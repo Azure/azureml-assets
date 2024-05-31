@@ -9,11 +9,14 @@ import os
 import time
 import uuid
 import yaml
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType
+from py4j.protocol import Py4JJavaError
 from .constants import MAX_RETRY_COUNT
+from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from shared_utilities.store_url import StoreUrl
@@ -113,6 +116,9 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
         if input_not_found_category != InputNotFoundCategory.NOT_INPUT_MISSING:
             return process_input_not_found(input_not_found_category)
         else:
+            # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
+            if isinstance(error, CredentialUnavailableError):
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
@@ -168,7 +174,19 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
     """Save spark dataframe as mltable."""
-    metrics_df.write.mode("overwrite").parquet(folder_path)
+    # init aml OBO class for supporting credential-less datastore scenarios.
+    # this class will init specific env variables required by Amlfs to get user token.
+    AzureMLOnBehalfOfCredential()
+
+    try:
+        metrics_df.write.mode("overwrite").parquet(folder_path)
+    except Exception as error:
+        # TODO: remove this check block after we switch over to using StoreUrl for saving spark df
+        if isinstance(error, Py4JJavaError):
+            if "Access token couldn't be obtained" in str(error):
+                raise InvalidInputError(
+                    MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.java_exception.getMessage()))
+        raise error
 
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/*.parquet"

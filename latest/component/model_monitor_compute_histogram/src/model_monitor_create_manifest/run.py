@@ -8,6 +8,7 @@ import glob
 import json
 import os
 import uuid
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from shared_utilities.amlfs import amlfs_put_as_json, amlfs_download, amlfs_upload
 
 
@@ -26,6 +27,11 @@ def _generate_manifest(root_dir: str):
 
 def run():
     """Create Manifest."""
+    # init aml OBO class for supporting credential-less datastore scenarios.
+    # this class will init specific env variables required by Amlfs to get
+    # user token in case of credential-less data access scenario
+    AzureMLOnBehalfOfCredential()
+
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--signal_outputs_1", type=str, required=True)
