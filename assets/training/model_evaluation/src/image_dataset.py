@@ -11,6 +11,7 @@ import pandas as pd
 import torch
 import numpy as np
 
+from mltable import DataType, load
 from PIL import Image
 from torch import Tensor
 from typing import cast, Dict, Tuple
@@ -275,6 +276,40 @@ def get_object_detection_dataset(
     return df
 
 
+def get_generation_dataset(mltable_path, settings):
+    # Workaround for MLTable not being able to convert back image url from stream to string.
+    mltable_file_name = mltable_path + "/MLTable"
+    with open(mltable_file_name, "rt") as f:
+        mltable_str = f.read()
+    mltable_str = mltable_str.replace("- convert_column_types:\n  - column_type: stream_info\n    columns: image_url\n", "")
+    with open(mltable_file_name, "wt") as f:
+        f.write(mltable_str)
+
+    mltable = load(mltable_path)
+    # mltable = mltable.convert_column_types({"image_url": DataType.to_string()})  -> does not work
+    logger.info("x1 {}".format(mltable))
+
+    mltable_dataframe = mltable.to_pandas_dataframe()
+    logger.info("x2 {}".format(mltable_dataframe))
+
+    df = pd.DataFrame(columns=[ImageDataFrameParams.GENERATION_PROMPT, ImageDataFrameParams.LABEL_COLUMN_NAME])
+
+    for image_url, captions in zip(mltable_dataframe["image_url"], mltable_dataframe["label"]):
+        for caption in captions.split("||"):
+            df = df.append(
+                {
+                    # The model input is a text prompt.
+                    ImageDataFrameParams.GENERATION_PROMPT: caption,
+                    # The original image is passed through via the label column.
+                    ImageDataFrameParams.LABEL_COLUMN_NAME: image_url,
+                },
+                ignore_index=True
+            )
+    logger.info("x3 {}".format(df))
+
+    return df
+
+
 def get_image_dataset(task_type, test_mltable, settings={}):
     """
     Return test dataset for image tasks from mltable.
@@ -298,5 +333,7 @@ def get_image_dataset(task_type, test_mltable, settings={}):
             settings=settings,
             masks_required=masks_required,
         )
+    elif task_type == constants.TASK.IMAGE_GENERATION:
+        return get_generation_dataset(test_mltable, settings)
     else:
         raise ValueError(f"Task type {task_type} not supported")

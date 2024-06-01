@@ -36,6 +36,7 @@ from task_factory.text.text_generation import TextGenerator
 from task_factory.text.fill_mask import FillMask
 from task_factory.text.chat_completion import ChatCompletion
 from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
+from task_factory.image.generation import ImageGenerationPredictor
 from task_factory.image.od_is import ImageOdIsPredictor
 from evaluators.evaluators import EvaluatorFactory
 from logging_utilities import current_run, get_azureml_exception
@@ -380,7 +381,8 @@ def get_predictor(task):
         TASK.IMAGE_CLASSIFICATION: ImageMulticlassClassifier,
         TASK.IMAGE_CLASSIFICATION_MULTILABEL: ImageMultilabelClassifier,
         TASK.IMAGE_OBJECT_DETECTION: ImageOdIsPredictor,
-        TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor
+        TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor,
+        TASK.IMAGE_GENERATION: ImageGenerationPredictor,
     }
     return predictor_map.get(task)
 
@@ -649,8 +651,12 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
     """
     if task in constants.IMAGE_TASKS:
         try:
+            logger.info("a1")
+
             # If the input file is a JSONL, then generate an MLTable for it.
             if _get_file_extension(file_path) == ".jsonl":
+                logger.info("a2")
+
                 # Make the MLTable object, converting the image_url column.
                 generated_mltable = True
                 table = from_json_lines_files([{"file": file_path}])
@@ -661,6 +667,7 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
                 file_path = temporary_directory.name
                 table.save(file_path)
             else:
+                logger.info("a3")
                 # The input file is an MLTable and a new MLTable does not need to be generated.
                 generated_mltable = False
 
@@ -1104,6 +1111,8 @@ def get_column_names(args, data):
         extra_y_test_cols = None
         if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
             input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
+        if task == constants.TASK.IMAGE_GENERATION:
+            input_column_names = [ImageDataFrameParams.GENERATION_PROMPT]
     else:
         # If input_column_names are not sent as argument we are retaining all columns
         label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME]

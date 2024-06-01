@@ -58,6 +58,7 @@ def main():
                 if any(dep in line.strip() for dep in ignore_deps):
                     continue
                 install_deps += [line.strip()]
+        install_deps += ["torchvision==0.14.1"]
 
         if len(install_deps) > 0:
             try:

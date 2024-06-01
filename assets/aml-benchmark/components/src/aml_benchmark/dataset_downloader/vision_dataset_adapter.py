@@ -103,6 +103,30 @@ class GTSRBAdapter(VisionDatasetAdapter):
         return Image.open(io.BytesIO(instance["Path"]["bytes"]))
 
 
+class MSCOCOAdapter(VisionDatasetAdapter):
+    """Adapter for MSCOCO HF dataset."""
+
+    def get_label(self, instance):
+        """Extract the instance's label as a string."""
+        return "||".join(instance["annotations"]["caption"])
+
+    def get_pil_image(self, instance):
+        """Extract the instance's image as a PIL image."""
+        return instance["image"]
+
+
+class MSCOCOAdapter2(VisionDatasetAdapter):
+    """Adapter for MSCOCO HF dataset."""
+
+    def get_label(self, instance):
+        """Extract the instance's label as a string."""
+        return instance["text"]
+
+    def get_pil_image(self, instance):
+        """Extract the instance's image as a PIL image."""
+        return instance["image"]
+
+
 class VisionDatasetAdapterFactory:
     """Factory for making vision dataset adapters based on dataset names."""
 
@@ -115,6 +139,8 @@ class VisionDatasetAdapterFactory:
             "patch_camelyon": PatchCamelyonAdapter,
             "resisc45": Resisc45Adapter,
             "gtsrb": GTSRBAdapter,
+            "mscoco": MSCOCOAdapter,
+            "mscoco_1k": MSCOCOAdapter2,
         }
 
         # Select the adapter class based on the dataset name. If name not available or not recognized, do not make

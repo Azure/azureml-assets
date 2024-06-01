@@ -29,6 +29,7 @@ class ImageDataFrameParams:
     IMAGE_META_INFO = "image_meta_info"
     PREDICTIONS = "predictions"
     TEXT_PROMPT = "text_prompt"
+    GENERATION_PROMPT = "prompt"
 
 
 class ODISLiterals:

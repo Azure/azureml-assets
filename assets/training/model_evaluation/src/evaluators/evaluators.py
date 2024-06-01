@@ -4,9 +4,15 @@
 """Evaluator."""
 
 import ast
+import re
 import pandas as pd
 import numpy as np
+import torch
+
 from abc import abstractmethod
+
+from PIL import Image
+from torchvision.transforms import functional as F
 
 from exceptions import (
     DataValidationException,
@@ -28,6 +34,9 @@ from constants import (
     ChatCompletionConstants
 )
 from image_constants import ImageDataFrameParams, ODISLiterals
+from azureml.core import Run
+from azureml.data.datapath import DataPath
+from azureml.data.dataset_factory import FileDatasetFactory
 from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
     ImageOdIsEvaluator,
 )
@@ -64,6 +73,7 @@ class EvaluatorFactory:
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
             TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
             TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator,
+            TASK.IMAGE_GENERATION: ImageGenerationEvaluator,
         }
 
     def get_evaluator(self, task_type, config=None):
@@ -776,3 +786,87 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
                                                      **self.metrics_config)
 
         return metrics
+
+
+class ImageGenerationEvaluator(Evaluator):
+    """???"""
+
+    def __init__(self, task_type, metrics_config):
+        """Initialize evaluator for generated images.
+
+        Args:
+            task_type (str): evaluator task type
+            metrics_config (Dict): Dict of metrics config
+        """
+        super().__init__(task_type, metrics_config)
+
+        # Importing here in order to avoid crash in download_dependencies.py, which indirectly imports this file
+        # without installing the needed packages first.
+        from torchmetrics.image.fid import FrechetInceptionDistance
+
+        self.fid = FrechetInceptionDistance()
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate generated images.
+
+        Args:
+            y_test (pd.DataFrame): pandas DataFrame with columns ["label"]
+            y_pred (pd.DataFrame): pandas DataFrame with columns ["predictions"]
+        Returns:
+            Dict: Dict of metrics
+        """
+
+        real_images = self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME])
+        self.fid.update(real_images, real=True)
+
+        fake_images = self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS])
+        self.fid.update(fake_images, real=False)
+
+        metrics = {
+            "metrics": {
+                "FID": self.fid.compute().item()
+            },
+            "artifacts": {},
+        }
+        return metrics
+    
+    def _preprocess_image(self, image):
+        image = torch.tensor(image).unsqueeze(0)
+        image = image.permute(0, 3, 1, 2) / 255.0
+        return F.center_crop(image, (256, 256))
+
+    def _download_images(self, image_urls):
+        run = Run.get_context()
+        workspace = run.experiment.workspace
+
+        def make_data_path(image_url):
+            match = re.search("AmlDatastore://([^/]+)((/[^/]+)+)$", image_url)
+            if match is None:
+                return image_url
+
+            groups = match.groups()
+            return DataPath(workspace.datastores.get(groups[0]), groups[1])
+
+        image_urls = [
+            make_data_path(image_url) for image_url in image_urls
+        ]
+        logger.info("n1 {} {}".format(len(image_urls), image_urls[0]))
+
+        images = []
+
+        remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
+        local_image_file_names = remote_image_files.download()
+        logger.info("n2 {}".format(len(local_image_file_names)))
+        for local_image_file_name in local_image_file_names:
+            image = np.array(Image.open(local_image_file_name).convert("RGB"))
+            images.append(image)
+        logger.info("n3 {} {} {}".format(len(images), images[0].shape, images[0].dtype))
+
+        # images = torch.cat([self._preprocess_image(image) for image in images])
+        images = torch.stack([
+            F.center_crop(torch.tensor(image).permute(2, 0, 1), (256, 256))
+            for image in images
+        ])
+        logger.info("n4 {} {} {}".format(len(images), images[0].shape, images[0].dtype))
+
+        return images

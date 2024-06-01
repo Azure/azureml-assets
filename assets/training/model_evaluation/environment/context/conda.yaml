@@ -9,6 +9,7 @@ dependencies:
 - pip=21.2.4
 - pytorch=1.13.1
 - pytorch-cuda=11.7
+- torchmetrics[image]
 - pip:
   - matplotlib>=3.3,<3.4
   - protobuf<4.0.0
