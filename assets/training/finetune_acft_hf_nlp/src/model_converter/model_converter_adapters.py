@@ -270,7 +270,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
                     logger.info("Updated conda.yaml file")
 
 
-    def _t5_model_on_text_classification_condition_meets(self, model_type):
+    def _is_t5_text_classification_finetune(self, model_type):
         """Check for t5 text-classification"""
         return self.mlflow_task_type == MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION and model_type == HfModelTypes.T5
 
@@ -285,7 +285,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         # Temp Fix:
         # specific check for t5 text-classification so that base model dependencies doesn't get pass
         # and use transformers version 4.40.0 from infer dependencies
-        if not self._t5_model_on_text_classification_condition_meets(model.config.model_type):
+        if not self._is_t5_text_classification_finetune(model.config.model_type):
             conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
             if conda_file_path.is_file():
                 self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
@@ -318,7 +318,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
 
         # Temp fix for t5 text-classification
-        if self._t5_model_on_text_classification_condition_meets(model.config.model_type):
+        if self._is_t5_text_classification_finetune(model.config.model_type):
             self._remove_unwanted_packages(self.mlflow_model_save_path)
 
         logger.info("Saved MLFlow model using OSS flavour.")
