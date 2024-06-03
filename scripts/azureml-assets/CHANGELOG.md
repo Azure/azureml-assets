@@ -5,7 +5,7 @@
 
 ## 1.16.52 (2024-06-03)
 ### 🚀 New Features
-- [#2991](https://github.com/Azure/azureml-assets/pull/2991) Allow use of azcopy's --overwrite flag
+- [#3000](https://github.com/Azure/azureml-assets/pull/3000) Allow use of azcopy's --overwrite flag
 
 ## 1.16.51 (2024-05-30)
 ### 🐛 Bugs Fixed
