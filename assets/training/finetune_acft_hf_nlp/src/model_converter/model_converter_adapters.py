@@ -20,7 +20,7 @@ from azureml.acft.common_components.utils.mlflow_utils import update_acft_metada
 
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import (
-    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants,
+    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants, HfModelTypes,
 )
 
 import mlflow
@@ -272,7 +272,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
 
     def _t5_model_on_text_classification_condition_meets(self, model_type):
         """Check for t5 text-classification"""
-        return self.mlflow_task_type == "text-classification" and model_type == 't5'
+        return self.mlflow_task_type == MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION and model_type == HfModelTypes.T5
 
 
     def convert_model(self) -> None:
