@@ -159,7 +159,7 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-    # We do this first to get Aml OBO credential which will let spark.write.parquet 
+    # We do this first to get Aml OBO credential which will let spark.write.parquet
     # work in credential-less scenario by initializing certain env variables for free.
     print(f"folder_path: {folder_path}")
     store_url = StoreUrl(folder_path)
