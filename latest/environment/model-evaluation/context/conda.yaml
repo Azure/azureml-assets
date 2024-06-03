@@ -32,5 +32,5 @@ dependencies:
   - mldesigner==0.1.0b18
   - tiktoken
   - idna==3.7
-  - pydantic==2.7.2
+  - pydantic==2.7.3
   - mteb==1.12.14
