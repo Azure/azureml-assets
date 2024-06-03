@@ -239,7 +239,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
 
     @staticmethod
     def remove_unwanted_packages(model_save_path: str):
-        """Remove unwanted packages from conda and requirements file"""
+        """Remove unwanted packages from conda and requirements file."""
         if is_main_process():
             req_file_path = os.path.join(model_save_path, "requirements.txt")
             conda_file_path = os.path.join(model_save_path, "conda.yaml")
@@ -269,8 +269,8 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
                         yaml.safe_dump(conda_dict, f)
                     logger.info("Updated conda.yaml file")
 
-    def is_t5_text_classification_finetune(self, model_type):
-        """Check for t5 text-classification"""
+    def is_t5_text_classification_finetune(self, model_type) -> bool:
+        """Check for t5 text-classification."""
         return self.mlflow_task_type == MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION and \
             model_type == HfModelTypes.T5
 
