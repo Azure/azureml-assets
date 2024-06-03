@@ -4,7 +4,7 @@ channels:
 - conda-forge
 dependencies:
 - python=3.11.8
-- pip=22.1.2
+- pip=24.0
 - pip:
   # vulnerabilities
   - requests>=2.32.0
