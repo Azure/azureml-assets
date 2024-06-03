@@ -238,7 +238,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         super(ModelConverter, self).__init__(component_args)
 
     @staticmethod
-    def _remove_unwanted_packages(model_save_path: str):
+    def remove_unwanted_packages(model_save_path: str):
         """Remove unwanted packages from conda and requirements file"""
         if is_main_process():
             req_file_path = os.path.join(model_save_path, "requirements.txt")
@@ -269,7 +269,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
                         yaml.safe_dump(conda_dict, f)
                     logger.info("Updated conda.yaml file")
 
-    def _is_t5_text_classification_finetune(self, model_type):
+    def is_t5_text_classification_finetune(self, model_type):
         """Check for t5 text-classification"""
         return self.mlflow_task_type == MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION and \
             model_type == HfModelTypes.T5
@@ -284,7 +284,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         # Temp Fix:
         # specific check for t5 text-classification so that base model dependencies doesn't get pass
         # and use transformers version 4.40.0 from infer dependencies
-        if not self._is_t5_text_classification_finetune(model.config.model_type):
+        if not self.is_t5_text_classification_finetune(model.config.model_type):
             conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
             if conda_file_path.is_file():
                 self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
@@ -317,7 +317,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
 
         # Temp fix for t5 text-classification
-        if self._is_t5_text_classification_finetune(model.config.model_type):
-            self._remove_unwanted_packages(self.mlflow_model_save_path)
+        if self.is_t5_text_classification_finetune(model.config.model_type):
+            self.remove_unwanted_packages(self.mlflow_model_save_path)
 
         logger.info("Saved MLFlow model using OSS flavour.")
