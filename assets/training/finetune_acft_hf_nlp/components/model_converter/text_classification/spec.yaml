@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: chat_completion_model_converter
+name: text_classification_model_converter
 version: 0.0.50
 type: command
 
 is_deterministic: True
 
-display_name: Chat Completion Model Converter
-description: Component to convert the chat completion finetune job output from pytorch to mlflow model
+display_name: Text Classification Model Converter
+description: Component to convert the text classification finetune job output from pytorch to mlflow model
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/59
 
