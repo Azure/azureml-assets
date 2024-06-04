@@ -12,7 +12,7 @@ RUN apt-get -y update && \
     && apt-get install -y --no-install-recommends \
         python3.9-venv \
     && apt-get clean \
-    && python -m pip install --upgrade pip && pip install --upgrade idna requests \
+    && python -m pip install --upgrade pip && pip install --upgrade idna \
     && rm -rf /var/lib/apt/lists/* && \
     python3.9 -m venv /venv
 
@@ -27,6 +27,6 @@ RUN v="8.4.1-1+cuda11.6" &&\
         libnvinfer-dev=${v} libnvonnxparsers-dev=${v} libnvparsers-dev=${v} libnvinfer-plugin-dev=${v} \
         python3-libnvinfer=${v} libnvinfer-samples=${v}
 
-RUN pip install --upgrade pip && pip install --upgrade setuptools requests
+RUN pip install --upgrade pip && pip install --upgrade setuptools
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
