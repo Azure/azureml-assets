@@ -638,9 +638,9 @@ jobs:
       model_selector_output: '${{parent.jobs.text_classification_model_import.outputs.output_dir}}'
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
-  ft_nlp_model_converter:
+  text_classification_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.50
+    component: azureml:text_classification_model_converter:0.0.50
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
