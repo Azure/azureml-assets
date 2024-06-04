@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV ACCEPT_EULA=Y
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y libsm6 libxext6
-RUN python -m pip install --upgrade pip && pip install --upgrade idna
+RUN python -m pip install --upgrade pip && pip install --upgrade idna requests
 
 # Build python3.9 as the default python
 RUN apt-get install -y --no-install-recommends \
@@ -18,6 +18,6 @@ RUN apt-get install -y --no-install-recommends \
 
 ENV PATH=/venv/bin:$PATH
 
-RUN pip install --upgrade pip && pip install --upgrade setuptools
+RUN pip install --upgrade pip && pip install --upgrade setuptools requests
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
