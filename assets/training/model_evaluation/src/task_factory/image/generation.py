@@ -16,6 +16,7 @@ from PIL import Image
 from azureml.core import Run, Datastore
 from logging_utilities import get_logger
 from task_factory.base import PredictWrapper
+from task_factory.image.constants import ImagePredictionsLiterals
 
 
 # TODO: refactor code to save images to datastore to be used both in Dataset Downloader and in Compute Metrics.
@@ -59,11 +60,13 @@ class ImageGenerationPredictor(PredictWrapper):
     def __init__(self, model_uri, task_type, device=None):
         super().__init__(model_uri, task_type, device)
 
-        self.prompt_column_name = "prompt"
+        # TODO: replace with value from model parameter.
         self.image_column_name = "generated_image"
 
     def predict(self, X_test, **kwargs):
         logger.info("z1 {} {}".format(type(X_test), X_test))
+
+        batch_size = kwargs.get(ImagePredictionsLiterals.BATCH_SIZE, 1)
 
         # Get the datastore and the directory within it where the images will be uploaded.
         datastore = get_default_datastore()
@@ -71,18 +74,17 @@ class ImageGenerationPredictor(PredictWrapper):
 
         logger.info("z2 {} {} {}".format(datastore.name, datastore_directory_name, datastore_directory_url))
 
-        ys = []
+        generated_image_urls = []
 
         # Make the local temporary directory where the images will be saved.
         with tempfile.TemporaryDirectory() as temporary_directory_name:
-            batch_size = 1
             image_counter = 0
             for idx in range(0, len(X_test), batch_size):
-                y_batch = self.model.predict(X_test.iloc[idx : idx + batch_size])
+                image_batch = self.model.predict(X_test.iloc[idx : idx + batch_size])
 
                 logger.info("z3")
 
-                for i, image_str in enumerate(y_batch[self.image_column_name]):
+                for i, image_str in enumerate(image_batch[self.image_column_name]):
                     if i == 0:
                         logger.info("z4 {}".format(type(image_str)))
 
@@ -94,7 +96,7 @@ class ImageGenerationPredictor(PredictWrapper):
                         logger.info("z5")
 
                     image_url = get_image_url(datastore_directory_url, image_file_name)
-                    ys.append(image_url)
+                    generated_image_urls.append(image_url)
                     if i == 0:
                         logger.info("z6 {}".format(image_url))
 
@@ -103,6 +105,6 @@ class ImageGenerationPredictor(PredictWrapper):
             # Upload the images to datastore.
             datastore.upload(src_dir=temporary_directory_name, target_path=datastore_directory_name)
 
-        logger.info("z7 {}".format(ys[0]))
+        logger.info("z7 {}".format(generated_image_urls[0]))
 
-        return ys
+        return generated_image_urls

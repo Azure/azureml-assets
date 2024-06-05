@@ -11,14 +11,14 @@ import pandas as pd
 import torch
 import numpy as np
 
-from mltable import DataType, load
+from mltable import load
 from PIL import Image
 from torch import Tensor
-from typing import cast, Dict, Tuple
+from typing import cast, Dict, List, Tuple
 
 import constants
 
-from image_constants import SettingLiterals, ImageDataFrameParams, ODISLiterals
+from image_constants import SettingLiterals, ODISLiterals
 from logging_utilities import get_logger
 
 from azureml.automl.core.shared.constants import MLTableLiterals, MLTableDataLabel
@@ -151,6 +151,8 @@ def read_image(image_path):
 
 def get_classification_dataset(
     testing_mltable: str,
+    input_column_names: List[str],
+    label_column_name: str,
     settings: Dict = {},
     multi_label: bool = False,
 ) -> AmlDatasetWrapper:
@@ -178,7 +180,6 @@ def get_classification_dataset(
         workspace=ws,
     )
 
-    label_column_name = settings.get(SettingLiterals.LABEL_COLUMN_NAME, None)
     test_dataset_wrapper = AmlDatasetWrapper(
         test_tabular_ds,
         multilabel=multi_label,
@@ -190,14 +191,14 @@ def get_classification_dataset(
         # labels: {test_dataset_wrapper.num_classes}"
     )
 
-    df = pd.DataFrame(columns=[ImageDataFrameParams.IMAGE_COLUMN_NAME, ImageDataFrameParams.LABEL_COLUMN_NAME])
+    df = pd.DataFrame(columns=input_column_names + [label_column_name])
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
             # sending image_paths instead of base64 encoded string as oss flavor doesnt take bytes as input.
             df = df.append({
-                ImageDataFrameParams.IMAGE_COLUMN_NAME: image_path,
-                ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
+                input_column_names[0]: image_path,
+                label_column_name: test_dataset_wrapper.label_at_index(index)
             }, ignore_index=True)
 
     return df
@@ -205,6 +206,8 @@ def get_classification_dataset(
 
 def get_object_detection_dataset(
     test_mltable: str,
+    input_column_names: List[str],
+    label_column_name: str,
     settings: Dict = {},
     masks_required: bool = False,
 ) -> Tuple[RuntimeDetectionDatasetAdapter, RuntimeDetectionDatasetAdapter]:
@@ -254,9 +257,7 @@ def get_object_detection_dataset(
         f"# test images: {len(test_dataset)}, # labels: {test_dataset.num_classes}"
     )
     test_dataset_wrapper = RuntimeDetectionDatasetAdapter(test_dataset)
-    df = pd.DataFrame(columns=[ImageDataFrameParams.IMAGE_COLUMN_NAME,
-                               ImageDataFrameParams.LABEL_COLUMN_NAME,
-                               ImageDataFrameParams.IMAGE_META_INFO])
+    df = pd.DataFrame(columns=input_column_names + [label_column_name])
 
     counter = 0
     for index in range(len(test_dataset_wrapper)):
@@ -266,18 +267,23 @@ def get_object_detection_dataset(
         if is_valid_image(image_path):
             counter += 1
             df = df.append({
-                ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
-                ImageDataFrameParams.LABEL_COLUMN_NAME: label,
-                ImageDataFrameParams.IMAGE_META_INFO: image_meta_info,
-                ImageDataFrameParams.TEXT_PROMPT: ". ".join(test_dataset.classes)
+                input_column_names[0]: base64.encodebytes(read_image(image_path)).decode("utf-8"),
+                input_column_names[1]: image_meta_info,
+                input_column_names[2]: ". ".join(test_dataset.classes),
+                label_column_name: label,
             }, ignore_index=True)
 
     logger.info(f"Total number of valid images: {counter}")
     return df
 
 
-def get_generation_dataset(mltable_path, settings):
-    # Workaround for MLTable not being able to convert back image url from stream to string.
+def get_generation_dataset(
+    mltable_path: str,
+    input_column_names: List[str],
+    label_column_name: str,
+    settings: Dict = {},
+):
+    # Workaround for MLTable not being able to convert image url from stream back to string.
     mltable_file_name = mltable_path + "/MLTable"
     with open(mltable_file_name, "rt") as f:
         mltable_str = f.read()
@@ -286,22 +292,23 @@ def get_generation_dataset(mltable_path, settings):
         f.write(mltable_str)
 
     mltable = load(mltable_path)
-    # mltable = mltable.convert_column_types({"image_url": DataType.to_string()})  -> does not work
     logger.info("x1 {}".format(mltable))
 
     mltable_dataframe = mltable.to_pandas_dataframe()
     logger.info("x2 {}".format(mltable_dataframe))
 
-    df = pd.DataFrame(columns=[ImageDataFrameParams.GENERATION_PROMPT, ImageDataFrameParams.LABEL_COLUMN_NAME])
+    df = pd.DataFrame(columns=input_column_names + [label_column_name])
 
-    for image_url, captions in zip(mltable_dataframe["image_url"], mltable_dataframe["label"]):
+    for image_url, captions in zip(
+        mltable_dataframe[SettingLiterals.IMAGE_URL], mltable_dataframe[SettingLiterals.LABEL]
+    ):
         for caption in captions.split("||"):
             df = df.append(
                 {
                     # The model input is a text prompt.
-                    ImageDataFrameParams.GENERATION_PROMPT: caption,
+                    input_column_names[0]: caption,
                     # The original image is passed through via the label column.
-                    ImageDataFrameParams.LABEL_COLUMN_NAME: image_url,
+                    label_column_name: image_url,
                 },
                 ignore_index=True
             )
@@ -310,7 +317,7 @@ def get_generation_dataset(mltable_path, settings):
     return df
 
 
-def get_image_dataset(task_type, test_mltable, settings={}):
+def get_image_dataset(task_type, test_mltable, input_column_names, label_column_name, settings={}):
     """
     Return test dataset for image tasks from mltable.
 
@@ -323,6 +330,8 @@ def get_image_dataset(task_type, test_mltable, settings={}):
         multi_label = True if task_type == constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL else False
         return get_classification_dataset(
             testing_mltable=test_mltable,
+            input_column_names=input_column_names,
+            label_column_name=label_column_name,
             settings=settings,
             multi_label=multi_label,
         )
@@ -330,10 +339,17 @@ def get_image_dataset(task_type, test_mltable, settings={}):
         masks_required = True if task_type == constants.TASK.IMAGE_INSTANCE_SEGMENTATION else False
         return get_object_detection_dataset(
             test_mltable=test_mltable,
+            input_column_names=input_column_names,
+            label_column_name=label_column_name,
             settings=settings,
             masks_required=masks_required,
         )
     elif task_type == constants.TASK.IMAGE_GENERATION:
-        return get_generation_dataset(test_mltable, settings)
+        return get_generation_dataset(
+            mltable_path=test_mltable,
+            input_column_names=input_column_names,
+            label_column_name=label_column_name,
+            settings=settings,
+        )
     else:
         raise ValueError(f"Task type {task_type} not supported")

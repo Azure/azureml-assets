@@ -6,7 +6,8 @@
 class SettingLiterals:
     """Setting literals for classification dataset."""
 
-    LABEL_COLUMN_NAME = "label_column_name"
+    IMAGE_URL = "image_url"
+    LABEL = "label"
     MASKS_REQUIRED = "masks_required"
     USE_BG_LABEL = "use_bg_label"
     IGNORE_DATA_ERRORS = "ignore_data_errors"

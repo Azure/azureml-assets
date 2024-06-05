@@ -127,7 +127,9 @@ class ModelPredictionRunner:
         if self.extra_y_test_cols is not None:
             all_cols += self.extra_y_test_cols
 
-        data, file_ext = read_model_prediction_data(test_data, self.task, self.batch_size)
+        data, file_ext = read_model_prediction_data(
+            test_data, self.input_column_names, self.label_column_name, self.task, self.batch_size
+        )
         data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(self.label_column_name),
                    repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size), repeat(file_ext))
         return data  # X_test, y_test
@@ -392,6 +394,8 @@ def run():
         validate_model_prediction_args(args)
 
         input_column_names, label_column_name, extra_y_test_cols = validate_and_get_columns(args)
+
+        logger.info("w1 {} {}".format(input_column_names, label_column_name))
 
     with log_activity(logger, constants.TelemetryConstants.INITIALISING_RUNNER,
                       custom_dimensions=custom_dims_dict):
