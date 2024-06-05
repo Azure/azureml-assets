@@ -13,11 +13,16 @@ tags:
   Featured: ""
   Preview: ""
   maas-inference: true
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
   huggingface_model_id: ""
   SharedComputeCapacityEnabled: ''
   license: mit
   disable-batch: "true"
+  _aml_system_vanity_registry: "azureml-phi"
   task: chat-completion
+  finetuning-tasks: chat-completion
   author: microsoft
   hiddenlayerscanned : ""
   inference_compute_allow_list:
@@ -58,4 +63,4 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 7
+version: 5
