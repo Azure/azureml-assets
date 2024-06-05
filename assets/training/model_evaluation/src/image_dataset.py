@@ -13,11 +13,11 @@ import numpy as np
 
 from PIL import Image
 from torch import Tensor
-from typing import cast, Dict, Tuple
+from typing import cast, Dict, List, Tuple
 
 import constants
 
-from image_constants import SettingLiterals, ImageDataFrameParams, ODISLiterals
+from image_constants import SettingLiterals, ODISLiterals
 from logging_utilities import get_logger
 
 from azureml.automl.core.shared.constants import MLTableLiterals, MLTableDataLabel
@@ -150,13 +150,17 @@ def read_image(image_path):
 
 def get_classification_dataset(
     testing_mltable: str,
+    input_column_names: List[str],
+    label_column_name: str,
     settings: Dict = {},
     multi_label: bool = False,
-) -> AmlDatasetWrapper:
+) -> pd.DataFrame:
     """
     Return training and validation dataset for classification task from mltable.
 
-    :param testing_mltable: The training mltable path
+    :param test_mltable: The path to the prediction input mltable
+    :param input_column_names: The column names of the model inputs
+    :param label_column_name: The column name of the label
     :param settings: Settings dictionary
     :param multi_label: True if multi label classification, False otherwise
     :return: Data Frame with test image paths and labels
@@ -177,7 +181,6 @@ def get_classification_dataset(
         workspace=ws,
     )
 
-    label_column_name = settings.get(SettingLiterals.LABEL_COLUMN_NAME, None)
     test_dataset_wrapper = AmlDatasetWrapper(
         test_tabular_ds,
         multilabel=multi_label,
@@ -189,14 +192,14 @@ def get_classification_dataset(
         # labels: {test_dataset_wrapper.num_classes}"
     )
 
-    df = pd.DataFrame(columns=[ImageDataFrameParams.IMAGE_COLUMN_NAME, ImageDataFrameParams.LABEL_COLUMN_NAME])
+    df = pd.DataFrame(columns=input_column_names + [label_column_name])
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
             # sending image_paths instead of base64 encoded string as oss flavor doesnt take bytes as input.
             df = df.append({
-                ImageDataFrameParams.IMAGE_COLUMN_NAME: image_path,
-                ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
+                input_column_names[0]: image_path,
+                label_column_name: test_dataset_wrapper.label_at_index(index)
             }, ignore_index=True)
 
     return df
@@ -204,23 +207,19 @@ def get_classification_dataset(
 
 def get_object_detection_dataset(
     test_mltable: str,
+    input_column_names: List[str],
+    label_column_name: str,
     settings: Dict = {},
     masks_required: bool = False,
-) -> Tuple[RuntimeDetectionDatasetAdapter, RuntimeDetectionDatasetAdapter]:
+) -> pd.DataFrame:
     """Return training and validation dataset for object detection and instance segmentation task from mltable.
 
-    :param training_mltable: The training mltable path
-    :type training_mltable: str
-    :param object_detection_dataset: The dataset adapter class name to be used for creating dataset objects.
-    :type object_detection_dataset: RuntimeDetectionDatasetAdapter
+    :param test_mltable: The path to the prediction input mltable
+    :param input_column_names: The column names of the model inputs
+    :param label_column_name: The column name of the label
     :param settings: Settings dictionary
-    :type settings: Dict
-    :param validation_mltable: The validation mltable path
-    :type validation_mltable: str
     :param masks_required: mask required or not for segmentation. Optional, default False
-    :type masks_required: bool
-    :return: Training dataset, validation dataset
-    :rtype: Tuple[RuntimeDetectionDatasetAdapter, RuntimeDetectionDatasetAdapter]
+    :return: Data Frame with test image paths and labels
     """
     mltable = _combine_mltables(test_mltable, test_mltable)
 
@@ -253,9 +252,7 @@ def get_object_detection_dataset(
         f"# test images: {len(test_dataset)}, # labels: {test_dataset.num_classes}"
     )
     test_dataset_wrapper = RuntimeDetectionDatasetAdapter(test_dataset)
-    df = pd.DataFrame(columns=[ImageDataFrameParams.IMAGE_COLUMN_NAME,
-                               ImageDataFrameParams.LABEL_COLUMN_NAME,
-                               ImageDataFrameParams.IMAGE_META_INFO])
+    df = pd.DataFrame(columns=input_column_names + [label_column_name])
 
     counter = 0
     for index in range(len(test_dataset_wrapper)):
@@ -265,29 +262,33 @@ def get_object_detection_dataset(
         if is_valid_image(image_path):
             counter += 1
             df = df.append({
-                ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
-                ImageDataFrameParams.LABEL_COLUMN_NAME: label,
-                ImageDataFrameParams.IMAGE_META_INFO: image_meta_info,
-                ImageDataFrameParams.TEXT_PROMPT: ". ".join(test_dataset.classes)
+                input_column_names[0]: base64.encodebytes(read_image(image_path)).decode("utf-8"),
+                input_column_names[1]: image_meta_info,
+                input_column_names[2]: ". ".join(test_dataset.classes),
+                label_column_name: label,
             }, ignore_index=True)
 
     logger.info(f"Total number of valid images: {counter}")
     return df
 
 
-def get_image_dataset(task_type, test_mltable, settings={}):
+def get_image_dataset(task_type, test_mltable, input_column_names, label_column_name, settings={}):
     """
     Return test dataset for image tasks from mltable.
 
-    :param testing_mltable: The training mltable path
+    :param task_type: The type of the prediction task
+    :param test_mltable: The path to the prediction input mltable
+    :param input_column_names: The column names of the model inputs
+    :param label_column_name: The column name of the label
     :param settings: Settings dictionary
-    :param multi_label: True if multi label classification, False otherwise
-    :return: Data Frame with test image paths and labels
+    :return: Data Frame with image paths and labels
     """
     if task_type in [constants.TASK.IMAGE_CLASSIFICATION, constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL]:
         multi_label = True if task_type == constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL else False
         return get_classification_dataset(
             testing_mltable=test_mltable,
+            input_column_names=input_column_names,
+            label_column_name=label_column_name,
             settings=settings,
             multi_label=multi_label,
         )
@@ -295,6 +296,8 @@ def get_image_dataset(task_type, test_mltable, settings={}):
         masks_required = True if task_type == constants.TASK.IMAGE_INSTANCE_SEGMENTATION else False
         return get_object_detection_dataset(
             test_mltable=test_mltable,
+            input_column_names=input_column_names,
+            label_column_name=label_column_name,
             settings=settings,
             masks_required=masks_required,
         )

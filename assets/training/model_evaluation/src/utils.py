@@ -632,11 +632,15 @@ def _get_file_extension(file_path):
     return os.path.splitext(file_path)[1].lower()
 
 
-def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None):
+def read_model_prediction_data(
+    file_path, input_column_names, label_column_name, task=None, batch_size=None, nrows=None
+):
     """Util function for reading test data for model prediction.
 
     Args:
         file_path (_type_): _description_
+        input_column_names (List[str])): Name of input columns.
+        label_column_name (str): Name of label column.
         task (_type_): _description_
         batch_size (_type_): _description_
         nrows (_type_): _description_
@@ -672,7 +676,10 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
 
         # Read the dataset from the MLTable.
         from image_dataset import get_image_dataset
-        df = get_image_dataset(task_type=task, test_mltable=file_path)
+        df = get_image_dataset(
+            task_type=task, test_mltable=file_path,
+            input_column_names=input_column_names, label_column_name=label_column_name
+        )
         data = iter([df])
         file_ext = SupportedFileExtensions.IMAGE
 
@@ -1095,16 +1102,41 @@ def parse_input_ground_truth_col(col_name):
     return col_name, extra_cols
 
 
-def get_column_names(args, data):
-    """Get Column names from test data."""
+def get_sample_data_and_column_names(args):
+    """Get sample data and column names based on the specified arguments."""
+    data_path = args[ArgumentLiterals.DATA]
     task = args[ArgumentLiterals.TASK]
     if task in constants.IMAGE_TASKS:
-        input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
-        label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+        if args[ArgumentLiterals.INPUT_COLUMN_NAMES]:
+            input_column_names = args[ArgumentLiterals.INPUT_COLUMN_NAMES]
+        else:
+            if task in [constants.TASK.IMAGE_GENERATION]:
+                input_column_names = [ImageDataFrameParams.GENERATION_PROMPT]
+            else:
+                input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
+                if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
+                    input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
+
+        if args[ArgumentLiterals.LABEL_COLUMN_NAME]:
+            if len(args[ArgumentLiterals.LABEL_COLUMN_NAME]) != 1:
+                message = "Must specify only one label column for vision tasks."
+                exception = get_azureml_exception(
+                    ArgumentValidationException, ArgumentParsingError, None, error=message
+                )
+                log_traceback(exception, logger)
+                raise exception
+
+            label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME][0]
+        else:
+            label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+
         extra_y_test_cols = None
-        if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
-            input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
+
+        sample_data, _ = read_model_prediction_data(data_path, task, input_column_names, label_column_name)
+
     else:
+        sample_data, _ = read_model_prediction_data(data_path, task, [], "", nrows=1)
+
         # If input_column_names are not sent as argument we are retaining all columns
         label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME]
         if label_column_name is None:
@@ -1118,14 +1150,16 @@ def get_column_names(args, data):
 
         input_column_names = args[ArgumentLiterals.INPUT_COLUMN_NAMES]
         if input_column_names is None or len(input_column_names) == 0:
-            input_column_names = list(data.columns)
+            input_column_names = list(sample_data.columns)
             if label_column_name is not None and label_column_name in input_column_names:
                 input_column_names.remove(label_column_name)
             if extra_y_test_cols is not None:
                 for col in extra_y_test_cols:
                     if col in input_column_names:
                         input_column_names.remove(col)
-    return input_column_names, label_column_name, extra_y_test_cols
+
+    sample_data = list(sample_data)[0]
+    return sample_data, input_column_names, label_column_name, extra_y_test_cols
 
 
 def openai_init(llm_config, **openai_params):
