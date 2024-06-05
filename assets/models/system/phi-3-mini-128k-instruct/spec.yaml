@@ -14,12 +14,10 @@ tags:
   Preview: ""
   huggingface_model_id: ""
   maas-inference: true
-  maas-finetuning-test: true
   license: mit
   disable-batch: "true"
   task: chat-completion
   author: microsoft
-  _aml_system_vanity_registry: "azureml-phi"
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
   inference_compute_allow_list:
