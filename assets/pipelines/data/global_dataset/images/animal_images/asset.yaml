@@ -1,5 +1,5 @@
 name: animal_images
-version: 2
+version: 3
 type: data
 spec: spec.yaml
 categories:
