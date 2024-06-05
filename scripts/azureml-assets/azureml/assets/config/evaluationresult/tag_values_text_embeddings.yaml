@@ -3,11 +3,11 @@ task:
   required: True
   allow_multiple: False
   values:
-  - BitextMining
-  - Classification
-  - Clustering
-  - PairClassification
-  - Reranking
-  - Retrieval
-  - Summarization
-  - STS
+  - bitext_mining
+  - classification
+  - clustering
+  - pair_classification
+  - reranking
+  - retrieval
+  - summarization
+  - sts

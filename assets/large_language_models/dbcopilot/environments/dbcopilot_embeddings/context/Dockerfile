@@ -7,24 +7,7 @@ USER root
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    unixodbc-dev \
-    openssl=1.1.1f-1ubuntu2.22 \
-    libssl1.1=1.1.1f-1ubuntu2.22 \
-    libldap-2.4-2=2.4.49+dfsg-2ubuntu1.10 \
-    libldap-common=2.4.49+dfsg-2ubuntu1.10 \
-    libxml2=2.9.10+dfsg-5ubuntu0.20.04.7 \
-    login=1:4.8.1-1ubuntu5.20.04.5 \
-    passwd=1:4.8.1-1ubuntu5.20.04.5 \
-    uidmap=1:4.8.1-1ubuntu5.20.04.5 \
-    libcurl3-gnutls=7.68.0-1ubuntu2.22 \
-    libuuid1=2.34-0.1ubuntu9.6  \
-    libblkid1=2.34-0.1ubuntu9.6\
-    util-linux=2.34-0.1ubuntu9.6 \
-    fdisk=2.34-0.1ubuntu9.6 \
-    libfdisk1=2.34-0.1ubuntu9.6 \
-    mount=2.34-0.1ubuntu9.6 \
-    libsmartcols1=2.34-0.1ubuntu9.6 \
-    libmount1=2.34-0.1ubuntu9.6 &&\
+    unixodbc-dev &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
@@ -51,13 +34,13 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  promptflow-vectordb==0.2.9 && \
-    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.20-py3-none-any.whl &&\
-    pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0"
+    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.21-py3-none-any.whl &&\
+    pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3"
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda && \
-    pip install cryptography==42.0.5 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 && \
+    pip install cryptography==42.0.5 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 tqdm==4.66.3 && \
     conda deactivate"
 
 # Install certificates and other utilities

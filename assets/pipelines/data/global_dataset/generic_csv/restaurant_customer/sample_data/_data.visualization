@@ -1,0 +1,3593 @@
+{
+  "visualizationType": "default",
+  "data": {
+    "name": null,
+    "numberOfColumns": 19,
+    "numberOfRows": 138,
+    "features": [
+      {
+        "name": "userID",
+        "index": 0,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "latitude",
+        "index": 1,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "longitude",
+        "index": 2,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "smoker",
+        "index": 3,
+        "elementType": "bool",
+        "featureType": "Binary Feature"
+      },
+      {
+        "name": "drink_level",
+        "index": 4,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "dress_preference",
+        "index": 5,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "ambience",
+        "index": 6,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "transport",
+        "index": 7,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "marital_status",
+        "index": 8,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "hijos",
+        "index": 9,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "birth_year",
+        "index": 10,
+        "elementType": "int64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "interest",
+        "index": 11,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "personality",
+        "index": 12,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "religion",
+        "index": 13,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "activity",
+        "index": 14,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "color",
+        "index": 15,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "weight",
+        "index": 16,
+        "elementType": "int64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "budget",
+        "index": 17,
+        "elementType": "str",
+        "featureType": "String Feature"
+      },
+      {
+        "name": "height",
+        "index": 18,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      }
+    ],
+    "records": [
+      [
+        "U1001",
+        22.139997,
+        -100.978803,
+        false,
+        "abstemious",
+        "informal",
+        "family",
+        "on foot",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "thrifty-protector",
+        "none",
+        "student",
+        "black",
+        69,
+        "medium",
+        1.77
+      ],
+      [
+        "U1002",
+        22.150087,
+        -100.983325,
+        false,
+        "abstemious",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "technology",
+        "hunter-ostentatious",
+        "Catholic",
+        "student",
+        "red",
+        40,
+        "low",
+        1.87
+      ],
+      [
+        "U1003",
+        22.119847,
+        -100.946527,
+        false,
+        "social drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "blue",
+        60,
+        "low",
+        1.69
+      ],
+      [
+        "U1004",
+        18.867,
+        -99.18299999999999,
+        false,
+        "abstemious",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1940,
+        "variety",
+        "hard-worker",
+        "none",
+        "professional",
+        "green",
+        44,
+        "medium",
+        1.53
+      ],
+      [
+        "U1005",
+        22.183477,
+        -100.959891,
+        false,
+        "abstemious",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1992,
+        "none",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "black",
+        65,
+        "medium",
+        1.69
+      ],
+      [
+        "U1006",
+        22.15,
+        -100.98299999999999,
+        true,
+        "social drinker",
+        "no preference",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "hard-worker",
+        "none",
+        "student",
+        "blue",
+        75,
+        "medium",
+        1.8
+      ],
+      [
+        "U1007",
+        22.118464000000003,
+        -100.93825600000001,
+        false,
+        "casual drinker",
+        "informal",
+        "solitary",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "purple",
+        60,
+        "low",
+        1.59
+      ],
+      [
+        "U1008",
+        22.122989,
+        -100.923811,
+        false,
+        "social drinker",
+        "formal",
+        "solitary",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "green",
+        68,
+        "low",
+        1.72
+      ],
+      [
+        "U1009",
+        22.159426999999997,
+        -100.990448,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "on foot",
+        "single",
+        "kids",
+        1991,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "green",
+        75,
+        "medium",
+        1.78
+      ],
+      [
+        "U1010",
+        22.190889000000002,
+        -100.99866899999999,
+        false,
+        "social drinker",
+        "no preference",
+        "friends",
+        "car owner",
+        "married",
+        "kids",
+        1987,
+        "technology",
+        "hard-worker",
+        "none",
+        "student",
+        "green",
+        40,
+        "medium",
+        1.67
+      ],
+      [
+        "U1011",
+        23.724972,
+        -99.152856,
+        false,
+        "abstemious",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "purple",
+        68,
+        "medium",
+        1.78
+      ],
+      [
+        "U1012",
+        18.813348,
+        -99.243697,
+        false,
+        "casual drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1988,
+        "technology",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "red",
+        98,
+        "medium",
+        1.84
+      ],
+      [
+        "U1013",
+        22.174623999999998,
+        -100.993873,
+        false,
+        "abstemious",
+        "no preference",
+        "friends",
+        "public",
+        "widow",
+        "independent",
+        1982,
+        "retro",
+        "thrifty-protector",
+        "none",
+        "professional",
+        "blue",
+        80,
+        "medium",
+        1.75
+      ],
+      [
+        "U1014",
+        23.751607,
+        -99.170108,
+        false,
+        "abstemious",
+        {
+          "isNan": true
+        },
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "blue",
+        53,
+        "medium",
+        1.69
+      ],
+      [
+        "U1015",
+        22.12676,
+        -100.905209,
+        true,
+        "social drinker",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "black",
+        87,
+        "medium",
+        1.67
+      ],
+      [
+        "U1016",
+        22.156247,
+        -100.977402,
+        false,
+        "casual drinker",
+        "informal",
+        "friends",
+        "on foot",
+        "single",
+        "independent",
+        1991,
+        "eco-friendly",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "green",
+        70,
+        "medium",
+        1.67
+      ],
+      [
+        "U1017",
+        18.952614999999998,
+        -99.201616,
+        false,
+        "casual drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        {
+          "isNan": true
+        },
+        1991,
+        "retro",
+        "hunter-ostentatious",
+        "none",
+        "professional",
+        "orange",
+        79,
+        "medium",
+        1.79
+      ],
+      [
+        "U1018",
+        22.190949,
+        -100.917902,
+        true,
+        "casual drinker",
+        "formal",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "thrifty-protector",
+        "Christian",
+        "student",
+        "blue",
+        65,
+        "low",
+        1.83
+      ],
+      [
+        "U1019",
+        22.153385,
+        -100.97529399999999,
+        false,
+        "casual drinker",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "purple",
+        59,
+        "medium",
+        1.6
+      ],
+      [
+        "U1020",
+        18.878189000000003,
+        -99.22296899999999,
+        false,
+        "abstemious",
+        "no preference",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1982,
+        "technology",
+        "hard-worker",
+        "Catholic",
+        "professional",
+        "blue",
+        40,
+        "medium",
+        1.68
+      ],
+      [
+        "U1021",
+        23.730569,
+        -99.171883,
+        false,
+        "social drinker",
+        "no preference",
+        "family",
+        "car owner",
+        "single",
+        "dependent",
+        1984,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "purple",
+        108,
+        "medium",
+        1.62
+      ],
+      [
+        "U1022",
+        22.146708,
+        -100.964355,
+        false,
+        "casual drinker",
+        "formal",
+        "family",
+        "car owner",
+        "single",
+        "independent",
+        1990,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "purple",
+        46,
+        "medium",
+        1.54
+      ],
+      [
+        "U1023",
+        23.752943,
+        -99.166589,
+        false,
+        "casual drinker",
+        "informal",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1988,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "blue",
+        103,
+        "low",
+        1.79
+      ],
+      [
+        "U1024",
+        22.154021,
+        -100.976028,
+        {
+          "isNan": true
+        },
+        "abstemious",
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        1930,
+        "none",
+        "hard-worker",
+        "none",
+        {
+          "isNan": true
+        },
+        "yellow",
+        40,
+        {
+          "isNan": true
+        },
+        1.2
+      ],
+      [
+        "U1025",
+        22.125602999999998,
+        -100.907844,
+        false,
+        "social drinker",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        {
+          "isNan": true
+        },
+        1990,
+        "none",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "red",
+        65,
+        "medium",
+        1.79
+      ],
+      [
+        "U1026",
+        23.733,
+        -99.133,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "hunter-ostentatious",
+        "Catholic",
+        "student",
+        "red",
+        49,
+        "medium",
+        1.55
+      ],
+      [
+        "U1027",
+        22.16515,
+        -100.987015,
+        true,
+        "social drinker",
+        "no preference",
+        {
+          "isNan": true
+        },
+        "public",
+        "single",
+        "independent",
+        1989,
+        "retro",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "purple",
+        60,
+        "low",
+        1.65
+      ],
+      [
+        "U1028",
+        23.752874,
+        -99.16924200000001,
+        false,
+        "abstemious",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "hard-worker",
+        "Christian",
+        "student",
+        "blue",
+        77,
+        "medium",
+        1.63
+      ],
+      [
+        "U1029",
+        22.151796,
+        -100.989075,
+        true,
+        "casual drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "variety",
+        "conformist",
+        "Catholic",
+        "student",
+        "white",
+        58,
+        "low",
+        1.6
+      ],
+      [
+        "U1030",
+        18.844818,
+        -99.18275799999999,
+        false,
+        "casual drinker",
+        "formal",
+        "family",
+        "on foot",
+        "single",
+        "independent",
+        1991,
+        "eco-friendly",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "black",
+        64,
+        "medium",
+        1.75
+      ],
+      [
+        "U1031",
+        23.735698,
+        -99.159851,
+        false,
+        "abstemious",
+        "informal",
+        "solitary",
+        {
+          "isNan": true
+        },
+        "married",
+        "kids",
+        1992,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "unemployed",
+        "white",
+        40,
+        "medium",
+        1.6
+      ],
+      [
+        "U1032",
+        22.169184,
+        -100.98684300000001,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "blue",
+        40,
+        "medium",
+        1.75
+      ],
+      [
+        "U1033",
+        22.15,
+        -100.98299999999999,
+        false,
+        "social drinker",
+        "no preference",
+        "family",
+        "on foot",
+        "single",
+        {
+          "isNan": true
+        },
+        1991,
+        "none",
+        "hard-worker",
+        "none",
+        "student",
+        "yellow",
+        54,
+        "low",
+        1.6
+      ],
+      [
+        "U1034",
+        22.137178,
+        -101.01316899999999,
+        false,
+        "casual drinker",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "yellow",
+        50,
+        "medium",
+        1.58
+      ],
+      [
+        "U1035",
+        18.839671,
+        -99.223897,
+        true,
+        "casual drinker",
+        "no preference",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1985,
+        "variety",
+        "hunter-ostentatious",
+        "none",
+        "student",
+        "red",
+        69,
+        "medium",
+        1.75
+      ],
+      [
+        "U1036",
+        22.160572,
+        -100.989418,
+        false,
+        "social drinker",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "blue",
+        76,
+        "medium",
+        1.7
+      ],
+      [
+        "U1037",
+        22.15031,
+        -100.900536,
+        false,
+        "social drinker",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        52,
+        "low",
+        1.5
+      ],
+      [
+        "U1038",
+        22.125785999999998,
+        -100.94370500000001,
+        true,
+        "social drinker",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1930,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        97,
+        "low",
+        1.83
+      ],
+      [
+        "U1039",
+        23.738067,
+        -99.13990600000001,
+        false,
+        "social drinker",
+        "no preference",
+        "friends",
+        {
+          "isNan": true
+        },
+        "single",
+        "independent",
+        1989,
+        "none",
+        "hard-worker",
+        "none",
+        "student",
+        "yellow",
+        83,
+        "medium",
+        1.73
+      ],
+      [
+        "U1040",
+        18.895187,
+        -99.18039,
+        false,
+        "abstemious",
+        "no preference",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1994,
+        "none",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        73,
+        "medium",
+        1.64
+      ],
+      [
+        "U1041",
+        18.935191,
+        -99.23624000000001,
+        false,
+        "abstemious",
+        "no preference",
+        "friends",
+        "on foot",
+        "single",
+        "independent",
+        1985,
+        "eco-friendly",
+        "hunter-ostentatious",
+        "Catholic",
+        "professional",
+        "white",
+        40,
+        "medium",
+        1.62
+      ],
+      [
+        "U1042",
+        18.925773,
+        -99.219589,
+        false,
+        "abstemious",
+        "no preference",
+        "family",
+        "car owner",
+        "single",
+        "independent",
+        1943,
+        "technology",
+        "thrifty-protector",
+        "Christian",
+        "student",
+        "yellow",
+        40,
+        "high",
+        1.4
+      ],
+      [
+        "U1043",
+        23.77103,
+        -99.167082,
+        false,
+        "abstemious",
+        "no preference",
+        "solitary",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "hard-worker",
+        "none",
+        "student",
+        "white",
+        60,
+        "medium",
+        1.64
+      ],
+      [
+        "U1044",
+        18.95298,
+        -99.260789,
+        true,
+        "social drinker",
+        "informal",
+        "family",
+        "car owner",
+        "married",
+        "kids",
+        1969,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "professional",
+        "orange",
+        85,
+        "medium",
+        1.73
+      ],
+      [
+        "U1045",
+        22.156724,
+        -100.984268,
+        false,
+        "casual drinker",
+        "elegant",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1991,
+        "technology",
+        "thrifty-protector",
+        "Mormon",
+        "student",
+        "orange",
+        68,
+        "high",
+        1.6
+      ],
+      [
+        "U1046",
+        22.144415,
+        -100.933097,
+        false,
+        "social drinker",
+        "no preference",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1990,
+        "retro",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "black",
+        82,
+        "medium",
+        1.84
+      ],
+      [
+        "U1047",
+        22.142429,
+        -100.949147,
+        false,
+        "abstemious",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1992,
+        "retro",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "purple",
+        60,
+        "medium",
+        1.63
+      ],
+      [
+        "U1048",
+        22.142208,
+        -101.022785,
+        true,
+        "casual drinker",
+        "no preference",
+        {
+          "isNan": true
+        },
+        "public",
+        "single",
+        "independent",
+        1988,
+        "eco-friendly",
+        "thrifty-protector",
+        "none",
+        "student",
+        "green",
+        65,
+        "medium",
+        1.7
+      ],
+      [
+        "U1049",
+        22.15,
+        -100.98299999999999,
+        false,
+        "casual drinker",
+        "informal",
+        "solitary",
+        "public",
+        "single",
+        {
+          "isNan": true
+        },
+        1991,
+        "none",
+        "hard-worker",
+        "none",
+        "student",
+        "blue",
+        55,
+        {
+          "isNan": true
+        },
+        1.6
+      ],
+      [
+        "U1050",
+        23.758815,
+        -99.171216,
+        false,
+        "social drinker",
+        "no preference",
+        "family",
+        "car owner",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "hard-worker",
+        "none",
+        "student",
+        "green",
+        73,
+        "medium",
+        1.71
+      ],
+      [
+        "U1051",
+        18.877719,
+        -99.22299,
+        false,
+        "casual drinker",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1979,
+        "variety",
+        "thrifty-protector",
+        "none",
+        "professional",
+        "blue",
+        74,
+        "medium",
+        1.76
+      ],
+      [
+        "U1052",
+        22.138054999999998,
+        -100.93600500000001,
+        true,
+        "social drinker",
+        "no preference",
+        "family",
+        "on foot",
+        "single",
+        "independent",
+        1990,
+        "none",
+        "conformist",
+        "Catholic",
+        "student",
+        "blue",
+        85,
+        "low",
+        1.8
+      ],
+      [
+        "U1053",
+        22.175832999999997,
+        -100.986671,
+        false,
+        "casual drinker",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "red",
+        66,
+        "low",
+        1.72
+      ],
+      [
+        "U1054",
+        22.150682999999997,
+        -100.975342,
+        false,
+        "social drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1992,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        59,
+        "medium",
+        1.7
+      ],
+      [
+        "U1055",
+        22.143289000000003,
+        -100.98768299999999,
+        false,
+        "abstemious",
+        "no preference",
+        "family",
+        "car owner",
+        "married",
+        "dependent",
+        1952,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "professional",
+        "blue",
+        70,
+        "medium",
+        1.66
+      ],
+      [
+        "U1056",
+        22.168997,
+        -100.974376,
+        false,
+        "social drinker",
+        "informal",
+        "family",
+        "on foot",
+        "single",
+        "independent",
+        1930,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "yellow",
+        61,
+        "medium",
+        1.62
+      ],
+      [
+        "U1057",
+        22.196624,
+        -100.91216999999999,
+        true,
+        "casual drinker",
+        "formal",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "hunter-ostentatious",
+        "Catholic",
+        "student",
+        "yellow",
+        69,
+        "medium",
+        1.83
+      ],
+      [
+        "U1058",
+        22.205802,
+        -100.986081,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "red",
+        74,
+        "low",
+        1.78
+      ],
+      [
+        "U1059",
+        18.988278,
+        -99.097023,
+        false,
+        "abstemious",
+        "formal",
+        "friends",
+        "on foot",
+        "single",
+        "independent",
+        1987,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        57,
+        "medium",
+        1.69
+      ],
+      [
+        "U1060",
+        23.715238,
+        -99.15886400000001,
+        false,
+        "casual drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        82,
+        "medium",
+        1.84
+      ],
+      [
+        "U1061",
+        22.140388,
+        -100.937321,
+        false,
+        "social drinker",
+        "no preference",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1990,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "professional",
+        "blue",
+        40,
+        "medium",
+        1.76
+      ],
+      [
+        "U1062",
+        22.195826,
+        -101.00631700000001,
+        false,
+        "casual drinker",
+        "informal",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1985,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "yellow",
+        88,
+        "medium",
+        1.68
+      ],
+      [
+        "U1063",
+        23.745096,
+        -99.164357,
+        false,
+        "casual drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1988,
+        "eco-friendly",
+        "conformist",
+        "Catholic",
+        "student",
+        "red",
+        80,
+        "medium",
+        1.78
+      ],
+      [
+        "U1064",
+        22.139511,
+        -100.957002,
+        false,
+        "casual drinker",
+        "formal",
+        "solitary",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "variety",
+        "hunter-ostentatious",
+        "none",
+        "student",
+        "blue",
+        94,
+        "medium",
+        1.77
+      ],
+      [
+        "U1065",
+        23.733665,
+        -99.10561700000001,
+        false,
+        "abstemious",
+        "formal",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "conformist",
+        "Catholic",
+        "student",
+        "green",
+        55,
+        "medium",
+        1.72
+      ],
+      [
+        "U1066",
+        18.890695,
+        -99.157104,
+        false,
+        "abstemious",
+        "informal",
+        "solitary",
+        "public",
+        "single",
+        {
+          "isNan": true
+        },
+        1986,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "green",
+        45,
+        "low",
+        1.45
+      ],
+      [
+        "U1067",
+        23.752269000000002,
+        -99.168605,
+        false,
+        "abstemious",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1987,
+        "technology",
+        "thrifty-protector",
+        "Christian",
+        "student",
+        "green",
+        92,
+        "medium",
+        1.73
+      ],
+      [
+        "U1068",
+        23.752269000000002,
+        -99.168605,
+        false,
+        "casual drinker",
+        "informal",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1988,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        72,
+        "low",
+        1.57
+      ],
+      [
+        "U1069",
+        19.347641,
+        -99.130229,
+        false,
+        "social drinker",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1983,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "professional",
+        "black",
+        60,
+        "medium",
+        1.56
+      ],
+      [
+        "U1070",
+        23.753237,
+        -99.16686800000001,
+        false,
+        "casual drinker",
+        "informal",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "green",
+        47,
+        "low",
+        1.6
+      ],
+      [
+        "U1071",
+        22.154339,
+        -100.975342,
+        false,
+        "abstemious",
+        "formal",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1930,
+        "none",
+        "hunter-ostentatious",
+        "none",
+        "student",
+        "blue",
+        40,
+        "high",
+        1.73
+      ],
+      [
+        "U1072",
+        18.86826,
+        -99.21203299999999,
+        false,
+        "casual drinker",
+        "no preference",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1984,
+        "eco-friendly",
+        "thrifty-protector",
+        "Christian",
+        "student",
+        "red",
+        50,
+        "medium",
+        1.54
+      ],
+      [
+        "U1073",
+        22.15,
+        -100.98299999999999,
+        false,
+        "abstemious",
+        "informal",
+        "solitary",
+        "car owner",
+        "widow",
+        "kids",
+        1989,
+        "none",
+        "hard-worker",
+        "none",
+        "unemployed",
+        "yellow",
+        118,
+        "medium",
+        1.79
+      ],
+      [
+        "U1074",
+        18.917,
+        -99.25,
+        true,
+        "casual drinker",
+        "no preference",
+        "family",
+        "car owner",
+        "single",
+        "kids",
+        1967,
+        "eco-friendly",
+        "hard-worker",
+        "Catholic",
+        "professional",
+        "black",
+        68,
+        "medium",
+        1.7
+      ],
+      [
+        "U1075",
+        22.167575,
+        -100.960364,
+        false,
+        "casual drinker",
+        "informal",
+        "family",
+        "car owner",
+        "single",
+        "independent",
+        1991,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "white",
+        68,
+        "medium",
+        1.6
+      ],
+      [
+        "U1076",
+        22.156469,
+        -100.98554,
+        false,
+        "social drinker",
+        "elegant",
+        "family",
+        "public",
+        "married",
+        "kids",
+        1987,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        65,
+        "medium",
+        1.71
+      ],
+      [
+        "U1077",
+        22.156469,
+        -100.98554,
+        false,
+        "social drinker",
+        "elegant",
+        "family",
+        "public",
+        "married",
+        "kids",
+        1987,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        65,
+        "medium",
+        1.71
+      ],
+      [
+        "U1078",
+        22.172109,
+        -100.963199,
+        true,
+        "social drinker",
+        "informal",
+        "solitary",
+        "car owner",
+        "single",
+        "independent",
+        1983,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "professional",
+        "blue",
+        69,
+        "medium",
+        1.69
+      ],
+      [
+        "U1079",
+        18.917,
+        -99.25,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1992,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        {
+          "isNan": true
+        },
+        "black",
+        53,
+        "medium",
+        1.55
+      ],
+      [
+        "U1080",
+        23.743793,
+        -99.163397,
+        true,
+        "social drinker",
+        "formal",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1987,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "white",
+        80,
+        "low",
+        1.82
+      ],
+      [
+        "U1081",
+        22.207749,
+        -100.94238299999999,
+        false,
+        "casual drinker",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "green",
+        52,
+        "low",
+        1.54
+      ],
+      [
+        "U1082",
+        23.753061,
+        -99.166095,
+        true,
+        "abstemious",
+        "informal",
+        "friends",
+        "public",
+        "single",
+        {
+          "isNan": true
+        },
+        1989,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "black",
+        63,
+        "medium",
+        1.69
+      ],
+      [
+        "U1083",
+        22.13392,
+        -101.028373,
+        false,
+        "abstemious",
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        1981,
+        "none",
+        "hard-worker",
+        "none",
+        {
+          "isNan": true
+        },
+        "yellow",
+        40,
+        {
+          "isNan": true
+        },
+        1.6
+      ],
+      [
+        "U1084",
+        22.172524,
+        -101.005758,
+        true,
+        "casual drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "red",
+        65,
+        "medium",
+        1.6
+      ],
+      [
+        "U1085",
+        22.196787,
+        -100.936335,
+        false,
+        "abstemious",
+        "no preference",
+        "solitary",
+        "car owner",
+        "single",
+        "independent",
+        1988,
+        "technology",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "black",
+        84,
+        {
+          "isNan": true
+        },
+        1.7
+      ],
+      [
+        "U1086",
+        22.157281,
+        -100.98444,
+        false,
+        "social drinker",
+        "no preference",
+        "family",
+        "car owner",
+        "single",
+        "independent",
+        1991,
+        "variety",
+        "hunter-ostentatious",
+        "Catholic",
+        "student",
+        "red",
+        49,
+        "medium",
+        1.59
+      ],
+      [
+        "U1087",
+        23.753335999999997,
+        -99.16798399999999,
+        false,
+        "abstemious",
+        "no preference",
+        "solitary",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "black",
+        53,
+        "medium",
+        1.55
+      ],
+      [
+        "U1088",
+        22.142748,
+        -100.940664,
+        false,
+        "social drinker",
+        "informal",
+        "family",
+        "on foot",
+        "single",
+        "independent",
+        1991,
+        "none",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "blue",
+        62,
+        "medium",
+        1.6
+      ],
+      [
+        "U1089",
+        22.162562,
+        -100.99313000000001,
+        true,
+        "casual drinker",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "variety",
+        "conformist",
+        "Catholic",
+        "student",
+        "white",
+        54,
+        "low",
+        1.6
+      ],
+      [
+        "U1090",
+        22.158473,
+        -100.984268,
+        false,
+        "social drinker",
+        "no preference",
+        "friends",
+        "car owner",
+        "single",
+        "independent",
+        1988,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        50,
+        "medium",
+        1.54
+      ],
+      [
+        "U1091",
+        22.154677,
+        -100.949013,
+        false,
+        "casual drinker",
+        "no preference",
+        "family",
+        "car owner",
+        "single",
+        "independent",
+        1989,
+        "eco-friendly",
+        "thrifty-protector",
+        "none",
+        "student",
+        "red",
+        40,
+        "low",
+        1.7
+      ],
+      [
+        "U1092",
+        22.125365,
+        -100.947888,
+        false,
+        "abstemious",
+        "formal",
+        "solitary",
+        "public",
+        "single",
+        "dependent",
+        1990,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        {
+          "isNan": true
+        },
+        "red",
+        70,
+        "medium",
+        1.69
+      ],
+      [
+        "U1093",
+        18.871654,
+        -99.183251,
+        true,
+        "casual drinker",
+        "no preference",
+        "family",
+        "car owner",
+        "single",
+        "independent",
+        1990,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        80,
+        "medium",
+        1.67
+      ],
+      [
+        "U1094",
+        23.73944,
+        -99.16054799999999,
+        false,
+        "abstemious",
+        "informal",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "green",
+        59,
+        "medium",
+        1.71
+      ],
+      [
+        "U1095",
+        22.179865,
+        -101.018547,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "public",
+        "married",
+        "independent",
+        1986,
+        "variety",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "blue",
+        65,
+        "medium",
+        1.65
+      ],
+      [
+        "U1096",
+        22.1455,
+        -100.939593,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "eco-friendly",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "black",
+        40,
+        "medium",
+        1.2
+      ],
+      [
+        "U1097",
+        22.145471,
+        -100.939588,
+        false,
+        "abstemious",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "variety",
+        "hard-worker",
+        "Catholic",
+        "student",
+        "black",
+        58,
+        "medium",
+        1.64
+      ],
+      [
+        "U1098",
+        22.182571,
+        -100.96323199999999,
+        false,
+        "social drinker",
+        "formal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1991,
+        "none",
+        "thrifty-protector",
+        "Catholic",
+        "student",
+        "green",
+        68,
+        "medium",
+        1.76
+      ],
+      [
+        "U1099",
+        22.184862,
+        -100.970535,
+        true,
+        "social drinker",
+        "informal",
+        "family",
+        "public",
+        "single",
+        "independent",
+        1989,
+        "technology",
+        "conformist",
+        "Catholic",
+        "student",
+        "purple",
+        70,
+        "high",
+        2.0
+      ],
+      [
+        "U1100",
+        18.879729,
+        -99.06710600000001,
+        false,
+        "casual drinker",
+        "formal",
+        "friends",
+        "public",
+        "single",
+        "independent",
+        1990,
+        "eco-friendly",
+        "hard-worker",
+        "Christian",
+        "student",
+        "black",
+        40,
+        "medium",
+        1.65
+      ]
+    ]
+  },
+  "statistics": {
+    "name": null,
+    "numberOfColumns": 7,
+    "numberOfRows": 19,
+    "features": [
+      {
+        "name": "Mean",
+        "index": 0,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Median",
+        "index": 1,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Min",
+        "index": 2,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Max",
+        "index": 3,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Standard Deviation",
+        "index": 4,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Unique Values",
+        "index": 5,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Missing Values",
+        "index": 6,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      }
+    ],
+    "records": [
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        138,
+        0
+      ],
+      [
+        21.810389239130433,
+        22.1504965,
+        18.813348,
+        23.77103,
+        1.5525285961971305,
+        128,
+        0
+      ],
+      [
+        -100.29185721014493,
+        -100.93778850000001,
+        -101.05468,
+        -99.06710600000001,
+        0.8699164513922818,
+        126,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        2,
+        3
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        3,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        4,
+        5
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        3,
+        6
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        3,
+        7
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        3,
+        4
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        3,
+        11
+      ],
+      [
+        1984.7028985507247,
+        1989.0,
+        1930.0,
+        1994.0,
+        14.655364190844091,
+        21,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        5,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        4,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        5,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        4,
+        7
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        8,
+        0
+      ],
+      [
+        64.8695652173913,
+        65.0,
+        40.0,
+        120.0,
+        17.214332038938092,
+        49,
+        0
+      ],
+      [
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        {
+          "isNan": true
+        },
+        3,
+        7
+      ],
+      [
+        1.667536231884058,
+        1.69,
+        1.2,
+        2.0,
+        0.1304725358812126,
+        38,
+        0
+      ]
+    ]
+  },
+  "layout": {
+    "name": null,
+    "numberOfColumns": 2,
+    "numberOfRows": 19,
+    "features": [
+      {
+        "name": "Histogram",
+        "index": 0,
+        "elementType": "object",
+        "featureType": "Object Feature"
+      },
+      {
+        "name": "Boxplot",
+        "index": 1,
+        "elementType": "object",
+        "featureType": "Object Feature"
+      }
+    ],
+    "records": [
+      [
+        {
+          "Bins": [
+            {
+              "x": "U1001",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1002",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1003",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1004",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1005",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1006",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1007",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1008",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1009",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "U1010",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": 18.813348,
+              "dx": 0.49576820000000055,
+              "y": 26,
+              "numElements": 0
+            },
+            {
+              "x": 19.309116200000002,
+              "dx": 0.49576820000000055,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 19.804884400000002,
+              "dx": 0.495768199999997,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 20.3006526,
+              "dx": 0.49576820000000055,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 20.7964208,
+              "dx": 0.49576820000000055,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 21.292189,
+              "dx": 0.49576820000000055,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 21.7879572,
+              "dx": 0.49576820000000055,
+              "y": 85,
+              "numElements": 0
+            },
+            {
+              "x": 22.2837254,
+              "dx": 0.495768199999997,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 22.7794936,
+              "dx": 0.49576820000000055,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 23.2752618,
+              "dx": 0.49576820000000055,
+              "y": 25,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        {
+          "median": 22.1504965,
+          "boxBottom": 22.126029499999998,
+          "boxTop": 22.186642499999998,
+          "whiskerBottom": 22.118464000000003,
+          "whiskerTop": 22.207749,
+          "outliers": [
+            18.813348,
+            18.867,
+            18.871674,
+            18.878189000000003,
+            18.844818,
+            18.839671,
+            18.875641,
+            18.871678,
+            18.879729,
+            18.871654,
+            18.877719,
+            18.86826,
+            18.886698000000003,
+            18.925773,
+            18.890695,
+            18.917,
+            18.917,
+            18.895187,
+            18.927072,
+            18.935191,
+            18.943935,
+            18.940062,
+            18.952614999999998,
+            18.95298,
+            18.96479,
+            23.715238,
+            23.730569,
+            23.752943,
+            23.733,
+            23.752874,
+            23.735698,
+            23.738067,
+            23.77103,
+            23.758815,
+            23.751607,
+            23.745096,
+            23.733665,
+            23.752269000000002,
+            23.752269000000002,
+            23.753237,
+            23.743793,
+            23.753061,
+            23.753335999999997,
+            23.73944,
+            23.752264999999998,
+            23.742409,
+            23.724972,
+            23.753111999999998,
+            23.728798,
+            23.733
+          ]
+        }
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": -101.05468,
+              "dx": 0.1987574000000052,
+              "y": 86,
+              "numElements": 0
+            },
+            {
+              "x": -100.8559226,
+              "dx": 0.19875739999999098,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -100.65716520000001,
+              "dx": 0.1987574000000052,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -100.4584078,
+              "dx": 0.19875739999999098,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -100.25965040000001,
+              "dx": 0.1987574000000052,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -100.06089300000001,
+              "dx": 0.1987574000000052,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -99.8621356,
+              "dx": 0.19875739999999098,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -99.66337820000001,
+              "dx": 0.1987574000000052,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -99.4646208,
+              "dx": 0.19875739999999098,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -99.26586340000001,
+              "dx": 0.1987574000000052,
+              "y": 52,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        {
+          "median": -100.93778850000001,
+          "boxBottom": -100.98299999999999,
+          "boxTop": -99.18325150000001,
+          "whiskerBottom": -101.05468,
+          "whiskerTop": -99.06710600000001,
+          "outliers": []
+        }
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": false,
+              "dx": "",
+              "y": 109,
+              "numElements": 0
+            },
+            {
+              "x": true,
+              "dx": "",
+              "y": 26,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "abstemious",
+              "dx": "",
+              "y": 51,
+              "numElements": 0
+            },
+            {
+              "x": "casual drinker",
+              "dx": "",
+              "y": 47,
+              "numElements": 0
+            },
+            {
+              "x": "social drinker",
+              "dx": "",
+              "y": 40,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "no preference",
+              "dx": "",
+              "y": 53,
+              "numElements": 0
+            },
+            {
+              "x": "formal",
+              "dx": "",
+              "y": 41,
+              "numElements": 0
+            },
+            {
+              "x": "informal",
+              "dx": "",
+              "y": 35,
+              "numElements": 0
+            },
+            {
+              "x": "elegant",
+              "dx": "",
+              "y": 4,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "family",
+              "dx": "",
+              "y": 70,
+              "numElements": 0
+            },
+            {
+              "x": "friends",
+              "dx": "",
+              "y": 46,
+              "numElements": 0
+            },
+            {
+              "x": "solitary",
+              "dx": "",
+              "y": 16,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "public",
+              "dx": "",
+              "y": 82,
+              "numElements": 0
+            },
+            {
+              "x": "car owner",
+              "dx": "",
+              "y": 35,
+              "numElements": 0
+            },
+            {
+              "x": "on foot",
+              "dx": "",
+              "y": 14,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "single",
+              "dx": "",
+              "y": 122,
+              "numElements": 0
+            },
+            {
+              "x": "married",
+              "dx": "",
+              "y": 10,
+              "numElements": 0
+            },
+            {
+              "x": "widow",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "independent",
+              "dx": "",
+              "y": 113,
+              "numElements": 0
+            },
+            {
+              "x": "kids",
+              "dx": "",
+              "y": 11,
+              "numElements": 0
+            },
+            {
+              "x": "dependent",
+              "dx": "",
+              "y": 3,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": 1930.0,
+              "dx": 6.400000000000091,
+              "y": 7,
+              "numElements": 0
+            },
+            {
+              "x": 1936.4,
+              "dx": 6.399999999999864,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 1942.8,
+              "dx": 6.400000000000091,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 1949.2,
+              "dx": 6.399999999999864,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 1955.6,
+              "dx": 6.400000000000091,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 1962.0,
+              "dx": 6.400000000000091,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 1968.4,
+              "dx": 6.399999999999864,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 1974.8,
+              "dx": 6.400000000000091,
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": 1981.2,
+              "dx": 6.399999999999864,
+              "y": 24,
+              "numElements": 0
+            },
+            {
+              "x": 1987.6,
+              "dx": 6.400000000000091,
+              "y": 100,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        {
+          "median": 1989.0,
+          "boxBottom": 1987.0,
+          "boxTop": 1991.0,
+          "whiskerBottom": 1981,
+          "whiskerTop": 1994,
+          "outliers": [
+            1930,
+            1930,
+            1930,
+            1930,
+            1930,
+            1930,
+            1930,
+            1940,
+            1943,
+            1952,
+            1967,
+            1969,
+            1979
+          ]
+        }
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "variety",
+              "dx": "",
+              "y": 50,
+              "numElements": 0
+            },
+            {
+              "x": "technology",
+              "dx": "",
+              "y": 36,
+              "numElements": 0
+            },
+            {
+              "x": "none",
+              "dx": "",
+              "y": 30,
+              "numElements": 0
+            },
+            {
+              "x": "eco-friendly",
+              "dx": "",
+              "y": 16,
+              "numElements": 0
+            },
+            {
+              "x": "retro",
+              "dx": "",
+              "y": 6,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "hard-worker",
+              "dx": "",
+              "y": 61,
+              "numElements": 0
+            },
+            {
+              "x": "thrifty-protector",
+              "dx": "",
+              "y": 58,
+              "numElements": 0
+            },
+            {
+              "x": "hunter-ostentatious",
+              "dx": "",
+              "y": 12,
+              "numElements": 0
+            },
+            {
+              "x": "conformist",
+              "dx": "",
+              "y": 7,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "Catholic",
+              "dx": "",
+              "y": 99,
+              "numElements": 0
+            },
+            {
+              "x": "none",
+              "dx": "",
+              "y": 30,
+              "numElements": 0
+            },
+            {
+              "x": "Christian",
+              "dx": "",
+              "y": 7,
+              "numElements": 0
+            },
+            {
+              "x": "Mormon",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": "Jewish",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "student",
+              "dx": "",
+              "y": 113,
+              "numElements": 0
+            },
+            {
+              "x": "professional",
+              "dx": "",
+              "y": 15,
+              "numElements": 0
+            },
+            {
+              "x": "unemployed",
+              "dx": "",
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": "working-class",
+              "dx": "",
+              "y": 1,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "blue",
+              "dx": "",
+              "y": 45,
+              "numElements": 0
+            },
+            {
+              "x": "black",
+              "dx": "",
+              "y": 21,
+              "numElements": 0
+            },
+            {
+              "x": "green",
+              "dx": "",
+              "y": 19,
+              "numElements": 0
+            },
+            {
+              "x": "red",
+              "dx": "",
+              "y": 15,
+              "numElements": 0
+            },
+            {
+              "x": "yellow",
+              "dx": "",
+              "y": 12,
+              "numElements": 0
+            },
+            {
+              "x": "purple",
+              "dx": "",
+              "y": 11,
+              "numElements": 0
+            },
+            {
+              "x": "white",
+              "dx": "",
+              "y": 11,
+              "numElements": 0
+            },
+            {
+              "x": "orange",
+              "dx": "",
+              "y": 4,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": 40.0,
+              "dx": 8.0,
+              "y": 23,
+              "numElements": 0
+            },
+            {
+              "x": 48.0,
+              "dx": 8.0,
+              "y": 20,
+              "numElements": 0
+            },
+            {
+              "x": 56.0,
+              "dx": 8.0,
+              "y": 21,
+              "numElements": 0
+            },
+            {
+              "x": 64.0,
+              "dx": 8.0,
+              "y": 33,
+              "numElements": 0
+            },
+            {
+              "x": 72.0,
+              "dx": 8.0,
+              "y": 15,
+              "numElements": 0
+            },
+            {
+              "x": 80.0,
+              "dx": 8.0,
+              "y": 13,
+              "numElements": 0
+            },
+            {
+              "x": 88.0,
+              "dx": 8.0,
+              "y": 6,
+              "numElements": 0
+            },
+            {
+              "x": 96.0,
+              "dx": 8.0,
+              "y": 3,
+              "numElements": 0
+            },
+            {
+              "x": 104.0,
+              "dx": 8.0,
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": 112.0,
+              "dx": 8.0,
+              "y": 2,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        {
+          "median": 65.0,
+          "boxBottom": 53.0,
+          "boxTop": 74.75,
+          "whiskerBottom": 40,
+          "whiskerTop": 103,
+          "outliers": [
+            108,
+            118,
+            120,
+            110
+          ]
+        }
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": "medium",
+              "dx": "",
+              "y": 91,
+              "numElements": 0
+            },
+            {
+              "x": "low",
+              "dx": "",
+              "y": 35,
+              "numElements": 0
+            },
+            {
+              "x": "high",
+              "dx": "",
+              "y": 5,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        null
+      ],
+      [
+        {
+          "Bins": [
+            {
+              "x": 1.2,
+              "dx": 0.08000000000000007,
+              "y": 5,
+              "numElements": 0
+            },
+            {
+              "x": 1.28,
+              "dx": 0.07999999999999985,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 1.3599999999999999,
+              "dx": 0.08000000000000007,
+              "y": 1,
+              "numElements": 0
+            },
+            {
+              "x": 1.44,
+              "dx": 0.08000000000000007,
+              "y": 2,
+              "numElements": 0
+            },
+            {
+              "x": 1.52,
+              "dx": 0.08000000000000007,
+              "y": 17,
+              "numElements": 0
+            },
+            {
+              "x": 1.6,
+              "dx": 0.07999999999999985,
+              "y": 35,
+              "numElements": 0
+            },
+            {
+              "x": 1.68,
+              "dx": 0.08000000000000007,
+              "y": 46,
+              "numElements": 0
+            },
+            {
+              "x": 1.76,
+              "dx": 0.07999999999999985,
+              "y": 26,
+              "numElements": 0
+            },
+            {
+              "x": 1.8399999999999999,
+              "dx": 0.08000000000000007,
+              "y": 5,
+              "numElements": 0
+            },
+            {
+              "x": 1.92,
+              "dx": 0.08000000000000007,
+              "y": 1,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 138
+        },
+        {
+          "median": 1.69,
+          "boxBottom": 1.6,
+          "boxTop": 1.75,
+          "whiskerBottom": 1.4,
+          "whiskerTop": 1.9,
+          "outliers": [
+            1.2,
+            1.2,
+            1.2,
+            1.2,
+            1.2,
+            2.0
+          ]
+        }
+      ]
+    ]
+  }
+}

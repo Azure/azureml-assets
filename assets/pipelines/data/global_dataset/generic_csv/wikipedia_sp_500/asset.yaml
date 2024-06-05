@@ -1,0 +1,6 @@
+name: wikipedia_sp_500
+version: 2
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

@@ -12,16 +12,17 @@ import argparse
 import json
 import openai
 import glob
-import tempfile
 from typing import Union
 
-from constants import TASK, ForecastingConfigContract, ArgumentLiterals, SupportedFileExtensions
+from constants import (
+    TASK, ForecastingConfigContract, ArgumentLiterals, SupportedFileExtensions, OpenAIConstants
+)
 from workspace_utils import (get_connection_by_id_v2,
                              workspace_connection_to_credential,
                              get_target_from_connection,
                              get_metadata_from_connection)
 from logging_utilities import get_logger, log_traceback
-from mltable import DataType, from_json_lines_files, load
+from mltable import load
 from task_factory.base import BasePredictor
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
@@ -652,29 +653,6 @@ def read_model_prediction_data(
         _type_: _description_
     """
     if task in constants.IMAGE_TASKS:
-        try:
-            # If the input file is a JSONL, then generate an MLTable for it.
-            if _get_file_extension(file_path) == ".jsonl":
-                # Make the MLTable object, converting the image_url column.
-                generated_mltable = True
-                table = from_json_lines_files([{"file": file_path}])
-                table = table.convert_column_types({"image_url": DataType.to_stream()})
-
-                # Save the MLTable object to a temporary file.
-                temporary_directory = tempfile.TemporaryDirectory()
-                file_path = temporary_directory.name
-                table.save(file_path)
-            else:
-                # The input file is an MLTable and a new MLTable does not need to be generated.
-                generated_mltable = False
-
-        except Exception as e:
-            message = "Could not generate MLTable for JSONL file."
-            exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
-            log_traceback(exception, logger, message)
-            raise exception
-
-        # Read the dataset from the MLTable.
         from image_dataset import get_image_dataset
         df = get_image_dataset(
             task_type=task, test_mltable=file_path,
@@ -682,14 +660,8 @@ def read_model_prediction_data(
         )
         data = iter([df])
         file_ext = SupportedFileExtensions.IMAGE
-
-        # If a new MLTable was generated, delete it.
-        if generated_mltable:
-            temporary_directory.cleanup()
-
     else:
         data, file_ext = read_data(file_path, batch_size, nrows)
-
     return data, file_ext
 
 
@@ -751,7 +723,7 @@ def read_dataframe(file_path, batch_size=None, nrows=None):
     Returns:
         _type_: _description_
     """
-    file_extension = _get_file_extension(file_path)
+    file_extension = os.path.splitext(file_path)[1].lower()
     logger.info("Detected File Format: {}".format(file_extension))
     if batch_size:
         nrows = None
@@ -1165,25 +1137,33 @@ def get_sample_data_and_column_names(args):
 def openai_init(llm_config, **openai_params):
     """Initialize OpenAI Params."""
     logger.info(f"Using llm_config: {json.dumps(llm_config, indent=2)}")
-    openai_api_type = openai_params.get("openai_api_type", "azure")
-    openai_api_version = openai_params.get("openai_api_version", "2023-03-15-preview")
+    openai_api_type = openai_params.get(
+        OpenAIConstants.OPENAI_API_TYPE, OpenAIConstants.DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_TYPE
+    )
+    openai_api_version = openai_params.get(
+        OpenAIConstants.OPENAI_API_VERSION, OpenAIConstants.DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_VERSION
+    )
 
-    connection_id = os.environ.get(constants.OpenAIConstants.CONNECTION_STRING_KEY, None)
+    connection_id = os.environ.get(OpenAIConstants.CONNECTION_STRING_KEY, None)
     fetch_from_connection = False
     if connection_id is not None:
         connection = get_connection_by_id_v2(connection_id)
         credential = workspace_connection_to_credential(connection)
-        if hasattr(credential, 'key'):
-            llm_config["key"] = credential.key
+        if hasattr(credential, OpenAIConstants.KEY):
+            llm_config[OpenAIConstants.KEY] = credential.key
             target = get_target_from_connection(connection)
-            llm_config["base"] = target
+            llm_config[OpenAIConstants.BASE] = target
             metadata = get_metadata_from_connection(connection)
-            openai_api_type = metadata.get('apiType', "azure")
-            openai_api_version = metadata.get('apiVersion', "2023-03-15-preview")
+            openai_api_type = metadata.get(
+                OpenAIConstants.METADATA_API_TYPE, OpenAIConstants.DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_TYPE
+            )
+            openai_api_version = metadata.get(
+                OpenAIConstants.METADATA_API_VERSION, OpenAIConstants.DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_VERSION
+            )
             logger.info("Using workspace connection key for OpenAI")
             fetch_from_connection = True
     if not fetch_from_connection:
-        if llm_config.get("type") == "azure_open_ai":
+        if llm_config.get(OpenAIConstants.TYPE) == OpenAIConstants.DEFAULT_OPENAI_CONFIG_TYPE:
             ws = TestRun().workspace
             keyvault = ws.get_default_keyvault()
             secrets = keyvault.get_secrets(secrets=[
@@ -1200,9 +1180,9 @@ def openai_init(llm_config, **openai_params):
                 secrets["OPENAI-API-KEY"] = secrets["BAKER-OPENAI-API-KEY"]
 
             if secrets["OPENAI-API-KEY"] is not None:
-                llm_config["key"] = secrets["OPENAI-API-KEY"]
+                llm_config[OpenAIConstants.KEY] = secrets["OPENAI-API-KEY"]
             if secrets["OPENAI-API-BASE"] is not None:
-                llm_config["base"] = secrets["OPENAI-API-BASE"]
+                llm_config[OpenAIConstants.BASE] = secrets["OPENAI-API-BASE"]
         else:
             logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
             logger.warn("Skipping OpenAI Initialization.")
@@ -1210,10 +1190,14 @@ def openai_init(llm_config, **openai_params):
 
     openai.api_version = openai_api_version
     openai.api_type = openai_api_type
-    openai.api_base = llm_config.get("base", None)
-    openai.api_key = llm_config.get("key", None)
+    openai.api_base = llm_config.get(OpenAIConstants.BASE, None)
+    openai.api_key = llm_config.get(OpenAIConstants.KEY, None)
 
-    if not all([llm_config.get("base", None), llm_config.get("key", None), llm_config.get('deployment_name', None)]):
+    if not all([
+        llm_config.get(OpenAIConstants.BASE, None),
+        llm_config.get(OpenAIConstants.KEY, None),
+        llm_config.get(OpenAIConstants.DEPLOYMENT_NAME, None)
+    ]):
         logger.warn("No Connection String Provided and no credentials present in workspace's keyvault.")
         logger.warn("Skipping OpenAI Initialization.")
         return {}
@@ -1221,8 +1205,8 @@ def openai_init(llm_config, **openai_params):
     openai_final_params = {
         "api_version": openai_api_version,
         "api_type": openai_api_type,
-        "api_base": llm_config["base"],
-        "api_key": llm_config["key"],
-        "deployment_id": llm_config['deployment_name']
+        "api_base": llm_config[OpenAIConstants.BASE],
+        "api_key": llm_config[OpenAIConstants.KEY],
+        "deployment_id": llm_config[OpenAIConstants.DEPLOYMENT_NAME]
     }
     return openai_final_params

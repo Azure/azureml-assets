@@ -5,6 +5,7 @@
 
 import pytest
 from unittest.mock import Mock, patch
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient, BlobServiceClient
@@ -62,9 +63,15 @@ class TestStoreUrl:
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
 
-        # before we support credential-less data, should raise InvalidInputError
-        with pytest.raises(InvalidInputError):
-            store_url.get_container_client()
+        # We support credential-less with secure store url.
+        if store_url._is_secure():
+            container = store_url.get_container_client()
+            assert container is not None
+            assert isinstance(container.credential, AzureMLOnBehalfOfCredential)
+        else:
+            with pytest.raises(InvalidInputError,
+                               match=r"Token credential is only supported with secure HTTPS protocol..*"):
+                store_url.get_container_client()
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, credential_type, relative_path, expected_protocol, expected_hdfs_path, "
@@ -113,21 +120,41 @@ class TestStoreUrl:
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-                "AzureDataLakeGen2", None, "/", "http",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "/", None,
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container")
+                "AzureDataLakeGen2", None, "/", "https",
+                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "/", AzureMLOnBehalfOfCredential(),
+                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
+                                 AzureMLOnBehalfOfCredential())
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "None", "/rpath", "http",
-                "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "/rpath", None,
-                ContainerClient("http://my_account.blob.core.windows.net", "my_container")
-            )
+                "AzureBlob", "None", "/rpath", "https",
+                "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
+                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "/rpath", AzureMLOnBehalfOfCredential(),
+                ContainerClient("https://my_account.blob.core.windows.net", "my_container",
+                                AzureMLOnBehalfOfCredential())
+            ),
+            # TODO: Update this UT with how the unsecure URL should work with credential-less. Or can we remove it?
+            # (
+            #     "azureml://datastores/my_datastore/paths/path/to/folder",
+            #     "AzureDataLakeGen2", None, "/", "http",
+            #     "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
+            #     "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
+            #     "/", None,
+            #     FileSystemClient("https://my_account.dfs.core.windows.net", "my_container")
+            # ),
+            # (
+            #     "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
+            #     "/paths/path/to/folder",
+            #     "AzureBlob", "None", "/rpath", "http",
+            #     "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
+            #     "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
+            #     "/rpath", None,
+            #     ContainerClient("http://my_account.blob.core.windows.net", "my_container")
+            # )
         ]
     )
     def test_store_url_with_azureml_path(
@@ -298,6 +325,9 @@ def assert_credentials_are_equal(credential1, credential2):
         assert credential1.account_key == credential2.account_key
     elif isinstance(credential1, DefaultAzureCredential):
         assert isinstance(credential2, DefaultAzureCredential)
+    elif isinstance(credential1, AzureMLOnBehalfOfCredential):
+        assert isinstance(credential2, AzureMLOnBehalfOfCredential)
+        assert credential1._credential.get_client() == credential2._credential.get_client()
     else:
         raise NotImplementedError(f"Unsupported credential type: {type(credential1)}")
 
@@ -318,6 +348,6 @@ def assert_container_clients_are_equal(container_client1, container_client2):
     elif isinstance(container_client1, FileSystemClient):
         assert isinstance(container_client2, FileSystemClient)
         assert container_client1.file_system_name == container_client2.file_system_name
-        assert_container_clients_properties_are_equal
+        assert_container_clients_properties_are_equal()
     else:
         raise NotImplementedError(f"Unsupported container client type: {type(container_client1)}")

@@ -7,12 +7,14 @@ from urllib.parse import urlparse
 import os
 import re
 from typing import Union, Tuple
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
 from azureml.core import Workspace, Run, Datastore
 from azureml.exceptions import UserErrorException
+from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -74,21 +76,18 @@ class StoreUrl:
             url = f"{url}/{relative_path.lstrip('/')}"
         return url
 
-    def get_credential(self) -> Union[str, ClientSecretCredential, AzureSasCredential, None]:
+    def get_credential(self) -> Union[
+            str, ClientSecretCredential, AzureSasCredential, AzureMLOnBehalfOfCredential, None]:
         """Get credential for this store url."""
         if not self._datastore:
-            raise InvalidInputError(
-                "abfs(s), wasb(s) and http(s) URLs are credential less and are NOT supported by Model Monitoring job, "
-                "please use azureml file system path with credential data store, e.g. "
-                "azureml://datastores/<credential_datastore_name>/paths/<path_to_data>")
+            return AzureMLOnBehalfOfCredential()
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
                 return self._datastore.account_key
             elif self._datastore.credential_type == "Sas":
                 return AzureSasCredential(self._datastore.sas_token)
             elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
-                raise InvalidInputError("Credential-less input data is NOT supported for Model Monitoring job, "
-                                        f"please add credential to datastore {self._datastore.name}.")
+                return AzureMLOnBehalfOfCredential()
             else:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
                                         "only AccountKey and Sas are supported.")
@@ -97,20 +96,28 @@ class StoreUrl:
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
             else:
-                raise InvalidInputError("Credential-less input data is NOT supported for Model Monitoring job. "
-                                        f"Please add credential to datastore {self._datastore.name}.")
+                return AzureMLOnBehalfOfCredential()
         else:
             raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
                                     "only Azure Blob and Azure Data Lake Gen2 are supported.")
 
-    def get_container_client(self, credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) \
-            -> Union[FileSystemClient, ContainerClient, None]:
+    def is_credentials_less(self) -> bool:
+        """Check if the store url is credential less."""
+        credential = self.get_credential()
+        return credential is None or isinstance(credential, AzureMLOnBehalfOfCredential)
+
+    def get_container_client(
+            self,
+            credential: Union[
+                str, AzureSasCredential, ClientSecretCredential, AzureMLOnBehalfOfCredential, None] = None
+            ) -> Union[FileSystemClient, ContainerClient, None]:
         """
         Get container client for this store url.
 
-        :param credential: if provided, it contains the credential to authorize the container to access the data,
-        if not provided, will retrieve credential from datastore. It's a special handling for access dataref file in
-        executors.
+        :param credential: if provided, it contains the credential to authorize the container to access the data;
+        if not provided, will retrieve credential from datastore,
+        if datastore absent or is credential-less, use Azureml OBO credential.
+        It's a special handling for access dataref file in executors.
         """
         if not self.account_name:
             # local or not supported store type
@@ -120,9 +127,15 @@ class StoreUrl:
         if self.store_type == "blob" and self._datastore \
                 and (self._datastore.credential_type and self._datastore.credential_type != "None"):
             return self._datastore.blob_service.get_container_client(self.container_name)
-        # TODO fallback to DefaultAzureCredential for credential less datastore for now, may need better fallback logic
+
+        # fallback to AzureMLOnBehalfOfCredential for credential less datastore for now.
+        # Requires that we submit MoMo component with managed identity or will fail later on.
         credential = credential or self.get_credential()
         account_url_scheme = "https" if self._is_secure() else "http"
+        if not self._is_secure() and isinstance(credential, AzureMLOnBehalfOfCredential):
+            raise InvalidInputError("Token credential is only supported with secure HTTPS protocol."
+                                    "Please use a secure url for the StoreUrl.")
+
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
                                    container_name=self.container_name, credential=credential)
@@ -139,12 +152,18 @@ class StoreUrl:
 
         container_client = self.get_container_client()
         relative_path = relative_path.strip("/")
-        if isinstance(container_client, FileSystemClient):
-            return container_client.get_directory_client(f"{self.path}/{relative_path}").exists()
-        else:
-            full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
-            blobs = container_client.list_blobs(name_starts_with=full_path)
-            return any(blobs)
+        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
+        try:
+            if isinstance(container_client, FileSystemClient):
+                return container_client.get_directory_client(f"{self.path}/{relative_path}").exists()
+            else:
+                full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
+                blobs = container_client.list_blobs(name_starts_with=full_path)
+                return any(blobs)
+        except CredentialUnavailableError as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
+            raise cue
 
     def is_local_path(self) -> bool:
         """Check if the store url is a local path."""
@@ -164,12 +183,18 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
-        if isinstance(container_client, FileSystemClient):
-            with container_client.get_file_client(full_path) as file_client:
-                return file_client.download_file().readall().decode()
-        else:
-            with container_client.get_blob_client(full_path) as blob_client:
-                return blob_client.download_blob().readall().decode()
+        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
+        try:
+            if isinstance(container_client, FileSystemClient):
+                with container_client.get_file_client(full_path) as file_client:
+                    return file_client.download_file().readall().decode()
+            else:
+                with container_client.get_blob_client(full_path) as blob_client:
+                    return blob_client.download_blob().readall().decode()
+        except CredentialUnavailableError as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
+            raise cue
 
     def write_file(self, file_content: Union[str, bytes], relative_path: str = None, overwrite: bool = False,
                    credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> dict:
@@ -179,12 +204,17 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
-        if isinstance(container_client, FileSystemClient):
-            with container_client.get_file_client(full_path) as file_client:
-                return file_client.upload_data(file_content, overwrite)
-        else:
-            with container_client.get_blob_client(full_path) as blob_client:
-                return blob_client.upload_blob(file_content, overwrite=overwrite)
+        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
+        try:
+            if isinstance(container_client, FileSystemClient):
+                with container_client.get_file_client(full_path) as file_client:
+                    return file_client.upload_data(file_content, overwrite)
+            else:
+                with container_client.get_blob_client(full_path) as blob_client:
+                    return blob_client.upload_blob(file_content, overwrite=overwrite)
+        except CredentialUnavailableError as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
 
     @staticmethod
     def _normalize_local_path(local_path: str) -> str:
