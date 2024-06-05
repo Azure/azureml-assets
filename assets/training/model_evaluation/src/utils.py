@@ -12,6 +12,7 @@ import argparse
 import json
 import openai
 import glob
+import tempfile
 from typing import Union
 
 from constants import (
@@ -22,7 +23,7 @@ from workspace_utils import (get_connection_by_id_v2,
                              get_target_from_connection,
                              get_metadata_from_connection)
 from logging_utilities import get_logger, log_traceback
-from mltable import load
+from mltable import DataType, from_json_lines_files, load
 from task_factory.base import BasePredictor
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
@@ -653,6 +654,29 @@ def read_model_prediction_data(
         _type_: _description_
     """
     if task in constants.IMAGE_TASKS:
+        try:
+            # If the input file is a JSONL, then generate an MLTable for it.
+            if _get_file_extension(file_path) == ".jsonl":
+                # Make the MLTable object, converting the image_url column.
+                generated_mltable = True
+                table = from_json_lines_files([{"file": file_path}])
+                table = table.convert_column_types({"image_url": DataType.to_stream()})
+
+                # Save the MLTable object to a temporary file.
+                temporary_directory = tempfile.TemporaryDirectory()
+                file_path = temporary_directory.name
+                table.save(file_path)
+            else:
+                # The input file is an MLTable and a new MLTable does not need to be generated.
+                generated_mltable = False
+
+        except Exception as e:
+            message = "Could not generate MLTable for JSONL file."
+            exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
+            log_traceback(exception, logger, message)
+            raise exception
+
+        # Read the dataset from the MLTable.
         from image_dataset import get_image_dataset
         df = get_image_dataset(
             task_type=task, test_mltable=file_path,
@@ -660,8 +684,14 @@ def read_model_prediction_data(
         )
         data = iter([df])
         file_ext = SupportedFileExtensions.IMAGE
+
+        # If a new MLTable was generated, delete it.
+        if generated_mltable:
+            temporary_directory.cleanup()
+
     else:
         data, file_ext = read_data(file_path, batch_size, nrows)
+
     return data, file_ext
 
 
@@ -723,7 +753,7 @@ def read_dataframe(file_path, batch_size=None, nrows=None):
     Returns:
         _type_: _description_
     """
-    file_extension = os.path.splitext(file_path)[1].lower()
+    file_extension = _get_file_extension(file_path)
     logger.info("Detected File Format: {}".format(file_extension))
     if batch_size:
         nrows = None
