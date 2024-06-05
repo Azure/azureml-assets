@@ -8,6 +8,7 @@ dependencies:
 - pip:
   - mlflow==2.6.0
   - torch==1.13.1
+  - torchvision==0.14.1
   - transformers==4.33.2
   - diffusers==0.23.0
   - accelerate==0.22.0
