@@ -275,6 +275,8 @@ def get_object_detection_dataset(
 def get_image_dataset(task_type, test_mltable, input_column_names, label_column_name, settings={}):
     """
     Return test dataset for image tasks from mltable.
+    Important details: for vision datasets, the MLTable must have columns "image_url" and "label". For some tasks, the
+    output Pandas dataframe may have other column names to respect the model input expectations.
 
     :param task_type: The type of the prediction task
     :param test_mltable: The path to the prediction input mltable

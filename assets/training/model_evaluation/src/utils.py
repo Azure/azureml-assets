@@ -1112,12 +1112,9 @@ def get_sample_data_and_column_names(args):
         if args[ArgumentLiterals.INPUT_COLUMN_NAMES]:
             input_column_names = args[ArgumentLiterals.INPUT_COLUMN_NAMES]
         else:
-            if task in [constants.TASK.IMAGE_GENERATION]:
-                input_column_names = [ImageDataFrameParams.GENERATION_PROMPT]
-            else:
-                input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
-                if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
-                    input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
+            input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
+            if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
+                input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
 
         if args[ArgumentLiterals.LABEL_COLUMN_NAME]:
             if len(args[ArgumentLiterals.LABEL_COLUMN_NAME]) != 1:
