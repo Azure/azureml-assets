@@ -47,12 +47,9 @@ class BatchValidationError:
     param: Optional[str] = None
 
     def __init__(
-            self,
-            code: AoaiBatchValidationErrorCode,
-            message: BatchValidationErrorMessage,
-            line: Optional[int] = None,
-            param: Optional[str] = None
-        ):
+        self, code: AoaiBatchValidationErrorCode, message: BatchValidationErrorMessage,
+        line: Optional[int] = None, param: Optional[str] = None
+    ):
         self.code = code
         self.message = message
         self.line = line
