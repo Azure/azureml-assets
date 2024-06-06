@@ -1,5 +1,5 @@
 name: crm_upselling_labels_shared
-version: 2
+version: 3
 type: data
 spec: spec.yaml
 categories:

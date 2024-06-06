@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "crm_appetency_labels_shared"
-version: "2"
-properties:
+version: "3"
+tags:
   azureml.Designer: true
   azureml.Designer.name: CRM Appetency Labels Shared
   azureml.Designer.dataTypeId: DataFrameDirectory
