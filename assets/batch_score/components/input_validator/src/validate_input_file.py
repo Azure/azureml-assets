@@ -51,8 +51,8 @@ def get_row_validators() -> List[BaseValidator]:
     ]
 
 
-def main():
-    """Main function to validate the input file."""
+def validate_input_file():
+    """Validate the input file."""
     try:
         args = parse_args()
 
@@ -125,4 +125,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    validate_input_file()

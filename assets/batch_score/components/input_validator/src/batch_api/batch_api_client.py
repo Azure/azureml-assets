@@ -18,7 +18,7 @@ class BatchApiClient:
     """Client for interacting with the MBI service."""
 
     def __init__(self) -> None:
-        """Initializes the BatchApiClient."""
+        """Initialize the BatchApiClient."""
         self._credential = DefaultAzureCredential()
 
     def submit_validation_result(self, data_validation_result: DataValidationResult) -> None:
