@@ -43,3 +43,4 @@ dependencies:
   - tika~=2.6.0
   - cryptography>=41.0.4
   - azure-ai-formrecognizer==3.3.1
+  - werkzeug>=3.0.3
