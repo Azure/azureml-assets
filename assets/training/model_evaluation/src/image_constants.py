@@ -57,7 +57,8 @@ class ODISLiterals:
     WIDTH = "width"
     LABEL_INDEX = "label_index"
 
+
 class GenerationLiterals:
-    """."""
+    """Image generation literals."""
 
     CAPTION_SEPARATOR = "||"
