@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: batch_score_input_validator
+version: 0.0.3
+
+display_name: Batch Score Input Validator
+description: Validates the input data for batch scoring
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/15
+
+code: ../src
+command: python validate_input_file.py --input_data_file ${{inputs.input_data_file}}
+
+inputs:
+  input_data_file:
+    type: uri_file
+    mode: download
+    description: The path to the input data file in the datastore
+    optional: false
