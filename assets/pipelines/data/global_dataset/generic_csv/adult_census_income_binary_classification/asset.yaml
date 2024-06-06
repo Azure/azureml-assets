@@ -1,5 +1,5 @@
 name: adult_census_income_binary_classification
-version: 2
+version: 3
 type: data
 spec: spec.yaml
 categories:
