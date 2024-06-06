@@ -46,3 +46,4 @@ dependencies:
   - sqlalchemy==1.4.46
   - tika~=2.6.0
   - tiktoken==0.5.2
+  - werkzeug>=3.0.3
