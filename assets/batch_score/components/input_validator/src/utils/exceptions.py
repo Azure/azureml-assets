@@ -1,13 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Batch Validation Exceptions"""
+"""Batch Validation Exceptions."""
 
 from typing import Optional
 
 
 class AoaiBatchValidationErrorCode:
-    """Aoai Batch Validation Error Codes"""
+    """Aoai Batch Validation Error Codes."""
 
     INVALID_JSON_LINE = "invalid_json_line"
     MAXIMUM_REQUESTS_EXCEEDED = "maximum_requests_exceeded"
@@ -27,7 +27,7 @@ class AoaiBatchValidationErrorCode:
 
 
 class BatchValidationErrorMessage:
-    """Batch Validation Error Messages"""
+    """Batch Validation Error Messages."""
 
     INVALID_JSON_LINE = "The input line is not parsable as valid JSON."
     INVALID_URL = "The URL must be the same for all requests."
@@ -39,7 +39,7 @@ class BatchValidationErrorMessage:
 
 
 class BatchValidationError:
-    """Batch Validation Error"""
+    """Batch Validation Error."""
 
     code: AoaiBatchValidationErrorCode
     message: BatchValidationErrorMessage
@@ -50,6 +50,7 @@ class BatchValidationError:
         self, code: AoaiBatchValidationErrorCode, message: BatchValidationErrorMessage,
         line: Optional[int] = None, param: Optional[str] = None
     ):
+        """Initialize the BatchValidationError."""
         self.code = code
         self.message = message
         self.line = line

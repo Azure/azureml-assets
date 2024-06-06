@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Schema Validator"""
+"""Schema Validator."""
 
 import json
 from typing import Union
@@ -21,14 +21,14 @@ from utils.exceptions import (
 
 
 class SchemaValidator(BaseValidator):
-    """Validates that the row is a JSON object with the expected schema"""
+    """Validate that the row is a JSON object with the expected schema."""
 
     def __init__(self) -> None:
+        """Initialize the SchemaValidator."""
         pass
 
     def validate_row(self, row_context: RowValidationContext) -> RowValidationResult:
-        """Validates that the row is a JSON object with the expected schema"""
-
+        """Validate that the row is a JSON object with the expected schema."""
         result: RowValidationResult = RowValidationResult()
 
         try:
@@ -45,8 +45,7 @@ class SchemaValidator(BaseValidator):
         return result
 
     def get_valid_input_row(self, data: dict) -> InputRow:
-        """Get a valid input row object from a dictionary"""
-
+        """Get a valid input row object from a dictionary."""
         return InputRow(
             custom_id=data["custom_id"],
             method=data["method"],
@@ -55,8 +54,7 @@ class SchemaValidator(BaseValidator):
         )
 
     def get_valid_request_body(self, data: dict) -> Union[RequestBody, ChatCompletionRequestBody]:
-        """Get a valid request body object from a dictionary"""
-
+        """Get a valid request body object from a dictionary."""
         if "messages" in data:
             return ChatCompletionRequestBody(
                 model=data["model"],
@@ -71,8 +69,7 @@ class SchemaValidator(BaseValidator):
             )
 
     def get_valid_message(self, data: dict) -> Union[SystemMessage, UserMessage]:
-        """Get a valid message object from a dictionary"""
-
+        """Get a valid message object from a dictionary."""
         if data["role"] in ["system", "assistant", "tool"]:
             return SystemMessage(
                 role=data["role"],

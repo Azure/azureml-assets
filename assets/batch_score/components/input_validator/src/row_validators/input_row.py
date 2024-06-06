@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Input Row"""
+"""Input Row."""
 
 from dataclasses import dataclass
 from typing import Union
@@ -14,7 +14,7 @@ from batch_api import (
 
 @dataclass
 class InputRow:
-    """Expected Schema for an Individual Input Row"""
+    """Expected Schema for an Individual Input Row."""
 
     custom_id: str
     method: str

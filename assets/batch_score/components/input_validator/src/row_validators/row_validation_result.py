@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Row Validation Result"""
+"""Row Validation Result."""
 
 from dataclasses import dataclass
 
@@ -10,10 +10,11 @@ from utils.exceptions import BatchValidationError
 
 @dataclass
 class RowValidationResult:
-    """Row Validation Result"""
+    """Row Validation Result."""
 
     error: BatchValidationError = None
     is_success: bool = error is None
 
     def __init__(self) -> None:
+        """Initialize the RowValidationResult object."""
         self.error = None

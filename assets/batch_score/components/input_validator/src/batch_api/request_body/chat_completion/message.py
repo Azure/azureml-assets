@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Message"""
+"""Message."""
 
 from dataclasses import dataclass
 from typing import Any
@@ -9,20 +9,20 @@ from typing import Any
 
 @dataclass
 class Message:
-    """Message"""
+    """Message."""
 
     role: str
 
 
 @dataclass
 class SystemMessage(Message):
-    """SystemMessage"""
+    """SystemMessage."""
 
     content: str
 
 
 @dataclass
 class UserMessage(Message):
-    """UserMessage"""
+    """UserMessage."""
 
     content: Any

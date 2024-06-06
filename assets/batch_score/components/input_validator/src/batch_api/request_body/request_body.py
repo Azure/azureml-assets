@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Request Body"""
+"""Request Body."""
 
 from dataclasses import dataclass
 from typing import Optional
@@ -9,7 +9,7 @@ from typing import Optional
 
 @dataclass
 class RequestBody:
-    """Request Body"""
+    """Request Body."""
 
     model: str
     user: Optional[str]

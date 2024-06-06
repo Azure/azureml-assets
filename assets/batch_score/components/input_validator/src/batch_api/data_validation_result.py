@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Input Row"""
+"""Input Row."""
 
 from dataclasses import dataclass
 from typing import List
@@ -12,7 +12,7 @@ from utils.exceptions import BatchValidationError
 
 @dataclass
 class DataValidationResult:
-    """Result of the Data Validation to send to MBI"""
+    """Result of the Data Validation to send to MBI."""
 
     batch_reference: BatchReference
     deployment_name: str
@@ -22,4 +22,5 @@ class DataValidationResult:
     errors: List[BatchValidationError]
 
     def __init__(self):
+        """Initialize the DataValidationResult object."""
         self.errors = []

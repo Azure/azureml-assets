@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Batch Score Input Validator"""
+"""Batch Score Input Validator."""
 
 import argparse
 import logging
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    """Gets the command line arguments."""
+    """Get the command line arguments."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -43,7 +43,7 @@ def parse_args():
 
 
 def get_row_validators() -> List[BaseValidator]:
-    """Returns the list of row validators to use for validation."""
+    """Get the list of row validators to use for validation."""
     return [
         JsonValidator(),
         SchemaValidator(),
@@ -52,6 +52,7 @@ def get_row_validators() -> List[BaseValidator]:
 
 
 def main():
+    """Main function to validate the input file."""
     try:
         args = parse_args()
 

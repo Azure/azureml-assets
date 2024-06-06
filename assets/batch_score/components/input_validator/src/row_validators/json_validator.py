@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Json Validator"""
+"""Json Validator."""
 
 import json
 
@@ -16,14 +16,14 @@ from utils.exceptions import (
 
 
 class JsonValidator(BaseValidator):
-    """Validates that the row is parsable as a valid JSON object"""
+    """Validate that the row is parsable as a valid JSON object."""
 
     def __init__(self) -> None:
+        """Initialize the JsonValidator."""
         pass
 
     def validate_row(self, row_context: RowValidationContext) -> RowValidationResult:
-        """Validates that the row is parsable as a valid JSON object"""
-
+        """Validate that the row is parsable as a valid JSON object."""
         result: RowValidationResult = RowValidationResult()
 
         try:

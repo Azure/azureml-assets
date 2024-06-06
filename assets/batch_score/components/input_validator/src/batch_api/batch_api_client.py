@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Batch API Client"""
+"""Batch API Client."""
 
 import requests
 from azure.identity import DefaultAzureCredential
@@ -15,14 +15,14 @@ logger = getLogger(__name__)
 
 
 class BatchApiClient:
-    """Client for interacting with the MBI service"""
+    """Client for interacting with the MBI service."""
 
     def __init__(self) -> None:
+        """Initializes the BatchApiClient."""
         self._credential = DefaultAzureCredential()
 
     def submit_validation_result(self, data_validation_result: DataValidationResult) -> None:
-        """Submits the results of the data validation to the MBI service"""
-
+        """Submit the results of the data validation to the MBI service."""
         logger.info("Submitting the data validation result to the MBI service")
 
         auth_token = self._credential.get_token(BATCH_DATA_VALIDATION_RESULT_SUBMISSION_URL).token
