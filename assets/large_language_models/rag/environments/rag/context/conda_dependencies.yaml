@@ -21,7 +21,7 @@ dependencies:
   - azureml-telemetry=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-fsspec
-  - azureml-inference-server-http==1.2.1
+  - azureml-inference-server-http>=1.3.0
   - azureml-mlflow=={{latest-pypi-version}}
     # Other public packages
   - beautifulsoup4~=4.11.2
@@ -46,4 +46,3 @@ dependencies:
   - sqlalchemy==1.4.46
   - tika~=2.6.0
   - tiktoken==0.5.2
-  - werkzeug>=3.0.3

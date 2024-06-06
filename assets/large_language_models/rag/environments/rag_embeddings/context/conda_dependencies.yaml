@@ -21,7 +21,7 @@ dependencies:
   - azureml-contrib-services
   - azureml-core=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
-  - azureml-inference-server-http==1.2.1
+  - azureml-inference-server-http>=1.3.0
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
     # Other public packages
@@ -52,4 +52,3 @@ dependencies:
   - PyJWT<3.0.0
   - pytz
   - cryptography>=41.0.4
-  - werkzeug>=3.0.3
