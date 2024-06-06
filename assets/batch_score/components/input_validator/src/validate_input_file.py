@@ -7,8 +7,18 @@ import argparse
 import logging
 from typing import List
 
-from batch_api import BatchApiClient, DataValidationResult
-from row_validators import *
+from batch_api import (
+    # BatchApiClient,  # TODO: Uncomment this line to import BatchApiClient
+    DataValidationResult
+)
+from row_validators import (
+    BaseValidator,
+    JsonValidator,
+    SchemaValidator,
+    CommonPropertyValidator,
+    RowValidationContext,
+    RowValidationResult
+)
 from utils.exceptions import (
     AoaiBatchValidationErrorCode,
     BatchValidationErrorMessage,
@@ -26,7 +36,7 @@ def parse_args():
         "--input_data_file",
         type=str,
         help="Path to the input file",
-        required=True 
+        required=True
     )
 
     return parser.parse_args()
@@ -54,7 +64,7 @@ def main():
 
         row_validators = get_row_validators()
 
-        batch_api_client = BatchApiClient()
+        # batch_api_client = BatchApiClient()  # TODO: Uncomment this line to create an instance of BatchApiClient
         data_validation_result = DataValidationResult()
 
         if not input_data:
@@ -76,12 +86,13 @@ def main():
                 line_number=i
             )
 
-            for validator in row_validators:      
+            for validator in row_validators:
                 row_validation_result: RowValidationResult = validator.validate_row(row_validation_context)
 
                 if not row_validation_result.is_success:
                     logger.error(
-                        f"Validation failed for input row '{i}'. Error code: '{row_validation_result.error.code}'. " + 
+                        f"Validation failed for input row '{i}'. " +
+                        f"Error code: '{row_validation_result.error.code}'. " +
                         f"Error message: '{row_validation_result.error.message}'"
                     )
 
@@ -106,7 +117,8 @@ def main():
     finally:
         logger.info("Submitting validation result to Batch API.")
 
-        # batch_api_client.submit_validation_result(data_validation_result) # TODO: Uncomment this line to submit the validation result to Batch API
+        # TODO: Uncomment this line to submit the validation result to Batch API
+        # batch_api_client.submit_validation_result(data_validation_result)
 
         logger.info("Validation result submitted to Batch API. Exiting.")
 

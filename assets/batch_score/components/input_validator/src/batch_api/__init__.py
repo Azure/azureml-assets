@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+# flake8: noqa: F401
+
 """__init__.py."""
 
 from .batch_api_client import BatchApiClient

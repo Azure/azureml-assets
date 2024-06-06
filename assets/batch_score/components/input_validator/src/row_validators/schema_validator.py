@@ -35,7 +35,7 @@ class SchemaValidator(BaseValidator):
             input_row_dict = json.loads(row_context.raw_input_row)
             row_context.parsed_input_row = self.get_valid_input_row(input_row_dict)
 
-        except:
+        except Exception:
             result.error = BatchValidationError(
                 code=AoaiBatchValidationErrorCode.INVALID_REQUEST,
                 message=BatchValidationErrorMessage.INVALID_REQUEST,

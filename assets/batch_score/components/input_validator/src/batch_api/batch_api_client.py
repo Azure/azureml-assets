@@ -9,7 +9,7 @@ from logging import getLogger
 
 from batch_api.data_validation_result import DataValidationResult
 
-BATCH_DATA_VALIDATION_RESULT_SUBMISSION_URL = "https://managed-batch-inference" # TODO: Update the URL
+BATCH_DATA_VALIDATION_RESULT_SUBMISSION_URL = "https://managed-batch-inference"   # TODO: Update the URL
 
 logger = getLogger(__name__)
 
