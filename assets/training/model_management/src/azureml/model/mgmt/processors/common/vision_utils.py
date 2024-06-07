@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 # Uncomment the following line for mlflow debug mode
 # logging.getLogger("mlflow").setLevel(logging.DEBUG)
 
+
 def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
     """
     Save image in a folder designated for batch output and return image file path.
