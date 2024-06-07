@@ -23,6 +23,7 @@ class TestVisionUtilities:
     """Test vision utility functions."""
 
     def test_save_image(self):
+        """Test that save_image() behaves correctly for png files."""
         image = Image.new("RGB", (640, 480))
         image.putpixel((320, 240), (0, 0, 255))
         image.putpixel((320, 241), (255, 255, 0))
