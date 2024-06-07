@@ -1,5 +1,5 @@
 name: flight_delays
-version: 2
+version: 3
 type: data
 spec: spec.yaml
 categories:

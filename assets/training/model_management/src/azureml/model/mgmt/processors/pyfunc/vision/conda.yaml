@@ -7,7 +7,7 @@ dependencies:
 - python=3.8.16
 - lap=0.4.0
 - pip:
-  - mlflow==2.10.2
+  - mlflow==2.12.1
   - cloudpickle==2.2.0
   - datasets==2.15.0
   - openmim==0.3.9
