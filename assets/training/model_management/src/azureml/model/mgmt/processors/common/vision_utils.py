@@ -8,9 +8,11 @@ import PIL
 import pandas as pd
 import base64
 import io
+import os
 import re
 import requests
 import torch
+import uuid
 from ast import literal_eval
 import numpy as np
 
@@ -22,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # Uncomment the following line for mlflow debug mode
 # logging.getLogger("mlflow").setLevel(logging.DEBUG)
+
 
 def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
     """
@@ -38,6 +41,7 @@ def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
     filename = f"image_{uuid.uuid4()}.{format.lower()}"
     img.save(os.path.join(output_folder, filename), format=format)
     return filename
+
 
 def get_pil_image(image: bytes) -> PIL.Image.Image:
     """
