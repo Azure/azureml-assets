@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
-    """
-    Save image in a folder designated for batch output and return image file path.
+    """Save image in a folder designated for batch output and return image file path.
+
     :param output_folder: directory path where we need to save files
     :type output_folder: str
     :param img: image object
