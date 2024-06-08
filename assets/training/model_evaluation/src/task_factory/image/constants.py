@@ -10,6 +10,7 @@ class ImagePredictionsLiterals:
     PROBS = "probs"
     LABELS = "labels"
     THRESHOLD = "threshold"
+    BATCH_SIZE = "batch_size"
 
 
 class ImagePredictionsConstants:
