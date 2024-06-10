@@ -3,19 +3,20 @@
 
 """Helper utils for vision Mlflow models."""
 
-import logging
-import PIL
-import pandas as pd
 import base64
 import io
+import logging
 import os
 import re
 import requests
-import torch
 import uuid
-from ast import literal_eval
-import numpy as np
 
+import PIL
+import pandas as pd
+import numpy as np
+import torch
+
+from ast import literal_eval
 from PIL import Image, UnidentifiedImageError
 from typing import Union
 
@@ -27,7 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
-    """Save image in a folder designated for batch output and return image file path.
+    """
+    Save image in a folder designated for batch output and return image file path.
 
     :param output_folder: directory path where we need to save files
     :type output_folder: str
