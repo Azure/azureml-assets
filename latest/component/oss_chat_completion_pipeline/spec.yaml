@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_chat_completion_pipeline
-version: 0.0.15
+version: 0.0.16
 type: pipeline
 display_name: OSS Chat Completion Pipeline
 description: FTaaS Pipeline component for chat completion
@@ -165,7 +165,7 @@ jobs:
       dataset_input: '${{parent.jobs.oss_text_generation_data_import.outputs.output_dataset}}'
       batch_size: 1000
       pad_to_max_length: "false"
-      max_seq_length: -1
+      max_seq_length: 8192
       number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
       apply_lora: "true"
       lora_alpha: 128
