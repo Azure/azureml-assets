@@ -132,8 +132,9 @@ def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None)
             raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
 
 
-def _write_mltable_yaml(mltable_obj, store_url: StoreUrl):
+def _write_mltable_yaml(mltable_obj, folder_path: str):
     try:
+        store_url = StoreUrl(folder_path)
         content = yaml.dump(mltable_obj, default_flow_style=False)
         store_url.write_file(content, "MLTable", True)
         return True
@@ -159,10 +160,6 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-    # We do this first to get Aml OBO credential which will let spark.write.parquet
-    # work in credential-less scenario by initializing certain env variables for free.
-    print(f"folder_path: {folder_path}")
-    store_url = StoreUrl(folder_path)
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/data/*.parquet"
 
@@ -173,7 +170,7 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
 
     retries = 0
     while True:
-        if _write_mltable_yaml(mltable_obj, store_url):
+        if _write_mltable_yaml(mltable_obj, folder_path):
             break
         retries += 1
         if retries >= MAX_RETRY_COUNT:
