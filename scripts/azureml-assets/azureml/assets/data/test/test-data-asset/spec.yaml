@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "test-data-asset"
+version: "1.0.1"
+description: My test data asset
+type: uri_file
+path: data.csv
