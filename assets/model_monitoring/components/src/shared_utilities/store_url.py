@@ -112,7 +112,8 @@ class StoreUrl:
             credential = self.get_credential()
             from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
         except ModuleNotFoundError:
-            print("Failed to import AzureMLOnBehalfOfCredential to check credential class instance. "
+            print(
+                "Failed to import AzureMLOnBehalfOfCredential to check credential class instance. "
                 "Defaulting to None credential-check solely.")
             return credential is None
         return credential is None or isinstance(credential, AzureMLOnBehalfOfCredential)
@@ -149,8 +150,10 @@ class StoreUrl:
                 raise InvalidInputError("Token credential is only supported with secure HTTPS protocol."
                                         "Please use a secure url for the StoreUrl.")
         except:
-            print("Failed to import AzureMLOnBehalfOfCredential to check if unsecure URL was used with token credential. "
+            print("Failed to import AzureMLOnBehalfOfCredential. "
+                  "Cannot check if unsecure URL was used with token credential. "
                   "Continuing and expecting no failures...")
+            pass
 
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",

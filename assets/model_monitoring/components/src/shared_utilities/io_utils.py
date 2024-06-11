@@ -124,6 +124,7 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
                 print(
                     "Failed to import from module azure-ai-ml to check if we have CredentialUnavailableError. "
                     "Check for LM failure or stale cache being used. Throwing exception as usual.")
+                pass
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
