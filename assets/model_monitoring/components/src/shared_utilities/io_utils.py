@@ -7,7 +7,6 @@ from enum import Enum
 import numpy as np
 import time
 import yaml
-from azure.ai.ml.identity import CredentialUnavailableError
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType
@@ -113,8 +112,14 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
             return process_input_not_found(input_not_found_category)
         else:
             # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
-            if isinstance(error, CredentialUnavailableError):
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
+            try:
+                from azure.ai.ml.identity import CredentialUnavailableError
+                if isinstance(error, CredentialUnavailableError):
+                    raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
+            except ModuleNotFoundError:
+                print(
+                    "Failed to import from module azure-ai-ml to check if we have CredentialUnavailableError. "
+                    "Check for LM failure or stale cache being used. Throwing exception as usual.")
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
