@@ -27,6 +27,7 @@ def _generate_manifest(root_dir: str):
 
 def run():
     """Create Manifest."""
+    # TODO: investigate why these aren't initialized by AzureML Filesystem itself
     # init env-vars for supporting credential-less datastore scenarios.
     # this env variable is required by Amlfs to get user token.
     spark = init_spark()
