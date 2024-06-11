@@ -179,13 +179,14 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
     """Save spark dataframe as mltable."""
+    # TODO: remove this explicit initialization after switch over to StoreUrl.
     # init env-vars for supporting credential-less datastore scenarios.
     # this env variable is required by Amlfs to get user token.
     spark = init_spark()
     spark_conf = spark.sparkContext.getConf()
     spark_conf_vars = {
         "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
-        # "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
+        "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
     }
     for env_key, conf_key in spark_conf_vars.items():
         value = spark_conf.get(conf_key)
