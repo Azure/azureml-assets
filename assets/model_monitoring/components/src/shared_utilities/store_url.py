@@ -80,24 +80,30 @@ class StoreUrl:
         """Get credential for this store url."""
         if not self._datastore:
             from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+            print("Using AML OBO credential from StoreUrl.get_credential().")
             return AzureMLOnBehalfOfCredential()
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
+                print("Using acount key credential from StoreUrl.get_credential().")
                 return self._datastore.account_key
             elif self._datastore.credential_type == "Sas":
+                print("Using SAS token credential from StoreUrl.get_credential().")
                 return AzureSasCredential(self._datastore.sas_token)
             elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
                 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+                print("Using AML OBO credential from StoreUrl.get_credential().")
                 return AzureMLOnBehalfOfCredential()
             else:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
                                         "only AccountKey and Sas are supported.")
         elif self._datastore.datastore_type == "AzureDataLakeGen2":
             if self._datastore.tenant_id and self._datastore.client_id and self._datastore.client_secret:
+                print("Using Client Secret credential from StoreUrl.get_credential().")
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
             else:
                 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+                print("Using AML OBO credential from StoreUrl.get_credential().")
                 return AzureMLOnBehalfOfCredential()
         else:
             raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
