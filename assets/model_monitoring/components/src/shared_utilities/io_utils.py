@@ -120,11 +120,10 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
                 from azure.ai.ml.identity import CredentialUnavailableError
                 if isinstance(error, CredentialUnavailableError):
                     raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
-            except:
+            except ModuleNotFoundError:
                 print(
                     "Failed to import from module azure-ai-ml to check if we have CredentialUnavailableError. "
                     "Check for LM failure or stale cache being used. Throwing exception as usual.")
-                pass
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 

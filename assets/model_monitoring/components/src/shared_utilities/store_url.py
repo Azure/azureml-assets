@@ -149,11 +149,10 @@ class StoreUrl:
             if not self._is_secure() and isinstance(credential, AzureMLOnBehalfOfCredential):
                 raise InvalidInputError("Token credential is only supported with secure HTTPS protocol."
                                         "Please use a secure url for the StoreUrl.")
-        except:
+        except ModuleNotFoundError:
             print("Failed to import AzureMLOnBehalfOfCredential. "
                   "Cannot check if unsecure URL was used with token credential. "
                   "Continuing and expecting no failures...")
-            pass
 
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
