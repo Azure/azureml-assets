@@ -8,8 +8,8 @@ import glob
 import json
 import os
 import uuid
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from shared_utilities.amlfs import amlfs_put_as_json, amlfs_download, amlfs_upload
+from shared_utilities.io_utils import init_spark
 
 
 def _generate_manifest(root_dir: str):
@@ -27,10 +27,18 @@ def _generate_manifest(root_dir: str):
 
 def run():
     """Create Manifest."""
-    # init aml OBO class for supporting credential-less datastore scenarios.
-    # this class will init specific env variables required by Amlfs to get
-    # user token in case of credential-less data access scenario
-    AzureMLOnBehalfOfCredential()
+    # init env-vars for supporting credential-less datastore scenarios.
+    # this env variable is required by Amlfs to get user token.
+    spark = init_spark()
+    spark_conf = spark.sparkContext.getConf()
+    spark_conf_vars = {
+        "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
+        # "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
+    }
+    for env_key, conf_key in spark_conf_vars.items():
+        value = spark_conf.get(conf_key)
+        if value:
+            os.environ[env_key] = value
 
     # Parse arguments
     parser = argparse.ArgumentParser()

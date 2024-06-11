@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 import os
 import re
 from typing import Union, Tuple
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
@@ -77,9 +76,10 @@ class StoreUrl:
         return url
 
     def get_credential(self) -> Union[
-            str, ClientSecretCredential, AzureSasCredential, AzureMLOnBehalfOfCredential, None]:
+            str, ClientSecretCredential, AzureSasCredential, None]:
         """Get credential for this store url."""
         if not self._datastore:
+            from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
             return AzureMLOnBehalfOfCredential()
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
@@ -87,6 +87,7 @@ class StoreUrl:
             elif self._datastore.credential_type == "Sas":
                 return AzureSasCredential(self._datastore.sas_token)
             elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
+                from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
                 return AzureMLOnBehalfOfCredential()
             else:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
@@ -96,6 +97,7 @@ class StoreUrl:
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
             else:
+                from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
                 return AzureMLOnBehalfOfCredential()
         else:
             raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
@@ -103,13 +105,22 @@ class StoreUrl:
 
     def is_credentials_less(self) -> bool:
         """Check if the store url is credential less."""
-        credential = self.get_credential()
+        # TODO: remove after we figure out cache failure issues.
+        # Should be able to import AzureMLOnBehalfOfCredential to check the class w/o issues.
+        credential = None
+        try:
+            credential = self.get_credential()
+            from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+        except ModuleNotFoundError:
+            print("Failed to import AzureMLOnBehalfOfCredential to check credential class instance. "
+                "Defaulting to None credential-check solely.")
+            return credential is None
         return credential is None or isinstance(credential, AzureMLOnBehalfOfCredential)
 
     def get_container_client(
             self,
             credential: Union[
-                str, AzureSasCredential, ClientSecretCredential, AzureMLOnBehalfOfCredential, None] = None
+                str, AzureSasCredential, ClientSecretCredential, None] = None
             ) -> Union[FileSystemClient, ContainerClient, None]:
         """
         Get container client for this store url.
@@ -132,9 +143,14 @@ class StoreUrl:
         # Requires that we submit MoMo component with managed identity or will fail later on.
         credential = credential or self.get_credential()
         account_url_scheme = "https" if self._is_secure() else "http"
-        if not self._is_secure() and isinstance(credential, AzureMLOnBehalfOfCredential):
-            raise InvalidInputError("Token credential is only supported with secure HTTPS protocol."
-                                    "Please use a secure url for the StoreUrl.")
+        try:
+            from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+            if not self._is_secure() and isinstance(credential, AzureMLOnBehalfOfCredential):
+                raise InvalidInputError("Token credential is only supported with secure HTTPS protocol."
+                                        "Please use a secure url for the StoreUrl.")
+        except:
+            print("Failed to import AzureMLOnBehalfOfCredential to check if unsecure URL was used with token credential. "
+                  "Continuing and expecting no failures...")
 
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
@@ -160,9 +176,9 @@ class StoreUrl:
                 full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
                 blobs = container_client.list_blobs(name_starts_with=full_path)
                 return any(blobs)
-        except CredentialUnavailableError as cue:
-            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
+        except Exception as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
             raise cue
 
     def is_local_path(self) -> bool:
@@ -191,9 +207,9 @@ class StoreUrl:
             else:
                 with container_client.get_blob_client(full_path) as blob_client:
                     return blob_client.download_blob().readall().decode()
-        except CredentialUnavailableError as cue:
-            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
+        except Exception as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
             raise cue
 
     def write_file(self, file_content: Union[str, bytes], relative_path: str = None, overwrite: bool = False,
@@ -212,9 +228,9 @@ class StoreUrl:
             else:
                 with container_client.get_blob_client(full_path) as blob_client:
                     return blob_client.upload_blob(file_content, overwrite=overwrite)
-        except CredentialUnavailableError as cue:
-            if "AzureML Spark On Behalf of credentials not available in this environment" in cue.message:
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=cue.message))
+        except Exception as cue:
+            if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
 
     @staticmethod
     def _normalize_local_path(local_path: str) -> str:
