@@ -175,7 +175,7 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
                 [
                     ParamSpec(MMDetLiterals.TEXT_PROMPT,
                               DataType.string, None),
-                    ParamSpec(MMDetLiterals.CUSTOM_ENTTIES,
+                    ParamSpec(MMDetLiterals.CUSTOM_ENTITIES,
                               DataType.boolean, True),
                 ]
             )
