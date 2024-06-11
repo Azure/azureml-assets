@@ -14,6 +14,7 @@ from scipy import stats
 from scipy.stats import mannwhitneyu
 from typing import List
 from mlflow import MlflowClient
+from assets.model_monitoring.components.src.shared_utilities.store_url import StoreUrl
 from shared_utilities.span_tree_utils import SpanTree
 from shared_utilities.constants import (
     RETRIEVAL_SPAN_TYPE,
@@ -40,7 +41,6 @@ from shared_utilities.llm_utils import _APITokenManager, _request_api
 from shared_utilities.io_utils import (
     np_encoder
 )
-from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.prompts import RELEVANCE_TEMPLATE, QUERY_INTENTION_PROMPT
 from action_analyzer.contracts.action_sample import IndexActionSample
 from action_analyzer.contracts.actions.action import Action
@@ -411,12 +411,10 @@ def deduplicate_actions(action_list: List[Action]) -> List[Action]:
     return deduplicated_list
 
 
-def write_to_file(payload: dict, local_output_directory: str, file_name: str):
-    """Write a file to a local directory."""
-    os.makedirs(local_output_directory, exist_ok=True)
-    action_file = os.path.join(local_output_directory, f"{file_name}.json")
-    with open(action_file, "w") as f:
-        f.write(json.dumps(payload, indent=4, default=np_encoder))
+def write_to_file(payload: dict, store_url: StoreUrl, file_name: str):
+    """Write a file to a store_url file."""
+    content = json.dumps(payload, indent=4, default=np_encoder)
+    store_url.write_file(content, file_name, True)
 
 
 def generate_action_summary(actions: List[Action], action_output_folder: str) -> dict:
@@ -442,16 +440,15 @@ def write_actions(actions: List[Action], action_output_folder: str) -> None:
         actions(List[Action]): list of actions.
         action_output_folder(str): output folder path.
     """
-    local_path = str(uuid.uuid4())
+    target_remote_path = os.path.join(action_output_folder, "actions")
+    store_url = StoreUrl(target_remote_path)
     action_summary = generate_action_summary(actions, action_output_folder)
     for action in actions:
         action.reduce_positive_sample_size(MAX_SAMPLE_SIZE)
-        write_to_file(action.to_json(), local_path, action.action_id)
+        write_to_file(action.to_json(), store_url, f"{action.action_id}.json")
     print("Writing action summary to location ", action_output_folder)
     print(action_summary)
-    write_to_file(action_summary, local_path, "action_summary")
-    target_remote_path = os.path.join(action_output_folder, "actions")
-    amlfs_upload(local_path=local_path, remote_path=target_remote_path)
+    write_to_file(action_summary, store_url, "action_summary.json")
 
 
 def add_action_tag_to_run() -> None:
