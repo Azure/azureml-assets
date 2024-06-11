@@ -14,7 +14,7 @@ from scipy import stats
 from scipy.stats import mannwhitneyu
 from typing import List
 from mlflow import MlflowClient
-from assets.model_monitoring.components.src.shared_utilities.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.span_tree_utils import SpanTree
 from shared_utilities.constants import (
     RETRIEVAL_SPAN_TYPE,

@@ -10,7 +10,7 @@ from pyspark.sql.types import (
 )
 from pyspark.sql import Window
 from pyspark.sql.functions import collect_set, col, udf, max
-from assets.model_monitoring.components.src.shared_utilities.store_url import StoreUrl
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
 import os
 import json
