@@ -119,12 +119,12 @@ class StoreUrl:
         try:
             credential = self.get_credential()
             from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+            return credential is None or isinstance(credential, AzureMLOnBehalfOfCredential)
         except ModuleNotFoundError:
             print(
                 "Failed to import AzureMLOnBehalfOfCredential to check credential class instance. "
                 "Defaulting to None credential-check solely.")
             return credential is None
-        return credential is None or isinstance(credential, AzureMLOnBehalfOfCredential)
 
     def get_container_client(
             self,
