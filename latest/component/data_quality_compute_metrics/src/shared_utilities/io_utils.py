@@ -9,7 +9,6 @@ import os
 import time
 import uuid
 import yaml
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
@@ -117,8 +116,14 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
             return process_input_not_found(input_not_found_category)
         else:
             # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
-            if isinstance(error, CredentialUnavailableError):
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
+            try:
+                from azure.ai.ml.identity import CredentialUnavailableError
+                if isinstance(error, CredentialUnavailableError):
+                    raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
+            except ModuleNotFoundError:
+                print(
+                    "Failed to import from module azure-ai-ml to check if we have CredentialUnavailableError. "
+                    "Check for LM failure or stale cache being used. Throwing exception as usual.")
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
@@ -174,9 +179,19 @@ def read_mltable_in_spark(mltable_path: str):
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
     """Save spark dataframe as mltable."""
-    # init aml OBO class for supporting credential-less datastore scenarios.
-    # this class will init specific env variables required by Amlfs to get user token.
-    AzureMLOnBehalfOfCredential()
+    # TODO: remove this explicit initialization after switch over to StoreUrl.
+    # init env-vars for supporting credential-less datastore scenarios.
+    # this env variable is required by Amlfs to get user token.
+    spark = init_spark()
+    spark_conf = spark.sparkContext.getConf()
+    spark_conf_vars = {
+        "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
+        "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
+    }
+    for env_key, conf_key in spark_conf_vars.items():
+        value = spark_conf.get(conf_key)
+        if value:
+            os.environ[env_key] = value
 
     try:
         metrics_df.write.mode("overwrite").parquet(folder_path)
