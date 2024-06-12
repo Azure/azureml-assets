@@ -3,7 +3,6 @@
 
 """This file contains utilities for action detector."""
 import os
-import uuid
 import json
 import pandas
 import yaml
