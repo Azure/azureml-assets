@@ -4,6 +4,9 @@
 """Entry script for Action Analyzer output actions."""
 
 import argparse
+from action_analyzer.contracts.utils.detector_utils import (
+    write_to_file
+)
 from pyspark.sql.types import (
     StringType,
     BooleanType
@@ -11,9 +14,8 @@ from pyspark.sql.types import (
 from pyspark.sql import Window
 from pyspark.sql.functions import collect_set, col, udf, max
 from shared_utilities.store_url import StoreUrl
-from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
+from shared_utilities.io_utils import try_read_mltable_in_spark
 import os
-import json
 import uuid
 import datetime
 import copy
@@ -75,7 +77,8 @@ def is_index_asset(index_id):
 def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, aml_deployment_id, signal_name):
     """Write the action summary and action detail files."""
     index_set, violated_metrics = get_action_metadata(action_bad_group_df)
-    store_url = StoreUrl(os.path.join(action_output_folder, "actions"))
+    target_remote_path = os.path.join(action_output_folder, "actions")
+    store_url = StoreUrl(target_remote_path)
 
     action_summary = {}
     for index_id in index_set:
@@ -135,12 +138,6 @@ def generate_samples(action_df, is_negative_sample):
             sample["ViolatedMetrics"] = sample_data[i][VIOLATED_METRICS_COLUMN].replace(TEXT_SPLITTER, ", ")
         samples.append(sample)
     return samples
-
-
-def write_to_file(payload: dict, store_url: StoreUrl, file_name: str):
-    """Save the action files to a store_url file."""
-    output_content = json.dumps(payload, indent=4, default=np_encoder)
-    store_url.write_file(output_content, file_name, True)
 
 
 def run():
