@@ -1,3 +1,4 @@
+# Dummy change
 FROM mcr.microsoft.com/azureml/inference-base-2204:{{latest-image-tag}}
 USER root
 WORKDIR /
