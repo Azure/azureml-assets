@@ -35,6 +35,7 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: object-detection
+  hiddenlayerscanned: ""
   inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
     Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
     Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
