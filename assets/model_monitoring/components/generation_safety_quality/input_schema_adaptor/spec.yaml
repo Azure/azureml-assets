@@ -17,7 +17,7 @@ outputs:
     mode: direct
 
 conf:
-  spark.hadoop.aml.enable_cache: "true"
+  spark.hadoop.aml.enable_cache : "true"
   spark.aml.internal.system.job: True
   spark.driver.cores: 4
   spark.driver.memory: 28g
