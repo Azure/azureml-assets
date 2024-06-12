@@ -234,6 +234,7 @@ class StoreUrl:
             self, container_client: FileSystemClient,
             file_content: Union[str, bytes], full_path: str):
         """Create a new file in FilSystemClient and append the file_content to the new file."""
+        print("Requested file does not exist. Create file and append data...")
         with container_client.create_file(full_path) as file_client:
             file_client.append_data(file_content, offset=0)
 
