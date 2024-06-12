@@ -1,0 +1,580 @@
+trigger: none
+
+variables:
+  ado_dir: AzureMlCli
+  ado_assets_dir: $(assets_dir)/azureml-asset
+  ado_source_dir: $(ado_dir)/assets
+  assets_artifact: assets-selected
+  assets_dir: $(Pipeline.Workspace)/assets
+  azcopy_url: https://aka.ms/downloadazcopy-v10-linux
+  build_folder: $(Pipeline.Workspace)/build
+  build_folder_artifact_ado: build-ado
+  build_folder_artifact_gh: build-gh
+  build_logs_artifact: build-logs
+  build_logs_artifact_ado: build-logs-ado
+  build_logs_artifact_gh: build-logs-gh
+  build_logs_dir: $(Pipeline.Workspace)/build-logs
+  deploy_configs_dir: $(ado_dir)/registry/deploy_configs
+  deploy_configs_artifact: deploy-configs
+  drop_dir: $(Pipeline.Workspace)/drop
+  environments_artifact_ado: environments-ado
+  environments_artifact_gh: environments-gh
+  gh_dir: azureml-assets
+  gh_assets_dir: $(assets_dir)/azureml-assets
+  gh_source_dir: $(gh_dir)/latest
+  git_email: "<>"
+  git_username: Microsoft
+  import_config_prod: import.cfg
+  import_config_staging: import-staging.cfg
+  import_configs_artifact: import-configs
+  import_configs_dir: $(Pipeline.Workspace)/import-configs
+  msftkube_dir: $(Build.StagingDirectory)/msftkube
+  msftkube_assets_dir: $(msftkube_scripts_dir)/assets
+  msftkube_deployment_configs_dir: $(msftkube_scripts_dir)/deployment-configs
+  msftkube_import_configs_dir: $(msftkube_scripts_dir)/images
+  msftkube_scripts_dir: $(msftkube_dir)/scripts
+  msftkube_tokens_dir: $(msftkube_scripts_dir)/tokens
+  msftkube_containerization_dir: $(msftkube_scripts_dir)/containerization
+  pattern_usage: It must contain a regular expression matching assets to include in the build. The format for the match is <type>/<name>/<version>, where asset type is environment, component, etc.
+  sas_tokens_artifact: sas-tokens
+  sas_tokens_dir: $(Build.StagingDirectory)/sas_tokens
+  containerization_artifact: containerization
+  containerization_dir: $(Build.StagingDirectory)/containerization
+  scripts_assets_dir: $(scripts_gh_dir)/azureml/assets
+  scripts_ado_dir: $(ado_dir)/scripts
+  scripts_gh_dir: $(gh_dir)/scripts/azureml-assets
+  staged_assets_dir: $(Pipeline.Workspace)/staged-assets
+  staging_tag: staging
+  vienna_dir: vienna
+  # model validation results
+  blobstorage_uri_template: "https://{account_name}.blob.core.windows.net/{container}/{path}"
+  blobstorage_account: automlcesdkdataresources
+  blobstorage_sub: 72c03bf3-4e69-41af-9532-dfcdc3eefef4
+  blobstorage_rg: shared-finetuning-rg
+  release_container: model-validation
+  release_rel_path: release
+  model_validation_results_dir: $(Pipeline.Workspace)/model_validation_results
+
+resources:
+  repositories:
+  - repository: azureml-assets
+    endpoint: AzureML Bot
+    ref: refs/heads/release
+    name: Azure/azureml-assets
+    type: github
+  - repository: vienna
+    ref: $(vienna_ref)
+    name: vienna
+    type: git
+
+jobs:
+- job: select_validate
+  displayName: Select and validate assets
+  timeoutInMinutes: 30
+  pool:
+    name: metastore-linux-01
+  steps:
+  # Initial checks
+  - bash: |
+      echo "##vso[task.LogIssue type=error;]This pipeline must be run against the main branch."
+      exit 1
+    displayName: Check branch
+    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['block_non_main_run'], 'true'))
+  - bash: |
+      echo "##vso[task.LogIssue type=error;]The pattern '$(pattern)' is empty or too broad. $(pattern_usage)"
+      exit 1
+    displayName: Check pattern
+    condition: in(variables['pattern'], '', '.*', '.+', 'component/.+', 'environment/.+', 'model/.+', 'data/.+', 'component/.*', 'environment/.*', 'model/.*', 'data/.*')
+  # Check out repos
+  - checkout: self
+    clean: true
+    fetchTags: false
+  - checkout: azureml-assets
+    clean: true
+    fetchDepth: 0
+    fetchTags: true
+  # Configure Python
+  - template: templates/configure-python.yml
+    parameters:
+      packages: azureml-assets
+  # Select assets
+  - bash: |
+      python -u -m azureml.assets.copy_assets -i $(ado_source_dir) -o $(ado_assets_dir) -t "$(pattern)"
+    name: select_ado_assets
+    displayName: Select assets from ADO
+    condition: and(succeeded(), ne(variables['backfill'], 'true'))
+  - bash: |
+      python -u -m azureml.assets.copy_assets -i $(gh_source_dir) -o $(gh_assets_dir) -r $(gh_dir) -t "$(pattern)" -p
+    name: select_gh_assets
+    displayName: Select unreleased assets from GitHub
+    condition: and(succeeded(), ne(variables['backfill'], 'true'))
+  - bash: |
+      python -u -m azureml.assets.extract_tagged_assets -r $(gh_dir) -o $(gh_assets_dir) -t "$(pattern)"
+    name: extract_assets
+    displayName: Extract previously released assets
+    condition: and(succeeded(), eq(variables['backfill'], 'true'))
+  # Validate
+  - bash: |
+      echo "##vso[task.LogIssue type=error;]No assets found matching the pattern '$(pattern)' (backfill=$(backfill)). $(pattern_usage)"
+      exit 1
+    displayName: Check assets
+    condition: and(succeeded(), not(or(ne(0, variables['select_ado_assets.copied_count']), ne(0, variables['select_gh_assets.copied_count']), ne(0, variables['extract_assets.extracted_count']))))
+  # TODO: add pattern based download
+  - bash: |
+      set -ex
+      az login --identity
+    displayName: Login via Azure CLI
+  - template: templates/get-blobstorage-sas.yml
+    parameters:
+      subscription_id: $(blobstorage_sub)
+      resource_group: $(blobstorage_rg)
+      storage_account_name: $(blobstorage_account)
+      container_name: $(release_container)
+      output_sas: release_validation_data_sas 
+  - bash: |
+      echo "azcopy release validation data to $(model_validation_results)/"
+      src_uri=`echo $(blobstorage_uri_template) | sed "s/{account_name}/$(blobstorage_account)/g; s/{container}/$(release_container)/g; s/{path}/$(release_rel_path)/g;"`
+      echo $src_uri
+      src_uri_sas="$src_uri?$(release_validation_data_sas)"
+      azcopy copy --recursive=true --as-subdir=false --skip-version-check --output-level essential $src_uri_sas $(model_validation_results_dir)
+      ls -ltrR $(model_validation_results_dir)
+    displayName: Download model validation results
+    condition: and(succeeded(), ne(variables['backfill'], 'true'),  ne(variables['skip_model_validation'], 'true'))
+  - bash: |
+      python -u -m azureml.assets.validate_assets -i $(ado_assets_dir),$(gh_assets_dir) -m $(model_validation_results_dir)
+    displayName: Validate assets
+    condition: and(succeeded(), ne(variables['backfill'], 'true'))
+  - bash: |
+      python -u $(scripts_ado_dir)/validate_ado_assets.py -i $(ado_assets_dir) -d $(deploy_configs_dir)/*.yml
+    displayName: Validate assets from ADO
+    condition: and(succeeded(), ne(variables['backfill'], 'true'))
+  - bash: |
+      python -u $(scripts_ado_dir)/validate_prod.py -i $(gh_assets_dir)
+    displayName: Validate assets from GitHub
+    condition: and(succeeded(), ne(variables['backfill'], 'true'))
+  - bash: |
+      python -u $(scripts_ado_dir)/validate_destinations.py -i $(ado_assets_dir),$(gh_assets_dir) -d $(deploy_configs_dir)/*.yml
+    displayName: Ensure assets will be deployed
+  # Replace template tags in assets from ADO
+  - bash: |
+      python -u -m azureml.assets.update_assets -i $(ado_assets_dir)
+    displayName: Update assets from ADO
+    condition: and(succeeded(), ne(0, variables['select_ado_assets.copied_count']))
+  # Store assets
+  - task: PublishPipelineArtifact@1
+    displayName: Store assets
+    inputs:
+      targetPath: $(assets_dir)
+      artifact: $(assets_artifact)
+  # Store deployment configs
+  - task: PublishPipelineArtifact@1
+    displayName: Store deployment configs
+    inputs:
+      targetPath: $(deploy_configs_dir)
+      artifact: $(deploy_configs_artifact)
+  - bash: |
+      rm -fr $(Build.SourcesDirectory)/*
+    displayName: Clean up
+
+- job: generate_sas_tokens
+  displayName: Generate SAS Tokens
+  dependsOn: select_validate
+  condition: and(succeeded(), or(or(ne(0, dependencies.select_validate.outputs['select_ado_assets.copied_model_count']), ne(0, dependencies.select_validate.outputs['select_gh_assets.copied_model_count'])),or(ne(0, dependencies.select_validate.outputs['select_ado_assets.copied_prompt_count']), ne(0, dependencies.select_validate.outputs['select_gh_assets.copied_prompt_count']))))
+  timeoutInMinutes: 300
+  pool:
+    name: metastore-linux-01
+  steps:
+    # Configure Python
+    - template: templates/configure-python.yml
+      parameters:
+        packages: azureml-assets
+    - bash: |
+        az login --identity
+        az account set -s $(storage_accounts_subscription)
+      displayName: Login via Azure CLI
+    # Download assets from initial job
+    - task: DownloadPipelineArtifact@2
+      displayName: Download models and prompts
+      inputs:
+        targetPath: $(assets_dir)
+        artifactName: $(assets_artifact)
+        itemPattern: |
+          */model/**
+          */prompt/**
+    # Get SAS tokens and write to file
+    - bash: |
+        mkdir -p $(sas_tokens_dir)
+        python -u -m azureml.assets.get_tokens -i $(assets_dir) -j $(sas_tokens_dir)/tokens.json
+      displayName: Get SAS Tokens
+    # Store SAS Tokens
+    - task: PublishPipelineArtifact@1
+      displayName: Store SAS Tokens
+      inputs:
+        targetPath: $(sas_tokens_dir)
+        artifact: $(sas_tokens_artifact)
+    - bash: |
+        rm -fr $(Build.SourcesDirectory)/*
+      displayName: Clean up
+
+- job: store_model_containerization_status
+  displayName: Store Model Containerization Status
+  dependsOn: select_validate
+  condition: and(succeeded(), or(ne(0, dependencies.select_validate.outputs['select_ado_assets.copied_model_count']), ne(0, dependencies.select_validate.outputs['select_gh_assets.copied_model_count'])))
+  timeoutInMinutes: 300
+  pool:
+    name: metastore-linux-01
+  steps:
+    # Configure Python
+    - template: templates/configure-python.yml
+      parameters:
+        packages: azureml-assets
+    - bash: |
+        az login --identity
+        az account set -s $(storage_accounts_subscription)
+      displayName: Login via Azure CLI
+    # Download assets from initial job
+    - task: DownloadPipelineArtifact@2
+      displayName: Download models
+      inputs:
+        targetPath: $(assets_dir)
+        artifactName: $(assets_artifact)
+        itemPattern: |
+          */model/**
+    # Get model files if model type is MLFlow, and write containerization status to file
+    - bash: |
+        mkdir -p $(containerization_dir)
+        python -u scripts/get_model_containerization_status.py -i $(assets_dir) -j $(containerization_dir)/containerized_models.json
+      displayName: Get Containerization Status
+    # Store containerization status
+    - task: PublishPipelineArtifact@1
+      displayName: Store containerization status
+      inputs:
+        targetPath: $(containerization_dir)
+        artifact: $(containerization_artifact)
+    - bash: |
+        rm -fr $(Build.SourcesDirectory)/*
+      displayName: Clean up
+
+- job: build_images_ado
+  displayName: Build images (ADO)
+  dependsOn: select_validate
+  condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, dependencies.select_validate.outputs['select_ado_assets.copied_environment_count']))
+  timeoutInMinutes: 300
+  pool:
+    name: metastore-linux-01
+  steps:
+    # Download assets from previous job
+    - task: DownloadPipelineArtifact@2
+      displayName: Download assets
+      inputs:
+        targetPath: $(assets_dir)
+        artifactName: $(assets_artifact)
+    # Check out repos
+    - checkout: self
+      clean: true
+      fetchTags: false
+    # Configure Python
+    - template: templates/configure-python.yml
+      parameters:
+        packages: azureml-assets
+    - bash: |
+        set -ex
+        az login --identity
+        az account set -s $(staging_acr_subscription)
+      displayName: Login via Azure CLI
+    # Build and test images
+    - bash: |
+        python -u -m azureml.assets.environment.build -i $(ado_assets_dir) -o $(staged_assets_dir) -l $(build_logs_dir) -g $(staging_acr_resource_group) -r $(staging_acr_name) -t -T 'python -V'
+      name: build_images
+      displayName: Build images
+    - task: PublishPipelineArtifact@1
+      displayName: Publish build logs
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: $(build_logs_dir)
+        artifact: $(build_logs_artifact_ado)
+    # Publish assets
+    - task: PublishPipelineArtifact@1
+      name: publish_assets
+      displayName: Publish assets
+      inputs:
+        targetPath: $(staged_assets_dir)
+        artifact: $(environments_artifact_ado)
+    - bash: |
+        rm -fr $(Build.SourcesDirectory)/*
+      displayName: Clean up
+
+- job: build_images_gh
+  displayName: Build images (GitHub)
+  dependsOn: select_validate
+  condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, dependencies.select_validate.outputs['select_gh_assets.copied_environment_count']))
+  timeoutInMinutes: 300
+  pool:
+    name: metastore-linux-01
+  steps:
+    # Download assets from previous job
+    - task: DownloadPipelineArtifact@2
+      displayName: Download assets
+      inputs:
+        targetPath: $(assets_dir)
+        artifactName: $(assets_artifact)
+    # Check out repos
+    - checkout: self
+      clean: true
+      fetchTags: false
+    # Configure Python
+    - template: templates/configure-python.yml
+      parameters:
+        packages: azureml-assets
+    # Get ready to build
+    - bash: |
+        mkdir -p $(build_folder) $(build_folder)/images
+      displayName: Initialize build folder
+    - bash: |
+        set -ex
+        az login --identity
+        az account set -s $(staging_acr_subscription)
+      displayName: Login via Azure CLI
+    # Build, test, and push images
+    - bash: |
+        python -u -m azureml.assets.environment.build -i $(gh_assets_dir) -o $(staged_assets_dir) -l $(build_logs_dir) -g $(staging_acr_resource_group) -r $(staging_acr_name) -t -T 'python -V' -u
+      name: build_images
+      displayName: Build images
+    - task: PublishPipelineArtifact@1
+      displayName: Publish build logs
+      condition: succeededOrFailed()
+      inputs:
+        targetPath: $(build_logs_dir)
+        artifact: $(build_logs_artifact_gh)
+    # Create deployment configs
+    - bash: |
+        # Don't set -x, which will put secrets in log files, but we do want to fail on any error
+        set -e
+
+        echo "Key vault name: $(keyvault_name)."
+        for n in registrybuiltinstaging-read-only-token-password; do
+            echo "Downloading secret value for: $n."
+            secret=`az keyvault secret show --vault-name $(keyvault_name) --name $n --query value --out tsv`
+            echo "##vso[task.setvariable variable=$n;issecret=true]$secret"
+        done
+      displayName: Get secrets
+    - bash: |
+        mkdir -p $(import_configs_dir)
+        python -u scripts/create_import_config.py -i $(staged_assets_dir) -o $(import_configs_dir)/$(import_config_staging) -A $(staging_acr) -t $(staging_tag) -u $(staging_acr_username) -p "$(registrybuiltinstaging-read-only-token-password)"
+        python -u scripts/create_import_config.py -i $(staged_assets_dir) -o $(import_configs_dir)/$(import_config_prod) -A $(staging_acr) -u $(staging_acr_username) -p "$(registrybuiltinstaging-read-only-token-password)"
+      displayName: Create import configs
+    # Publish assets and import configs
+    - task: PublishPipelineArtifact@1
+      name: publish_assets
+      displayName: Publish assets
+      inputs:
+        targetPath: $(staged_assets_dir)
+        artifact: $(environments_artifact_gh)
+    - task: PublishPipelineArtifact@1
+      name: publish_import_configs
+      displayName: Publish import configs
+      inputs:
+        path: $(import_configs_dir)
+        artifactName: $(import_configs_artifact)
+    - bash: |
+        echo "##vso[build.addbuildtag]mcr-publish"
+      displayName: Create build tag
+    # Make images available Component Governance and run Component Detection
+    - bash: |
+        echo "Logging into $(staging_acr_name)"
+        az acr login --name $(staging_acr_name)
+
+        echo "Pulling images"
+        for i in `echo $(build_images.built_images) | tr "," "\n"`; do
+          echo "Pulling $i"
+          docker pull -q $(staging_acr_name).azurecr.io/$i
+        done
+      name: pull_images
+      displayName: Pull images
+      condition: and(succeeded(), eq(variables['scan_images'], 'true'))
+    - bash: |
+        echo "Adding ACR hostname to image names"
+        acr_fqdn_prefix="$(staging_acr_name).azurecr.io/"
+        built_images_with_acr=`echo $(build_images.built_images) | sed -E "s|([^,]+)|$acr_fqdn_prefix\1|g"`
+        echo "##vso[task.setvariable variable=built_images_with_acr;isOutput=true]$built_images_with_acr"
+
+        # Create empty directory for Component Detector to scan
+        echo "Creating empty directory for Component Detector to scan"
+        empty_dir="$(Agent.BuildDirectory)/no_local_files"
+        mkdir -p $empty_dir
+        echo "##vso[task.setvariable variable=empty_dir;isOutput=true]$empty_dir"
+      name: prep_for_cd
+      displayName: Prepare for Component Detection
+      condition: and(succeeded(), eq(variables['scan_images'], 'true'))
+    - task: ComponentGovernanceComponentDetection@0
+      displayName: Component Detection
+      condition: and(succeeded(), eq(variables['scan_images'], 'true'))
+      inputs:
+        dockerImagesToScan: $(prep_for_cd.built_images_with_acr)
+        sourceScanPath: $(prep_for_cd.empty_dir)
+    - bash: |
+        rm -fr $(Build.SourcesDirectory)/*
+      displayName: Clean up
+
+- job: create_drop
+  displayName: Create drop
+  dependsOn:
+    - select_validate
+    - generate_sas_tokens
+    - store_model_containerization_status
+    - build_images_ado
+    - build_images_gh
+  condition: and(eq(dependencies.select_validate.result, 'Succeeded'), in(dependencies.generate_sas_tokens.result, 'Succeeded', 'Skipped'), in(dependencies.store_model_containerization_status.result, 'Succeeded', 'Skipped'), in(dependencies.build_images_ado.result, 'Succeeded', 'Skipped'), in(dependencies.build_images_gh.result, 'Succeeded', 'Skipped'))
+  timeoutInMinutes: 60
+  pool:
+    vmImage: ubuntu-latest
+  variables:
+    # These are here because dependencies is only available at runtime
+    ado_asset_count: $[ dependencies.select_validate.outputs['select_ado_assets.copied_count'] ]
+    ado_environment_count: $[ coalesce(dependencies.select_validate.outputs['select_ado_assets.copied_environment_count'], 0) ]
+    gh_asset_count: $[ dependencies.select_validate.outputs['select_gh_assets.copied_count'] ]
+    gh_environment_count: $[ coalesce(dependencies.select_validate.outputs['select_gh_assets.copied_environment_count'], 0) ]
+    ado_model_count: $[ coalesce(dependencies.select_validate.outputs['select_ado_assets.copied_model_count'], 0) ]
+    gh_model_count: $[ coalesce(dependencies.select_validate.outputs['select_gh_assets.copied_model_count'], 0) ]
+    ado_prompt_count: $[ coalesce(dependencies.select_validate.outputs['select_ado_assets.copied_prompt_count'], 0) ]
+    gh_prompt_count: $[ coalesce(dependencies.select_validate.outputs['select_gh_assets.copied_prompt_count'], 0) ]
+  steps:
+    # Start assembling drop
+    - checkout: self
+      clean: true
+      fetchTags: false
+    - task: CopyFiles@2
+      displayName: Copy msftkube folder
+      inputs:
+        SourceFolder: $(ado_dir)/msftkube
+        TargetFolder: $(msftkube_dir)
+    # Get count of non-environment assets
+    - bash: |
+        echo "##vso[task.setvariable variable=non_environment_asset_count;isOutput=true]`echo $(ado_asset_count) - $(ado_environment_count) + $(gh_asset_count) - $(gh_environment_count) | bc`"
+      displayName: Count non-environment assets
+      name: get_counts
+    # Download assets from initial job, excluding any environments unless backfilling
+    - task: DownloadPipelineArtifact@2
+      displayName: Download non-environment assets
+      condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, variables['get_counts.non_environment_asset_count']))
+      inputs:
+        targetPath: $(msftkube_assets_dir)
+        artifactName: $(assets_artifact)
+        itemPattern: |
+          **
+          !*/environment/**
+    - task: DownloadPipelineArtifact@2
+      displayName: Download all assets
+      condition: and(succeeded(), eq(variables['backfill'], 'true'))
+      inputs:
+        targetPath: $(msftkube_assets_dir)
+        artifactName: $(assets_artifact)
+    # Download environment assets
+    - task: DownloadPipelineArtifact@2
+      displayName: Download environment assets (ADO)
+      condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, variables['ado_environment_count']))
+      inputs:
+        targetPath: $(msftkube_assets_dir)/$(ado_dir)
+        artifactName: $(environments_artifact_ado)
+    - task: DownloadPipelineArtifact@2
+      displayName: Download environment assets (GitHub)
+      condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, variables['gh_environment_count']))
+      inputs:
+        targetPath: $(msftkube_assets_dir)/$(gh_dir)
+        artifactName: $(environments_artifact_gh)
+    # Publish assets artifact, for later reference
+    - task: PublishPipelineArtifact@1
+      displayName: Publish artifacts
+      inputs:
+        path: $(msftkube_assets_dir)
+        artifactName: assets
+    # Download import configs
+    - task: DownloadPipelineArtifact@2
+      displayName: Download import configs
+      condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, variables['gh_environment_count']))
+      inputs:
+        targetPath: $(msftkube_import_configs_dir)
+        artifactName: $(import_configs_artifact)
+    # Create empty import configs, to prevent errors in the release pipeline
+    - bash: |
+        mkdir -p $(msftkube_import_configs_dir)
+        echo '{"images": []}' > $(msftkube_import_configs_dir)/$(import_config_prod)
+        echo '{"images": []}' > $(msftkube_import_configs_dir)/$(import_config_staging)
+      displayName: Create empty import configs
+      condition: and(succeeded(), or(eq(variables['backfill'], 'true'), eq(0, variables['gh_environment_count'])))
+    # Download deployment configs
+    - task: DownloadPipelineArtifact@2
+      displayName: Download deployment configs
+      inputs:
+        targetPath: $(msftkube_deployment_configs_dir)
+        artifactName: $(deploy_configs_artifact)
+    # Download SAS Tokens
+    - task: DownloadPipelineArtifact@2
+      displayName: Download SAS Tokens
+      condition: and(succeeded(), or(or(ne(0, variables['ado_prompt_count']), ne(0, variables['gh_prompt_count'])), or(ne(0, variables['ado_model_count']), ne(0, variables['gh_model_count']))))
+      inputs:
+        targetPath: $(msftkube_tokens_dir)
+        artifactName: $(sas_tokens_artifact)
+    # Download containerization status
+    - task: DownloadPipelineArtifact@2
+      displayName: Download containerization status
+      condition: and(succeeded(), or(ne(0, variables['ado_model_count']), ne(0, variables['gh_model_count'])))
+      inputs:
+        targetPath: $(msftkube_containerization_dir)
+        artifactName: $(containerization_artifact)
+    # Configure Python
+    - template: templates/configure-python.yml
+      parameters:
+        packages: azureml-assets piprepo
+    # Download modules
+    - template: templates/download-modules.yml
+      parameters:
+        modules_dir: $(msftkube_dir)/scripts/modules
+        packages: -r $(Build.SourcesDirectory)/$(ado_dir)/msftkube/scripts/requirements.txt
+    # Download azcopy
+    - bash: |
+        bin_dir=$(msftkube_dir)/scripts/bin
+        temp_file=$(Agent.TempDirectory)/azcopy.tgz
+        mkdir -p $bin_dir
+
+        # See https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10
+        echo "Downloading azcopy from $(azcopy_url)"
+        curl --no-progress-meter -Lo $temp_file $(azcopy_url)
+        echo "Extracting azcopy to $bin_dir"
+        pushd $bin_dir
+        tar zxvf $temp_file --no-anchored azcopy --strip-components=1
+        popd
+      displayName: Download binaries
+    # Download and update shared spec files
+    - checkout: vienna
+      clean: true
+      fetchDepth: 1
+      fetchTags: false
+    # Create drop
+    - template: templates/create-drop-all.yml
+      parameters:
+        environments: $(release_envs)
+        msftkube_dir: $(msftkube_dir)
+        vienna_dir: $(vienna_dir)
+    # TODO: Tag other asset types too
+    # Tag released environments
+    - checkout: azureml-assets
+      clean: true
+      fetchDepth: 0
+      fetchTags: true
+      persistCredentials: true
+      condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, variables['gh_environment_count']))
+    - bash: |
+        pushd $(gh_dir)
+        git config user.email "$(git_email)"
+        git config user.name "$(git_username)"
+        popd
+        python -u -m azureml.assets.tag_released_assets -i $(msftkube_assets_dir)/$(gh_dir)/environment -r $(gh_dir)
+      displayName: Tag released environments
+      condition: and(succeeded(), ne(variables['backfill'], 'true'), ne(0, variables['gh_environment_count']))
+      workingDirectory: $(Build.SourcesDirectory)
+    # Can't delete $(gh_dir) because a Post-job Checkout task needs to clear a cached credential from it
+    - bash: |
+        rm -fr $(Build.SourcesDirectory)/$(gh_dir)/{latest,scripts,tests} \
+          $(Build.SourcesDirectory)/$(ado_dir) $(Build.SourcesDirectory)/$(vienna_dir)
+      displayName: Clean up
