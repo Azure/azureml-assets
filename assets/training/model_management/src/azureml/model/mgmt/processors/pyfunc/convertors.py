@@ -175,7 +175,7 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
                 [
                     ParamSpec(MMDetLiterals.TEXT_PROMPT,
                               DataType.string, None),
-                    ParamSpec(MMDetLiterals.CUSTOM_ENTTIES,
+                    ParamSpec(MMDetLiterals.CUSTOM_ENTITIES,
                               DataType.boolean, True),
                 ]
             )
@@ -611,6 +611,12 @@ class StableDiffusionInpaintingMlflowConvertor(TextToImageInpaintingMLflowConver
             os.path.join(self.MODEL_DIR, "config.py"),
             os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
+
+        # Enable DS-MII optimisation for Stable Diffusion Inpainting
+        metadata = {"model_type": "stable-diffusion"}
+        if self._inference_base_image:
+            metadata["azureml.base_image"] = self._inference_base_image
+
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
             artifacts_dict=artifacts_dict,

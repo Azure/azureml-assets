@@ -10,6 +10,7 @@ from pyspark.sql.types import (
 )
 from pyspark.sql import Window
 from pyspark.sql.functions import collect_set, col, udf, max
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
 import os
 import json
@@ -17,7 +18,6 @@ import uuid
 import datetime
 import copy
 from mlflow import MlflowClient
-from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import (
     INDEX_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
@@ -75,7 +75,8 @@ def is_index_asset(index_id):
 def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, aml_deployment_id, signal_name):
     """Write the action summary and action detail files."""
     index_set, violated_metrics = get_action_metadata(action_bad_group_df)
-    local_path = str(uuid.uuid4())
+    store_url = StoreUrl(os.path.join(action_output_folder, "actions"))
+
     action_summary = {}
     for index_id in index_set:
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
@@ -104,12 +105,10 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         action_detail["NegativeSamples"] = generate_samples(action_bad_group_df, True)
         print("Writing action detail of action: ")
         print(action)
-        write_to_file(action_detail, local_path, action_id)
+        write_to_file(action_detail, store_url, f"{action_id}.json")
     print("Writing action summary to location ", action_output_folder)
     print(action_summary)
-    write_to_file(action_summary, local_path, "action_summary")
-    target_remote_path = os.path.join(action_output_folder, "actions")
-    amlfs_upload(local_path=local_path, remote_path=target_remote_path)
+    write_to_file(action_summary, store_url, "action_summary.json")
 
 
 def generate_samples(action_df, is_negative_sample):
@@ -138,12 +137,10 @@ def generate_samples(action_df, is_negative_sample):
     return samples
 
 
-def write_to_file(payload: dict, local_output_directory: str, file_name: str):
-    """Save the action files to a local directory."""
-    os.makedirs(local_output_directory, exist_ok=True)
-    action_file = os.path.join(local_output_directory, f"{file_name}.json")
-    with open(action_file, "w") as f:
-        f.write(json.dumps(payload, indent=4, default=np_encoder))
+def write_to_file(payload: dict, store_url: StoreUrl, file_name: str):
+    """Save the action files to a store_url file."""
+    output_content = json.dumps(payload, indent=4, default=np_encoder)
+    store_url.write_file(output_content, file_name, True)
 
 
 def run():

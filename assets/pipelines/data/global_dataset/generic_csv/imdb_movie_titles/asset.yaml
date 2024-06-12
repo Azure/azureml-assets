@@ -1,5 +1,5 @@
 name: imdb_movie_titles
-version: 2
+version: 3
 type: data
 spec: spec.yaml
 categories:
