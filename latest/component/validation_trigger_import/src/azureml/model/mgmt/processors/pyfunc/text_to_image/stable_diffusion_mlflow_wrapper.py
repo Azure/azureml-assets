@@ -127,7 +127,9 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         for text_prompt in text_prompts:
             output = self._pipe(text_prompt)
             img = output.images[0]
-            nsfw_content = output.nsfw_content_detected[0] if output.nsfw_content_detected else None
+            nsfw_content = None
+            if hasattr(output, MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG):
+                nsfw_content = output.nsfw_content_detected[0]
             generated_images.append(save_image(self.batch_output_folder, img, DatatypeLiterals.IMAGE_FORMAT))
             nsfw_content_detected.append(nsfw_content)
 
