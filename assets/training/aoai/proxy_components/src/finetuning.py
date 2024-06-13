@@ -315,7 +315,7 @@ def main():
 
         validate_train_data_upload_type(args)
 
-        finetuned_model_id, finetune_job_id  = finetune_component.submit_job(
+        finetuned_model_id, finetune_job_id = finetune_component.submit_job(
             training_file_path=args.training_file_path,
             validation_file_path=args.validation_file_path,
             training_import_path=args.training_import_path,
