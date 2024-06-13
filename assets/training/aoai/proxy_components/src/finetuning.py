@@ -326,7 +326,10 @@ def main():
             suffix=args.suffix
         )
 
-        utils.save_json({"finetuned_model_id": finetuned_model_id, "finetune_job_id": finetune_job_id}, args.aoai_finetuning_output)
+        utils.save_json(
+            {"finetuned_model_id": finetuned_model_id, "finetune_job_id": finetune_job_id},
+            args.aoai_finetuning_output
+        )
         logger.info("Completed finetuning in Azure OpenAI resource")
 
     except SystemExit:
