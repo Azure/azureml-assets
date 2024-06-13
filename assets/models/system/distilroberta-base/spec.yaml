@@ -15,6 +15,7 @@ properties:
   languages: en
 tags:
   SharedComputeCapacityEnabled: ''
+  mlflow_flavor: transformers
   task: fill-mask
   datasets: openwebtext
   license: apache-2.0
