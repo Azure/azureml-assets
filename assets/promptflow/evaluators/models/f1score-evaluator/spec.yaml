@@ -8,5 +8,4 @@ properties:
   _default-display-file: ./evaluator/flow/flow.dag.yaml
 tags:
   Preview: ""
-  hiddenlayerscanned: ""
 version: 1
