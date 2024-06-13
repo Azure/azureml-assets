@@ -243,6 +243,7 @@ class StoreUrl:
         except Exception as cue:
             if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
                 raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
+            raise cue
 
     @staticmethod
     def _normalize_local_path(local_path: str) -> str:
