@@ -14,13 +14,9 @@ from promptflow.azure import PFClient
 class PromptFlowCreation(OBOComponentBase):
     """PromptFlowCreation Class."""
 
-    FLOW_DIRECTORY = os.path.join(
-        os.path.dirname(__file__), "prompt_flows"
-    )
+    FLOW_DIRECTORY = os.path.join(os.path.dirname(__file__), "prompt_flows")
 
-    FLOW_DAG = os.path.join(
-        os.path.dirname(__file__), "prompt_flows", "flow.dag.yaml"
-    )
+    FLOW_DAG = os.path.join(os.path.dirname(__file__), "prompt_flows", "flow.dag.yaml")
 
     def __init__(self):
         """Initialize the class."""
@@ -63,6 +59,7 @@ class PromptFlowCreation(OBOComponentBase):
         datastore_uri = get_datastore_uri(workspace, asset_uri)
         logging.info(f"Datastore uri: {datastore_uri}")
 
+        user_identity_client_id = os.environ.get("USER_IDENTITY_CLIENT_ID", None)
         embedding_connection_id = os.environ.get(
             "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None
         )
@@ -130,6 +127,7 @@ class PromptFlowCreation(OBOComponentBase):
             "AZUREML_WORKSPACE_NAME": self.workspace.name,
             "AZUREML_SUBSCRIPTION_ID": self.workspace.subscription_id,
             "AZUREML_RESOURCE_GROUP": self.workspace.resource_group,
+            "USER_IDENTITY_CLIENT_ID": user_identity_client_id,
         }
         base_run = pf_client.run(
             flow=flow,

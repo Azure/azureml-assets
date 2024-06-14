@@ -104,12 +104,16 @@ class EndpointDeployment(EndpointDeploymentBase):
             logging.info("dumped secrets to secrets.json")
             with open(os.path.join(code_dir, "configs.json"), "w") as f:
                 json.dump([asdict(config)], f)
+            user_identity_client_id = os.getenv("USER_IDENTITY_CLIENT_ID", None)
             self._deploy_endpoint(
                 mir_environment,
                 endpoint_name,
                 deployment_name,
                 code_dir,
                 score_script="score_zero.py",
-                extra_environment_variables={"INSTRUCT_TEMPLATE": instruct_template},
+                extra_environment_variables={
+                    "INSTRUCT_TEMPLATE": instruct_template,
+                    "USER_IDENTITY_CLIENT_ID": user_identity_client_id,
+                },
                 sku=sku,
             )
