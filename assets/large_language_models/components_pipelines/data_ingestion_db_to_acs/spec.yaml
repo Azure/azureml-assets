@@ -109,7 +109,7 @@ inputs:
     type: string
     optional: true
     description: "The instruct template for the LLM."
-  user_identity_client_id:
+  user_managed_identity_client_id:
     type: string
     optional: true
     description: "The user identity client_id for the deployment."

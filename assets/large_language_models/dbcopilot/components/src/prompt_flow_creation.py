@@ -59,7 +59,7 @@ class PromptFlowCreation(OBOComponentBase):
         datastore_uri = get_datastore_uri(workspace, asset_uri)
         logging.info(f"Datastore uri: {datastore_uri}")
 
-        user_identity_client_id = os.environ.get("USER_MANAGED_IDENTITY_CLIENT_ID", None)
+        user_managed_identity_client_id = os.environ.get("USER_MANAGED_IDENTITY_CLIENT_ID", None)
         embedding_connection_id = os.environ.get(
             "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None
         )
