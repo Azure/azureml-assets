@@ -234,13 +234,20 @@ class StoreUrl:
         try:
             if isinstance(container_client, FileSystemClient):
                 with container_client.get_file_client(full_path) as file_client:
-                    return file_client.upload_data(file_content, overwrite)
+                    if not file_client.exists():
+                        # when writing to a Gen2 storage location,
+                        # if the file doesn't exist we can't just use upload_data() as it will throw errors.
+                        # Instead use this work around to create the file, append data, and flush the data commit.
+                        return self._create_file_and_append_content(container_client, file_content, full_path)
+                    # upload_data() works fine with Gen2 if the file exists.
+                    return file_client.upload_data(file_content, overwrite=overwrite)
             else:
                 with container_client.get_blob_client(full_path) as blob_client:
                     return blob_client.upload_blob(file_content, overwrite=overwrite)
         except Exception as cue:
             if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
                 raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
+            raise cue
 
     @staticmethod
     def _normalize_local_path(local_path: str) -> str:
@@ -253,6 +260,17 @@ class StoreUrl:
         full_path = os.path.join(base_url, relative_path) if relative_path else base_url
         with open(full_path) as f:
             return f.read()
+
+    def _create_file_and_append_content(
+            self, container_client: FileSystemClient,
+            file_content: Union[str, bytes], full_path: str):
+        """Create a new file in FilSystemClient and append the file_content to the new file."""
+        print("Requested file does not exist. Create file and append data...")
+        with container_client.create_file(full_path) as file_client:
+            file_client.append_data(file_content, offset=0)
+
+            content_length = len(file_content)
+            return file_client.flush_data(content_length)
 
     def _write_local_file(self, file_content: Union[str, bytes], relative_path: str = None) -> int:
         """Write file to local path."""
