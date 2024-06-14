@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: cyberagent-open-calm-7b
+path: ./
+properties:
+  SHA: 276a5fb67510554e11ef191a2da44c919acccdf5
+  datasets: wikipedia, cc100, mc4
+  finetuning-tasks : text-classification, token-classification
+  languages : ja
+  model_id : cyberagent/open-calm-7b
+  min_inference_sku : Standard_ND40rs_v2
+
+
+tags:
+  Featured: ''
+  Preview: ''
+  computes_allow_list:
+  - Standard_ND40rs_v2
+  license: mit
+  task: text-generation
+version: 2
