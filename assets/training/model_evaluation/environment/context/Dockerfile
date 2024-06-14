@@ -14,6 +14,9 @@ RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
+## Vulnerability fix
+RUN pip install idna==3.7 gunicorn==22.0.0
+
 # Prepend path to AzureML conda environment
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
