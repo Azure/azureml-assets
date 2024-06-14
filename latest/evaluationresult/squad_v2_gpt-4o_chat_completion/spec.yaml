@@ -1,0 +1,33 @@
+type: evaluationresult
+name: squad_v2_gpt-4o_chat_completion
+version: 2.13.06
+display_name: squad_v2_gpt-4o_chat_completion
+description: squad_v2_gpt-4o_chat_completion
+dataset_family: squad
+dataset_name: squad_v2
+
+model_name: gpt-4o
+model_version: "5/13/2024"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/1
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai/models/gpt-4o/versions/1
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  groundedness: 4.090295358649789
+  relevance: 4.1897133220910625
+  GPTSimilarity: 3.535804549283909
+
+
+properties:
+  n_shot: 2
+  evaluation_sampling_ratio: 0.2
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
