@@ -152,7 +152,7 @@ jobs:
         type: uri_folder
       output_grounding_context_file: ${{parent.outputs.db_context}}
     environment_variables:
-      USER_IDENTITY_CLIENT_ID: ${{parent.inputs.user_identity_client_id}}
+      USER_MANAGED_IDENTITY_CLIENT_ID: ${{parent.inputs.user_managed_identity_client_id}}
     component: "azureml:llm_dbcopilot_grounding:0.0.61"
     type: command
   generate_meta_embeddings:
@@ -301,7 +301,7 @@ jobs:
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}
-      USER_IDENTITY_CLIENT_ID: ${{parent.inputs.user_identity_client_id}}
+      USER_MANAGED_IDENTITY_CLIENT_ID: ${{parent.inputs.user_managed_identity_client_id}}
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
