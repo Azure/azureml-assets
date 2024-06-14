@@ -143,6 +143,9 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
         content = yaml.dump(mltable_obj, default_flow_style=False)
         store_url.write_file(content, "MLTable", True)
         return True
+    except InvalidInputError as iie:
+        print(f"Unretriable InvalidInputError writing mltable file: {iie}")
+        raise iie
     except Exception as e:
         print(f"Error writing mltable file: {e}")
         return False
