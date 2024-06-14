@@ -235,9 +235,9 @@ class StoreUrl:
             if isinstance(container_client, FileSystemClient):
                 with container_client.get_file_client(full_path) as file_client:
                     if not file_client.exists():
-                    # when writing to a Gen2 storage location,
-                    # if the file doesn't exist we can't just use upload_data() as it will throw errors.
-                    # Instead use this work around to create the file, append data, and flush the data commit.
+                        # when writing to a Gen2 storage location,
+                        # if the file doesn't exist we can't just use upload_data() as it will throw errors.
+                        # Instead use this work around to create the file, append data, and flush the data commit.
                         return self._create_file_and_append_content(container_client, file_content, full_path)
                     # upload_data() works fine with Gen2 if the file exists.
                     return file_client.upload_data(file_content, overwrite=overwrite)
