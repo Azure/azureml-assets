@@ -40,8 +40,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
     def submit_job(self, training_file_path: Optional[str], validation_file_path: Optional[str],
                    training_import_path: Optional[str], validation_import_path: Optional[str], model: str,
                    hyperparameters: Dict[str, str], hyperparameters_1p: Dict[str, str], suffix=Optional[str]) -> str:
+        """Upload data, finetune model and then delete data."""
         try:
-            """Upload data, finetune model and then delete data."""
             logger.info("Step 1:Uploading data to AzureOpenAI resource")
             if training_file_path is not None:
                 self.upload_files(training_file_path, validation_file_path)
