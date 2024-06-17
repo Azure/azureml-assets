@@ -269,13 +269,11 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     if mltable_path is None:
         mltable_path = get_mltable_path()
     test_path = get_test_path(None, "test_output")
-    fuse_prefix = "file://"
     histogram_path = get_test_path(test_path, "histogram")
     sample_index_path = get_test_path(test_path, "samples_index")
-    histogram_file_path = fuse_prefix + histogram_path
-    samples_index_file_path = fuse_prefix + sample_index_path
-    import fsspec
-    fs = fsspec.filesystem("file")
+    histogram_file_path = histogram_path
+    samples_index_file_path = sample_index_path
+
     if threshold_args is None:
         threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
     violations = {
@@ -287,9 +285,9 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     }
 
     for k, v in violations.items():
-        violations[k] = fuse_prefix + get_test_path(test_path, v)
+        violations[k] = get_test_path(test_path, v)
 
-    evaluation_path = fuse_prefix + get_test_path(test_path, EVALUATION)
+    evaluation_path = get_test_path(test_path, EVALUATION)
 
     apply_annotation(
         metric_names=metric_names,
@@ -308,6 +306,5 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
         ground_truth_column_name=None,
         samples_index=samples_index_file_path,
         violations=violations,
-        evaluation=evaluation_path,
-        file_system=fs
+        evaluation=evaluation_path
     )
