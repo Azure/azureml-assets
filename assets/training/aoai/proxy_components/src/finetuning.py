@@ -90,7 +90,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         else:
             logger.info(f'Fine-tune job: {self.finetuning_job_id} finished successfully')
 
-        return finetuned_job.fine_tuned_model
+        return finetuned_job.fine_tuned_model, self.finetuning_job_id
 
     def delete_files(self):
         """Delete training and validation files from azure openai resource."""
@@ -315,7 +315,7 @@ def main():
 
         validate_train_data_upload_type(args)
 
-        finetuned_model_id = finetune_component.submit_job(
+        finetuned_model_id, finetune_job_id = finetune_component.submit_job(
             training_file_path=args.training_file_path,
             validation_file_path=args.validation_file_path,
             training_import_path=args.training_import_path,
@@ -326,7 +326,10 @@ def main():
             suffix=args.suffix
         )
 
-        utils.save_json({"finetuned_model_id": finetuned_model_id}, args.aoai_finetuning_output)
+        utils.save_json(
+            {"finetuned_model_id": finetuned_model_id, "finetune_job_id": finetune_job_id},
+            args.aoai_finetuning_output
+        )
         logger.info("Completed finetuning in Azure OpenAI resource")
 
     except SystemExit:
