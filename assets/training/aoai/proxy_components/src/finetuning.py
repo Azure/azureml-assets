@@ -42,7 +42,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                    hyperparameters: Dict[str, str], hyperparameters_1p: Dict[str, str], suffix=Optional[str]) -> str:
         try:
             """Upload data, finetune model and then delete data."""
-            logger.info("Step 1: Uploading data to AzureOpenAI resource")
+            logger.info("Step 1:Uploading data to AzureOpenAI resource")
             if training_file_path is not None:
                 self.upload_files(training_file_path, validation_file_path)
             else:
