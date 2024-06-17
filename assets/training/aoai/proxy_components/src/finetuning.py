@@ -46,8 +46,10 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             if training_file_path is not None:
                 self.upload_files(training_file_path, validation_file_path)
             else:
-                training_data_uri_key, training_data_uri = utils.get_key_or_uri_from_data_import_path(training_import_path)
-
+                training_data_uri_key, training_data_uri = utils.get_key_or_uri_from_data_import_path(
+                    training_import_path
+                )
+                
                 if validation_import_path is not None:
                     validation_data_uri_key, validation_data_uri =\
                         utils.get_key_or_uri_from_data_import_path(validation_import_path)
@@ -67,10 +69,12 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                     if validation_data_uri_key is not None:
                         keyvault_client_manager = KeyVaultClientManager()
                         keyvault_client = keyvault_client_manager.get_keyvault_client()
-                        logger.info(f"fetching validation file uri from keyvault: {keyvault_client_manager.keyvault_name}")
+                        logger.info(
+                            f"fetching validation fileuri from keyvault: {keyvault_client_manager.keyvault_name}"
+                        )
                         validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
                     else:
-                        logger.info("User has provided validation data uri directly, sending it to Azure OpenAI resource")
+                        logger.info("User provided validation data uri directly, sending it to Azure OpenAI resource")
 
                     self.validation_file_id = self.upload_file_uri_from_rest(validation_data_uri)
                     logger.info("uploaded validation file uri to aoai resource")
