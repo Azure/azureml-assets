@@ -49,7 +49,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                 training_data_uri_key, training_data_uri = utils.get_key_or_uri_from_data_import_path(
                     training_import_path
                 )
-                
                 if validation_import_path is not None:
                     validation_data_uri_key, validation_data_uri =\
                         utils.get_key_or_uri_from_data_import_path(validation_import_path)
