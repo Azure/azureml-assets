@@ -7,7 +7,9 @@ USER root
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    unixodbc-dev &&\
+    unixodbc-dev \
+    git=1:2.25.1-1ubuntu3.12\
+    git-man=1:2.25.1-1ubuntu3.12 &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
