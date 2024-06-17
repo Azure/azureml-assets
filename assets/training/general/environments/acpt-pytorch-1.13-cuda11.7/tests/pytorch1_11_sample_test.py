@@ -38,7 +38,7 @@ def test_pytorch_1_13():
     ml_client.environments.create_or_update(env_docker_context)
 
     # create the command
-    commandscrpit=(
+    commandscrpit = (
         "pip install -r requirements.txt && "
         "python pretrain_glue.py "
         "--tensorboard_log_dir \"/outputs/runs/\" "
