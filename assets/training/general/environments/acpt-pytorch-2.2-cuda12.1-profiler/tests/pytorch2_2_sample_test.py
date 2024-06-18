@@ -36,7 +36,7 @@ def test_pytorch_2_2():
         description="Pytorch 2.2 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
-
+    print("hello, testing!!")
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
