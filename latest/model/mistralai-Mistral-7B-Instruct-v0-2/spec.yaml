@@ -23,7 +23,7 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: mistralai
-version: 3
+version: 4
 description: |
   The Mistral-7B-Instruct-v0.2 Large Language Model (LLM) is an instruct fine-tuned version of the Mistral-7B-v0.2.
 
