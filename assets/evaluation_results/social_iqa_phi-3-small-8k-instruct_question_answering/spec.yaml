@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_phi-3-small-8k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: social_iqa_Phi-3-small-8k-instruct_question_answering
 description: social_iqa_Phi-3-small-8k-instruct_question_answering
 dataset_family: social_iqa

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: piqa_phi-3-small-128k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: piqa_Phi-3-small-128k-instruct_question_answering
 description: Phi-3-small-128k-instruct run for piqa dataset
 dataset_family: piqa

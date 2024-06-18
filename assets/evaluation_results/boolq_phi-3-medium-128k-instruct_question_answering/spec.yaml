@@ -1,6 +1,6 @@
 type: evaluationresult
 name: boolq_phi-3-medium-128k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: boolq_Phi-3-medium-128k-instruct_question_answering
 description: boolq_Phi-3-medium-128k-instruct_question_answering
 dataset_family: boolq

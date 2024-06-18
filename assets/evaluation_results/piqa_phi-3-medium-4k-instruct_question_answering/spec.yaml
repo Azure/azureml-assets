@@ -1,6 +1,6 @@
 type: evaluationresult
 name: piqa_phi-3-medium-4k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: piqa_Phi-3-medium-4k-instruct_question_answering
 description: piqa_Phi-3-medium-4k-instruct_question_answering
 dataset_family: piqa

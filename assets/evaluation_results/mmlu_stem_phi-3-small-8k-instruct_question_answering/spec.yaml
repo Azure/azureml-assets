@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_phi-3-small-8k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: mmlu_stem_Phi-3-small-8k-instruct_question_answering
 description: mmlu_stem_Phi-3-small-8k-instruct_question_answering
 dataset_family: mmlu

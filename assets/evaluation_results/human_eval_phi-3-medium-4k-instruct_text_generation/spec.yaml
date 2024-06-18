@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_phi-3-medium-4k-instruct_text_generation
-version: 20.06.18
+version: 2.06.18
 display_name: human_eval_Phi-3-medium-4k-instruct_text_generation
 description: human_eval_Phi-3-medium-4k-instruct_text_generation
 dataset_family: human_eval

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: winogrande_phi-3-small-128k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: winogrande_Phi-3-small-128k-instruct_question_answering
 description: Phi-3-small-128k-instruct run for winogrande dataset
 dataset_family: winogrande

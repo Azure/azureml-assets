@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_social_sciences_phi-3-medium-128k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: mmlu_social_sciences_Phi-3-medium-128k-instruct_question_answering
 description: mmlu_social_sciences_Phi-3-medium-128k-instruct_question_answering
 dataset_family: mmlu

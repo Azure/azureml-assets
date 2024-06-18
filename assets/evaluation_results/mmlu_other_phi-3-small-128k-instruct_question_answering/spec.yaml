@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_other_phi-3-small-128k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: mmlu_other_Phi-3-small-128k-instruct_question_answering
 description: Phi-3-small-128k-instruct run for mmlu_other dataset
 dataset_family: mmlu

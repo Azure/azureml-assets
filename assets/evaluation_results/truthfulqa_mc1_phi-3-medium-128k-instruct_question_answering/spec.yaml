@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_phi-3-medium-128k-instruct_question_answering
-version: 20.06.18
+version: 2.06.18
 display_name: truthfulqa_mc1_Phi-3-medium-128k-instruct_question_answering
 description: truthfulqa_mc1_Phi-3-medium-128k-instruct_question_answering
 dataset_family: truthfulqa
