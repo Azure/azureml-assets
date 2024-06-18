@@ -33,4 +33,4 @@ dependencies:
   - tiktoken
   - idna==3.7
   - pydantic==2.7.4
-  - mteb==1.12.38
+  - mteb==1.12.39
