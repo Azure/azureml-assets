@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.js
 type: pipeline
 
 name: llm_ingest_dbcopilot_acs_e2e
-version: 0.0.54
+version: 0.0.55
 display_name: Data Ingestion for DB Data Output to ACS E2E Deployment
 description: Single job pipeline to chunk data from AzureML DB Datastore and create acs embeddings index
 
@@ -122,6 +122,10 @@ inputs:
     type: string
     optional: true
     description: "The instruct template for the LLM."
+  user_managed_identity_client_id:
+    type: string
+    optional: true
+    description: "The user identity client_id for the deployment."
 outputs:
   grounding_index:
     type: uri_folder
@@ -131,7 +135,7 @@ jobs:
   #########################################
   db_meta_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding:0.0.60"
+    component: "azureml:llm_dbcopilot_grounding:0.0.61"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -155,10 +159,12 @@ jobs:
       output_grounding_context_file:
         type: uri_folder
         path: ${{parent.outputs.db_context}}
+    environment_variables:
+      USER_MANAGED_IDENTITY_CLIENT_ID: ${{parent.inputs.user_managed_identity_client_id}}
   #########################################
   generate_meta_embeddings:
     type: command
-    component: "azureml:llm_rag_generate_embeddings:0.0.56"
+    component: "azureml:llm_rag_generate_embeddings:0.0.58"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -179,7 +185,7 @@ jobs:
   #########################################
   create_meta_acs_index_job:
     type: command
-    component: "azureml:llm_rag_update_acs_index:0.0.60"
+    component: "azureml:llm_rag_update_acs_index:0.0.62"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -201,7 +207,7 @@ jobs:
   #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.35"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.36"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -221,7 +227,7 @@ jobs:
   #########################################
   generate_sample_embeddings:
     type: command
-    component: "azureml:llm_rag_generate_embeddings:0.0.56"
+    component: "azureml:llm_rag_generate_embeddings:0.0.58"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -242,7 +248,7 @@ jobs:
   #########################################
   create_sample_acs_index_job:
     type: command
-    component: "azureml:llm_rag_update_acs_index:0.0.60"
+    component: "azureml:llm_rag_update_acs_index:0.0.62"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -263,7 +269,7 @@ jobs:
   #########################################
   endpoint_deployment_job:
     type: command
-    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.35"
+    component: "azureml:llm_dbcopilot_deploy_endpoint:0.0.36"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -303,3 +309,4 @@ jobs:
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}
+      USER_MANAGED_IDENTITY_CLIENT_ID: ${{parent.inputs.user_managed_identity_client_id}}
