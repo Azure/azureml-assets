@@ -4,6 +4,6 @@ pydantic==1.10.13
 azureml.core==1.56.0
 pandas==2.2.2
 plotly==5.22.0
-psutil==5.9.8
+psutil==6.0.0
 datasets==2.20.0
 transformers==4.41.2
