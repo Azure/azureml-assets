@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.17
+version: 0.0.18
 name: image_instance_segmentation_pipeline
 display_name: Image Instance Segmentation Pipeline
 description: Pipeline component for image instance segmentation.
@@ -300,7 +300,7 @@ jobs:
 
   finetune_common_validation:
     type: command
-    component: azureml:finetune_common_validation:0.0.3
+    component: azureml:finetune_common_validation:0.0.4
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       train_mltable_path: ${{parent.inputs.training_data}}

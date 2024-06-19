@@ -1,0 +1,31 @@
+type: evaluationresult
+name: openbookqa_phi-3-medium-4k-instruct_question_answering
+version: 2.06.18
+display_name: openbookqa_Phi-3-medium-4k-instruct_question_answering
+description: openbookqa_Phi-3-medium-4k-instruct_question_answering
+dataset_family: openbookqa
+dataset_name: openbookqa
+
+model_name: Phi-3-medium-4k-instruct
+model_version: "6"
+model_asset_id: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/6
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/6
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.888
+
+
+properties:
+  n_shot: 10
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"
