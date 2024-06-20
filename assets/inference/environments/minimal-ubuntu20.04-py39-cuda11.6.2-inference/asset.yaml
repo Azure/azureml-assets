@@ -1,4 +1,4 @@
-name: minimal-py39-cuda11.6.32-gpu-inference
+name: minimal-py39-cuda11.6.32-inference
 version: auto
 type: environment
 spec: spec.yaml

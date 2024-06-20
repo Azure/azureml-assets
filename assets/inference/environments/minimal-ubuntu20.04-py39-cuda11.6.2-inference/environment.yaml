@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-py39-cuda11.6.32-gpu-inference
+  name: azureml/curated/minimal-py39-cuda11.6.32-inference
   os: linux
   context:
     dir: context
