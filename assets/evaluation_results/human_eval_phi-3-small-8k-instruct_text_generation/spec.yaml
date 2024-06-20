@@ -1,0 +1,31 @@
+type: evaluationresult
+name: human_eval_phi-3-small-8k-instruct_text_generation
+version: 2.06.18
+display_name: human_eval_Phi-3-small-8k-instruct_text_generation
+description: human_eval_Phi-3-small-8k-instruct_text_generation
+dataset_family: human_eval
+dataset_name: human_eval
+
+model_name: Phi-3-small-8k-instruct
+model_version: "6"
+model_asset_id: azureml://registries/models-staging/models/Phi-3-small-8k-instruct/versions/6
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/models-staging/models/Phi-3-small-8k-instruct/versions/6
+
+tags:
+  evaluation_type: text_generation
+  task: text-generation
+  accuracy_metric_name: pass@1
+
+metrics:
+  accuracy: 0.5914634146341463
+
+
+properties:
+  n_shot: 0
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: None
+  fewshot_split: "None"
