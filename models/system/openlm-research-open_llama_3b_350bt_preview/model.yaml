@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/openlm-research-open_llama_3b_350bt_preview/331170d/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
