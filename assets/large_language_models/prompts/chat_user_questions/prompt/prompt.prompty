@@ -17,12 +17,16 @@ model:
 inputs:
   persona:
     type: string
+    description: The user persona
   context:
     type: string
+    description: The context where the user is accessing the product
   product:
     type: string
+    description: The product the user is interested in
   count:
     type: integer
+    description: The number of questions to generate
 
 outputs:
   questions:

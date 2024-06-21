@@ -19,4 +19,4 @@ tags:
   industry: retail
 
 data_uri: ./prompt
-template_path: prompt.prompty
+template_path: prompt.yaml
