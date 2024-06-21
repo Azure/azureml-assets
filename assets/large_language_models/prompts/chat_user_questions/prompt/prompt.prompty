@@ -1,0 +1,57 @@
+---
+name: Generate user questions on a product
+description: >
+  To submit your application to user questions, you can ask
+  a language model to generate synthetic questions for you.
+  Use this prompt as a basis to generate a set of questions
+  on a product for a given context and user persona.
+  This technique can be leveraged to create a robust evaluation
+  dataset made of synthetic questions, so that you evaluate the
+  quality of your application responses on more than just a few samples.
+
+model:
+  api: chat
+  parameters:
+    temperature: 0.8
+
+inputs:
+  persona:
+    type: string
+  context:
+    type: string
+  product:
+    type: string
+  count:
+    type: integer
+
+outputs:
+  questions:
+    type: list
+
+sample:
+  persona: a confused customer, not proficient in web interfaces
+  context: contoso outdoors shopping website
+  product: hiking boots
+  count: 5
+  questions: >
+    {"question":"How do I find the right size of hiking boots for my feet on this website?"}
+    {"question":"Are there instructions available for how to measure my foot for the correct boot fit?"}
+    {"question":"Can someone guide me through the process of selecting a pair of hiking boots?"}
+    {"question":"I'm not sure what the different boot terms mean, is there a glossary or help section?"}
+    {"question":"What is the return policy in case the hiking boots don't fit well when I receive them?"}
+---
+system:
+Your goal is to generate questions from a user on a given product.
+
+You are given a context and persona. The context describes where the user is accessing the product. The persona describes the user themselves.
+
+# instructions
+- empathize with the user based on the persona
+- imagine a situation based on the context where the user would access the feature
+- generate {{count}} question(s) this user would have on this feature
+- return the {{count}} question(s) in JSONL format `{"question":"[QUESTION]"}`
+
+user:
+- context: {{context}}
+- persona: {{persona}}
+- product: {{product}}
