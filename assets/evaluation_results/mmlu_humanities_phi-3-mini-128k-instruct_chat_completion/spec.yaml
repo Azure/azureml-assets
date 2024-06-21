@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_humanities_phi-3-mini-128k-instruct_chat_completion
-version: 2.06.19
+version: 2.06.21
 display_name: mmlu_humanities_phi-3-mini-128k-instruct_chat_completion
 description: mmlu_humanities_phi-3-mini-128k-instruct_chat_completion
 dataset_family: mmlu

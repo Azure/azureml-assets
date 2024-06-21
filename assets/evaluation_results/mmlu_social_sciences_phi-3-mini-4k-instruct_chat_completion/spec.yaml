@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_social_sciences_phi-3-mini-4k-instruct_chat_completion
-version: 2.06.19
+version: 2.06.21
 display_name: mmlu_social_sciences_phi-3-mini-4k-instruct_chat_completion
 description: mmlu_social_sciences_phi-3-mini-4k-instruct_chat_completion
 dataset_family: mmlu
