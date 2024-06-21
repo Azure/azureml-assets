@@ -19,16 +19,9 @@ messages:
     - return the {{count}} question(s) in JSONL format `{"question":"[QUESTION]"}`
 - role: user
   content: |
-    - context: contoso outdoors shopping website
-    - persona: a confused customer, not proficient in web interfaces
-    - product: hiking boots
-- role: assistant
-  content: |
-    {"question":"How do I find the right size of hiking boots for my feet on this website?"}
-    {"question":"Are there instructions available for how to measure my foot for the correct boot fit?"}
-    {"question":"Can someone guide me through the process of selecting a pair of hiking boots?"}
-    {"question":"I'm not sure what the different boot terms mean, is there a glossary or help section?"}
-    {"question":"What is the return policy in case the hiking boots don't fit well when I receive them?"}
+    - context: {{context}}
+    - persona: {{persona}}
+    - product: {{product}}
 
 input_variables:
   - name: count
