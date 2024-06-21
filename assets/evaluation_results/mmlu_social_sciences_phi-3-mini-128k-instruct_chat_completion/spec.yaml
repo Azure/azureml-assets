@@ -1,0 +1,31 @@
+type: evaluationresult
+name: mmlu_social_sciences_phi-3-mini-128k-instruct_chat_completion
+version: 2.06.19
+display_name: mmlu_social_sciences_phi-3-mini-128k-instruct_chat_completion
+description: mmlu_social_sciences_phi-3-mini-128k-instruct_chat_completion
+dataset_family: mmlu
+dataset_name: mmlu_social_sciences
+
+model_name: phi-3-mini-128k-instruct
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.783230419
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
