@@ -1,0 +1,31 @@
+type: evaluationresult
+name: openbookqa_phi-3-mini-128k-instruct_chat_completion
+version: 2.06.19
+display_name: openbookqa_phi-3-mini-128k-instruct_chat_completion
+description: openbookqa_phi-3-mini-128k-instruct_chat_completion
+dataset_family: openbookqa
+dataset_name: openbookqa
+
+model_name: phi-3-mini-128k-instruct
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.812
+
+
+properties:
+  n_shot: 10
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"
