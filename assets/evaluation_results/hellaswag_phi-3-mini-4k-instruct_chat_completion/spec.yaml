@@ -1,0 +1,31 @@
+type: evaluationresult
+name: hellaswag_phi-3-mini-4k-instruct_chat_completion
+version: 2.06.21
+display_name: hellaswag_phi-3-mini-4k-instruct_chat_completion
+description: hellaswag_phi-3-mini-4k-instruct_chat_completion
+dataset_family: hellaswag
+dataset_name: hellaswag
+
+model_name: phi-3-mini-4k-instruct
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.781915953
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"
