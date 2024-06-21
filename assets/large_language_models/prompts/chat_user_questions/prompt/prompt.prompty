@@ -1,13 +1,13 @@
 ---
 name: Generate user questions on a product
 description: >
-  To submit your application to user questions, you can ask
+  To submit your application to evaluation, you can ask
   a language model to generate synthetic questions for you.
   Use this prompt as a basis to generate a set of questions
   on a product for a given context and user persona.
-  This technique can be leveraged to create a robust evaluation
-  dataset made of synthetic questions, so that you evaluate the
-  quality of your application responses on more than just a few samples.
+  Using this technique, you can create an evaluation
+  dataset, to measure the quality of your application
+  responses on more than just a few manual samples.
 
 model:
   api: chat
