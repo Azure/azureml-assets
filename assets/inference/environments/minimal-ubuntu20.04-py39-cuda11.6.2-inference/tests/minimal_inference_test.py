@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the minimal ubuntu20.04 py38 gpu environment."""
+"""Tests running a sample job in the minimal ubuntu20.04 py39 gpu environment."""
 import os
 import time
 from pathlib import Path
