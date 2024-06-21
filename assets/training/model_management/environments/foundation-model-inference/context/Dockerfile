@@ -70,7 +70,7 @@ RUN pip install pillow==10.3.0
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
-ADD /runit_folder/api_server /var/runit/api_server
+ADD runit_folder/api_server /var/runit/api_server
 RUN sed -i 's/\r$//g' /var/runit/api_server/run
 RUN chmod +x /var/runit/api_server/run
 
