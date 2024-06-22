@@ -6,7 +6,9 @@
 from urllib.parse import urlparse
 import os
 import re
+import glob
 from typing import Union, Tuple
+import fnmatch
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient
@@ -190,6 +192,42 @@ class StoreUrl:
             if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
                 raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
             raise cue
+
+    def any_files(self, relative_path_pattern: str,
+                  container_client: Union[FileSystemClient, ContainerClient, None] = None) -> bool:
+        """Check if file matching the `relative_path_pattern` exists, wildcard supported."""
+        def file_name_match(file_name: str, pattern: str) -> bool:
+            # fnmatch will match /a/b.txt with /*.txt, but we want it to return False
+            # so split the path and pattern and then match with fnmatch within each section
+            path_sections = file_name.split("/")
+            pattern_sections = pattern.split("/")
+            if len(path_sections) != len(pattern_sections):
+                return False
+            return all(fnmatch.fnmatch(file_name, pattern)
+                       for file_name, pattern in zip(path_sections, pattern_sections))
+
+        def any_files(file_names: list, pattern):
+            return any(file_name_match(file_name, pattern) for file_name in file_names)
+
+        relative_path_pattern = f"{self.path}/{relative_path_pattern.strip('/')}"
+        # find the non-wildcard part of the path
+        pattern_sections = relative_path_pattern.split("/")
+        for idx in range(len(pattern_sections)):
+            if "*" in pattern_sections[idx] or '?' in pattern_sections[idx]:
+                break
+        non_wildcard_path = "/".join(pattern_sections[:idx]) + "/"
+        path_pattern = "/".join(pattern_sections[idx:])
+        # match the wildcard part of the path
+        container_client = container_client or self.get_container_client()
+        if not container_client:  # local
+            return any(glob.iglob(relative_path_pattern, root_dir=self._base_url))
+        elif isinstance(container_client, FileSystemClient):  # gen2
+            paths = container_client.get_paths(non_wildcard_path, True)
+            file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]
+        else:  # blob
+            blobs = container_client.list_blobs(name_starts_with=non_wildcard_path)
+            file_names = [blob.name[len(non_wildcard_path):] for blob in blobs]
+        return any_files(file_names, path_pattern)
 
     def is_local_path(self) -> bool:
         """Check if the store url is a local path."""

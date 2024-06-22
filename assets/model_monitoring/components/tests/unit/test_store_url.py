@@ -304,6 +304,48 @@ class TestStoreUrl:
             store_url = StoreUrl(path, mock_ws)
             assert store_url.is_local_path() == is_local_path
 
+    @pytest.mark.parametrize(
+        "path_names, base_folder, pattern, expected_folder, expected_result",
+        [
+            (
+                ["my/folder/folder1/file1.jsonl", "my/folder/folder1", "my/folder/file2.parquet"],
+                "my/folder", "/folder1/*.jsonl", "my/folder/folder1", True
+            )
+        ]
+    )
+    def test_any_files(self, path_names, base_folder, pattern, expected_folder, expected_result):
+        """Test any_files()."""
+        def construct_mock_blob(name):
+            mock_blob = Mock(is_directory='.' not in name)
+            mock_blob.name = name
+            return mock_blob
+
+        def list_blobs(name_starts_with):
+            if name_starts_with == f"{expected_folder}/":
+                return [construct_mock_blob(name) for name in path_names]
+            else:
+                raise Exception("Invalid name_starts_with.")
+
+        def get_paths(path, recursive: bool):
+            if (path == expected_folder or path == f"{expected_folder}/") and recursive:
+                return [construct_mock_blob(name) for name in path_names]
+            else:
+                raise Exception("Invalid path or recursive.")
+
+        for store_type in ["blob", "gen2"]:
+            if store_type == "blob":
+                base_url = f"wasbs://my_container@my_account.blob.core.windows.net/{base_folder}"
+                mock_container_client = Mock(spec=ContainerClient)
+                mock_container_client.list_blobs.side_effect = list_blobs
+            else:
+                base_url = f"abfss://my_container@my_account.dfs.core.windows.net/{base_folder}"
+                mock_container_client = Mock(spec=FileSystemClient)
+                mock_container_client.get_paths.side_effect = get_paths
+            store_url = StoreUrl(base_url)
+            assert store_url.any_files(pattern, mock_container_client) is expected_result
+
+    # TODO: add UT for any_files local for local test
+
 
 def assert_credentials_are_equal(credential1, credential2):
     """Assert 2 credentials are equal."""
