@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y \
     libc6-dev=2.31-0ubuntu9.16 \
     libc6=2.31-0ubuntu9.16 \
     libc-dev-bin=2.31-0ubuntu9.16 \
-    git=1:2.25.1-1ubuntu3.12 \
-    git-man=1:2.25.1-1ubuntu3.12 &&\
+    git \
+    git-man &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
