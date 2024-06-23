@@ -210,7 +210,8 @@ class StoreUrl:
             return any(file_name_match(file_name, pattern) for file_name in file_names)
 
         # lstrip to handle empty self.path
-        relative_path_pattern = f"{self.path}/{relative_path_pattern.strip('/')}".lstrip("/")
+        base_path = self._base_url.replace('\\', '/') if self.is_local_path() else self.path
+        relative_path_pattern = f"{base_path.rstrip('/')}/{relative_path_pattern.strip('/')}".lstrip("/")
         # find the non-wildcard part of the path
         pattern_sections = relative_path_pattern.split("/")
         for idx in range(len(pattern_sections)):
@@ -221,7 +222,7 @@ class StoreUrl:
         # match the wildcard part of the path
         container_client = container_client or self.get_container_client()
         if not container_client:  # local
-            return any(glob.iglob(relative_path_pattern, root_dir=self._base_url))
+            return any(glob.iglob(path_pattern, root_dir=non_wildcard_path))
         elif isinstance(container_client, FileSystemClient):  # gen2
             paths = container_client.get_paths(non_wildcard_path, True)
             file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]

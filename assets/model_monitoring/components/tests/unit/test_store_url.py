@@ -4,6 +4,7 @@
 """Test file for StoreUrl."""
 
 import pytest
+import os
 from unittest.mock import Mock, patch
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
@@ -364,7 +365,25 @@ class TestStoreUrl:
             store_url = StoreUrl(base_url)
             assert store_url.any_files(pattern, mock_container_client) is expected_result
 
-    # TODO: add UT for any_files local for local test
+    @pytest.mark.parametrize(
+        "pattern, expected_result",
+        [
+            ("2023/10/11/20/*.jsonl", True),
+            ("2023/10/11/*/*.jsonl", True),
+            ("2023/10/*/*/*.jsonl", True),
+            ("2023/*/*/*/*.jsonl", True),
+            ("2023/10/11/*/*.csv", False),
+            ("2023/10/12/*/*.jsonl", False),
+            ("2023/12/*/*/*.jsonl", False),
+            ("2023/10/1?/*/m??_*_only.jsonl", True),
+            ("2023/10/?2/*/*.jsonl", False)
+        ]
+    )
+    def test_any_files_local(self, pattern, expected_result):
+        """Test any_files() for local file system."""
+        base_path = os.path.abspath(f"{os.path.dirname(__file__)}/raw_mdc_data")
+        store_url = StoreUrl(base_path)
+        assert store_url.any_files(pattern) is expected_result
 
 
 def assert_credentials_are_equal(credential1, credential2):
