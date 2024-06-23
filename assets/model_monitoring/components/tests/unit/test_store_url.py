@@ -304,13 +304,34 @@ class TestStoreUrl:
             store_url = StoreUrl(path, mock_ws)
             assert store_url.is_local_path() == is_local_path
 
+    PATHS = [
+        "my/folder/folder1/folder2/file1.jsonl",
+        "my/folder/folder1/file2.jsonl",
+        "my/folder/folder3/file3.csv",
+        "my/folder/file4.jsonl",
+        "my/folder/folder1/folder2",
+        "my/folder/folder1"
+    ]
+
     @pytest.mark.parametrize(
         "path_names, base_folder, pattern, expected_folder, expected_result",
         [
-            (
-                ["my/folder/folder1/file1.jsonl", "my/folder/folder1", "my/folder/file2.parquet"],
-                "my/folder", "/folder1/*.jsonl", "my/folder/folder1", True
-            )
+            (PATHS, "/my/folder", "/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "*/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "*/*/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "*/*/*/*.jsonl", "my/folder/", False),
+            (PATHS, "/my/folder", "/folder1/*.jsonl", "my/folder/folder1/", True),
+            (PATHS, "/my/folder", "/folder1/folder2/*.jsonl", "my/folder/folder1/folder2/", True),
+            (PATHS, "/my/folder", "/folder1/folder3/*.jsonl", "my/folder/folder1/folder3/", False),
+            (PATHS, "/my/folder", "/folder1/folder3/*.csv", "my/folder/folder1/folder3/", False),
+            (PATHS, "/my/folder", "/folder1/folder4/*.jsonl", "my/folder/folder1/folder4/", False),
+            (PATHS, "/my/folder", "/*1/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "/folder1/f?ld*2/*.jsonl", "my/folder/folder1/", True),
+            (["file1.jsonl"], "", "*.jsonl", "", True),
+            (["file1.jsonl"], "", "*.csv", "", False),
+            (["folder1/file1.jsonl", "folder1"], "", "*/*.jsonl", "", True),
+            (["folder1/file1.jsonl", "folder1"], "", "folder1/*.jsonl", "folder1/", True),
+            (["folder1/file1.jsonl", "folder1"], "", "*/*.csv", "", False),
         ]
     )
     def test_any_files(self, path_names, base_folder, pattern, expected_folder, expected_result):
@@ -321,24 +342,23 @@ class TestStoreUrl:
             return mock_blob
 
         def list_blobs(name_starts_with):
-            if name_starts_with == f"{expected_folder}/":
-                return [construct_mock_blob(name) for name in path_names]
-            else:
-                raise Exception("Invalid name_starts_with.")
+            assert name_starts_with == expected_folder, \
+                f"expected non wildcard path to be {expected_folder}, but {name_starts_with} is given"
+            # if condition to return only files under the sub folder
+            return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
 
         def get_paths(path, recursive: bool):
-            if (path == expected_folder or path == f"{expected_folder}/") and recursive:
-                return [construct_mock_blob(name) for name in path_names]
-            else:
-                raise Exception("Invalid path or recursive.")
+            assert path == expected_folder, f"expected non wildcard path to be {expected_folder}, but {path} is given"
+            assert recursive, "get_paths() should be called with recursive=True"
+            return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
 
         for store_type in ["blob", "gen2"]:
             if store_type == "blob":
-                base_url = f"wasbs://my_container@my_account.blob.core.windows.net/{base_folder}"
+                base_url = f"wasbs://my_container@my_account.blob.core.windows.net{base_folder}"
                 mock_container_client = Mock(spec=ContainerClient)
                 mock_container_client.list_blobs.side_effect = list_blobs
             else:
-                base_url = f"abfss://my_container@my_account.dfs.core.windows.net/{base_folder}"
+                base_url = f"abfss://my_container@my_account.dfs.core.windows.net{base_folder}"
                 mock_container_client = Mock(spec=FileSystemClient)
                 mock_container_client.get_paths.side_effect = get_paths
             store_url = StoreUrl(base_url)

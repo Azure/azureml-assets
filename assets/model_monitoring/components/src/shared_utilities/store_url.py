@@ -209,13 +209,14 @@ class StoreUrl:
         def any_files(file_names: list, pattern):
             return any(file_name_match(file_name, pattern) for file_name in file_names)
 
-        relative_path_pattern = f"{self.path}/{relative_path_pattern.strip('/')}"
+        # lstrip to handle empty self.path
+        relative_path_pattern = f"{self.path}/{relative_path_pattern.strip('/')}".lstrip("/")
         # find the non-wildcard part of the path
         pattern_sections = relative_path_pattern.split("/")
         for idx in range(len(pattern_sections)):
             if "*" in pattern_sections[idx] or '?' in pattern_sections[idx]:
                 break
-        non_wildcard_path = "/".join(pattern_sections[:idx]) + "/"
+        non_wildcard_path = ("/".join(pattern_sections[:idx]) + "/").lstrip("/")  # lstrip to handle idx == 0
         path_pattern = "/".join(pattern_sections[idx:])
         # match the wildcard part of the path
         container_client = container_client or self.get_container_client()
