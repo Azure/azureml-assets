@@ -8,12 +8,12 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
     unixodbc-dev \
-    git=1:2.25.1-1ubuntu3.12 \
-    git-man=1:2.25.1-1ubuntu3.12 \
     libc-bin=2.31-0ubuntu9.16 \
     libc6-dev=2.31-0ubuntu9.16 \
     libc6=2.31-0ubuntu9.16 \
-    libc-dev-bin=2.31-0ubuntu9.16 &&\
+    libc-dev-bin=2.31-0ubuntu9.16 \
+    git=1:2.25.1-1ubuntu3.12 \
+    git-man=1:2.25.1-1ubuntu3.12 &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
@@ -39,8 +39,8 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
-    pip install  promptflow-vectordb==0.2.9 && \
-    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.22-py3-none-any.whl &&\
+    pip install  promptflow-vectordb==0.2.10 && \
+    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl &&\
     pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0"
 
 # Fix vunerabilities
