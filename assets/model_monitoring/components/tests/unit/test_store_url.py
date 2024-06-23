@@ -327,7 +327,8 @@ class TestStoreUrl:
             (PATHS, "/my/folder", "/folder1/folder3/*.csv", "my/folder/folder1/folder3/", False),
             (PATHS, "/my/folder", "/folder1/folder4/*.jsonl", "my/folder/folder1/folder4/", False),
             (PATHS, "/my/folder", "/*1/*.jsonl", "my/folder/", True),
-            (PATHS, "/my/folder", "/folder1/f?ld*2/*.jsonl", "my/folder/folder1/", True),
+            (PATHS, "/my/folder", "/folder1/f?ld*2/*.jsonl", "my/folder/folder1/", True),  # both ? and * wildcard
+            # store url points to container root folder
             (["file1.jsonl"], "", "*.jsonl", "", True),
             (["file1.jsonl"], "", "*.csv", "", False),
             (["folder1/file1.jsonl", "folder1"], "", "*/*.jsonl", "", True),
@@ -345,7 +346,7 @@ class TestStoreUrl:
         def list_blobs(name_starts_with):
             assert name_starts_with == expected_folder, \
                 f"expected non wildcard path to be {expected_folder}, but {name_starts_with} is given"
-            # if condition to return only files under the sub folder
+            # if condition to return only folders/files under the sub folder
             return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
 
         def get_paths(path, recursive: bool):
