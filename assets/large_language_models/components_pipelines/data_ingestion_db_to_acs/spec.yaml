@@ -109,7 +109,7 @@ inputs:
     type: string
     optional: true
     description: "The instruct template for the LLM."
-  system_identity_enabled:
+  managed_identity_enabled:
     type: boolean
     default: flase
     optional: true
@@ -153,7 +153,7 @@ jobs:
         type: uri_folder
       output_grounding_context_file: ${{parent.outputs.db_context}}
     environment_variables:
-      SYSTEM_IDENTITY_ENABLED: ${{parent.inputs.system_identity_enabled}}
+      MANAGED_IDENTITY_ENABLED: ${{parent.inputs.managed_identity_enabled}}
     component: "azureml:llm_dbcopilot_grounding:0.0.62"
     type: command
   generate_meta_embeddings:
@@ -302,7 +302,7 @@ jobs:
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}
-      SYSTEM_IDENTITY_ENABLED: ${{parent.inputs.system_identity_enabled}}
+      MANAGED_IDENTITY_ENABLED: ${{parent.inputs.managed_identity_enabled}}
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}

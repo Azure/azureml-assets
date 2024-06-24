@@ -104,7 +104,7 @@ class EndpointDeployment(EndpointDeploymentBase):
             logging.info("dumped secrets to secrets.json")
             with open(os.path.join(code_dir, "configs.json"), "w") as f:
                 json.dump([asdict(config)], f)
-            system_identity_enabled = os.getenv("SYSTEM_IDENTITY_ENABLED", None)
+            managed_identity_enabled = os.getenv("MANAGED_IDENTITY_ENABLED", None)
             self._deploy_endpoint(
                 mir_environment,
                 endpoint_name,
@@ -113,7 +113,7 @@ class EndpointDeployment(EndpointDeploymentBase):
                 score_script="score_zero.py",
                 extra_environment_variables={
                     "INSTRUCT_TEMPLATE": instruct_template,
-                    "SYSTEM_IDENTITY_ENABLED": system_identity_enabled,
+                    "MANAGED_IDENTITY_ENABLED": managed_identity_enabled,
                 },
                 sku=sku,
             )

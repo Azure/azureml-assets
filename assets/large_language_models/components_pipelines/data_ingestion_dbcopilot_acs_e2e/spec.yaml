@@ -122,7 +122,7 @@ inputs:
     type: string
     optional: true
     description: "The instruct template for the LLM."
-  system_identity_enabled:
+  managed_identity_enabled:
     type: boolean
     default: flase
     optional: true
@@ -161,7 +161,7 @@ jobs:
         type: uri_folder
         path: ${{parent.outputs.db_context}}
     environment_variables:
-      SYSTEM_IDENTITY_ENABLED: ${{parent.inputs.system_identity_enabled}}
+      MANAGED_IDENTITY_ENABLED: ${{parent.inputs.managed_identity_enabled}}
   #########################################
   generate_meta_embeddings:
     type: command
@@ -310,4 +310,4 @@ jobs:
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}
-      SYSTEM_IDENTITY_ENABLED: ${{parent.inputs.system_identity_enabled}}
+      MANAGED_IDENTITY_ENABLED: ${{parent.inputs.managed_identity_enabled}}
