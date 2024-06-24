@@ -4,7 +4,7 @@ tags:
   Preview: ""
 name: llm_ingest_db_to_acs
 display_name: LLM - SQL Datastore to ACS Pipeline
-version: 0.0.87
+version: 0.0.88
 description: Single job pipeline to chunk data from AzureML sql data store, and create ACS embeddings index
 settings:
   default_compute: serverless
@@ -109,10 +109,11 @@ inputs:
     type: string
     optional: true
     description: "The instruct template for the LLM."
-  user_managed_identity_client_id:
-    type: string
+  managed_identity_enabled:
+    type: boolean
+    default: flase
     optional: true
-    description: "The user identity client_id for the deployment."
+    description: "Whether to connect using managed identity."
 outputs:
   grounding_index:
     type: uri_folder
@@ -152,8 +153,8 @@ jobs:
         type: uri_folder
       output_grounding_context_file: ${{parent.outputs.db_context}}
     environment_variables:
-      USER_MANAGED_IDENTITY_CLIENT_ID: ${{parent.inputs.user_managed_identity_client_id}}
-    component: "azureml:llm_dbcopilot_grounding:0.0.61"
+      MANAGED_IDENTITY_ENABLED: ${{parent.inputs.managed_identity_enabled}}
+    component: "azureml:llm_dbcopilot_grounding:0.0.62"
     type: command
   generate_meta_embeddings:
     type: command
@@ -220,7 +221,7 @@ jobs:
     #########################################
   db_sample_loading_generator:
     type: command
-    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.36"
+    component: "azureml:llm_dbcopilot_grounding_ground_samples:0.0.37"
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -301,7 +302,7 @@ jobs:
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}
-      USER_MANAGED_IDENTITY_CLIENT_ID: ${{parent.inputs.user_managed_identity_client_id}}
+      MANAGED_IDENTITY_ENABLED: ${{parent.inputs.managed_identity_enabled}}
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
@@ -335,5 +336,5 @@ jobs:
         path: ${{parent.inputs.include_views}}
       instruct_template:
         path: ${{parent.inputs.instruct_template}}
-    component: "azureml:llm_dbcopilot_create_promptflow:0.0.61"
+    component: "azureml:llm_dbcopilot_create_promptflow:0.0.62"
     type: command
