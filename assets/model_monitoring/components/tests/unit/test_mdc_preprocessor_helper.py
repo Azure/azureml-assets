@@ -208,7 +208,6 @@ class TestMDCPreprocessorHelper:
     )
     def test_get_file_list(self, start, end, expected_datetimes):
         """Test get_file_list()."""
-
         mock_store_url = Mock(spec=StoreUrl)
         mock_store_url.is_local_path.return_value = False
         mock_store_url.any_files.side_effect = lambda pattern: pattern in TestMDCPreprocessorHelper.MATCH_PATTERNS
