@@ -9,15 +9,6 @@ RUN apt-get update \
     && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
     && ACCEPT_EULA=Y apt-get install -y msodbcsql18=18.3.3.1-1 \
-    && apt-get install -y libpam0g=1.4.0-11ubuntu2.4 \
-    && apt-get install -y libexpat1=2.4.7-1ubuntu0.3 \
-    && apt-get install -y bash=5.1-6ubuntu1.1 \
-    && apt-get install -y libuuid1=2.37.2-4ubuntu3.4 \
-    && apt-get install -y libblkid1=2.37.2-4ubuntu3.4\
-    && apt-get install -y util-linux=2.37.2-4ubuntu3.4 \
-    && apt-get install -y mount=2.37.2-4ubuntu3.4 \
-    && apt-get install -y libsmartcols1=2.37.2-4ubuntu3.4 \
-    && apt-get install -y libmount1=2.37.2-4ubuntu3.4 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -34,9 +25,9 @@ RUN python -m pip install --upgrade pip && \
     pip install -r requirements.txt && \
     # Install promptflow environment
     pip install promptflow-image-bundle[azure]==0.3.0 && \
-    pip install promptflow-vectordb==0.2.9 && \
+    pip install promptflow-vectordb==0.2.10 && \
     ## Install dbcopilot
-    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.22-py3-none-any.whl && \
+    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl && \
     ## Fix vulnerabilities
     pip install idna==3.7
 
