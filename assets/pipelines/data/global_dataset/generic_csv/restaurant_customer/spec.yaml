@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "{{asset.name}}"
 version: "{{asset.version}}"
-properties:
+tags:
   azureml.Designer: true
   azureml.Designer.name: Restaurant Customer Data
   azureml.Designer.dataTypeId: DataFrameDirectory
