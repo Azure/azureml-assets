@@ -59,7 +59,7 @@ class PromptFlowCreation(OBOComponentBase):
         datastore_uri = get_datastore_uri(workspace, asset_uri)
         logging.info(f"Datastore uri: {datastore_uri}")
 
-        user_managed_identity_client_id = os.environ.get("USER_MANAGED_IDENTITY_CLIENT_ID", None)
+        managed_identity_enabled = os.environ.get("MANAGED_IDENTITY_ENABLED", None)
         embedding_connection_id = os.environ.get(
             "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None
         )
@@ -127,7 +127,7 @@ class PromptFlowCreation(OBOComponentBase):
             "AZUREML_WORKSPACE_NAME": self.workspace.name,
             "AZUREML_SUBSCRIPTION_ID": self.workspace.subscription_id,
             "AZUREML_RESOURCE_GROUP": self.workspace.resource_group,
-            "USER_MANAGED_IDENTITY_CLIENT_ID": user_managed_identity_client_id,
+            "MANAGED_IDENTITY_ENABLED": managed_identity_enabled,
         }
         base_run = pf_client.run(
             flow=flow,
