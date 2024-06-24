@@ -62,6 +62,7 @@ class SupportedVisionTasks(_CustomEnum):
 class SupportedNLPTasks(_CustomEnum):
     """Supported NLP Hugging face tasks."""
 
+    CHAT_COMPLETION = "chat-completion"
     FILL_MASK = "fill-mask"
     TOKEN_CLASSIFICATION = "token-classification"
     QUESTION_ANSWERING = "question-answering"
@@ -69,6 +70,7 @@ class SupportedNLPTasks(_CustomEnum):
     TEXT_GENERATION = "text-generation"
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
+    TEXT2TEXT_GENERATION = "text2text-generation"
 
 
 class SupportedASRModelFamily(_CustomEnum):
@@ -81,6 +83,7 @@ class SupportedTasks(_CustomEnum):
     """Supported Hugging face tasks for conversion to MLflow."""
 
     # NLP tasks
+    CHAT_COMPLETION = "chat-completion"
     FILL_MASK = "fill-mask"
     TOKEN_CLASSIFICATION = "token-classification"
     QUESTION_ANSWERING = "question-answering"
@@ -88,6 +91,7 @@ class SupportedTasks(_CustomEnum):
     TEXT_GENERATION = "text-generation"
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
+    TEXT2TEXT_GENERATION = "text2text-generation"
     # Vision tasks
     IMAGE_CLASSIFICATION = "image-classification"
     # ASR

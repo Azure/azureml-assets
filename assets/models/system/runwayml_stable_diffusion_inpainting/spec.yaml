@@ -2,16 +2,17 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: runwayml-stable-diffusion-inpainting
 path: ./
 properties:
+  SharedComputeCapacityEnabled: true
   SHA: 51388a731f57604945fddd703ecb5c50e8e7b49d
-  inference-min-sku-spec: 6|1|112|336
+  inference-min-sku-spec: 6|1|112|736
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,Standard_NC96ads_A100_v4,
     Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail-m
   task: text-to-image
+  hiddenlayerscanned: ""
   training_dataset: LAION aesthetics v2.5+
   author: Runway
   huggingface_model_id: runwayml/stable-diffusion-inpainting
@@ -20,11 +21,8 @@ tags:
       Standard_NC6s_v3,
       Standard_NC12s_v3,
       Standard_NC24s_v3,
-      Standard_NC24ads_A100_v4,
-      Standard_NC48ads_A100_v4,
-      Standard_NC96ads_A100_v4,
       Standard_ND40rs_v2,
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
-version: 5
+version: 10

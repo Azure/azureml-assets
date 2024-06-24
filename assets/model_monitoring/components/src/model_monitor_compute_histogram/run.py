@@ -38,6 +38,8 @@ def run():
     parser.add_argument("--input_data", type=str)
     parser.add_argument("--histogram_buckets", type=str)
     parser.add_argument("--histogram", type=str)
+    parser.add_argument("--override_numerical_features", type=str, required=False)
+    parser.add_argument("--override_categorical_features", type=str, required=False)
     args = parser.parse_args()
 
     df = try_read_mltable_in_spark_with_error(args.input_data, "input_data")
@@ -48,7 +50,10 @@ def run():
     if not histogram_buckets:
         histogram_buckets = _create_empty_histogram_buckets_df()
 
-    histogram_df = compute_histograms(df, histogram_buckets)
+    histogram_df = compute_histograms(df,
+                                      histogram_buckets,
+                                      args.override_numerical_features,
+                                      args.override_categorical_features)
 
     save_spark_df_as_mltable(histogram_df, args.histogram)
 

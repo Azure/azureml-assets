@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_llama_2_70b_question_answering
-version: 1.0.1
+version: 2.19.040
 display_name: hellaswag_llama_2_70b_question_answering
 description: llama-2-70b run for hellaswag dataset
 dataset_family: hellaswag
@@ -15,13 +15,12 @@ relationships:
     assetId: azureml://registries/azureml-meta/models/Llama-2-70b/versions/13
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
   accuracy: 0.752
-
-path: ./job_files
 
 
 properties:

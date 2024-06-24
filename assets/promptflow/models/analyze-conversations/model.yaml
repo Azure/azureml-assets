@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: samples/analyze_conversations/v1
+  storage_name: pfazurelangstorage
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

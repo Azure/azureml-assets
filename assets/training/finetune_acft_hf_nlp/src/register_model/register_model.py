@@ -30,7 +30,7 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 )
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.register_model.register_model")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.register_model.register_model")
 
 
 COMPONENT_NAME = "ACFT-Register_Model"
@@ -202,6 +202,7 @@ def get_properties(finetune_args_path: str) -> Dict[str, str]:
     additional_properties = {
         "baseModelWeightsVersion": 1.0,
         "hasDeltaWeights": "true",
+        "maas-finetuning": "true",
     }
     properties.update(additional_properties)
     logger.info(f"Adding the following properties to the registered model: {properties}")
@@ -289,7 +290,7 @@ def register_model(args: Namespace):
 
 @swallow_all_exceptions(time_delay=60)
 def main():
-    """Main run function."""
+    """Execute main run function."""
     args = parse_args()
 
     set_logging_parameters(

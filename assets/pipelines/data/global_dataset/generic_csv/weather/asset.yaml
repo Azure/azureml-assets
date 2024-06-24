@@ -1,0 +1,6 @@
+name: weather
+version: 3
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

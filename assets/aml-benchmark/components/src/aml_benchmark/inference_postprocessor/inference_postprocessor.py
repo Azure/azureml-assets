@@ -6,17 +6,24 @@
 """Inference Postprocessor class and runner methods for 3P."""
 
 import json
-import os
 import re
 import jinja2
 import codecs
+import subprocess
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 from typing import Union, List
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-from aml_benchmark.utils.error_definitions import BenchmarkValidationError, BenchmarkUserError
-from aml_benchmark.utils.exceptions import BenchmarkValidationException, BenchmarkUserException
+from aml_benchmark.utils.error_definitions import (
+    BenchmarkValidationError,
+    BenchmarkUserError,
+)
+from aml_benchmark.utils.exceptions import (
+    BenchmarkValidationException,
+    BenchmarkUserException,
+)
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files
 
@@ -41,6 +48,7 @@ class InferencePostprocessor(object):
         prediction_column_name: str = None,
         ground_truth_dataset: str = None,
         ground_truth_column_name: str = None,
+        additional_columns: str = None,
         separator: str = None,
         find_first: str = None,
         regex_expr: str = None,
@@ -62,6 +70,7 @@ class InferencePostprocessor(object):
         :param prediction_column_name: Name of prediction column/key.
         :param ground_truth_dataset: Path to the jsonl file to load the prediction dataset.
         :param ground_truth_column_name: Name of ground truth column/key.
+        :param additional_columns: Name of additional columns which may be useful for metric computation.
         :param separator: Few shot separator used in prompt crafter.
         :param find_first: A list of strings to search for in the inference results. The first occurrence \
             of each string will be extracted. Must provide a comma-separated list of strings.
@@ -108,6 +117,7 @@ class InferencePostprocessor(object):
         self.prediction_column_name = prediction_column_name
         self.ground_truth_dataset = ground_truth_dataset
         self.ground_truth_column_name = ground_truth_column_name
+        self.additional_columns = additional_columns
         self.label_map = label_map
         self.separator = separator
         self.regex_expr = regex_expr
@@ -135,20 +145,6 @@ class InferencePostprocessor(object):
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
-        if (
-            len(
-                [
-                    file
-                    for file in resolve_io_path(self.prediction_dataset)
-                    if file.endswith(".jsonl")
-                ]
-            )
-            == 0
-        ):
-            mssg = "No .jsonl files found in the given prediction dataset."
-            raise BenchmarkValidationException._with_error(
-                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-            )
         if self.prediction_column_name is None:
             mssg = "Prediction column name is not provided."
             raise BenchmarkValidationException._with_error(
@@ -164,19 +160,46 @@ class InferencePostprocessor(object):
         """
         Read the ground truth dataset if provided.
 
-        If ground truth dataset is n-D array, then read only the provided ground truth column name.
+        If ground truth dataset is n-D array, then read only the provided ground truth column name
+        and the additional columns.
         """
         result_df = pd.DataFrame()
         if self.ground_truth_dataset:
             actual_df = pd.json_normalize(
                 read_jsonl_files(resolve_io_path(self.ground_truth_dataset))
             )
+            if not self.ground_truth_dataset and not self.additional_columns:
+                return actual_df
             if self.ground_truth_column_name:
                 result_df[self.ground_truth_column_name] = actual_df[
                     self.ground_truth_column_name
                 ]
-            else:
-                result_df = actual_df
+            if self.additional_columns:
+                columns = [col.strip() for col in self.additional_columns.split(",")]
+                if "" in columns:
+                    logger.warning(
+                        "Received a column name as '' in additional_fields. "
+                        "Please check if extra comma is provided between two column names. "
+                        "Dropping columns named as '' from additional_fields input."
+                    )
+                    columns = [
+                        col for col in columns if col
+                    ]  # and col in actual_df.columns.tolist()]
+                missing_columns = [
+                    col for col in columns if col not in actual_df.columns.tolist()
+                ]
+                if len(missing_columns) > 0:
+                    raise BenchmarkUserException._with_error(
+                        AzureMLError.create(
+                            BenchmarkUserError,
+                            error_details=(
+                                f"The columns {missing_columns} provided in the additional_columns field is not "
+                                "found in the ground truth dataset. Please make sure that the all columns "
+                                "provided in this field is present in the groun_truth dataset."
+                            ),
+                        )
+                    )
+                result_df[columns] = actual_df[columns]
         return result_df
 
     def apply_find_first(self, text: str) -> str:
@@ -237,6 +260,8 @@ class InferencePostprocessor(object):
                     except SyntaxError:
                         # we matched with something that is not a number
                         pass
+        if self.kwargs.get("extract_number_strategy_default_value") is not None:
+            default = self.kwargs.get("extract_number_strategy_default_value")
         return default
 
     def _convert_to_unicode(self, text: str) -> str:
@@ -279,7 +304,8 @@ class InferencePostprocessor(object):
         :param data: A json serialized dictionary.
         """
         if self.label_map:
-            self.label_map = json.loads(self.label_map)
+            if not isinstance(self.label_map, dict):
+                self.label_map = json.loads(self.label_map)
             col_to_encode = self.label_map.get("column_name", None)
             if col_to_encode is None:
                 col_to_encode = self.prediction_column_name
@@ -325,12 +351,16 @@ class InferencePostprocessor(object):
                 row[self.prediction_column_name] = row.get(key)
             predicted = row.get(self.prediction_column_name)
             if predicted is None:
-                logger.warning(f"Received None as prediction at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received None as prediction at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list) and len(predicted) == 0:
-                logger.warning(f"Received an empty array of predictions at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received an empty array of predictions at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list):
                 try:
@@ -389,21 +419,30 @@ class InferencePostprocessor(object):
         for idx, row in enumerate(predicted_data):
             predicted = row.get(key)
             if predicted is None:
-                logger.warning(f"Received None as prediction at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received None as prediction at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list) and len(predicted) == 0:
-                logger.warning(f"Received an empty array of predictions at index {idx}. \
-                               Falling back to an empty string.")
+                logger.warning(
+                    f"Received an empty array of predictions at index {idx}. \
+                               Falling back to an empty string."
+                )
                 pred_list.append("")
             elif isinstance(predicted, list) and len(predicted[0]) > 1:
                 curr_pred_list = [
-                    self.apply_generic_processor(out_string, row) for out_string in predicted
+                    self.apply_generic_processor(out_string, row)
+                    for out_string in predicted
                 ]
                 pred_list.append(curr_pred_list)
             else:
                 out_string = predicted if isinstance(predicted, str) else predicted[0]
-                pred_list.append(self.apply_generic_processor(out_string, row))
+                pred_list.append(
+                    self.apply_generic_processor(out_string, row)
+                    if out_string != ""
+                    else out_string
+                )
         if isinstance(pred_list[0], list) and len(pred_list[0]) > 1:
             cols = [
                 f"{self.prediction_column_name}_{i+1}" for i in range(len(pred_list[0]))
@@ -413,7 +452,7 @@ class InferencePostprocessor(object):
         result_df = pd.DataFrame(pred_list, columns=cols)
         return result_df
 
-    def run(self):
+    def run(self) -> None:
         """Postprocessor runner."""
         if self.user_postprocessor:
             self.run_user_postprocessor()
@@ -443,25 +482,40 @@ class InferencePostprocessor(object):
         )
         actual_df = self.read_ground_truth_dataset()
         predicted_df = self.extract_inferences(key, processor_order)
-        pd.concat([actual_df, predicted_df], axis=1).to_json(self.result, lines=True, orient='records')
+        pd.concat([actual_df, predicted_df], axis=1).to_json(
+            self.result, lines=True, orient="records"
+        )
         return
+
+    def __get_parameters(self) -> dict:
+        return deepcopy(self.__dict__)
 
     def run_user_postprocessor(self) -> None:
         """Postprocessor run using custom template."""
-        try:
-            argss = [
-                "--prediction_dataset",
-                self.prediction_dataset,
-                "--output_dataset",
-                self.result
-            ]
-            if self.ground_truth_dataset:
-                argss.extend(["--ground_truth_dataset", self.ground_truth_dataset])
-            argss = " ".join(argss)
-            os.system(
-                f"python {self.user_postprocessor} {argss}"
+        params_dict = deepcopy(self.__get_parameters())
+        postprocessor_script = params_dict.pop("user_postprocessor")
+        argss = [
+            "--prediction_dataset",
+            params_dict.pop("prediction_dataset"),
+            "--output_dataset",
+            params_dict.pop("result"),
+        ]
+        if self.ground_truth_dataset:
+            argss.extend(
+                ["--ground_truth_dataset", params_dict.pop("ground_truth_dataset")]
             )
-        except Exception as e:
+        additional_parameters = json.dumps(params_dict)
+        argss.extend(["--additional_parameters", f"'{additional_parameters}'"])
+        argss = " ".join(argss)
+        try:
+            _ = subprocess.check_output(
+                f"python {postprocessor_script} {argss}",
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                shell=True,
+            )
+        except subprocess.CalledProcessError as e:
+            error_message = e.output.strip()
             raise BenchmarkUserException._with_error(
-                AzureMLError.create(BenchmarkUserError, error_details=e)
+                AzureMLError.create(BenchmarkUserError, error_details=error_message)
             )

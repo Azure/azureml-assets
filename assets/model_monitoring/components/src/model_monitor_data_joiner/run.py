@@ -5,11 +5,11 @@
 
 import argparse
 import pyspark.sql as pyspark_sql
-from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark_with_error,
     save_spark_df_as_mltable,
 )
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def _validate_join_column_in_input_data(
@@ -18,7 +18,7 @@ def _validate_join_column_in_input_data(
     input_data_name: str
 ):
     if join_column not in input_data_df.columns:
-        raise Exception(f"The join column '{join_column}' is not present in {input_data_name}.")
+        raise InvalidInputError(f"The join column '{join_column}' is not present in {input_data_name}.")
 
 
 def join_data(
@@ -53,6 +53,11 @@ def join_data(
             'inner'
         )
 
+    # Throw exception if the result is empty
+    if joined_data_df.count() == 0:
+        raise InvalidInputError("""The data joiner resulted in an empty data asset.
+                                Please check the input data to see if this is expected.""")
+
     return joined_data_df
 
 
@@ -77,11 +82,6 @@ def run():
         right_input_data_df,
         args.right_join_column
     )
-
-    # Raise warning if the result is empty
-    if joined_data_df.count() == 0:
-        warning_message = 'The data joiner resulted in an empty data asset. Please check the input data to see if this is expected.'  # noqa
-        post_warning_event(warning_message)
 
     # Write the joined data.
     save_spark_df_as_mltable(joined_data_df, args.joined_data)

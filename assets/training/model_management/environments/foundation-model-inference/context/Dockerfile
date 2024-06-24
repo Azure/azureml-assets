@@ -1,59 +1,80 @@
 FROM nvidia/cuda:12.1.0-devel-ubuntu20.04
 
-WORKDIR /
-
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Etc/UTC \
     DEBIAN_FRONTEND=noninteractive
-
-# Install Python 3.10 and pip
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
-RUN apt install python3.10-dev python3.10-distutils -y
-RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python
 RUN apt install git -y
 
-# Install pip for Python 3.10
+ENV MINICONDA_VERSION py310_23.10.0-1
+ENV PATH /opt/miniconda/bin:$PATH
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget && \
-    wget -O get-pip.py 'https://bootstrap.pypa.io/get-pip.py' && \
-    python3.10 get-pip.py && \
-    rm get-pip.py
+    apt-get install -y --no-install-recommends wget runit
+RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
+    conda update --all -c conda-forge -y && \
+    conda clean -ay && \
+    rm -rf /opt/miniconda/pkgs && \
+    rm /tmp/miniconda.sh && \
+    find / -type d -name __pycache__ | xargs rm -rf
 
-# Set Python 3.10 as the default python and pip version
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && \
-    update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3.10 1
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
 
-RUN pip3 install torch==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+# Create conda environment with py310
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    python=3.10 \
+    -c conda-forge 
 
-COPY . .
+ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+
+ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
+ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
+
+WORKDIR /
+
+# Needed for megablocks
+RUN pip install torch~=2.3.0 torchvision --index-url https://download.pytorch.org/whl/cu121
 
 # mixtral specific
 ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
 ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
 RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
 
-RUN pip3 install --no-cache-dir -e .
-RUN pip3 list    # show installed packages
+# For local testing
+# Need to copy src code and install in editable mode
+# COPY . .
+# RUN pip install -e ./ --no-cache-dir
 
-# Copy scoring file
-COPY src/score.py /var/mlflow_resources/mlflow_score_script.py
-ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
-ENV AML_APP_ROOT="/var/mlflow_resources"
+# Flash attention needed for phi-3-mini-v
+RUN pip install packaging
+RUN pip install flash-attn --no-build-isolation
+
+# When copied to assets repo, change to install from public pypi
+RUN pip install llm-optimized-inference==0.1.10 --no-cache-dir
+
+RUN pip uninstall -y vllm
+
+# Apply patch
+COPY ./vllm_phiv.patch ./vllm_phiv.patch
+RUN git clone https://github.com/vllm-project/vllm.git && \
+    cd vllm && \
+    git checkout f8e7adda21810104382bdf3febe3ea02c72f7348 && \
+    git apply ../vllm_phiv.patch && \
+    pip install -r requirements-cuda.txt && \
+    python setup.py bdist_wheel && \
+    pip install dist/*.whl
+# Address pillow vulnerability - torchvision above installs 10.2.0
+RUN pip install pillow==10.3.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
-#Inference requirements
-COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
-RUN /var/requirements/install_system_requirements.sh && \
-    cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
-    cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
-    ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
-    rm -f /etc/nginx/sites-enabled/default
+ADD runit_folder/api_server /var/runit/api_server
+RUN sed -i 's/\r$//g' /var/runit/api_server/run
+RUN chmod +x /var/runit/api_server/run
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
-EXPOSE 5001 8883 8888
+EXPOSE 5001
 CMD [ "runsvdir", "/var/runit" ]
-# dummy number to change when needing to force rebuild without changing the definition: 1

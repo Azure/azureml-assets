@@ -12,6 +12,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
+RUN conda list
+# Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
+RUN conda remove cryptography
+
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # Install main azureml packages
@@ -21,15 +25,22 @@ RUN pip install 'azureml-core=={{latest-pypi-version}}' \
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-telemetry=={{latest-pypi-version}}' \
-                'Werkzeug==2.2.3'
+                'gunicorn>=22.0.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
 RUN pip install 'pyarrow>=14.0.1'
 
+# To resolve vulnerability issue regarding crytography
+RUN pip install 'cryptography>=42.0.4'
+
 # Install huggingface evaluate package from source
 # see issue https://github.com/huggingface/datasets/issues/6182
 RUN pip install git+https://github.com/huggingface/evaluate.git
+
+# To resolve vulnerability issue
+RUN pip install 'Werkzeug>=3.0.3'
+RUN pip install 'tqdm>=4.66.3'
 
 RUN pip freeze
 

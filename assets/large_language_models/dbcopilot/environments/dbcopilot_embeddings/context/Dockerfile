@@ -1,39 +1,55 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
-
-# Set the shared environment path
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
-# Create conda environment
-COPY conda_dependencies.yaml .
-RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
-    rm conda_dependencies.yaml && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
-    conda clean -a -y
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-image-tag}}
+WORKDIR /
 
 USER root
 
-# ODBC
-# adding custom MS repository
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list
+# Install necessary tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    unixodbc-dev \
+    libc-bin=2.31-0ubuntu9.16 \
+    libc6-dev=2.31-0ubuntu9.16 \
+    libc6=2.31-0ubuntu9.16 \
+    libc-dev-bin=2.31-0ubuntu9.16 \
+    git \
+    git-man &&\
+    rm -rf /var/lib/apt/lists/*
 
-# install SQL Server drivers
-# install SQL Server tools
-RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18
-RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
-RUN /bin/bash -c "source ~/.bashrc"
+# Install MS SQL ODBC Driver
+RUN apt-get update \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18=18.3.3.1-1 msodbcsql17=17.10.6.1-1 \
+    && rm -rf /var/lib/apt/lists/*
 
-## Install dbcopilot
-COPY ./extra_requirements.txt ./
-RUN pip install -r extra_requirements.txt
+# Default to UTF-8 file.encoding
+ENV LANG C.UTF-8
 
-## Install dbcopilot
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.12-py3-none-any.whl
+# Set the shared environment path
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/prompt-flow/runtime/
+ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-# fix for https://portal.microsofticm.com/imp/v3/incidents/incident/418102604/summary
-RUN pip install cryptography==41.0.4 langchain==0.0.317 pyarrow==14.0.1
+# Copy the environment file
+COPY ./requirements.txt ./
 
+# dbcopilot environment
+RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+    conda activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+    pip install --upgrade pip && \
+    pip install  -r requirements.txt && \
+    pip install  promptflow-vectordb==0.2.10 && \
+    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl &&\
+    pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0"
+
+# Fix vunerabilities
+RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
+    conda activate /opt/miniconda && \
+    pip install cryptography==42.0.5 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 tqdm==4.66.3 requests==2.32.0 && \
+    conda deactivate"
+
+# Install certificates and other utilities
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \

@@ -24,7 +24,7 @@ class QuotaSimulator(ServiceSimulator):
     """Quota simulator."""
 
     def __init__(self):
-        """Init function."""
+        """Initialize QuotaSimulator."""
         super().__init__(handler=partial(self.RequestHandler, simulator=self))
 
         self._leases = {}
@@ -48,7 +48,7 @@ class QuotaSimulator(ServiceSimulator):
         """Simulator request handler."""
 
         def __init__(self, *args, simulator: 'QuotaSimulator', **kwargs):
-            """Init function."""
+            """Initialize RequestHandler."""
             self.__simulator = simulator
             super().__init__(*args, **kwargs)
 

@@ -3,6 +3,126 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.52 (2024-06-03)
+### 🚀 New Features
+- [#3000](https://github.com/Azure/azureml-assets/pull/3000) Allow use of azcopy's --overwrite flag
+
+## 1.16.51 (2024-05-30)
+### 🐛 Bugs Fixed
+- [#2991](https://github.com/Azure/azureml-assets/pull/2991) Generate SAS tokens for data assets
+
+## 1.16.50 (2024-05-22)
+### 🐛 Bugs Fixed
+- [#2956](https://github.com/Azure/azureml-assets/pull/2956) Update embeddings asset task type
+
+## 1.16.49 (2024-05-17)
+### 🐛 Bugs Fixed
+- [#2935](https://github.com/Azure/azureml-assets/pull/2935) Update the manifest file to include additional configs
+
+## 1.16.48 (2024-05-17)
+### 🐛 Bugs Fixed
+- [#2934](https://github.com/Azure/azureml-assets/pull/2934) Update asset validation check for EvaluationResult
+
+## 1.16.47 (2024-05-17)
+### 🐛 Bugs Fixed
+- [#2933](https://github.com/Azure/azureml-assets/pull/2933) skip hiddenlayerscanned tags till most models are scanned
+
+## 1.16.46 (2024-05-15)
+### 🐛 Bugs Fixed
+- [#2907](https://github.com/Azure/azureml-assets/pull/2907) add hiddenlayerscanned tags valdn
+
+## 1.16.45 (2024-04-24)
+### 🐛 Bugs Fixed
+- [#2773](https://github.com/Azure/azureml-assets/pull/2773) Add h100 skus to supported inference skus list
+
+## 1.16.44 (2024-04-19)
+### 🐛 Bugs Fixed
+- [#2730](https://github.com/Azure/azureml-assets/pull/2730) Fix ACR task timeout keys
+
+## 1.16.43 (2024-04-19)
+### 🐛 Bugs Fixed
+- [#2726](https://github.com/Azure/azureml-assets/pull/2726) Set overall ACR task timeout
+
+## 1.16.42 (2024-04-03)
+### 🐛 Bugs Fixed
+- [#2591](https://github.com/Azure/azureml-assets/pull/2637) Exclude yanked version for `latest-pypi-version`
+
+## 1.16.41 (2024-03-27)
+### 🐛 Bugs Fixed
+- [#2591](https://github.com/Azure/azureml-assets/pull/2591) Revert to not fail on workspace asset URI
+
+## 1.16.40 (2024-03-26)
+### 🐛 Bugs Fixed
+- [#2585](https://github.com/Azure/azureml-assets/pull/2585) Revert enforcing registry asset URI for components
+
+## 1.16.39 (2024-03-26)
+### 🐛 Bugs Fixed
+- [#2584](https://github.com/Azure/azureml-assets/pull/2584) Fix empty create configs
+
+## 1.16.38 (2024-03-25)
+### 🐛 Bugs Fixed
+- [#2572](https://github.com/Azure/azureml-assets/pull/2572) Enforce using registry asset URI for components
+
+## 1.16.37 (2024-03-11)
+### 🐛 Bugs Fixed
+- [#2476](https://github.com/Azure/azureml-assets/pull/2476) Fix bug for extras with `latest-pypi-version`
+
+## 1.16.36 (2024-03-05)
+### 🐛 Bugs Fixed
+- [#2282](https://github.com/Azure/azureml-assets/pull/2282) Add support for optional dependencies with `latest-pypi-version`
+
+## 1.16.35 (2024-02-28)
+### 🐛 Bugs Fixed
+- [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration 
+
+## 1.16.34 (2024-01-29)
+### 🐛 Bugs Fixed
+- [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models 
+
+## 1.16.33 (2024-01-22)
+### 🐛 Bugs Fixed
+- [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation 
+
+## 1.16.32 (2024-01-19)
+### 🐛 Bugs Fixed
+- [#2155](https://github.com/Azure/azureml-assets/pull/2155) Fix no-op model metadata update
+
+## 1.16.31 (2024-01-19)
+### 🚀 New Features
+- [#2078](https://github.com/Azure/azureml-assets/pull/2078) Model spec minimum SKU validation
+
+## 1.16.30 (2024-01-18)
+### 🚀 New Features
+- [#2141](https://github.com/Azure/azureml-assets/pull/2141) Support archiving models
+
+## 1.16.29 (2023-01-17)
+### 🚀 New Features
+- [#2132](https://github.com/Azure/azureml-assets/pull/2132) Improve logging for model validation and link validation results and build running it
+
+## 1.16.28 (2023-01-05)
+### 🚀 New Features
+- [#2071](https://github.com/Azure/azureml-assets/pull/2071) Allow updating files during azcopy
+
+## 1.16.27 (2023-12-22)
+### 🐛 Bugs Fixed
+- [#2031](https://github.com/Azure/azureml-assets/pull/2031) Update model validation for shared quota usage
+
+## 1.16.26 (2023-12-21)
+### 🐛 Bugs Fixed
+- [#2021](https://github.com/Azure/azureml-assets/pull/2021) Require auto version for environments
+
+## 1.16.25 (2023-12-21)
+### 🐛 Bugs Fixed
+- [#2009](https://github.com/Azure/azureml-assets/pull/2009) Fix call to get tokens
+
+## 1.16.24 (2023-12-20)
+### 🐛 Bugs Fixed
+- [#2006](https://github.com/Azure/azureml-assets/pull/2006) Make SAS expiration configurable
+
+## 1.16.23 (2023-12-19)
+### 🚀 New Features
+- [#1909](https://github.com/Azure/azureml-assets/pull/1909) Model spec validation
+
 ## 1.16.22 (2023-12-18)
 ### 🚀 New Features
 - [#1980](https://github.com/Azure/azureml-assets/pull/1980) Add switch to skip validating pytest existence

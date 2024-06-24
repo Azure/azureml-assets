@@ -1,0 +1,33 @@
+type: evaluationresult
+name: squad_v2_llama-2-13b-chat_question_answering
+version: 2.10.05
+display_name: squad_v2_llama-2-13b-chat_question_answering
+description: llama-2-13b-chat run for squad_v2 dataset
+dataset_family: squad_v2
+dataset_name: squad_v2
+
+model_name: llama-2-13b-chat
+model_version: "14"
+model_asset_id: azureml://registries/azureml-meta/models/Llama-2-13b-chat/versions/14
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml-meta/models/Llama-2-13b-chat/versions/14
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  groundedness: 3.6393926613243357
+  relevance: 3.976517501107665
+  GPTSimilarity: 3.204804046
+
+
+properties:
+  n_shot: 2
+  evaluation_sampling_ratio: 0.01
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

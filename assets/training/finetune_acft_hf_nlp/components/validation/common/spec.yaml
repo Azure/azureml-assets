@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
-version: 0.0.27
+version: 0.0.50
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/33
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/59
 
 code: ../../../src/validation
 
@@ -110,12 +110,12 @@ inputs:
     type: integer
     optional: true
     description: Number of training epochs
-  
+
   max_steps:
     type: integer
     optional: true
     description: Maximum number of training steps
-  
+
   per_device_train_batch_size:
     type: integer
     optional: true
@@ -125,26 +125,95 @@ inputs:
     type: integer
     optional: true
     description: Batch size per GPU/CPU for evaluation
-  
+
+  auto_find_batch_size:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable auto_find_batch_size for training
+
   learning_rate:
     type: number
     optional: true
     description: Learning rate for optimizer
-  
+
   adam_beta1:
     type: number
     optional: true
     description: Beta1 hyperparameter for the Adam optimizer
-  
+
   adam_beta2:
     type: number
     optional: true
     description: Beta2 hyperparameter for the Adam optimizer
-  
+
   adam_epsilon:
     type: number
     optional: true
     description: Epsilon hyperparameter for the Adam optimizer
+
+  apply_deepspeed:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable deepspeed for training
+
+  precision:
+    type: string
+    enum:
+      - "32"
+      - "16"
+    default: "32"
+    optional: true
+    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+
+  apply_lora:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If "true" enables lora.
+
+  apply_ort:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will use the ONNXRunTime training
+
+  deepspeed_stage:
+    type: string
+    optional: true
+    default: "2"
+    enum:
+      - "2"
+      - "3"
+    description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
+
+  ignore_mismatched_sizes:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "true"
+    optional: true
+    description: Not setting this flag will raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model.
+
+  max_seq_length:
+    type: integer
+    optional: true
+    default: -1
+    description: Controls the maximum length to use when pad_to_max_length parameter is set to `true`. Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
 
 outputs:
   validation_info:

@@ -1,0 +1,31 @@
+type: evaluationresult
+name: openbookqa_mistralai-mixtral-8x7b-v01_question_answering
+version: 2.19.040
+display_name: openbookqa_mistralai-Mixtral-8x7B-v01_question_answering
+description: mistralai-Mixtral-8x7B-v01 run for openbookqa dataset
+dataset_family: openbookqa
+dataset_name: openbookqa
+
+model_name: mistralai-Mixtral-8x7B-v01
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.856
+
+
+properties:
+  n_shot: 10
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

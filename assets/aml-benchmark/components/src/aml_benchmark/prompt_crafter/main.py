@@ -77,6 +77,11 @@ def parse_args() -> ArgumentParser:
         required=False,
         help="The ground truth key in the input data.")
     parser.add_argument(
+        "--additional_columns",
+        type=str,
+        required=False,
+        help="The additional columns in the input data, seperated by comma.")
+    parser.add_argument(
         "--system_message",
         type=str,
         required=False,
@@ -107,6 +112,7 @@ def main(
         prompt_pattern: str,
         output_file: str,
         ground_truth_column_name: Optional[str] = None,
+        additional_columns: Optional[str] = None,
         few_shot_separator: Optional[str] = None,
         prefix: Optional[str] = None,
         system_message: Optional[str] = None,
@@ -123,6 +129,7 @@ def main(
     :param prompt_pattern: Pattern to use for prompts.
     :param output_file: Path to jsonl with generated prompts.
     :param ground_truth_column_name: Ground truth column name.
+    :param additional_columns: additional columns (e.g. context, question), separated by comma.
     :param few_shot_separator: Separator to use for few-shot prompts.
     :param prefix: Prefix to use for prompts.
     :param system_message: System message to use for prompts.
@@ -143,6 +150,7 @@ def main(
         prefix=prefix,
         output_file=output_file,
         ground_truth_column_name=ground_truth_column_name,
+        additional_columns=additional_columns,
         output_mltable=None,
         metadata_keys=None,
         label_map=None,
@@ -160,6 +168,7 @@ def main(
         system_message=system_message,
         random_seed=random_seed,
         ground_truth_column_name=ground_truth_column_name if ground_truth_column_name else None,
+        additional_columns=additional_columns if additional_columns else None,
         test_dataset_checksum=resolve_io_path(test_data),
         few_shot_dataset_checksum=resolve_io_path(few_shot_data)
         if few_shot_data else None,
@@ -182,6 +191,7 @@ if __name__ == "__main__":
         few_shot_separator=args.few_shot_separator,
         prefix=args.prefix,
         ground_truth_column_name=args.ground_truth_column_name,
+        additional_columns=args.additional_columns,
         output_file=args.output_file,
         system_message=args.system_message,
         few_shot_pattern=args.few_shot_pattern

@@ -1,0 +1,65 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+name: Llama-2-13b
+path: ./
+
+properties:
+  languages: EN
+  evaluation-min-sku-spec: 12|2|224|1474
+  inference-min-sku-spec: 24|4|448|2900
+  finetune-min-sku-spec: 40|2|440|128
+  evaluation-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: text-classification,text-generation
+  azureml.copyRegistryFilesToWorkspace: true
+  SharedComputeCapacityEnabled: true
+  baseModelWeightsVersion: 1.0
+  baseWeightsId: Llama-2-13b
+
+tags:
+  Featured: ""
+  Preview: ""
+  author: meta
+  license: custom
+  task: text-generation
+  hiddenlayerscanned: ""
+  training_datasets: Publicly available sources
+  maas-inference: true
+  maas-finetuning: true
+  SharedComputeCapacityEnabled: ""
+  finetune_compute_allow_list:
+    - Standard_ND40rs_v2
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+  evaluation_compute_allow_list:
+    - Standard_NC12s_v3
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+  inference_compute_allow_list:
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+  sku_to_num_replicas_map:
+    Standard_NC24s_v3: 1
+    Standard_ND40rs_v2: 4
+    Standard_ND96asr_v4: 8
+    Standard_ND96amsr_A100_v4: 8
+    Default: 1
+  model_specific_defaults:
+    apply_lora: "true"
+    apply_deepspeed: "true"
+    deepspeed_stage: "2"
+    precision: "16"
+    max_seq_length: "2048"
+    ignore_mismatched_sizes: "false"
+  inference_supported_envs:
+    - vllm
+    - ds_mii
+
+version: 22

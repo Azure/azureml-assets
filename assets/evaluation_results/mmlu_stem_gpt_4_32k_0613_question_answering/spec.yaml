@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_gpt_4_32k_0613_question_answering
-version: 1.0.1
+version: 2.03.05
 display_name: mmlu_stem_gpt_4_32k_0613_question_answering
 description: gpt-4-32k-0613 run for mmlu_stem dataset
 dataset_family: mmlu
@@ -8,20 +8,19 @@ dataset_name: mmlu_stem
 
 model_name: gpt-4-32k-0613
 model_version: "0613"
-model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
+model_asset_id: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
+    assetId: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
   accuracy: 0.776
-
-path: ./job_files
 
 
 properties:

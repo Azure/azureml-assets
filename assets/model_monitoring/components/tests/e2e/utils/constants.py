@@ -11,16 +11,19 @@ COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR = (
 )
 COMPONENT_NAME_CREATE_MANIFEST = "model_monitor_create_manifest"
 COMPONENT_NAME_MDC_PREPROCESSOR = "model_data_collector_preprocessor"
+COMPONENT_NAME_GENAI_PREPROCESSOR = "genai_mdc_preprocessor"
 COMPONENT_NAME_METRIC_OUTPUTTER = "model_monitor_metric_outputter"
 COMPONENT_NAME_DATA_JOINER = "model_monitor_data_joiner"
 COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR = 'generation_safety_quality_signal_monitor'
 COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR = "model_performance_signal_monitor"
+COMPONENT_NAME_MODEL_TOKEN_STATS_SIGNAL_MONITOR = "genai_token_statistics_signal_monitor"
+COMPONENT_NAME_ACTION_DETECTOR = "model_monitor_action_detector"
 
 # MDC-generated target dataset of an iris model. The data contains drift.
 # Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT = "azureml:uri_folder_iris_model_inputs_with_drift:1"
 # TODO generate this data asset in the gated test workspace
-DATA_ASSET_LLM_INPUTS = "azureml:ChatHistoryModelInput:1"
+DATA_ASSET_LLM_INPUTS = "azureml:uri_folder_llm_model_inputs:1"
 
 
 # MDC-generated target dataset of an iris model. The data contains no drift.
@@ -78,6 +81,32 @@ DATA_ASSET_EMPTY = (
     "azureml:mltable_empty:1"
 )
 
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS = (
+    "azureml:mltable_iris_preprocessed_model_inputs_no_common_columns:1"
+)
+
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_TYPE_OVERRIDE = (
+    "azureml:mltable_iris_preprocessed_model_inputs_type_override:1"
+)
+DATA_ASSET_IRIS_BASELINE_DATA_TYPE_OVERRIDE = (
+    "azureml:mltable_iris_baseline_data_type_override:1"
+)
+
+DATA_ASSET_WITH_TIMESTAMP_BASELINE_DATA = (
+    "azureml:mltable_test_with_timestamp_baseline_data:1"
+)
+DATA_ASSET_WITH_TIMESTAMP_PRODUCTION_DATA = (
+    "azureml:mltable_test_with_timestamp_production_data:1"
+)
+
+# used for checking against histogram regressions where a numerical data-column has a single distinct value
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_INT_SINGLE_VALUE_HISTOGRAM = (
+    "azureml:mltable_iris_preprocessed_model_inputs_int_single_value_histogram:1"
+)
+DATA_ASSET_IRIS_BASELINE_INT_SINGLE_VALUE_HISTOGRAM = (
+    "azureml:mltable_iris_baseline_int_single_value_histogram:1"
+)
+
 # MDC-generated target dataset of an iris model which contains both the input features as well as the inferred results.
 # The data contains no drift. Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
 DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (
@@ -87,7 +116,29 @@ DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (
 DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME = 'model_inputs_join_column'
 DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME = 'model_outputs_join_column'
 # Groundedness target dataset as a MLTable.
-DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:groundedness_preprocess_target_small:1'
+DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:mltable_groundedness_preprocessed_target_small:1'
+DATA_ASSET_TRACE_LOGS_DATA_WITH_CONTEXT = 'azureml:mltable_trace_logs_gsq_adaptor_test:1'
+
+# Chat history data as a MLTable.
+DATA_ASSET_CHAT_HISTORY_DATA = 'azureml:mltable_chat_history_data_small:1'
 
 # For Data Quality with timestamp and boolean type in the MLTable
 DATA_ASSET_VALID_DATATYPE = 'azureml:mltable_validate_datatype_for_data_quality:1'
+
+DATA_ASSET_MODEL_PERFORMANCE_PRODUCTION_DATA = 'azureml:mltable_model_performance_production_data:1'
+
+DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS = (
+    "azureml:uri_folder_genai_raw_log_model_inputs:1"
+)
+
+DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS = (
+    "azureml:uri_folder_genai_raw_log_with_events:1"
+)
+
+# For token stats aggregated data as mltable input
+DATA_AGGREGATED_TRACE_DATA = (
+    "azureml:mltable_aggregrated_genai_preprocessor_outputs:1"
+)
+
+# For action detector as input
+DATA_ASSET_SIGNAL_OUTPUT_GSQ = "azureml:uri_folder_signal_output_gsq:1"

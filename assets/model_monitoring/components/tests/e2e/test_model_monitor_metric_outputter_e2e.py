@@ -6,6 +6,7 @@
 import pytest
 from azure.ai.ml import Input, MLClient, Output
 from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_METRIC_OUTPUTTER,
@@ -15,7 +16,8 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_metric_outputter_job(
-    ml_client: MLClient, get_component, experiment_name, signal_metrics_input, samples_index_input
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, signal_metrics_input,
+    samples_index_input, expect_failure: bool = False
 ):
     metric_outputter_component = get_component(COMPONENT_NAME_METRIC_OUTPUTTER)
 
@@ -42,12 +44,17 @@ def _submit_metric_outputter_job(
     pipeline_job = _metric_outputter_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
+
     return ml_client.jobs.get(pipeline_job.name)
 
 
@@ -56,10 +63,11 @@ class TestModelMonitorMetricOutputterE2E:
     """Test class."""
 
     def test_mdc_preprocessor_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test the happy path scenario for MDC preprocessor."""
         pipeline_job = _submit_metric_outputter_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,

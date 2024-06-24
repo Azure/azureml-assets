@@ -5,9 +5,16 @@
 
 from enum import Enum
 import numpy as np
+import time
+import yaml
+from azureml.dataprep.api.errorhandlers import ExecutionError
 from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.types import StructType
+from .constants import MAX_RETRY_COUNT
+from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
 from shared_utilities.event_utils import post_warning_event
-from shared_utilities.momo_exceptions import DataNotFoundError
+from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
+from shared_utilities.store_url import StoreUrl
 
 
 class NoDataApproach(Enum):
@@ -28,18 +35,21 @@ class InputNotFoundCategory(Enum):
     GENERAL = 10
 
 
-def init_spark():
+def init_spark() -> SparkSession:
     """Get or create spark session."""
     spark = SparkSession.builder.appName("AccessParquetFiles").getOrCreate()
     return spark
 
 
 def _get_input_not_found_category(error: Exception):
-    if isinstance(error, IndexError) or ("Partition 0 is out of bounds." in error.args[0]):
+    err_msg = error.args[0] if len(error.args) > 0 else ""
+    if not isinstance(err_msg, str):
+        err_msg = ""
+    if isinstance(error, IndexError) or ("Partition 0 is out of bounds." in err_msg):
         return InputNotFoundCategory.NO_INPUT_IN_WINDOW
-    elif "The requested stream was not found" in error.args[0]:
+    elif "The requested stream was not found" in err_msg:
         return InputNotFoundCategory.ROOT_FOLDER_NOT_FOUND
-    elif "Not able to find MLTable file" in error.args[0]:
+    elif "Not able to find MLTable file" in err_msg:
         return InputNotFoundCategory.MLTABLE_NOT_FOUND
     else:
         return InputNotFoundCategory.NOT_INPUT_MISSING
@@ -101,24 +111,96 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
         if input_not_found_category != InputNotFoundCategory.NOT_INPUT_MISSING:
             return process_input_not_found(input_not_found_category)
         else:
+            # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
+            try:
+                from azure.ai.ml.identity import CredentialUnavailableError
+                if isinstance(error, CredentialUnavailableError):
+                    raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
+            except ModuleNotFoundError:
+                print(
+                    "Failed to import from module azure-ai-ml to check if we have CredentialUnavailableError. "
+                    "Check for LM failure or stale cache being used. Throwing exception as usual.")
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
 
+def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None):
+    """Verify paths in mltable is supported."""
+    mltable_dict = mltable_dict or yaml.safe_load(StoreUrl(mltable_path, ws).read_file_content("MLTable"))
+    for path in mltable_dict.get("paths", []):
+        path_val = path.get("file") or path.get("folder") or path.get("pattern")
+        try:
+            path_url = StoreUrl(path_val, ws)  # path_url itself must be valid
+            if not path_url.is_local_path():   # and it must be either local(absolute or relative) path
+                _ = path_url.get_credential()  # or credential azureml path
+        except InvalidInputError as iie:
+            raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
+
+
+def _write_mltable_yaml(mltable_obj, folder_path: str):
+    try:
+        store_url = StoreUrl(folder_path)
+        content = yaml.dump(mltable_obj, default_flow_style=False)
+        store_url.write_file(content, "MLTable", True)
+        return True
+    except InvalidInputError as iie:
+        print(f"Unretriable InvalidInputError writing mltable file: {iie}")
+        raise iie
+    except Exception as e:
+        print(f"Error writing mltable file: {e}")
+        return False
+
+
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
+    _verify_mltable_paths(mltable_path)
     spark = init_spark()
-    return spark.read.mltable(mltable_path)
+    try:
+        return spark.read.mltable(mltable_path)
+    except ExecutionError as ee:
+        if 'AuthenticationError("RuntimeError: Non-matching ' in str(ee):
+            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, "
+                                    "please make sure only data defined in the same AML workspace is used in MLTable.")
+    except ValueError as ve:
+        if 'AuthenticationError("RuntimeError: Non-matching ' in str(ve):
+            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not from the same AML workspace.")
 
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-    metrics_df.write.option("output_format", "parquet").option(
-        "overwrite", True
-    ).mltable(folder_path)
+    base_path = folder_path.rstrip('/')
+    output_path_pattern = base_path + "/data/*.parquet"
+
+    mltable_obj = {
+        'paths': [{'pattern': output_path_pattern}],
+        'transformations': ['read_parquet']
+    }
+
+    retries = 0
+    while True:
+        if _write_mltable_yaml(mltable_obj, folder_path):
+            break
+        retries += 1
+        if retries >= MAX_RETRY_COUNT:
+            raise Exception("Failed to write mltable yaml file after multiple retries.")
+        time.sleep(1)
+
+    metrics_df.write.mode("overwrite").parquet(base_path+"/data/")
 
 
 def np_encoder(object):
     """Json encoder for numpy types."""
     if isinstance(object, np.generic):
         return object.item()
+
+
+def create_spark_df(rows: list, schema: StructType):
+    """Create Spark DataFrame."""
+    spark = init_spark()
+    return spark.createDataFrame(data=rows, schema=schema)
+
+
+def save_empty_dataframe(schema: StructType, output_path: str):
+    """Save empty Data Spark DataFrame."""
+    df = create_spark_df([], schema)
+    save_spark_df_as_mltable(df, output_path)

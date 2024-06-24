@@ -6,24 +6,20 @@ from exceptions import (
     ModelValidationException,
     DataValidationException,
     ArgumentValidationException,
-    DataLoaderException,
 )
 from constants import ALL_TASKS, TASK, ArgumentLiterals
 from logging_utilities import get_logger, log_traceback, get_azureml_exception
 from utils import assert_and_raise, read_config, read_config_str, read_model_prediction_data, get_column_names
-from typing import Union
 from error_definitions import (
     InvalidTaskType,
     InvalidModel,
     BadInputColumnData,
     BadLabelColumnData,
     BadFeatureColumnData,
-    EmptyInputData,
     InvalidData,
     InvalidFileInputSource,
     BadEvaluationConfig,
     InvalidGroundTruthColumnNameCodeGen,
-    FilteringDataError,
 )
 from azureml.evaluate.mlflow.models import Model
 from azureml.metrics._score import validate_y_test
@@ -54,29 +50,32 @@ def _validate_task(args):
         args (_type_): _description_
     """
     logger.info("Validating Task Type: " + args[ArgumentLiterals.TASK])
+    message_kwargs = {"TaskName": args[ArgumentLiterals.TASK]}
     assert_and_raise(
         condition=args[ArgumentLiterals.TASK] in ALL_TASKS,
         exception_cls=ArgumentValidationException,
         error_cls=InvalidTaskType,
-        message_kwargs={"TaskName": args[ArgumentLiterals.TASK]}
+        **message_kwargs
     )
 
 
 def _validate_data_passed(data, input_port):
+    message_kwargs = {"input_port": input_port}
     assert_and_raise(
         condition=(data is not None and data != ""),
         exception_cls=DataValidationException,
         error_cls=InvalidData,
-        message_kwargs={"input_port": input_port}
+        **message_kwargs
     )
 
 
 def _validate_input_source_mount(data, input_port):
+    message_kwargs = {"input_port": input_port}
     assert_and_raise(
         condition=(not data.startswith("azureml://")),
         exception_cls=DataValidationException,
         error_cls=InvalidFileInputSource,
-        message_kwargs={"input_port": input_port}
+        **message_kwargs
     )
 
 
@@ -230,7 +229,8 @@ def validate_and_get_columns(args):
         args (_type_): _description_
     """
     logger.info("Reading top row in data for validation.")
-    data = list(read_model_prediction_data(args[ArgumentLiterals.DATA], args[ArgumentLiterals.TASK], nrows=1))[0]
+    data, _ = read_model_prediction_data(args[ArgumentLiterals.DATA], args[ArgumentLiterals.TASK], nrows=1)
+    data = list(data)[0]
     input_column_names, label_column_name, extra_y_test_cols = get_column_names(args, data)
 
     validate_input_column_names(input_column_names, data)
@@ -268,94 +268,15 @@ def validate_Xy(X_test, y_test):
         y_test (_type_): _description_
     """
     # _validate_data_passed(X_test, "test_data")
+    message_kwargs = {"input_port": "test_data"}
     assert_and_raise(
         condition=(X_test is not None and len(X_test) != 0),
         exception_cls=DataValidationException,
         error_cls=InvalidData,
-        message_kwargs={"input_port": "test_data"}
+        **message_kwargs
     )
     assert_and_raise(
         condition=y_test is not None,
         exception_cls=DataValidationException,
         error_cls=BadLabelColumnData
     )
-
-
-def _check_if_non_empty(val: Union[str, list, int]) -> bool:
-    # For the supported tasks val will be the following
-    # Single Label - int, str
-    # Multi Label - int, str
-    # Regression - str, float
-    # NER, POS, Chunking - list
-    # Summarization, Translation - str
-    # QnA - data validation is `skipped`
-    if val is None:
-        return False
-    if isinstance(val, (str, list)):
-        return len(val) != 0
-
-    return True
-
-
-def _clean_and_validate_dataset(data, keep_columns, batch_size=None):
-    """
-    Clean the data for irrelevant columns and null values.
-
-    Args:
-        data: Incoming Data
-        keep_columns: Columns to extract from data
-
-    Returns: Data
-
-    """
-    try:
-        logger.info("Filtering data columns from input columns.")
-        data = data[keep_columns]
-    except Exception as e:
-        message_kwargs = {
-            "column": "input_columns and label_column",
-            "keep_columns": str(keep_columns),
-            "data_columns": str(list(data.columns))
-        }
-        exception = get_azureml_exception(DataValidationException, BadFeatureColumnData, e, **message_kwargs)
-        log_traceback(exception, logger)
-        raise exception
-
-    # remove the null values
-    pre_filter_examples = len(data)
-    if pre_filter_examples == 0:
-        exception = get_azureml_exception(DataValidationException, EmptyInputData, None)
-        log_traceback(exception, logger)
-        raise exception
-
-    logger.info("Filtering rows with 'None' values")
-    logger.info(f"Number of examples before filter: {pre_filter_examples}")
-
-    # TODO support batched=True and handle processing multiple examples in lambda
-    try:
-        data['to_filter'] = data.apply(lambda x: all(_check_if_non_empty(x[col]) for col in keep_columns), axis=1)
-        data = data.loc[data['to_filter']]
-        data = data.drop('to_filter', axis=1)
-        post_filter_examples = len(data)
-    except Exception as e:
-        exception = get_azureml_exception(DataLoaderException, FilteringDataError, e, error=repr(e))
-        log_traceback(exception, logger)
-        raise exception
-
-    logger.info(f"Number of examples after postprocessing: {post_filter_examples}")
-
-    # logging
-    if pre_filter_examples == post_filter_examples:
-        logger.info("None of the examples are filtered")
-    else:
-        logger.info(
-            f"{pre_filter_examples - post_filter_examples} examples are discarded "
-            f"as atleast one of the columns in the data is empty"
-        )
-    if post_filter_examples == 0 and batch_size is None:
-        message = "Failed to prepare data with error: No examples left after filtering."
-        exception = get_azureml_exception(DataValidationException, EmptyInputData, None)
-        log_traceback(exception, logger, message)
-        raise exception
-
-    return data

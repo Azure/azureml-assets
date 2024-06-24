@@ -29,6 +29,7 @@ def run():
     arg_parser.add_argument("--baseline_histogram", type=str, required=False)
     arg_parser.add_argument("--target_histogram", type=str, required=False)
     arg_parser.add_argument("--signal_output", type=str)
+    arg_parser.add_argument("--feature_importance_all", type=str, required=False)
 
     args = arg_parser.parse_args()
 
@@ -42,6 +43,7 @@ def run():
 
     baseline_histogram = None
     target_histogram = None
+    feature_importance_names_importance = None
 
     if args.baseline_histogram:
         baseline_histogram_df = try_read_mltable_in_spark(
@@ -57,6 +59,15 @@ def run():
         if target_histogram_df:
             target_histogram: List[Row] = target_histogram_df.collect()
 
+    if args.feature_importance_all:
+        feature_importance_all_df = try_read_mltable_in_spark(
+            args.feature_importance_all, "feature_importance_all"
+        )
+        if feature_importance_all_df is not None:
+            feature_importance_names_importance = (
+                feature_importance_all_df
+                .select(feature_importance_all_df.feature, feature_importance_all_df.metric_value).collect()
+            )
     signal: Signal = SignalFactory().produce(
         signal_type=args.signal_type,
         monitor_name=args.monitor_name,
@@ -64,6 +75,7 @@ def run():
         metrics=metrics,
         baseline_histogram=baseline_histogram,
         target_histogram=target_histogram,
+        feature_importance=feature_importance_names_importance,
     )
 
     metric_timestamp = parser.parse(args.metric_timestamp)

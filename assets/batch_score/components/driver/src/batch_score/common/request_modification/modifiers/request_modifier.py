@@ -19,5 +19,5 @@ class RequestModificationException(Exception):
     """Request modifier exception."""
 
     def __init__(self, message: str = "An exception was thrown while attempting to apply a RequestModifier.") -> None:
-        """Init function."""
+        """Initialize RequestModificationException."""
         super().__init__(message)

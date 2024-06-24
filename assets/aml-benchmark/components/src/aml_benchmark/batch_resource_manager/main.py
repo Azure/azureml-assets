@@ -93,6 +93,10 @@ def parse_args() -> argparse.Namespace:
         default=False, type=str2bool,
         help="Flag on if this is a finetuned model.",
     )
+    parser.add_argument(
+        "--finetuned_model_metadata", default=None, type=str,
+        help="Directory contains finetuned_model_metadata.",
+    )
     parser.add_argument("--deployment_retries", default=5, type=int, help="Number of retries for deployment.")
     parser.add_argument(
         "--deployment_retry_interval_seconds", default=600, type=int, help="Retry interval for deployment.")
@@ -354,7 +358,8 @@ def main(
     deployment_retries: int,
     deployment_retry_interval_seconds: int,
     wait_finetuned_step: bool,
-    finetuned_step_name: str
+    finetuned_step_name: str,
+    finetuned_model_metadata: str
 ) -> None:
     """
     Entry function of the script.
@@ -400,10 +405,18 @@ def main(
                 if finetuned_resource_group else workspace.resource_group
             finetuned_subscription_id = finetuned_subscription_id \
                 if finetuned_subscription_id else workspace.subscription_id
+
+        # if model is finetuned from aoai finetune step then override model from finetuned_model_metadata
+        is_aoai_finetuned_model = finetuned_model_metadata is not None
+        if is_aoai_finetuned_model:
+            with open(finetuned_model_metadata) as f:
+                model_metadata = json.load(f)
+                model = model_metadata["finetuned_model_id"]
+
         online_model = OnlineEndpointModel(
             model, model_version, model_type, endpoint_name, is_finetuned_model,
             finetuned_subscription_id, finetuned_resource_group, finetuned_workspace,
-            finetuned_step_name
+            finetuned_step_name, is_aoai_finetuned_model
         )
         is_deployment_successful = False
         while deployment_retries > 0:
@@ -440,7 +453,9 @@ def main(
     elif delete_managed_deployment:
         if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
-            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
+            is_aoai_finetuned_model = finetuned_model_metadata is not None
+            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name,
+                                               is_aoai_finetuned_model=is_aoai_finetuned_model)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
                 endpoint_resource_group,
@@ -493,5 +508,6 @@ if __name__ == "__main__":
         args.deployment_retries,
         args.deployment_retry_interval_seconds,
         args.wait_finetuned_step,
-        args.finetuned_step_name
+        args.finetuned_step_name,
+        args.finetuned_model_metadata
     )

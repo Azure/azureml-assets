@@ -18,7 +18,7 @@ import re
 import torch
 
 # set up transformers cache
-from azureml.acft.common_components.utils import transformer_utils  # noqa: F401
+from azureml.acft.common_components.utils import transformer_utils  # noqa: F401 # Module imported but unused
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -28,11 +28,12 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     MLFLOW_FLAVORS,
+    SaveStrategy,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
-from azureml.acft.accelerator.utils.run_utils import add_run_properties
+from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
@@ -47,24 +48,15 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 from azureml.acft.common_components.utils.error_handling.error_definitions import SKUNotSupported
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
-UNWANTED_PACKAGES = [
-    "apex>",
-    "apex<",
-    "apex=",
-    "mlflow>",
-    "mlflow<",
-    "mlflow=",
-    "transformers=",
-    "transformers>",
-    "transformers<",
-]
-PINNED_PACAKGES = ["transformers==4.34.0", "mlflow==2.8.0"]
+
+PHI3_MINI_4K_INSTRUCT_MODEL_TYPE = "phi3mini"
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
+
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
@@ -81,6 +73,7 @@ RUN_PROPERTIES = {
 
 add_run_properties(ROOT_RUN_PROPERTIES, add_to_root=True)
 add_run_properties(RUN_PROPERTIES)
+
 
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
@@ -137,6 +130,11 @@ MLFLOW_MODEL_SIGNATURES_FOR_TRANSFORMERS = {
         "inputs": '[{"type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
+    Tasks.TEXT_GENERATION: {
+        "inputs": '[{"type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+        "params": '[{"name": "top_p", "type": "float", "default": 1.0, "shape": null}, {"name": "temperature", "type": "float", "default": 0.8, "shape": null}, {"name": "max_new_tokens", "type": "integer", "default": 50, "shape": null}, {"name": "do_sample", "type": "boolean", "default": true, "shape": null}, {"name": "return_full_text", "type": "boolean", "default": true, "shape": null}]',   # noqa: E501 # Length of line greater than 119 characters limit
+    },
 }
 
 
@@ -152,6 +150,7 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.GPT_NEOX,  # dolly
     HfModelTypes.FALCON,
     HfModelTypes.REFINEDWEBMODEL,  # falcon
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -160,6 +159,7 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.REFINEDWEBMODEL,
     HfModelTypes.FALCON,
     REFINED_WEB,
+    HfModelTypes.MIXTRAL,
 ]
 
 
@@ -177,6 +177,7 @@ ACFT_REGEX_PREFIX = "acft_regex:"
 
 DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
     Tasks.TEXT_GENERATION,
+    Tasks.CHAT_COMPLETION
 ]
 DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
@@ -186,7 +187,10 @@ DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASK
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
-    MISTRAL
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
+    HfModelTypes.PHI_LONGROPE,
+    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -196,6 +200,19 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTE
 FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.FALCON,
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
+    HfModelTypes.PHI_LONGROPE,
+    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
+]
+
+FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
+    HfModelTypes.MISTRAL,
+    HfModelTypes.MIXTRAL,
+    HfModelTypes.PHI_LONGROPE,
+    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
 ]
 
 
@@ -458,6 +475,18 @@ def get_parser():
         help="Loads Optimizer, Scheduler and Trainer state for finetuning if true",
     )
     parser.add_argument(
+        "--save_strategy",
+        type=str,
+        default=SaveStrategy.EVALUATION_STRATEGY,
+        help="The checkpoint save strategy to adopt during training.",
+    )
+    parser.add_argument(
+        "--save_steps",
+        type=int,
+        default=100,
+        help="Number of update steps between two checkpoint saves if save_strategy='steps'",
+    )
+    parser.add_argument(
         "--save_total_limit",
         type=int,
         default=-1,
@@ -500,14 +529,14 @@ def get_parser():
 
     parser.add_argument(
         "--pytorch_model_folder",
-        default="output",
+        default="pytorch_model_folder",
         type=str,
         help="Output dir to save the finetune model and other metadata",
     )
 
     parser.add_argument(
         "--mlflow_model_folder",
-        default="output",
+        default="mlflow_model_folder",
         type=str,
         help="Output dir to save the finetune model as mlflow model",
     )
@@ -650,6 +679,11 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
             invalid_settings=dict(auto_find_batch_size=True),
             fail_run=False,
             valid_settings=dict(auto_find_batch_size=False)
+        ),
+        dict(  # Phi models, disable deepspeed stage 3
+            invalid_settings=dict(model_type=MIXFORMER_SEQUENTIAL),
+            fail_run=True,
+            valid_settings=None
         )
     ]
     for setting in invalid_ds_zero3_settings:
@@ -680,6 +714,14 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
                 )
                 for key, value in valid_settings.items():
                     setattr(args, key, value)
+
+
+def _set_hf_trainer_args_from_finetune_config(args: Namespace, finetune_config: Dict[str, Any]):
+    """Read :param `hf_trainer_args` from finetune config and set them to args."""
+    hf_trainer_args = finetune_config.get("hf_trainer_args", {})
+    for arg_name, arg_value in hf_trainer_args.items():
+        setattr(args, arg_name, arg_value)
+        logger.info(f"Setting {arg_name} to {arg_value}")
 
 
 def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
@@ -733,6 +775,49 @@ def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder:
     return ds_config_json
 
 
+def is_vllm_enabled(task_name: str, finetune_config: Dict[str, Any]) -> bool:
+    """Read :flag `inferencing_config.enable_vllm` to enable vllm for finetuned model.
+
+    1. vllm support is disabled by default.
+    2. To enable vllm support update the param :inferencing_config.enable_vllm to True.
+    3. Legacy support
+        vllm support for text generation task is enabled by default.
+        To disable it set the param :inferencing_config.enable_vllm to False.
+    """
+    if (
+        finetune_config.get("inferencing_config") is not None and
+        finetune_config["inferencing_config"].get("enable_vllm") is not None
+    ):
+        enable_vllm = bool(finetune_config["inferencing_config"]["enable_vllm"])
+        enabled_or_disabled_warn_msg = "enabled" if enable_vllm else "disabled"
+        logger.warning(f"Vllm inferencing is {enabled_or_disabled_warn_msg} for {task_name} from finetune config.")
+        return enable_vllm
+    # legacy support for already supported models
+    elif task_name == Tasks.TEXT_GENERATION:
+        logger.warning(
+            f"Vllm inferencing is auto enabled for {task_name}. "
+            "Set the :param `inferencing_config.enable_vllm to False` to disable it."
+        )
+        return True
+    return False  # default case
+
+
+def setup_vllm(task_name: str, finetune_config: Dict[str, Any], base_model_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """Enable/disable vllm for finetuned model inferencing."""
+    if not is_vllm_enabled(task_name, finetune_config):
+        removed_base_image = base_model_metadata.pop("azureml.base_image", None)
+        if removed_base_image is not None:
+            logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
+                        base image value is {removed_base_image}.")
+    else:
+        if base_model_metadata.get("azureml.base_image") is not None:
+            logger.info(
+                "Adding inferencing base image {} for {} task.\
+                ".format(base_model_metadata.get("azureml.base_image"), task_name)
+            )
+    return base_model_metadata
+
+
 def resolve_deepspeed_config(args: Namespace) -> str:
     """Identify the right deepspeed config to be used based on user passed parameters."""
     # Check for deepspeed config via input port
@@ -764,11 +849,28 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
         logger.info("Deepspeed is not enabled. Nothing to setup!")
         return
 
+    # Validate auto_find_batch_size
+    if args.auto_find_batch_size:
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "Invalid settings found. Deep Speed cannot be coupled with auto_find_batch_size.\n"
+                            "1. If you want to use auto_find_batch_size functionality set apply_deepspeed to false\n"
+                            "2. Otherwise, set auto_find_batch_size to false and use per_device_train_batch_size of 1"
+                        )
+                    )
+                )
     # load deepspeed config
     ds_config_json = get_deepspeed_config_json(args)
 
+    ds_stage = identify_deepspeed_stage(ds_config_json)
+    # set proper deespeeed stage in finetune args
+    # so that down stream components like model_converter can use proper values if to merge model or not
+    setattr(args, "deepspeed_stage", ds_stage)
+
     # add validations for deepspeed stage3
-    if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
+    if do_validate and ds_stage == 3:
         # activate few deepspeed stage3 specific configurations
         enable_ds3_model_specific_args(args)
         # validate the ds config file
@@ -787,6 +889,92 @@ def enable_ds3_model_specific_args(args: Namespace):
 
     Invoke the function only when deepspeed stage3 is enabled.
     """
+    pass
+
+
+def set_16bit_precision(args: Namespace):
+    """Set fp16/bf16 in args based on cuda device support."""
+    if torch.cuda.is_bf16_supported():
+        args.bf16 = True
+        logger.info("Setting bfloat16 to True.")
+    else:
+        args.fp16 = True
+        logger.info("Setting float16 to True.")
+
+
+def set_flash_attention(args: Namespace):
+    """Set Flash Attention related parameters."""
+    flash_attention_load_model_kwargs = {}
+    if (
+        hasattr(args, "model_type")
+        and args.model_type in FORCE_FLASH_ATTENTION_2_MODEL_TYPES
+    ):
+        # only Ampere or higher architecture supports Flash attention 2
+        # Flash attention 2 is supported with 16-bit, 8-bit anf 4-bit
+        if torch.cuda.is_available() and torch.cuda.is_bf16_supported() and args.precision in [16, 8, 4]:
+            # `use_flash_attention_2=True` will be deprecated, use `attn_implementation="flash_attention_2"`
+            flash_attention_load_model_kwargs.update({"attn_implementation": "flash_attention_2"})
+            setattr(args, "apply_flash_attention", True)
+            setattr(args, "flash_attention_version", 2)
+        # elif args.precision == 16:
+        #     # Flash attention is supported with only 16-bit
+        #     setattr(args, "apply_flash_attention", True)
+        #     setattr(args, "flash_attention_version", 1)
+        # else:
+        #     # unable to use Flash attention as precision is not supported
+        #     logger.warning(f"{args.precision}-bit precision is not supported for Flash attention.")
+        #     logger.warning("Disabling Flash attention.")
+        #     setattr(args, "apply_flash_attention", False)
+        #     setattr(args, "flash_attention_version", -1)
+        else:
+            logger.warning("Flash Attention is not supported on current compute.")
+            setattr(args, "apply_flash_attention", False)
+            setattr(args, "flash_attention_version", -1)
+        if args.flash_attention_version != -1:
+            # Set 16-bit precision value in Quantization case for Flash Attention to work.
+            # Currently will fail with error `RuntimeError: FlashAttention only support fp16 and bf16 data type`.
+            # When fp16/bf16 is set the attention q,k,v layers are autocasted to respective precision from `uint8`.
+            if (args.finetune_in_4bit or args.finetune_in_8bit) and not (args.fp16 or args.bf16):
+                set_16bit_precision(args)
+            # Flash attention is supported only when model is loaded in respective supported precision
+            if args.bf16:
+                flash_attention_load_model_kwargs.update({"torch_dtype": torch.bfloat16})
+            elif args.fp16:
+                flash_attention_load_model_kwargs.update({"torch_dtype": torch.float16})
+            # update finetune_config to load model with flash_attention_2/torch_dtype
+            args.finetune_config = deep_update(
+                args.finetune_config,
+                {
+                    "load_model_kwargs": flash_attention_load_model_kwargs,
+                }
+            )
+    else:
+        setattr(args, "apply_flash_attention", False)
+        setattr(args, "flash_attention_version", -1)
+    logger.info(f"enable Flash attention: {getattr(args, 'apply_flash_attention', None)}")
+    logger.info(f"Using Flash Attention version: {getattr(args, 'flash_attention_version', None)}")
+    logger.info(f"Flash Attention model load kwargs: {flash_attention_load_model_kwargs}")
+
+
+def set_gradient_checkpointing(args: Namespace):
+    """Set Gradient checkpointing related parameters."""
+    if args.apply_lora and not args.apply_deepspeed:
+        # do not set `gradient_checkpointing` for LoRA only training as it fails with the following error:
+        # RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following
+        # reasons: 1) Use of a module parameter outside the `forward` function. Please make sure model parameters
+        # are not shared across multiple concurrent forward-backward passes. or try to use _set_static_graph() as
+        # a workaround if this module graph does not change during training loop.2) Reused parameters in multiple
+        # reentrant backward passes. For example, if you use multiple `checkpoint` functions to wrap the same part
+        # of your model, it would result in the same set of parameters been used by different reentrant backward
+        # passes multiple times, and hence marking a variable ready multiple times. DDP does not support such use
+        # cases in default. You can try to use _set_static_graph() as a workaround if your module graph does not
+        # change over iterations.
+        # Parameter at index xxx has been marked as ready twice. This means that multiple autograd engine  hooks
+        # have fired for this particular parameter during this iteration. You can set the environment variable
+        # TORCH_DISTRIBUTED_DEBUG to either INFO or DETAIL to print parameter names for further debugging.
+        logger.info("Not setting `gradient_checkpointing` to True for LoRA only finetuning.")
+        return
+
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
@@ -795,6 +983,8 @@ def enable_ds3_model_specific_args(args: Namespace):
             f"Identified model type: {args.model_type}. Forcing `gradient_checkpointing` to True."
         )
         setattr(args, "gradient_checkpointing", True)
+
+    logger.info(f"enable Gradient checkpointing: {getattr(args, 'gradient_checkpointing', None)}")
 
 
 def setup_automl_nlp(args: Namespace) -> None:
@@ -863,7 +1053,8 @@ def finetune(args: Namespace):
         setattr(args, "ignore_mismatched_sizes", False)
 
     # set eval_accumulation_steps to None if passed a non-positive value
-    if getattr(args, "eval_accumulation_steps", -1) <= 0:
+    eval_accumulation_steps = getattr(args, "eval_accumulation_steps", -1)
+    if eval_accumulation_steps and eval_accumulation_steps <= 0:
         setattr(args, "eval_accumulation_steps", None)
 
     logger.info(f"eval_accumulation_steps: {getattr(args, 'eval_accumulation_steps', None)}")
@@ -882,6 +1073,12 @@ def finetune(args: Namespace):
             if "lora_target_modules" in ft_config:
                 logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
                 setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
+            # Read leaf modules for MoE models from finetune config
+            if "leaf_modules_of_moe_models" in ft_config:
+                logger.info(f'Setting leaf_modules_of_moe_models to: {ft_config.get("leaf_modules_of_moe_models")}')
+                setattr(args, "leaf_modules_of_moe_models", ft_config.get("leaf_modules_of_moe_models"))
+            # Reading hf trainer args from finetune config
+            _set_hf_trainer_args_from_finetune_config(args, ft_config)
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
         setattr(args, "finetune_config", {})
@@ -915,6 +1112,9 @@ def finetune(args: Namespace):
                                 f"Adding mlflow model signature for task {args.task_name} - "
                                 f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[mlflow_flavor][args.task_name]}"
                             )
+
+    # set `mlflow_flavor` in finetune args
+    setattr(args, "mlflow_flavor", mlflow_flavor)
 
     # remove mlflow_model_signature if empty
     if "mlflow_model_signature" in mlflow_ft_conf \
@@ -992,19 +1192,26 @@ def finetune(args: Namespace):
     args.output_dir = args.pytorch_model_folder
     Path(args.output_dir).mkdir(exist_ok=True, parents=True)
     if args.precision == 16:
-        if torch.cuda.is_bf16_supported():
-            args.bf16 = True
-            logger.info("Setting bfloat16 to True.")
-        else:
-            args.fp16 = True
-            logger.info("Setting float16 to True.")
+        set_16bit_precision(args)
     args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
     args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
 
+    # set flash-attention
+    set_flash_attention(args)
+
+    # set gradient-checkpointing
+    set_gradient_checkpointing(args)
+
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
-            raise ValueError(
-                f"Looks like quantized finetune is enabled for model family: {args.model_type} which is not supported")
+            raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            f"Quantized finetune is not supported for model family: {args.model_type}."
+                        )
+                    )
+                )
         logger.info("Enabling QLoRA finetuning")
         if not args.apply_lora:
             logger.info("Lora is not enabled. Setting it to true.")
@@ -1012,9 +1219,15 @@ def finetune(args: Namespace):
         if args.apply_deepspeed:
             logger.info(
                 "Deepspeed is enabled which is not compatible with QLoRA. "
-                "Resetting Deepspeed to false"
+                "Resetting Deepspeed to false."
             )
             setattr(args, "apply_deepspeed", False)
+        if args.gradient_checkpointing:
+            logger.info(
+                "Gradient checkpointing is enabled which is not compatible with QLoRA. "
+                "Resetting Gradient checkpointing to false."
+            )
+            setattr(args, "gradient_checkpointing", False)
 
     setattr(args, "apply_ort", can_apply_ort(args, logger))
 
@@ -1034,8 +1247,13 @@ def finetune(args: Namespace):
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
 
-    args.save_strategy = args.evaluation_strategy
-    args.save_steps = args.eval_steps
+    if args.save_strategy == SaveStrategy.EVALUATION_STRATEGY:
+        logger.info(f"Setting save strategy to evaluation strategy: {args.evaluation_strategy}, {args.eval_steps}")
+        args.save_strategy = args.evaluation_strategy
+        args.save_steps = args.eval_steps
+
+    # setup vllm for finetuned model inference
+    metadata = setup_vllm(args.task_name, args.finetune_config, metadata)
 
     args.model_metadata = update_acft_metadata(metadata=metadata,
                                                finetuning_task=args.task_name,
@@ -1047,46 +1265,13 @@ def finetune(args: Namespace):
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
 
-    # remove unwanted packages and add pinned packages in requirements.txt and conda.yaml
-    # TODO: Workaround for now, we need to find better solution
-    if mlflow_flavor == MLFLOW_FLAVORS.TRANSFORMERS:
-        _update_packages(getattr(args, 'mlflow_model_folder', None))
-
-
-def _update_packages(model_save_path: str):
-    req_file_path = os.path.join(model_save_path, "requirements.txt")
-    conda_file_path = os.path.join(model_save_path, "conda.yaml")
-    requirements = None
-    if os.path.exists(req_file_path):
-        with open(req_file_path, "r") as f:
-            requirements = f.readlines()
-        if requirements:
-            for package in UNWANTED_PACKAGES:
-                requirements = [item for item in requirements if not item.startswith(package)]
-            pinned_packages = [pin_pack + '\n' for pin_pack in PINNED_PACAKGES]
-            requirements[-1:-1] = pinned_packages
-            with open(req_file_path, "w") as f:
-                f.writelines(requirements)
-            logger.info("Updated requirements.txt file")
-
-    conda_dict = None
-    if os.path.exists(conda_file_path):
-        with open(conda_file_path, "r") as f:
-            conda_dict = yaml.safe_load(f)
-        if conda_dict is not None and "dependencies" in conda_dict:
-            for i in range(len(conda_dict["dependencies"])):
-                if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
-                    pip_list = conda_dict["dependencies"][i]["pip"]
-                    if len(pip_list) > 0:
-                        for package in UNWANTED_PACKAGES:
-                            pip_list = [item for item in pip_list if not item.startswith(package)]
-                        pip_list.extend(PINNED_PACAKGES)
-                        conda_dict["dependencies"][i]["pip"] = pip_list
-                        break
-
-            with open(conda_file_path, "w") as f:
-                yaml.safe_dump(conda_dict, f)
-            logger.info("Updated conda.yaml file")
+    # post-training execute any code on main-process only to avoid race conditions.
+    if is_main_process():
+        # copy conda file
+        conda_file_path = Path(args.model_selector_output, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
+        if conda_file_path.is_file():
+            shutil.copy(str(conda_file_path), args.output_dir)
+            logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
 
 def can_apply_ort(args: Namespace, logger):
@@ -1160,6 +1345,16 @@ def main():
             AutoModelForCausalLM.from_pretrained, trust_remote_code=True
         )
         logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA and Text Gen")
+
+    # XXX Hack to support loading best peft model after finetuning to ignore base model layers.
+    # This is needed for transformers==4.37.2 and is already fixed in transformers>=4.38.0.
+    # Currently transformers==4.38.1 has issues with multi-node training, hence not upgrading transformers further.
+    if getattr(args, "apply_lora", False) and getattr(args, "apply_deepspeed", False):
+        from functools import partialmethod
+        from deepspeed import DeepSpeedEngine
+
+        DeepSpeedEngine.load_checkpoint = partialmethod(DeepSpeedEngine.load_checkpoint, load_module_strict=False)
+        logger.info("Updated `DeepSpeedEngine.load_checkpoint` defaults to use `load_module_strict=False`.")
 
     finetune(args)
 

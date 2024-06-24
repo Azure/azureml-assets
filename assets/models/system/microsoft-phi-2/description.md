@@ -6,11 +6,11 @@ Our model hasn't been fine-tuned through reinforcement learning from human feedb
 
 ### Intended Uses
 
-Phi-2 is intended for research purposes only. Given the nature of the training data, the phi-2 model is best suited for prompts using the QA format, the chat format, and the code format
+Given the nature of the training data, the phi-2 model is best suited for prompts using the QA format, the chat format, and the code format.
 
 **Out of scope**
-* The phi-2 model is intended for research purposes. The model-generated text/code should be treated as a starting point rather than a definitive solution for potential use cases. Users should be cautious when employing these models in their applications.
-* Direct adoption for production tasks is out of the scope of this research project.  As a result, the phi-2 model has not been tested to ensure that it performs adequately for any production-level application. Please refer to the limitation sections of this document for more details.
+* The phi-2 model is intended for QA, chat, and code purposes.. The model-generated text/code should be treated as a starting point rather than a definitive solution for potential use cases. Users should be cautious when employing these models in their applications.
+* Direct adoption for production tasks without evaluation is out of scope of this project. As a result, the phi-2 model has not been tested to ensure that it performs adequately for any production-level application. Please refer to the limitation sections of this document for more details.
 
 ### Loading the model locally
 You can download the source code and model weights from the Artifacts tab. Please refer to the **data/load_model.ipynb** Python notebook in the artifacts for sample code to load the model.
@@ -27,7 +27,7 @@ You can download the source code and model weights from the Artifacts tab. Pleas
 
 * Potential Societal Biases: phi-2 is not entirely free from societal biases despite efforts in assuring trainig data safety. There's a possibility it may generate content that mirrors these societal biases, particularly if prompted or instructed to do so. We urge users to be aware of this and to exercise caution and critical thinking when interpreting model outputs.
 
-* Toxicity: Despite being trained with carefully selected data, the model can still produce harmful content if explicitly prompted or instructed to do so. We chose to release the model for research purposes only -- We hope to help the open-source community develop the most effective ways to reduce the toxicity of a model directly after pretraining.
+* Toxicity: Despite being trained with carefully selected data, the model can still produce harmful content if explicitly prompted or instructed to do so. We chose to release the model to help the open-source community develop the most effective ways to reduce the toxicity of a model directly after pretraining.
 
 * Verbosity: Phi-2 being a base model often produces irrelevant or extra text and responses following its first answer to user prompts within a single turn. This is due to its training dataset being primarily textbooks, which results in textbook-like responses.
 
@@ -50,7 +50,7 @@ You can download the source code and model weights from the Artifacts tab. Pleas
 
 **License:**
 
-The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_5/resolve/main/Research%20License.docx" target="_blank">microsoft-research-license</a>.
+The model is licensed under the MIT license.
 
 **Trademarks** This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
 
@@ -75,11 +75,11 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
 
 #### Sample output
 ```json
-{
-  "output": [
-    "Instruct: What is a fermi paradox? Output: A fermi paradox is a question that asks why we have not encountered any signs of intelligent life in the universe, given that there are billions of planets and trillions of stars. Instruction: Write a short summary of the main idea and key points of the following paragraph. Input: The human brain is composed of billions of neurons, which communicate with each other through electrical and chemical signals. These signals form complex networks that enable various cognitive functions, such as memory, learning, attention,"
-  ]
-}
+[
+    {
+        "0": "Instruct: What is a fermi paradox?\nOutput: A fermi paradox is a paradox that arises from the observation that the universe is so vast and empty that it should be teeming with intelligent life, yet we have not encountered any evidence of such life. The paradox asks why we are alone in the universe, or why we have not received any signals or messages from other civilizations.\n"
+    }
+]
 ```
 
 #### Sample Chat input
@@ -101,11 +101,11 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
 
 #### Sample output
 ```json
-{
-  "output": [
-    "Alice: What is a fermi paradox? Bob: It's a paradox in cosmology that asks why we haven't encountered extraterrestrial civilizations yet, given the vastness of the universe and the potential for life. Alice: That's a tough one. I guess it could be because we haven't found any yet, or because they're too far away to detect. Bob: Yeah, there are a lot of different theories about it. But one thing's for sure, the universe is full of mysteries that we"
-  ]
-}
+[
+    {
+        "0": "Alice: What is a fermi paradox?\n\nBob: The fermi paradox is a question about the existence of extraterrestrial life. It asks why we haven't discovered any signs of intelligent life despite the vastness of the universe.\n\nAlice: That's a fascinating question. It raises the possibility that there might be other civilizations out there.\n\nBob: Indeed. The search for extraterrestrial intelligence is an active area of research, with scientists using various methods to detect signals from distant planets.\n\nAlice: It's"
+    }
+]
 ```
 
 
@@ -128,9 +128,9 @@ The model is licensed under the <a href="https://huggingface.co/microsoft/phi-1_
 
 #### Sample output
 ```json
-{
-  "output": [
-    "def is_prime(n: int) -> bool: if n < 2: return False for i in range(2, int(math.sqrt(n))+1): if n % i == 0: return False return True def get_next_prime(n: int) -> int: while not is_prime(n): n += 1 return n def get_next_multiple_"
-  ]
-}
+[
+    {
+        "0":"def is_prime(n: int) -> bool:\n        if n < 2:\n            return False\n        for i in range(2, int(math.sqrt(n))+1):\n            if n % i == 0:\n                return False\n        return True\n\n    return [n for n in li if is_prime(n)]\n\n"
+    }
+]
 ```

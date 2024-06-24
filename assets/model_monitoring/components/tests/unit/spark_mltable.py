@@ -6,6 +6,9 @@
 import datetime
 
 
+SPARK_ZIP_PATH = 'SPARK_ZIP_PATH'
+
+
 def _patch_spark_dataframereader_format():
     from functools import update_wrapper
     from logging import warning
@@ -35,6 +38,12 @@ def _patch_spark_dataframereader_format():
                 spark_session = self._dataframe_reader._spark.sparkSession
             else:
                 raise f'Unsupported type for spark context: {type(self._dataframe_reader._spark)}'
+
+            sc = spark_session.sparkContext
+            # if SPARK_ZIP_PATH is set, add the zip file to the spark context
+            zip_path = os.environ.get(SPARK_ZIP_PATH, '')
+            if zip_path:
+                sc.addPyFile(zip_path)
 
             spark_conf = spark_session.sparkContext.getConf()
             spark_conf_vars = {
@@ -148,9 +157,15 @@ def _write_mltable_yaml(uri, output_path_pattern, manager):
         }]
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        with rslex_uri_volume_mount(uri=uri, mount_point=temp_dir, options=MountOptions(read_only=False)):
-            with open(os.path.join(temp_dir, 'MLTable'), 'w') as yaml_file:
-                yaml.dump(mltable_obj, yaml_file)
+        try:
+            with rslex_uri_volume_mount(uri=uri, mount_point=temp_dir, options=MountOptions(read_only=False)):
+                with open(os.path.join(temp_dir, 'MLTable'), 'w') as yaml_file:
+                    yaml.dump(mltable_obj, yaml_file)
+        except Exception as e:
+            # if on a windows machine, return since azureml-dataprep-rslex does not support PyMountOptions
+            if os.name == 'nt':
+                return
+            raise e
 
 
 def _write_spark_dataframe(dataframe, uri, **kwargs):

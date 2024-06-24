@@ -1,0 +1,39 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+name: Llama-2-70b-chat
+path: ./
+
+properties:
+  languages: EN
+  evaluation-min-sku-spec: 24|4|448|2900
+  inference-min-sku-spec: 40|4|672|256
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
+  azureml.copyRegistryFilesToWorkspace: true
+  SharedComputeCapacityEnabled: true
+
+tags:
+  Featured: ""
+  Preview: ""
+  author: meta
+  license: custom
+  task: chat-completion
+  hiddenlayerscanned: ""
+  disable-batch: "true"
+  training_datasets: Publicly available sources
+  maas-inference: true
+  SharedComputeCapacityEnabled: ""
+  inference_supported_envs:
+    - vllm
+  evaluation_compute_allow_list:
+    - Standard_NC24s_v3
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+  inference_compute_allow_list:
+    - Standard_ND40rs_v2
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
+    - Standard_NC96ads_A100_v4
+
+version: 19

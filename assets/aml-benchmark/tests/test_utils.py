@@ -9,6 +9,8 @@ from typing import Dict, Any, Optional, List
 import hashlib
 import time
 import uuid
+import sys
+from enum import Enum
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -29,28 +31,45 @@ class Constants:
     """Class to hold all constants."""
 
     SAMPLER_INPUT_FILE_1 = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data/sampler_data_1.jsonl"
+        os.path.dirname(os.path.abspath(__file__)), "data", "sampler_data_1.jsonl"
     )
     SAMPLER_INPUT_FILE_2 = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data/sampler_data_2.jsonl"
+        os.path.dirname(os.path.abspath(__file__)), "data", "sampler_data_2.jsonl"
     )
     PERF_INPUT_FILE_PATH = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data/perf_metrics_data.jsonl"
+        os.path.dirname(os.path.abspath(__file__)), "data", "perf_metrics_data.jsonl"
     )
     BATCH_INFERENCE_PREPARER_FILE_PATH = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data/sample_batch_input.jsonl"
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "sample_batch_input.jsonl"
     )
     BATCH_INFERENCE_PREPARER_FILE_PATH_VISION = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data/sample_batch_input_vision.jsonl"
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "sample_batch_input_vision.jsonl"
     )
-    BATCH_OUTPUT_FORMATTER_FILE_PATH = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_output.jsonl"
+    BATCH_OUTPUT_FORMATTER_OAI_CHAT_FILE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "batch_inference_output_oai_chat.jsonl"
+    )
+    BATCH_OUTPUT_FORMATTER_OAI_TEXT_FILE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "batch_inference_output_oai_text.jsonl"
+    )
+    BATCH_OUTPUT_FORMATTER_OSS_CHAT_FILE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "batch_inference_output_oss_chat.jsonl"
+    )
+    BATCH_OUTPUT_FORMATTER_OSS_TEXT_FILE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "batch_inference_output_oss_text.jsonl"
     )
     BATCH_INFERENCE_FILE_PATH = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_input.json"
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "batch_inference_input.jsonl"
     )
     BATCH_INFERENCE_FILE_PATH_VISION = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_input_vision.jsonl"
+        os.path.dirname(os.path.abspath(__file__)), "data",
+        "batch_benchmark_inference", "batch_inference_input_vision.jsonl"
     )
     PROCESS_SAMPLE_EXAMPLES_INPUT_FILE = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/process_sample_examples.jsonl"
@@ -60,6 +79,12 @@ class Constants:
     )
     CUSTOM_PREPROCESSOR_SCRIPT_PATH = os.path.join(
         os.path.dirname(__file__), '../scripts/custom_dataset_preprocessors'
+    )
+    CUSTOM_INFERENCE_POSTPROCESSOR_SCRIPT_PATH = os.path.join(
+        os.path.dirname(__file__), '../scripts/custom_inference_postprocessors'
+    )
+    CUSTOM_HUMANEVAL_POSTPROCESSOR_SCRIPT_PATH = os.path.join(
+        CUSTOM_INFERENCE_POSTPROCESSOR_SCRIPT_PATH, "humaneval.py"
     )
     POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/process_inference_sample_examples.jsonl"
@@ -84,6 +109,21 @@ class Constants:
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         "scripts", "data_loaders", "math.py"
     )
+
+
+class ModelType(Enum):
+    """Model Type."""
+
+    OAI = "oai"
+    OSS = "oss"
+    VISION_OSS = "vision_oss"
+
+
+class PromptType(Enum):
+    """Prompt Type."""
+
+    TEXT_GENERATION = "text_generation"
+    CHAT_COMPLETION = "chat_completion"
 
 
 def _get_runs(job_name: str, exp_name: str) -> List[mlflow.entities.Run]:
@@ -242,12 +282,17 @@ def run_command(command: str) -> None:
     :param command: The command to run.
     :return: None
     """
-    _ = subprocess.check_output(
+    result = subprocess.run(
         command,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
         shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding=sys.stdout.encoding,
+        universal_newlines=True,
+        errors="ignore",
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"Command: {command} failed with error:\n{result.stdout}")
 
 
 def assert_exception_mssg(exception_message: str, expected_exception_mssg: str) -> None:

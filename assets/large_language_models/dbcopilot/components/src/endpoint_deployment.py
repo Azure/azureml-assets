@@ -50,11 +50,14 @@ class EndpointDeployment(EndpointDeploymentBase):
         max_columns: int = None,
         max_rows: int = None,
         max_text_length: int = None,
+        max_knowledge_pieces: int = None,
         tools: str = None,
         temperature: float = 0.0,
         top_p: float = 0.0,
         knowledge_pieces: str = None,
         sku: str = "Standard_DS3_v2",
+        include_views: bool = False,
+        instruct_template: str = None,
     ):
         """deploy_endpoint."""
         from utils.asset_utils import get_datastore_uri
@@ -79,10 +82,12 @@ class EndpointDeployment(EndpointDeploymentBase):
             max_columns=max_columns,
             max_rows=max_rows,
             max_text_length=max_text_length,
+            max_knowledge_pieces=max_knowledge_pieces,
             tools=tools,
             temperature=temperature,
             top_p=top_p,
             knowledge_pieces=knowledge_pieces,
+            include_views=include_views,
         )
         logging.info(f"DBCopilotConfig: {config}")
         # mir_environment = get_full_env_path(self.mlclient_credential, mir_environment)
@@ -99,11 +104,16 @@ class EndpointDeployment(EndpointDeploymentBase):
             logging.info("dumped secrets to secrets.json")
             with open(os.path.join(code_dir, "configs.json"), "w") as f:
                 json.dump([asdict(config)], f)
+            managed_identity_enabled = os.getenv("MANAGED_IDENTITY_ENABLED", None)
             self._deploy_endpoint(
                 mir_environment,
                 endpoint_name,
                 deployment_name,
                 code_dir,
                 score_script="score_zero.py",
+                extra_environment_variables={
+                    "INSTRUCT_TEMPLATE": instruct_template,
+                    "MANAGED_IDENTITY_ENABLED": managed_identity_enabled,
+                },
                 sku=sku,
             )

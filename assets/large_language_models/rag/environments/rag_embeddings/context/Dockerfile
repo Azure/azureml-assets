@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
 # Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/rag-embeddings
@@ -103,10 +103,11 @@ RUN python3 -m nltk.downloader punkt && \
 
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
-RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.1/tika-server-standard-2.9.1.jar'; \
-    downloadMd5='4a0e60c6698b85881a3ef28a68669ac5'; \
+# Install tika server
+RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.2/tika-server-standard-2.9.2.jar'; \
+    downloadMd5='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.2/tika-server-standard-2.9.2.jar.md5'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
     # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
-    echo -n "$downloadMd5" > tika-server.jar.md5; \
+    wget -O tika-server.jar.md5 "$downloadMd5"; \
     # basic smoke test
     python -c 'from tika import parser; parser.from_file("/root/.bashrc")'

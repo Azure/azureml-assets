@@ -1,0 +1,6 @@
+name: flight_delays
+version: 3
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

@@ -16,7 +16,7 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 from .. import constants
 from .events_client import AppInsightsEventsClient, EventsClient
 
-
+DEFAULT_FORMAT = '%(asctime)-15s :%(name)-5s:%(levelname)-8s- %(message)s'
 _default_logger_name = "BatchScoreComponent"
 _custom_dimensions = {}
 _default_logger: logging.LoggerAdapter = None
@@ -27,6 +27,12 @@ _ctx_mini_batch_id = ContextVar("Async mini-batch ID", default=None)
 _ctx_quota_audience = ContextVar("Async quota audience", default=None)
 _ctx_batch_pool = ContextVar("Async batch pool", default=None)
 
+_pre_init_logger: logging.LoggerAdapter = logging.getLogger("PreInitLogger")
+_pre_init_logger.setLevel(logging.DEBUG)
+_pre_init_logger_handler = logging.StreamHandler()  # Log to stdout
+_pre_init_logger_handler.setFormatter(logging.Formatter(DEFAULT_FORMAT))
+_pre_init_logger.addHandler(_pre_init_logger_handler)
+
 
 class UTCFormatter(logging.Formatter):
     """UTC formatter."""
@@ -34,37 +40,38 @@ class UTCFormatter(logging.Formatter):
     converter = time.gmtime
 
 
-class CustomerLogs(logging.Filter):
+class CustomerLogsFilter(logging.Filter):
     """Customer log filter."""
 
     def __init__(self, log_level: str):
-        """Init function."""
+        """Initialize CustomerLogsFilter."""
         self.log_level = logging.getLevelName(log_level)
 
     def filter(self, record):
-        """Apply log filter to the record."""
+        """Filter the record based on the given rule."""
         """
         Customers can see:
          - All logs higher than INFO level, even for internal classes,
          - For INFO and DEBUG, customer sees no logs from internal classes.
          - For all other logs, customer sees their requested log level and higher.
         """
-        if record.levelno > 20:
+        if record.levelno > logging.INFO:
             return True
         message = record.getMessage()
-        for internal_class in ['AIMD',
-                               'Conductor',
-                               'Gatherer',
-                               'ParallelDriver',
-                               'QuotaClient',
-                               'RoutingClient',
-                               'WaitTimeCongestionDetector']:
+        for internal_class in [
+                'AIMD',
+                'Conductor',
+                'Gatherer',
+                'ParallelDriver',
+                'QuotaClient',
+                'RoutingClient',
+                'WaitTimeCongestionDetector']:
             if message.startswith(internal_class):
                 return False
         return record.levelno >= self.log_level
 
 
-class AppInsightsLogs(logging.Filter):
+class AppInsightsLogsFilter(logging.Filter):
     """Application insight log filter."""
 
     def filter(self, record):
@@ -73,46 +80,53 @@ class AppInsightsLogs(logging.Filter):
         return not message.startswith('AppInsRedact')
 
 
-def setup_logger(log_level: str, app_insights_connection_string: str = None):
+def setup_logger(
+        stdout_log_level: str,
+        app_insights_log_level: str = None,
+        app_insights_connection_string: str = None,
+        component_version: str = None):
     """Set up logger."""
     global _custom_dimensions
     global _default_logger
     global _events_client
 
-    default_format = '%(asctime)-15s :%(name)-5s:%(levelname)-8s- %(message)s'
+    set_default_logger_format(DEFAULT_FORMAT)
 
-    set_default_logger_format(default_format)
-
+    stdout_log_level_upper = stdout_log_level.upper()
     # The root logger has a pre-configured stream handler to log to stdout.
     # A filter is added to clean up the logs sent to customer.
     stream_handler = logging.root.handlers[0]
-    stream_handler.addFilter(CustomerLogs(log_level))
+    stream_handler.addFilter(CustomerLogsFilter(stdout_log_level_upper))
 
     _custom_dimensions = __calculate_custom_dimensions()
 
     logger = logging.getLogger(_default_logger_name)
 
-    if app_insights_connection_string is not None:
-        level = logging.getLevelName(logging.DEBUG)
-        print(f"Enabling application insights logs, level: {level}")
+    if app_insights_connection_string is None:
+        print("Application insights logging is disabled.")
+    else:
+        app_insights_log_level_upper = app_insights_log_level.upper()
+        print(f"Enabling application insights logs, level: {app_insights_log_level_upper}")
         azure_formatter = logging.Formatter('%(message)s')
         azure_handler = AzureLogHandler(connection_string=app_insights_connection_string)
         azure_handler.setFormatter(azure_formatter)
-        azure_handler.setLevel(level)
-        azure_handler.addFilter(AppInsightsLogs())
+        azure_handler.setLevel(app_insights_log_level_upper)
+        azure_handler.addFilter(AppInsightsLogsFilter())
         logger.addHandler(azure_handler)
 
-    logger.setLevel(log_level)
+    logger.setLevel(stdout_log_level_upper)
 
     _default_logger = logger
 
     if app_insights_connection_string is not None:
-        _events_client = AppInsightsEventsClient(_custom_dimensions,
-                                                 app_insights_connection_string,
-                                                 _ctx_worker_id,
-                                                 _ctx_mini_batch_id,
-                                                 _ctx_quota_audience,
-                                                 _ctx_batch_pool)
+        _events_client = AppInsightsEventsClient(
+            _custom_dimensions,
+            app_insights_connection_string,
+            _ctx_worker_id,
+            _ctx_mini_batch_id,
+            _ctx_quota_audience,
+            _ctx_batch_pool,
+            component_version)
     else:
         _events_client = EventsClient()
 
@@ -137,6 +151,11 @@ def set_default_logger_format(default_format, root_handlers=None):
 
 def get_logger():
     """Get logger."""
+    # We log some things during initialization, before the default logger is set up.
+    # During this time, use the the pre-init logger.
+    if _default_logger is None:
+        return _pre_init_logger
+
     custom_dimensions = _custom_dimensions.copy()
     custom_dimensions["WorkerId"] = _ctx_worker_id.get()
     custom_dimensions["MiniBatchId"] = _ctx_mini_batch_id.get()
@@ -155,9 +174,19 @@ def get_events_client():
     return _events_client
 
 
+def get_worker_id():
+    """Get worker id."""
+    return _ctx_worker_id.get()
+
+
 def set_worker_id(worker_id: int):
     """Set worker id."""
     _ctx_worker_id.set(worker_id)
+
+
+def get_mini_batch_id():
+    """Get mini batch id."""
+    return _ctx_mini_batch_id.get()
 
 
 def set_mini_batch_id(mini_batch_id: int):
@@ -165,9 +194,19 @@ def set_mini_batch_id(mini_batch_id: int):
     _ctx_mini_batch_id.set(mini_batch_id)
 
 
+def get_quota_audience():
+    """Get quota audience."""
+    return _ctx_quota_audience.get()
+
+
 def set_quota_audience(quota_audience: str):
     """Set quota audience."""
     _ctx_quota_audience.set(quota_audience)
+
+
+def get_batch_pool():
+    """Get batch pool."""
+    return _ctx_batch_pool.get()
 
 
 def set_batch_pool(batch_pool: str):
@@ -181,7 +220,6 @@ def __calculate_custom_dimensions():
     custom_dimensions["Workspace"] = os.environ.get(constants.OS_ENVIRON_WORKSPACE, "Unknown")
     custom_dimensions["RunId"] = os.environ.get(constants.OS_ENVIRON_RUN_ID, "Unknown")
     custom_dimensions["NodeRank"] = os.environ.get(constants.OS_ENVIRON_NODE_RANK, "Unknown")
-    custom_dimensions["ComponentVersion"] = constants.BATCH_SCORE_COMPONENT_VERSION
 
     try:
         run = Run.get_context()

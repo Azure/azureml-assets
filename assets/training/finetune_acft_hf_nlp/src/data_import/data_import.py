@@ -22,7 +22,7 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.data_import.data_import")
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.data_import.data_import")
 
 
 SUPPORTED_FILE_FORMATS = [".jsonl"]

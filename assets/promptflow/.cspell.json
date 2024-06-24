@@ -23,6 +23,8 @@
       "openai",
       "pfazure",
       "eastus",
+      "eastus2",
+      "euap",
       "azureai",
       "vectordb",
       "Qdrant",
@@ -66,7 +68,9 @@
       "zelin",
       "embeded",
       "metad",
-      "orignal"
+      "orignal",
+      "mlindex",
+      "chjinche"
     ],
     "ignoreWords": [
       "openmpi",
@@ -139,16 +143,27 @@
       "uionly",
       "llmops",
       "Abhishek",
-      "restx"
+      "restx",
+      "ayod",
+      "AYOD",
+      "Featur",
+      "showno",
+      "amlraipfmodels",
+      "zhizho"
     ],
     "flagWords": [
       "Prompt Flow"
     ],
     "ignorePaths":[
       "**.py",
+      "**.pyc",
       "**.jinja2",
       "**.txt",
-      "**.json"
+      "**.json",
+      "**.jsonl",
+      "**/asset.yaml",
+      "**/description.md",
+      "**/model.yaml"
     ],
     "allowCompoundWords": true
   }

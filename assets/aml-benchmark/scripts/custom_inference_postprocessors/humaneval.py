@@ -7,16 +7,15 @@ import re
 import json
 import codecs
 import argparse
-import logging as logger
 import pandas as pd
 import sys
 from io import StringIO
 from jinja2 import Environment
 from datasets import load_dataset
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
-REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
+REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
 \\S|$))"""
 CODE_GENERATION_DEBUG = False
 
@@ -40,23 +39,25 @@ def _parse_args():
         type=str,
         help="Path to the jsonl output file to write the processed data."
     )
+    parser.add_argument(
+        "--additional_parameters",
+        type=str,
+        default='null',
+        help="Additional parameter values set in other fields of the component in a pipeline."
+    )
     argss = parser.parse_args()
     return argss
 
 
-def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
-    """Read `.jsonl` file and return a list of dictionaries.
+def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
+    """Read files that have content in the json format and return a list of dictionaries.
 
     :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
-    if not file_path.endswith(".jsonl"):
-        mssg = f"Input file '{file_path}' is not a .jsonl file."
-        logger.ERROR(mssg)
-        raise ValueError(mssg)
     data_dicts = []
     with open(file_path, "r", encoding="utf8") as file:
-        for i, line in enumerate(file):
+        for line in file:
             data_dicts.append(json.loads(line))
     return data_dicts
 
@@ -92,16 +93,31 @@ def _write_to_jsonl_file(
     return
 
 
+def _extract_text_from_markdown_tag(input_string: str, tag_type='python') -> str:
+    """
+    Extract text between markdown code tags.
+
+    If the tag pattern search returns no matches, the input string is returned.
+    """
+    pattern = f"```{tag_type}(.*?)```"
+    m = re.search(pattern, input_string, flags=re.DOTALL)
+    if not m:
+        pattern_partial = f"```{tag_type}(.*)"
+        m = re.search(pattern_partial, input_string, flags=re.DOTALL)
+    return m.group(1) if m else input_string
+
+
 def _run(
     prediction_dataset: str,
     output_path: str,
-    ground_truth_dataset: str = None
+    ground_truth_dataset: str = None,
+    additional_args: Optional[dict] = None,
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     if prediction_dataset:
-        pred_data = _read_jsonl_file(prediction_dataset)
+        pred_data = _read_input_file(prediction_dataset)
         if ground_truth_dataset:
-            task_id = _read_jsonl_file(ground_truth_dataset)
+            task_id = _read_input_file(ground_truth_dataset)
             pred_with_task_id, label_key, prediction_key = merge_id(task_id, pred_data)
 
     # Post processing the prediction and ground truth columns
@@ -119,9 +135,9 @@ def merge_id(
     """
     Merge the task_id with the prediction data.
 
-    :param label_data: Label data loaded from _read_jsonl_file function.
+    :param label_data: Label data loaded from _read_input_file function.
     :type: List[Dict[str, Any]]
-    :param pred_data: Prediction data loaded from _read_jsonl_file function.
+    :param pred_data: Prediction data loaded from _read_input_file function.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
@@ -135,7 +151,7 @@ def run_humaneval_postprocessor(
     data: List[Dict[str, Any]],
     label_key: str,
     prediction_key: str,
-    regex_exp: str = None,
+    regex_exp: str,
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom post processor function to extract the expected code.
@@ -170,16 +186,36 @@ def run_humaneval_postprocessor(
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
+        tag_type = "python" if "```python" in row["original_prediction"] else ""
 
-        if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
-            # If the model regenerates the prompt/ function name
-            pred_combined_prompt = row["original_prediction"]
+        # Extract the prediction data from the markdown tags
+        pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
+
+        # Get the index of the first function definition and return keyword
+        def_index = pred_combined_prompt.find("def ")
+        func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"]))
+        return_keyword_index = pred_combined_prompt.find("return")
+
+        # If function definition is not present or present after the initial function body prediction
+        if def_index == -1 or return_keyword_index < def_index or func_name_index == -1:
+            # If spaces were stripped from endpoint responses, add those back.
+            if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
+                prefix = ""
+            else:
+                prefix = "    "
+            pred_combined_prompt = row["prompt"] + "\n" + prefix + pred_combined_prompt
         else:
-            pred_combined_prompt = row["prompt"]+"\n"+row["original_prediction"]
+            # If function name is present in the prediction, then remove from prompt
+            prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
+            # Removing spaces from the beginning of the prediction
+            if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
+                pred_combined_prompt = pred_combined_prompt.lstrip()
+            pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
 
         # Applying regex on the prediction column
         if regex_exp:
-            pred = apply_regex_expr(pred_combined_prompt, regex_exp)
+            regex_exp_func = regex_exp.replace("FUNCNAME", row["entry_point"])
+            pred = apply_regex_expr(pred_combined_prompt, regex_exp_func)
         else:
             pred = pred_combined_prompt
         if CODE_GENERATION_DEBUG is True:
@@ -218,7 +254,7 @@ def generate_output(
     return op_details
 
 
-def run_code(code):
+def run_code(code: str):
     """To run the test cases."""
     original_stdout = sys.stdout
     original_stderr = sys.stderr
@@ -230,7 +266,7 @@ def run_code(code):
     error_type = None
 
     try:
-        exec(code)
+        exec(code, {})
         output = sys.stdout.getvalue()
         output = "No error, executed successfully"
     except Exception as e:
@@ -248,7 +284,7 @@ def run_code(code):
 
 def apply_regex_expr(
         text: str,
-        regex_exp: str = None
+        regex_exp: str
         ) -> str:
     """Apply regex on the given text."""
     if regex_exp:
@@ -262,4 +298,7 @@ def apply_regex_expr(
 
 if __name__ == "__main__":
     argss = _parse_args()
-    _run(argss.prediction_dataset, argss.output_dataset, argss.ground_truth_dataset)
+    _run(
+        argss.prediction_dataset, argss.output_dataset,
+        argss.ground_truth_dataset, json.loads(argss.additional_parameters)
+    )

@@ -6,6 +6,7 @@
 import pytest
 from azure.ai.ml import MLClient, Output, Input
 from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR,
@@ -17,7 +18,8 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_data_drift_and_create_manifest_job(
-    ml_client: MLClient, get_component, experiment_name, baseline_data, target_data
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data,
+    expect_failure: bool = False
 ):
     dd_model_monitor = get_component(COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR)
     create_manifest = get_component(COMPONENT_NAME_CREATE_MANIFEST)
@@ -44,7 +46,7 @@ def _submit_data_drift_and_create_manifest_job(
         )
 
         create_manifest_output: Spark = create_manifest(
-            signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output,
+            signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output
         )
 
         mdc_preprocessor_output.identity = AmlTokenConfiguration()
@@ -68,12 +70,16 @@ def _submit_data_drift_and_create_manifest_job(
         type="uri_folder", mode="direct"
     )
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 
@@ -83,10 +89,11 @@ class TestCreateManifestE2E:
     """Test class."""
 
     def test_monitoring_run_use_defaults_data_has_no_drift_successful(
-        self, ml_client: MLClient, get_component, download_job_output, test_suite_name
+        self, ml_client: MLClient, get_component, download_job_output, submit_pipeline_job, test_suite_name
     ):
         """Test the happy path scenario where the data has drift and default settings are used."""
         pipeline_job = _submit_data_drift_and_create_manifest_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,

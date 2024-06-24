@@ -9,16 +9,13 @@ from logging_utilities import (
     custom_dimensions, get_logger, log_traceback, swallow_all_exceptions, get_azureml_exception
 )
 from azureml.telemetry.activity import log_activity
-from error_definitions import DownloadDependenciesError
+from error_definitions import InvalidModel
 from exceptions import ModelValidationException
 from validation import _validate_model
 from constants import ArgumentLiterals, TelemetryConstants
 
-try:
-    from pip import main as pipmain
-except ImportError:
-    from pip._internal import main as pipmain
-REQUIREMENTS_FILE = "./requirements.txt"
+import sys
+import subprocess
 
 custom_dimensions.app_name = TelemetryConstants.DOWNLOAD_MODEL_DEPENDENCIES
 logger = get_logger(name=__name__)
@@ -36,33 +33,57 @@ def main():
 
     _validate_model(args)
 
-    reqs_file = _get_model_dependencies(args[ArgumentLiterals.MLFLOW_MODEL], "pip")
-
-    ignore_deps = [
-        "mlflow",
-        "azureml_evaluate_mlflow",
-        "azureml-evaluate-mlflow",
-        "azureml_metrics",
-        "azureml-metrics"
-    ]
-    install_deps = []
     with log_activity(logger, TelemetryConstants.DOWNLOAD_MODEL_DEPENDENCIES,
                       custom_dimensions=custom_dims_dict):
+        try:
+            reqs_file = _get_model_dependencies(args[ArgumentLiterals.MLFLOW_MODEL], "pip")
+        except Exception as e:
+            exception = get_azureml_exception(ModelValidationException, InvalidModel, e)
+            log_traceback(exception, logger)
+            raise exception
+
+        ignore_deps = [
+            "mlflow",
+            "azureml_evaluate_mlflow",
+            "azureml-evaluate-mlflow",
+            "azureml_metrics",
+            "azureml-metrics"
+        ]
+        install_deps = []
         with open(reqs_file, "r") as f:
             for line in f.readlines():
                 if any(dep in line.strip() for dep in ignore_deps):
                     continue
                 install_deps += [line.strip()]
 
+        no_install = []
         if len(install_deps) > 0:
             try:
-                pipmain(["install"] + install_deps)
+                command = [sys.executable, '-m', 'pip', 'install'] + install_deps
+                command_str = ' '.join(command)
+                logger.info(f"Installing dependencies. Executing command: {command_str}")
+                subprocess.check_output(command, stderr=subprocess.STDOUT)
             except Exception as e:
-                message_kwargs = {"dependencies": ' '.join(install_deps)}
-                exception = get_azureml_exception(ModelValidationException, DownloadDependenciesError, e,
-                                                  error=repr(e), **message_kwargs)
-                log_traceback(exception, logger)
-                raise exception
+                logger.warning(f"Installing dependencies failed with error:\n{e.stdout.decode('utf-8')}")
+                logger.info("Installing dependencies one by one.")
+
+                command = [sys.executable, '-m', 'pip', 'install', 'dep']
+                for dep in install_deps:
+                    try:
+                        command[-1] = dep
+                        command_str = ' '.join(command)
+                        logger.info(f"Installing dependencies. Executing command: {command_str}")
+                        subprocess.check_output(command, stderr=subprocess.STDOUT)
+                    except Exception as e:
+                        logger.warning(f"Installing dependency {dep} failed with error:\n{e.stdout.decode('utf-8')}")
+                        no_install += [dep]
+
+        if len(no_install):
+            no_install = "\n".join(no_install)
+            logger.warning(
+                f"Could not install following dependencies - \n{no_install}"
+                f"\nSome functionality might not work as expected."
+            )
 
 
 if __name__ == "__main__":

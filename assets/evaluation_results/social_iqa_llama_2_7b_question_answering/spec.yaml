@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_llama_2_7b_question_answering
-version: 1.0.1
+version: 2.19.040
 display_name: social_iqa_llama_2_7b_question_answering
 description: llama-2-7b run for social_iqa dataset
 dataset_family: social_iqa
@@ -15,13 +15,12 @@ relationships:
     assetId: azureml://registries/azureml-meta/models/Llama-2-7b/versions/12
 
 tags:
+  evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
 
 metrics:
   accuracy: 0.553
-
-path: ./job_files
 
 
 properties:

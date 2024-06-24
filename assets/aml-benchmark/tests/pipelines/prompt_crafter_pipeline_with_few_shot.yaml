@@ -1,0 +1,45 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: test_prompt_crafter
+description: Pipeline to test Prompt Crafter.
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  test_data:
+    type: uri_file
+    path: ../data/test_data_prompt_crafter/inferencesample.jsonl
+  few_shot_data:
+    type: uri_file
+    path: ../data/test_data_prompt_crafter/fewshotsample.jsonl
+  n_shots: 3
+  prompt_pattern: "Question:{{question}} \nChoices:(1) {{choices.text[0]}}\n(2) {{choices.text[1]}}\n(3) {{choices.text[2]}}\n(4) {{choices.text[3]}}\nThe answer is: "
+  output_pattern: " {{answerKey}} "
+  prompt_type: "completions"
+  system_message: "Answer truthfully. "
+  ground_truth_column_name: "answerKey"  
+  few_shot_pattern: ""
+
+outputs:
+  output_file:
+    type: uri_file
+    path: "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl"
+
+jobs:
+  benchmark_prompt_crafter:
+    type: command
+    component: ../../components/prompt_crafter/spec.yaml
+    limits: 
+      timeout: 900
+    inputs:
+      test_data: ${{parent.inputs.test_data}}
+      few_shot_data: ${{parent.inputs.few_shot_data}}
+      n_shots: ${{parent.inputs.n_shots}}
+      prompt_pattern: ${{parent.inputs.prompt_pattern}}
+      few_shot_pattern: ${{parent.inputs.few_shot_pattern}}
+      output_pattern: ${{parent.inputs.output_pattern}}
+      prompt_type: ${{parent.inputs.prompt_type}}
+      system_message: ${{parent.inputs.system_message}}
+    outputs:
+      output_file: ${{parent.outputs.output_file}}

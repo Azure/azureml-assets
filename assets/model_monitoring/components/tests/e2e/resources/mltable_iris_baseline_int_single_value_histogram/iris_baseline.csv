@@ -1,0 +1,14 @@
+sepal_length,sepal_width,petal_length,petal_width,target,pickup_month
+5,3,1,4,setosa,1
+5,3,1,1,setosa,1
+2,3,1,2,setosa,1
+5,3,1,3,setosa,1
+4,3,1,4,setosa,1
+4,3,1,5,virginica,1
+5,3,1,6,versicolor,1
+4,3,1,5,virginica,1
+5,3,1,6,versicolor,1
+4,3,1,5,virginica,1
+5,3,1,6,versicolor,1
+4,3,1,5,virginica,1
+5,3,1.0,6,versicolor,1.0

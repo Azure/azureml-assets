@@ -29,7 +29,7 @@ jobs:
       job_output_path: ${{parent.outputs.job_out_path}}
 
       # Other outputs are omitted and should be explicitly populated by e2e tests
-    
+
     mini_batch_size: 1MB
     error_threshold: 0
     mini_batch_error_threshold: 0

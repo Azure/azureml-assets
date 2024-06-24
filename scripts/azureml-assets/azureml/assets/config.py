@@ -451,6 +451,11 @@ class Spec(Config):
 
         return deps
 
+    @property
+    def properties(self) -> Dict[str, str]:
+        """Asset properties."""
+        return self._yaml.get('properties', {})
+
 
 class AssetPath:
     """Asset path."""
@@ -989,6 +994,54 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visibility) if visibility else None
 
 
+class DataConfig(Config):
+    """Data Asset Config class.
+
+    Example:
+        # Remote storage path for asset data
+        path:
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+    """
+
+    def __init__(self, file_name: Path):
+        """Initialize object for the Data Asset Properties extracted from storage.yaml.
+
+        Args:
+            file_name (Path): Storage config file to load and validate.
+        """
+        super().__init__(file_name)
+        self._path = None
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        Config._validate_exists('data_asset.path', self.path)
+        Config._validate_enum('data_asset.path.type', self.path.type.value, PathType, True)
+
+    @property
+    def path(self) -> AssetPath:
+        """Remote Storage Path (Azure Blob is the only supported type)."""
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            else:
+                raise NotImplementedError("Unrecognized path type.")
+        else:
+            return None
+        return self._path
+
+
 class GenericAssetConfig(Config):
     """Generic Asset Config class.
 
@@ -1290,7 +1343,7 @@ class AssetConfig(Config):
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
 
-    def extra_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
+    def extra_config_as_object(self, force_reload: bool = False) -> Config:
         """Retrieve extra config file as an object.
 
         Args:
@@ -1300,7 +1353,7 @@ class AssetConfig(Config):
             Exception: If loading an extra_config for the asset type is unimplemented.
 
         Returns:
-            Spec: Extra config object.
+            Config: Extra config object.
         """
         if force_reload or self._extra_config is None:
             extra_config_with_path = self.extra_config_with_path
@@ -1309,6 +1362,8 @@ class AssetConfig(Config):
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
                 elif self.type == AssetType.MODEL:
                     self._extra_config = ModelConfig(extra_config_with_path)
+                elif self.type == AssetType.DATA:
+                    self._extra_config = DataConfig(extra_config_with_path)
                 elif self.type == AssetType.PROMPT:
                     self._extra_config = GenericAssetConfig(extra_config_with_path)
                 else:

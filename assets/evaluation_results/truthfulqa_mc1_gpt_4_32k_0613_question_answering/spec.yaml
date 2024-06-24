@@ -1,0 +1,31 @@
+type: evaluationresult
+name: truthfulqa_mc1_gpt_4_32k_0613_question_answering
+version: 2.03.05
+display_name: truthfulqa_mc1_gpt_4_32k_0613_question_answering
+description: gpt-4-32k-0613 run for truthfulqa mc1 dataset
+dataset_family: truthfulqa
+dataset_name: truthfulqa_mc1
+
+model_name: gpt-4-32k-0613
+model_version: "0613"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.842
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

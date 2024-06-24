@@ -6,18 +6,21 @@
 import json
 from argparse import ArgumentParser
 
+from .configuration import Configuration
 from .command_line_argument_specification import (
     COMMAND_LINE_ARGUMENT_SPECIFICATION_FOR_FILE_CONFIGURATION,
 )
-from .configuration import Configuration
 from .file_configuration_validator import FileConfigurationValidator
 
 
 class FileConfigurationParser:
     """Parser for file-base configuration."""
 
+    MAX_METADATA_FIELDS = 20
+    MAX_METADATA_CHAR_LENGTH = 50
+
     def __init__(self, validator: FileConfigurationValidator) -> None:
-        """Init function."""
+        """Initialize FileConfigurationParser."""
         self._validator = validator
 
     def parse_configuration(self, args: "list[str]" = None) -> Configuration:
@@ -35,6 +38,15 @@ class FileConfigurationParser:
         if isinstance(additional_properties, dict):
             additional_properties = json.dumps(additional_properties)
 
+        logging_metadata = config.get('log_settings', {}).get('logging_metadata')
+        if isinstance(logging_metadata, dict):
+            reduced_metadata = {}
+            for idx, (key, value) in enumerate(logging_metadata.items()):
+                if idx >= self.MAX_METADATA_FIELDS:
+                    break
+                reduced_metadata[key[:self.MAX_METADATA_CHAR_LENGTH]] = value[:self.MAX_METADATA_CHAR_LENGTH]
+            logging_metadata = json.dumps(reduced_metadata)
+
         if config.get('output_settings', {}).get('save_partitioned_scoring_results'):
             output_behavior = 'summary_only'
             save_mini_batch_results = "enabled"
@@ -48,16 +60,18 @@ class FileConfigurationParser:
             api_key_name=None,
             api_type=config.get('api', {}).get('type'),
             app_insights_connection_string=config.get('log_settings', {}).get('app_insights_connection_string'),
+            app_insights_log_level=config.get('log_settings', {}).get('app_insights_log_level'),
             async_mode=async_mode,
             authentication_type=config.get('authentication', {}).get('type'),
             batch_pool=None,
             batch_size_per_request=config.get('api', {}).get('batch_size_per_request'),
             configuration_file=None,
             connection_name=config.get('authentication', {}).get('name'),
-            debug_mode=config.get('log_settings', {}).get('app_insights_log_level') == 'debug',
             ensure_ascii=config.get('output_settings', {}).get('ensure_ascii'),
             image_input_folder=None,
             initial_worker_count=config.get('concurrency_settings', {}).get('initial_worker_count'),
+            input_schema_version=config.get('request_settings', {}).get('input_schema_version'),
+            logging_metadata=logging_metadata,
             max_retry_time_interval=config.get('request_settings', {}).get('timeout'),
             max_worker_count=config.get('concurrency_settings', {}).get('max_worker_count'),
             mini_batch_results_out_directory=parsed_args.partitioned_scoring_results,
@@ -71,6 +85,8 @@ class FileConfigurationParser:
             segment_large_requests=config.get('api', {}).get('response_segment_size') > 0,
             segment_max_token_size=config.get('api', {}).get('response_segment_size'),
             service_namespace=None,
+            split_output=config.get('output_settings', {}).get('split_output'),
+            stdout_log_level=config.get('log_settings', {}).get('stdout_log_level'),
             tally_exclusions=None,
             tally_failed_requests=None,
             token_file_path=None,

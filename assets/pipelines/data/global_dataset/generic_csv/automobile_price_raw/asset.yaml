@@ -1,0 +1,6 @@
+name: automobile_price_raw
+version: 3
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

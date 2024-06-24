@@ -35,7 +35,7 @@ jobs:
     type: command
     component: file:../components/insight_create/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       title: Boston Housing Analysis
       task_type: regression
@@ -49,7 +49,7 @@ jobs:
     type: command
     component: file:../components/explanation/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       comment: Some random string
       rai_insights_dashboard: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
@@ -58,7 +58,7 @@ jobs:
     type: command
     component: file:../components/causal/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       rai_insights_dashboard: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
       treatment_features: '["ZN", "NOX"]'
@@ -70,7 +70,7 @@ jobs:
     type: command
     component: file:../components/counterfactual/spec.yaml
     limits:
-      timeout: 600
+      timeout: 7200
     inputs:
       rai_insights_dashboard: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
       total_CFs: 10
@@ -79,7 +79,7 @@ jobs:
 
   error_analysis_01:
     limits:
-      timeout: 120
+      timeout: 3600
     type: command
     component: file:../components/error_analysis/spec.yaml
     inputs:
@@ -91,7 +91,7 @@ jobs:
     type: command
     component: file:../components/insight_gather/spec.yaml
     limits:
-      timeout: 120
+      timeout: 3600
     inputs:
       constructor: ${{parent.jobs.create_rai_job.outputs.rai_insights_dashboard}}
       insight_1: ${{parent.jobs.causal_01.outputs.causal}}

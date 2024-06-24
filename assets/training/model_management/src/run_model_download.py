@@ -33,6 +33,7 @@ def _get_parser():
     parser.add_argument("--mlflow-model-output-dir", required=True, help="Model directory to output mlflow model to")
     parser.add_argument("--update-existing-model", required=False, default='false', help="Update existing model")
     parser.add_argument("--validation-info", required=False, help="Validation info")
+    parser.add_argument("--token", required=False, help="Token to access the private models or authenticate the user.")
     parser.add_argument("--is-mlflow-model", type=Path, required=True, help="if input model is mlflow model")
     return parser
 
@@ -124,6 +125,7 @@ def run():
     model_output_dir = args.model_output_dir
     mlflow_model_output_dir = args.mlflow_model_output_dir
     update_existing_model = args.update_existing_model.lower()
+    token = args.token
     is_mlflow_model_conditional_output = args.is_mlflow_model
 
     if not ModelSource.has_value(model_source):
@@ -138,7 +140,7 @@ def run():
 
     logger.info("Downloading model")
     model_download_details = download_model(
-        model_source=model_source, model_id=model_id, download_dir=model_output_dir
+        model_source=model_source, model_id=model_id, download_dir=model_output_dir, token=token
     )
 
     is_mlflow_model = check_and_prepare_mlflow_model(Path(model_output_dir), Path(mlflow_model_output_dir))

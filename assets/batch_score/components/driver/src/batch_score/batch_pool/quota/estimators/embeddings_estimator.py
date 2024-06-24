@@ -10,8 +10,11 @@ class EmbeddingsEstimator(DV3Estimator):
     """Estimator for the /embeddings API."""
 
     def _get_prompt(self, request_obj: any) -> "list[str]":
-        """Embeddings are always estimated like a batch."""
-        """Even if the prompt is a string, it is put into a batch of one."""
+        """
+        Embeddings are always estimated like a batch.
+
+        Even if the prompt is a string, it is put into a batch of one.
+        """
         prompt = request_obj.get("input", None)
 
         if not prompt:

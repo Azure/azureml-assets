@@ -49,7 +49,7 @@ class TokenProvider:
 
     def __is_msi_access_token_expired(self, scope: str) -> bool:
         return not self.__msi_access_tokens.get(scope) or \
-               self.__msi_access_tokens[scope].expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
+            self.__msi_access_tokens[scope].expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
 
     def __get_msi_access_token(self, scope: str) -> AccessToken:
         # If there's a token that isn't expired, return that

@@ -1,5 +1,5 @@
 # PTCA Image (enabling Singularity Support)
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py38-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 RUN apt-get update && apt-get -y upgrade
 
@@ -19,6 +19,3 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-
-# not able to install packages with extra requires in conda.yaml
-RUN pip install azureml-acft-common-components["image"]>=0.0.9

@@ -17,7 +17,7 @@ class PermanentException(Exception):
     """Permanent exception."""
 
     def __init__(self, message: str, status_code: int = None, response_payload: any = None):
-        """Init function."""
+        """Initialize PermanentException."""
         super().__init__(message)
 
         self.status_code = status_code
@@ -27,13 +27,15 @@ class PermanentException(Exception):
 class RetriableException(Exception):
     """Retriable exception."""
 
-    def __init__(self,
-                 status_code: int,
-                 response_payload: any = None,
-                 model_response_code: str = None,
-                 model_response_reason: str = None,
-                 retry_after: float = None):
-        """Init function."""
+    def __init__(
+            self,
+            status_code: int,
+            response_payload:
+            any = None,
+            model_response_code: str = None,
+            model_response_reason: str = None,
+            retry_after: float = None):
+        """Initialize RetriableException."""
         self.status_code = status_code
         self.response_payload = response_payload
         self.model_response_code = model_response_code
@@ -51,22 +53,25 @@ class ScoringResultStatus(Enum):
 class ScoringResult:
     """Scoring result."""
 
-    def __init__(self,
-                 status: ScoringResultStatus,
-                 start: float,
-                 end: float,
-                 request_obj: any,
-                 request_metadata: any,
-                 response_body: any,
-                 response_headers: CIMultiDictProxy[str],
-                 num_retries: int,
-                 omit: bool = False,
-                 token_counts: "tuple[int]" = (),
-                 mini_batch_context: MiniBatchContext = None):
-        """Init function."""
+    def __init__(
+            self,
+            status: ScoringResultStatus,
+            start: float,
+            end: float,
+            model_response_code: int,
+            request_obj: any,
+            request_metadata: any,
+            response_body: any,
+            response_headers: CIMultiDictProxy[str],
+            num_retries: int,
+            omit: bool = False,
+            token_counts: "tuple[int]" = (),
+            mini_batch_context: MiniBatchContext = None):
+        """Initialize ScoringResult."""
         self.status = status
         self.start = start
         self.end = end
+        self.model_response_code = model_response_code
         self.request_obj = request_obj  # Normalize to json
         self.request_metadata = request_metadata
         self.response_body = response_body
@@ -83,7 +88,7 @@ class ScoringResult:
 
         self.__token_counts = token_counts
 
-        self.__analyze()
+        self.reload()
 
     # read-only
     @property
@@ -91,12 +96,13 @@ class ScoringResult:
         """Get the estimated token count."""
         return self.__token_counts
 
-    def __analyze(self):
+    def reload(self):
+        """Reload the token fields from the usage dictionary in response body after they are updated."""
         try:
             if self.status == ScoringResultStatus.FAILURE:
                 return
 
-            if not isinstance(self.response_body, list):
+            if isinstance(self.response_body, dict) and "usage" in self.response_body:
                 usage: dict[str, int] = self.response_body["usage"]
 
                 self.prompt_tokens = usage.get("prompt_tokens", None)
@@ -104,6 +110,12 @@ class ScoringResult:
                 self.total_tokens = usage.get("total_tokens", None)
         except ValueError:
             lu.get_logger().error("response is not a json")
+        except Exception:
+            # KeyError and AttributeError can also be raised.
+            # It is better to catch any generic exception otherwise any successful request
+            # will be retried like a failed error which is worse than not
+            # having token statistics in the output.
+            lu.get_logger().error("response does not have usage statistics")
 
     def Failed(scoring_request: ScoringRequest = None) -> 'ScoringResult':
         """Get a scoring result of failed status."""
@@ -111,6 +123,7 @@ class ScoringResult:
             status=ScoringResultStatus.FAILURE,
             start=0,
             end=0,
+            model_response_code=None,
             request_obj=scoring_request.original_payload_obj if scoring_request else None,
             request_metadata=scoring_request.request_metadata if scoring_request else None,
             response_body=None,
@@ -130,6 +143,7 @@ class ScoringResult:
             self.status,
             self.start,
             self.end,
+            self.model_response_code,
             self.request_obj,
             self.request_metadata,
             deepcopy(self.response_body),

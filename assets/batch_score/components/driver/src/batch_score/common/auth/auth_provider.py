@@ -10,7 +10,7 @@ import json
 import os
 from abc import abstractmethod
 from datetime import datetime, timezone
-from enum import Enum
+from ..common_enums import EndpointType
 
 import requests
 from azure.core.credentials import AccessToken
@@ -24,9 +24,6 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from ..telemetry.logging_utils import get_logger
-
-
-EndpointType = Enum('EndpointType', ['AOAI', 'Serverless', 'MIR'])
 
 
 class AuthProvider:
@@ -47,7 +44,7 @@ class IdentityAuthProvider(AuthProvider):
             self,
             use_user_identity: bool,
             managed_identity_client_id: str = None):
-        """Init function."""
+        """Initialize IdentityAuthProvider."""
         # The identity used to score an AOAI deployment must have
         # the role "Cognitive Services User" on the AOAI resource.
         # The role "Contributor" is not sufficient.
@@ -100,11 +97,10 @@ class MissingApiKeyNameException(Exception):
 
     def __str__(self):
         """Str function."""
-        return ("'api_key_name' cannot be empty when using the authentication_type 'api_key'."
-                "Please set 'api_key_name' to the name of the key vault secret "
-                "that contains the API key of the scoring_url."
-                "The secret must be placed in the key vault that is linked to the AzureML workspace "
-                "in which the batch scoring job runs.")
+        return ("'api_key_name' cannot be empty when using the authentication_type 'api_key'. "
+                "Please set 'api_key_name' to the name of the key vault secret that contains the API key "
+                "of the scoring_url. The secret must be placed in the key vault that is linked to the "
+                "AzureML workspace in which the batch scoring job runs.")
 
 
 class ApiKeyAuthProvider(AuthProvider):
@@ -138,7 +134,7 @@ class WorkspaceConnectionAuthProvider(AuthProvider):
     """Workspace connection auth provider."""
 
     def __init__(self, connection_name, endpoint_type) -> None:
-        """Init function."""
+        """Initialize WorkspaceConnectionAuthProvider."""
         self._current_workspace = None
         self._connection_name = connection_name
         self._endpoint_type = endpoint_type

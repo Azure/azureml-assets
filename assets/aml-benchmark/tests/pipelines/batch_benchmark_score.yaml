@@ -31,7 +31,7 @@ outputs:
 jobs:
   run_batch_benchmark_score:
     type: parallel
-    component: ../../components/batch-benchmark-score/spec.yaml
+    component: ../../components/batch_benchmark_score/spec.yaml
     inputs:
       data_input_table: ${{parent.inputs.data_input_table}}
       online_endpoint_url: ${{parent.inputs.online_endpoint_url}}

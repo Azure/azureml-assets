@@ -13,6 +13,7 @@ from typing import List, Tuple, Union
 
 import azureml.assets as assets
 from azureml.assets.util import logger
+from azureml.assets.config import ValidationException
 
 RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
@@ -333,12 +334,28 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
         List[Path]: Asset config files found.
     """
     input_dirs, exclude_dirs = _convert_excludes(input_dirs, exclude_dirs)
+    changed_files_resolved = set([file.resolve() for file in changed_files] if changed_files else [])
 
     found_assets = []
     for input_dir in input_dirs:
         for file in input_dir.rglob(asset_config_filename):
-            # If specified, skip assets with no changed files
-            if changed_files and not any([f for f in changed_files if file.parent in f.parents]):
+            # If specified, skip assets when no change in asset, source_code and test_code
+            try:
+                asset_config = assets.AssetConfig(file)
+                test_dir_path = asset_config.pytest_tests_dir_with_path
+                test_dir_path = test_dir_path.resolve() if test_dir_path else Path()
+
+                release_paths_resolved = [path.resolve() for path in asset_config.release_paths]
+                asset_changed_files = changed_files_resolved & set(release_paths_resolved)
+            except ValidationException:
+                test_dir_path = Path()
+                asset_changed_files = set()
+
+            if changed_files and not asset_changed_files and not any(
+                file.parent in f.parents or
+                test_dir_path in f.resolve().parents
+                for f in changed_files
+            ):
                 continue
 
             # If specified, skip excluded directories
@@ -433,3 +450,33 @@ def dump_yaml(yaml_dict: dict, file_path: str):
     """
     with open(file_path, "w") as f:
         yaml_dict = YAML().dump(yaml_dict, f)
+
+
+def retry(times):
+    """Retry Decorator.
+
+    Args:
+        times (int): The number of times to repeat the wrapped function/method
+    """
+
+    def decorator(func):
+        def newfn(*args, **kwargs):
+            attempt = 1
+            while attempt <= times:
+                try:
+                    return func(*args, **kwargs)
+                except Exception:
+                    attempt += 1
+                    ex_msg = "Exception thrown when attempting to run {}, attempt {} of {}".format(
+                        func.__name__, attempt, times
+                    )
+                    logger.log_warning(ex_msg)
+                    if attempt == times:
+                        logger.log_warning(
+                            "Retried {} times when calling {}, now giving up!".format(times, func.__name__)
+                        )
+                        raise
+
+        return newfn
+
+    return decorator

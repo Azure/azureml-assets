@@ -1,5 +1,5 @@
 name: acft-mmdetection-image-gpu
-version: "13"
+version: auto
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml

@@ -5,6 +5,7 @@
 import azureml.evaluate.mlflow as aml_mlflow
 import json
 from azureml.telemetry.activity import log_activity
+from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 
 import constants
 from constants import ArgumentLiterals, ForecastingConfigContract, TASK, SubTask
@@ -17,9 +18,11 @@ from exceptions import (
 from error_definitions import (
     ComputeMetricsInternalError,
     BadForecastData,
+    BadFeatureColumnData,
     InvalidGroundTruthColumnNameData,
     InvalidPredictionColumnNameData,
     BadInputData,
+    BadQuestionsContextGroundTruthData,
     BadEvaluationConfig,
     SavingOutputError,
 )
@@ -43,6 +46,10 @@ from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import os
 import pandas as pd
 import numpy as np
+
+# Mark current path as allowed
+mark_path_as_loggable(os.path.dirname(__file__))
+
 
 custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
 logger = get_logger(name=__name__)
@@ -106,11 +113,13 @@ class ComputeMetricsRunner:
                     logger.warning(f"Any of Required Keys '[{', '.join(keys)}]' missing in openai_config_params.\n"
                                    f"Skipping GPT Based Metrics calculation for this Run.")
                     do_openai_init = False
-            elif self.task == TASK.CHAT_COMPLETION:
+            elif self.task == TASK.CHAT_COMPLETION and \
+                    self.config.get(SubTask.SUB_TASK_KEY, "") == SubTask.RAG_EVALUATION:
                 if not all(k in llm_config for k in keys):
                     message = f"Required Keys '[{', '.join(keys)}]' missing in openai_config_params."
-                    exception = get_azureml_exception(DataValidationException, BadEvaluationConfig,
-                                                      None, error=message)
+                    exception = get_azureml_exception(
+                        DataValidationException, BadEvaluationConfig, None, error=message
+                    )
                     log_traceback(exception, logger)
                     raise exception
             self.rag_input_data_keys = {}
@@ -133,9 +142,9 @@ class ComputeMetricsRunner:
         ground_truth = None
         if self.ground_truth:
             if os.path.isdir(self.ground_truth) and not self.is_ground_truth_mltable:
-                ground_truth = read_multiple_files(self.ground_truth)
+                ground_truth, _ = read_multiple_files(self.ground_truth)
             else:
-                ground_truth = read_data(self.ground_truth)
+                ground_truth, _ = read_data(self.ground_truth)
             ground_truth = list(ground_truth)[0]
 
             if self.config.get(constants.OpenAIConstants.METRICS_KEY) and (
@@ -155,8 +164,8 @@ class ComputeMetricsRunner:
                                    Skipping GPT Based Metrics Calculation")
                     self.config.pop(constants.OpenAIConstants.METRICS_KEY)
                 elif self.task == TASK.CHAT_COMPLETION and not all(len(values) for values in key_data.values()):
-                    message = "Failed to Fetch Questions and Contexts from Ground Truth Data."
-                    exception = get_azureml_exception(DataValidationException, message, None)
+                    exception = get_azureml_exception(DataValidationException,
+                                                      BadQuestionsContextGroundTruthData, None)
                     log_traceback(exception, logger)
                     raise exception
                 else:
@@ -171,9 +180,9 @@ class ComputeMetricsRunner:
                                                                                     self.config)
 
         if os.path.isdir(self.predictions) and not self.is_predictions_mltable:
-            predictions = read_multiple_files(path=self.predictions)
+            predictions, _ = read_multiple_files(path=self.predictions)
         else:
-            predictions = read_data(self.predictions)
+            predictions, _ = read_data(self.predictions)
         predictions = list(predictions)[0]
         if self.predictions_column_name is not None:
             predictions = filter_predictions(predictions, self.task, self.predictions_column_name)
@@ -181,9 +190,9 @@ class ComputeMetricsRunner:
         predictions_probabilities = None
         if self.predictions_probabilities is not None:
             if os.path.isdir(self.predictions_probabilities) and not self.is_predictions_probabilities_mltable:
-                predictions_probabilities = read_multiple_files(path=self.predictions_probabilities)
+                predictions_probabilities, _ = read_multiple_files(path=self.predictions_probabilities)
             else:
-                predictions_probabilities = read_data(self.predictions_probabilities)
+                predictions_probabilities, _ = read_data(self.predictions_probabilities)
             predictions_probabilities = list(predictions_probabilities)[0]
         self.ground_truth, self.predictions, self.predictions_probabilities = \
             ground_truth, predictions, predictions_probabilities
@@ -194,6 +203,15 @@ class ComputeMetricsRunner:
             ground_true_regressors = None
             self.rename_columns = {}
             if self.task == TASK.FORECASTING:
+                if self.ground_truths_column_name not in self.ground_truth.columns:
+                    message_kwargs = {
+                        "column": "input_columns", "keep_columns": str(self.ground_truths_column_name),
+                        "data_columns": str(list(self.ground_truth.columns))
+                    }
+                    exception = get_azureml_exception(DataValidationException, BadFeatureColumnData, None,
+                                                      **message_kwargs)
+                    log_traceback(exception, logger)
+                    raise exception
                 ground_truth = self.ground_truth.pop(self.ground_truths_column_name).values
                 ground_true_regressors = self.ground_truth
                 self.ground_truth = ground_truth
@@ -242,7 +260,7 @@ class ComputeMetricsRunner:
                 artifact_content = result.artifacts['forecast_time_series_id_distribution_table'].content
                 ts_id_table = pd.DataFrame(artifact_content['data'])
                 ts_id_table.rename(self.rename_columns, axis=1, inplace=True)
-                artifact_content['data'] = ts_id_table.to_dict(orient='recrds')
+                artifact_content['data'] = ts_id_table.to_dict(orient='records')
                 new_table = JsonEvaluationArtifact(
                     uri=result.artifacts['forecast_time_series_id_distribution_table'].uri,
                     content=artifact_content)
@@ -397,7 +415,7 @@ def run():
     parser = ArgumentParser()
     # Inputs
     parser.add_argument("--task", type=str, dest=ArgumentLiterals.TASK, choices=constants.ALL_TASKS)
-    parser.add_argument("--ground_truths", type=str, dest=ArgumentLiterals.GROUND_TRUTHS, required=True)
+    parser.add_argument("--ground_truths", type=str, dest=ArgumentLiterals.GROUND_TRUTHS, required=False)
     parser.add_argument("--ground_truths_column_name", type=lambda x: x.split(","),
                         dest=ArgumentLiterals.GROUND_TRUTHS_COLUMN_NAME, required=False, default=None)
     parser.add_argument("--predictions", type=str, dest=ArgumentLiterals.PREDICTIONS, required=True)

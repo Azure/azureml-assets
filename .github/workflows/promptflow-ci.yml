@@ -6,9 +6,21 @@ on:
     branches:
       - main
     paths:
-      - 'assets/promptflow/models/**'
-      - '.github/workflows/promptflow_ci.yml'
-      - 'scripts/promptflow_ci/**'
+      - assets/promptflow/models/**
+      - .github/workflows/promptflow-ci.yml
+      - scripts/promptflow-ci/**
+  pull_request_target:
+    branches:
+      - main
+    paths:
+      - assets/promptflow/models/**
+      - .github/workflows/promptflow-ci.yml
+      - scripts/promptflow-ci/**
+    types:
+      - opened
+      - labeled
+      - synchronize
+      - reopened
 
 env:
   PROMPTFLOW_DIR: "assets/promptflow/models"
@@ -16,16 +28,26 @@ env:
 permissions:
   # Required for OIDC login to Azure
   id-token: write
+  # Required to clone repo
+  contents: read
 
 jobs:
+  check-execution-context:
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+
   check_spec_yaml:
     runs-on: ubuntu-latest
+    if: fromJSON(needs.check-execution-context.outputs.continue)
+    needs: check-execution-context
     name: Check spec.yaml fields
     timeout-minutes: 45
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    
+    - name: Clone branch
+      uses: Azure/azureml-assets/.github/actions/clone-repo@main
+      with:
+        forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+        fetch-depth: 2
+
     - name: Set up Python 3.9 environment
       uses: actions/setup-python@v4
       with:
@@ -38,14 +60,19 @@ jobs:
 
   run_promptflow_ci_job:
     runs-on: ubuntu-latest
+    if: fromJSON(needs.check-execution-context.outputs.continue)
+    needs: check-execution-context
     name: Flow tests
     environment: Testing
     timeout-minutes: 60
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+          fetch-depth: 2
 
       - name: Use Node.js 18.x  
         uses: actions/setup-node@v3
@@ -72,7 +99,7 @@ jobs:
 
       - name: Validate prompt flows
         run: |
-          python scripts/promptflow-ci/promptflow_ci.py --local
+          python scripts/promptflow-ci/promptflow_ci.py
 
       - name: Run cspell for typo check
         working-directory: ${{ env.PROMPTFLOW_DIR }}

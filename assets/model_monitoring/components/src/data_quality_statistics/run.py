@@ -16,19 +16,19 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_data", type=str)
     parser.add_argument("--data_statistics", type=str)
+    parser.add_argument("--override_numerical_features", type=str, required=False)
+    parser.add_argument("--override_categorical_features", type=str, required=False)
     args = parser.parse_args()
 
     df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
 
-    metric_unique_df = compute_data_quality_statistics(df)
-
-    sp_metric_unique_df = (
-        metric_unique_df.to_spark()
-    )  # Convert back to Spark dataframe to output as MLTable
+    metric_unique_df = compute_data_quality_statistics(df,
+                                                       args.override_numerical_features,
+                                                       args.override_categorical_features)
 
     # CONVERT TO STRING
-    sp_metric_unique_df = sp_metric_unique_df.withColumn(
-        "set", sp_metric_unique_df["set"].cast(StringType())
+    sp_metric_unique_df = metric_unique_df.withColumn(
+        "set", metric_unique_df["set"].cast(StringType())
     )
     # remove brackets as they will get added again with array type conversion
     sp_metric_unique_df = sp_metric_unique_df.withColumn(

@@ -14,11 +14,16 @@ import sys
 import json
 from datetime import datetime
 from model_data_collector_preprocessor.spark_run import (
-    _mdc_uri_folder_to_raw_spark_df, _extract_data_and_correlation_id, _mdc_uri_folder_to_preprocessed_spark_df,
+    _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string
 )
-from model_data_collector_preprocessor.store_url import StoreUrl
+from model_data_collector_preprocessor.mdc_utils import (
+    _mdc_uri_folder_to_raw_spark_df,
+    _extract_data_and_correlation_id,
+)
+from shared_utilities.store_url import StoreUrl
 from shared_utilities.momo_exceptions import DataNotFoundError
+from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
 
 
 @pytest.fixture(scope="module")
@@ -485,10 +490,3 @@ class TestMDCSparkPreprocessor:
         df_out = spark.createDataFrame(data_out, schema=schema_out)
 
         assert_spark_dataframe_equal(df_actual, df_out)
-
-
-def assert_spark_dataframe_equal(df1, df2):
-    """Assert two spark dataframes are equal."""
-    assert df1.schema == df2.schema
-    assert df1.count() == df2.count()
-    assert df1.collect() == df2.collect()

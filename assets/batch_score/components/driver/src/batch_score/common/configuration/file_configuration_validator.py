@@ -25,7 +25,7 @@ class FileConfigurationValidator:
     """Validator for file-based configuration."""
 
     def __init__(self, schema_file=None):
-        """Init function."""
+        """Initialize FileConfigurationValidator."""
         if schema_file is None:
             schema_file = SCHEMAS_ROOT / "configuration.json"
 
@@ -88,16 +88,19 @@ class FileConfigurationValidator:
         instance["request_settings"].setdefault("headers", {})
         instance["request_settings"].setdefault("properties", {})
         instance["request_settings"].setdefault("timeout", 600)
+        instance["request_settings"].setdefault("input_schema_version", 1)
 
         # log_settings
         instance.setdefault("log_settings", {})
         instance["log_settings"].setdefault("app_insights_log_level", "debug")
         instance["log_settings"].setdefault("stdout_log_level", "debug")
+        instance["log_settings"].setdefault("logging_metadata", {})
 
         # output_settings
         instance.setdefault("output_settings", {})
         instance["output_settings"].setdefault("ensure_ascii", False)
         instance["output_settings"].setdefault("save_partitioned_scoring_results", True)
+        instance["output_settings"].setdefault("split_output", False)
 
         return instance
 

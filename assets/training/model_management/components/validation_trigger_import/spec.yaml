@@ -4,7 +4,7 @@ type: command
 name: validation_trigger_import
 display_name: Validation Trigger Import model
 description: Component for enabling validation of import pipeline.
-version: 0.0.3
+version: 0.0.8
 
 # Pipeline inputs
 inputs:
@@ -38,6 +38,15 @@ inputs:
     type: string
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
 
+  model_flavor:
+    type: string
+    enum:
+      - HFTransformersV2
+      - OSS
+    default: HFTransformersV2
+    optional: false
+    description: Flavor of MLFlow to which model the model is converted to.
+
   ## Inputs for the MlFLow conversion
   license_file_path:
     type: uri_file
@@ -57,6 +66,7 @@ inputs:
     - translation
     - image-classification
     - text-to-image
+    - chat-completion
     optional: true
     type: string
 
@@ -170,7 +180,7 @@ outputs:
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/9
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/15
 code: ../../src
 command: python -u run_model_validate.py --validation-info ${{outputs.validation_info}}
 

@@ -21,7 +21,6 @@ from error_definitions import (
 from constants import (
     TASK,
     ForecastingConfigContract,
-    ForecastColumns,
     TextGenerationColumns,
     DataFrameParams,
     OpenAIConstants,
@@ -612,7 +611,7 @@ class ChatCompletionEvaluator(Evaluator):
         #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
             y_pred_formatted = [
-                item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0]["0"]
+                list(item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0].values())[0]
                 for idx, item in y_pred.iterrows()
             ]
         # dataframe wih just predictions appended to conversations
@@ -709,8 +708,8 @@ class ForecastingEvaluator(Evaluator):
             X_test=X_test,
             **kwargs
         )
-        X_test[ForecastColumns._ACTUAL_COLUMN_NAME] = y_test
-        X_test[ForecastColumns._FORECAST_COLUMN_NAME] = y_pred
+        # X_test[ForecastColumns._ACTUAL_COLUMN_NAME] = y_test
+        # X_test[ForecastColumns._FORECAST_COLUMN_NAME] = y_pred
         return metrics
 
 

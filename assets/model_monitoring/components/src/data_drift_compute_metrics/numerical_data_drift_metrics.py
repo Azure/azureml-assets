@@ -8,7 +8,7 @@ import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
 from scipy.spatial import distance
 from scipy.stats import ks_2samp, wasserstein_distance
-from io_utils import get_output_spark_df, init_spark
+from data_drift_compute_metrics.io_utils import get_output_spark_df, init_spark
 from shared_utilities.histogram_utils import (
     get_dual_histogram_bin_edges,
     get_histograms,
@@ -166,7 +166,8 @@ def _normalized_wasserstein(
 
         # Normalize the Wasserstein distance by dividing it by the norm
         std_dev = baseline_df.select(F.stddev(column)).collect()[0][0]
-        norm = max(std_dev, 0.001)
+        # if all the values of the column is None, we would get None stddev value
+        norm = max(std_dev, 0.001) if std_dev is not None else 0.001
 
         normalized_distance = distance / norm
         row = [column, float(normalized_distance), "Numerical", NORMALIZED_WASSERSTEN_DISTANCE_METRIC_NAME, column, ""]

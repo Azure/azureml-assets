@@ -20,7 +20,8 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_feature_attribution_drift_model_monitor_job(
-    ml_client, get_component, experiment_name, baseline_data, target_data
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data,
+    expect_failure: bool = False
 ):
     feature_attr_drift_signal_monitor = get_component(
         COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR
@@ -44,8 +45,8 @@ def _submit_feature_attribution_drift_model_monitor_job(
     pipeline_job = _feature_attr_drift_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
@@ -59,7 +60,8 @@ def _submit_feature_attribution_drift_model_monitor_job(
 
 
 def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
-    ml_client: MLClient, get_component, experiment_name, model_inputs, model_outputs, baseline_data
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, model_inputs,
+    model_outputs, baseline_data, expect_failure: bool = False
 ):
     # Get the components.
     data_joiner_component = get_component(COMPONENT_NAME_DATA_JOINER)
@@ -132,12 +134,16 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
     pipeline_job = _feature_attr_drift_with_preprocessor_and_data_joiner_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
-    pipeline_job = ml_client.jobs.create_or_update(
-        pipeline_job, experiment_name=experiment_name
+    pipeline_job = submit_pipeline_job(
+        pipeline_job, experiment_name, expect_failure
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 
@@ -147,10 +153,11 @@ class TestFeatureAttributionDriftModelMonitor:
     """Test class."""
 
     def test_featureattributiondrift_with_preprocessor_and_datajoiner_successful(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test preprocessor and data joiner with FAD signal."""
         pipeline_job = _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
@@ -162,15 +169,17 @@ class TestFeatureAttributionDriftModelMonitor:
         assert pipeline_job.status == "Completed"
 
     def test_monitoring_run_use_defaults_empty_production_data_failed(
-        self, ml_client: MLClient, get_component, test_suite_name
+        self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
         """Test the scenario where the production data is empty."""
         pipeline_job = _submit_feature_attribution_drift_model_monitor_job(
+            submit_pipeline_job,
             ml_client,
             get_component,
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_EMPTY,
+            expect_failure=True
         )
 
         # empty target data should cause the pipeline to fail

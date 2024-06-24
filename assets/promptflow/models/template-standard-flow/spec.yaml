@@ -9,4 +9,6 @@ properties:
   azureml.promptflow.description: Template Standard Flow
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+tags:
+  hiddenlayerscanned: ""
+version: 2

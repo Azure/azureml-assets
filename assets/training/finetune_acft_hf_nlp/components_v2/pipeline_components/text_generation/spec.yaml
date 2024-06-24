@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-version: 0.0.7
+version: 0.0.17
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
@@ -111,6 +111,12 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
+  # Model parameters
+  model_asset_id:
+    type: string
+    optional: false
+    description: Asset id of model
+
   # Model registration
   registered_model_name:
     type: string
@@ -126,7 +132,7 @@ outputs:
 jobs:
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.7
+    component: azureml:oss_text_generation_data_import:0.0.17
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -135,13 +141,16 @@ jobs:
           imageVersion: ''
           SLATier: 'Premium'
           priority: 'Medium'
+    environment_variables:
+      _AZUREML_CR_ENABLE_ITP_CAP: "false"
     inputs:
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
       system_properties: '${{parent.inputs.system_properties}}'
+      user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
   oss_text_generation_finetune:
     type: command
-    component: azureml:oss_text_generation_finetune:0.0.7
+    component: azureml:oss_text_generation_finetune:0.0.17
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -150,8 +159,12 @@ jobs:
           imageVersion: ''
           SLATier: 'Premium'
           priority: 'Medium'
+    environment_variables:
+      _AZUREML_CR_ENABLE_ITP_CAP: "false"
     inputs:
+      task_name: "TextGeneration"
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
       dataset_input: '${{parent.jobs.oss_text_generation_data_import.outputs.output_dataset}}'
       text_key: '${{parent.inputs.text_key}}'
       ground_truth_key: '${{parent.inputs.ground_truth_key}}'
@@ -182,7 +195,7 @@ jobs:
       seed: 42
       enable_full_determinism: "false"
       dataloader_num_workers: 0
-      ignore_mismatched_sizes: "true"
+      ignore_mismatched_sizes: "false"
       max_grad_norm: 1.0
       evaluation_strategy: epoch
       evaluation_steps_interval: 0.0
@@ -190,7 +203,9 @@ jobs:
       logging_strategy: epoch
       logging_steps: 500
       metric_for_best_model: loss
-      resume_from_checkpoint: "false"
+      resume_from_checkpoint: "true"
+      save_strategy: steps
+      save_steps: 100
       save_total_limit: 1
       apply_early_stopping: "false"
       early_stopping_patience: 0

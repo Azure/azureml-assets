@@ -12,8 +12,8 @@ from collections import deque
 import aiohttp
 
 from ...batch_pool.quota.quota_client import QuotaUnavailableException
-from ...batch_pool.scoring.scoring_client import ScoringClient
 from ...utils.common import str2bool
+from ...utils import timeout_utils
 from .. import constants
 from ..configuration.client_settings import ClientSettingsKey, ClientSettingsProvider
 from ..configuration.configuration import Configuration
@@ -24,9 +24,12 @@ from ..scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )
+from ..scoring.scoring_client import ScoringClient
 from ..scoring.scoring_utils import is_zero_traffic_group_error
 from ..scoring.segmented_score_context import SegmentedScoreContext
 from ..telemetry import logging_utils as lu
+from ..telemetry.events import event_utils
+from ..telemetry.events.batch_score_input_row_completed_event import BatchScoreInputRowCompletedEvent
 from ..telemetry.logging_utils import set_mini_batch_id
 from .request_metrics import RequestMetrics
 
@@ -34,14 +37,20 @@ from .request_metrics import RequestMetrics
 class QueueItem:
     """Queue Item."""
 
-    def __init__(self,
-                 scoring_request: ScoringRequest,
-                 segmented_score_context: SegmentedScoreContext = None,
-                 timeout_generator=None):
-        """Init function."""
+    def __init__(
+        self,
+        scoring_request: ScoringRequest,
+        segmented_score_context: SegmentedScoreContext = None,
+        timeout_generator=None
+    ):
+        """Initialize QueueItem."""
         self.scoring_request = scoring_request
         self.segmented_score_context = segmented_score_context
-        self.timeout_generator = timeout_generator
+        self.timeout_generator = timeout_generator or timeout_utils.get_retry_timeout_generator()
+
+    def reset_timeout_generator(self):
+        """Reset timeout generator."""
+        self.timeout_generator = timeout_utils.get_retry_timeout_generator()
 
 
 class Worker:
@@ -61,7 +70,7 @@ class Worker:
         empty_wait_interval: int = 1,
         scoring_result_queue: "deque[ScoringRequest]" = None,
     ):
-        """Init function."""
+        """Initialize Worker."""
         self._configuration = configuration
         self.__scoring_client: ScoringClient = scoring_client
         self.__client_session = client_session
@@ -73,8 +82,9 @@ class Worker:
         self.__scoring_result_queue = scoring_result_queue
 
         self.__is_running = False
-        self.__enable_delay_after_success = str2bool(
-            os.environ.get("BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST", "True"))
+        self.__enable_delay_after_success = str2bool(os.environ.get(
+            "BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST",
+            "True"))
 
         lu.get_logger().debug("Worker {}: Created".format(self.id))
 
@@ -103,8 +113,9 @@ class Worker:
             if self._configuration.async_mode:
                 mini_batch_id = queue_item.scoring_request.mini_batch_context.mini_batch_id
                 set_mini_batch_id(mini_batch_id)
-                lu.get_logger().debug("Worker {}: Picked an queue item from mini-batch {}"
-                                      .format(self.id, mini_batch_id))
+                lu.get_logger().debug(
+                    "Worker {}: Picked an queue item from mini-batch {}"
+                    .format(self.id, mini_batch_id))
 
             start, end = 0, 0
 
@@ -144,38 +155,39 @@ class Worker:
                 wait_time = 0
 
                 # To activate this, set BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS to True.
-                # And to override the default back-off time,
-                # set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF to a value in seconds.
-                if is_zero_traffic_group_error(e.status_code, e.response_payload) \
-                        and str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS, "False")):
+                # And to override the default back-off time, set BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF
+                # to a value in seconds.
+                if is_zero_traffic_group_error(e.status_code, e.response_payload) and \
+                   str2bool(os.environ.get(constants.BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR, "False")):
                     back_off = int(
-                        os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF)
-                        or self.__client_settings_provider.get_client_setting(
-                            ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF)
-                        or self.NO_DEPLOYMENTS_BACK_OFF)
+                        os.environ.get(constants.BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF_ENV_VAR) or
+                        self.get_client_settings(ClientSettingsKey.NO_DEPLOYMENTS_BACK_OFF) or
+                        self.NO_DEPLOYMENTS_BACK_OFF)
 
                     wait_time = back_off
                     queue_item.scoring_request.total_wait_time += wait_time
                     # Reset timeout generator since this error is not due to timeout or model congestion.
-                    queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
-                        self.__client_session.timeout)
+                    queue_item.reset_timeout_generator()
 
                 elif e.status_code == 429 or e.model_response_code == "429":
                     wait_time = back_off
 
                     is_quota_429 = isinstance(e, QuotaUnavailableException)
 
-                    value = self.__client_settings_provider.get_client_setting(
+                    value = self.get_client_settings(
                         ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME) or "False"
+
                     count_only_quota_429s_toward_total_request_time: bool = (value.lower() == "true")
 
                     if count_only_quota_429s_toward_total_request_time and not is_quota_429:
                         # Non-quota 429 responses don't contribute to the total wait time.
-                        msg = f"Worker {self.id}: Encountered non-quota 429 response. Not adding to total wait time."
-                        lu.get_logger().debug(msg)
+                        lu.get_logger().debug(
+                            "Worker {}: Encountered non-quota 429 response."
+                            " Not adding to total wait time.")
                         pass
                     else:
                         queue_item.scoring_request.total_wait_time += wait_time
+                        lu.get_logger().warning("Worker {}: Insufficient quota: Encountered quota 429 response.")
 
                 self.__request_metrics.add_result(
                     request_id=queue_item.scoring_request.internal_id,
@@ -186,7 +198,7 @@ class Worker:
                     additional_wait_time=wait_time,
                     request_total_wait_time=queue_item.scoring_request.total_wait_time)
 
-                self._log_score_failed_with_retriable_exception(queue_item.scoring_request, back_off, wait_time)
+                self._log_score_failed_with_retriable_exception(queue_item.scoring_request, back_off, wait_time, e)
 
                 await asyncio.sleep(back_off)
 
@@ -205,53 +217,73 @@ class Worker:
         self.__is_running = False
 
         if self._configuration.async_mode:
-            lu.get_logger().debug("Worker {}: Finished processing an queue item from mini-batch {}"
-                                  .format(self.id, mini_batch_id))
+            lu.get_logger().debug(
+                "Worker {}: Finished processing an queue item from mini-batch {}"
+                .format(self.id, mini_batch_id))
             set_mini_batch_id(None)
         else:
             lu.get_logger().debug("Worker {}: Finished".format(self.id))
 
+    def get_client_settings(self, client_settings_key: ClientSettingsKey):
+        """Get client settings."""
+        return self.__client_settings_provider.get_client_setting(client_settings_key)
+
     def _request_exceeds_max_retry_time_interval(self, scoring_request: ScoringRequest) -> bool:
-        if self._configuration.max_retry_time_interval is None:
+        # If max_retry_time_interval is 0, that means request_setting.timeout = 0.
+        # In this case we should try to score the same row indefinitely.
+        if self._configuration.max_retry_time_interval is None or self._configuration.max_retry_time_interval == 0:
             return False
 
         return scoring_request.scoring_duration > self._configuration.max_retry_time_interval
 
-    def _log_score_failed_with_max_retry_time_interval_exceeded(self, scoring_request: ScoringRequest):
-        msg = "Worker {}: Score failed: Payload scored for {} seconds, " \
-              + "which exceeded the maximum time interval of {} seconds. " \
-              + "internal_id: {}, total_wait_time: {}, retry_count: {}"
-        lu.get_logger().error(msg.format(self.id,
-                                         round(scoring_request.scoring_duration, 2),
-                                         self._configuration.max_retry_time_interval,
-                                         scoring_request.internal_id,
-                                         scoring_request.total_wait_time,
-                                         scoring_request.retry_count))
+    def _log_score_failed_with_max_retry_time_interval_exceeded(
+            self,
+            scoring_request: ScoringRequest):
+        lu.get_logger().error(
+            "Worker {}: Score failed: Payload scored for {} seconds, which exceeded the maximum"
+            " time interval of {} seconds. internal_id: {}, total_wait_time: {},"
+            " retry_count: {}, retry_count_for_limited_retries: {}"
+            .format(
+                self.id,
+                round(scoring_request.scoring_duration, 2),
+                self._configuration.max_retry_time_interval,
+                scoring_request.internal_id,
+                scoring_request.total_wait_time,
+                scoring_request.retry_count,
+                scoring_request.retry_count_for_limited_retries))
 
-    def _log_score_failed_with_permanent_exception(self,
-                                                   scoring_request: ScoringRequest,
-                                                   exception: PermanentException):
-        msg = "Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {}, retry_count: {}"
-        lu.get_logger().error(msg.format(
-            self.id,
-            str(exception),
-            scoring_request.internal_id,
-            scoring_request.total_wait_time,
-            scoring_request.retry_count))
+    def _log_score_failed_with_permanent_exception(
+            self, scoring_request: ScoringRequest,
+            exception: PermanentException):
+        lu.get_logger().error(
+            "Worker {}: Score failed: {}. internal_id: {}, total_wait_time: {},"
+            " retry_count: {}, retry_count_for_limited_retries: {}"
+            .format(
+                self.id,
+                str(exception),
+                scoring_request.internal_id,
+                scoring_request.total_wait_time,
+                scoring_request.retry_count,
+                scoring_request.retry_count_for_limited_retries))
 
-    def _log_score_failed_with_retriable_exception(self,
-                                                   scoring_request: ScoringRequest,
-                                                   back_off: int,
-                                                   wait_time: int):
-        msg = "Worker {}: Encountered retriable exception. internal_id: {},"
-        msg += " back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}"
-        lu.get_logger().debug(msg.format(
-            self.id,
-            scoring_request.internal_id,
-            back_off,
-            wait_time,
-            scoring_request.total_wait_time,
-            scoring_request.retry_count))
+    def _log_score_failed_with_retriable_exception(
+            self,
+            scoring_request: ScoringRequest,
+            back_off: int,
+            wait_time: int,
+            exception: RetriableException):
+        lu.get_logger().debug(
+            "Worker {}: Encountered retriable exception: {}. internal_id: {},"
+            " back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}, retry_count_for_limited_retries: {}"
+            .format(
+                self.id,
+                str(exception),
+                scoring_request.internal_id,
+                back_off,
+                wait_time,
+                scoring_request.total_wait_time,
+                scoring_request.retry_count,
+                scoring_request.retry_count_for_limited_retries))
 
     def _log_score_failed_with_unhandled_exception(self, scoring_request: ScoringRequest, trace: str):
         lu.get_logger().error("Worker {}: Encountered unhandled exception. internal_id: {}, error: {}".format(
@@ -260,19 +292,17 @@ class Worker:
             trace))
 
     async def __process_queue_item(self, queue_item: QueueItem):
-        if queue_item.timeout_generator is None:
-            queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(self.__client_session.timeout)
-
-        timeout = ScoringClient.get_next_retry_timeout(queue_item.timeout_generator)
+        timeout = aiohttp.ClientTimeout(total=next(queue_item.timeout_generator))
 
         if self._configuration.segment_large_requests == "enabled":
             if queue_item.segmented_score_context is None:
-                queue_item.segmented_score_context = SegmentedScoreContext(queue_item.scoring_request,
-                                                                           self._configuration.segment_max_token_size)
+                queue_item.segmented_score_context = SegmentedScoreContext(
+                    queue_item.scoring_request,
+                    self._configuration.segment_max_token_size)
 
             if queue_item.segmented_score_context.has_more():
 
-                scoring_result = await queue_item.segmented_score_context.score_next_once(
+                scoring_result = await queue_item.segmented_score_context.score_next_segment(
                     self.__scoring_client,
                     self.__client_session,
                     timeout,
@@ -281,17 +311,22 @@ class Worker:
                 if scoring_result.status == ScoringResultStatus.SUCCESS:
                     if queue_item.segmented_score_context.has_more():
                         # Reset timeout generator for the next segment.
-                        queue_item.timeout_generator = ScoringClient.get_retry_timeout_generator(
-                            self.__client_session.timeout)
+                        queue_item.reset_timeout_generator()
                         self.__scoring_request_queue.append(queue_item)
                     else:
                         scoring_result = queue_item.segmented_score_context.build_scoring_result(scoring_result)
-                        self.__add_result(queue_item.scoring_request, scoring_result)
+                        self.__add_result(
+                            queue_item.scoring_request,
+                            scoring_result,
+                            queue_item.segmented_score_context.processed_segments_count)
                 else:
-                    self.__add_result(queue_item.scoring_request, scoring_result)
+                    self.__add_result(
+                        queue_item.scoring_request,
+                        scoring_result,
+                        queue_item.segmented_score_context.processed_segments_count)
 
         else:
-            scoring_result = await self.__scoring_client.score_once(
+            scoring_result = await self.__scoring_client.score(
                 session=self.__client_session,
                 scoring_request=queue_item.scoring_request,
                 timeout=timeout,
@@ -299,7 +334,11 @@ class Worker:
 
             self.__add_result(queue_item.scoring_request, scoring_result)
 
-    def __add_result(self, scoring_request: ScoringRequest, scoring_result: ScoringResult):
+    def __add_result(
+            self,
+            scoring_request: ScoringRequest,
+            scoring_result: ScoringResult,
+            processed_segments_count: int = 0):
         self.__scoring_result_queue.append(scoring_result)
 
         self.__request_metrics.add_result(
@@ -307,10 +346,36 @@ class Worker:
             scoring_result.status,
             "<OMITTED>" if scoring_result.status == ScoringResultStatus.SUCCESS else scoring_result.response_body,
             "" if not scoring_result.response_headers else scoring_result.response_headers.get(
-                "ms-azureml-model-error-statuscode", ""),
+                    "ms-azureml-model-error-statuscode", ""),
             "" if not scoring_result.response_headers else scoring_result.response_headers.get(
-                "ms-azureml-model-error-reason", ""),
+                    "ms-azureml-model-error-reason", ""),
             0,
             scoring_request.total_wait_time)
 
+        # TODO: Clean up this log line
         lu.get_events_client().emit_row_completed(1, str(scoring_result.status))
+
+        self.__emit_input_row_completed_event(scoring_request, scoring_result, processed_segments_count)
+
+    @event_utils.catch_and_log_all_exceptions
+    def __emit_input_row_completed_event(
+            self,
+            scoring_request: ScoringRequest,
+            scoring_result: ScoringResult,
+            processed_segments_count: int = 0) -> None:
+        # Emit input row completed event
+        input_row_completed_event = BatchScoreInputRowCompletedEvent(
+            input_row_id=scoring_request.internal_id,
+            worker_id=self.id,
+            scoring_url=scoring_request.scoring_url,
+            is_successful=scoring_result.status == ScoringResultStatus.SUCCESS,
+            response_code=-1 if not scoring_result.response_headers else scoring_result.response_headers.get(
+                "ms-azureml-model-error-statuscode", -1),
+            prompt_tokens=scoring_result.prompt_tokens,
+            completion_tokens=scoring_result.completion_tokens,
+            retry_count=scoring_result.num_retries,
+            duration_ms=scoring_result.duration * 1000,
+            segment_count=processed_segments_count
+        )
+
+        event_utils.emit_event(batch_score_event=input_row_completed_event)

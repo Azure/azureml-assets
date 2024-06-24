@@ -1,17 +1,31 @@
-`BLIP-2` is a model consisting of three components: a CLIP-like image encoder, a Querying Transformer (Q-Former), and a large language model. The image encoder and language model are initialized from pre-trained checkpoints and kept frozen while training the Querying Transformer. The model's goal is to predict the next text token given query embeddings and previous text, making it useful for tasks such as image captioning, visual question answering, and chat-like conversations. However, the model inherits the same risks and limitations as the off-the-shelf OPT language model it uses, including bias, safety issues, generation diversity issues, and potential vulnerability to inappropriate content or inherent biases in the underlying data. Researchers should carefully assess the safety and fairness of the model before deploying it in any real-world applications.
+The `BLIP-2` model, utilizing OPT-2.7b (a large language model with 2.7 billion parameters), is presented in the <a href='https://arxiv.org/abs/2201.12086' target='_blank'>paper</a> titled "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models". This is a generic and efficient pre-training strategy that easily harvests development of pre-trained vision models and large language models (LLMs) for Vision-Language Pre-training (VLP). This model was made available in this <a href='https://github.com/salesforce/LAVIS/tree/main/projects/blip2' target='_blank'>repository</a>.
 
-> The above summary was generated using ChatGPT. Review the <a href='https://huggingface.co/Salesforce/blip2-opt-2.7b' target='_blank'>original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+BLIP-2 consists of 3 models: a CLIP-like image encoder, a Querying Transformer (Q-Former) and a large language model. The authors initialize the weights of the image encoder and large language model from pre-trained checkpoints and keep them frozen while training the Querying Transformer, which is a BERT-like Transformer encoder that maps a set of "query tokens" to query embeddings, which bridge the gap between the embedding space of the image encoder and the large language model.
 
-### Inference samples
+The model's objective is to predict the next text token based on query embeddings and the previous text. This functionality allows the model to undertake a range of tasks, such as generating image captions, responding to visual questions (VQA), and participating in chat-like conversations using the image and preceding chat as input prompts.
+
+# Limitations and Biases
+
+BLIP2-OPT uses off-the-shelf OPT as the language model. It shares the same potential risks and limitations outlined in Meta's model card.
+
+> Like other large language models for which the diversity (or lack thereof) of training data induces downstream impact on the quality of our model, OPT-175B has limitations in terms of bias and safety. OPT-175B can also have quality issues in terms of generation diversity and hallucination. In general, OPT-175B is not immune from the plethora of issues that plague modern large language models.
+
+BLIP2 undergoes fine-tuning on internet collected image-text datasets, which raises concerns about potential inappropriate content generation or replicating inherent biases from the underlying data. The model has not been tested in real-world applications, and caution is advised against direct deployment. Researchers should carefully assess the model's safety and fairness in the specific deployment context before considering its use.
+
+# License
+
+mit
+
+# Inference Samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href='https://aka.ms/azureml-infer-online-sdk-blip-vqa' target='_blank'>visual-question-answering-online-endpoint.ipynb</a>|<a href='https://aka.ms/azureml-infer-online-cli-blip-vqa' target='_blank'>visual-question-answering-online-endpoint.sh</a>
 Batch |<a href='https://aka.ms/azureml-infer-batch-sdk-blip-vqa' target='_blank'>visual-question-answering-batch-endpoint.ipynb</a>|<a href='https://aka.ms/azureml-infer-batch-cli-blip-vqa' target='_blank'>visual-question-answering-batch-endpoint.sh</a>
 
-### Sample inputs and outputs (for real-time inference)
+# Sample input and output
 
-#### Sample input
+### Sample input
 
 ```json
 {
@@ -31,7 +45,7 @@ Batch |<a href='https://aka.ms/azureml-infer-batch-sdk-blip-vqa' target='_blank'
 Note:
 - "image1" and "image2" should be publicly accessible urls or strings in `base64` format.
 
-#### Sample output
+### Sample output
 
 ```json
 [
@@ -44,7 +58,8 @@ Note:
 ]
 ```
 
-#### Model inference - visual question answering
+#### Visualization of inference result for a sample image
+
 For sample image below and text prompt "what are people doing? Answer: ", the output text is "they're buying coffee".
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip2_vqa.png" alt="Salesforce-BLIP2-vqa">
