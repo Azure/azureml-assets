@@ -1,0 +1,31 @@
+type: evaluationresult
+name: mmlu_humanities_phi-3-small-128k-instruct_question_answering
+version: 2.06.18
+display_name: mmlu_humanities_Phi-3-small-128k-instruct_question_answering
+description: Phi-3-small-128k-instruct run for mmlu_humanities dataset
+dataset_family: mmlu
+dataset_name: mmlu_humanities
+
+model_name: Phi-3-small-128k-instruct
+model_version: "7"
+model_asset_id: azureml://registries/models-staging/models/Phi-3-small-128k-instruct/versions/7
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/models-staging/models/Phi-3-small-128k-instruct/versions/7
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.7045696068012752
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
