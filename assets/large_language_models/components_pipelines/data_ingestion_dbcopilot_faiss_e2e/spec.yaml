@@ -116,7 +116,7 @@ inputs:
     type: boolean
     default: flase
     optional: true
-    description: "Whether to connect using system identity."
+    description: "Whether to connect using managed identity."
 outputs:
   grounding_index:
     type: uri_folder
