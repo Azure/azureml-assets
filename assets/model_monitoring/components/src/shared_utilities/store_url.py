@@ -209,9 +209,8 @@ class StoreUrl:
         def any_files(file_names: list, pattern):
             return any(file_name_match(file_name, pattern) for file_name in file_names)
 
-        # lstrip to handle empty self.path
         base_path = self._base_url.replace('\\', '/') if self.is_local_path() else self.path
-        full_path_pattern = f"{base_path.rstrip('/')}/{relative_path_pattern.strip('/')}".lstrip("/")
+        full_path_pattern = f"{base_path.rstrip('/')}/{relative_path_pattern.strip('/')}"
         # find the non-wildcard part of the path
         pattern_sections = full_path_pattern.split("/")
         for idx in range(len(pattern_sections)):
