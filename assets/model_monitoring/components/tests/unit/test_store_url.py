@@ -311,7 +311,10 @@ class TestStoreUrl:
         "my/folder/folder3/file3.csv",
         "my/folder/file4.jsonl",
         "my/folder/folder1/folder2",
-        "my/folder/folder1"
+        "my/folder/folder1",
+        "my/folder/folder3",
+        "my/folder/folder4",  # empty folder
+        "my/folder/folder4/folder5"
     ]
 
     @pytest.mark.parametrize(
@@ -326,6 +329,8 @@ class TestStoreUrl:
             (PATHS, "/my/folder", "/folder1/folder3/*.jsonl", "my/folder/folder1/folder3/", False),
             (PATHS, "/my/folder", "/folder1/folder3/*.csv", "my/folder/folder1/folder3/", False),
             (PATHS, "/my/folder", "/folder1/folder4/*.jsonl", "my/folder/folder1/folder4/", False),
+            (PATHS, "/my/folder", "/folder4/*.jsonl", "my/folder/folder4/", False),
+            (PATHS, "/my/folder", "/folder4/*/*.jsonl", "my/folder/folder4/", False),
             (PATHS, "/my/folder", "/*1/*.jsonl", "my/folder/", True),
             (PATHS, "/my/folder", "/folder1/f?ld*2/*.jsonl", "my/folder/folder1/", True),  # both ? and * wildcard
             # store url points to container root folder
