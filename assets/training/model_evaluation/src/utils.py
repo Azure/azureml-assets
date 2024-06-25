@@ -39,6 +39,7 @@ from task_factory.text.fill_mask import FillMask
 from task_factory.text.chat_completion import ChatCompletion
 from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
 from task_factory.image.od_is import ImageOdIsPredictor
+from task_factory.image.vqa import ImageVQAPredictor
 from evaluators.evaluators import EvaluatorFactory
 from logging_utilities import current_run, get_azureml_exception
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
@@ -384,7 +385,7 @@ def get_predictor(task):
         TASK.IMAGE_OBJECT_DETECTION: ImageOdIsPredictor,
         TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor,
         TASK.IMAGE_GENERATION: None,
-        TASK.IMAGE_VQA: None,
+        TASK.IMAGE_VQA: ImageVQAPredictor,
     }
     return predictor_map.get(task)
 
