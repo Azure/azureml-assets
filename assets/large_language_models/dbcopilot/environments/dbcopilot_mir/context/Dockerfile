@@ -27,14 +27,12 @@ RUN python -m pip install --upgrade pip && \
     pip install promptflow-image-bundle[azure]==0.3.0 && \
     pip install promptflow-vectordb==0.2.10 && \
     ## Install dbcopilot
-    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl && \
-    ## Fix vulnerabilities
-    pip install idna==3.7
+    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 tqdm==4.66.3 Werkzeug==3.0.3 requests==2.32.0 && \
+    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 && \
     conda deactivate"
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout
