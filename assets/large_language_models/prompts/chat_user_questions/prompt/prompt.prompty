@@ -1,0 +1,72 @@
+---
+name: Generate user questions on a product
+description: >
+  To submit your application to evaluation, you can ask
+  a language model to generate synthetic questions for you.
+  Use this prompt as a basis to generate a set of questions
+  on a product for a given context and user persona.
+  Using this technique, you can create an evaluation
+  dataset, to measure the quality of your application
+  responses on more than just a few manual samples.
+
+  Example input:
+  ```
+  - context: contoso outdoors shopping website
+  - persona: a confused customer, not proficient in web interfaces
+  - product: hiking boots
+  ```
+
+  Example output:
+  ```json
+  {"question":"How do I find the right size of hiking boots for my feet on this website?"}
+  {"question":"Are there instructions available for how to measure my foot for the correct boot fit?"}
+  {"question":"Can someone guide me through the process of selecting a pair of hiking boots?"}
+  ```
+
+model:
+  api: chat
+  parameters:
+    temperature: 0.8
+
+inputs:
+  persona:
+    type: string
+    description: The user persona
+  context:
+    type: string
+    description: The context where the user is accessing the product
+  product:
+    type: string
+    description: The product the user is interested in
+  count:
+    type: integer
+    description: The number of questions to generate
+
+outputs:
+  questions:
+    type: string
+
+sample:
+  persona: a confused customer, not proficient in web interfaces
+  context: contoso outdoors shopping website
+  product: hiking boots
+  count: 5
+---
+system:
+Your goal is to generate questions from a user on a given product.
+
+You are given a context, a persona and a product.
+The context describes where the user is accessing the product.
+The persona describes the user themselves.
+The product is the item the user is interested in.
+
+# instructions
+- empathize with the user based on the given persona
+- imagine a situation grounded in the given context where the user would access the product
+- generate {{count}} question(s) this user would have on this product
+- return the {{count}} question(s) in JSONL format `{"question":"[QUESTION]"}`
+
+user:
+- context: {{context}}
+- persona: {{persona}}
+- product: {{product}}
