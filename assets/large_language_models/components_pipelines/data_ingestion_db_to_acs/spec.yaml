@@ -111,7 +111,7 @@ inputs:
     description: "The instruct template for the LLM."
   managed_identity_enabled:
     type: boolean
-    default: flase
+    default: false
     optional: true
     description: "Whether to connect using managed identity."
 outputs:
