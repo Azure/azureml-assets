@@ -33,6 +33,7 @@ class ImageDataFrameParams:
     PREDICTIONS = "predictions"
     TEXT_PROMPT = "text_prompt"
     GENERATION_PROMPT = "prompt"
+    QUESTION = "question"
 
 
 class ODISLiterals:
@@ -62,3 +63,10 @@ class GenerationLiterals:
     """Image generation literals."""
 
     CAPTION_SEPARATOR = "||"
+
+
+class VQALiterals:
+    """Image VQA literals."""
+
+    QUESTION = "question"
+    ANSWER_OPTIONS = "answer_options"

@@ -102,6 +102,7 @@ class TASK:
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
     IMAGE_GENERATION = "image-generation"
+    IMAGE_VQA = "image-vqa"
     FORECASTING = "tabular-forecasting"
     CHAT_COMPLETION = "chat-completion"
 
@@ -131,6 +132,7 @@ ALL_TASKS = [
     TASK.IMAGE_OBJECT_DETECTION,
     TASK.IMAGE_INSTANCE_SEGMENTATION,
     TASK.IMAGE_GENERATION,
+    TASK.IMAGE_VQA,
 ]
 
 MULTILABEL_SET = [
@@ -174,6 +176,7 @@ MLFLOW_MODEL_TYPE_MAP = {
     TASK.IMAGE_OBJECT_DETECTION: "image-object-detection",
     TASK.IMAGE_INSTANCE_SEGMENTATION: "image-instance-segmentation",
     TASK.IMAGE_GENERATION: "image-generation",
+    TASK.IMAGE_VQA: "image-vqa",
 }
 
 IMAGE_TASKS = [
@@ -182,6 +185,7 @@ IMAGE_TASKS = [
     TASK.IMAGE_OBJECT_DETECTION,
     TASK.IMAGE_INSTANCE_SEGMENTATION,
     TASK.IMAGE_GENERATION,
+    TASK.IMAGE_VQA,
 ]
 
 TEXT_TOKEN_TASKS = [

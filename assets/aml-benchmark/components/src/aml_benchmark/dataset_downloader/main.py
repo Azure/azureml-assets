@@ -222,6 +222,8 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
             features=Features({
                 "image_url": Value(dtype="string", id=None),
                 "label": Value(dtype="string", id=None),
+                "question": Value(dtype="string", id=None),
+                "answer_options": Value(dtype="string", id=None),
             })
         )
 

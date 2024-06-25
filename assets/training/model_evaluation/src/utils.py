@@ -384,6 +384,7 @@ def get_predictor(task):
         TASK.IMAGE_OBJECT_DETECTION: ImageOdIsPredictor,
         TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor,
         TASK.IMAGE_GENERATION: None,
+        TASK.IMAGE_VQA: None,
     }
     return predictor_map.get(task)
 
@@ -1115,6 +1116,8 @@ def get_sample_data_and_column_names(args):
         else:
             if task in [constants.TASK.IMAGE_GENERATION]:
                 input_column_names = [ImageDataFrameParams.GENERATION_PROMPT]
+            elif task in [constants.TASK.IMAGE_VQA]:
+                input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME, ImageDataFrameParams.QUESTION]
             else:
                 input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
                 if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
