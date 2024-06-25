@@ -11,13 +11,14 @@ import pandas as pd
 import torch
 import numpy as np
 
+from mltable import load
 from PIL import Image
 from torch import Tensor
 from typing import cast, Dict, List, Tuple
 
 import constants
 
-from image_constants import SettingLiterals, ODISLiterals
+from image_constants import GenerationLiterals, ODISLiterals, SettingLiterals
 from logging_utilities import get_logger
 
 from azureml.automl.core.shared.constants import MLTableLiterals, MLTableDataLabel
@@ -272,6 +273,56 @@ def get_object_detection_dataset(
     return df
 
 
+def get_generation_dataset(
+    mltable_path: str,
+    input_column_names: List[str],
+    label_column_name: str,
+    settings: Dict = {},
+):
+    """
+    Make input dataset for image generation from mltable.
+
+    :param test_mltable: The path to the prediction input mltable
+    :param input_column_names: The column names of the model inputs
+    :param label_column_name: The column name of the label
+    :param settings: Settings dictionary
+    :return: Data Frame with test image paths and labels
+    """
+    # Workaround for MLTable not being able to convert image url from stream back to string.
+    full_mltable_file_name = mltable_path + "/" + SettingLiterals.MLTABLE_FILE_NAME
+    with open(full_mltable_file_name, "rt") as f:
+        mltable_str = f.read()
+    mltable_str = mltable_str.replace(SettingLiterals.MLTABLE_STREAM_STR, "")
+    with open(full_mltable_file_name, "wt") as f:
+        f.write(mltable_str)
+
+    # Load MLTable and convert to Pandas dataframe.
+    mltable = load(mltable_path)
+    mltable_dataframe = mltable.to_pandas_dataframe()
+
+    # Initialize the output dataframe with the input and label columns.
+    df = pd.DataFrame(columns=input_column_names + [label_column_name])
+
+    # Go through all (image_url, captions) pairs and make a (prompt, image_url) from each pair. The model will generate
+    # a synthetic image from the prompt and the set of synthetic images will be compared with the set of original ones.
+    for image_url, captions in zip(
+        mltable_dataframe[SettingLiterals.IMAGE_URL], mltable_dataframe[SettingLiterals.LABEL]
+    ):
+        # Go through all captions (split according to special separator).
+        for caption in captions.split(GenerationLiterals.CAPTION_SEPARATOR):
+            df = df.append(
+                {
+                    # The model input is a text prompt.
+                    input_column_names[0]: caption,
+                    # The original image is passed through via the label column.
+                    label_column_name: image_url,
+                },
+                ignore_index=True
+            )
+
+    return df
+
+
 def get_image_dataset(task_type, test_mltable, input_column_names, label_column_name, settings={}):
     """Return test dataset for image tasks from mltable.
 
@@ -302,6 +353,13 @@ def get_image_dataset(task_type, test_mltable, input_column_names, label_column_
             label_column_name=label_column_name,
             settings=settings,
             masks_required=masks_required,
+        )
+    elif task_type == constants.TASK.IMAGE_GENERATION:
+        return get_generation_dataset(
+            mltable_path=test_mltable,
+            input_column_names=input_column_names,
+            label_column_name=label_column_name,
+            settings=settings,
         )
     else:
         raise ValueError(f"Task type {task_type} not supported")
