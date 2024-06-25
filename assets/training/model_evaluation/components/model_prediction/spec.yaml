@@ -31,6 +31,7 @@ inputs:
       chat-completion,
       image-object-detection,
       image-instance-segmentation,
+      image-generation,
     ]
     description: "Task type"
   test_data:
