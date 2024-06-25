@@ -197,6 +197,9 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
             # Get the current label.
             label = vision_dataset_adapter.get_label(instance)
 
+            # Get the task specific fields.
+            other_fields = vision_dataset_adapter.get_other_fields(instance)
+
             # Since returning a different dictionary than `instance` does not work, the current dictionary is modified
             # and then returned.
             instance.clear()
@@ -204,6 +207,9 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
             # Store the datastore URL where the image will be saved and also store the label.
             instance["image_url"] = "{}/{}".format(datastore_directory_url, image_file_name)
             instance["label"] = label
+
+            # Store task specific fields.
+            instance.update(other_fields)
 
             # Increment the image counter.
             image_counter += 1

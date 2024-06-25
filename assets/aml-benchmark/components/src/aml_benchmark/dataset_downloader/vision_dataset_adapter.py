@@ -29,6 +29,9 @@ class VisionDatasetAdapter(ABC):
         """Extract the instance's image as a PIL image."""
         pass
 
+    def get_other_fields(self, instance):
+        return {}
+
 
 class Cifar10Adapter(VisionDatasetAdapter):
     """Adapter for Cifar10 HF dataset."""
@@ -103,6 +106,25 @@ class GTSRBAdapter(VisionDatasetAdapter):
         return Image.open(io.BytesIO(instance["Path"]["bytes"]))
 
 
+class MMMUAdapter(VisionDatasetAdapter):
+    """Adapter for MMMU HF dataset."""
+
+    def get_label(self, instance):
+        """Extract the instance's label as a string."""
+        return instance["answer"]
+
+    def get_pil_image(self, instance):
+        """Extract the instance's image as a PIL image."""
+        # TODO(rdondera): add support for multiple images.
+        return instance["image_1"]
+
+    def get_other_fields(self, instance):
+        return {
+            "question": instance["question"],
+            "answer_options": "||".join(instance["options"]),
+        }
+
+
 class VisionDatasetAdapterFactory:
     """Factory for making vision dataset adapters based on dataset names."""
 
@@ -115,6 +137,7 @@ class VisionDatasetAdapterFactory:
             "patch_camelyon": PatchCamelyonAdapter,
             "resisc45": Resisc45Adapter,
             "gtsrb": GTSRBAdapter,
+            "mmmu": MMMUAdapter,
         }
 
         # Select the adapter class based on the dataset name. If name not available or not recognized, do not make
