@@ -67,65 +67,56 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         if is_same_month(start, end):
             return same_month(start, end)
         if is_start_of_year(start) and is_end_of_year(end):
-            return [get_url(f"{start.strftime('%Y')}/*/*/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{start.strftime('%Y')}") else []
+            return _get_files(f"{start.strftime('%Y')}/*/*/*/*.jsonl")
         return cross_month(start, end)
 
     def same_month(start, end) -> List[str]:
         if is_same_day(start, end):
             return same_day(start, end)
         if is_start_of_month(start) and is_end_of_month(end):
-            return [get_url(f"{start.strftime('%Y/%m')}/*/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{start.strftime('%Y/%m')}") else []
+            return _get_files(f"{start.strftime('%Y/%m')}/*/*/*.jsonl")
         return cross_day(start, end)
 
     def same_day(start, end) -> List[str]:
         if is_start_of_day(start) and is_end_of_day(end):
-            return [get_url(f"{start.strftime('%Y/%m/%d')}/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{start.strftime('%Y/%m/%d')}") else []
+            return _get_files(f"{start.strftime('%Y/%m/%d')}/*/*.jsonl")
         return cross_hour(start, end)
 
     def start_of_year(y) -> List[str]:
         if is_end_of_year(y):
-            return [get_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{y.strftime('%Y')}") else []
+            return _get_files(f"{y.strftime('%Y')}/*/*/*/*.jsonl")
         return same_year(y.replace(month=1, day=1, hour=0, minute=0, second=0), y)
 
     def end_of_year(y) -> List[str]:
         if is_start_of_year(y):
-            return [get_url(f"{y.strftime('%Y')}/*/*/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{y.strftime('%Y')}") else []
+            return _get_files(f"{y.strftime('%Y')}/*/*/*/*.jsonl")
         return same_year(y, y.replace(month=12, day=31, hour=23, minute=59, second=59))
 
     def start_of_month(m) -> List[str]:
         if is_end_of_month(m):
-            return [get_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}") else []
+            return _get_files(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")
         return same_month(m.replace(day=1, hour=0, minute=0, second=0), m)
 
     def end_of_month(m) -> List[str]:
         if is_start_of_month(m):
-            return [get_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}") else []
+            return _get_files(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")
         _, month_days = calendar.monthrange(m.year, m.month)
         return same_month(m, m.replace(day=month_days, hour=23, minute=59, second=59))
 
     def start_of_day(d) -> List[str]:
         if is_end_of_day(d):
-            return [get_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}") else []
+            return _get_files(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")
         return same_day(d.replace(hour=0, minute=0, second=0), d)
 
     def end_of_day(d) -> List[str]:
         if is_start_of_day(d):
-            return [get_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")] \
-                if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}") else []
+            return _get_files(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")
         return same_day(d, d.replace(hour=23, minute=59, second=59))
 
     def cross_year(start, end) -> List[str]:
         middle_years = [
             get_url(f"{y}/*/*/*/*.jsonl") for y in range(start.year+1, end.year)
-            if store_url.is_folder_exists(f"{y}")
+            if store_url.any_files(f"{y}/*/*/*/*.jsonl")
         ]
         return end_of_year(start) + middle_years + start_of_year(end)
 
@@ -135,7 +126,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         middle_months = [
             get_url(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")
             for m in date_range(_start, _end, relativedelta(months=1))
-            if store_url.is_folder_exists(f"{m.strftime('%Y/%m')}")
+            if store_url.any_files(f"{m.strftime('%Y/%m')}/*/*/*.jsonl")
         ]
         return end_of_month(start) + middle_months + start_of_month(end)
 
@@ -145,7 +136,7 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         middle_days = [
             get_url(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")
             for d in date_range(_start, _end, timedelta(days=1))
-            if store_url.is_folder_exists(f"{d.strftime('%Y/%m/%d')}")
+            if store_url.any_files(f"{d.strftime('%Y/%m/%d')}/*/*.jsonl")
         ]
         return end_of_day(start) + middle_days + start_of_day(end)
 
@@ -155,8 +146,11 @@ def get_file_list(start_datetime: datetime, end_datetime: datetime, store_url: S
         return [
             get_url(f"{h.strftime('%Y/%m/%d/%H')}/*.jsonl")
             for h in date_range(_start, _end, timedelta(hours=1))
-            if store_url.is_folder_exists(f"{h.strftime('%Y/%m/%d/%H')}")
+            if store_url.any_files(f"{h.strftime('%Y/%m/%d/%H')}/*.jsonl")
         ]
+
+    def _get_files(file_pattern: str) -> List[str]:
+        return [get_url(file_pattern)] if store_url.any_files(file_pattern) else []
 
     # ensure start_datetime and end_datetime both or neither have tzinfo
     if start_datetime.tzinfo is None:
