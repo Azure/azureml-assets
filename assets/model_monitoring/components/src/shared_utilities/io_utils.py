@@ -8,6 +8,7 @@ import numpy as np
 import time
 import yaml
 from azureml.dataprep.api.errorhandlers import ExecutionError
+from azureml.dataprep.api.mltable._mltable_helper import UserErrorException
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType
 from .constants import MAX_RETRY_COUNT
@@ -124,19 +125,6 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
 
-def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None):
-    """Verify paths in mltable is supported."""
-    mltable_dict = mltable_dict or yaml.safe_load(StoreUrl(mltable_path, ws).read_file_content("MLTable"))
-    for path in mltable_dict.get("paths", []):
-        path_val = path.get("file") or path.get("folder") or path.get("pattern")
-        try:
-            path_url = StoreUrl(path_val, ws)  # path_url itself must be valid
-            if not path_url.is_local_path():   # and it must be either local(absolute or relative) path
-                _ = path_url.get_credential()  # or credential azureml path
-        except InvalidInputError as iie:
-            raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
-
-
 def _write_mltable_yaml(mltable_obj, folder_path: str):
     try:
         store_url = StoreUrl(folder_path)
@@ -153,17 +141,31 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
 
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
-    _verify_mltable_paths(mltable_path)
+    if mltable_path is None:
+        raise InvalidInputError("MLTable path is None.")
     spark = init_spark()
     try:
         return spark.read.mltable(mltable_path)
+    except UserErrorException as ue:
+        ue_str = str(ue)
+        if 'Not able to find MLTable file' in ue_str:
+            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not found or not accessible.")
+        elif 'MLTable yaml is invalid' in ue_str:
+            raise InvalidInputError(f"Invalid MLTable yaml content in {mltable_path}, please make sure all paths "
+                                    "defined in MLTable is in correct format and supported scheme.")
     except ExecutionError as ee:
-        if 'AuthenticationError("RuntimeError: Non-matching ' in str(ee):
+        ee_str = str(ee)
+        if 'AuthenticationError("RuntimeError: Non-matching ' in ee_str:
             raise InvalidInputError(f"Failed to read MLTable {mltable_path}, "
                                     "please make sure only data defined in the same AML workspace is used in MLTable.")
+        elif 'StreamError(NotFound)' in ee_str and 'The requested stream was not found' in ee_str:
+            raise InvalidInputError(f"One or more paths defined in MLTable {mltable_path} is not found.")
     except ValueError as ve:
         if 'AuthenticationError("RuntimeError: Non-matching ' in str(ve):
             raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not from the same AML workspace.")
+    except SystemError as se:
+        if 'Name or service not known' in str(se):
+            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, the storage account is not found.")
 
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
