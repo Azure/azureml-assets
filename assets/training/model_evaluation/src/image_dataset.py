@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import json
 import pandas as pd
+import re
 import torch
 import numpy as np
 
@@ -47,6 +48,9 @@ from azureml.acft.common_components.image.runtime_common.object_detection.data.d
 )
 from azureml.core import Workspace
 from azureml.core.run import Run
+from azureml.data.datapath import DataPath
+from azureml.data.dataset_factory import FileDatasetFactory
+
 
 logger = get_logger(name=__name__)
 
@@ -353,13 +357,34 @@ def get_vqa_dataset(
     # Initialize the output dataframe with the input and label columns.
     df = pd.DataFrame(columns=input_column_names + [label_column_name])
 
-    for image_url, label, question, answer_options in zip(
-        mltable_dataframe[SettingLiterals.IMAGE_URL], mltable_dataframe[SettingLiterals.LABEL],
+    DATASTORE_URL_TEMPLATE = "AmlDatastore://([^/]+)((/[^/]+)+)$"
+
+    # Get the workspace of the run.
+    run = Run.get_context()
+    workspace = run.experiment.workspace
+
+    def maybe_make_data_path(image_url):
+        # Check if this url refers to datastore and if not, keep it as is.
+        match = re.search(DATASTORE_URL_TEMPLATE, image_url)
+        if match is None:
+            return image_url
+
+        # Make DataPath from datastore name and file path.
+        groups = match.groups()
+        return DataPath(workspace.datastores.get(groups[0]), groups[1])
+
+    image_urls = [maybe_make_data_path(image_url) for image_url in mltable_dataframe[SettingLiterals.IMAGE_URL]]
+    remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
+    local_image_file_names = remote_image_files.download()
+
+    for local_image_file_name, label, question, answer_options in zip(
+        local_image_file_names, mltable_dataframe[SettingLiterals.LABEL],
         mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[VQALiterals.ANSWER_OPTIONS]
     ):
+        image = base64.encodebytes(read_image(local_image_file_name)).decode("utf-8")
         df = df.append(
             {
-                input_column_names[0]: image_url,
+                input_column_names[0]: image,
                 input_column_names[1]: question,
                 label_column_name: label,
             },
