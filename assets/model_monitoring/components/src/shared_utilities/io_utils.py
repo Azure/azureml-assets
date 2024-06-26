@@ -153,6 +153,8 @@ def read_mltable_in_spark(mltable_path: str):
         elif 'MLTable yaml is invalid' in ue_str:
             raise InvalidInputError(f"Invalid MLTable yaml content in {mltable_path}, please make sure all paths "
                                     "defined in MLTable is in correct format and supported scheme.")
+        else:
+            raise ue
     except ExecutionError as ee:
         ee_str = str(ee)
         if 'AuthenticationError("RuntimeError: Non-matching ' in ee_str:
@@ -160,12 +162,24 @@ def read_mltable_in_spark(mltable_path: str):
                                     "please make sure only data defined in the same AML workspace is used in MLTable.")
         elif 'StreamError(NotFound)' in ee_str and 'The requested stream was not found' in ee_str:
             raise InvalidInputError(f"One or more paths defined in MLTable {mltable_path} is not found.")
+        else:
+            raise ee
     except ValueError as ve:
-        if 'AuthenticationError("RuntimeError: Non-matching ' in str(ve):
+        ve_str = str(ve)
+        if 'AuthenticationError("RuntimeError: Non-matching ' in ve_str:
             raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not from the same AML workspace.")
+        elif 'StreamError(PermissionDenied(' in ve_str:
+            # TODO add link to doc
+            raise InvalidInputError(f"No permission to read MLTable {mltable_path}, please make it as credential data."
+                                    " Or you can run Model Monitor job with managed identity and grant proper data "
+                                    "access permission to the user managed identity attached to this AML workspace.")
+        else:
+            raise ve
     except SystemError as se:
         if 'Name or service not known' in str(se):
             raise InvalidInputError(f"Failed to read MLTable {mltable_path}, the storage account is not found.")
+        else:
+            raise se
 
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):
