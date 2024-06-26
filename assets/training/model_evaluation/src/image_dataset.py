@@ -355,7 +355,7 @@ def get_vqa_dataset(
     mltable_dataframe = mltable.to_pandas_dataframe()
 
     # Initialize the output dataframe with the input and label columns.
-    df = pd.DataFrame(columns=input_column_names + [label_column_name])
+    df = pd.DataFrame(columns=input_column_names + [label_column_name] + [VQALiterals.ANSWER_OPTIONS])
 
     DATASTORE_URL_TEMPLATE = "AmlDatastore://([^/]+)((/[^/]+)+)$"
 
@@ -377,9 +377,9 @@ def get_vqa_dataset(
     remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
     local_image_file_names = remote_image_files.download()
 
-    for local_image_file_name, label, question, answer_options in zip(
-        local_image_file_names, mltable_dataframe[SettingLiterals.LABEL],
-        mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[VQALiterals.ANSWER_OPTIONS]
+    for local_image_file_name, question, answer_options, label in zip(
+        local_image_file_names, mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[VQALiterals.ANSWER_OPTIONS],
+        mltable_dataframe[SettingLiterals.LABEL]
     ):
         image = base64.encodebytes(read_image(local_image_file_name)).decode("utf-8")
         df = df.append(
@@ -387,6 +387,7 @@ def get_vqa_dataset(
                 input_column_names[0]: image,
                 input_column_names[1]: question,
                 label_column_name: label,
+                VQALiterals.ANSWER_OPTIONS: answer_options,
             },
             ignore_index=True
         )

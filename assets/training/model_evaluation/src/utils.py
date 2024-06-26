@@ -1125,19 +1125,11 @@ def get_sample_data_and_column_names(args):
                     input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
 
         if args[ArgumentLiterals.LABEL_COLUMN_NAME]:
-            if len(args[ArgumentLiterals.LABEL_COLUMN_NAME]) != 1:
-                message = "Must specify only one label column for vision tasks."
-                exception = get_azureml_exception(
-                    ArgumentValidationException, ArgumentParsingError, None, error=message
-                )
-                log_traceback(exception, logger)
-                raise exception
-
             label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME][0]
+            extra_y_test_cols = args[ArgumentLiterals.LABEL_COLUMN_NAME][1:]
         else:
             label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
-
-        extra_y_test_cols = None
+            extra_y_test_cols = None
 
         sample_data, _ = read_model_prediction_data(data_path, task, input_column_names, label_column_name)
 
