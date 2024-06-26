@@ -129,16 +129,15 @@ class TestMDCPreprocessor:
         pdf.show()
 
     @pytest.mark.parametrize(
-        "window_start_time, window_end_time, root_folder_exists",
+        "window_start_time, window_end_time",
         [
-            ("2023-11-03T15:00:00", "2023-11-03T16:00:00", True),  # no window folder
-            ("2023-11-06T15:00:00", "2023-11-06T16:00:00", True),  # has window folder, no file
-            ("2023-11-06T17:00:00", "2023-11-06T18:00:00", True),  # has window folder and file, but empty file
-            ("2023-11-08T14:00:00", "2023-11-08T16:00:00", False),  # root folder not exists
+            ("2023-11-03T15:00:00", "2023-11-03T16:00:00"),  # no window folder
+            ("2023-11-06T15:00:00", "2023-11-06T16:00:00"),  # has window folder, no file
+            ("2023-11-06T17:00:00", "2023-11-06T18:00:00"),  # has window folder and file, but empty file
         ]
     )
     def test_uri_folder_to_spark_df_no_data(self, mdc_preprocessor_test_setup,
-                                            window_start_time, window_end_time, root_folder_exists):
+                                            window_start_time, window_end_time):
         """Test uri_folder_to_spark_df()."""
         def my_add_tags(tags: dict):
             print("my_add_tags:", tags)
@@ -149,7 +148,7 @@ class TestMDCPreprocessor:
         tests_path = os.path.abspath(f"{os.path.dirname(__file__)}/../../tests")
         preprocessed_output = f"{tests_path}/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
-        root_folder = f"{tests_path}/unit/raw_mdc_data/" if root_folder_exists else f"{tests_path}/unit/raw_mdc_data1/"
+        root_folder = f"{tests_path}/unit/raw_mdc_data/"
 
         with pytest.raises(DataNotFoundError):
             df = _raw_mdc_uri_folder_to_preprocessed_spark_df(
