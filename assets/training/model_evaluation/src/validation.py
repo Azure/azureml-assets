@@ -8,8 +8,9 @@ from exceptions import (
     ArgumentValidationException,
 )
 from constants import ALL_TASKS, TASK, ArgumentLiterals
+from image_constants import SettingLiterals
 from logging_utilities import get_logger, log_traceback, get_azureml_exception
-from utils import assert_and_raise, read_config, read_config_str, read_model_prediction_data, get_column_names
+from utils import assert_and_raise, read_config, read_config_str, get_sample_data_and_column_names
 from error_definitions import (
     InvalidTaskType,
     InvalidModel,
@@ -228,15 +229,19 @@ def validate_and_get_columns(args):
     Args:
         args (_type_): _description_
     """
-    logger.info("Reading top row in data for validation.")
-    data, _ = read_model_prediction_data(args[ArgumentLiterals.DATA], args[ArgumentLiterals.TASK], nrows=1)
-    data = list(data)[0]
-    input_column_names, label_column_name, extra_y_test_cols = get_column_names(args, data)
-
-    validate_input_column_names(input_column_names, data)
+    logger.info("Reading top row in data for column name extraction and validation.")
+    data, input_column_names, label_column_name, extra_y_test_cols = get_sample_data_and_column_names(args)
 
     task = args[ArgumentLiterals.TASK]
     config = args[ArgumentLiterals.CONFIG]
+
+    if task in constants.IMAGE_TASKS:
+        # Vision datasets must have an image_url and a label column. The input columns for model prediction will be
+        # constructed from these two (pass through in most of the cases).
+        validate_input_column_names([SettingLiterals.IMAGE_URL, SettingLiterals.LABEL], data)
+    else:
+        validate_input_column_names(input_column_names, data)
+
     if task == TASK.TEXT_GENERATION:
         if config.get(constants.TextGenerationColumns.SUBTASKKEY, "") == constants.SubTask.CODEGENERATION:
             # Ensure that user always has "," in label_col_name

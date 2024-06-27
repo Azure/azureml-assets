@@ -4,6 +4,7 @@
 """Test file for StoreUrl."""
 
 import pytest
+import os
 from unittest.mock import Mock, patch
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
@@ -303,6 +304,92 @@ class TestStoreUrl:
         with patch.object(Datastore, "get", return_value=mock_datastore):
             store_url = StoreUrl(path, mock_ws)
             assert store_url.is_local_path() == is_local_path
+
+    PATHS = [
+        "my/folder/folder1/folder2/file1.jsonl",
+        "my/folder/folder1/file2.jsonl",
+        "my/folder/folder3/file3.csv",
+        "my/folder/file4.jsonl",
+        "my/folder/folder1/folder2",
+        "my/folder/folder1",
+        "my/folder/folder3",
+        "my/folder/folder4",  # empty folder
+        "my/folder/folder4/folder5"
+    ]
+
+    @pytest.mark.parametrize(
+        "path_names, base_folder, pattern, expected_folder, expected_result",
+        [
+            (PATHS, "/my/folder", "/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "*/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "*/*/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "*/*/*/*.jsonl", "my/folder/", False),
+            (PATHS, "/my/folder", "/folder1/*.jsonl", "my/folder/folder1/", True),
+            (PATHS, "/my/folder", "/folder1/folder2/*.jsonl", "my/folder/folder1/folder2/", True),
+            (PATHS, "/my/folder", "/folder1/folder3/*.jsonl", "my/folder/folder1/folder3/", False),
+            (PATHS, "/my/folder", "/folder1/folder3/*.csv", "my/folder/folder1/folder3/", False),
+            (PATHS, "/my/folder", "/folder1/folder4/*.jsonl", "my/folder/folder1/folder4/", False),
+            (PATHS, "/my/folder", "/folder4/*.jsonl", "my/folder/folder4/", False),
+            (PATHS, "/my/folder", "/folder4/*/*.jsonl", "my/folder/folder4/", False),
+            (PATHS, "/my/folder", "/*1/*.jsonl", "my/folder/", True),
+            (PATHS, "/my/folder", "/folder1/f?ld*2/*.jsonl", "my/folder/folder1/", True),  # both ? and * wildcard
+            # store url points to container root folder
+            (["file1.jsonl"], "", "*.jsonl", "", True),
+            (["file1.jsonl"], "", "*.csv", "", False),
+            (["folder1/file1.jsonl", "folder1"], "", "*/*.jsonl", "", True),
+            (["folder1/file1.jsonl", "folder1"], "", "folder1/*.jsonl", "folder1/", True),
+            (["folder1/file1.jsonl", "folder1"], "", "*/*.csv", "", False),
+        ]
+    )
+    def test_any_files(self, path_names, base_folder, pattern, expected_folder, expected_result):
+        """Test any_files()."""
+        def construct_mock_blob(name):
+            mock_blob = Mock(is_directory='.' not in name)
+            mock_blob.name = name
+            return mock_blob
+
+        def list_blobs(name_starts_with):
+            assert name_starts_with == expected_folder, \
+                f"expected non wildcard path to be {expected_folder}, but {name_starts_with} is given"
+            # if condition to return only folders/files under the sub folder
+            return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
+
+        def get_paths(path, recursive: bool):
+            assert path == expected_folder, f"expected non wildcard path to be {expected_folder}, but {path} is given"
+            assert recursive, "get_paths() should be called with recursive=True"
+            return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
+
+        for store_type in ["blob", "gen2"]:
+            if store_type == "blob":
+                base_url = f"wasbs://my_container@my_account.blob.core.windows.net{base_folder}"
+                mock_container_client = Mock(spec=ContainerClient)
+                mock_container_client.list_blobs.side_effect = list_blobs
+            else:
+                base_url = f"abfss://my_container@my_account.dfs.core.windows.net{base_folder}"
+                mock_container_client = Mock(spec=FileSystemClient)
+                mock_container_client.get_paths.side_effect = get_paths
+            store_url = StoreUrl(base_url)
+            assert store_url.any_files(pattern, mock_container_client) is expected_result
+
+    @pytest.mark.parametrize(
+        "pattern, expected_result",
+        [
+            ("2023/10/11/20/*.jsonl", True),
+            ("2023/10/11/*/*.jsonl", True),
+            ("2023/10/*/*/*.jsonl", True),
+            ("2023/*/*/*/*.jsonl", True),
+            ("2023/10/11/*/*.csv", False),
+            ("2023/10/12/*/*.jsonl", False),
+            ("2023/12/*/*/*.jsonl", False),
+            ("2023/10/1?/*/m??_*_only.jsonl", True),
+            ("2023/10/?2/*/*.jsonl", False)
+        ]
+    )
+    def test_any_files_local(self, pattern, expected_result):
+        """Test any_files() for local file system."""
+        base_path = os.path.abspath(f"{os.path.dirname(__file__)}/raw_mdc_data")
+        store_url = StoreUrl(base_path)
+        assert store_url.any_files(pattern) is expected_result
 
 
 def assert_credentials_are_equal(credential1, credential2):
