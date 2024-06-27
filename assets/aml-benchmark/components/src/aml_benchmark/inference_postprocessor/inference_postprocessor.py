@@ -39,6 +39,74 @@ def get_prompt(data: dict, remove_prompt_prefix: bool = True):
     return data.get("prompt") if remove_prompt_prefix else None
 
 
+import random
+
+import numpy as np
+
+# Taken from MMMU codebase.
+def parse_multi_choice_response(response, all_choices, index2ans):
+    """
+    Parse the prediction from the generated response.
+    Return the predicted index e.g., A, B, C, D.
+    """
+    for char in [',', '.', '!', '?', ';', ':', "'"]:
+        response = response.strip(char)
+    response = " " + response + " " # add space to avoid partial match
+
+    index_ans = True
+    ans_with_brack = False
+    candidates = []
+    for choice in all_choices:  # e.g., (A) (B) (C) (D)
+        if f'({choice})' in response:
+            candidates.append(choice)
+            ans_with_brack = True
+
+    if len(candidates) == 0:
+        for choice in all_choices: # e.g., A B C D
+            if f' {choice} ' in response:
+                candidates.append(choice)
+
+    # if all above doesn't get candidates, check if the content is larger than 5 tokens and try to parse the example
+    if len(candidates) == 0 and len(response.split()) > 5:
+        for index, ans in index2ans.items():
+            if ans.lower() in response.lower():
+                candidates.append(index)
+                index_ans = False # it's content ans.
+
+    # print("a3", candidates)
+
+    if len(candidates) == 0:  # still not get answer, randomly choose one.
+        # pred_index = random.choice(all_choices)
+        if len(index2ans) == 1:
+            # if actually single choice and no match, return index outside range
+            # assumption: when single choice, the only choice has key A
+            pred_index = "Z"
+        else:
+            pred_index = random.choice(list(index2ans.keys()))
+    elif len(candidates) > 1:
+        start_indexes = []
+        if index_ans:
+            if ans_with_brack: 
+                for can in candidates:
+                    index = response.rfind(f'({can})')
+                    start_indexes.append(index) # -1 will be ignored anyway
+                # start_indexes = [generated_response.index(f'({can})') for can in candidates]
+            else:
+                for can in candidates:
+                    index = response.rfind(f" {can} ")
+                    start_indexes.append(index)
+        else:
+            for can in candidates:
+                index = response.lower().rfind(index2ans[can].lower())
+                start_indexes.append(index)
+        # get the last one
+        pred_index = candidates[np.argmax(start_indexes)]
+    else: # if only one candidate, use it.
+        pred_index = candidates[0]
+
+    return pred_index
+
+
 class InferencePostprocessor(object):
     """Inference Postprocessor object class."""
 
@@ -406,6 +474,36 @@ class InferencePostprocessor(object):
         out_string = self.apply_label_map(out_string)
         return out_string
 
+    def extract_multi_choice(self, actual_df):
+        print("b1", actual_df.columns.tolist())
+
+        multi_choice_predictions = []
+
+        predicted_data = read_jsonl_files(resolve_io_path(self.prediction_dataset))
+        for i, row in enumerate(predicted_data):
+            response = row.get(self.prediction_column_name)
+            print("b2", i, response)
+
+            choices = actual_df.iloc[i]["answer_options"].split("||")
+            print("b3", choices)
+
+            if len(choices) == 0:
+                index2ans = {
+                    "A": actual_df.iloc[i][self.ground_truth_column_name]
+                }
+            else:
+                index2ans = {
+                    chr(ord("A") + j): a
+                    for j, a in enumerate(choices)
+                }
+            print("b4", index2ans)
+
+            p = parse_multi_choice_response(response, [], index2ans)
+            print("b5", p)
+            multi_choice_predictions.append(p)
+
+        return pd.DataFrame(multi_choice_predictions, columns=["predictions"])
+
     def extract_inferences(
         self, key: str = None, processor_order: List = None
     ) -> pd.DataFrame:
@@ -481,8 +579,9 @@ class InferencePostprocessor(object):
             else None
         )
         actual_df = self.read_ground_truth_dataset()
-        predicted_df = self.extract_inferences(key, processor_order)
-        pd.concat([actual_df, predicted_df], axis=1).to_json(
+        # predicted_df = self.extract_inferences(key, processor_order)
+        predicted_df = self.extract_multi_choice(actual_df)
+        pd.concat([actual_df[self.ground_truth_column_name], predicted_df], axis=1).to_json(
             self.result, lines=True, orient="records"
         )
         return

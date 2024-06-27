@@ -2,7 +2,8 @@ import random
 
 import numpy as np
 
-# ----------- Process Multi-choice -------------
+
+# Taken from MMMU codebase.
 def parse_multi_choice_response(response, all_choices, index2ans):
     """
     Parse the prediction from the generated response.
@@ -36,7 +37,12 @@ def parse_multi_choice_response(response, all_choices, index2ans):
 
     if len(candidates) == 0:  # still not get answer, randomly choose one.
         # pred_index = random.choice(all_choices)
-        pred_index = random.choice(list(index2ans.keys()))
+        if len(index2ans) == 1:
+            # if actually single choice and no match, return index outside range
+            # assumption: when single choice, the only choice has key A
+            pred_index = "Z"
+        else:
+            pred_index = random.choice(list(index2ans.keys()))
     elif len(candidates) > 1:
         start_indexes = []
         if index_ans:
@@ -90,6 +96,16 @@ if __name__ == "__main__":
             response="To solve for the unknown number of years, we can use the future value formula for compound interest:\n\n\\[ FV = PV \\times (1 + r)^n \\]\n\nWhere:\n- \\( FV \\) is the Future Value\n- \\( PV \\) is the Present Value\n- \\( r \\) is the annual interest rate (decimal)\n- \\( n \\) is the number of years\n\nWe need to solve for \\( n \\), so we rearrange the formula:\n\n\\[ n = \\frac{\\log(FV\/PV)}{\\log(1 + r)} \\]\n\nLet's compute the values for each row.\n\n**1.** Present Value = \\$625, Interest Rate = 7% (or 0.07), Future Value = \\$1,284\n\\[ n = \\frac{\\log(1284 \/ 625)}{\\log(1 + 0.07)} \\]\n\\[ n = \\frac{\\log(2.0544)}{\\log(1.07)} \\]\n\\[ n = \\frac{0.3120}{0.0294} \\]\n\\[ n \\approx 10.61 \\]\n\n**2.** Present Value = \\$810, Interest Rate = 12% (or 0.12), Future Value = \\$4,341\n\\[ n = \\frac{\\log(4341 \/ 810)}{\\log(1 + 0.12)} \\]\n\\[ n = \\frac{\\log(5.3617)}{\\log(1.12)} \\]\n\\[ n = \\frac{0.7291}{0.0471} \\]\n\\[ n \\approx 15.48 \\]\n\n**3.** Present Value = \\$16,500, Interest Rate = 17% (or 0.17), Future Value = \\$402,662\n\\[ n = \\frac{\\log(402662 \/ 16500)}{\\log(1 + 0.17)} \\]\n\\[ n = \\frac{\\log(24.4038)}{\\log(1.17)} \\]\n\\[ n = \\frac{1.3874}{0.0706} \\]\n\\[ n \\approx 19.64 \\]\n\n**4.** Present Value = \\$21,500, Interest Rate = 8% (or 0.08), Future Value = \\$147,350\n\\[ n = \\frac{\\log(147350 \/ 21500)}{\\log(1 + 0.08)} \\]\n\\[ n = \\frac{\\log(6.8547)}{\\log(1.08)} \\]\n\\[ n = \\frac{0.8358}{0.0334} \\]\n\\[ n \\approx 25.02 \\]\n\nSummarizing:\n1. Approximately 10.61 years\n2. Approximately 15.48 years\n3. Approximately 19.64 years\n4. Approximately 25.02 years",
             choices=['10.52 years; 14.73 years; 20.02 years; 24.73 years', '10.64 years; 14.81 years; 20.35 years; 25.01 years', '10.96 years; 15.22 years; 20.83 years; 25.96 years'],
             correct_choice="B",
+        ),
+        dict(
+            response="Two plus two is four. The final answer is 4.",
+            choices=['4'],
+            correct_choice="A",
+        ),
+        dict(
+            response="Two plus two is four. The final answer is 5.",
+            choices=['4'],
+            correct_choice="A",
         ),
     ]
 
