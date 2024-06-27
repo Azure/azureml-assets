@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-devel-ubuntu20.04
+FROM nvidia/cuda:12.1.1-devel-ubuntu20.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -48,8 +48,7 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.1 --no-cache-dir
-
-RUN pip uninstall -y vllm
+RUN pip uninstall vllm -y
 
 # Apply patch
 COPY ./vllm.patch ./vllm.patch
