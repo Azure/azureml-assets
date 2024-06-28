@@ -46,6 +46,13 @@ else
         az ml compute create --name $cpu_cluster --size Standard_DS3_v2 --min-instances 0 --max-instances 10 --type AmlCompute
     fi
 
+    resource_name="compute cluster ${gpu_v100_cluster}"
+    echo "Checking ${resource_name}"
+    if ! az ml compute show --name $gpu_v100_cluster --output none >/dev/null 2>&1; then
+        echo "Creating ${resource_name}"
+        az ml compute create --name $gpu_v100_cluster --size Standard_NC6s_v3 --min-instances 0 --max-instances 2 --type AmlCompute
+    fi
+
     resource_name="compute cluster ${gpu_cluster}"
     echo "Checking ${resource_name}"
     if ! az ml compute show --name $gpu_cluster --output none >/dev/null 2>&1; then
@@ -53,12 +60,6 @@ else
         az ml compute create --name $gpu_cluster --size Standard_NC4as_T4_v3 --min-instances 0 --max-instances 10 --type AmlCompute
     fi
 
-    resource_name="compute cluster ${gpu_v100_cluster}"
-    echo "Checking ${resource_name}"
-    if ! az ml compute show --name $gpu_v100_cluster --output none >/dev/null 2>&1; then
-        echo "Creating ${resource_name}"
-        az ml compute create --name $gpu_v100_cluster --size Standard_NC6s_v3 --min-instances 0 --max-instances 2 --type AmlCompute
-    fi
 fi
 
 # Create environment variables
