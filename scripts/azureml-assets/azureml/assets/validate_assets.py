@@ -16,6 +16,7 @@ from typing import List
 from azure.ai.ml import load_model
 from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
+from azure.core.exceptions import ClientAuthenticationError
 from azure.identity import AzureCliCredential
 
 import azureml.assets as assets
@@ -46,17 +47,6 @@ MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
 SUPPORTED_INFERENCE_SKU_FILE_NAME = "config/supported_inference_skus.json"
 SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / SUPPORTED_INFERENCE_SKU_FILE_NAME
-
-# credential and mlcient initialization
-# credential might not always be present
-# check in try-except block
-credential = None
-try:
-    credential = AzureCliCredential()
-    token = credential.get_token("https://management.azure.com/.default")
-except Exception as e:
-    credential = None
-    logger.log_warning(f"Exception in creating credential. {e}")
 
 
 class MLFlowModelProperties:
@@ -755,13 +745,13 @@ def confirm_min_sku_spec(
     Returns:
         int: Number of errors.
     """
-    subscription_id = os.getenv("SUBSCRIPTION_ID", None)
-    if not (credential and subscription_id):
-        logger.log_warning("credential or subscription_id missing. Skipping min sku valdn")
+    subscription_id = os.getenv("SUBSCRIPTION_ID")
+    if not subscription_id:
+        logger.log_warning("subscription_id missing. Skipping min sku valdn")
         return 0
 
     try:
-        all_sku_details = get_all_sku_details(credential, subscription_id)
+        all_sku_details = get_all_sku_details(AzureCliCredential(), subscription_id)
         min_disk = min_cpu_mem = min_ngpus = min_ncpus = -1
         for sku in supported_skus:
             sku_details = all_sku_details.get(sku)
@@ -809,8 +799,10 @@ def confirm_min_sku_spec(
             )
 
             return 1
+    except ClientAuthenticationError as e:
+        logger.log_warning(f"Failed to log in to Azure, skipping min sku valdn. {e}")
     except Exception as e:
-        _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
+        _log_error(asset_file_name_with_path, f"Exception in fetching SKU details: {e}")
         return 1
     return 0
 
