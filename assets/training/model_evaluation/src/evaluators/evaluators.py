@@ -793,9 +793,8 @@ class ImageVQAEvaluator(Evaluator):
         """???
 
         """
-        print("v1", y_pred)
         y_pred = self._convert_predictions(y_pred)
-        y_pred_proba = np.zeros_like(y_pred, dtype=np.float32)
+        y_pred_proba = None
         y_test = self._convert_predictions(y_test)
         metrics = compute_metrics(task_type=constants.Tasks.CLASSIFICATION, y_test=y_test, y_pred=y_pred,
                                   y_pred_proba=y_pred_proba, **self.metrics_config)

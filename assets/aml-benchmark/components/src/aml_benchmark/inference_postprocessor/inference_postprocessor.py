@@ -581,9 +581,10 @@ class InferencePostprocessor(object):
         actual_df = self.read_ground_truth_dataset()
         # predicted_df = self.extract_inferences(key, processor_order)
         predicted_df = self.extract_multi_choice(actual_df)
-        pd.concat([actual_df[self.ground_truth_column_name], predicted_df], axis=1).to_json(
-            self.result, lines=True, orient="records"
-        )
+        # pd.concat([actual_df[self.ground_truth_column_name], predicted_df], axis=1).to_json(
+        #     self.result, lines=True, orient="records"
+        # )
+        predicted_df.to_json(self.result, lines=True, orient="records")
         return
 
     def __get_parameters(self) -> dict:
