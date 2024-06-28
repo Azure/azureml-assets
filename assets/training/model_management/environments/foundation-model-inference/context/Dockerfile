@@ -51,15 +51,10 @@ RUN pip install llm-optimized-inference==0.2.1 --no-cache-dir
 
 RUN pip uninstall -y vllm
 
-# Apply patch
-COPY ./vllm.patch ./vllm.patch
-RUN git clone https://github.com/vllm-project/vllm.git && \
+RUN git clone https://github.com/garg-amit/vllm.git && \
     cd vllm && \
-    git checkout 0f0d8bc065f3608e7657a9696f5d2d7c0d6722d1 && \
-    git apply ../vllm.patch && \
-    pip install -r requirements-cuda.txt && \
-    python setup.py bdist_wheel && \
-    pip install dist/*.whl
+    git checkout gargamit/v0.5.0.post1_with_changes
+    pip install .
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
