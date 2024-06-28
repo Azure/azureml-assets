@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-devel-ubuntu20.04
+FROM nvidia/cuda:12.1.0-devel-ubuntu20.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -44,10 +44,22 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # For local testing
 # Need to copy src code and install in editable mode
 # COPY . .
-# RUN pip install -e .
+# RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.1.9 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.1 --no-cache-dir
+
+RUN pip uninstall -y vllm
+
+# Apply patch
+COPY ./vllm.patch ./vllm.patch
+RUN git clone https://github.com/vllm-project/vllm.git && \
+    cd vllm && \
+    git checkout 0f0d8bc065f3608e7657a9696f5d2d7c0d6722d1 && \
+    git apply ../vllm.patch && \
+    pip install -r requirements-cuda.txt && \
+    python setup.py bdist_wheel && \
+    pip install dist/*.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

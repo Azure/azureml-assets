@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Image uploader (store images in datastore and pass URLs instead of image data)."""
 # TODO: refactor to use the same image uploading code in the Dataset Downloader and the Compute Metrics components.
 
