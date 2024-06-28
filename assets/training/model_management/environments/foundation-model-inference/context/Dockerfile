@@ -44,18 +44,14 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # For local testing
 # Need to copy src code and install in editable mode
 # COPY . .
-# RUN pip install -e ./ --no-cache-dir
-
-# When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.1 --no-cache-dir
-
-RUN pip uninstall -y vllm
+RUN pip install llm-optimized-inference==0.2.0 --no-cache-dir
+RUN pip uninstall vllm -y
 
 # Apply patch
 COPY ./vllm.patch ./vllm.patch
 RUN git clone https://github.com/vllm-project/vllm.git && \
     cd vllm && \
-    git checkout 0f0d8bc065f3608e7657a9696f5d2d7c0d6722d1 && \
+    git checkout 1197e02141df1a7442f21ff6922c98ec0bba153e && \
     git apply ../vllm.patch && \
     pip install -r requirements-cuda.txt && \
     python setup.py bdist_wheel && \
