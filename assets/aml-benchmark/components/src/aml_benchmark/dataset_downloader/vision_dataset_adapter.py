@@ -3,8 +3,8 @@
 
 """Vision dataset adapters."""
 
+import ast
 import io
-import json
 
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -120,10 +120,9 @@ class MMMUAdapter(VisionDatasetAdapter):
         return instance["image_1"]
 
     def get_other_fields(self, instance):
-        answer_options_str = instance["options"].replace("'", "\"")
         return {
             "question": instance["question"],
-            "answer_options": "||".join(json.loads(answer_options_str)),
+            "answer_options": "||".join(ast.literal_eval(instance["options"])),
         }
 
 
