@@ -53,7 +53,7 @@ RUN pip uninstall -y vllm
 
 RUN git clone https://github.com/garg-amit/vllm.git && \
     cd vllm && \
-    git checkout gargamit/v0.5.0.post1_with_changes
+    git checkout gargamit/v0.5.0.post1_with_changes && \
     pip install .
 
 # clean conda and pip caches
