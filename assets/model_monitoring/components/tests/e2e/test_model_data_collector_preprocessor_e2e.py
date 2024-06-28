@@ -67,7 +67,7 @@ class TestMDCPreprocessorE2E:
         "input_data, start_time, end_time",
         [
             # traditional model
-            (DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT, "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z"),
+            ("azureml://subscriptions/1aefdc5e-3a7c-4d71-a9f9-f5d3b03be19a/resourcegroups/TestingTeamProjectRG/workspaces/TestCodeChanges/datastores/workspaceblobstore/paths/UI/2024-06-05_000821_UTC/Titanic.csv", "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z"),
             # LLM model
             (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z")
         ]
