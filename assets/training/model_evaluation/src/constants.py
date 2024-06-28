@@ -37,7 +37,7 @@ class ArgumentLiterals:
 
     EXTRA_Y_TEST_COLS = "extra_y_test_cols"
     GROUND_TRUTHS = "ground_truths"
-    GROUND_TRUTHS_COLUMN_NAME = "ground_truths_column_name"
+    GROUND_TRUTHS_COLUMN_NAME = "ground_truth_column_name"
     PREDICTIONS = "predictions"
     PREDICTIONS_COLUMN_NAME = "predictions_column_name"
     PREDICTION_PROBABILITIES = "prediction_probabilities"

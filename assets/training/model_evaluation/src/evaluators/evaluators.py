@@ -64,6 +64,7 @@ class EvaluatorFactory:
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
             TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
             TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator,
+            TASK.IMAGE_VQA: ImageVQAEvaluator,
         }
 
     def get_evaluator(self, task_type, config=None):
@@ -775,4 +776,27 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
                                                      masks_required=self.masks_required,
                                                      **self.metrics_config)
 
+        return metrics
+
+
+class ImageVQAEvaluator(Evaluator):
+    def __init__(self, task_type, metrics_config):
+        """Initialize evaluator.
+
+        Args:
+            task_type (str): evaluator task type
+            metrics_config (Dict): Dict of metrics config
+        """
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """???
+
+        """
+        print("v1", y_pred)
+        y_pred = self._convert_predictions(y_pred)
+        y_pred_proba = np.zeros_like(y_pred, dtype=np.float32)
+        y_test = self._convert_predictions(y_test)
+        metrics = compute_metrics(task_type=constants.Tasks.CLASSIFICATION, y_test=y_test, y_pred=y_pred,
+                                  y_pred_proba=y_pred_proba, **self.metrics_config)
         return metrics
