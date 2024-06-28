@@ -13,5 +13,3 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # The below file is required for baking the code into the environment
 COPY data_import_run.py /azureml/data_import/run.py
-
-# dummy number to change when needing to force rebuild without changing the definition: 1
