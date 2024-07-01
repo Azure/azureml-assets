@@ -92,14 +92,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._output_dir = output_dir
         self._temp_dir = temp_dir
         self._model_id = translate_params.get("model_id", None)
-<<<<<<< HEAD
-        self._task = translate_params["task"]
-        self._model_flavor = translate_params["model_flavor"]
-=======
         self._task = translate_params.get("task", None)
         self._model_flavor = translate_params.get("model_flavor", "HFTransformersV2")
         self._vllm_enabled = translate_params.get("vllm_enabled", False)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
@@ -181,23 +176,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
                                               is_finetuned_model=False,
                                               base_model_task=self._task)
-<<<<<<< HEAD
-        if self._model_flavor == "OSS":
-            try:
-                self._save_in_oss_flavor(model, metadata, conda_env, code_paths, input_example, pip_requirements)
-            except Exception as e:
-                logger.error("Model save failed with mlflow OSS flow for task: {} "
-                             "with exception: {}".format(self._task, e))
-
-                self._save_in_hftransformersv2_flavor(metadata, conda_env,
-                                                      code_paths, input_example,
-                                                      requirements_file, pip_requirements)
-        else:
-            self._save_in_hftransformersv2_flavor(metadata, conda_env,
-                                                  code_paths, input_example,
-                                                  requirements_file, pip_requirements)
-
-=======
 
         if self._vllm_enabled:
             mlclient = get_mlclient("azureml")
@@ -221,7 +199,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                                                   code_paths, input_example,
                                                   requirements_file, pip_requirements)
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
 
@@ -581,11 +558,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
 
     def get_model_signature(self):
         """Return model signature for NLP models."""
-<<<<<<< HEAD
-        if self._task == SupportedNLPTasks.TEXT_GENERATION.value:
-=======
         if self._task == SupportedNLPTasks.TEXT_GENERATION.value or self._task == SupportedNLPTasks.CHAT_COMPLETION:
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             inputs = Schema([ColSpec(DataType.string)])
             outputs = Schema([ColSpec(DataType.string)])
             params = ParamSchema([ParamSpec("top_p", "float", default=0.8),

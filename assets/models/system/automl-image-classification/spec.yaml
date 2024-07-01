@@ -24,10 +24,7 @@ tags:
     SharedComputeCapacityEnabled: ''
     license: apache2.0
     task: image-classification
-<<<<<<< HEAD
-=======
     hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     finetune_compute_allow_list:
         [
             Standard_NC4as_T4_v3,

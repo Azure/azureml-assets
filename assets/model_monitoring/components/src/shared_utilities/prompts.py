@@ -34,8 +34,6 @@ BERTOPIC_DEFAULT_PROMPT = """
     Topic name:"""
 
 
-<<<<<<< HEAD
-=======
 QUERY_INTENTION_PROMPT = """
     This is a list of texts where each collection of texts describe a topic.
     The task is to summarize the name of the topic they represent is mentioned as a short-highly-descriptive title.
@@ -64,7 +62,6 @@ QUERY_INTENTION_PROMPT = """
     {{ QUERIES }}"""
 
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 RELEVANCE_TEMPLATE = """
     A chat history between user and bot is shown below
     A list of documents is shown below in json format, and each document has one unique id.

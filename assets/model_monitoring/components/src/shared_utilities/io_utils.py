@@ -5,16 +5,6 @@
 
 from enum import Enum
 import numpy as np
-<<<<<<< HEAD
-import os
-import time
-import uuid
-import yaml
-from azureml.fsspec import AzureMachineLearningFileSystem
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.types import StructType
-from .constants import MAX_RETRY_COUNT
-=======
 import time
 import yaml
 from azureml.dataprep.api.errorhandlers import ExecutionError
@@ -23,7 +13,6 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType
 from .constants import MAX_RETRY_COUNT
 from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from shared_utilities.store_url import StoreUrl
@@ -136,37 +125,6 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
 
-<<<<<<< HEAD
-def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None):
-    """Verify paths in mltable is supported."""
-    mltable_dict = mltable_dict or yaml.safe_load(StoreUrl(mltable_path, ws).read_file_content("MLTable"))
-    for path in mltable_dict.get("paths", []):
-        path_val = path.get("file") or path.get("folder") or path.get("pattern")
-        try:
-            path_url = StoreUrl(path_val, ws)  # path_url itself must be valid
-            if not path_url.is_local_path():   # and it must be either local(absolute or relative) path
-                _ = path_url.get_credential()  # or credential azureml path
-        except InvalidInputError as iie:
-            raise InvalidInputError(f"Invalid or unsupported path {path_val} in MLTable {mltable_path}") from iie
-
-
-def _write_mltable_yaml(mltable_obj, dest_path, file_system=None):
-    try:
-        folder_name = str(uuid.uuid4())
-        folder_path = os.path.join(os.getcwd(), folder_name)
-        os.makedirs(folder_path)
-        source_path = os.path.join(folder_path, "MLTable")
-        with open(source_path, "w") as yaml_file:
-            yaml.dump(mltable_obj, yaml_file)
-
-        fs = file_system or AzureMachineLearningFileSystem(dest_path)
-        fs.upload(
-            lpath=source_path,
-            rpath=dest_path,
-            **{"overwrite": "MERGE_WITH_OVERWRITE"},
-        )
-        return True
-=======
 def _write_mltable_yaml(mltable_obj, folder_path: str):
     try:
         store_url = StoreUrl(folder_path)
@@ -176,7 +134,6 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
     except InvalidInputError as iie:
         print(f"Unretriable InvalidInputError writing mltable file: {iie}")
         raise iie
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     except Exception as e:
         print(f"Error writing mltable file: {e}")
         return False
@@ -184,12 +141,8 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
 
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
-<<<<<<< HEAD
-    _verify_mltable_paths(mltable_path)
-=======
     if mltable_path is None:
         raise InvalidInputError("MLTable path is None.")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     spark = init_spark()
     try:
         return spark.read.mltable(mltable_path)
@@ -229,17 +182,10 @@ def read_mltable_in_spark(mltable_path: str):
             raise se
 
 
-def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
+def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
-<<<<<<< HEAD
-    metrics_df.write.mode("overwrite").parquet(folder_path)
-
-    base_path = folder_path.rstrip('/')
-    output_path_pattern = base_path + "/*.parquet"
-=======
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/data/*.parquet"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     mltable_obj = {
         'paths': [{'pattern': output_path_pattern}],
@@ -248,21 +194,14 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
 
     retries = 0
     while True:
-<<<<<<< HEAD
-        if _write_mltable_yaml(mltable_obj, folder_path, file_system):
-=======
         if _write_mltable_yaml(mltable_obj, folder_path):
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             break
         retries += 1
         if retries >= MAX_RETRY_COUNT:
             raise Exception("Failed to write mltable yaml file after multiple retries.")
         time.sleep(1)
-<<<<<<< HEAD
-=======
 
     metrics_df.write.mode("overwrite").parquet(base_path+"/data/")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 def np_encoder(object):

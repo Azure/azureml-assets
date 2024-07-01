@@ -5,10 +5,7 @@
 
 import pytest
 from azure.ai.ml import MLClient, Output
-<<<<<<< HEAD
-=======
 from azure.ai.ml.exceptions import JobException
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR,
@@ -18,11 +15,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_model_performance_signal_monitor_job(
     submit_pipeline_job,
-<<<<<<< HEAD
-    ml_client,
-=======
     ml_client: MLClient,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     get_component,
     experiment_name,
     task,
@@ -34,11 +27,7 @@ def _submit_model_performance_signal_monitor_job(
     classification_precision_threshold=None,
     classification_accuracy_threshold=None,
     classification_recall_threshold=None,
-<<<<<<< HEAD
-
-=======
     expect_failure: bool = False
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     mp_signal_monitor = get_component(COMPONENT_NAME_MODEL_PERFORMANCE_SIGNAL_MONITOR)
 
@@ -64,13 +53,6 @@ def _submit_model_performance_signal_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = submit_pipeline_job(
-<<<<<<< HEAD
-        pipeline_job, experiment_name
-    )
-
-    # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
-=======
         pipeline_job, experiment_name, expect_failure
     )
 
@@ -80,7 +62,6 @@ def _submit_model_performance_signal_monitor_job(
     except JobException:
         # ignore JobException to return job final status
         pass
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     return ml_client.jobs.get(pipeline_job.name)
 

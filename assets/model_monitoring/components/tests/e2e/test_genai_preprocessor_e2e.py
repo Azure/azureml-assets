@@ -6,28 +6,18 @@
 import pytest
 from azure.ai.ml import Input, MLClient, Output
 from azure.ai.ml.entities import Spark, AmlTokenConfiguration
-<<<<<<< HEAD
-=======
 from azure.ai.ml.exceptions import JobException
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_GENAI_PREPROCESSOR,
     DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS,
-<<<<<<< HEAD
-=======
     DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 )
 
 
 def _submit_genai_preprocessor_job(
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
-<<<<<<< HEAD
-    input_data, start_time, end_time
-=======
     input_data, start_time, end_time, expect_failure: bool = False
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     genai_preprocessor_component = get_component(COMPONENT_NAME_GENAI_PREPROCESSOR)
 
@@ -59,13 +49,6 @@ def _submit_genai_preprocessor_job(
     )
 
     pipeline_job = submit_pipeline_job(
-<<<<<<< HEAD
-        pipeline_job, experiment_name
-    )
-
-    # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
-=======
         pipeline_job, experiment_name, expect_failure
     )
 
@@ -76,7 +59,6 @@ def _submit_genai_preprocessor_job(
         # ignore JobException to return job final status
         pass
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     return ml_client.jobs.get(pipeline_job.name)
 
 
@@ -88,13 +70,9 @@ class TestGenAIPreprocessorE2E:
         "input_data, start_time, end_time",
         [
             # traditional model
-<<<<<<< HEAD
-            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-08T00:00:00Z")
-=======
             (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-06T00:00:00Z"),
             # log with events
             (DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS, "2024-04-08T00:00:00Z", "2024-04-10T20:00:00Z")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         ]
     )
     def test_mdc_preprocessor_successful(
@@ -112,8 +90,4 @@ class TestGenAIPreprocessorE2E:
             end_time
         )
 
-<<<<<<< HEAD
-        assert pipeline_job.status == 'Completed'
-=======
         assert pipeline_job.status == "Completed"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

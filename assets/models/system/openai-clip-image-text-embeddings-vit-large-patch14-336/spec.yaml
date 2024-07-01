@@ -20,16 +20,10 @@ tags:
     Preview: ''
     huggingface_model_id: openai/clip-vit-large-patch14-336
     SharedComputeCapacityEnabled: ''
-<<<<<<< HEAD
-    author: openai
-    license: mit
-    task: embeddings
-=======
     author: openai-oss
     license: mit
     task: embeddings
     hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inference_compute_allow_list:
         [
             Standard_DS2_v2,
@@ -85,8 +79,4 @@ tags:
             Standard_ND96amsr_A100_v4,
             Standard_ND40rs_v2
         ]
-<<<<<<< HEAD
-version: 1
-=======
 version: 2
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

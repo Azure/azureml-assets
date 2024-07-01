@@ -1,6 +1,1 @@
-<<<<<<< HEAD
-{"0": "2\n\n### Premise: The new rights"}
-{"0": "0\n\n### Premise: The Commission did"}
-=======
 {"samples": "\ndef max_element(l: list) -> int:\n    \"\"\"\n    Return the maximum element in the given list.\n\n    Parameters:\n    l (list): A list of integers.\n\n    Returns:\n    int: The maximum element in the list.\n\n    Example:\n    >>> max_element([1, 2, 3])\n    3\n    >>> max_element([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    123\n    \"\"\"\n\n    if not l:\n        raise ValueError(\"The list is empty.\")\n\n    max_element = l[0]\n    for element in l:\n        if element > max_element:\n            max_element = element\n\n    return max_element\n\n# Example usage:\nif __name__ == \"__main__\":\n    print(max_element([1, 2, 3]))  # Output: 3\n    print(max_element([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10]))  # Output: 123"}
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

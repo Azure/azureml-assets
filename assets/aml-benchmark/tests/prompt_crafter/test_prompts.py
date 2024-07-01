@@ -6,17 +6,7 @@
 import pytest
 from typing import List, Dict
 
-<<<<<<< HEAD
-from ..test_utils import get_src_dir
-
-sys.path.append(get_src_dir())
-try:
-    from aml_benchmark.prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
-except ImportError:
-    raise ImportError("Please install the package 'prompt_crafter' to run this test.")
-=======
 from aml_benchmark.prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 # Without few_shot_pattern as inputs

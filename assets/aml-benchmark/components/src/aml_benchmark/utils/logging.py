@@ -3,14 +3,8 @@
 
 """Contains helper functions for logging."""
 
-<<<<<<< HEAD
-from typing import Any, Dict
-from importlib.metadata import entry_points
-
-=======
 from typing import Any, Dict, Union, Tuple
 from importlib.metadata import entry_points
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import logging
 import os
 import hashlib
@@ -126,11 +120,6 @@ class AMLBenchmarkHandler(logging.StreamHandler):
 run_details = RunDetails()
 custom_dimensions = CustomDimensions(run_details=run_details)
 
-from azureml.core import Run
-
-
-AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT = "aml_benchmark.azureml_benchmark_custom_logger"
-
 
 def log_mlflow_params(**kwargs: Any) -> None:
     """
@@ -184,22 +173,6 @@ def get_logger(
     logger = logging.getLogger(filename)
     numeric_log_level = getattr(logging, level.upper(), None)
 
-<<<<<<< HEAD
-    try:
-        for custom_logger in entry_points(group=AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT):
-            handler = custom_logger.load()
-            logger.addHandler(handler())
-    except TypeError:
-        # For Older python versions
-        custom_loggers = entry_points().get(AML_BENCHMARK_DYNAMIC_LOGGER_ENTRY_POINT, ())
-        for custom_logger in custom_loggers:
-            if custom_logger is not None:
-                handler = custom_logger.load()
-                logger.addHandler(handler())
-
-    formatter = logging.Formatter(
-        "[%(asctime)s - %(name)s - %(levelname)s] - %(message)s"
-=======
     # don't log twice i.e. root logger
     logger.propagate = False
     logger.setLevel(numeric_log_level)
@@ -208,7 +181,6 @@ def get_logger(
     format_str = (
         "[%(asctime)s - {} - {} - %(process)d - %(module)s - %(funcName)s - "
         "%(lineno)s]: %(levelname)s - %(message)s \n"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     if LoggerConfig.AML_BENCHMARK_HANDLER_NAME not in handler_names:
@@ -250,8 +222,6 @@ def get_logger(
     return logger
 
 
-<<<<<<< HEAD
-=======
 def _get_error_details(
         exception: BaseException, logger: Union[logging.Logger, logging.LoggerAdapter]
 ) -> Tuple[str, str, str]:
@@ -361,7 +331,6 @@ def log_traceback(exception: Union[AzureMLException, BaseException], logger, mes
         _log_traceback(traceback_exception, logger)
 
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 logger = get_logger(__name__)
 
 

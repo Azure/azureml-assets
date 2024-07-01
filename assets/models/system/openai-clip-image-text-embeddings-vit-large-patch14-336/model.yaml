@@ -1,10 +1,6 @@
 path:
   container_name: finetuning-image-models
-<<<<<<< HEAD
-  container_path: HuggingFace-mlflow/OpenAI-CLIP-Image-Text-Embeddings-ViT-Large-Patch14-336/1703118658/mlflow_model_folder
-=======
   container_path: HuggingFace-mlflow/OpenAI-CLIP-Image-Text-Embeddings-ViT-Large-Patch14-336/1714035914/mlflow_model_folder
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

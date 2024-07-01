@@ -31,8 +31,6 @@ COMPONENT_NAME = "run_finetune"
 _COMPONENTS_SCRIPTS_REL_PATH = Path("entry_point", "ftaas", "finetune")
 _ALLOWED_MAX_STRING_LENGTH = 128
 PEFT_ADAPTER_WEIGHTS_DIR = "peft_adapter_weights"
-<<<<<<< HEAD
-=======
 CHAT_KEY = "messages"
 
 TASK_SPECIFIC_PARAMS = {
@@ -52,7 +50,6 @@ TASK_SPECIFIC_PARAMS = {
         }
     }
 }
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 @dataclass
@@ -338,8 +335,6 @@ def add_optional_input(cmd, input_name):
         cmd += ["--" + input_name, input_val]
 
 
-<<<<<<< HEAD
-=======
 def add_task_specific_params(cmd: List[str], task_name: str, component_name: str):
     """Add task specific params based on task_name."""
     logger.info(f"Adding task_specific params for {task_name} task, for {component_name} component")
@@ -372,7 +367,6 @@ def add_task_specific_params(cmd: List[str], task_name: str, component_name: str
                     add_optional_input(cmd, param)
 
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
@@ -448,18 +442,11 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     # model selector
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.model_selector",
-<<<<<<< HEAD
-        "--task_name", "TextGeneration",
-        "--mlflow_model_path", decode_input_from_env_var("mlflow_model_path"),
-        "--output_dir", model_selector_output
-    ]
-=======
         "--task_name", task_name,
         "--output_dir", model_selector_output
     ]
     add_optional_input(cmd, "mlflow_model_path")
     add_optional_input(cmd, "pytorch_model_path")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder)
 
     # preprocess
@@ -549,34 +536,19 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
 
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.validate_lora_weights",
-<<<<<<< HEAD
-        "--mlflow_model_path", decode_input_from_env_var("mlflow_model_path"),
-        "--lora_weights_path", os.path.join(pytorch_model_folder, PEFT_ADAPTER_WEIGHTS_DIR),
-        "--tokenizer_path", os.path.join(decode_input_from_env_var("mlflow_model_path") or "", "data", "tokenizer")
-    ]
-=======
         "--task_name", task_name,
         "--base_pytorch_model_path", os.path.join(model_selector_output, model_name),
         "--lora_weights_path", os.path.join(pytorch_model_folder, PEFT_ADAPTER_WEIGHTS_DIR),
         "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
     ]
     add_task_specific_params(cmd, task_name, component_name="validate_lora_weights")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     _run_subprocess_cmd(cmd, component_name="validate_lora_weights", completion_files_folder=completion_files_folder)
 
     # model registration
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.register_model",
-<<<<<<< HEAD
-        "--task_name", "TextGeneration",
-        "--finetune_args_path", os.path.join(
-            pytorch_model_folder,
-            "finetune_args.json"
-        ),
-=======
         "--task_name", task_name,
         "--model_asset_id", decode_param_from_env_var('model_asset_id'),
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "--registration_details_folder", decode_output_from_env_var('output_model'),
         "--model_path", os.path.join(
             pytorch_model_folder,

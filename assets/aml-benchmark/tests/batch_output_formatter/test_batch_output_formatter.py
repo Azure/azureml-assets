@@ -144,11 +144,7 @@ class TestBatchOutputFormatterComponent:
             perf_cols.extend(["input_token_count", "output_token_count"])
         self._check_output_data(
             os.path.join(output_dir, "performance_metadata"),
-<<<<<<<< HEAD:assets/aml-benchmark/tests/batch_benchmark_inference/test_batch_output_formatter.py
-            "performance_metadata.jsonl", ["start_time_iso", "end_time_iso", "time_taken_ms"]
-========
             "performance_metadata.jsonl", perf_cols
->>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa:assets/aml-benchmark/tests/batch_output_formatter/test_batch_output_formatter.py
         )
         self._check_output_data(
             os.path.join(

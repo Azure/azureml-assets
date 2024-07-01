@@ -18,10 +18,7 @@ def test_copy():
         ScoringResultStatus.SUCCESS,
         0,
         1,
-<<<<<<< HEAD
-=======
         200,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "request_obj",
         {},
         response_body={"usage": {"prompt_tokens": 2,
@@ -52,10 +49,7 @@ def test_copy():
     assert result2.response_body["usage"]["total_tokens"] == 16
 
     assert result.status == result2.status
-<<<<<<< HEAD
-=======
     assert result.model_response_code == result2.model_response_code
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     assert result2.estimated_token_counts == (1, 2, 3)
 
 
@@ -87,10 +81,7 @@ def test_usage_statistics(
         ScoringResultStatus.SUCCESS,
         0,
         1,
-<<<<<<< HEAD
-=======
         200,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "request_obj",
         {},
         response_body=response_usage,

@@ -3,11 +3,7 @@ azureml-acft-accelerator=={{latest-pypi-version}}
 azureml-acft-common-components[image]~={{latest-pypi-version}}
 azureml-acft-image-components=={{latest-pypi-version}}
 azureml-core=={{latest-pypi-version}}
-<<<<<<< HEAD
-azure-ai-ml==1.13.0
-=======
 azure-ai-ml==1.16.1
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 requests
 datasets==2.15.0
 transformers==4.38.2

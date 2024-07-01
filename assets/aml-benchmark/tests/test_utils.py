@@ -10,10 +10,7 @@ import hashlib
 import time
 import uuid
 import sys
-<<<<<<< HEAD
-=======
 from enum import Enum
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job

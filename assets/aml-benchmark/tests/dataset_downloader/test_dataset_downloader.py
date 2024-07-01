@@ -14,10 +14,7 @@ import pytest
 from datasets import get_dataset_config_names, get_dataset_split_names
 from PIL import Image, ImageChops
 
-<<<<<<< HEAD
-=======
 from aml_benchmark.dataset_downloader.vision_dataset_adapter import VisionDatasetAdapterFactory
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from ..test_utils import (
     load_yaml_pipeline,
     get_mlclient,
@@ -182,11 +179,8 @@ class TestDatasetDownloaderScript:
             )
         elif dataset_name == "some_random_name":
             expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub"
-<<<<<<< HEAD
-=======
         elif dataset_name == "cifar100":
             expected_exception_mssg = "Error saving dataset to JSONL format: "
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         # Run the script and verify the exception
         try:

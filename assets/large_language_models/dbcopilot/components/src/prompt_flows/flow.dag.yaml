@@ -27,13 +27,9 @@ nodes:
     history_cache_enabled: true
     query: ${inputs.question}
     session_id: ${chat_session_tool.output}
-<<<<<<< HEAD
-    include_views:
-=======
     knowledge_pieces:
     include_views:
     instruct_template:
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   name: DBCopilot_generate
   source:
     tool: db_copilot_tool.db_copilot_tool.DBCopilot.generate

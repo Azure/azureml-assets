@@ -175,15 +175,6 @@ class InferencePostprocessor(object):
                     self.ground_truth_column_name
                 ]
             if self.additional_columns:
-<<<<<<< HEAD
-                columns = [col.strip() for col in self.additional_columns.split(',')]
-                if '' in columns:
-                    logger.warning("Received a column name as '' in additional_fields. "
-                                   "Please check if extra comma is provided between two column names. "
-                                   "Dropping columns named as '' from additional_fields input.")
-                    columns = [col for col in columns if col]  # and col in actual_df.columns.tolist()]
-                missing_columns = [col for col in columns if col not in actual_df.columns.tolist()]
-=======
                 columns = [col.strip() for col in self.additional_columns.split(",")]
                 if "" in columns:
                     logger.warning(
@@ -197,7 +188,6 @@ class InferencePostprocessor(object):
                 missing_columns = [
                     col for col in columns if col not in actual_df.columns.tolist()
                 ]
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                 if len(missing_columns) > 0:
                     raise BenchmarkUserException._with_error(
                         AzureMLError.create(
@@ -206,11 +196,7 @@ class InferencePostprocessor(object):
                                 f"The columns {missing_columns} provided in the additional_columns field is not "
                                 "found in the ground truth dataset. Please make sure that the all columns "
                                 "provided in this field is present in the groun_truth dataset."
-<<<<<<< HEAD
-                            )
-=======
                             ),
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                         )
                     )
                 result_df[columns] = actual_df[columns]
@@ -452,15 +438,11 @@ class InferencePostprocessor(object):
                 pred_list.append(curr_pred_list)
             else:
                 out_string = predicted if isinstance(predicted, str) else predicted[0]
-<<<<<<< HEAD
-                pred_list.append(self.apply_generic_processor(out_string, row) if out_string != '' else out_string)
-=======
                 pred_list.append(
                     self.apply_generic_processor(out_string, row)
                     if out_string != ""
                     else out_string
                 )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         if isinstance(pred_list[0], list) and len(pred_list[0]) > 1:
             cols = [
                 f"{self.prediction_column_name}_{i+1}" for i in range(len(pred_list[0]))
@@ -526,22 +508,8 @@ class InferencePostprocessor(object):
         argss.extend(["--additional_parameters", f"'{additional_parameters}'"])
         argss = " ".join(argss)
         try:
-<<<<<<< HEAD
-            argss = [
-                "--prediction_dataset",
-                self.prediction_dataset,
-                "--output_dataset",
-                self.result
-            ]
-            if self.ground_truth_dataset:
-                argss.extend(["--ground_truth_dataset", self.ground_truth_dataset])
-            argss = " ".join(argss)
-            _ = subprocess.check_output(
-                f"python {self.user_postprocessor} {argss}",
-=======
             _ = subprocess.check_output(
                 f"python {postprocessor_script} {argss}",
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 shell=True,

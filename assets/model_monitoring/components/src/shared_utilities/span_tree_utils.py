@@ -11,8 +11,6 @@ from typing import Dict, Iterator, List, Optional
 from pyspark.sql import Row
 from copy import copy
 
-<<<<<<< HEAD
-=======
 from shared_utilities.constants import (
     APP_TRACES_EMBEDDINGS_EVENT_NAME,
     APP_TRACES_INPUTS_EVENT_NAME,
@@ -22,7 +20,6 @@ from shared_utilities.constants import (
     EMBEDDING_SPAN_TYPE,
     RETRIEVAL_SPAN_TYPE
 )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -82,10 +79,6 @@ class SpanTreeNode:
         return self.get_node_attribute("attributes")  # type: ignore
 
     @property
-<<<<<<< HEAD
-    def input(self) -> str:
-        """Get the span's input from the attributes field as json string."""
-=======
     def events(self) -> str:
         """Get the span's attributes."""
         return self.get_node_attribute("events")  # type: ignore
@@ -110,23 +103,15 @@ class SpanTreeNode:
 
     def input_from_attributes(self) -> str:
         """Get input from attributes."""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         if self.attributes is None:
             return None  # type: ignore
         attribute_dict: dict = json.loads(self.attributes)
         if attribute_dict is None:
-<<<<<<< HEAD
-            return None  # type: ignore
-=======
             return None
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         return attribute_dict.get("inputs", None)
 
     @property
     def output(self) -> str:
-<<<<<<< HEAD
-        """Get the span's output from the attributes field as json string."""
-=======
         """Get the span's output from the events payload field as json string."""
         if self.events is None or len(self.events) == 0:
             return self.output_from_attribute()
@@ -145,17 +130,10 @@ class SpanTreeNode:
 
     def output_from_attribute(self) -> str:
         """Get output from attributes."""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         if self.attributes is None:
             return None  # type: ignore
         attribute_dict: dict = json.loads(self.attributes)
         if attribute_dict is None:
-<<<<<<< HEAD
-            return None  # type: ignore
-        return attribute_dict.get("output", None)
-
-    @property
-=======
             return None
         return attribute_dict.get("output", None)
 
@@ -253,7 +231,6 @@ class SpanTreeNode:
         return json.loads(attribute_dict.get("embedding.embeddings", None))
 
     @property
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def status(self) -> str:
         """Get the span's status."""
         return self.get_node_attribute("status")  # type: ignore
@@ -273,8 +250,6 @@ class SpanTreeNode:
         """Get the span's trace id."""
         return self.get_node_attribute("trace_id")  # type: ignore
 
-<<<<<<< HEAD
-=======
     @trace_id.setter
     def trace_id(self, value):
         """Set the span's trace id."""
@@ -284,7 +259,6 @@ class SpanTreeNode:
             print(f"Setting 'trace_id' to '{value}'.")
             self._span_row_dict["trace_id"] = value
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     @classmethod
     def create_node_from_dict(cls, span_node_dict: dict) -> "SpanTreeNode":
         """Parse dict representation to create a single SpanTree node.
@@ -368,10 +342,7 @@ class SpanTree:
     def __init__(self, spans: List[SpanTreeNode]) -> None:
         """Spantree constructor to build up tree from span list."""
         self._span_node_map: Dict[str, SpanTreeNode] = {}
-<<<<<<< HEAD
-=======
         self._possible_root_spans = []
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         self._root_span = self._construct_span_tree(spans)
 
     @property
@@ -379,14 +350,11 @@ class SpanTree:
         """Get the root span of the span tree."""
         return self._root_span
 
-<<<<<<< HEAD
-=======
     @property
     def possible_root_spans(self) -> List[SpanTreeNode]:
         """Get the possible root_spans list."""
         return self._possible_root_spans
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     @classmethod
     def create_tree_from_json_string(cls, json_string: str) -> "SpanTree":
         """Create SpanTree object from "root_span" json string."""
@@ -399,12 +367,9 @@ class SpanTree:
         else:
             obj._root_span = SpanTreeNode.create_node_from_dict(root_span_dict)
         obj._span_node_map = {span.span_id: span for span in obj}
-<<<<<<< HEAD
-=======
         obj._possible_root_spans = []
         if obj.root_span is not None:
             obj._possible_root_spans.append(obj.root_span)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         return obj
 
     def show(self) -> None:
@@ -430,29 +395,19 @@ class SpanTree:
     def _construct_span_tree(self, spans: List[SpanTreeNode]) -> Optional[SpanTreeNode]:
         """Build the span tree in ascending time order from list of all spans."""
         root_span = None
-<<<<<<< HEAD
-        # construct a dict with span_id as key and span as value
-        self._span_node_map = {span.span_id: span for span in spans}
-=======
         self._possible_root_spans = []
         # construct a dict with span_id as key and span as value
         self._span_node_map = {span.span_id: span for span in spans}
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         for span in self._span_node_map.values():
             parent_id = span.parent_id
             if parent_id is None:
                 root_span = span
-<<<<<<< HEAD
-=======
                 self._possible_root_spans.append(root_span)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             else:
                 parent_span = self.get_span_tree_node_by_span_id(parent_id)
                 if parent_span is not None:
                     parent_span.insert_child(span)
-<<<<<<< HEAD
-=======
                 else:
                     # consider the possibility that current span is root_span since
                     # parent_span is not in the data.
@@ -479,7 +434,6 @@ class SpanTree:
                     " but there were other spans which were identified as possible root spans."
                     " If this is unexpected, please debug your data carefully to figure out the issue.")
                 root_span = None
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         return root_span
 
     def __iter__(self) -> Iterator[SpanTreeNode]:

@@ -24,10 +24,7 @@ tags:
    SharedComputeCapacityEnabled: ""
    huggingface_model_id: Salesforce/blip-vqa-base
    author: Salesforce
-<<<<<<< HEAD
-=======
    hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
    inference_compute_allow_list:
     [
         Standard_DS2_v2,
@@ -83,8 +80,4 @@ tags:
         Standard_ND96amsr_A100_v4,
         Standard_ND40rs_v2
     ]
-<<<<<<< HEAD
-version: 5
-=======
 version: 6
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

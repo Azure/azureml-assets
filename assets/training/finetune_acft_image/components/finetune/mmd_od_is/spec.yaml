@@ -1,22 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-<<<<<<< HEAD
-version: 0.0.13
-=======
 version: 0.0.16
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: mmdetection_image_objectdetection_instancesegmentation_finetune
 display_name: Image Object Detection and Instance Segmentation MMDetection Model Finetune
 description: Component to finetune MMDetection models for image object detection and instance segmentation.
 
 is_deterministic: false
 
-<<<<<<< HEAD
-environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/25
-=======
 environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/31
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 code: ../../../src/finetune
 

@@ -4,35 +4,22 @@
 """Entry script for Action Analyzer output actions."""
 
 import argparse
-<<<<<<< HEAD
-=======
 from action_analyzer.contracts.utils.detector_utils import (
     write_to_file
 )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from pyspark.sql.types import (
     StringType,
     BooleanType
 )
 from pyspark.sql import Window
 from pyspark.sql.functions import collect_set, col, udf, max
-<<<<<<< HEAD
-from shared_utilities.io_utils import try_read_mltable_in_spark, np_encoder
-import os
-import json
-=======
 from shared_utilities.store_url import StoreUrl
 from shared_utilities.io_utils import try_read_mltable_in_spark
 import os
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import uuid
 import datetime
 import copy
 from mlflow import MlflowClient
-<<<<<<< HEAD
-from shared_utilities.amlfs import amlfs_upload
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from shared_utilities.constants import (
     INDEX_ID_COLUMN,
     INDEX_CONTENT_COLUMN,
@@ -53,12 +40,8 @@ from shared_utilities.constants import (
     ACTION_ID_COLUMN,
     RETRIEVAL_QUERY_TYPE_COLUMN,
     RETRIEVAL_TOP_K_COLUMN,
-<<<<<<< HEAD
-    PROMPT_FLOW_INPUT_COLUMN
-=======
     PROMPT_FLOW_INPUT_COLUMN,
     DEFAULT_TOPIC_NAME
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 )
 
 
@@ -81,11 +64,8 @@ def get_action_metadata(df):
     for data_row in df.collect():
         index_set.add(data_row[INDEX_ID_COLUMN])
         violated_metrics.update(data_row[VIOLATED_METRICS_COLUMN].split(TEXT_SPLITTER))
-<<<<<<< HEAD
-=======
     # sometimes a same query can be both good or bad. For good case, the violated_metrics is empty so need to remove
     violated_metrics.discard("")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     return index_set, violated_metrics
 
 
@@ -97,34 +77,21 @@ def is_index_asset(index_id):
 def write_actions(action_bad_group_df, action_good_group_df, action_output_folder, aml_deployment_id, signal_name):
     """Write the action summary and action detail files."""
     index_set, violated_metrics = get_action_metadata(action_bad_group_df)
-<<<<<<< HEAD
-    local_path = str(uuid.uuid4())
-=======
     target_remote_path = os.path.join(action_output_folder, "actions")
     store_url = StoreUrl(target_remote_path)
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     action_summary = {}
     for index_id in index_set:
         row = action_bad_group_df.filter(col(INDEX_ID_COLUMN) == index_id).collect()[0]
         action_id = row[ACTION_ID_COLUMN]
-<<<<<<< HEAD
-=======
         query_intention = row["most_significant_group"].split("_")[-1]
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         action = {
             "ActionId": action_id,
             "Type": INDEX_ACTION_TYPE,
             "Description": ACTION_DESCRIPTION.replace("{index_id}", index_id),
-<<<<<<< HEAD
-            "ConfidenceScore": row["action_confidence_score"],
-            "ViolatedMetrics": ", ".join(violated_metrics),
-            "QueryIntention": row["most_significant_group"].split("_")[-1],
-=======
             "ConfidenceScore": row["max_confidence_score"],
             "ViolatedMetrics": ", ".join(violated_metrics),
             "QueryIntention": query_intention if query_intention != "default" else DEFAULT_TOPIC_NAME,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             "CreationTime": str(datetime.datetime.now()),
             "FilePath": os.path.join(action_output_folder, f"actions/{action_id}.json")
         }
@@ -141,19 +108,10 @@ def write_actions(action_bad_group_df, action_good_group_df, action_output_folde
         action_detail["NegativeSamples"] = generate_samples(action_bad_group_df, True)
         print("Writing action detail of action: ")
         print(action)
-<<<<<<< HEAD
-        write_to_file(action_detail, local_path, action_id)
-    print("Writing action summary to location ", action_output_folder)
-    print(action_summary)
-    write_to_file(action_summary, local_path, "action_summary")
-    target_remote_path = os.path.join(action_output_folder, "actions")
-    amlfs_upload(local_path=local_path, remote_path=target_remote_path)
-=======
         write_to_file(action_detail, store_url, f"{action_id}.json")
     print("Writing action summary to location ", action_output_folder)
     print(action_summary)
     write_to_file(action_summary, store_url, "action_summary.json")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 def generate_samples(action_df, is_negative_sample):
@@ -182,17 +140,6 @@ def generate_samples(action_df, is_negative_sample):
     return samples
 
 
-<<<<<<< HEAD
-def write_to_file(payload: dict, local_output_directory: str, file_name: str):
-    """Save the action files to a local directory."""
-    os.makedirs(local_output_directory, exist_ok=True)
-    action_file = os.path.join(local_output_directory, f"{file_name}.json")
-    with open(action_file, "w") as f:
-        f.write(json.dumps(payload, indent=4, default=np_encoder))
-
-
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def run():
     """Merge and output actions."""
     # Parse argument
@@ -219,12 +166,6 @@ def run():
     # get the group with highest confidence score (except the default group)
     w = Window.partitionBy(INDEX_ID_COLUMN)
     max_conf_df = action_data_df.filter(~col(BAD_GROUP_COLUMN).endswith("_default"))\
-<<<<<<< HEAD
-                                .withColumn("max_confidence", max(CONFIDENCE_SCORE_COLUMN).over(w))\
-                                .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence'))\
-                                .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
-                                .select(INDEX_ID_COLUMN, "most_significant_group")
-=======
                                 .withColumn("max_confidence_score", max(CONFIDENCE_SCORE_COLUMN).over(w))\
                                 .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence_score'))\
                                 .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
@@ -236,7 +177,6 @@ def run():
                                     .where(col(CONFIDENCE_SCORE_COLUMN) == col('max_confidence_score'))\
                                     .withColumn("most_significant_group", col(BAD_GROUP_COLUMN))\
                                     .select(INDEX_ID_COLUMN, "max_confidence_score", "most_significant_group")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     merged_action = action_data_df.groupby(INDEX_ID_COLUMN).agg(collect_set(BAD_GROUP_COLUMN).alias("action_bad_group_set"),  # noqa: E501
                                                                 collect_set(GOOD_GROUP_COLUMN).alias("action_good_group_set"),  # noqa: E501

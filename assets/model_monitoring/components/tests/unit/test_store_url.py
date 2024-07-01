@@ -4,13 +4,9 @@
 """Test file for StoreUrl."""
 
 import pytest
-<<<<<<< HEAD
-from unittest.mock import Mock, patch
-=======
 import os
 from unittest.mock import Mock, patch
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient, BlobServiceClient
@@ -68,11 +64,6 @@ class TestStoreUrl:
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
 
-<<<<<<< HEAD
-        # before we support credential-less data, should raise InvalidInputError
-        with pytest.raises(InvalidInputError):
-            store_url.get_container_client()
-=======
         # We support credential-less with secure store url.
         if store_url._is_secure():
             container = store_url.get_container_client()
@@ -82,7 +73,6 @@ class TestStoreUrl:
             with pytest.raises(InvalidInputError,
                                match=r"Token credential is only supported with secure HTTPS protocol..*"):
                 store_url.get_container_client()
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, credential_type, relative_path, expected_protocol, expected_hdfs_path, "
@@ -131,32 +121,16 @@ class TestStoreUrl:
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-<<<<<<< HEAD
-                "AzureDataLakeGen2", None, "/", "http",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "/", None,
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container")
-=======
                 "AzureDataLakeGen2", None, "/", "https",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "/", AzureMLOnBehalfOfCredential(),
                 FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
                                  AzureMLOnBehalfOfCredential())
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-<<<<<<< HEAD
-                "AzureBlob", "None", "/rpath", "http",
-                "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "/rpath", None,
-                ContainerClient("http://my_account.blob.core.windows.net", "my_container")
-            )
-=======
                 "AzureBlob", "None", "/rpath", "https",
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
@@ -182,7 +156,6 @@ class TestStoreUrl:
             #     "/rpath", None,
             #     ContainerClient("http://my_account.blob.core.windows.net", "my_container")
             # )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         ]
     )
     def test_store_url_with_azureml_path(
@@ -332,8 +305,6 @@ class TestStoreUrl:
             store_url = StoreUrl(path, mock_ws)
             assert store_url.is_local_path() == is_local_path
 
-<<<<<<< HEAD
-=======
     PATHS = [
         "my/folder/folder1/folder2/file1.jsonl",
         "my/folder/folder1/file2.jsonl",
@@ -420,7 +391,6 @@ class TestStoreUrl:
         store_url = StoreUrl(base_path)
         assert store_url.any_files(pattern) is expected_result
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 def assert_credentials_are_equal(credential1, credential2):
     """Assert 2 credentials are equal."""

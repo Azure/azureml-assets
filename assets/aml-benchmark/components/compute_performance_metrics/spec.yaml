@@ -4,11 +4,7 @@ type: command
 name: compute_performance_metrics
 display_name: Compute Performance Metrics
 description: Performs performance metric post processing using data from a model inference run.
-<<<<<<< HEAD
-version: 0.0.3
-=======
 version: 0.0.6
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 is_deterministic: true
 
 inputs:
@@ -61,11 +57,7 @@ outputs:
     description: Path to the file where the calculated performance metric results will be stored.
 
 code: ../src
-<<<<<<< HEAD
-environment: azureml://registries/azureml/environments/model-evaluation/versions/20
-=======
 environment: azureml://registries/azureml/environments/model-evaluation/versions/25
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 command: >-
   python -m aml_benchmark.compute_performance_metrics.main
   --performance_data ${{inputs.performance_data}}

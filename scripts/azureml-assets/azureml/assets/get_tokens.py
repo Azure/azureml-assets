@@ -44,10 +44,6 @@ def get_tokens(input_dirs: List[Path],
 
         if asset_config.type == AssetType.MODEL:
             model_config: assets.ModelConfig = asset_config.extra_config_as_object()
-<<<<<<< HEAD
-            if isinstance(model_config.path, AzureBlobstoreAssetPath):
-                add_token_info(model_config.path, json_info, sas_expiration_hrs)
-=======
             if model_config and isinstance(model_config.path, AzureBlobstoreAssetPath):
                 add_token_info(model_config.path, json_info, sas_expiration_hrs)
 
@@ -55,7 +51,6 @@ def get_tokens(input_dirs: List[Path],
             data_config: assets.DataConfig = asset_config.extra_config_as_object()
             if data_config and isinstance(data_config.path, AzureBlobstoreAssetPath):
                 add_token_info(data_config.path, json_info, sas_expiration_hrs)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         elif asset_config.type in GENERIC_ASSET_TYPES:
             generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()

@@ -12,10 +12,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install datasets==2.15.0
 RUN pip install pyarrow==14.0.1
 RUN pip install cryptography==42.0.5
-<<<<<<< HEAD
-=======
 RUN pip install gunicorn==22.0.0
 RUN pip install onnxruntime==1.17.3
 RUN pip install onnx==1.16.0 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 # dummy number to change when needing to force rebuild without changing the definition: 1

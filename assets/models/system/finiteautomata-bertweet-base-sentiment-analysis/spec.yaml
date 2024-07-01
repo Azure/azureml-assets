@@ -13,10 +13,7 @@ tags:
   license: other
   SharedComputeCapacityEnabled: ""
   task: text-classification
-<<<<<<< HEAD
-=======
   hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   huggingface_model_id: finiteautomata/bertweet-base-sentiment-analysis
   inference_compute_allow_list:
     [

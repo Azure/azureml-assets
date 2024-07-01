@@ -10,11 +10,7 @@ from exceptions import (
 from constants import ALL_TASKS, TASK, ArgumentLiterals
 from image_constants import SettingLiterals
 from logging_utilities import get_logger, log_traceback, get_azureml_exception
-<<<<<<< HEAD
-from utils import assert_and_raise, read_config, read_config_str, read_model_prediction_data, get_column_names
-=======
 from utils import assert_and_raise, read_config, read_config_str, get_sample_data_and_column_names
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from error_definitions import (
     InvalidTaskType,
     InvalidModel,

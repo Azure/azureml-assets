@@ -4,11 +4,7 @@ type: pipeline
 name: model_performance_signal_monitor
 display_name: Model Performance - Signal Monitor
 description: Computes the model performance
-<<<<<<< HEAD
-version: 0.0.13
-=======
 version: 0.0.19
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 is_deterministic: true
 inputs:
   task:
@@ -61,11 +57,7 @@ outputs:
 jobs:
   compute_metrics:
     type: spark
-<<<<<<< HEAD
-    component: azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.12
-=======
     component: azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.17
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       task: ${{parent.inputs.task}}
       baseline_data_target_column: ${{parent.inputs.baseline_data_target_column}}
@@ -86,11 +78,7 @@ jobs:
       type: aml_token
   output_signal_metrics: 
     type: spark
-<<<<<<< HEAD
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.21
-=======
     component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.26
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       signal_metrics:
         type: mltable
@@ -111,11 +99,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-<<<<<<< HEAD
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.17
-=======
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.23
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       signal_metrics:
         type: mltable

@@ -4,11 +4,7 @@ type: command
 tags:
     Preview: ""
 
-<<<<<<< HEAD
-version: 0.0.58
-=======
 version: 0.0.67
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: llm_rag_crack_and_chunk
 display_name: LLM - Crack and Chunk Data
 is_deterministic: true

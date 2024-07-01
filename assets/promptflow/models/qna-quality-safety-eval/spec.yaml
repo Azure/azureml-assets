@@ -9,9 +9,6 @@ properties:
   azureml.promptflow.description: Compute the quality and safety of the answer for the given question based on the ground_truth and the context
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-<<<<<<< HEAD
-=======
 tags:
   hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 version: 9

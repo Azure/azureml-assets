@@ -14,9 +14,6 @@ regex
 pybind11
 urllib3>=1.26.18
 cryptography>=42.0.5
-<<<<<<< HEAD
-aiohttp>=3.8.5
-=======
 aiohttp>=3.8.5
 idna>=3.7
 py-spy==0.3.12
@@ -28,4 +25,3 @@ matplotlib~=3.5.0
 tqdm~=4.66.3
 py-cpuinfo==5.0.0
 torch-tb-profiler~=0.4.0
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

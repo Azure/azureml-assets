@@ -7,12 +7,8 @@
 from pyspark.sql import SparkSession
 from src.model_monitor_evaluate_metrics_threshold.evaluate_metrics_threshold import (
     calculate_metrics_breach,
-<<<<<<< HEAD
-    _generate_error_message)
-=======
     _generate_error_message,
     _clean_metrics_df)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from src.shared_utilities.constants import (
     AGGREGATED_COHERENCE_PASS_RATE_METRIC_NAME,
     AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME,
@@ -119,8 +115,6 @@ class TestEvaluateMetricsThreshold:
         assert breached_metrics_df.count() == actual_breached_metrics_df.count()
         assert sorted(breached_metrics_df.collect()) == sorted(actual_breached_metrics_df.collect())
 
-<<<<<<< HEAD
-=======
     @pytest.mark.parametrize("metrics_df, expected_metrics_df",
                              [(test_null_df, emptyRDD),
                               (test_clean_df, test_clean_df)])
@@ -130,7 +124,6 @@ class TestEvaluateMetricsThreshold:
         assert expected_metrics_df.count() == actual_cleaned_metrics_df.count()
         assert sorted(expected_metrics_df.collect()) == sorted(actual_cleaned_metrics_df.collect())
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     @pytest.mark.parametrize("data, schema, expected_message",
                              [([("1", "metics", 4.6, 5.6)],
                                ["group", SIGNAL_METRICS_METRIC_NAME,

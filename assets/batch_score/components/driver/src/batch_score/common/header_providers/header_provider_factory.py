@@ -125,42 +125,11 @@ class HeaderProviderFactory:
         else:
             return headers
 
-<<<<<<< HEAD
-        for header_key, header_value in OPENAI_MODEL_HEADER_DEFAULTS[key].items():
-=======
         for header_key, header_value in OPENAI_MODEL_HEADER_DEFAULTS.get(key, {}).items():
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             headers.setdefault(header_key, header_value)
 
         return headers
 
 
 OPENAI_MODEL_HEADER_DEFAULTS = {
-<<<<<<< HEAD
-    "chat_completion": {
-        "Openai-Internal-AllowChatCompletion": "true",
-        "Openai-Internal-AllowedOutputSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-AllowedSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-HarmonyVersion": "harmony_v3",
-    },
-    "completion": {},
-    "embedding": {},
-    "sahara": {
-        "Openai-Internal-AllowedOutputSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-AllowedSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-HarmonyVersion": "harmony_v3",
-    },
-    "vesta": {},
-    "vesta_chat_completion": {
-        "Openai-Internal-AllowedOutputSpecialTokens":
-            "<|im_start|>,<|im_sep|>,<|im_end|>,<|diff_marker|>,<|fim_suffix|>,"
-            "<|ghreview|>,<|ipynb_marker|>,<|fim_middle|>,<|meta_start|>",
-        "Openai-Internal-AllowedSpecialTokens":
-            "<|im_start|>,<|im_sep|>,<|im_end|>,<|diff_marker|>,<|fim_suffix|>,"
-            "<|ghreview|>,<|ipynb_marker|>,<|fim_middle|>,<|meta_start|>",
-        "Openai-Internal-HarmonyVersion": "harmony_v4.0.11_8k_turbo_mm",
-        "Openai-Internal-MegatokenSwitchAndParams": "true-true-1-4-2000",
-    },
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 }

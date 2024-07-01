@@ -22,10 +22,7 @@ from error_definitions import (
     InvalidGroundTruthColumnNameData,
     InvalidPredictionColumnNameData,
     BadInputData,
-<<<<<<< HEAD
-=======
     BadQuestionsContextGroundTruthData,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     BadEvaluationConfig,
     SavingOutputError,
 )
@@ -116,13 +113,6 @@ class ComputeMetricsRunner:
                     logger.warning(f"Any of Required Keys '[{', '.join(keys)}]' missing in openai_config_params.\n"
                                    f"Skipping GPT Based Metrics calculation for this Run.")
                     do_openai_init = False
-<<<<<<< HEAD
-            elif self.task == TASK.CHAT_COMPLETION:
-                if not all(k in llm_config for k in keys):
-                    message = f"Required Keys '[{', '.join(keys)}]' missing in openai_config_params."
-                    exception = get_azureml_exception(DataValidationException, BadEvaluationConfig,
-                                                      None, error=message)
-=======
             elif self.task == TASK.CHAT_COMPLETION and \
                     self.config.get(SubTask.SUB_TASK_KEY, "") == SubTask.RAG_EVALUATION:
                 if not all(k in llm_config for k in keys):
@@ -130,7 +120,6 @@ class ComputeMetricsRunner:
                     exception = get_azureml_exception(
                         DataValidationException, BadEvaluationConfig, None, error=message
                     )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                     log_traceback(exception, logger)
                     raise exception
             self.rag_input_data_keys = {}
@@ -175,13 +164,8 @@ class ComputeMetricsRunner:
                                    Skipping GPT Based Metrics Calculation")
                     self.config.pop(constants.OpenAIConstants.METRICS_KEY)
                 elif self.task == TASK.CHAT_COMPLETION and not all(len(values) for values in key_data.values()):
-<<<<<<< HEAD
-                    message = "Failed to Fetch Questions and Contexts from Ground Truth Data."
-                    exception = get_azureml_exception(DataValidationException, message, None)
-=======
                     exception = get_azureml_exception(DataValidationException,
                                                       BadQuestionsContextGroundTruthData, None)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                     log_traceback(exception, logger)
                     raise exception
                 else:

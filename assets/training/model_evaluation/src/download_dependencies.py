@@ -9,11 +9,7 @@ from logging_utilities import (
     custom_dimensions, get_logger, log_traceback, swallow_all_exceptions, get_azureml_exception
 )
 from azureml.telemetry.activity import log_activity
-<<<<<<< HEAD
-from error_definitions import DownloadDependenciesError, InvalidModel
-=======
 from error_definitions import InvalidModel
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from exceptions import ModelValidationException
 from validation import _validate_model
 from constants import ArgumentLiterals, TelemetryConstants

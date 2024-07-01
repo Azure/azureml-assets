@@ -101,14 +101,11 @@ class TestInferencePostprocessorComponent:
                 None, None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None,
             ),
-<<<<<<< HEAD
-=======
             (
                 "human-eval-custom-script", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, None, None, None, None, None, None, None,
                 None, Constants.CUSTOM_HUMANEVAL_POSTPROCESSOR_SCRIPT_PATH, None, None,
             ),
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         ],
     )
     def test_inference_postprocessor_as_component(
@@ -217,11 +214,7 @@ class TestInferencePostprocessorComponent:
             strip_characters=strip_characters,
             extract_number=extract_number,
             template=template,
-<<<<<<< HEAD
-            script_path=script_path,
-=======
             user_postprocessor=script_path,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             label_map=label_map,
             find_first=find_first
         )
@@ -491,12 +484,6 @@ class TestInferencePostprocessorScript:
         invalid_prediction_dataset_error_mssg = (
             "the following arguments are required: --prediction_dataset"
         )
-<<<<<<< HEAD
-        invalid_jsonl_dataset_mssg = (
-            "No .jsonl files found in the given prediction dataset."
-        )
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         invalid_prediction_colname_error_mssg = (
             "the following arguments are required: --prediction_column_name"
         )
@@ -533,28 +520,6 @@ class TestInferencePostprocessorScript:
             exception_message = str(e)
             assert invalid_prediction_colname_error_mssg in exception_message
 
-<<<<<<< HEAD
-        dummy_dataset_path = os.path.join(os.getcwd(), "prediction_dataset_path")
-        os.system(f"mkdir {dummy_dataset_path}")
-        try:
-            argss = " ".join(
-                [
-                    "--prediction_dataset",
-                    dummy_dataset_path,
-                    "--prediction_column_name",
-                    prediction_column_name,
-                    "--template",
-                    f"'{template}'",
-                ]
-            )
-            cmd = f"cd {src_dir} && python -m aml_benchmark.inference_postprocessor.main {argss}"
-            run_command(f"{cmd}")
-        except RuntimeError as e:
-            exception_message = str(e)
-            assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
-
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         dummy_script_path = os.path.join(os.getcwd(), "user_script.json")
         os.system(f"touch {dummy_script_path}")
         try:

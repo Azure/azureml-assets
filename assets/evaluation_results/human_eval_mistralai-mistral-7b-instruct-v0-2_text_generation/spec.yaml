@@ -1,10 +1,6 @@
 type: evaluationresult
 name: human_eval_mistralai-mistral-7b-instruct-v0-2_text_generation
-<<<<<<< HEAD
-version: 2.08.04
-=======
 version: 2.19.040
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: human_eval_mistralai-Mistral-7B-Instruct-v0-2_text_generation
 description: mistralai-Mistral-7B-Instruct-v0-2 run for human_eval dataset
 dataset_family: human_eval
@@ -19,10 +15,7 @@ relationships:
     assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/1
 
 tags:
-<<<<<<< HEAD
-=======
   evaluation_type: text_generation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: text-generation
   accuracy_metric_name: pass@1
 

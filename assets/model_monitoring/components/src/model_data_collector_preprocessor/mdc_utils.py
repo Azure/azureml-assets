@@ -9,11 +9,7 @@ from pyspark.sql.types import StringType, AtomicType
 from py4j.protocol import Py4JJavaError
 from dateutil import parser
 from datetime import datetime
-<<<<<<< HEAD
-from shared_utilities.momo_exceptions import DataNotFoundError
-=======
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from shared_utilities.io_utils import init_spark
 from shared_utilities.event_utils import add_tags_to_root_run
 from shared_utilities.constants import (
@@ -21,16 +17,9 @@ from shared_utilities.constants import (
 )
 
 from model_data_collector_preprocessor.mdc_preprocessor_helper import (
-<<<<<<< HEAD
-    get_file_list, set_data_access_config, serialize_credential, copy_appendblob_to_blockblob
-)
-from shared_utilities.store_url import StoreUrl
-from model_data_collector_preprocessor.mdc_preprocessor_helper import deserialize_credential
-=======
     get_file_list, set_data_access_config, serialize_credential, deserialize_credential, copy_appendblob_to_blockblob
 )
 from shared_utilities.store_url import StoreUrl
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: datetime, store_url: StoreUrl,
@@ -50,13 +39,10 @@ def _mdc_uri_folder_to_raw_spark_df(start_datetime: datetime, end_datetime: date
             return _uri_folder_to_spark_df(start_datetime, end_datetime, store_url, soft_delete_enabled=False)
         except Py4JJavaError as pe:
             if "This endpoint does not support BlobStorageEvents or SoftDelete" in pe.java_exception.getMessage():
-<<<<<<< HEAD
-=======
                 if store_url.is_credentials_less():
                     raise InvalidInputError(
                         "Credential-less blob store with soft delete enabled is not supported, you can: "
                         "1. Upgrade to adlsgen2, 2. Switch to credential store, or 3. Disable soft delete.")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                 blockblob_url = copy_appendblob_to_blockblob(store_url, start_datetime, end_datetime)
                 return _uri_folder_to_spark_df(start_datetime, end_datetime, blockblob_url, soft_delete_enabled=True)
             else:
@@ -172,8 +158,6 @@ def _filter_df_by_time_window(df: DataFrame, data_window_start: datetime, data_w
     """Filter dataframe on its end_time column to fit within the given data window: [start, end)."""
     df = df.filter(df.end_time >= data_window_start).filter(df.end_time < data_window_end)
     return df
-<<<<<<< HEAD
-=======
 
 
 def _count_dropped_rows_with_error(
@@ -197,4 +181,3 @@ def _count_dropped_rows_with_error(
             " Failing preprocessing job. Please check your log quality and"
             " the stdout logs for any possible debugging info for help."
             f" {additional_error_msg}")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

@@ -9,11 +9,8 @@ tasks include
 - Applications in educational or creative tools.
 - Research on generative models.
 
-<<<<<<< HEAD
-=======
 Stable Diffusion DreamBooth Finetuning is now avalable for this model on AzureML. DreamBooth is a method for personalizing text-to-image models. It fine-tunes these models using 5-10 images of a specific subject, allowing them to generate personalized images based on textual prompts.
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 # Training Details
 
 ## Training Data
@@ -100,15 +97,12 @@ Using the model to generate content that is cruel to individuals is a misuse of 
 
 The CreativeML OpenRAIL M license is an [Open RAIL M license](https://www.licenses.ai/blog/2022/8/18/naming-convention-of-responsible-ai-licenses), adapted from the work that [BigScience](https://bigscience.huggingface.co/) and [the RAIL Initiative](https://www.licenses.ai/) are jointly carrying in the area of responsible AI licensing. See also [the article about the BLOOM Open RAIL license](https://bigscience.huggingface.co/blog/the-bigscience-rail-license) on which our license is based.
 
-<<<<<<< HEAD
-=======
 # DreamBooth Finetuning Samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
 Text-to-image|Text-to-image|[dog-example](https://huggingface.co/datasets/diffusers/dog-example)|<a href="https://aka.ms/azureml-ft-sdk-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-dreambooth-text-to-image" target="_blank">diffusers-dreambooth-dog-text-to-image.sh</a>
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 # Inference Samples
 
 > Note: The inferencing script of this model is optimized for high-throughput, low latency using <a href="https://github.com/microsoft/DeepSpeed-MII" target="_blank">Deepspedd-mii</a> library. Please use `version 4` of this model for inferencing using default (FP32) diffusion pipeline implementation.

@@ -11,17 +11,11 @@ import pytest
 import os
 import sys
 from datetime import datetime
-<<<<<<< HEAD
-from model_data_collector_preprocessor.trace_aggregator import (
-    aggregate_spans_into_traces,
-)
-=======
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import _get_aggregated_trace_log_spark_df_schema
 from model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
 )
 from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from spark_mltable import SPARK_ZIP_PATH
 
 
@@ -164,22 +158,7 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str],
     ]
 
-<<<<<<< HEAD
-    _trace_log_schema = StructType(
-        [
-            StructField("trace_id", StringType(), False),
-            StructField("user_id", StringType(), True),
-            StructField("session_id", StringType(), True),
-            StructField("start_time", TimestampType(), False),
-            StructField("end_time", TimestampType(), False),
-            StructField("input", StringType(), False),
-            StructField("output", StringType(), False),
-            StructField("root_span", StringType(), True),
-        ]
-    )
-=======
     _trace_log_schema = _get_aggregated_trace_log_spark_df_schema()
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     _trace_log_data_extra = [
             ["01", None, None, datetime(2024, 2, 5, 0, 1, 0)] +
@@ -273,8 +252,6 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 9, 59), "in", "out", _root_span_str_request_01],
     ]
 
-<<<<<<< HEAD
-=======
     _span_log_data_same_trace = [
         ['{"inputs":"in", "output":"out"}'] +
         [datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name", None] +
@@ -470,7 +447,6 @@ class TestGenAISparkPreprocessor:
             [datetime(2024, 2, 5, 0, 8, 0), "in", "out", _root_span_str_error4]
     ]
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def test_trace_aggregator_empty_root_span(self, code_zip_test_setup, genai_preprocessor_test_setup):
         """Test scenarios where we have a faulty root span when generating tree."""
         spark = self._init_spark()
@@ -489,16 +465,6 @@ class TestGenAISparkPreprocessor:
 
         trace_df = aggregate_spans_into_traces(span_logs_no_root_with_data_df, True, start_time, end_time)
         rows = trace_df.collect()
-<<<<<<< HEAD
-        assert trace_df.count() == 1
-        assert rows[0]['trace_id'] == "01"
-
-        span_logs_no_root = [
-            ['{"inputs":"in", "output":"out"}', datetime(2024, 2, 5, 0, 8, 0), "[]", "FLOW", "[]", "name",] +
-            ["1", "1", "llm", datetime(2024, 2, 5, 0, 1, 0), "OK", "01"],
-        ]
-        spans_no_root_df = spark.createDataFrame(span_logs_no_root, self._preprocessed_log_schema)
-=======
         assert trace_df.count() == 2
         assert rows[0]['trace_id'] == "01"
         assert rows[1]['trace_id'] == "02"
@@ -510,7 +476,6 @@ class TestGenAISparkPreprocessor:
             ["1", "2", "llm", datetime(2024, 2, 5, 0, 2, 0), "OK", "01"],
         ]
         spans_no_root_df = spark.createDataFrame(span_logs_no_root_forest, self._preprocessed_log_schema)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         no_root_traces = aggregate_spans_into_traces(spans_no_root_df, True, start_time, end_time)
         assert no_root_traces.isEmpty()
 
@@ -530,10 +495,6 @@ class TestGenAISparkPreprocessor:
             (_span_log_data_lookback, _preprocessed_log_schema, _trace_log_data_lookback, _trace_log_schema, True,
              datetime(2024, 2, 5, 6), datetime(2024, 2, 5, 7)),
             # request_id data
-<<<<<<< HEAD
-            (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema, True,
-             datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
-=======
             # TODO: uncomment when we want to test replacing trace_id with request_id
             # (_span_log_data_request_id, _preprocessed_log_schema, _trace_log_data_request_id, _trace_log_schema,
             #  True, datetime(2024, 2, 5, 9), datetime(2024, 2, 5, 10))
@@ -542,7 +503,6 @@ class TestGenAISparkPreprocessor:
             # one of the logs won't have input or output
             (_span_log_data_with_error, _preprocessed_log_schema, _trace_log_data_with_error, _trace_log_schema,
              True, datetime(2024, 2, 5, 0), datetime(2024, 2, 5, 1)),
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         ]
     )
     def test_trace_aggregator(
@@ -572,15 +532,3 @@ class TestGenAISparkPreprocessor:
         actual_trace_df.printSchema()
 
         assert_spark_dataframe_equal(actual_trace_df, expected_traces_df)
-<<<<<<< HEAD
-
-
-def assert_spark_dataframe_equal(df1, df2):
-    """Assert two spark dataframes are equal."""
-    assert df1.schema == df2.schema
-    assert df1.count() == df2.count()
-    print(f'df1: {df1.collect()}')
-    print(f'df2: {df2.collect()}')
-    assert df1.collect() == df2.collect()
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

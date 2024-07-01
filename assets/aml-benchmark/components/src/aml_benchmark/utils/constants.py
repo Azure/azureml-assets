@@ -5,8 +5,6 @@
 from enum import Enum
 
 
-<<<<<<< HEAD
-=======
 class Constants:
     """Constants for benchmarking."""
 
@@ -20,7 +18,6 @@ class Constants:
     RETRIABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504, None}
 
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 class AuthenticationType(Enum):
     """Authentication Type enum for endpoints."""
 
@@ -36,12 +33,6 @@ class ModelType(Enum):
     VISION_OSS = "vision_oss"
 
 
-<<<<<<< HEAD
-AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST = [
-    "openai.azure.com",
-    "api.cognitive.microsoft.com",
-    "cognitiveservices.azure.com"
-=======
 class LoggerConfig:
     """Logger Config."""
 
@@ -81,7 +72,6 @@ AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST = [
     "openai.azure.com",
     "api.cognitive.microsoft.com",
     "cognitiveservices.azure.com",
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ]
 MIR_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ml.azure.com"]
 SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ai.azure.com"]
@@ -89,11 +79,7 @@ SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ai.azure.com"]
 _URL_TYPES_MAPPING = {
     "azure_openai": AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST,
     "azureml_online_endpoint": MIR_ENDPOINT_DOMAIN_SUFFIX_LIST,
-<<<<<<< HEAD
-    "azureml_serverless_endpoint": SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST
-=======
     "azureml_serverless_endpoint": SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 }
 _DEFAULT_URL_TYPE = "azureml_online_endpoint"
 

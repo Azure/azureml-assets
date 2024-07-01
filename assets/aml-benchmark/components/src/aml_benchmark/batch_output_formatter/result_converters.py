@@ -15,14 +15,8 @@ from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndp
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
-<<<<<<< HEAD
-from aml_benchmark.utils.exceptions import BenchmarkUserException
-from aml_benchmark.utils.error_definitions import BenchmarkUserError
-from azureml._common._error_definition.azureml_error import AzureMLError
-=======
 from aml_benchmark.utils.exceptions import BenchmarkUserException, BenchmarkSystemException
 from aml_benchmark.utils.error_definitions import BenchmarkUserError, BenchmarkSystemError
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 logger = get_logger(__name__)
@@ -212,8 +206,6 @@ class ResultConverters:
         input_parameters = ResultConverters._get_oss_input_parameters(result)
         return input_parameters.get("max_new_tokens", perf_metrics.get('output_token_count', -1))
 
-<<<<<<< HEAD
-=======
     def _get_tiktoken_count(self, result: Any) -> Tuple[int, int]:
         input: List[str] = self._get_request_content(result)
         if self._model.is_oss_model():
@@ -231,7 +223,6 @@ class ResultConverters:
         output_tokens = len(encoding.encode(output))
         return input_tokens, output_tokens
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def _get_additional_columns_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         additional_columns_data = {}
         if self._additional_columns:
