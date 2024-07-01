@@ -1,10 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-<<<<<<< HEAD
-version: 0.0.40
-=======
 version: 0.0.52
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for extractive question answering task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/question_answering_pipeline) to learn more.
@@ -545,11 +541,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-<<<<<<< HEAD
-    component: azureml:ft_nlp_common_validation:0.0.38
-=======
     component: azureml:ft_nlp_common_validation:0.0.50
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -586,11 +578,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   question_answering_model_import:
     type: command
-<<<<<<< HEAD
-    component: azureml:question_answering_model_import:0.0.38
-=======
     component: azureml:question_answering_model_import:0.0.50
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -601,11 +589,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   question_answering_datapreprocess:
     type: command
-<<<<<<< HEAD
-    component: azureml:question_answering_datapreprocess:0.0.38
-=======
     component: azureml:question_answering_datapreprocess:0.0.50
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -630,11 +614,7 @@ jobs:
       model_selector_output: '${{parent.jobs.question_answering_model_import.outputs.output_dir}}'
   question_answering_finetune:
     type: command
-<<<<<<< HEAD
-    component: azureml:question_answering_finetune:0.0.38
-=======
     component: azureml:question_answering_finetune:0.0.50
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -691,11 +671,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-<<<<<<< HEAD
-    component: azureml:ft_nlp_model_converter:0.0.38
-=======
     component: azureml:ft_nlp_model_converter:0.0.50
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -705,11 +681,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-<<<<<<< HEAD
-    component: azureml:model_prediction:0.0.21
-=======
     component: azureml:model_prediction:0.0.22
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -725,11 +697,7 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-<<<<<<< HEAD
-    component: azureml:compute_metrics:0.0.21
-=======
     component: azureml:compute_metrics:0.0.22
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'

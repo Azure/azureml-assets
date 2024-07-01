@@ -5,8 +5,6 @@
 
 import json
 import yaml
-<<<<<<< HEAD
-=======
 from typing import Optional
 import os
 from io import BytesIO
@@ -21,7 +19,6 @@ class Constants:
     train_dataset_split_ratio = 0.8
     data_uri_key = "keyvault_key_for_data_uri"
     data_uri = "data_uri"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 def save_yaml(content, filename):
@@ -48,8 +45,6 @@ def save_json(data, file_path):
     """Save dictionary to json file."""
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
-<<<<<<< HEAD
-=======
 
 
 def get_train_validation_filename(train_file_path: str, validation_file_path: Optional[str]) -> tuple[str, str]:
@@ -146,4 +141,3 @@ def get_key_or_uri_from_data_import_path(json_path: str) -> tuple[str, str]:
         raise ValueError("Only one of data uri and keyvault data uri key should be provided")
 
     return data_uri_key, data_uri
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

@@ -186,19 +186,6 @@ def run_humaneval_postprocessor(
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
-<<<<<<< HEAD
-        if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
-            # If the model regenerates the prompt/ function name
-            pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
-        else:
-            original_prediction = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
-            # If spaces were stripped from endpoint responses, add those back.
-            if not len(original_prediction) or (len(original_prediction) and original_prediction[0].isspace()):
-                prefix = ""
-            else:
-                prefix = "    "
-            pred_combined_prompt = row["prompt"] + "\n" + prefix + original_prediction
-=======
         tag_type = "python" if "```python" in row["original_prediction"] else ""
 
         # Extract the prediction data from the markdown tags
@@ -225,7 +212,6 @@ def run_humaneval_postprocessor(
                 pred_combined_prompt = pred_combined_prompt.lstrip()
             pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         # Applying regex on the prediction column
         if regex_exp:
             regex_exp_func = regex_exp.replace("FUNCNAME", row["entry_point"])

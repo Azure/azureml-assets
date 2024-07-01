@@ -1,26 +1,12 @@
 type: evaluationresult
 name: truthfulqa_generation_databricks-dbrx-instruct_question_answering
-<<<<<<< HEAD
-version: 2.02.04
-=======
 version: 2.27.05
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: truthfulqa_generation_databricks-dbrx-instruct_question_answering
 description: databricks-dbrx-instruct run for truthfulqa_generation dataset
 dataset_family: truthfulqa
 dataset_name: truthfulqa_generation
 
 model_name: databricks-dbrx-instruct
-<<<<<<< HEAD
-model_version: "1"
-model_asset_id: azureml://registries/azureml-restricted/models/databricks-dbrx-instruct/versions/1
-
-relationships:
-  - relationshipType: Source
-    assetId: azureml://registries/azureml-restricted/models/databricks-dbrx-instruct/versions/1
-
-tags:
-=======
 model_version: "3"
 model_asset_id: azureml://registries/azureml-restricted/models/databricks-dbrx-instruct/versions/3
 
@@ -30,20 +16,13 @@ relationships:
 
 tags:
   evaluation_type: text_generation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: question-answering
   accuracy_metric_name: nan
 
 metrics:
-<<<<<<< HEAD
-  coherence: 4.616891
-  fluency: 4.731946
-  GPTSimilarity: 3.406365
-=======
   coherence: 4.647059
   fluency: 4.729167
   GPTSimilarity: 3.35049
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 properties:

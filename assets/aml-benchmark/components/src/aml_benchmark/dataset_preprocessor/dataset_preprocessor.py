@@ -9,10 +9,7 @@ import json
 import re
 import jinja2
 import subprocess
-<<<<<<< HEAD
-=======
 from copy import deepcopy
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 from azureml._common._error_definition.azureml_error import AzureMLError
 from aml_benchmark.utils.exceptions import (
@@ -146,12 +143,6 @@ class DatasetPreprocessor(object):
 
     def run_user_preprocessor(self) -> None:
         """Preprocessor run using custom script."""
-<<<<<<< HEAD
-        try:
-            _ = subprocess.check_output(
-                f"python {self.user_preprocessor} --input_path {self.input_dataset} \
-                    --output_path {self.output_dataset}",
-=======
         params_dict = deepcopy(self.__get_parameters())
         preprocessor_script = params_dict.pop("user_preprocessor")
         input_path = params_dict.pop("input_dataset")
@@ -169,7 +160,6 @@ class DatasetPreprocessor(object):
         try:
             _ = subprocess.check_output(
                 f"python {preprocessor_script} {argss}",
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 shell=True,

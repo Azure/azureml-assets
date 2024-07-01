@@ -10,10 +10,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Flag needed to enable control flow which is in PrP.
 ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 
-<<<<<<< HEAD
-=======
 # Vulnerability Fix
 RUN pip install gunicorn==22.0.0
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 # dummy number to change when needing to force rebuild without changing the definition: 1

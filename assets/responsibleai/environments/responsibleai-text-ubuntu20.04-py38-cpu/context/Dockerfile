@@ -38,14 +38,9 @@ RUN pip install 'cryptography>=42.0.4'
 # see issue https://github.com/huggingface/datasets/issues/6182
 RUN pip install git+https://github.com/huggingface/evaluate.git
 
-<<<<<<< HEAD
-# TODO: remove rai-core-flask pin with next raiwidgets release
-RUN pip install 'rai-core-flask==0.7.4'
-=======
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 RUN pip freeze
 

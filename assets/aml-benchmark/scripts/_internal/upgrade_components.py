@@ -26,11 +26,7 @@ AML_BENCH_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 REG_ML_CLIENT = MLClient(credential=DefaultAzureCredential(), registry_name="azureml")
-<<<<<<< HEAD
-AVOID_COMPONENT_FOLDERS = {"batch_resource_manager", "batch_benchmark_inference_claude"}
-=======
 AVOID_COMPONENT_FOLDERS = {"batch_resource_manager", "batch_benchmark_inference_claude", "batch_benchmark_score"}
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 FIRST_VERSION = "0.0.1"
 
 

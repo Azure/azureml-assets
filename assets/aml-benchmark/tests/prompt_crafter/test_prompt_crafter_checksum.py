@@ -7,17 +7,7 @@ import os
 import pytest
 import mlflow
 
-<<<<<<< HEAD
-from ..test_utils import get_src_dir
-
-sys.path.append(get_src_dir())
-try:
-    from aml_benchmark.prompt_crafter.package.prompt_crafter import PromptCrafter
-except ImportError:
-    raise ImportError("Please install the package 'prompt_crafter' to run this test.")
-=======
 from aml_benchmark.prompt_crafter.package.prompt_crafter import PromptCrafter
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 # Setting dataset path

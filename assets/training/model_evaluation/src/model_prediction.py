@@ -127,17 +127,11 @@ class ModelPredictionRunner:
         if self.extra_y_test_cols is not None:
             all_cols += self.extra_y_test_cols
 
-<<<<<<< HEAD
-        data = read_model_prediction_data(test_data, self.task, self.batch_size)
-        data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(self.label_column_name),
-                   repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size))
-=======
         data, file_ext = read_model_prediction_data(
             test_data, self.input_column_names, self.label_column_name, self.task, self.batch_size
         )
         data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(self.label_column_name),
                    repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size), repeat(file_ext))
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         return data  # X_test, y_test
 
     def load_tokenizer(self, token_counts_enabled):
@@ -180,19 +174,6 @@ class ModelPredictionRunner:
         enable_character_counts = self.config.get("char_count_per_sample", False)
         tokenizer = self.load_tokenizer(enable_token_counts)
 
-<<<<<<< HEAD
-        try:
-            for idx, (X_test, y_test_batch) in enumerate(data):
-                logger.info("batch: " + str(idx))
-                if len(X_test) == 0:
-                    logger.info("No samples in batch. Skipping.")
-                    continue
-
-                y_transformer = None
-
-                pred_probas_batch = None
-                pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor)
-=======
         pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor, self.predictor)
 
         try:
@@ -205,7 +186,6 @@ class ModelPredictionRunner:
                 y_transformer = None
 
                 pred_probas_batch = None
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
                 def add_to_predict_params_if_applicable(dict_to_add, predict_params):
                     if self.predictor.model_flavor != constants.MODEL_FLAVOR.TRANSFORMERS:

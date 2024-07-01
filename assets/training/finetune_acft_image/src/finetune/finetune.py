@@ -991,22 +991,6 @@ def main():
         )
         logger.warning(msg)
 
-<<<<<<< HEAD
-    # Dinov2 model doesn't support DS & ORT training with current ort version 1.16.0, so we are disabling it.
-    # Todo: Remove this block once ORT-training 1.17.3 is released.
-    # We also don't support DS & ORT training for OD and IS tasks.
-    Dinov2_Modelname = "facebook/dinov2-base-imagenet1k-1-layer"
-    if (args.model_name == Dinov2_Modelname or args.task_name in [
-        Tasks.MM_OBJECT_DETECTION,
-        Tasks.MM_INSTANCE_SEGMENTATION
-    ]) and (args.apply_deepspeed is True or args.apply_ort is True):
-        unsupported_feature = Dinov2_Modelname if args.model_name == Dinov2_Modelname else args.task_name
-        err_msg = f"apply_deepspeed or apply_ort is not yet supported for {unsupported_feature}. " \
-            "Please disable ds and ort training."
-        raise ACFTValidationException._with_error(
-            AzureMLError.create(ACFTUserError, pii_safe_message=err_msg)
-        )
-=======
     # We don't support DS & ORT training for OD and IS tasks.
     if args.task_name in [Tasks.MM_OBJECT_DETECTION, Tasks.MM_INSTANCE_SEGMENTATION] and (
        args.apply_deepspeed is True or args.apply_ort is True):
@@ -1015,7 +999,6 @@ def main():
             "Please disable ds and ort training."
         )
         raise ACFTValidationException._with_error(AzureMLError.create(ACFTUserError, pii_safe_message=err_msg))
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     if args.task_name in [
         Tasks.MM_OBJECT_DETECTION, Tasks.MM_INSTANCE_SEGMENTATION, Tasks.MM_MULTI_OBJECT_TRACKING,

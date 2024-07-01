@@ -10,11 +10,7 @@
     {
       "name": "querySearchResource",
       "inputs": {
-<<<<<<< HEAD
-        "mlindex_content": "embeddings:\r\n  kind: none\r\n  schema_version: '2'\r\nindex:\r\n  api_version: 2023-07-01-Preview\r\n  connection:\r\n    id: \/subscriptions\/96aede12-2f73-41cb-b983-6d11a904839b\/resourceGroups\/promptflow\/providers\/Microsoft.MachineLearningServices\/workspaces\/chjinche-pf-eus\/connections\/AzureAISearch\r\n  connection_type: workspace_connection\r\n  endpoint: https:\/\/cogsearch-embeddingstore.search.windows.net\r\n  engine: azure-sdk\r\n  field_mapping:\r\n    content: content\r\n    embedding: null\r\n    metadata: null\r\n  index: test-vector-index-acs-built-for-awesome-vector-search\r\n  kind: acs\r\n  semantic_configuration_name: default",
-=======
         "mlindex_content": "embeddings:\r\n  kind: none\r\n  schema_version: '2'\r\nindex:\r\n  api_version: 2023-07-01-preview\r\n  connection:\r\n    id: \/subscriptions\/96aede12-2f73-41cb-b983-6d11a904839b\/resourceGroups\/promptflow\/providers\/Microsoft.MachineLearningServices\/workspaces\/chjinche-pf-eus\/connections\/rawan-wed-test\r\n  connection_type: workspace_connection\r\n  endpoint: https:\/\/rawan-wed-test.search.windows.net\r\n  engine: azure-sdk\r\n  field_mapping:\r\n    content: content\r\n    filename: filepath\r\n    title: title\r\n    url: url\r\n    metadata: meta_json_string\r\n    embedding: contentVector\r\n  index: product-info-index\r\n  kind: acs\r\n  semantic_configuration_name: default\r\n",
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "query_type": "Semantic"
       }
     },

@@ -3,11 +3,7 @@ type: command
 tags:
   Preview: ""
 name: llm_dbcopilot_grounding
-<<<<<<< HEAD
-version: 0.0.53
-=======
 version: 0.0.62
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 inputs:
   asset_uri:
     type: string
@@ -46,8 +42,4 @@ outputs:
     type: uri_folder
 code: ../src
 environment: azureml:llm-dbcopilot-embeddings@latest
-<<<<<<< HEAD
-command: python database_grounding.py --output_chunk_file '${{outputs.output_chunk_file}}' --output_grounding_context_file '${{outputs.output_grounding_context_file}}' $[[--asset_uri '${{inputs.asset_uri}}']] $[[--max_tables '${{inputs.max_tables}}']] $[[--max_columns '${{inputs.max_columns}}']] $[[--max_rows '${{inputs.max_rows}}']] $[[--max_sampling_rows '${{inputs.max_sampling_rows}}']] $[[--max_text_length '${{inputs.max_text_length}}']] $[[--selected_tables '${{inputs.selected_tables}}']] $[[--column_settings '${{inputs.column_settings}}']] $[[--include_views '${{inputs.include_views}}']]
-=======
 command: python database_grounding.py --output_chunk_file '${{outputs.output_chunk_file}}' --output_grounding_context_file '${{outputs.output_grounding_context_file}}' $[[--asset_uri '${{inputs.asset_uri}}']] $[[--max_tables '${{inputs.max_tables}}']] $[[--max_columns '${{inputs.max_columns}}']] $[[--max_rows '${{inputs.max_rows}}']] $[[--max_sampling_rows '${{inputs.max_sampling_rows}}']] $[[--max_text_length '${{inputs.max_text_length}}']] $[[--max_knowledge_pieces '${{inputs.max_knowledge_pieces}}']] $[[--selected_tables '${{inputs.selected_tables}}']] $[[--column_settings '${{inputs.column_settings}}']] $[[--include_views '${{inputs.include_views}}']]
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

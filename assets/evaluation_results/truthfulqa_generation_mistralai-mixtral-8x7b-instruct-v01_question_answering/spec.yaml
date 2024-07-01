@@ -1,10 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_mistralai-mixtral-8x7b-instruct-v01_question_answering
-<<<<<<< HEAD
-version: 2.02.04
-=======
 version: 2.19.040
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: truthfulqa_generation_mistralai-Mixtral-8x7B-Instruct-v01_question_answering
 description: mistralai-Mixtral-8x7B-Instruct-v01 run for truthfulqa_generation dataset
 dataset_family: truthfulqa
@@ -19,10 +15,7 @@ relationships:
     assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/2
 
 tags:
-<<<<<<< HEAD
-=======
   evaluation_type: text_generation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: question-answering
   accuracy_metric_name: nan
 

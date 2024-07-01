@@ -56,11 +56,7 @@ def _submit_data_joiner_job(
     )
 
     pipeline_job = submit_pipeline_job(
-<<<<<<< HEAD
-        pipeline_job, experiment_name
-=======
         pipeline_job, experiment_name, expect_failure
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     # Wait until the job completes
@@ -110,8 +106,4 @@ class TestDataJoinerE2E:
             expect_failure=True
         )
 
-<<<<<<< HEAD
-        assert pipeline_job.status == 'Failed'
-=======
         assert pipeline_job.status == "Failed"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

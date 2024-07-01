@@ -57,10 +57,7 @@ class EndpointDeployment(EndpointDeploymentBase):
         knowledge_pieces: str = None,
         sku: str = "Standard_DS3_v2",
         include_views: bool = False,
-<<<<<<< HEAD
-=======
         instruct_template: str = None,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     ):
         """deploy_endpoint."""
         from utils.asset_utils import get_datastore_uri

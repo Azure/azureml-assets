@@ -3,12 +3,6 @@ spec: spec.yaml
 categories: ["Benchmarking"]
 test:
   pytest:
-<<<<<<< HEAD
-    enabled: true
-    conda_environment: ../../dev_conda_env.yaml
-    tests_dir: ../../tests/batch_benchmark_inference
-=======
     enabled: false
     conda_environment: ../../dev_conda_env.yaml
     tests_dir: ../../tests/batch_resource_manager
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

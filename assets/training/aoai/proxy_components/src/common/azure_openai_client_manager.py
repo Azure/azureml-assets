@@ -3,10 +3,7 @@
 
 """Azure OpenAI client manager."""
 
-<<<<<<< HEAD
-=======
 import requests
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from azure.identity import ManagedIdentityCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import ApiKeys
@@ -23,11 +20,7 @@ class AzureOpenAIClientManager:
 
     ENV_CLIENT_ID_KEY = "DEFAULT_IDENTITY_CLIENT_ID"
     MLFLOW_TRACKING_URI = "MLFLOW_TRACKING_URI"
-<<<<<<< HEAD
-    api_version = "2023-12-01-preview"
-=======
     api_version = "2024-04-01-preview"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     def __init__(self, endpoint_name, endpoint_resource_group: Optional[str], endpoint_subscription: Optional[str]):
         """Initialize the AzureOpenAIClientManager."""
@@ -46,10 +39,7 @@ class AzureOpenAIClientManager:
             self.endpoint_resource_group = workspace_resource_group
             if self.endpoint_resource_group is None:
                 raise Exception("endpoint_resource_group is None")
-<<<<<<< HEAD
-=======
         self.aoai_client = self._get_azure_openai_client()
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     def _get_client_id(self) -> str:
         """Get the client id."""
@@ -59,11 +49,7 @@ class AzureOpenAIClientManager:
         """Get current subscription id."""
         uri = os.environ.get(AzureOpenAIClientManager.MLFLOW_TRACKING_URI, None)
         if uri is None:
-<<<<<<< HEAD
-            return None
-=======
             return None, None
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         uri_segments = uri.split("/")
         subscription_id = uri_segments[uri_segments.index("subscriptions") + 1]
         resource_group = uri_segments[uri_segments.index("resourceGroups") + 1]
@@ -88,11 +74,7 @@ class AzureOpenAIClientManager:
         logger.info("Endpoint: {}".format(account.properties.endpoint))
         return account.properties.endpoint
 
-<<<<<<< HEAD
-    def get_azure_openai_client(self) -> AzureOpenAI:
-=======
     def _get_azure_openai_client(self) -> AzureOpenAI:
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         """Get azure openai client."""
         if self._get_client_id() is None:
             logger.info("Managed identity client id is empty, will fail...")
@@ -104,8 +86,6 @@ class AzureOpenAIClientManager:
             return AzureOpenAI(azure_endpoint=self.get_endpoint_from_cognitive_service_account(client),
                                api_key=self.get_key_from_cognitive_service_account(client),
                                api_version=AzureOpenAIClientManager.api_version)
-<<<<<<< HEAD
-=======
 
     @property
     def data_upload_url(self) -> str:
@@ -126,4 +106,3 @@ class AzureOpenAIClientManager:
             return resp.text
         except requests.exceptions.RequestException as e:
             logger.error(f"Got Exception : {e} while uploading data to AOAI resource")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

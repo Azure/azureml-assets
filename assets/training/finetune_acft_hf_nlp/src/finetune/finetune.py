@@ -52,10 +52,7 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
 
-<<<<<<< HEAD
-=======
 PHI3_MINI_4K_INSTRUCT_MODEL_TYPE = "phi3mini"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
@@ -192,11 +189,8 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
-<<<<<<< HEAD
-=======
     HfModelTypes.PHI_LONGROPE,
     PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -208,11 +202,8 @@ FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
-<<<<<<< HEAD
-=======
     HfModelTypes.PHI_LONGROPE,
     PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
@@ -220,11 +211,8 @@ FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
-<<<<<<< HEAD
-=======
     HfModelTypes.PHI_LONGROPE,
     PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ]
 
 
@@ -970,8 +958,6 @@ def set_flash_attention(args: Namespace):
 
 def set_gradient_checkpointing(args: Namespace):
     """Set Gradient checkpointing related parameters."""
-<<<<<<< HEAD
-=======
     if args.apply_lora and not args.apply_deepspeed:
         # do not set `gradient_checkpointing` for LoRA only training as it fails with the following error:
         # RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following
@@ -989,7 +975,6 @@ def set_gradient_checkpointing(args: Namespace):
         logger.info("Not setting `gradient_checkpointing` to True for LoRA only finetuning.")
         return
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
@@ -1269,16 +1254,6 @@ def finetune(args: Namespace):
 
     # setup vllm for finetuned model inference
     metadata = setup_vllm(args.task_name, args.finetune_config, metadata)
-
-    if args.task_name not in [Tasks.TEXT_GENERATION]:
-        removed_base_image = metadata.pop("azureml.base_image", None)
-        logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
-                    base image value is {removed_base_image}.")
-    else:
-        logger.info(
-            "Adding inferencing base image {} for text generation \
-            task.".format(metadata.get("azureml.base_image", "Base image for inference does not exist"))
-        )
 
     args.model_metadata = update_acft_metadata(metadata=metadata,
                                                finetuning_task=args.task_name,

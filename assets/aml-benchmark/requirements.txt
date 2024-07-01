@@ -9,11 +9,6 @@ mltable>=1.5.0
 datasets
 tqdm
 azure-core
-<<<<<<< HEAD
-pytest
-pytest-xdist
-ddt
-=======
 tiktoken
 mteb
 openai
@@ -22,4 +17,3 @@ pytest-xdist
 ddt
 flake8
 pydocstyle
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

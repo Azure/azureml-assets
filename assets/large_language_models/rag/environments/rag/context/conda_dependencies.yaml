@@ -7,20 +7,11 @@ dependencies:
 - pip=24.0
 - scikit-learn
 - pip:
-<<<<<<< HEAD
-  - azureml-rag[cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.27
-  - azure-search-documents==11.4.0b8
-  - langchain==0.0.348
-  - tiktoken==0.5.2
-  - azure-ai-ml==1.13.0
-  - azure-identity==1.12.0
-=======
     # RAG package
   - azureml-rag[azure,cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.34
     # Azure
   - azure-ai-formrecognizer==3.3.1
   - azure-identity=={{latest-pypi-version}}
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   - azure-keyvault-secrets==4.6.0
   - azure-search-documents>=11.4.0
   - azure-mgmt-cognitiveservices~=13.4.0
@@ -37,12 +28,8 @@ dependencies:
   - cryptography>=41.0.7
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
-<<<<<<< HEAD
-  - inference-schema==1.4
-=======
   - inference-schema>=1.8.0
   - langchain<0.2
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   - lxml
   - markdown
   - mlflow-skinny==2.3.2

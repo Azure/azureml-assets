@@ -17,11 +17,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_mdc_preprocessor_job(
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
-<<<<<<< HEAD
-    extract_correlation_id, input_data, start_time, end_time
-=======
     extract_correlation_id, input_data, start_time, end_time, expect_failure: bool = False
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     mdc_preprocessor_component = get_component(COMPONENT_NAME_MDC_PREPROCESSOR)
 
@@ -50,11 +46,7 @@ def _submit_mdc_preprocessor_job(
     )
 
     pipeline_job = submit_pipeline_job(
-<<<<<<< HEAD
-        pipeline_job, experiment_name
-=======
         pipeline_job, experiment_name, expect_failure
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     # Wait until the job completes

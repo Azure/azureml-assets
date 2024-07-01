@@ -4,11 +4,7 @@ type: command
 name:  dataset_preprocessor 
 display_name: Dataset Preprocessor
 description: Dataset Preprocessor
-<<<<<<< HEAD
-version: 0.0.3
-=======
 version: 0.0.6
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 is_deterministic: true
 
 inputs:
@@ -54,11 +50,7 @@ outputs:
 
 code: ../src
 
-<<<<<<< HEAD
-environment: azureml://registries/azureml/environments/model-evaluation/versions/20
-=======
 environment: azureml://registries/azureml/environments/model-evaluation/versions/25
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 command: >-
   python -m aml_benchmark.dataset_preprocessor.main

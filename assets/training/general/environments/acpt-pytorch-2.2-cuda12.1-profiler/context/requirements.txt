@@ -14,9 +14,5 @@ MarkupSafe==2.1.2
 regex
 pybind11
 urllib3>=1.26.18
-<<<<<<< HEAD:assets/training/general/environments/acpt-pytorch-2.0-cuda11.7/context/requirements.txt
-cryptography>=42.0.5
-=======
 cryptography>=42.0.4
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa:assets/training/general/environments/acpt-pytorch-2.2-cuda12.1-profiler/context/requirements.txt
 aiohttp>=3.8.5

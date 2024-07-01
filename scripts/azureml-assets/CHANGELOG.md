@@ -3,10 +3,6 @@
 
 ### 🐛 Bugs Fixed
 
-<<<<<<< HEAD
-## 1.16.42 (2024-04-03)
-### 🐛 Bugs Fixed
-=======
 ## 1.16.53 (2024-06-28)
 ### 🐛 Bugs Fixed
 - [#3102](https://github.com/Azure/azureml-assets/pull/3102) Don't auth to Azure during import of validate_assets
@@ -53,7 +49,6 @@
 
 ## 1.16.42 (2024-04-03)
 ### 🐛 Bugs Fixed
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 - [#2591](https://github.com/Azure/azureml-assets/pull/2637) Exclude yanked version for `latest-pypi-version`
 
 ## 1.16.41 (2024-03-27)

@@ -5,12 +5,6 @@
 
 import json
 from pyspark.sql import DataFrame, Row
-<<<<<<< HEAD
-from datetime import datetime
-from pyspark.sql.functions import collect_list, struct
-from shared_utilities.span_tree_utils import SpanTree, SpanTreeNode
-from model_data_collector_preprocessor.mdc_utils import _filter_df_by_time_window
-=======
 from pyspark.sql.types import StructType
 from datetime import datetime
 from pyspark.sql.functions import collect_list, struct
@@ -19,15 +13,12 @@ from model_data_collector_preprocessor.mdc_utils import (
     _filter_df_by_time_window,
     _count_dropped_rows_with_error,
 )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from model_data_collector_preprocessor.genai_preprocessor_df_schemas import (
     _get_aggregated_trace_log_spark_df_schema,
 )
 from shared_utilities.io_utils import init_spark
 
 
-<<<<<<< HEAD
-=======
 logging_prefix_str = "[TRACE_AGGREGATOR_LOGS] [INFO]"
 
 
@@ -61,23 +52,12 @@ def _validate_traces_df(aggregated_traces_df: DataFrame) -> DataFrame:
     return transformed_df
 
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
     """Aggregate grouped span logs into trace logs."""
     output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     span_list = [SpanTreeNode(row) for row in grouped_row.span_rows]
     tree = SpanTree(span_list)
-<<<<<<< HEAD
-    if tree.root_span is None:
-        return []
-    else:
-        output_dict = tree.root_span.to_dict(datetime_to_str=False)
-        output_dict['input'] = tree.root_span.input
-        output_dict['output'] = tree.root_span.output
-        output_dict['root_span'] = tree.to_json_str()
-        return [tuple(output_dict.get(fieldName, None) for fieldName in output_schema.fieldNames())]
-=======
 
     if tree.root_span is None:
         print(f"{logging_prefix_str} Didn't find a singular root_span."
@@ -96,7 +76,6 @@ def _aggregate_span_logs_to_trace_logs(grouped_row: Row):
     else:
         print(f"{logging_prefix_str} Found a singular root_span. Creating entry for it.")
         return [_create_trace_log_output_entry(tree.root_span, output_schema)]
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 def _replace_trace_with_request_id(row: Row):
@@ -115,21 +94,6 @@ def aggregate_spans_into_traces(
         enlarged_span_logs: DataFrame, require_trace_data: bool,
         data_window_start: datetime, data_window_end: datetime) -> DataFrame:
     """Group span logs into aggregated trace logs."""
-<<<<<<< HEAD
-    output_trace_schema = _get_aggregated_trace_log_spark_df_schema()
-
-    # TODO: figure out optional output behavior and change to that.
-    if not require_trace_data:
-        spark = init_spark()
-        print("Skip processing of spans into aggregated traces.")
-        return spark.createDataFrame(data=[], schema=output_trace_schema)
-
-    print("Processing spans into aggregated traces...")
-
-    # for PromptFlow we need to replace the trace_id values with request_id in order to handle edge cases
-    # where PF has same trace_id but multiple LLM requests
-    enlarged_span_logs = enlarged_span_logs.rdd.map(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
-=======
     output_schema = _get_aggregated_trace_log_spark_df_schema()
 
     if not require_trace_data:
@@ -144,7 +108,6 @@ def aggregate_spans_into_traces(
     # TODO: Prompt flow team doesn't guarantee that all spans will have request_id due to a backlog of work.
     # Uncomment the code below when we get a guarantee from them
     # enlarged_span_logs = enlarged_span_logs.rdd.map(_replace_trace_with_request_id).toDF(enlarged_span_logs.schema)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     grouped_spans_df = enlarged_span_logs.groupBy('trace_id').agg(
         collect_list(
@@ -155,21 +118,11 @@ def aggregate_spans_into_traces(
     all_aggregated_traces = grouped_spans_df \
         .rdd \
         .flatMap(_aggregate_span_logs_to_trace_logs) \
-<<<<<<< HEAD
-        .toDF(output_trace_schema)
-=======
         .toDF(output_schema)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     all_aggregated_traces = _filter_df_by_time_window(
         all_aggregated_traces, data_window_start, data_window_end)
 
-<<<<<<< HEAD
-    print("Aggregated Trace DF:")
-    all_aggregated_traces.show()
-    all_aggregated_traces.printSchema()
-    return all_aggregated_traces
-=======
     validated_aggregated_traces_df = _validate_traces_df(all_aggregated_traces)
 
     print(f"{logging_prefix_str} Aggregated Trace DF:")
@@ -177,4 +130,3 @@ def aggregate_spans_into_traces(
     validated_aggregated_traces_df.printSchema()
 
     return validated_aggregated_traces_df
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

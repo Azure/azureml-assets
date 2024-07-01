@@ -156,10 +156,7 @@
     ],
     "ignorePaths":[
       "**.py",
-<<<<<<< HEAD
-=======
       "**.pyc",
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
       "**.jinja2",
       "**.txt",
       "**.json",

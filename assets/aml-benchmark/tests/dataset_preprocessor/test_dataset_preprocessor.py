@@ -134,11 +134,7 @@ class TestDatasetPreprocessorComponent:
         self._verify_and_get_output_records(
             pipeline_job, dataset_name, dataset,
             Constants.PREPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE,
-<<<<<<< HEAD
-            output_dir=os.path.join(os.path.dirname(__file__), 'data')
-=======
             output_dir=os.path.join(os.path.dirname(__file__), '../data')
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         )
         assert_logged_params(
             pipeline_job.name,
@@ -249,11 +245,7 @@ class TestDatasetPreprocessorScript:
         script_path: str,
         encoder_config: str,
         output_dataset: str = os.path.join(
-<<<<<<< HEAD
-            os.path.dirname(__file__), 'data/processed_output.jsonl'
-=======
             os.path.dirname(__file__), '../data/processed_output.jsonl'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         ),
     ) -> None:
         """Dataset Preprocessor script test."""
@@ -355,12 +347,6 @@ class TestDatasetPreprocessorScript:
         invalid_dataset_error_mssg = (
             "the following arguments are required: --dataset"
         )
-<<<<<<< HEAD
-        invalid_jsonl_dataset_mssg = (
-            "No .jsonl files found in the given input dataset."
-        )
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         invalid_preprocessor_logic_exception_mssg = (
            "Please provide the input to apply preprocessing logic either via template input or script_path."
         )
@@ -376,19 +362,6 @@ class TestDatasetPreprocessorScript:
             out_message = str(e)
             assert invalid_dataset_error_mssg in out_message
 
-<<<<<<< HEAD
-        dummy_dataset_path = os.path.join(os.getcwd(), "input_dataset_path")
-        os.system(f"mkdir {dummy_dataset_path}")
-        try:
-            argss = " ".join(["--dataset", dummy_dataset_path])
-            cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
-            run_command(f"{cmd}")
-        except RuntimeError as e:
-            exception_message = str(e)
-            assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
-
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         try:
             argss = " ".join(["--dataset", dataset])
             cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
@@ -424,11 +397,7 @@ class TestDatasetPreprocessorScript:
         script_path: str,
         encoder_config: str,
         output_dataset: str = os.path.join(
-<<<<<<< HEAD
-            os.path.dirname(__file__), 'data/processed_output.jsonl'
-=======
             os.path.dirname(__file__), '../data/processed_output.jsonl'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         ),
     ) -> None:
         """TruthfulQA-HF Dataset Custom Preprocessor script test."""
@@ -448,10 +417,7 @@ class TestDatasetPreprocessorScript:
             os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
             "process_one_example.jsonl"
         )
-<<<<<<< HEAD
-=======
         encoder_config = json.dumps({str(i): chr(i+ord('A')-1) for i in range(1, 27)})
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         argss = ["--dataset", dataset, "--output_dataset", output_dataset,]
         if dataset is not None:
             argss.extend(["--dataset", dataset])
@@ -460,11 +426,7 @@ class TestDatasetPreprocessorScript:
         elif script_path is not None:
             argss.extend(["--script_path", script_path])
         if encoder_config is not None:
-<<<<<<< HEAD
-            argss.extend(["--encoder_config", str(encoder_config)])
-=======
             argss.extend(["--encoder_config", f"'{encoder_config}'"])
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         argss = " ".join(argss)
         cmd = f"cd {src_dir} && python -m aml_benchmark.dataset_preprocessor.main {argss}"
         run_command(f"{cmd}")

@@ -70,10 +70,7 @@ class EvaluatorFactory:
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
             TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
             TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator,
-<<<<<<< HEAD
-=======
             TASK.IMAGE_GENERATION: ImageGenerationEvaluator,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         }
 
     def get_evaluator(self, task_type, config=None):

@@ -12,18 +12,12 @@ import argparse
 import json
 import openai
 import glob
-<<<<<<< HEAD
-from typing import Union
-
-from constants import TASK, ForecastingConfigContract, ArgumentLiterals
-=======
 import tempfile
 from typing import Union
 
 from constants import (
     TASK, ForecastingConfigContract, ArgumentLiterals, SupportedFileExtensions, OpenAIConstants
 )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from workspace_utils import (get_connection_by_id_v2,
                              workspace_connection_to_credential,
                              get_target_from_connection,
@@ -129,32 +123,18 @@ def get_task_from_model(model_uri):
     return task_type
 
 
-<<<<<<< HEAD
-def filter_pipeline_params(evaluation_config, model_flavor=""):
-=======
 def filter_pipeline_params(evaluation_config, model_flavor="", predictor: BasePredictor = None):
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     """Filter Pipeline params in evaluation_config.
 
     Args:
         evaluation_config (_type_): _description_
         model_flavor (_type_): _description_
-<<<<<<< HEAD
-=======
         predictor (_type_): _description_
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     Returns:
         _type_: _description_
     """
     if model_flavor == constants.MODEL_FLAVOR.TRANSFORMERS:
-<<<<<<< HEAD
-        filtered_params = {i: j for i, j in evaluation_config.items() if
-                           i in constants.ALLOWED_PIPELINE_MLFLOW_TRANSFORMER_PARAMS}
-        filtered_params = {"params": filtered_params}  # Transformers curently accepts dict and not **kwargs
-    else:
-        filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_HF_PARAMS}
-=======
         params_schema = Model.load(predictor.model_uri).get_params_schema() or []
         model_params = set(param.name for param in params_schema)
         allowed_params = {*constants.ALLOWED_PIPELINE_HF_PARAMS, *model_params}
@@ -188,7 +168,6 @@ def filter_pipeline_params(evaluation_config, model_flavor="", predictor: BasePr
         filtered_params = {
             key: value for key, value in evaluation_config.items() if key in constants.ALLOWED_PIPELINE_HF_PARAMS
         }
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     return filtered_params
 
 
@@ -929,12 +908,8 @@ def _clean_and_validate_dataset(data, keep_columns, batch_size=None):
 
 
 def prepare_data(data, task, all_cols, label_column_name=None,
-<<<<<<< HEAD
-                 _has_multiple_output=False, extra_y_test_cols=None, batch_size=None):
-=======
                  _has_multiple_output=False, extra_y_test_cols=None, batch_size=None,
                  file_ext=None):
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     """Prepare data.
 
     Args:
@@ -945,10 +920,7 @@ def prepare_data(data, task, all_cols, label_column_name=None,
         _has_multiple_output (bool, optional): _description_. Defaults to False.
         extra_y_test_cols (_type_, optional): _description_. Defaults to None.
         batch_size
-<<<<<<< HEAD
-=======
         file_ext
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     Raises:
         ModelEvaluationException: _description_
@@ -1163,14 +1135,9 @@ def get_sample_data_and_column_names(args):
             label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
 
         extra_y_test_cols = None
-<<<<<<< HEAD
-        if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
-            input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
-=======
 
         sample_data, _ = read_model_prediction_data(data_path, task, input_column_names, label_column_name)
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     else:
         sample_data, _ = read_model_prediction_data(data_path, task, [], "", nrows=1)
 
@@ -1214,15 +1181,6 @@ def openai_init(llm_config, **openai_params):
     if connection_id is not None:
         connection = get_connection_by_id_v2(connection_id)
         credential = workspace_connection_to_credential(connection)
-<<<<<<< HEAD
-        if hasattr(credential, 'key'):
-            llm_config["key"] = credential.key
-            target = get_target_from_connection(connection)
-            llm_config["base"] = target
-            metadata = get_metadata_from_connection(connection)
-            openai_api_type = metadata.get('apiType', "azure")
-            openai_api_version = metadata.get('apiVersion', "2023-03-15-preview")
-=======
         if hasattr(credential, OpenAIConstants.KEY):
             llm_config[OpenAIConstants.KEY] = credential.key
             target = get_target_from_connection(connection)
@@ -1234,7 +1192,6 @@ def openai_init(llm_config, **openai_params):
             openai_api_version = metadata.get(
                 OpenAIConstants.METADATA_API_VERSION, OpenAIConstants.DEFAULT_OPENAI_INIT_PARAMS_OPENAI_API_VERSION
             )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             logger.info("Using workspace connection key for OpenAI")
             fetch_from_connection = True
     if not fetch_from_connection:
@@ -1265,13 +1222,8 @@ def openai_init(llm_config, **openai_params):
 
     openai.api_version = openai_api_version
     openai.api_type = openai_api_type
-<<<<<<< HEAD
-    openai.api_base = llm_config.get("base", None)
-    openai.api_key = llm_config.get("key", None)
-=======
     openai.api_base = llm_config.get(OpenAIConstants.BASE, None)
     openai.api_key = llm_config.get(OpenAIConstants.KEY, None)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     if not all([
         llm_config.get(OpenAIConstants.BASE, None),

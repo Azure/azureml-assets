@@ -74,10 +74,7 @@ def mock_run(monkeypatch):
     async def _run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":
         passed_requests.extend(requests)
         return [ScoringResult(status=ScoringResultStatus.SUCCESS,
-<<<<<<< HEAD
-=======
                               model_response_code=200,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                               response_body={"usage": {}},
                               omit=False,
                               start=0,

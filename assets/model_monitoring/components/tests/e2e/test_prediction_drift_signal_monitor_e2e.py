@@ -17,12 +17,8 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_prediction_drift_model_monitor_job(
-<<<<<<< HEAD
-    submit_pipeline_job, ml_client, get_component, experiment_name, baseline_data, target_data
-=======
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data,
     expect_failure: bool = False
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     prediction_drift_signal_monitor = get_component(
         COMPONENT_NAME_PREDICTION_DRIFT_SIGNAL_MONITOR
@@ -48,11 +44,7 @@ def _submit_prediction_drift_model_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = submit_pipeline_job(
-<<<<<<< HEAD
-        pipeline_job, experiment_name
-=======
         pipeline_job, experiment_name, expect_failure
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     # Wait until the job completes
@@ -113,10 +105,7 @@ class TestPredictionDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
-<<<<<<< HEAD
-=======
             expect_failure=True
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         )
 
         # No common columns should fail the job in the feature selector step.
@@ -134,10 +123,7 @@ class TestPredictionDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_EMPTY,
             DATA_ASSET_EMPTY,
-<<<<<<< HEAD
-=======
             expect_failure=True,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         )
 
         # empty production and target data should fail the job

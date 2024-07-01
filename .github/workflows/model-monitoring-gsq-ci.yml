@@ -57,8 +57,6 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
-<<<<<<< HEAD
-=======
       - name: Refresh login (background process)
         run: |
           while true; do
@@ -78,7 +76,6 @@ jobs:
             sleep $sleep_timer
           done &
 
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
       - name: Install dependencies
         run: pip install -r ${{ env.testsRootPath }}/gsq-requirements.txt
 

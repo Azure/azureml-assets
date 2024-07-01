@@ -22,16 +22,8 @@ from shared_utilities.constants import (
     SIGNAL_METRICS_METRIC_VALUE,
     SIGNAL_METRICS_THRESHOLD_VALUE,
     SIGNAL_METRICS_GROUP,
-<<<<<<< HEAD
-    ACCURACY_METRIC_NAME,
-    PERCISION_METRIC_NAME,
-    RECALL_METRIC_NAME,
-)
-import pyspark
-=======
 )
 from pyspark.sql import DataFrame
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import pyspark.sql.functions as F
 
 
@@ -46,17 +38,11 @@ Metric_Value_Should_Greater_Than_Threshold = [TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST
                                               AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME,
                                               AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME,
                                               AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME,
-<<<<<<< HEAD
-                                              ACCURACY_METRIC_NAME,
-                                              PERCISION_METRIC_NAME,
-                                              RECALL_METRIC_NAME
-=======
                                               AVERAGE_COHERENCE_SCORE_METRIC_NAME,
                                               AVERAGE_GROUNDEDNESS_SCORE_METRIC_NAME,
                                               AVERAGE_FLUENCY_SCORE_METRIC_NAME,
                                               AVERAGE_RELEVANCE_SCORE_METRIC_NAME,
                                               AVERAGE_SIMILARITY_SCORE_METRIC_NAME,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                                               ]
 
 

@@ -4,11 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-<<<<<<< HEAD
-version: 0.4.18
-=======
 version: 0.4.26
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 is_deterministic: false
 inputs:
   production_dataset:
@@ -132,11 +128,7 @@ conf:
           - azureml-fsspec~=1.2.0
           - fsspec~=2023.4.0
           - pyopenssl<23.0.0
-<<<<<<< HEAD
-    name: momo-base-spark
-=======
     name: momo-gsq-spark
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 code: ../../src
 entry:
   file: ./generation_safety_quality/annotation_compute_histogram/run.py

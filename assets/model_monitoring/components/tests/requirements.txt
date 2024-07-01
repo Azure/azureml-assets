@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-azure-ai-ml==1.12.1
-=======
 azure-ai-ml==1.13.0
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 azure-cli-core~=2.45.0
 azure-identity~=1.12.0
 azureml-fsspec~=1.0.0
