@@ -12,10 +12,6 @@ tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
   disable-batch: "true"
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   inference_compute_allow_list:
     [
       Standard_NC12s_v3,
@@ -33,8 +29,4 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: mistralai
-<<<<<<< HEAD
 version: 8
-=======
-version: 10
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

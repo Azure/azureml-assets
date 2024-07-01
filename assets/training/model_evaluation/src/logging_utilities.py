@@ -4,10 +4,6 @@
 """Logging Utitilies."""
 from azureml.telemetry.logging_handler import get_appinsights_log_handler
 from azureml.telemetry import INSTRUMENTATION_KEY
-from azureml.automl.core.shared import log_server
-from azureml.automl.core.shared.logging_utilities import (
-    _CustomStackSummary, mark_package_exceptions_as_loggable, mark_path_as_loggable
-)
 from azureml.exceptions import AzureMLException
 from azureml.metrics.common.exceptions import MetricsException
 from azureml.evaluate.mlflow.exceptions import AzureMLMLFlowUserException
@@ -18,35 +14,17 @@ from constants import TelemetryConstants
 from error_definitions import ModelEvaluationInternalError, ModelPredictionUserError, ComputeMetricsUserError
 from run_utils import TestRun
 
-from typing import List, Tuple, Union, Optional
+from typing import Tuple, Union
 from functools import wraps
 import platform
 import constants
 import uuid
 import json
 import azureml.core
+import traceback
 import sys
-from pathlib import Path
 import time
 import logging
-
-
-def add_package_exceptions_as_loggable(packages: List):
-    """Add package as loggable for Telemetry."""
-    for package in packages:
-        try:
-            sys_module = sys.modules[package]
-            # Mark package as being allowed to log certain built-in types
-            mark_package_exceptions_as_loggable(sys_module)
-            log_server.install_sockethandler(package)
-        except Exception:
-            pass
-
-
-add_package_exceptions_as_loggable(TelemetryConstants.ALLOWED_EXTRA_PACKAGES)
-
-# Mark current path as allowed
-mark_path_as_loggable(str(Path(__file__).parent.absolute()))
 
 
 class CustomDimensions:
@@ -291,122 +269,52 @@ def _get_error_details(
     return error_code, error_type, exception_target
 
 
-def get_pii_free_msg(exception: AzureMLException, scrubbed: bool = True) -> str:
-    """
-    Fallback message to use for situations where printing PII-containing information is inappropriate.
-
-    :param scrubbed: If true, return a generic '[Hidden as it may contain PII]' as a fallback, else an empty string
-    :return: Log safe message for logging in telemetry
-    """
-    if exception._azureml_error is not None:
-        return exception._azureml_error.log_safe_message_format()  # type: str
-
-    fallback_message = (getattr(exception, '_message_format', None) or getattr(exception, '_generic_msg', None)
-                        or TelemetryConstants.NON_PII_MESSAGE if scrubbed else '')  # type: str
-    has_pii = getattr(exception, '_generic_msg', None)
-    message = exception._exception_message or fallback_message if not has_pii else fallback_message  # type: str
-    return message
-
-
-def _exception_msg_format(
-        exception, error_name: str, message: str, error_response: Optional[str], log_safe: bool = True) -> str:
-    inner_exception_message = None
-    if exception._inner_exception:
-        if log_safe:
-            # Only print the inner exception type for a log safe message
-            inner_exception_message = exception._inner_exception.__class__.__name__
-        else:
-            inner_exception_message = "{}: {}".format(
-                exception._inner_exception.__class__.__name__,
-                str(exception._inner_exception)
-            )
-    return "{}:\n\tMessage: {}\n\tInnerException: {}\n\tErrorResponse \n{}".format(
-        error_name,
-        message,
-        inner_exception_message,
-        error_response)
-
-
-def get_pii_free_exception_msg_format(exception: AzureMLException) -> str:
-    """Get PII free exception message format.
-
-    :return: PII free exception message format
-    """
-    # Update exception message to be PII free
-    # Update inner exception to log exception type only
-    # Update Error Response to contain PII free message
-    pii_free_msg = get_pii_free_msg(exception)
-    error_dict = json.loads(exception._serialize_json(
-        indent=4, filter_fields=[AzureMLError.Keys.MESSAGE_FORMAT, AzureMLError.Keys.MESSAGE_PARAMETERS]
-    ))
-    error_dict['error']['message'] = pii_free_msg
-    return _exception_msg_format(
-        exception,
-        exception.__class__.__name__,
-        pii_free_msg,
-        json.dumps(error_dict, indent=4)
-    )
-
-
-def _get_pii_free_message(exception: BaseException) -> str:
-    if isinstance(exception, AzureMLException):
-        return get_pii_free_exception_msg_format(exception)
-    else:
-        return TelemetryConstants.NON_PII_MESSAGE
-
-
-def _log_traceback(
-        exception: (AzureMLException, BaseException),
-        logger,
-        override_error_msg: Optional[str] = None,
-):
+def _log_traceback(exception: (AzureMLException, BaseException), logger, message=None):
     """Log exceptions without PII in APP Insights and full tracebacks in logger.
 
     Args:
         exception (_type_): _description_
         logger (_type_): _description_
-        override_error_msg (_type_): _description_
+        message (_type_): _description_
     """
-    error_msg = "No message available."
+    exception_message = "No message available."
     if hasattr(exception, "message"):
-        error_msg = exception.message
+        exception_message = exception.message
     elif hasattr(exception, "exception_message"):
-        error_msg = exception.exception_message
-    error_msg = error_msg if override_error_msg is None else "\n".join([override_error_msg, error_msg])
-
-    error_code, error_type, exception_target = _get_error_details(exception, logger)
-
-    # Some exceptions may not have a __traceback__ attr
-    traceback_obj = exception.__traceback__ if hasattr(exception, "__traceback__") else None or sys.exc_info()[2]
-
-    traceback_msg = _CustomStackSummary.get_traceback_message(traceback_obj, remove_pii=False)
-
+        exception_message = exception.exception_message
+    message = exception_message if message is None else "\n".join([message, exception_message])
     exception_class_name = exception.__class__.__name__
 
+    error_code, error_type, exception_target = _get_error_details(exception, logger)
+    # traceback_message = message
+    traceback_obj = exception.__traceback__ if hasattr(exception, "__traceback__") else None
+    if traceback_obj is None:
+        inner_exception = getattr(exception, "inner_exception", None)
+        if inner_exception and hasattr(inner_exception, "__traceback__"):
+            traceback_obj = inner_exception.__traceback__
+        else:
+            traceback_obj = sys.exc_info()[2]
+    traceback_not_available_msg = "Not available (exception was not raised but was returned directly)"
+    if traceback_obj is not None:
+        traceback_message = "\n".join(traceback.format_tb(traceback_obj))
+    else:
+        traceback_message = traceback_not_available_msg
     logger_message = "\n".join([
         "Type: {}".format(error_type),
         "Code: {}".format(error_code),
         "Class: {}".format(exception_class_name),
-        "Message: {}".format(error_msg),
-        "Traceback: {}".format(traceback_msg),
+        "Message: {}".format(message),
+        "Traceback: {}".format(traceback_message),
         "ExceptionTarget: {}".format(exception_target)
     ])
-
-    # Marking extra properties to be PII free since azureml-telemetry logging_handler is
-    # not updating the extra properties after formatting.
-    # Get PII free exception_message
-    error_msg_without_pii = _get_pii_free_message(exception)
-    # Get PII free exception_traceback
-    traceback_msg_without_pii = _CustomStackSummary.get_traceback_message(traceback_obj)
-    # Get PII free exception_traceback
 
     extra = {
         "properties": {
             "error_code": error_code,
             "error_type": error_type,
             "exception_class": exception_class_name,
-            "exception_message": error_msg_without_pii,
-            "exception_traceback": traceback_msg_without_pii,
+            "message": message,
+            "exception_traceback": traceback_message,
             "exception_target": exception_target,
         },
         "exception_tb_obj": traceback_obj,

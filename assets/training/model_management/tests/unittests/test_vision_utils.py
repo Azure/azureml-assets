@@ -4,35 +4,18 @@
 """Test vision utility code."""
 
 import base64
-import os
 import pytest
 import requests
-import tempfile
 
 import pandas as pd
 
 from unittest.mock import patch
-from PIL import Image, ImageChops
 
-from azureml.model.mgmt.processors.common.vision_utils import (
-    process_image, process_image_pandas_series, save_image, _is_valid_url
-)
+from azureml.model.mgmt.processors.common.vision_utils import process_image, process_image_pandas_series, _is_valid_url
 
 
 class TestVisionUtilities:
     """Test vision utility functions."""
-
-    def test_save_image(self):
-        """Test that save_image() behaves correctly for png files."""
-        image = Image.new("RGB", (640, 480))
-        image.putpixel((320, 240), (0, 0, 255))
-        image.putpixel((320, 241), (255, 255, 0))
-
-        with tempfile.TemporaryDirectory() as temporary_directory_name:
-            image_file_name = save_image(temporary_directory_name, image, "png")
-
-            image2 = Image.open(os.path.join(temporary_directory_name, image_file_name))
-            assert not ImageChops.difference(image, image2).getbbox()
 
     def test_process_image_bytes(self):
         """Test process_image() with a bytes object."""

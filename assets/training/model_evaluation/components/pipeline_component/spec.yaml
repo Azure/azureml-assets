@@ -1,10 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_evaluation_pipeline
-<<<<<<< HEAD
 version: 0.0.23
-=======
-version: 0.0.29
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \
@@ -91,11 +87,7 @@ outputs:
 jobs:
   validation_trigger_model_evaluation:
     type: command
-<<<<<<< HEAD
     component: azureml:validation_trigger_model_evaluation:0.0.23
-=======
-    component: azureml:validation_trigger_model_evaluation:0.0.28
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -119,11 +111,7 @@ jobs:
 
   model_prediction:
     type: command
-<<<<<<< HEAD
     component: azureml:model_prediction:0.0.23
-=======
-    component: azureml:model_prediction:0.0.28
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -140,11 +128,7 @@ jobs:
   
   compute_metrics:
     type: command
-<<<<<<< HEAD
     component: azureml:compute_metrics:0.0.23
-=======
-    component: azureml:compute_metrics:0.0.28
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

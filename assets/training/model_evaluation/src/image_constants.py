@@ -6,15 +6,12 @@
 class SettingLiterals:
     """Setting literals for classification dataset."""
 
-    IMAGE_URL = "image_url"
-    LABEL = "label"
+    LABEL_COLUMN_NAME = "label_column_name"
     MASKS_REQUIRED = "masks_required"
     USE_BG_LABEL = "use_bg_label"
     IGNORE_DATA_ERRORS = "ignore_data_errors"
     BOX_SCORE_THRESHOLD = "box_score_threshold"
     IOU_THRESHOLD = "iou_threshold"
-    MLTABLE_FILE_NAME = "MLTable"
-    MLTABLE_STREAM_STR = "- convert_column_types:\n  - column_type: stream_info\n    columns: image_url\n"
 
 
 class ImageDataConstants:
@@ -32,10 +29,6 @@ class ImageDataFrameParams:
     IMAGE_META_INFO = "image_meta_info"
     PREDICTIONS = "predictions"
     TEXT_PROMPT = "text_prompt"
-<<<<<<< HEAD
-=======
-    GENERATION_PROMPT = "prompt"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 class ODISLiterals:
@@ -59,9 +52,3 @@ class ODISLiterals:
     HEIGHT = "height"
     WIDTH = "width"
     LABEL_INDEX = "label_index"
-
-
-class GenerationLiterals:
-    """Image generation literals."""
-
-    CAPTION_SEPARATOR = "||"

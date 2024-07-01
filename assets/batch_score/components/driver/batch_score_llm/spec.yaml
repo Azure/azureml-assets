@@ -2,11 +2,7 @@ $schema: http://azureml/sdk-2-0/ParallelComponent.json
 type: parallel
 
 name: batch_score_llm
-<<<<<<< HEAD
 version: 1.1.4
-=======
-version: 1.1.8
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: Batch Score Large Language Models
 is_deterministic: False
 
@@ -65,9 +61,5 @@ task:
     --configuration_file ${{inputs.configuration_file}}
     --partitioned_scoring_results ${{outputs.mini_batch_results_output_directory}}
     $[[--resume_from ${{inputs.resume_from}}]]
-<<<<<<< HEAD
   environment: azureml://registries/azureml/environments/model-evaluation/versions/15
-=======
-  environment: azureml://registries/azureml/environments/model-evaluation/versions/25
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   append_row_to: ${{outputs.job_output_path}}

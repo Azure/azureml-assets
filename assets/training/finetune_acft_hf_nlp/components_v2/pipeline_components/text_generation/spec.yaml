@@ -1,10 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-<<<<<<< HEAD
 version: 0.0.11
-=======
-version: 0.0.18
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
@@ -115,12 +111,6 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
-  # Model parameters
-  model_asset_id:
-    type: string
-    optional: false
-    description: Asset id of model
-
   # Model registration
   registered_model_name:
     type: string
@@ -136,11 +126,7 @@ outputs:
 jobs:
   oss_text_generation_data_import:
     type: command
-<<<<<<< HEAD
     component: azureml:oss_text_generation_data_import:0.0.11
-=======
-    component: azureml:oss_text_generation_data_import:0.0.18
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -158,11 +144,7 @@ jobs:
       user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
   oss_text_generation_finetune:
     type: command
-<<<<<<< HEAD
     component: azureml:oss_text_generation_finetune:0.0.11
-=======
-    component: azureml:oss_text_generation_finetune:0.0.18
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -174,9 +156,7 @@ jobs:
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"
     inputs:
-      task_name: "TextGeneration"
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
-      model_asset_id: '${{parent.inputs.model_asset_id}}'
       dataset_input: '${{parent.jobs.oss_text_generation_data_import.outputs.output_dataset}}'
       text_key: '${{parent.inputs.text_key}}'
       ground_truth_key: '${{parent.inputs.ground_truth_key}}'

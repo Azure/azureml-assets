@@ -58,10 +58,6 @@ class ScoringResult:
             status: ScoringResultStatus,
             start: float,
             end: float,
-<<<<<<< HEAD
-=======
-            model_response_code: int,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             request_obj: any,
             request_metadata: any,
             response_body: any,
@@ -74,10 +70,6 @@ class ScoringResult:
         self.status = status
         self.start = start
         self.end = end
-<<<<<<< HEAD
-=======
-        self.model_response_code = model_response_code
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         self.request_obj = request_obj  # Normalize to json
         self.request_metadata = request_metadata
         self.response_body = response_body
@@ -129,10 +121,6 @@ class ScoringResult:
             status=ScoringResultStatus.FAILURE,
             start=0,
             end=0,
-<<<<<<< HEAD
-=======
-            model_response_code=None,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             request_obj=scoring_request.original_payload_obj if scoring_request else None,
             request_metadata=scoring_request.request_metadata if scoring_request else None,
             response_body=None,
@@ -152,10 +140,6 @@ class ScoringResult:
             self.status,
             self.start,
             self.end,
-<<<<<<< HEAD
-=======
-            self.model_response_code,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             self.request_obj,
             self.request_metadata,
             deepcopy(self.response_body),

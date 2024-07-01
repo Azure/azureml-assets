@@ -1,6 +1,0 @@
-name: restaurant_customer
-version: 3
-type: data
-spec: spec.yaml
-categories:
-  - pipeline

@@ -3,10 +3,6 @@ azure-identity
 markdown
 bs4
 azureml-core
-<<<<<<< HEAD
 promptflow
-=======
-promptflow[azure]
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 azure-ai-ml
 azure-cli-core

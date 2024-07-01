@@ -17,13 +17,15 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_path', type=str, required=True)
     parser.add_argument('--output_path', type=str, required=True)
-    parser.add_argument('--additional_parameters', type=str, default='null', required=False)
     argss = parser.parse_args()
     return argss
 
 
 def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
     """Read `.jsonl` file and return a list of dictionaries."""
+    if not file_path.endswith(".jsonl"):
+        mssg = f"Input file '{file_path}' is not a .jsonl file."
+        raise ValueError(mssg)
     data_dicts = []
     with open(file_path, 'r', encoding="utf8") as file:
         for i, line in enumerate(file):
@@ -43,10 +45,10 @@ def _write_to_jsonl_file(data, file_path: str) -> None:
     return
 
 
-def _run(input_path: str, output_path: str, additional_args: dict = None) -> None:
+def _run(input_path: str, output_path: str) -> None:
     """Entry function to read, run and write the processed the data."""
     data = _read_jsonl_file(input_path)
-    processed_data = run_processor(data, additional_args)
+    processed_data = run_processor(data)
     _write_to_jsonl_file(processed_data, output_path)
 
 
@@ -57,18 +59,14 @@ def format_string(sentence: str) -> str:
     return sentence
 
 
-def run_processor(
-        data: List[Dict[str, Any]], additional_args: dict = None
-) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+def run_processor(data: List[Dict[str, Any]]) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """Run the custom processor function."""
     # generic preprocessor
     input_keys = ["question", "best_answer", "incorrect_answers"]
     label_key = "correct_answers"
 
     # create following dictionary for labels in format {'1': 'A', '2': 'B', ... '26': 'Z'}
-    encoder_config = additional_args.get("encoder_config")
-    if encoder_config is None:
-        encoder_config = {str(i): chr(i+ord('A')-1) for i in range(1, 27)}
+    encoder_config = {str(i): chr(i+ord('A')-1) for i in range(1, 27)}
     ret_data = []
     for example in data:
         out_dict = {}
@@ -94,4 +92,4 @@ def run_processor(
 
 if __name__ == '__main__':
     argss = _parse_args()
-    _run(argss.input_path, argss.output_path, json.loads(argss.additional_parameters))
+    _run(argss.input_path, argss.output_path)

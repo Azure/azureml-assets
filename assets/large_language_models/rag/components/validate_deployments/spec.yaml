@@ -4,11 +4,7 @@ type: command
 tags:
     Preview: ""
 
-<<<<<<< HEAD
 version: 0.0.61
-=======
-version: 0.0.70
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: llm_rag_validate_deployments
 display_name: LLM - Validate Deployments
 is_deterministic: false

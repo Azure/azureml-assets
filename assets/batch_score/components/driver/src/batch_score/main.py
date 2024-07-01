@@ -9,10 +9,6 @@ import os
 import sys
 import time
 import traceback
-<<<<<<< HEAD
-=======
-import json
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 import pandas as pd
 
@@ -94,10 +90,6 @@ def init():
     global par
     global configuration
     global input_handler
-<<<<<<< HEAD
-=======
-    global output_handler
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     start = time.time()
     parser = ConfigurationParserFactory().get_parser()
@@ -111,16 +103,6 @@ def init():
     else:
         raise ValueError(f"Invalid input_schema_version: {configuration.input_schema_version}")
 
-<<<<<<< HEAD
-=======
-    if (configuration.split_output):
-        output_handler = SeparateFileOutputHandler()
-        lu.get_logger().info("Will save successful results and errors to separate files")
-    else:
-        output_handler = SingleFileOutputHandler()
-        lu.get_logger().info("Will save all results to a single file")
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     event_utils.setup_context_vars(configuration, metadata)
     setup_geneva_event_handlers()
     setup_job_log_event_handlers()
@@ -165,10 +147,6 @@ def init():
     if configuration.async_mode:
         callback_factory = CallbackFactory(
             configuration=configuration,
-<<<<<<< HEAD
-=======
-            output_handler=output_handler,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             input_to_output_transformer=input_to_output_transformer)
         finished_callback = callback_factory.generate_callback()
 
@@ -193,14 +171,7 @@ def init():
     end = time.time()
 
     # Emit init completed event
-<<<<<<< HEAD
     init_completed_event = BatchScoreInitCompletedEvent(init_duration_ms=(end - start) * 1000)
-=======
-    init_completed_event = BatchScoreInitCompletedEvent(
-        init_duration_ms=((end - start) * 1000),
-        logging_metadata=json.loads(configuration.logging_metadata) if configuration.logging_metadata else None
-    )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     event_utils.emit_event(batch_score_event=init_completed_event)
 
     get_events_client().emit_batch_driver_init(job_params=vars(configuration))
@@ -230,7 +201,6 @@ def run(input_data: pd.DataFrame, mini_batch_context):
     try:
         ret = par.run(data_list, mini_batch_context)
 
-<<<<<<< HEAD
         if (configuration.split_output):
             output_handler = SeparateFileOutputHandler()
             lu.get_logger().info("Saving successful results and errors to separate files")
@@ -238,8 +208,6 @@ def run(input_data: pd.DataFrame, mini_batch_context):
             output_handler = SingleFileOutputHandler()
             lu.get_logger().info("Saving results to single file")
 
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         if configuration.save_mini_batch_results == "enabled":
             lu.get_logger().info("save_mini_batch_results is enabled")
             output_handler.save_mini_batch_results(

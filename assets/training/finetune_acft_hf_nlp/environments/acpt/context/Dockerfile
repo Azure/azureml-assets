@@ -1,9 +1,5 @@
 #PTCA image
-<<<<<<< HEAD
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py38-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
-=======
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py38-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 USER root
 
@@ -19,8 +15,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
 RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
 
-<<<<<<< HEAD
 # dummy number to change when needing to force rebuild without changing the definition: 4
-=======
-# dummy number to change when needing to force rebuild without changing the definition: 1
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

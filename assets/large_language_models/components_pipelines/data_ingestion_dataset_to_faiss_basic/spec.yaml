@@ -4,11 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-<<<<<<< HEAD
 version: 0.0.69
-=======
-version: 0.0.76
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: llm_ingest_dataset_to_faiss_basic
 display_name: LLM - Dataset to FAISS Pipeline
 is_deterministic: false
@@ -106,11 +102,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-<<<<<<< HEAD
     component: 'azureml:llm_rag_validate_deployments:0.0.61'
-=======
-    component: 'azureml:llm_rag_validate_deployments:0.0.70'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     identity:
       type: user_identity
     inputs:
@@ -133,11 +125,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-<<<<<<< HEAD
     component: 'azureml:llm_rag_crack_and_chunk:0.0.58'
-=======
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.67'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       input_data: ${{parent.inputs.input_data}}
       input_glob: ${{parent.inputs.input_glob}}
@@ -160,11 +148,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-<<<<<<< HEAD
     component: 'azureml:llm_rag_create_promptflow:0.0.67'
-=======
-    component: 'azureml:llm_rag_create_promptflow:0.0.76'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
       mlindex_asset_uri: ${{parent.jobs.create_faiss_index_job.outputs.index}}
@@ -182,11 +166,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-<<<<<<< HEAD
     component: 'azureml:llm_rag_generate_embeddings:0.0.51'
-=======
-    component: 'azureml:llm_rag_generate_embeddings:0.0.60'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       chunks_source:
         type: uri_folder
@@ -236,11 +216,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-<<<<<<< HEAD
     component: 'azureml:llm_rag_create_faiss_index:0.0.56'
-=======
-    component: 'azureml:llm_rag_create_faiss_index:0.0.65'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       embeddings:
         type: uri_folder
@@ -258,11 +234,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-<<<<<<< HEAD
     component: 'azureml:llm_rag_register_mlindex_asset:0.0.55'
-=======
-    component: 'azureml:llm_rag_register_mlindex_asset:0.0.64'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       storage_uri: ${{parent.jobs.create_faiss_index_job.outputs.index}}
       asset_name: ${{parent.inputs.embeddings_dataset_name}}

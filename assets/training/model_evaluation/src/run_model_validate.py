@@ -11,14 +11,9 @@ from validation import (
     validate_and_get_columns,
     validate_compute_metrics_label_column_arg,
 )
-import os
 
-from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 from azureml.telemetry.activity import log_activity
 from mldesigner import Input, Output, command_component
-
-# Mark current path as allowed
-mark_path_as_loggable(os.path.dirname(__file__))
 
 custom_dimensions.app_name = TelemetryConstants.TRIGGER_VALIDATION_NAME
 logger = get_logger(name=__name__)

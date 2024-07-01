@@ -9,8 +9,4 @@ properties:
   azureml.promptflow.description: Learn how to use GPT function calling to extend the capabilities of GPT models with external data sources.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-<<<<<<< HEAD
 version: 9
-=======
-version: 10
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

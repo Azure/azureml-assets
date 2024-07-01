@@ -14,10 +14,6 @@ tags:
   SharedComputeCapacityEnabled: ''
   license: creativeml-openrail++-m
   task: text-to-image
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   author: deci-ai
   huggingface_model_id: Deci/DeciDiffusion-v1-0
   inference_compute_allow_list:
@@ -35,8 +31,4 @@ tags:
       Standard_ND96asr_v4,
     ]
 
-<<<<<<< HEAD
 version: 5
-=======
-version: 7
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

@@ -27,11 +27,7 @@ Batch | N/A | N/A
       {
         "content": "<p>the TrailWalker Hiking Shoes for a weekend hiking trip, and they exceeded my expectations. The fit is comfortable, providing excellent support throughout the journey. The traction is impressive, allowing me to confidently tackle various terrains. The shoes are also durable, showing no signs of wear after a challenging hike. My only minor complaint is that they could provide slightly more cushioning for longer treks. Overall, these shoes are a reliable choice for outdoor enthusiasts.\\n\\n2) <strong>Rating:</strong> 5\\n</p>",
         "score": 0.06557377049180328,
-<<<<<<< HEAD
         "id": "aHR0cHM6Ly9wcnJpaGFuYW1sc3Rv",
-=======
-        "metadata": null,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "title": "# Information about product item_number: 11\\nTrailWalker Hiking Shoes, price $110",
         "filepath": "product_info_11.md",
         "url": "https://foo.blob.core.windows.net/product-info/product_info_11.md",
@@ -40,11 +36,7 @@ Batch | N/A | N/A
       {
         "content": "<p>of the laces by pulling both ends simultaneously. Find the desired tightness and comfort level.\\n4. Push the lace lock down to secure the laces in place.\\n5. Tuck any excess lace into the lace pocket for safety and to prevent tripping.\\n\\nNote: It's recommended to wear hiking socks for the best fit and to prevent blisters or discomfort.\\n\\n</p>",
         "score": 0.06451612903225806,
-<<<<<<< HEAD
         "id": "aHR0cHM6Ly9wcnJpa",
-=======
-        "metadata": null,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "title": "# Information about product item_number: 11\\nTrailWalker Hiking Shoes, price $110",
         "filepath": "product_info_11.md",
         "url": "https://foo.blob.core.windows.net/product-info/product_info_11.md",
@@ -53,11 +45,7 @@ Batch | N/A | N/A
       {
         "content": "<p>disregard safety precautions:<strong> While the TrekReady Hiking Boots provide support and protection, they do not guarantee immunity from accidents or injuries. Always exercise caution and follow proper hiking safety guidelines, such as using trekking poles, wearing appropriate clothing, and being aware of your surroundings.\\n</p>",
         "score": 0.015384615384615385,
-<<<<<<< HEAD
         "id": "aHR0c1iMTgwTG0xazAvY2y5qc29u0",
-=======
-        "metadata": null,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "title": "# Information about product item_number: 4\\nTrekReady Hiking Boots, price $140",
         "filepath": "product_info_4.md",
         "url": "https://foo.blob.core.windows.net/product-info/product_info_4.md",

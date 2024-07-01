@@ -101,25 +101,6 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
-      - name: Refresh login (background process)
-        run: |
-          while true; do
-            token_request=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
-            token_uri=$ACTIONS_ID_TOKEN_REQUEST_URL
-            token=$(curl -H "Authorization: bearer $token_request" "${token_uri}&audience=api://AzureADTokenExchange" | jq .value -r)
-
-            expiration_time=$(jq -R 'split(".") | .[1] | @base64d | fromjson | .exp' <<< $token)
-            expiration_time_formatted=$(date -u -d @$expiration_time +"%Y-%m-%dT%H:%M:%SZ")
-            current_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-            echo "Token expires at: $expiration_time_formatted, Current time: $current_time"
-
-            az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -t ${{ secrets.AZURE_TENANT_ID }} --federated-token $token --output none
-
-            sleep_timer=$((expiration_time - $(date +%s) - 30))
-            echo "Sleeping for $sleep_timer seconds"
-            sleep $sleep_timer
-          done &
-
       - name: Install dependencies
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 

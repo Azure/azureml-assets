@@ -15,32 +15,17 @@ import logging
 import os
 import re
 import tempfile
-<<<<<<< HEAD
 import traceback
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import mlflow
 import socket
 
 import pandas as pd
-<<<<<<< HEAD
 import requests
 from azure.ai.generative.evaluate import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from pyspark.sql.functions import col
 from shared_utilities import io_utils
-=======
-from azure.ai.generative.evaluate import evaluate
-from shared_utilities.llm_utils import _WorkspaceConnectionTokenManager
-from pyspark.sql.types import IntegerType, StructField, StructType, StringType
-from pyspark.sql.functions import col
-from shared_utilities.io_utils import (
-    try_read_mltable_in_spark_with_error,
-    save_spark_df_as_mltable,
-    init_spark,
-)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from shared_utilities.momo_exceptions import InvalidInputError
 
 _logger = logging.getLogger(__file__)
@@ -56,7 +41,6 @@ GROUND_TRUTH = "ground_truth"
 CORRELATION_ID = "correlationid"
 TRACE_ID = "trace_id"
 ROOT_SPAN = "root_span"
-<<<<<<< HEAD
 
 PASSTHROUGH_COLUMNS = [CORRELATION_ID, TRACE_ID, ROOT_SPAN]
 
@@ -68,10 +52,6 @@ HTTP_REQUEST_TIMEOUT = 300
 # ================= Endpoint Constants =================
 AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE = r"^(?=.{1,255}$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*\.(inference\.ml|openai)\.azure\.com(/openai)?$"  # noqa: E501
 AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN = "https://{}/openai/deployments/{}"
-=======
-
-PASSTHROUGH_COLUMNS = [CORRELATION_ID, TRACE_ID, ROOT_SPAN]
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 # Parameters to OpenAI API requests
 OPENAI_REQUEST_PARAMS = [
@@ -108,7 +88,6 @@ THRESHOLD_PARAMS = [
 
 # ---
 
-<<<<<<< HEAD
 CL_100K_BASE = "cl100k_base"
 GPT_35_TURBO = "gpt-35-turbo"
 GPT_35_TURBO_16K = "gpt-35-turbo-16k"
@@ -117,8 +96,6 @@ GPT_4_32K = "gpt-4-32k"
 
 # ---
 
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 MIN_RATING = 1
 MAX_RATING = 5
 
@@ -188,13 +165,15 @@ PRODUCTION_ROW_COUNT = "production_data"
 REFERENCE_ROW_COUNT = "reference_data"
 
 DEFAULT_PROMPTFLOW_PATH = "/home/trusted-service-user/.promptflow/"
-<<<<<<< HEAD
-
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
-<<<<<<< HEAD
+def _check_and_format_azure_endpoint_url(
+    url_pattern, domain_pattern_re, domain, api_version, model
+):
+    domain = domain.strip()
+    if domain.endswith('/'):
+        domain = domain[:-1]
+
     if not re.match(domain_pattern_re, domain):
         err_msg = f"Invalid Azure endpoint domain URL: {domain}."
         err_msg += " The domain must be in the format of 'inference.ml.azure.com' or 'openai.azure.com'."
@@ -330,8 +309,6 @@ def _get_model_type(token_manager, get_model_endpoint):
     return model_type
 
 
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def get_compact_metric_name(metric_name):
     """Get the compact metric name from the full metric name."""
     return metric_name.replace(" ", "").title()
@@ -512,27 +489,18 @@ def apply_annotation(
     ground_truth_column_name,
     samples_index,
     violations,
-<<<<<<< HEAD
     evaluation,
     file_system=None
-=======
-    evaluation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     """Apply annotation to all samples in the production_dataset."""
     metric_names = process_metric_names(metric_names)
     validate_parameters(request_args, sample_rate)
-<<<<<<< HEAD
 
     if "chat_history" in [prompt_column_name, completion_column_name, context_column_name, ground_truth_column_name]:
         raise NotImplementedError("chat_history column is not currently supported and cannot be used as specified "
                                   "column. ")
 
     production_df = io_utils.try_read_mltable_in_spark_with_error(production_dataset, "production_dataset")
-=======
-
-    production_df = try_read_mltable_in_spark_with_error(production_dataset, "production_dataset")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
@@ -592,7 +560,7 @@ def apply_annotation(
     production_df = production_df_sampled
     row_count = production_df.count()
 
-    spark = init_spark()
+    spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
     spark_conf_vars = {
         "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",  # noqa: E501
@@ -633,17 +601,11 @@ def apply_annotation(
     is_test_connection = False
     if workspace_connection_arm_id == TEST_CONNECTION:
         # Used for testing component e2e without consuming OpenAI endpoint
-<<<<<<< HEAD
         endpoint_domain_name = TEST_CONNECTION
         api_version = API_VERSION
         is_test_connection = True
         token_manager = None
         model_type = GPT_4
-=======
-        api_version = API_VERSION
-        is_test_connection = True
-        token_manager = None
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     else:
         try:
             # Define authorization token manager
@@ -656,10 +618,7 @@ def apply_annotation(
             print(f"Unable to process request: {e}")
             return
 
-<<<<<<< HEAD
         endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         api_version = token_manager.get_api_version()
         api_key = token_manager.get_token()
         api_base = token_manager.get_endpoint_domain()
@@ -668,7 +627,6 @@ def apply_annotation(
             "Created token manager for auth type "
             f"managed identity using auth header {API_KEY}."
         )
-<<<<<<< HEAD
         # use fixed API version since newer versions aren't supported
         get_model_endpoint = _check_and_format_azure_endpoint_url(
             AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
@@ -676,8 +634,6 @@ def apply_annotation(
             endpoint_domain_name, "2022-12-01",
             model_deployment_name)
         model_type = _get_model_type(token_manager, get_model_endpoint)
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     all_metrics_pdf = None
     samples_index_rows = []
@@ -694,7 +650,6 @@ def apply_annotation(
     # get tracking uri
     tracking_uri = mlflow.get_tracking_uri()
     run_id = os.environ.get("AZUREML_RUN_ID")
-<<<<<<< HEAD
 
     def annotate_batch(iterator):
         for batch in iterator:
@@ -754,85 +709,6 @@ def apply_annotation(
             client.log_artifacts(run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
             yield tabular_result
 
-=======
-
-    def annotate_batch(iterator):
-        for batch in iterator:
-            # add environment variables on executors
-            for env_var_key, env_var_value in driver_env_vars.items():
-                os.environ[env_var_key] = env_var_value
-            rows = []
-            passthrough_cols = get_passthrough_cols(batch)
-            for index, row in batch.iterrows():
-                qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
-                if has_context:
-                    qca[CONTEXT] = row[CONTEXT]
-                if has_ground_truth:
-                    qca[GROUND_TRUTH] = row[GROUND_TRUTH]
-                rows.append(qca)
-
-            if not os.path.exists(DEFAULT_PROMPTFLOW_PATH):
-                os.makedirs(DEFAULT_PROMPTFLOW_PATH, exist_ok=True)
-            mlflow.set_tracking_uri(tracking_uri)
-
-            output_dir = tempfile.TemporaryDirectory()
-            evaluation_name = "gsq-evaluation"
-            run_name = evaluation_name + "-child-run"
-            # get existing run
-            with mlflow.start_run():
-                # create child run
-                with mlflow.start_run(nested=mlflow.active_run(), run_name=run_name) as run:
-                    evaluate(
-                        evaluation_name=evaluation_name,
-                        data=rows,
-                        task_type="qa",
-                        data_mapping={
-                            "question": PROMPT,
-                            "context": CONTEXT,
-                            "answer": COMPLETION,
-                            "ground_truth": GROUND_TRUTH
-                        },
-                        model_config={
-                            "api_version": api_version,
-                            "api_base": api_base,
-                            "api_type": AZURE,
-                            "api_key": api_key,
-                            "deployment_id": model_deployment_name
-                        },
-                        metrics_list=metrics_list,
-                        output_path=output_dir.name
-                    )
-                    child_run_id = run.info.run_id
-                    # add promptflow debug logs to run
-                    hostname = socket.gethostname()
-                    artifact_path = f"worker_promptflow/{hostname}"
-                    client = mlflow.tracking.MlflowClient()
-                    client.log_artifacts(
-                        child_run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
-            tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
-            for passthrough_column, passthrough_values in passthrough_cols.items():
-                tabular_result[passthrough_column] = passthrough_values
-            # rename metric columns
-            try:
-                for column_name in metrics_list:
-                    # set failures to -1
-                    tabular_result[column_name] = pd.to_numeric(tabular_result[column_name], errors='coerce')
-                    tabular_result[column_name].fillna(-1, inplace=True)
-                    tabular_result.rename(
-                        columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
-                        inplace=True)
-            except KeyError as e:
-                # raise new user error with more context
-                raise InvalidInputError(
-                    f"Unable to retrieve and rename {column_name}. "
-                    f"Usually this indicates an invalid configuration or connection. "
-                    f"Please check the model_deployment_name and workspace_connection_arm_id. "
-                    f"For more detailed error information please see the promptflow "
-                    f"debug folder in the child run with run id {child_run_id}."
-                ) from e
-            yield tabular_result
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     # used for testing without using openai connection
     def mock_metrics_batch(iterator):
         for batch in iterator:
@@ -914,11 +790,7 @@ def apply_annotation(
                              .withColumnRenamed(COMPLETION, completion_column_name)
                              .withColumnRenamed(CONTEXT, context_column_name)
                              .withColumnRenamed(GROUND_TRUTH, ground_truth_column_name))
-<<<<<<< HEAD
             io_utils.save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()], file_system)
-=======
-            save_spark_df_as_mltable(violations_df, violations[metric_name_compact.lower()])
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
@@ -960,22 +832,13 @@ def apply_annotation(
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
 
     # Save the samples and annotations dataframes as output
-<<<<<<< HEAD
     io_utils.save_spark_df_as_mltable(annotations_df, evaluation, file_system)
     io_utils.save_spark_df_as_mltable(samples_df, samples_index, file_system)
-=======
-    save_spark_df_as_mltable(annotations_df, evaluation)
-    save_spark_df_as_mltable(samples_df, samples_index)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     # temporary workaround for pandas>2.0 until pyspark upgraded to 3.4.1, see issue:
     # https://stackoverflow.com/questions/76404811/attributeerror-dataframe-object-has-no-attribute-iteritems
     pd.DataFrame.iteritems = pd.DataFrame.items
-<<<<<<< HEAD
     io_utils.save_spark_df_as_mltable(
-=======
-    save_spark_df_as_mltable(
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         spark.createDataFrame(all_metrics_pdf),
         histogram,
         file_system)

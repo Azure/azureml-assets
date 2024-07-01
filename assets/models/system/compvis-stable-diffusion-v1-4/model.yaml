@@ -1,10 +1,6 @@
 path:
   container_name: finetuning-image-models
-<<<<<<< HEAD
   container_path: HuggingFace-mlflow/compvis-stable-diffusion-v1-4/1702903968/mlflow_model_folder
-=======
-  container_path: HuggingFace-mlflow/compvis-stable-diffusion-v1-4/1714136920/mlflow_model_folder
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

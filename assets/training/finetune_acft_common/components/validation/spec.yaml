@@ -1,18 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-<<<<<<< HEAD
 version: 0.0.2
-=======
-version: 0.0.4
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: finetune_common_validation
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acpt-pytorch-1.13-cuda11.7/versions/43
+environment: azureml://registries/azureml/environments/acpt-pytorch-2.0-cuda11.7/versions/21
 
 code: ../../src/validation
 

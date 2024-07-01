@@ -15,10 +15,6 @@ tags:
   SharedComputeCapacityEnabled: ''
   training_datasets: bookcorpus, wikipedia
   huggingface_model_id: distilbert-base-cased
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ''
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   evaluation_compute_allow_list:
     [
       Standard_DS4_v2,

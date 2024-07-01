@@ -69,11 +69,7 @@ def test_generate_extension_fields_init_completed(mock_import_module, make_batch
         'workspace_name': 'testws',
 
         # Event specific fields
-<<<<<<< HEAD
         'init_duration_ms': '5',
-=======
-        'init_duration_ms': '5'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     }
 
 

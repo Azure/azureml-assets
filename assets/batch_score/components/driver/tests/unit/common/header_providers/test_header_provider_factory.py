@@ -132,7 +132,6 @@ def test_get_header_provider_for_rate_limiter():
         UserAgentHeaderProvider,
         XMsClientRequestIdHeaderProvider,
     ])
-<<<<<<< HEAD
 
 
 @pytest.mark.parametrize(
@@ -176,5 +175,3 @@ def test_set_defaults_for_openai_model_headers(method_to_return_true, number_of_
     )
 
     assert len(headers_with_defaults) == number_of_headers
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

@@ -7,6 +7,7 @@ import argparse
 from dateutil import parser
 import json
 import os
+import uuid
 
 from pyspark.sql import Row
 from typing import List
@@ -19,13 +20,13 @@ from model_monitor_metric_outputter.builder.samples_output_builder import (
 )
 from model_monitor_metric_outputter.runmetric_client import RunMetricClient
 from model_monitor_metric_outputter.runmetrics_publisher import RunMetricPublisher
+from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import METADATA_VERSION
 from shared_utilities.dict_utils import merge_dicts
 from shared_utilities.io_utils import (
     np_encoder,
     try_read_mltable_in_spark_with_error,
 )
-from shared_utilities.store_url import StoreUrl
 
 
 def run():
@@ -68,14 +69,17 @@ def run():
             # whatever error we got, including DataNotFoundError, skip processing the samples index
             print(f"Samples index is empty. Skipping processing of the samples index. {e}")
 
-    # write output file
-    target_remote_path = os.path.join(args.signal_output, "signals")
-    store_url = StoreUrl(target_remote_path)
-
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)
-    output_content = signal_to_json_str(output_payload)
 
-    store_url.write_file(output_content, f"{args.signal_name}.json")
+    local_path = str(uuid.uuid4())
+    write_to_file(
+        payload=output_payload,
+        local_output_directory=local_path,
+        signal_name=args.signal_name,
+    )
+
+    target_remote_path = os.path.join(args.signal_output, "signals")
+    amlfs_upload(local_path=local_path, remote_path=target_remote_path)
 
     print("Uploading run metrics to AML run history.")
     metric_timestamp = parser.parse(args.metric_timestamp)
@@ -99,9 +103,12 @@ def to_output_payload(signal_name: str, signal_type: str, metrics_dict: dict) ->
     return output_payload
 
 
-def signal_to_json_str(payload: dict) -> str:
-    """Dump the signal as a json string."""
-    return json.dumps(payload, indent=4, default=np_encoder)
+def write_to_file(payload: dict, local_output_directory: str, signal_name: str):
+    """Save the signal to a local directory."""
+    os.makedirs(local_output_directory, exist_ok=True)
+    signal_file = os.path.join(local_output_directory, f"{signal_name}.json")
+    with open(signal_file, "w") as f:
+        f.write(json.dumps(payload, indent=4, default=np_encoder))
 
 
 if __name__ == "__main__":

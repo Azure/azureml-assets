@@ -10,11 +10,7 @@ from pyspark.sql.types import (
     StringType,
     BooleanType,
 )
-<<<<<<< HEAD
 from pyspark.sql import SparkSession, DataFrame
-=======
-from pyspark.sql import SparkSession
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from src.shared_utilities.df_utils import (
     get_common_columns,
     has_duplicated_columns,
@@ -31,10 +27,6 @@ from src.shared_utilities.df_utils import (
 )
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp
-<<<<<<< HEAD
-=======
-from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import pandas as pd
 import pytest
 import datetime
@@ -510,7 +502,6 @@ class TestDFUtils:
         spark = self.init_spark()
         empty_df = spark.createDataFrame(input_data, input_data_columns)
         assert has_duplicated_columns(empty_df) == expected_output
-<<<<<<< HEAD
 
 
 def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
@@ -518,5 +509,3 @@ def assert_spark_dataframe_equal(actual_df: DataFrame, expected_df: DataFrame):
     assert actual_df.schema == expected_df.schema
     assert actual_df.count() == expected_df.count()
     assert actual_df.collect() == expected_df.collect()
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

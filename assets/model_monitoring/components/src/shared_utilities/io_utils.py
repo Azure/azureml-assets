@@ -5,7 +5,6 @@
 
 from enum import Enum
 import numpy as np
-<<<<<<< HEAD
 import os
 import time
 import uuid
@@ -14,16 +13,6 @@ from azureml.fsspec import AzureMachineLearningFileSystem
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType
 from .constants import MAX_RETRY_COUNT
-=======
-import time
-import yaml
-from azureml.dataprep.api.errorhandlers import ExecutionError
-from azureml.dataprep.api.mltable._mltable_helper import UserErrorException
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.types import StructType
-from .constants import MAX_RETRY_COUNT
-from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from shared_utilities.store_url import StoreUrl
@@ -123,20 +112,10 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str, no_data_approa
         if input_not_found_category != InputNotFoundCategory.NOT_INPUT_MISSING:
             return process_input_not_found(input_not_found_category)
         else:
-            # TODO: remove this check block after we are able to support submitting managed identity MoMo graphs.
-            try:
-                from azure.ai.ml.identity import CredentialUnavailableError
-                if isinstance(error, CredentialUnavailableError):
-                    raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=error.message))
-            except ModuleNotFoundError:
-                print(
-                    "Failed to import from module azure-ai-ml to check if we have CredentialUnavailableError. "
-                    "Check for LM failure or stale cache being used. Throwing exception as usual.")
             raise error
     return df if df and not df.isEmpty() else process_input_not_found(InputNotFoundCategory.NO_INPUT_IN_WINDOW)
 
 
-<<<<<<< HEAD
 def _verify_mltable_paths(mltable_path: str, ws=None, mltable_dict: dict = None):
     """Verify paths in mltable is supported."""
     mltable_dict = mltable_dict or yaml.safe_load(StoreUrl(mltable_path, ws).read_file_content("MLTable"))
@@ -166,17 +145,6 @@ def _write_mltable_yaml(mltable_obj, dest_path, file_system=None):
             **{"overwrite": "MERGE_WITH_OVERWRITE"},
         )
         return True
-=======
-def _write_mltable_yaml(mltable_obj, folder_path: str):
-    try:
-        store_url = StoreUrl(folder_path)
-        content = yaml.dump(mltable_obj, default_flow_style=False)
-        store_url.write_file(content, "MLTable", True)
-        return True
-    except InvalidInputError as iie:
-        print(f"Unretriable InvalidInputError writing mltable file: {iie}")
-        raise iie
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     except Exception as e:
         print(f"Error writing mltable file: {e}")
         return False
@@ -184,62 +152,17 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
 
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
-<<<<<<< HEAD
     _verify_mltable_paths(mltable_path)
-=======
-    if mltable_path is None:
-        raise InvalidInputError("MLTable path is None.")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     spark = init_spark()
-    try:
-        return spark.read.mltable(mltable_path)
-    except UserErrorException as ue:
-        ue_str = str(ue)
-        if 'Not able to find MLTable file' in ue_str:
-            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not found or not accessible.")
-        elif 'MLTable yaml is invalid' in ue_str:
-            raise InvalidInputError(f"Invalid MLTable yaml content in {mltable_path}, please make sure all paths "
-                                    "defined in MLTable is in correct format and supported scheme.")
-        else:
-            raise ue
-    except ExecutionError as ee:
-        ee_str = str(ee)
-        if 'AuthenticationError("RuntimeError: Non-matching ' in ee_str:
-            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, "
-                                    "please make sure only data defined in the same AML workspace is used in MLTable.")
-        elif 'StreamError(NotFound)' in ee_str and 'The requested stream was not found' in ee_str:
-            raise InvalidInputError(f"One or more paths defined in MLTable {mltable_path} is not found.")
-        else:
-            raise ee
-    except ValueError as ve:
-        ve_str = str(ve)
-        if 'AuthenticationError("RuntimeError: Non-matching ' in ve_str:
-            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, it is not from the same AML workspace.")
-        elif 'StreamError(PermissionDenied(' in ve_str:
-            # TODO add link to doc
-            raise InvalidInputError(f"No permission to read MLTable {mltable_path}, please make it as credential data."
-                                    " Or you can run Model Monitor job with managed identity and grant proper data "
-                                    "access permission to the user managed identity attached to this AML workspace.")
-        else:
-            raise ve
-    except SystemError as se:
-        if 'Name or service not known' in str(se):
-            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, the storage account is not found.")
-        else:
-            raise se
+    return spark.read.mltable(mltable_path)
 
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
     """Save spark dataframe as mltable."""
-<<<<<<< HEAD
     metrics_df.write.mode("overwrite").parquet(folder_path)
 
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/*.parquet"
-=======
-    base_path = folder_path.rstrip('/')
-    output_path_pattern = base_path + "/data/*.parquet"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     mltable_obj = {
         'paths': [{'pattern': output_path_pattern}],
@@ -248,21 +171,12 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str, file_system=None):
 
     retries = 0
     while True:
-<<<<<<< HEAD
         if _write_mltable_yaml(mltable_obj, folder_path, file_system):
-=======
-        if _write_mltable_yaml(mltable_obj, folder_path):
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             break
         retries += 1
         if retries >= MAX_RETRY_COUNT:
             raise Exception("Failed to write mltable yaml file after multiple retries.")
         time.sleep(1)
-<<<<<<< HEAD
-=======
-
-    metrics_df.write.mode("overwrite").parquet(base_path+"/data/")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 def np_encoder(object):

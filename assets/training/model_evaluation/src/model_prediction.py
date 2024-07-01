@@ -4,13 +4,11 @@
 """Entry script for Model Evaluation Component."""
 
 import azureml.evaluate.mlflow as aml_mlflow
-from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 import pandas as pd
 import constants
 import torch
 import ast
 import time
-import os
 from datetime import datetime, timezone
 from itertools import repeat, chain
 from constants import ArgumentLiterals
@@ -47,9 +45,6 @@ from validation import (
     validate_common_args,
     validate_and_get_columns,
 )
-
-# Mark current path as allowed
-mark_path_as_loggable(os.path.dirname(__file__))
 
 custom_dimensions.app_name = constants.TelemetryConstants.MODEL_PREDICTION_NAME
 logger = get_logger(name=__name__)
@@ -127,17 +122,9 @@ class ModelPredictionRunner:
         if self.extra_y_test_cols is not None:
             all_cols += self.extra_y_test_cols
 
-<<<<<<< HEAD
         data = read_model_prediction_data(test_data, self.task, self.batch_size)
         data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(self.label_column_name),
                    repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size))
-=======
-        data, file_ext = read_model_prediction_data(
-            test_data, self.input_column_names, self.label_column_name, self.task, self.batch_size
-        )
-        data = map(prepare_data, data, repeat(self.task), repeat(all_cols), repeat(self.label_column_name),
-                   repeat(False), repeat(self.extra_y_test_cols), repeat(self.batch_size), repeat(file_ext))
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         return data  # X_test, y_test
 
     def load_tokenizer(self, token_counts_enabled):
@@ -180,7 +167,6 @@ class ModelPredictionRunner:
         enable_character_counts = self.config.get("char_count_per_sample", False)
         tokenizer = self.load_tokenizer(enable_token_counts)
 
-<<<<<<< HEAD
         try:
             for idx, (X_test, y_test_batch) in enumerate(data):
                 logger.info("batch: " + str(idx))
@@ -192,20 +178,6 @@ class ModelPredictionRunner:
 
                 pred_probas_batch = None
                 pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor)
-=======
-        pipeline_params = filter_pipeline_params(self.config, self.predictor.model_flavor, self.predictor)
-
-        try:
-            for idx, (X_test, y_test_batch) in enumerate(data):
-                logger.info("batch: " + str(idx))
-                if len(X_test) == 0:
-                    logger.info("No samples in batch. Skipping.")
-                    continue
-
-                y_transformer = None
-
-                pred_probas_batch = None
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
                 def add_to_predict_params_if_applicable(dict_to_add, predict_params):
                     if self.predictor.model_flavor != constants.MODEL_FLAVOR.TRANSFORMERS:
@@ -274,14 +246,8 @@ class ModelPredictionRunner:
                     if self.task == constants.TASK.QnA:
                         for col in X_test.columns:
                             y_test_batch[col] = X_test[col]
-                elif self.task == constants.TASK.CHAT_COMPLETION:
-                    logger.info("Empty/NaN ground truths will replaced with Empty string values ('').")
-                    if self.label_column_name is not None:
-                        y_test_batch = pd.DataFrame(y_test_batch, columns=[self.label_column_name]).fillna("")
-                    else:
-                        logger.info("No label column found. Trying to parse test data for ground truths.")
-                        y_test_batch = pd.DataFrame(X_test[self.input_column_names[0]].apply(
-                            lambda x: x[-1]['content'] if x[-1]['role'] == 'assistant' else ""))
+                elif self.task == constants.TASK.CHAT_COMPLETION and self.label_column_name is not None:
+                    y_test_batch = pd.DataFrame(y_test_batch, columns=[self.label_column_name])
                 else:
                     y_test_batch = pd.DataFrame({})
                 if self.task != constants.TASK.CHAT_COMPLETION:

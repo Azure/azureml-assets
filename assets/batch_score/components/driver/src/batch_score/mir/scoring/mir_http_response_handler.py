@@ -104,10 +104,6 @@ class MirHttpResponseHandler(HttpResponseHandler):
         if response_status == 200:
             result = self._create_scoring_result(
                 status=ScoringResultStatus.SUCCESS,
-<<<<<<< HEAD
-=======
-                model_response_code=response_status,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                 scoring_request=scoring_request,
                 start=start,
                 end=end,
@@ -128,10 +124,6 @@ class MirHttpResponseHandler(HttpResponseHandler):
         else:  # Score failed
             result = self._create_scoring_result(
                 status=ScoringResultStatus.FAILURE,
-<<<<<<< HEAD
-=======
-                model_response_code=response_status,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                 scoring_request=scoring_request,
                 start=start,
                 end=end,

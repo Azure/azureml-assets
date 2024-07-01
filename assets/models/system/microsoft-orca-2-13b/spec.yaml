@@ -12,12 +12,7 @@ tags:
   license: other
   SharedComputeCapacityEnabled: ''
   task: text-generation
-<<<<<<< HEAD
   author: Microsoft Research
-=======
-  hiddenlayerscanned: ""
-  author: microsoft
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   huggingface_model_id: microsoft/Orca-2-13b
   inference_compute_allow_list:
     [

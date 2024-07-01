@@ -64,19 +64,6 @@ class TestMDCPreprocessorHelper:
         datetime(2024, 2, 3, 3), datetime(2024, 2, 3, 9),
     ]
 
-<<<<<<< HEAD
-=======
-    MATCH_PATTERNS = [
-        p for d in NONE_EMPTY_DATETIMES
-        for p in (
-            f"{d.strftime('%Y/%m/%d/%H')}/*.jsonl",
-            f"{d.strftime('%Y/%m/%d')}/*/*.jsonl",
-            f"{d.strftime('%Y/%m')}/*/*/*.jsonl",
-            f"{d.strftime('%Y')}/*/*/*/*.jsonl"
-        )
-    ]
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     @pytest.mark.parametrize(
         "start, end, expected_datetimes",
         [
@@ -211,18 +198,15 @@ class TestMDCPreprocessorHelper:
     )
     def test_get_file_list(self, start, end, expected_datetimes):
         """Test get_file_list()."""
-<<<<<<< HEAD
         non_empty_folders = {
             f for d in TestMDCPreprocessorHelper.NONE_EMPTY_DATETIMES
             # hour, day, month, year folders
             for f in (d.strftime("%Y/%m/%d/%H"), d.strftime("%Y/%m/%d"), d.strftime("%Y/%m"), d.strftime("%Y"))
         }
 
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         mock_store_url = Mock(spec=StoreUrl)
         mock_store_url.is_local_path.return_value = False
-        mock_store_url.any_files.side_effect = lambda pattern: pattern in TestMDCPreprocessorHelper.MATCH_PATTERNS
+        mock_store_url.is_folder_exists.side_effect = lambda path: path in non_empty_folders
         mock_store_url.get_abfs_url.side_effect = \
             lambda rpath: f"abfss://my_container@my_account.dfs.core.windows.net/path/to/folder/{rpath}"
         mock_store_url.get_azureml_url.side_effect = \

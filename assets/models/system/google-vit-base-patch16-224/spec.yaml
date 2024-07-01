@@ -33,10 +33,6 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   training_dataset: imagenet-1k, imagenet-21k
   SharedComputeCapacityEnabled: ''
   author: google
@@ -119,8 +115,4 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND40rs_v2
     ]
-<<<<<<< HEAD
 version: 16
-=======
-version: 17
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
