@@ -1,9 +1,0 @@
-olive-ai==0.3.1
-onnxruntime-gpu==1.15.1
-pydantic==1.10.13
-azureml.core=={{latest-pypi-version}}
-pandas=={{latest-pypi-version}}
-plotly=={{latest-pypi-version}}
-psutil=={{latest-pypi-version}}
-datasets=={{latest-pypi-version}}
-transformers=={{latest-pypi-version}}
