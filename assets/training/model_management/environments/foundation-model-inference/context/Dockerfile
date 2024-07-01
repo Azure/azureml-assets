@@ -51,15 +51,8 @@ RUN pip install llm-optimized-inference==0.2.1 --no-cache-dir
 
 RUN pip uninstall -y vllm
 
-# Apply patch
-COPY ./vllm.patch ./vllm.patch
-RUN git clone https://github.com/vllm-project/vllm.git && \
-    cd vllm && \
-    git checkout 0f0d8bc065f3608e7657a9696f5d2d7c0d6722d1 && \
-    git apply ../vllm.patch && \
-    pip install -r requirements-cuda.txt && \
-    python setup.py bdist_wheel && \
-    pip install dist/*.whl
+# Install patched vllm wheel
+RUN pip install https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.5.0.post1-cp310-cp310-linux_x86_64.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
