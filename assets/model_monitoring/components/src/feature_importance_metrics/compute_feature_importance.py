@@ -97,7 +97,12 @@ def create_lightgbm_model(X, y, task_type):
     try:
         model = lgbm.fit(X, y)
     except ValueError as e:
+<<<<<<< HEAD
         if "Unknown label type: 'continuous'" in str(e):
+=======
+        # Depending on lightgbm version this error message can be slightly different
+        if "Unknown label type: 'continuous'" or "Unknown label type: continuous" in str(e):
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             raise InvalidInputError(CONTINUOUS_ERR)
         raise e
     log_time_and_message(f"Created lightgbm model using task_type: {task_type}")

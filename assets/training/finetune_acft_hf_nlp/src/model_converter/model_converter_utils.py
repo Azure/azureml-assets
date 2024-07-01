@@ -44,6 +44,10 @@ ACFT_TASKS_HUGGINGFACE_MODELS_MAPPING = {
     Tasks.TRANSLATION: AutoModelForSeq2SeqLM,
     Tasks.QUESTION_ANSWERING: AutoModelForQuestionAnswering,
     Tasks.TEXT_GENERATION: AutoModelForCausalLM,
+<<<<<<< HEAD
+=======
+    Tasks.CHAT_COMPLETION: AutoModelForCausalLM,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 }
 
 
@@ -55,6 +59,10 @@ ACFT_TASKS_PEFT_MODELS_MAPPING = {
     Tasks.TRANSLATION: AutoPeftModelForSeq2SeqLM,
     Tasks.QUESTION_ANSWERING: AutoPeftModelForQuestionAnswering,
     Tasks.TEXT_GENERATION: AutoPeftModelForCausalLM,
+<<<<<<< HEAD
+=======
+    Tasks.CHAT_COMPLETION: AutoPeftModelForCausalLM,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 }
 
 
@@ -152,6 +160,7 @@ def load_and_merge_peft_lora_model(model_path: str, component_args: Namespace, f
 def copy_tokenizer_files_to_model_folder(mlflow_model_folder: str, task_name: str):
     """Copy tokenizer files to model folder.
 
+<<<<<<< HEAD
     Copying only for Text Gen tasks as this is needed for vLLM inference engine.
     It expects tokenizer and model files in same folder i.e. "data/model".
     """
@@ -166,3 +175,19 @@ def copy_tokenizer_files_to_model_folder(mlflow_model_folder: str, task_name: st
         dirs_exist_ok=True
     )
     logger.info("Copy completed for tokenizer files to model folder for {}".format(task_name))
+=======
+    It expects tokenizer and model files in same folder i.e. "data/model".
+    """
+    src_dir = Path(mlflow_model_folder, 'data', 'tokenizer')
+    dst_dir = Path(mlflow_model_folder, 'data', 'model')
+    if src_dir.is_dir() and dst_dir.is_dir():
+        logger.info("Copying tokenizer files to model folder for {}".format(task_name))
+        shutil.copytree(
+            str(Path(mlflow_model_folder, 'data', 'tokenizer')),
+            str(Path(mlflow_model_folder, 'data', 'model')),
+            dirs_exist_ok=True
+        )
+        logger.info("Copy completed for tokenizer files to model folder for {}".format(task_name))
+    else:
+        logger.warning("Couldn't copy the tokenizer files to model folder.")
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

@@ -40,7 +40,11 @@ async def test_score(response_status, response_body, exception_to_raise):
         http_response_handler=http_response_handler,
         scoring_url=None)
 
+<<<<<<< HEAD
     scoring_request = ScoringRequest(original_payload='{"prompt":"Test model"}')
+=======
+    scoring_request = ScoringRequest(original_payload='{"custom_id": "task_123", "prompt":"Test model"}')
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     async with aiohttp.ClientSession() as session:
         with patch.object(session, "post") as mock_post:
@@ -62,6 +66,11 @@ async def test_score(response_status, response_body, exception_to_raise):
     assert http_response_handler.handle_response.assert_called_once
     response_sent_to_handler = http_response_handler.handle_response.call_args.kwargs['http_response']
 
+<<<<<<< HEAD
+=======
+    assert "custom_id" not in scoring_client._create_http_request(scoring_request).payload
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     if exception_to_raise:
         assert type(response_sent_to_handler.exception) is exception_to_raise
     elif response_status == 200:

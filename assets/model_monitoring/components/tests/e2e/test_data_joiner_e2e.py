@@ -26,7 +26,8 @@ def _submit_data_joiner_job(
     left_input_data,
     left_join_column,
     right_input_data,
-    right_join_column
+    right_join_column,
+    expect_failure: bool = False
 ):
     data_joiner_component = get_component(COMPONENT_NAME_DATA_JOINER)
 
@@ -55,7 +56,11 @@ def _submit_data_joiner_job(
     )
 
     pipeline_job = submit_pipeline_job(
+<<<<<<< HEAD
         pipeline_job, experiment_name
+=======
+        pipeline_job, experiment_name, expect_failure
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     # Wait until the job completes
@@ -87,7 +92,7 @@ class TestDataJoinerE2E:
             DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
         )
 
-        assert pipeline_job.status == 'Completed'
+        assert pipeline_job.status == "Completed"
 
     def test_data_joiner_empty_result_failed(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
@@ -101,7 +106,12 @@ class TestDataJoinerE2E:
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_OVERLAPPING_JOIN_VALUE,
             DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
-            DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
+            DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME,
+            expect_failure=True
         )
 
+<<<<<<< HEAD
         assert pipeline_job.status == 'Failed'
+=======
+        assert pipeline_job.status == "Failed"
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

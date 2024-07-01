@@ -16,8 +16,19 @@ dependencies:
     - datasets
     - tqdm
     - azure-core
+<<<<<<< HEAD
+=======
+    - tiktoken
+    - mteb
+    - openai
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     ## Test requirements
     - pytest
     - pytest-xdist
     - ddt
+<<<<<<< HEAD
+=======
+    - flake8
+    - pydocstyle
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: aml_benchmark

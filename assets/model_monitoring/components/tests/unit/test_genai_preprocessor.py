@@ -13,9 +13,15 @@ import sys
 from datetime import datetime
 from src.model_data_collector_preprocessor.genai_run import (
     _genai_uri_folder_to_enlarged_spans,
+<<<<<<< HEAD
     _filter_df_by_time_window
 )
 from src.shared_utilities.store_url import StoreUrl
+=======
+)
+from src.shared_utilities.store_url import StoreUrl
+from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import spark_mltable  # noqa, to enable spark.read.mltable
 from spark_mltable import SPARK_ZIP_PATH
 
@@ -219,6 +225,7 @@ class TestGenAISparkPreprocessor:
         window_start_time = datetime(2024, 2, 8, 15)
         window_end_time = datetime(2024, 2, 8, 16)
 
+<<<<<<< HEAD
         actual_data = _genai_uri_folder_to_enlarged_spans(
             window_start_time, window_end_time,
             input_url, my_add_tags)
@@ -312,3 +319,13 @@ def assert_spark_dataframe_equal(df1, df2):
     print(f'df1: {df1.collect()}')
     print(f'df2: {df2.collect()}')
     assert df1.collect() == df2.collect()
+=======
+        try:
+            _ = _genai_uri_folder_to_enlarged_spans(
+                window_start_time, window_end_time,
+                input_url, my_add_tags)
+            assert False
+        except Exception as ex:
+            assert "Additionally, preprocessing step that caused issue was casting start/end" + \
+                " timestamp column to TimestampType(). Double check those columns for any issues." in str(ex)
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

@@ -15,7 +15,12 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_generation_safety_quality_model_monitor_job(
+<<<<<<< HEAD
     submit_pipeline_job, ml_client, get_component, experiment_name, production_data, data_columns_dict: dict = {}
+=======
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
+    production_data, data_columns_dict: dict = {}, expect_failure: bool = False
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     generation_safety_quality_signal_monitor = get_component(
         COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR
@@ -61,7 +66,11 @@ def _submit_generation_safety_quality_model_monitor_job(
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = submit_pipeline_job(
+<<<<<<< HEAD
         pipeline_job, experiment_name
+=======
+        pipeline_job, experiment_name, expect_failure
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     # Wait until the job completes

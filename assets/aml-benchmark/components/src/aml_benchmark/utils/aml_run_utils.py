@@ -9,10 +9,10 @@ import re
 
 import mlflow
 from mlflow.entities import Run as MLFlowRun
-from azureml.core import Run
-from aml_benchmark.utils.logging import get_logger
-
+from azureml.core import Run, Datastore
 from azureml._common._error_definition.azureml_error import AzureMLError
+
+from .logging import get_logger
 from .exceptions import BenchmarkValidationException
 from .error_definitions import BenchmarkValidationError
 
@@ -23,6 +23,14 @@ logger = get_logger(__name__)
 def get_experiment_name() -> str:
     """Get the current experiment name."""
     return Run.get_context().experiment.name
+
+
+def get_default_datastore() -> Datastore:
+    """Get the default datastore for the current run."""
+    run = Run.get_context()
+    workspace = run.experiment.workspace
+    datastore = workspace.get_default_datastore()
+    return datastore
 
 
 def get_parent_run_id() -> str:

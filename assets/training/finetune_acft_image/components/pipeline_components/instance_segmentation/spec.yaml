@@ -1,7 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
+<<<<<<< HEAD
 version: 0.0.14
+=======
+version: 0.0.18
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: image_instance_segmentation_pipeline
 display_name: Image Instance Segmentation Pipeline
 description: Pipeline component for image instance segmentation.
@@ -300,7 +304,11 @@ jobs:
 
   finetune_common_validation:
     type: command
+<<<<<<< HEAD
     component: azureml:finetune_common_validation:0.0.2
+=======
+    component: azureml:finetune_common_validation:0.0.4
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       train_mltable_path: ${{parent.inputs.training_data}}
@@ -313,7 +321,11 @@ jobs:
 
   framework_selector:
     type: command
+<<<<<<< HEAD
     component: azureml:image_framework_selector:0.0.13
+=======
+    component: azureml:image_framework_selector:0.0.15
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: ${{parent.inputs.task_type}}
@@ -322,7 +334,11 @@ jobs:
 
   image_instance_segmentation_runtime_component:
     type: command
+<<<<<<< HEAD
     component: azureml:train_instance_segmentation_model:0.0.8
+=======
+    component: azureml:train_instance_segmentation_model:0.0.10
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
@@ -369,7 +385,11 @@ jobs:
 
   mm_detection_model_import:
     type: command
+<<<<<<< HEAD
     component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.13
+=======
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.16
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'MmDetectionImage'
@@ -379,7 +399,11 @@ jobs:
 
   mm_detection_finetune:
     type: command
+<<<<<<< HEAD
     component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.13
+=======
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.16
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -423,7 +447,11 @@ jobs:
 
   output_selector:
     type: command
+<<<<<<< HEAD
     component: azureml:image_model_output_selector:0.0.12
+=======
+    component: azureml:image_model_output_selector:0.0.14
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_instance_segmentation_runtime_component.outputs.mlflow_model_folder}}

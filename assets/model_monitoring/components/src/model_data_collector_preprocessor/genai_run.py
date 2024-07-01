@@ -19,6 +19,10 @@ from model_data_collector_preprocessor.mdc_utils import (
     _mdc_uri_folder_to_preprocessed_spark_df,
     _convert_complex_columns_to_json_string,
     _filter_df_by_time_window,
+<<<<<<< HEAD
+=======
+    _count_dropped_rows_with_error,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 )
 from model_data_collector_preprocessor.trace_aggregator import (
     aggregate_spans_into_traces,
@@ -113,8 +117,20 @@ def _preprocess_raw_logs_to_span_logs_spark_df(df: DataFrame) -> DataFrame:
         print("rows that will be removed:")
         df.filter(df.start_time.isNull()).show()
         df.filter(df.end_time.isNull()).show()
+<<<<<<< HEAD
         df = df.dropna(subset=["start_time", "end_time"])
 
+=======
+
+        original_df_row_count = df.count()
+        df = df.dropna(subset=["start_time", "end_time"])
+
+        _count_dropped_rows_with_error(
+            original_df_row_count, df.count(),
+            additional_error_msg="Additionally, preprocessing step that caused issue was casting start/end "
+            "timestamp column to TimestampType(). Double check those columns for any issues.")
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     df = _promote_fields_from_attributes(df)
 
     # Cast all remaining fields in attributes to json string, for easier schema unifying
@@ -172,15 +188,24 @@ def genai_preprocessor(
     enlarged_time_window_span_logs_df = _genai_uri_folder_to_enlarged_spans(
         data_window_start, data_window_end, store_url)
 
+<<<<<<< HEAD
     trace_logs_df = aggregate_spans_into_traces(
         enlarged_time_window_span_logs_df, require_trace_data, data_window_start, data_window_end)
 
+=======
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     # filter down the span_logs to original time window
     filtered_span_logs_df = _filter_df_by_time_window(
         enlarged_time_window_span_logs_df, data_window_start, data_window_end)
 
     save_spark_df_as_mltable(filtered_span_logs_df, preprocessed_span_data)
 
+<<<<<<< HEAD
+=======
+    trace_logs_df = aggregate_spans_into_traces(
+        enlarged_time_window_span_logs_df, require_trace_data, data_window_start, data_window_end)
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     save_spark_df_as_mltable(trace_logs_df, aggregated_trace_data)
 
 

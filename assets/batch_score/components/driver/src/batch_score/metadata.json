@@ -1,7 +1,15 @@
 {
+<<<<<<< HEAD
     "component_version": "1.1.4",
+=======
+    "component_version": "1.1.8",
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     "component_directory": "driver/batch_score_llm",
     "component_name": "batch_score_llm",
     "virtual_environment_name": null,
     "registry_name": "azureml"
+<<<<<<< HEAD
   }
+=======
+}
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

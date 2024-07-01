@@ -9,4 +9,10 @@ properties:
   azureml.promptflow.description: Create an advanced RAG flow modeled on the implementation of Azure AI Playground - on Your Data.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
+<<<<<<< HEAD
 version: 3
+=======
+tags:
+  hiddenlayerscanned: ""
+version: 4
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

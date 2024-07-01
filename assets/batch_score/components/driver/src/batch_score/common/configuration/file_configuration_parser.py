@@ -16,6 +16,12 @@ from .file_configuration_validator import FileConfigurationValidator
 class FileConfigurationParser:
     """Parser for file-base configuration."""
 
+<<<<<<< HEAD
+=======
+    MAX_METADATA_FIELDS = 20
+    MAX_METADATA_CHAR_LENGTH = 50
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def __init__(self, validator: FileConfigurationValidator) -> None:
         """Initialize FileConfigurationParser."""
         self._validator = validator
@@ -35,6 +41,18 @@ class FileConfigurationParser:
         if isinstance(additional_properties, dict):
             additional_properties = json.dumps(additional_properties)
 
+<<<<<<< HEAD
+=======
+        logging_metadata = config.get('log_settings', {}).get('logging_metadata')
+        if isinstance(logging_metadata, dict):
+            reduced_metadata = {}
+            for idx, (key, value) in enumerate(logging_metadata.items()):
+                if idx >= self.MAX_METADATA_FIELDS:
+                    break
+                reduced_metadata[key[:self.MAX_METADATA_CHAR_LENGTH]] = value[:self.MAX_METADATA_CHAR_LENGTH]
+            logging_metadata = json.dumps(reduced_metadata)
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         if config.get('output_settings', {}).get('save_partitioned_scoring_results'):
             output_behavior = 'summary_only'
             save_mini_batch_results = "enabled"
@@ -59,6 +77,10 @@ class FileConfigurationParser:
             image_input_folder=None,
             initial_worker_count=config.get('concurrency_settings', {}).get('initial_worker_count'),
             input_schema_version=config.get('request_settings', {}).get('input_schema_version'),
+<<<<<<< HEAD
+=======
+            logging_metadata=logging_metadata,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             max_retry_time_interval=config.get('request_settings', {}).get('timeout'),
             max_worker_count=config.get('concurrency_settings', {}).get('max_worker_count'),
             mini_batch_results_out_directory=parsed_args.partitioned_scoring_results,

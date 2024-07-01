@@ -1,0 +1,24 @@
+type: evaluationresult
+name: lccsentimentclassification_cohere-embed-v3-multilingual_classification
+version: 2.22.05
+display_name: LccSentimentClassification_cohere-embed-v3-multilingual_classification
+description: cohere-embed-v3-multilingual run for LccSentimentClassification dataset
+dataset_name: LccSentimentClassification
+dataset_family: LccSentimentClassification
+
+model_name: cohere-embed-v3-multilingual
+model_version: "3"
+model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-multilingual/versions/3
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azureml-cohere/models/Cohere-embed-v3-multilingual/versions/3
+
+tags:
+    evaluation_type: text_embeddings
+    task: classification
+    primary_metric: accuracy
+
+metrics:
+    accuracy: 0.5993333333333333
+
+properties: {}

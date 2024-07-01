@@ -3,17 +3,26 @@
 
 """Helper utils for vision Mlflow models."""
 
+<<<<<<< HEAD
 import logging
 import PIL
 import pandas as pd
+=======
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import base64
 import io
+import logging
+import os
 import re
 import requests
-import torch
-from ast import literal_eval
-import numpy as np
+import uuid
 
+import PIL
+import pandas as pd
+import numpy as np
+import torch
+
+from ast import literal_eval
 from PIL import Image, UnidentifiedImageError
 from typing import Union
 
@@ -24,6 +33,27 @@ logger = logging.getLogger(__name__)
 # logging.getLogger("mlflow").setLevel(logging.DEBUG)
 
 
+<<<<<<< HEAD
+=======
+def save_image(output_folder: str, img: PIL.Image.Image, format: str) -> str:
+    """
+    Save image in a folder designated for batch output and return image file path.
+
+    :param output_folder: directory path where we need to save files
+    :type output_folder: str
+    :param img: image object
+    :type img: PIL.Image.Image
+    :param format: format to save image
+    :type format: str
+    :return: file name of image.
+    :rtype: str
+    """
+    filename = f"image_{uuid.uuid4()}.{format.lower()}"
+    img.save(os.path.join(output_folder, filename), format=format)
+    return filename
+
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def get_pil_image(image: bytes) -> PIL.Image.Image:
     """
     Convert image bytes to PIL image.

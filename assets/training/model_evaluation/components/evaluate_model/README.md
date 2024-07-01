@@ -6,7 +6,11 @@ evaluate_model
 
 ### Version 
 
+<<<<<<< HEAD
 0.0.21
+=======
+0.0.27
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 ### Type 
 

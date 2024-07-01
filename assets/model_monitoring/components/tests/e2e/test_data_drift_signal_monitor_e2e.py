@@ -26,14 +26,23 @@ from tests.e2e.utils.constants import (
 
 def _submit_data_drift_model_monitor_job(
     submit_pipeline_job,
+<<<<<<< HEAD
     ml_client,
+=======
+    ml_client: MLClient,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     get_component,
     experiment_name,
     baseline_data,
     target_data,
     target_column="target",
     override_numerical_features=None,
+<<<<<<< HEAD
     override_categorical_features=None
+=======
+    override_categorical_features=None,
+    expect_failure: bool = False
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     dd_model_monitor = get_component(COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR)
 
@@ -62,7 +71,11 @@ def _submit_data_drift_model_monitor_job(
     print(pipeline_job)
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
     pipeline_job = submit_pipeline_job(
+<<<<<<< HEAD
        pipeline_job, experiment_name
+=======
+       pipeline_job, experiment_name, expect_failure
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     # Wait until the job completes
@@ -107,6 +120,7 @@ class TestDataDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_EMPTY,
+            expect_failure=True
         )
 
         # empty production data should fail the job
@@ -124,6 +138,10 @@ class TestDataDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_COMMON_COLUMNS,
+<<<<<<< HEAD
+=======
+            expect_failure=True
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         )
 
         # No common columns should fail the job in the feature selector step and compute histogram step.
@@ -157,6 +175,7 @@ class TestDataDriftModelMonitor:
             test_suite_name,
             DATA_ASSET_EMPTY,
             DATA_ASSET_EMPTY,
+            expect_failure=True
         )
 
         # empty production and target data should fail the job

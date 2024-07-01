@@ -1,6 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_finetune
+<<<<<<< HEAD
 version: 0.0.11
+=======
+version: 0.0.18
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 type: command
 
 is_deterministic: True
@@ -8,14 +12,29 @@ is_deterministic: True
 display_name: OSS Text Generation Finetune
 description: FTaaS component to finetune model for Text Generation task
 
+<<<<<<< HEAD
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/49
+=======
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/62
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 inputs:
+  task_name:
+    type: string
+    optional: True
+    default: "TextGeneration"
+    description: Finetune task name.
+    enum:
+    - "TextGeneration"
   mlflow_model_path:
     type: mlflow_model
     optional: True
     description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
     mode: download
+  model_asset_id:
+    type: string
+    optional: False
+    description: Asset id of model
   dataset_input:
     type: uri_folder
     optional: False

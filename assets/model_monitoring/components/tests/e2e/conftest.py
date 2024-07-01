@@ -535,7 +535,11 @@ def publish_generation_safety_signal_monitor_component(
         print(f"Successfully published {component['name']}.")
 
 
+<<<<<<< HEAD
 @pytest.fixture(scope="session", autouse=True)
+=======
+@pytest.fixture(scope="session")
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def publish_model_token_stats_model_monitor_component(
     main_worker_lock,
     publish_command_components,
@@ -658,7 +662,14 @@ def submit_pipeline_job(ml_client: MLClient, request):
     """Submit pipeline job to ml ws. Handle deletion if the testcase is cancelled/stopped."""
     submitted_jobs = []
 
+<<<<<<< HEAD
     def _submit_job(job: Job, experiment_name: str):
+=======
+    def _submit_job(job: Job, experiment_name: str, expect_failure: bool = False):
+        if job.display_name is not None:
+            job.display_name += "_should_FAIL" if expect_failure else "_should_PASS"
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         pipeline_job = ml_client.jobs.create_or_update(
             job, experiment_name=experiment_name, skip_validation=True
         )
@@ -687,6 +698,11 @@ def cleanup_previous_e2e_tests(ml_client: MLClient, test_suite_name):
         pass
     else:
         for job in ml_client.jobs.list():
+<<<<<<< HEAD
+=======
+            if not job:
+                continue
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             if job.status in RunHistoryConstants.TERMINAL_STATUSES or job.status == JobStatus.FINALIZING:
                 continue
 

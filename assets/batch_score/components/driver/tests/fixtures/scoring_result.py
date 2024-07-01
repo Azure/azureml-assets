@@ -19,6 +19,10 @@ def make_scoring_result():
     """Mock scoring result."""
     def make(
             status: ScoringResultStatus = ScoringResultStatus.SUCCESS,
+<<<<<<< HEAD
+=======
+            model_response_code: int = 200,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             start: float = time.time() - 10,
             end: float = time.time(),
             request_obj: any = None,
@@ -30,6 +34,10 @@ def make_scoring_result():
         """Make a mock scoring result."""
         return ScoringResult(
             status=status,
+<<<<<<< HEAD
+=======
+            model_response_code=model_response_code,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             start=start,
             end=end,
             request_obj=request_obj,

@@ -3,6 +3,7 @@
 
 """Common utilities."""
 
+<<<<<<< HEAD
 import json
 from argparse import ArgumentParser
 from urllib.parse import urlparse
@@ -11,6 +12,11 @@ from ..common.scoring.scoring_result import ScoringResult
 from . import embeddings_utils as embeddings
 from .json_encoder_extensions import BatchComponentJSONEncoder
 
+=======
+from argparse import ArgumentParser
+from urllib.parse import urlparse
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 def get_base_url(url: str) -> str:
     """Get base url."""
@@ -38,6 +44,7 @@ def str2bool(v):
         raise ArgumentParser.ArgumentTypeError('Boolean value expected.')
 
 
+<<<<<<< HEAD
 def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: int) -> "list[str]":
     """Convert scoring results to the result list."""
     output_list: list[dict[str, str]] = []
@@ -66,11 +73,16 @@ def convert_result_list(results: "list[ScoringResult]", batch_size_per_request: 
     return list(map(__stringify_output, output_list))
 
 
+=======
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def get_mini_batch_id(mini_batch_context: any):
     """Get mini batch id from mini batch context."""
     if mini_batch_context:
         return mini_batch_context.mini_batch_id
+<<<<<<< HEAD
 
 
 def __stringify_output(payload_obj: dict) -> str:
     return json.dumps(payload_obj, cls=BatchComponentJSONEncoder)
+=======
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

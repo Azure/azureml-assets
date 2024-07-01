@@ -105,6 +105,10 @@ class TestSpanTreeUtilities:
 
         assert tree_0.root_span is not None
         assert tree_0.root_span == s0
+<<<<<<< HEAD
+=======
+        assert tree_0.possible_root_spans[0] == s0
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         assert tree_0.root_span.children == []
 
         # scneario 1 where single span is give but parent_id is pointing to an unknown node.
@@ -119,6 +123,7 @@ class TestSpanTreeUtilities:
         tree_1.show()
         print()
 
+<<<<<<< HEAD
         assert tree_1.root_span is None
         assert tree_1._span_node_map == {span.span_id: span for span in spans_1}
         # TODO: Uncomment if we ever want to handle scenarios like this differently.
@@ -126,6 +131,15 @@ class TestSpanTreeUtilities:
         # assert tree_1.root_span is not None
         # assert tree_1.root_span == s1
         # assert tree_1.root_span.children == []
+=======
+        assert tree_1._span_node_map == {span.span_id: span for span in spans_1}
+
+        # root span should be 1.
+        assert tree_1.root_span is not None
+        assert tree_1.root_span == s1
+        assert tree_1.possible_root_spans[0] == s1
+        assert tree_1.root_span.children == []
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         # scenario 2 where root span "0" is outside our data_window. Visually denoted by the dashes
         #    0
@@ -139,6 +153,7 @@ class TestSpanTreeUtilities:
         tree_2.show()
         print()
 
+<<<<<<< HEAD
         assert tree_2.root_span is None
         assert tree_2._span_node_map == {span.span_id: span for span in spans_2}
         # TODO: Uncomment if we ever want to handle scenarios like this differently.
@@ -147,6 +162,16 @@ class TestSpanTreeUtilities:
         # assert tree_2.root_span == s1
         # assert tree_2.root_span.children[0] == s2
         # assert tree_2.root_span.children[1] == s3
+=======
+        assert tree_2._span_node_map == {span.span_id: span for span in spans_2}
+
+        # root span should be 1.
+        assert tree_2.root_span is not None
+        assert tree_2.root_span == s1
+        assert tree_2.possible_root_spans[0] == s1
+        assert tree_2.root_span.children[0] == s2
+        assert tree_2.root_span.children[1] == s3
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         # scenario 3 where root span "0" is outside our data_window but have multiple spans pointing to it.
         #    0
@@ -164,11 +189,16 @@ class TestSpanTreeUtilities:
 
         assert tree_3.root_span is None
         assert tree_3._span_node_map == {span.span_id: span for span in spans_3}
+<<<<<<< HEAD
         # TODO: uncomment when we know what to look for in this case.
         # assert tree_3.root_span is not None
         # assert tree_3.root_span == s1
         # assert tree_3.root_span.children[0] == s2
         # assert tree_3.root_span.children[1] == s4
+=======
+        assert tree_3.possible_root_spans[0] == s1
+        assert tree_3.possible_root_spans[1] == s4
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         # scenario 4 where spans in our data point to multiple outside parent spans.
         # 00  0
@@ -186,11 +216,32 @@ class TestSpanTreeUtilities:
 
         assert tree_4.root_span is None
         assert tree_4._span_node_map == {span.span_id: span for span in spans_4}
+<<<<<<< HEAD
         # TODO: uncomment when we know what to look for in this case.
         # assert tree_4.root_span is not None
         # assert tree_4.root_span == s1
         # assert tree_4.root_span.children[0] == s2
         # assert tree_4.root_span.children[1] == s4
+=======
+        assert tree_4.possible_root_spans[0] == s1
+        assert tree_4.possible_root_spans[1] == s4
+        assert tree_4.possible_root_spans[2] == s5
+
+        # scenario 5: we have two root spans where one has parent_id null and one doesn't.
+        # 00   null
+        # -|----|------
+        #  |    |-> 0
+        #  |-> 5
+        spans_5 = [s0, s5]
+        tree_5 = SpanTree(spans_5)
+        tree_5.show()
+        print()
+
+        assert tree_5.root_span is None
+        assert tree_5._span_node_map == {span.span_id: span for span in spans_5}
+        assert tree_5.possible_root_spans[0] == s0
+        assert tree_5.possible_root_spans[1] == s5
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     def test_span_tree_from_json_string(self):
         """Test scenario to construct span tree from json string."""
@@ -445,3 +496,326 @@ class TestSpanTreeUtilities:
         assert tree.get_span_tree_node_by_span_id("") is None
         assert tree.get_span_tree_node_by_span_id(None) is None  # type: ignore
         assert tree.get_span_tree_node_by_span_id("0") == s0
+<<<<<<< HEAD
+=======
+
+    @pytest.mark.parametrize(
+            "row,inputs,output",
+            [
+                (
+                    Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
+                        attributes=None,
+                        events=None),
+                    None,
+                    None),
+                (
+                    Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
+                        attributes=None,
+                        events="[{\"name\":\"promptflow.function.inputs\",\"timestamp\":"
+                        "\"2024-04-09T01:42:23.587010Z\","
+                        "\"attributes\":{\"payload\":\"{\\n  \\\"model\\\": "
+                        "\\\"gpt-4-0405\\\",\\n  \\\"messages\\\":"
+                        " [\\n    {\\n      \\\"role\\\": \\\"system\\\",\\n      "
+                        "\\\"content\\\": \\\"You are "
+                        "a helpful assistant.\\\"\\n    },\\n    {\\n      "
+                        "\\\"role\\\": \\\"user\\\",\\n      "
+                        "\\\"content\\\": \\\"hello\\\"\\n    },\\n    {\\n      "
+                        "\\\"role\\\": \\\"assistant\\\",\\n"
+                        "      \\\"content\\\": \\\"Hello! How can I assist you today?\\\""
+                        "\\n    },\\n    {\\n      "
+                        "\\\"role\\\": \\\"user\\\",\\n      \\\"content\\\": "
+                        "\\\"what can you do?\\\"\\n    }\\n  ],\\n"
+                        "  \\\"temperature\\\": 0.7,\\n  \\\"top_p\\\": 1.0,\\n  "
+                        "\\\"n\\\": 1,\\n  \\\"stream\\\": false,\\n"
+                        "  \\\"presence_penalty\\\": 0.0,\\n  "
+                        "\\\"frequency_penalty\\\": 0.0,\\n  \\\"user\\\": \\\"\\\",\\n"
+                        "  \\\"max_tokens\\\": 256\\n}\"}},{\"name\":"
+                        "\"promptflow.function.output\",\"timestamp\""
+                        ":\"2024-04-09T01:42:50.757239Z\",\"attributes\":{"
+                        "\"payload\":\"{\\n  \\\"id\\\": "
+                        "\\\"chatcmpl-9Bun9MD3qDvYLvVeGenY4uF6sLyS1\\\",\\n  "
+                        "\\\"choices\\\": [\\n    {\\n"
+                        "      \\\"finish_reason\\\": \\\"length\\\",\\n      "
+                        "\\\"index\\\": 0,\\n      "
+                        "\\\"logprobs\\\": null,\\n      \\\"message\\\": {\\n        "
+                        "\\\"content\\\": \\\"I can "
+                        "help with a wide range of questions and tasks! "
+                        "Here are some examples:\\\\n\\\\n1. "
+                        "**General Knowledge and Facts**: I can provide "
+                        "information on a vast array of topics "
+                        "such as history, science, technology, and more.\\\\n2. "
+                        "**Educational Assistance**: "
+                        "I can help with explanations, summaries, and information on various academic subjects."
+                        "\\\\n3. **Daily Tasks**: I can assist with setting reminders, providing weather updates, "
+                        "or offering advice on daily routines.\\\\n4. **Technical Support**: I can offer guidance on"
+                        " using software, troubleshooting basic tech issues, or understanding tech concepts.\\\\n5. "
+                        "**Entertainment and Recommendations**: "
+                        "I can suggest books, movies, music, or games based on "
+                        "your preferences.\\\\n6. **Travel and Geography**: I can provide information on countries, "
+                        "cultures, travel tips, and help plan trips.\\\\n7. **Writing and Editing**: I can help with "
+                        "writing tips, grammar checks, and suggestions for improving your text.\\\\n8. **Health and "
+                        "Fitness Advice**: I can offer general advice on exercise, "
+                        "diet, and wellness, though I recommend"
+                        " consulting professionals for personalized guidance.\\\\n9. **News and Current Events**: "
+                        "I can provide summaries or explanations of recent happenings around the world, "
+                        "up to my last "
+                        "update.\\\\n\\\\nAnd much more! If you have a specific question\\\",\\n        "
+                        "\\\"role\\\": "
+                        "\\\"assistant\\\",\\n        \\\"function_call\\\": null,\\n        "
+                        "\\\"tool_calls\\\": null\\n "
+                        "     },\\n      \\\"content_filter_results\\\": {\\n        \\\"hate\\\": {\\n          "
+                        "\\\"filtered\\\": false,\\n          \\\"severity\\\": \\\"safe\\\"\\n        },\\n        "
+                        "\\\"self_harm\\\": {\\n          \\\"filtered\\\": false,\\n          \\\"severity\\\": "
+                        "\\\"safe\\\"\\n        },\\n        \\\"sexual\\\": {\\n          "
+                        "\\\"filtered\\\": false,\\n "
+                        "         \\\"severity\\\": \\\"safe\\\"\\n        },\\n        "
+                        "\\\"violence\\\": {\\n          "
+                        "\\\"filtered\\\": false,\\n          \\\"severity\\\": "
+                        "\\\"safe\\\"\\n        }\\n      }\\n    "
+                        "}\\n  ],\\n  \\\"created\\\": 1712626943,\\n  \\\"model\\\": "
+                        "\\\"gpt-4\\\",\\n  \\\"object\\\": "
+                        "\\\"chat.completion\\\",\\n  \\\"system_fingerprint\\\": "
+                        "\\\"fp_2f57f81c11\\\",\\n  \\\"usage\\\":"
+                        " {\\n    \\\"completion_tokens\\\": 256,\\n    "
+                        "\\\"prompt_tokens\\\": 40,\\n    \\\"total_tokens\\\""
+                        ": 296\\n  },\\n  \\\"prompt_filter_results\\\": "
+                        "[\\n    {\\n      \\\"prompt_index\\\": 0,\\n      "
+                        "\\\"content_filter_results\\\": {\\n        "
+                        "\\\"hate\\\": {\\n          \\\"filtered\\\": false,\\n "
+                        "         \\\"severity\\\": \\\"safe\\\"\\n        },\\n        "
+                        "\\\"self_harm\\\": {\\n          "
+                        "\\\"filtered\\\": false,\\n          "
+                        "\\\"severity\\\": \\\"safe\\\"\\n        },\\n        "
+                        "\\\"sexual\\\": {\\n          \\\"filtered\\\": false,\\n          "
+                        "\\\"severity\\\": \\\"safe\\\"\\n "
+                        "       },\\n        \\\"violence\\\": {\\n          \\\"filtered\\\": false,\\n          "
+                        "\\\"severity\\\": \\\"safe\\\"\\n        }\\n      }\\n    }\\n  ]\\n}\"}}]"),
+                    "{\n  \"model\": \"gpt-4-0405\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      "
+                    "\"content\": \"You are a helpful assistant.\"\n    },\n    {\n      \"role\": \"user\",\n      "
+                    "\"content\": \"hello\"\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": "
+                    "\"Hello! How can I assist you today?\"\n    },\n    {\n      \"role\": \"user\",\n      "
+                    "\"content\": \"what can you do?\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"top_p\": 1.0,\n  "
+                    "\"n\": 1,\n  \"stream\": false,\n  \"presence_penalty\": 0.0,\n  \"frequency_penalty\": 0.0,\n  "
+                    "\"user\": \"\",\n  \"max_tokens\": 256\n}",
+                    "{\n  \"id\": \"chatcmpl-9Bun9MD3qDvYLvVeGenY4uF6sLyS1\",\n  \"choices\": [\n    {\n      "
+                    "\"finish_reason\": \"length\",\n      \"index\": 0,\n      \"logprobs\": null,\n      "
+                    "\"message\": "
+                    "{\n        \"content\": \"I can help with a wide range of questions and tasks! "
+                    "Here are some examples:"
+                    "\\n\\n1. **General Knowledge and Facts**: "
+                    "I can provide information on a vast array of topics such as "
+                    "history, science, technology, and more.\\n2. "
+                    "**Educational Assistance**: I can help with explanations, "
+                    "summaries, and information on various academic subjects.\\n3. "
+                    "**Daily Tasks**: I can assist with setting "
+                    "reminders, providing weather updates, or offering advice "
+                    "on daily routines.\\n4. **Technical Support**: "
+                    "I can offer guidance on using software, "
+                    "troubleshooting basic tech issues, or understanding tech concepts."
+                    "\\n5. **Entertainment and Recommendations**: "
+                    "I can suggest books, movies, music, or games based on your "
+                    "preferences.\\n6. **Travel and Geography**: "
+                    "I can provide information on countries, cultures, travel tips, "
+                    "and help plan trips.\\n7. **Writing and Editing**: "
+                    "I can help with writing tips, grammar checks, and "
+                    "suggestions for improving your text.\\n8. **Health "
+                    "and Fitness Advice**: I can offer general advice on "
+                    "exercise, diet, and wellness, though I recommend "
+                    "consulting professionals for personalized guidance.\\n9. "
+                    "**News and Current Events**: I can provide summaries or "
+                    "explanations of recent happenings around the world, "
+                    "up to my last update.\\n\\nAnd much more! If you have a specific question\",\n"
+                    "        \"role\": \"assistant\",\n"
+                    "        \"function_call\": null,\n        \"tool_calls\": null\n      },\n"
+                    "      \"content_filter_results\": {\n "
+                    "       \"hate\": {\n          \"filtered\": false,\n          "
+                    "\"severity\": \"safe\"\n        },\n        "
+                    "\"self_harm\": {\n          \"filtered\": false,\n          "
+                    "\"severity\": \"safe\"\n        },\n        \"sexual\": {\n "
+                    "         \"filtered\": false,\n          \"severity\": "
+                    "\"safe\"\n        },\n        \"violence\": {\n          "
+                    "\"filtered\": false,\n          \"severity\": \"safe\"\n        "
+                    "}\n      }\n    }\n  ],\n  \"created\": 1712626943,\n"
+                    "  \"model\": \"gpt-4\",\n  \"object\": \"chat.completion\",\n  "
+                    "\"system_fingerprint\": \"fp_2f57f81c11\",\n  \"usage\": "
+                    "{\n    \"completion_tokens\": 256,\n    \"prompt_tokens\": 40,\n    "
+                    "\"total_tokens\": 296\n  },\n  \"prompt_filter_results\":"
+                    " [\n    {\n      \"prompt_index\": 0,\n      \"content_filter_results\": {\n        "
+                    "\"hate\": {\n          \"filtered\": false,\n"
+                    "          \"severity\": \"safe\"\n        },\n        \"self_harm\": {\n          "
+                    "\"filtered\": false,\n          "
+                    "\"severity\": \"safe\"\n        },\n        \"sexual\": {\n          "
+                    "\"filtered\": false,\n          \"severity\": \"safe\"\n"
+                    "        },\n        \"violence\": {\n          \"filtered\": false,\n          "
+                    "\"severity\": \"safe\"\n        }\n      }\n    }\n  ]\n}"),
+                (
+                    Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
+                        attributes="{\"inputs\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\",\\n  \\\"messages\\\":"
+                        "[\\n    {\\n      \\\"role\\\": \\\"system\\\",\\n      \\\"content\\\": \\\"You are a help"
+                        "ful assistant.\\\"\\n    },\\n    {\\n      \\\"role\\\": "
+                        "\\\"user\\\",\\n      \\\"content\\\": "
+                        "\\\"hello\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"assistant\\\",\\n      "
+                        "\\\"content\\\": "
+                        "\\\"Hello! How can I assist you today?\\\"\\n    },\\n    {\\n      \\\"role\\\": "
+                        "\\\"user\\\",\\n "
+                        "     \\\"content\\\": \\\"what can you do?\\\"\\n    }\\n  ],\\n  "
+                        "\\\"temperature\\\": 0.7,\\n  "
+                        "\\\"top_p\\\": 1.0,\\n  \\\"n\\\": 1,\\n  \\\"stream\\\": false,\\n  "
+                        "\\\"presence_penalty\\\": 0.0,\\n "
+                        " \\\"frequency_penalty\\\": 0.0,\\n  \\\"user\\\": \\\"\\\",\\n  "
+                        "\\\"max_tokens\\\": 256\\n}\"}",
+                        events="[]"),
+                    "{\n  \"model\": \"gpt-4-0405\",\n  \"messages\":[\n    {\n      \"role\": \"system\",\n      "
+                    "\"content\": \"You are a helpful assistant.\"\n    },\n    {\n      \"role\": \"user\",\n      "
+                    "\"content\": \"hello\"\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": "
+                    "\"Hello! How can I assist you today?\"\n    },\n    {\n      \"role\": \"user\",\n      "
+                    "\"content\": \"what can you do?\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"top_p\": 1.0,\n  "
+                    "\"n\": 1,\n  \"stream\": false,\n  \"presence_penalty\": 0.0,\n  \"frequency_penalty\": 0.0,\n  "
+                    "\"user\": \"\",\n  \"max_tokens\": 256\n}",
+                    None),
+                (
+                    Row(span_id="0", parent_id=None, start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0), trace_id="1", status="OK",
+                        attributes="{\"inputs\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\",\\n  \\\"messages\\\":"
+                        "[\\n    {\\n      \\\"role\\\": \\\"system\\\",\\n      \\\"content\\\": \\\"You are a help"
+                        "ful assistant.\\\"\\n    },\\n    {\\n      \\\"role\\\": "
+                        "\\\"user\\\",\\n      \\\"content\\\": "
+                        "\\\"hello\\\"\\n    },\\n    {\\n      \\\"role\\\": \\\"assistant\\\",\\n      "
+                        "\\\"content\\\": "
+                        "\\\"Hello! How can I assist you today?\\\"\\n    },\\n    {\\n      "
+                        "\\\"role\\\": \\\"user\\\",\\n "
+                        "     \\\"content\\\": \\\"what can you do?\\\"\\n    }\\n  ],\\n  "
+                        "\\\"temperature\\\": 0.7,\\n  "
+                        "\\\"top_p\\\": 1.0,\\n  \\\"n\\\": 1,\\n  \\\"stream\\\": false,\\n  "
+                        "\\\"presence_penalty\\\": 0.0,\\n "
+                        " \\\"frequency_penalty\\\": 0.0,\\n  \\\"user\\\": \\\"\\\",\\n  "
+                        "\\\"max_tokens\\\": 256\\n}\"}",
+                        events="[{\"name\":\"promptflow.function.inputs\",\"timestamp\":"
+                        "\"2024-04-09T01:42:23.587010Z\","
+                        "\"attributes\":{\"payload\":\"{\\n  \\\"model\\\": \\\"gpt-4-0405\\\"\\n  }\"}}]"),
+                    "{\n  \"model\": \"gpt-4-0405\"\n  }",
+                    None),
+                ])
+    def test_span_tree_node_input_output_properties(self, row: Row, inputs, output):
+        """Test scenarios for getting the input and output tree node properties."""
+        node = SpanTreeNode(row)
+        assert node.input == inputs
+        assert node.output == output
+
+    @pytest.mark.parametrize(
+            "row,retrieval_query,retrieval_documents",
+            [
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Retrieval",
+                        attributes=None,
+                        events=None),
+                    None,
+                    None),
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Retrieval",
+                        attributes="{\"span_type\":\"Retrieval\",\"retrieval.query\":"
+                        "\"Can you provide information about AML?\",\"retrieval.documents\":"
+                        "\"[{\\\"document.content\\\": \\\"# Monitoring Azure Machine "
+                        "Learning data reference\\\"}]\"}",
+                        events=""),
+                    "Can you provide information about AML?",
+                    [{"document.content": "# Monitoring Azure Machine Learning data reference"}]),
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Retrieval",
+                        attributes="{\"span_type\":\"Retrieval\",\"retrieval.query\":"
+                        "\"Can you provide information about AML?\","
+                        "\"retrieval.documents\":\"[{\\\"document.content\\\": "
+                        "\\\"# Monitoring Azure Machine Learning data reference\\\"}]\"}",
+                        events="[\n  {\"name\":\"promptflow.retrieval.query\",\n  "
+                        "\"timestamp\":\"2024-04-10T15:26:11.410541Z\",\n"
+                        "  \"attributes\":{\"payload\":\"Can you provide information about AML?\"}},\n  "
+                        "{\"name\":\"promptflow.retrieval.documents\",\n  "
+                        "\"timestamp\":\"2024-04-10T15:26:18.429217Z\",\n  "
+                        "\"attributes\":{\"payload\":\"[{\\\"document.content\\\": "
+                        "\\\"# Monitoring Azure Machine Learning data "
+                        "reference\\\"}]\"}}\n  ]"),
+                    "Can you provide information about AML?",
+                    [{"document.content": "# Monitoring Azure Machine Learning data reference"}])
+            ])
+    def test_span_tree_node_retrieval_properties(self, row: Row, retrieval_query, retrieval_documents: list):
+        """Test scenarios for getting the input and output tree node properties."""
+        node = SpanTreeNode(row)
+        assert node.retrieval_query == retrieval_query
+        assert node.retrieval_documents == retrieval_documents
+
+    @pytest.mark.parametrize(
+            "row,embeddings",
+            [
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        attributes=None,
+                        events=None),
+                    None),
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Embedding",
+                        attributes="{\"span_type\": \"Embedding\"}",
+                        events="[        {\n          \"name\": \"promptflow.function.inputs\",\n "
+                        "         \"timestamp\": \"2024-04-10T15:25:48.909821Z\",\n        "
+                        "  \"attributes\": {\n            \"payload\": \"{\\n  \\\"input\\\": [\\n"
+                        "    [\\n      4438,\\n      527,\\n      499,\\n      3815,\\n      30\\n "
+                        "   ]\\n  ],\\n  \\\"model\\\": \\\"text-embedding-ada-002\\\"\\n}\"\n      "
+                        "    }\n        },\n        {\n          \"name\": \"promptflow.embedding.embeddings\","
+                        "\n          \"timestamp\": \"2024-04-10T15:25:49.146844Z\",\n          "
+                        "\"attributes\": {\n            \"payload\": \"[\\n  {\\n    "
+                        "\\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n    "
+                        "\\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"\n"
+                        "}\n        }]"),
+                    [{"embedding.vector": "\u003c1536 dimensional vector\u003e",
+                      "embedding.text": "\u003c5 dimensional token\u003e"}]),
+                (
+                    Row(span_id="0",
+                        parent_id=None,
+                        start_time=datetime(2024, 2, 12, 0, 0, 1),
+                        end_time=datetime(2024, 2, 12, 1, 40, 0),
+                        trace_id="1",
+                        status="OK",
+                        span_type="Embedding",
+                        attributes="{\"span_type\": \"Embedding\",\"embedding.embeddings\": \"[\\n  "
+                        "{\\n    \\\"embedding.vector\\\": \\\"\\u003c1536 dimensional vector\\u003e\\\",\\n"
+                        "    \\\"embedding.text\\\": \\\"\\u003c5 dimensional token\\u003e\\\"\\n  }\\n]\"}",
+                        events="[]"),
+                    [{"embedding.vector": "\u003c1536 dimensional vector\u003e",
+                     "embedding.text": "\u003c5 dimensional token\u003e"}])
+            ])
+    def test_span_tree_node_embedding_properties(self, row: Row, embeddings):
+        """Test scenarios for getting the input and output tree node properties."""
+        node = SpanTreeNode(row)
+        assert node.embeddings == embeddings
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

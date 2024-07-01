@@ -3,7 +3,7 @@
 
 """Contains helper functions for input/output operations."""
 
-from typing import Any, List, Dict, Optional
+from typing import Any, List, Dict, Optional, Tuple
 import uuid
 import json
 import os
@@ -13,6 +13,7 @@ import pandas as pd
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
 
+from .constants import IntermediateNames
 from .logging import get_logger
 from .exceptions import DataFormatException
 from .error_definitions import DataFormatError
@@ -113,20 +114,39 @@ def resolve_io_path(dataset: str) -> List[str]:
     return [dataset]
 
 
+def filter_files_with_given_extension(file_paths: List[str], extension: str) -> List[str]:
+    """Filter and returns the list of files with given extension."""
+    return [file_path for file_path in file_paths if file_path.endswith(extension)]
+
+
+def get_image_file_name(image_counter: int) -> str:
+    """Make name for local image file."""
+    return IntermediateNames.IMAGE_FILE_NAME_TEMPLATE.format(image_counter=image_counter)
+
+
+def get_datastore_image_directory_name(datastore_name: str) -> Tuple[str, str]:
+    """Make random name for image directory on datastore and get its URL."""
+    datastore_directory_name = IntermediateNames.RANDOM_IMAGE_DIRECTORY_TEMPLATE.format(random_id=str(uuid.uuid4()))
+    datastore_directory_url = IntermediateNames.DATASTORE_DIRECTORY_URL_TEMPLATE.format(
+        datastore_name=datastore_name, directory_name=datastore_directory_name
+    )
+    return datastore_directory_name, datastore_directory_url
+
+
 def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     """
-    Read `.jsonl` files and return a list of dictionaries.
+    Read `.jsonl` file/files and return a list of dictionaries.
 
-    Ignores files that do not have `.jsonl` extension. Raises exception if no `.jsonl` files
-    found or if any `.jsonl` file contains invalid JSON.
+    If a single path is present in `file_paths` and the file does not have any extension, try \
+    to read it as a `.jsonl` file. This is done to support `uri_file` without extension scenario.
 
     :param file_paths: List of paths to .jsonl files.
     :return: List of dictionaries.
     """
+    if len(file_paths) > 1:
+        file_paths = filter_files_with_given_extension(file_paths, ".jsonl")
     data_dicts = []
     for file_path in file_paths:
-        if not file_path.endswith(".jsonl"):
-            continue
         with open(file_path, 'r') as file:
             for i, line in enumerate(file):
                 try:

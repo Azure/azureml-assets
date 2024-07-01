@@ -1,6 +1,10 @@
 type: evaluationresult
 name: human_eval_microsoft_phi_2_text_generation
+<<<<<<< HEAD
 version: 2.02.04
+=======
+version: 2.19.040
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: human_eval_microsoft_phi_2_text_generation
 description: microsoft-phi-2 run for human_eval dataset
 dataset_family: human_eval
@@ -15,6 +19,10 @@ relationships:
     assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
 
 tags:
+<<<<<<< HEAD
+=======
+  evaluation_type: text_generation
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: text-generation
   accuracy_metric_name: pass@1
 

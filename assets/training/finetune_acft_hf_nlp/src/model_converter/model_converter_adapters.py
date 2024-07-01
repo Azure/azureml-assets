@@ -9,15 +9,28 @@ from pathlib import Path
 import json
 import shutil
 import yaml
+<<<<<<< HEAD
 
 from azureml.acft.accelerator.utils.code_utils import get_model_custom_code_files, copy_code_files
 from azureml.acft.accelerator.utils.license_utils import download_license_file
+=======
+import os
+
+from azureml.acft.accelerator.utils.code_utils import get_model_custom_code_files, copy_code_files
+from azureml.acft.accelerator.utils.license_utils import download_license_file
+from azureml.acft.accelerator.utils.run_utils import is_main_process
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 from azureml.acft.common_components.utils.mlflow_utils import update_acft_metadata
 
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import (
+<<<<<<< HEAD
     MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants,
+=======
+    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants, HfModelTypes,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 )
 
 import mlflow
@@ -42,7 +55,17 @@ MLFLOW_TASK_HF_PRETRAINED_CLASS_MAP = {
     MLFlowHFFlavourTasks.TEXT_GENERATION: "AutoModelForCausalLM",
     MLFlowHFFlavourTasks.SUMMARIZATION: "AutoModelForSeq2SeqLM",
     MLFlowHFFlavourTasks.TRANSLATION: "AutoModelForSeq2SeqLM",
+<<<<<<< HEAD
 }
+=======
+    MLFlowHFFlavourTasks.CHAT_COMPLETION: "AutoModelForCausalLM",
+}
+UNWANTED_PACKAGES = [
+    "apex>",
+    "apex<",
+    "apex="
+]
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 class ModelConverter(ABC):
@@ -228,6 +251,46 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         super().__init__()
         super(ModelConverter, self).__init__(component_args)
 
+<<<<<<< HEAD
+=======
+    @staticmethod
+    def remove_unwanted_packages(model_save_path: str):
+        """Remove unwanted packages from conda and requirements file."""
+        if is_main_process():
+            req_file_path = os.path.join(model_save_path, "requirements.txt")
+            conda_file_path = os.path.join(model_save_path, "conda.yaml")
+            requirements = None
+            if os.path.exists(req_file_path):
+                with open(req_file_path, "r") as f:
+                    requirements = f.readlines()
+                if requirements:
+                    for package in UNWANTED_PACKAGES:
+                        requirements = [item for item in requirements if not item.startswith(package)]
+                    logger.info("Updated requirements.txt file")
+
+            conda_dict = None
+            if os.path.exists(conda_file_path):
+                with open(conda_file_path, "r") as f:
+                    conda_dict = yaml.safe_load(f)
+                if conda_dict is not None and "dependencies" in conda_dict:
+                    for i in range(len(conda_dict["dependencies"])):
+                        if "pip" in conda_dict["dependencies"][i] and isinstance(conda_dict["dependencies"][i], dict):
+                            pip_list = conda_dict["dependencies"][i]["pip"]
+                            if len(pip_list) > 0:
+                                for package in UNWANTED_PACKAGES:
+                                    pip_list = [item for item in pip_list if not item.startswith(package)]
+                                conda_dict["dependencies"][i]["pip"] = pip_list
+                                break
+                    with open(conda_file_path, "w") as f:
+                        yaml.safe_dump(conda_dict, f)
+                    logger.info("Updated conda.yaml file")
+
+    def is_t5_text_classification_finetune(self, model_type) -> bool:
+        """Check for t5 text-classification."""
+        return self.mlflow_task_type == MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION and \
+            model_type == HfModelTypes.T5
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def convert_model(self) -> None:
         """Convert pytorch model to oss mlflow model."""
         # load model and tokenizer
@@ -235,6 +298,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
 
         self.set_mlflow_model_parameters(model)
 
+<<<<<<< HEAD
         conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
         if conda_file_path.is_file():
             self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
@@ -242,6 +306,19 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
                 f"Found {MLFlowHFFlavourConstants.CONDA_YAML_FILE} from base model. "
                 "Using it for saving Mlflow model."
             )
+=======
+        # Temp Fix:
+        # specific check for t5 text-classification so that base model dependencies doesn't get pass
+        # and use transformers version 4.40.0 from infer dependencies
+        if not self.is_t5_text_classification_finetune(model.config.model_type):
+            conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
+            if conda_file_path.is_file():
+                self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
+                logger.info(
+                    f"Found {MLFlowHFFlavourConstants.CONDA_YAML_FILE} from base model. "
+                    "Using it for saving Mlflow model."
+                )
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         # saving oss mlflow model
         model_pipeline = pipeline(task=self.mlflow_task_type, model=model, tokenizer=tokenizer, config=model.config)
@@ -266,4 +343,11 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.add_model_signature()
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
 
+<<<<<<< HEAD
+=======
+        # Temp fix for t5 text-classification
+        if self.is_t5_text_classification_finetune(model.config.model_type):
+            self.remove_unwanted_packages(self.mlflow_model_save_path)
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         logger.info("Saved MLFlow model using OSS flavour.")

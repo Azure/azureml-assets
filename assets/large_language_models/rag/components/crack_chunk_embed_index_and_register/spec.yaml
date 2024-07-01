@@ -1,5 +1,9 @@
 name: llm_rag_crack_chunk_embed_index_and_register
+<<<<<<< HEAD
 version: 0.0.17
+=======
+version: 0.0.26
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 tags:
     Preview: ""
 

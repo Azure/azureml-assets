@@ -1,6 +1,10 @@
 type: evaluationresult
 name: piqa_gpt_4_32k_0613_question_answering
+<<<<<<< HEAD
 version: 2.02.04
+=======
+version: 2.03.05
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: piqa_gpt_4_32k_0613_question_answering
 description: gpt-4-32k-0613 run for piqa dataset
 dataset_family: piqa
@@ -8,6 +12,7 @@ dataset_name: piqa
 
 model_name: gpt-4-32k-0613
 model_version: "0613"
+<<<<<<< HEAD
 model_asset_id: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
 
 relationships:
@@ -15,6 +20,16 @@ relationships:
     assetId: azureml://registries/azure-openai-preview/models/gpt-4-32k/versions/629592.2a481b56
 
 tags:
+=======
+model_asset_id: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4-32k/versions/315
+
+tags:
+  evaluation_type: text_generation
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: question-answering
   accuracy_metric_name: exact_match
 

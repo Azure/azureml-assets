@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: snowflake-arctic-instruct
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  inference-min-sku-spec: 80|2|640|256
+  inference-recommended-sku: Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
+tags:
+  Preview: ""
+  huggingface_model_id: Snowflake/snowflake-arctic-instruct
+  license: apache2.0
+  disable-batch: "true"
+  task: chat-completion
+  SharedComputeCapacityEnabled: ""
+  author: snowflake
+  hiddenlayerscanned: ""
+  inference_compute_allow_list: 
+    [
+      Standard_NC80adis_H100_v5,
+      Standard_ND96isr_H100_v5,
+    ]
+  inference_supported_envs:
+    - vllm
+version: 1

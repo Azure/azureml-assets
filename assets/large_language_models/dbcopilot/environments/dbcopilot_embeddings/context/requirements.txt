@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 azureml-rag[cognitive_search,data_generation]==0.2.26
+=======
+azureml-rag[cognitive_search,data_generation]==0.2.34
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 azureml-contrib-services
 azure-identity==1.14.0
 azureml-core~=1.53.0

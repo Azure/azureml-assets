@@ -14,6 +14,7 @@ from promptflow.azure import PFClient
 class PromptFlowCreation(OBOComponentBase):
     """PromptFlowCreation Class."""
 
+<<<<<<< HEAD
     FLOW_DIRECTORY = os.path.join(
         os.path.dirname(__file__), "prompt_flows"
     )
@@ -21,6 +22,11 @@ class PromptFlowCreation(OBOComponentBase):
     FLOW_DAG = os.path.join(
         os.path.dirname(__file__), "prompt_flows", "flow.dag.yaml"
     )
+=======
+    FLOW_DIRECTORY = os.path.join(os.path.dirname(__file__), "prompt_flows")
+
+    FLOW_DAG = os.path.join(os.path.dirname(__file__), "prompt_flows", "flow.dag.yaml")
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     def __init__(self):
         """Initialize the class."""
@@ -49,7 +55,13 @@ class PromptFlowCreation(OBOComponentBase):
         example_embedding_uri: str = None,
         llm_config: str = None,
         runtime: str = None,
+<<<<<<< HEAD
         include_views: bool = False,
+=======
+        knowledge_pieces: str = None,
+        include_views: bool = False,
+        instruct_template: str = None,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     ):
         """Create the prompt flow."""
         from utils.asset_utils import get_datastore_uri, parse_connection
@@ -61,6 +73,10 @@ class PromptFlowCreation(OBOComponentBase):
         datastore_uri = get_datastore_uri(workspace, asset_uri)
         logging.info(f"Datastore uri: {datastore_uri}")
 
+<<<<<<< HEAD
+=======
+        managed_identity_enabled = os.environ.get("MANAGED_IDENTITY_ENABLED", None)
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         embedding_connection_id = os.environ.get(
             "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None
         )
@@ -113,9 +129,17 @@ class PromptFlowCreation(OBOComponentBase):
             flow_data['nodes'][0]['inputs'][
                 'chat_aoai_deployment_name'] = chat_aoai_deployment_name if chat_aoai_deployment_name else ""
             flow_data['nodes'][0]['inputs']['example_embedding_uri'] = example_embedding_uri
+<<<<<<< HEAD
             flow_data["nodes"][0]["inputs"]["include_views"] = include_views
 
         with open(self.FLOW_DAG, 'w', encoding="utf-8") as file:
+=======
+            flow_data['nodes'][0]['inputs']['knowledge_pieces'] = knowledge_pieces
+            flow_data["nodes"][0]["inputs"]["include_views"] = include_views
+            flow_data["nodes"][0]["inputs"]["instruct_template"] = instruct_template
+
+        with open(self.FLOW_DAG, "w", encoding="utf-8") as file:
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             yaml.safe_dump(flow_data, file)
 
         # create flow
@@ -126,6 +150,10 @@ class PromptFlowCreation(OBOComponentBase):
             "AZUREML_WORKSPACE_NAME": self.workspace.name,
             "AZUREML_SUBSCRIPTION_ID": self.workspace.subscription_id,
             "AZUREML_RESOURCE_GROUP": self.workspace.resource_group,
+<<<<<<< HEAD
+=======
+            "MANAGED_IDENTITY_ENABLED": managed_identity_enabled,
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         }
         base_run = pf_client.run(
             flow=flow,

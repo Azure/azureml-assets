@@ -26,7 +26,7 @@ def get_tokens(input_dirs: List[Path],
                json_output_path: str,
                sas_expiration_hrs: int,
                pattern: re.Pattern = None):
-    """Generate SAS tokens for models and generic assets to JSON output file.
+    """Generate SAS tokens for models, datasets, and generic assets to JSON output file.
 
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
@@ -37,15 +37,25 @@ def get_tokens(input_dirs: List[Path],
     """
     json_info = defaultdict(dict)
 
-    # Generate SAS tokens for generic assets
-    asset_types = [AssetType.MODEL] + GENERIC_ASSET_TYPES
+    # Filter to only models, datasets, and generic assets
+    asset_types = [AssetType.MODEL, AssetType.DATA] + GENERIC_ASSET_TYPES
     for asset_config in util.find_assets(
             input_dirs, asset_config_filename, types=asset_types, pattern=pattern):
 
         if asset_config.type == AssetType.MODEL:
             model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+<<<<<<< HEAD
             if isinstance(model_config.path, AzureBlobstoreAssetPath):
                 add_token_info(model_config.path, json_info, sas_expiration_hrs)
+=======
+            if model_config and isinstance(model_config.path, AzureBlobstoreAssetPath):
+                add_token_info(model_config.path, json_info, sas_expiration_hrs)
+
+        elif asset_config.type == AssetType.DATA:
+            data_config: assets.DataConfig = asset_config.extra_config_as_object()
+            if data_config and isinstance(data_config.path, AzureBlobstoreAssetPath):
+                add_token_info(data_config.path, json_info, sas_expiration_hrs)
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         elif asset_config.type in GENERIC_ASSET_TYPES:
             generic_config: assets.GenericAssetConfig = asset_config.extra_config_as_object()

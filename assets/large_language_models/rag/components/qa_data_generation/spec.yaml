@@ -4,7 +4,11 @@ type: command
 tags:
     Preview: ""
 
+<<<<<<< HEAD
 version: 0.0.55
+=======
+version: 0.0.64
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: llm_rag_qa_data_generation
 display_name: LLM - Generate QnA Test Data
 is_deterministic: true

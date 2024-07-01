@@ -10,3 +10,7 @@
 {"name":"mnli_hf", "0":"2\n\n### Premise: The new rights"}
 {"name":"gsm8k_empty_prediction", "0":""}
 {"name":"gsm8k_no_regex_found", "0":"Adding one and two gives three. Hence, the final answer is three.\n\nQ: A 10-pound bag "}
+<<<<<<< HEAD
+=======
+{"name":"human-eval-custom-script", "samples":"\ndef max_element(l: list) -> int:\n    \"\"\"\n    Return the maximum element in the given list.\n\n    Parameters:\n    l (list): A list of integers.\n\n    Returns:\n    int: The maximum element in the list.\n\n    Example:\n    >>> max_element([1, 2, 3])\n    3\n    >>> max_element([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    123\n    \"\"\"\n\n    if not l:\n        raise ValueError(\"The list is empty.\")\n\n    max_element = l[0]\n    for element in l:\n        if element > max_element:\n            max_element = element\n\n    return max_element\n\n# Example usage:\nif __name__ == \"__main__\":\n    print(max_element([1, 2, 3]))  # Output: 3\n    print(max_element([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10]))  # Output: 123"}
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

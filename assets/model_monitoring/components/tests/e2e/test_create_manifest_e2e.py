@@ -6,6 +6,7 @@
 import pytest
 from azure.ai.ml import MLClient, Output, Input
 from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR,
@@ -17,7 +18,12 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_data_drift_and_create_manifest_job(
+<<<<<<< HEAD
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data
+=======
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data,
+    expect_failure: bool = False
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ):
     dd_model_monitor = get_component(COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR)
     create_manifest = get_component(COMPONENT_NAME_CREATE_MANIFEST)
@@ -69,11 +75,19 @@ def _submit_data_drift_and_create_manifest_job(
     )
 
     pipeline_job = submit_pipeline_job(
+<<<<<<< HEAD
         pipeline_job, experiment_name
+=======
+        pipeline_job, experiment_name, expect_failure
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 

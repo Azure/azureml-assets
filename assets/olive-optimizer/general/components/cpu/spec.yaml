@@ -1,7 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
+<<<<<<< HEAD
 version: 0.0.13
+=======
+version: 0.0.17
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: olive_optimizer
 display_name: Olive Optimizer - CPU
 is_deterministic: false

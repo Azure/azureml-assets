@@ -1,0 +1,14 @@
+name: minimal-app-quickstart
+channels:
+- anaconda
+- conda-forge
+dependencies:
+- python=3.11.8
+- pip=24.0
+- pip:
+  # vulnerabilities
+  - requests>=2.32.0
+  - certifi>=2023.07.22
+  - wheel>=0.38.1
+  - poetry==1.6.1
+  - uvicorn

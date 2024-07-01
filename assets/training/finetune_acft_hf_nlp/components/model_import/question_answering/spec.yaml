@@ -1,6 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_model_import
+<<<<<<< HEAD
 version: 0.0.38
+=======
+version: 0.0.50
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 type: command
 
 is_deterministic: True
@@ -8,7 +12,11 @@ is_deterministic: True
 display_name: Question Answering Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/question_answering_model_import) to learn more.
 
+<<<<<<< HEAD
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/46
+=======
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/50
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 code: ../../../src/model_selector
 

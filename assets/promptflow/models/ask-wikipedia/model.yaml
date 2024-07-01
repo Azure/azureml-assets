@@ -1,6 +1,10 @@
 path:
   container_name: models
+<<<<<<< HEAD
   container_path: samples/ask_wikipedia/v4/model_folder
+=======
+  container_path: samples/ask_wikipedia/v5/model_folder
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   storage_name: promptflowsamples
   type: azureblob
 publish:

@@ -4,7 +4,11 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   SHA: 51388a731f57604945fddd703ecb5c50e8e7b49d
+<<<<<<< HEAD
   inference-min-sku-spec: 6|1|112|336
+=======
+  inference-min-sku-spec: 6|1|112|736
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
@@ -12,6 +16,10 @@ tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail-m
   task: text-to-image
+<<<<<<< HEAD
+=======
+  hiddenlayerscanned: ""
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   training_dataset: LAION aesthetics v2.5+
   author: Runway
   huggingface_model_id: runwayml/stable-diffusion-inpainting
@@ -24,4 +32,8 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
+<<<<<<< HEAD
 version: 6
+=======
+version: 10
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

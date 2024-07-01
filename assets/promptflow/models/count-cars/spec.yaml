@@ -9,4 +9,9 @@ properties:
   azureml.promptflow.description: Quantify red cars in images with Azure OpenAI GPT-4 Turbo with Vision to provide accurate vehicle counts.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
+<<<<<<< HEAD
+=======
+tags:
+  hiddenlayerscanned: ""
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 version: 2

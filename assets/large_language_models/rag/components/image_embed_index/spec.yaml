@@ -4,7 +4,11 @@ type: command
 tags:
     Preview: ""
 
+<<<<<<< HEAD
 version: 0.0.9
+=======
+version: 0.0.18
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: llm_rag_image_embed_index
 display_name: LLM - Embedding images with Florence 
 is_deterministic: true

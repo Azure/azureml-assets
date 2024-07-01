@@ -1,0 +1,24 @@
+type: evaluationresult
+name: toxicconversationsclassification_text-embedding-ada-002_classification
+version: 2.22.05
+display_name: ToxicConversationsClassification_text-embedding-ada-002_classification
+description: text-embedding-ada-002 run for ToxicConversationsClassification dataset
+dataset_name: ToxicConversationsClassification
+dataset_family: ToxicConversationsClassification
+
+model_name: text-embedding-ada-002
+model_version: "2"
+model_asset_id: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
+
+tags:
+    evaluation_type: text_embeddings
+    task: classification
+    primary_metric: accuracy
+
+metrics:
+    accuracy: 0.63337
+
+properties: {}

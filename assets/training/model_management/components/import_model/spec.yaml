@@ -4,7 +4,11 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
+<<<<<<< HEAD
 version: 0.0.28
+=======
+version: 0.0.33
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 # Pipeline inputs
 inputs:
@@ -47,6 +51,15 @@ inputs:
     optional: false
     description: Flavor of MLFlow to which model the model is converted to.
 
+<<<<<<< HEAD
+=======
+  vllm_enabled:
+    type: boolean
+    description: Enable vllm in the converted model 
+    default: false
+    optional: false
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   token:
     type: string
     description: If set use it to access the private models or authenticate the user. For example, user can get the token for HF private model by creating account in Huggingface, accept the condition for models that needs to be downloaded and create access token from browser. For more details please visit - https://huggingface.co/docs/hub/security-tokens
@@ -61,6 +74,10 @@ inputs:
   task_name:
     description: A Hugging face task on which model was trained on
     enum:
+<<<<<<< HEAD
+=======
+      - chat-completion
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
       - fill-mask
       - token-classification
       - question-answering
@@ -200,7 +217,11 @@ outputs:
 
 jobs:
   validation_trigger_import:
+<<<<<<< HEAD
     component: azureml:validation_trigger_import:0.0.6
+=======
+    component: azureml:validation_trigger_import:0.0.8
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -234,7 +255,11 @@ jobs:
         type: uri_file
 
   download_model:
+<<<<<<< HEAD
     component: azureml:download_model:0.0.23
+=======
+    component: azureml:download_model:0.0.25
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -253,13 +278,23 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
+<<<<<<< HEAD
     component: azureml:convert_model_to_mlflow:0.0.24
+=======
+    component: azureml:convert_model_to_mlflow:0.0.28
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
     inputs:
       task_name: ${{parent.inputs.task_name}}
       model_flavor: ${{parent.inputs.model_flavor}}
+<<<<<<< HEAD
+=======
+      vllm_enabled: ${{parent.inputs.vllm_enabled}}
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
       license_file_path: ${{parent.inputs.license_file_path}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
@@ -275,11 +310,13 @@ jobs:
     outputs:
       mlflow_model_folder:
         type: mlflow_model
-      model_import_job_path:
-        type: uri_file
 
   mlflow_model_local_validation:
+<<<<<<< HEAD
     component: azureml:mlflow_model_local_validation:0.0.8
+=======
+    component: azureml:mlflow_model_local_validation:0.0.11
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -292,7 +329,11 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
+<<<<<<< HEAD
     component: azureml:register_model:0.0.12
+=======
+    component: azureml:register_model:0.0.14
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -307,7 +348,6 @@ jobs:
       model_type: mlflow_model
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
-      model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
       registration_details_folder: ${{parent.outputs.model_registration_details}}
 

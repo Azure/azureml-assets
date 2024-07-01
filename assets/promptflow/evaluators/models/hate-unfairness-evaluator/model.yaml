@@ -1,0 +1,8 @@
+path:
+  container_name: rai-eval-flows
+  container_path: models/evaluators/HateUnfairnessEvaluator/v1/evaluator
+  storage_name: amlraipfmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

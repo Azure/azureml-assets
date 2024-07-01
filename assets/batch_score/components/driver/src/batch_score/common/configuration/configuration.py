@@ -32,6 +32,10 @@ class Configuration(Namespace):
     image_input_folder: str = field(init=True, default=None)
     initial_worker_count: int = field(init=True, default=None)
     input_schema_version: int = field(init=True, default=1)
+<<<<<<< HEAD
+=======
+    logging_metadata: dict = field(init=True, default=None)
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     max_retry_time_interval: int = field(init=True, default=None)
     max_worker_count: int = field(init=True, default=None)
     mini_batch_results_out_directory: str = field(init=True, default=None)

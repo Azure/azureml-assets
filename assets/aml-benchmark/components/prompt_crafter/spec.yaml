@@ -6,7 +6,11 @@ display_name: Prompt Crafter
 description: This component is used to create prompts from a given dataset. From a 
   given jinja prompt template, it will generate prompts. It can also create 
   few-shot prompts given a few-shot dataset and the number of shots.
+<<<<<<< HEAD
 version: 0.0.7
+=======
+version: 0.0.9
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 is_deterministic: true
 
 inputs:
@@ -134,7 +138,11 @@ outputs:
     description: Output file path where few_shot_prompt data will be written.
 
 code: ../src
+<<<<<<< HEAD
 environment: azureml://registries/azureml/environments/model-evaluation/versions/20
+=======
+environment: azureml://registries/azureml/environments/model-evaluation/versions/25
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 command: >-
   python -m aml_benchmark.prompt_crafter.main 
   --test_data ${{inputs.test_data}}

@@ -1,6 +1,10 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
+<<<<<<< HEAD
 RUN apt-get update -y && apt-get install binutils libssh-4 libsqlite3-0 libpam-modules linux-libc-dev libldap-common libldap-2.4-2 libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
+=======
+RUN apt-get update -y && apt-get install nscd git cpio less libglib2.0-0 libglib2.0-data util-linux binutils libnghttp2-14 libssh-4 libsqlite3-0 libpam-modules linux-libc-dev libldap-common libldap-2.4-2 libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 WORKDIR /
 
@@ -18,3 +22,8 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
+<<<<<<< HEAD
+=======
+## Vulnerability fix
+RUN pip install tqdm requests
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

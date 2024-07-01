@@ -3,6 +3,7 @@
 
 """Embeddings utilities."""
 
+<<<<<<< HEAD
 from copy import deepcopy
 
 import pandas as pd
@@ -12,6 +13,10 @@ from ..common.telemetry import logging_utils as lu
 
 estimator = None
 
+=======
+import pandas as pd
+
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 def _convert_to_list_of_input_batches(
         data: pd.DataFrame,
@@ -32,6 +37,7 @@ def _convert_to_list_of_input_batches(
         payload_obj = {"input": list_of_strings}
         list_of_input_batches.append(payload_obj)
     return list_of_input_batches
+<<<<<<< HEAD
 
 
 def _convert_to_list_of_output_items(result: dict, token_count_estimates: "tuple[int]") -> "list[dict]":
@@ -174,3 +180,5 @@ def __validate_response_data_length(numrequests, numresults):
                         f"{numrequests} request batch length."
         lu.get_logger().error(error_message)
         raise Exception(error_message)
+=======
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

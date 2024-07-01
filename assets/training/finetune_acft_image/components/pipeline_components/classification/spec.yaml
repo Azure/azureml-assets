@@ -1,7 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
+<<<<<<< HEAD
 version: 0.0.13
+=======
+version: 0.0.17
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: image_classification_pipeline
 display_name: Image Classification Pipeline
 description: Pipeline component for image classification.
@@ -255,7 +259,11 @@ jobs:
 
   finetune_common_validation:
     type: command
+<<<<<<< HEAD
     component: azureml:finetune_common_validation:0.0.2
+=======
+    component: azureml:finetune_common_validation:0.0.4
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       train_mltable_path: ${{parent.inputs.training_data}}
@@ -268,7 +276,11 @@ jobs:
 
   framework_selector:
     type: command
+<<<<<<< HEAD
     component: azureml:image_framework_selector:0.0.13
+=======
+    component: azureml:image_framework_selector:0.0.15
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: 'image-classification'
@@ -277,7 +289,11 @@ jobs:
 
   image_classification_runtime_component:
     type: command
+<<<<<<< HEAD
     component: azureml:train_image_classification_model:0.0.8
+=======
+    component: azureml:train_image_classification_model:0.0.10
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
@@ -319,7 +335,11 @@ jobs:
 
   hugging_face_model_import:
     type: command
+<<<<<<< HEAD
     component: azureml:transformers_image_classification_model_import:0.0.12
+=======
+    component: azureml:transformers_image_classification_model_import:0.0.15
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'HuggingFaceImage'
@@ -329,7 +349,11 @@ jobs:
 
   hugging_face_finetune:
     type: command
+<<<<<<< HEAD
     component: azureml:transformers_image_classification_finetune:0.0.12
+=======
+    component: azureml:transformers_image_classification_finetune:0.0.15
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -371,7 +395,11 @@ jobs:
 
   output_selector:
     type: command
+<<<<<<< HEAD
     component: azureml:image_model_output_selector:0.0.12
+=======
+    component: azureml:image_model_output_selector:0.0.14
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_classification_runtime_component.outputs.mlflow_model_folder}}

@@ -35,6 +35,10 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: image-segmentation
+<<<<<<< HEAD
+=======
+  hiddenlayerscanned: ''
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   inference_compute_allow_list: 
     [
       Standard_DS3_v2,
@@ -113,4 +117,8 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND40rs_v2
     ]
+<<<<<<< HEAD
 version: 13
+=======
+version: 15
+>>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
