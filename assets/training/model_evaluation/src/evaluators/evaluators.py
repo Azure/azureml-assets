@@ -798,4 +798,5 @@ class ImageVQAEvaluator(Evaluator):
         y_test = self._convert_predictions(y_test)
         metrics = compute_metrics(task_type=constants.Tasks.CLASSIFICATION, y_test=y_test, y_pred=y_pred,
                                   y_pred_proba=y_pred_proba, **self.metrics_config)
+        metrics["metrics"]["num_instances"] = len(y_pred)
         return metrics

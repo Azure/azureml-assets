@@ -1,0 +1,170 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: mmmu_aggregator
+display_name: MMMU Aggregator
+description: Aggregates results for the MMMU domains.
+version: 0.0.1
+
+inputs:
+  evaluation_result_accounting:
+    type: uri_folder
+    description: Results for the accounting category.
+    optional: True
+  evaluation_result_agriculture:
+    type: uri_folder
+    description: Results for the agriculture category.
+    optional: True
+  evaluation_result_arch_eng:
+    type: uri_folder
+    description: Results for the architecture and engineering category.
+    optional: True
+  evaluation_result_art:
+    type: uri_folder
+    description: Results for the art category.
+    optional: True
+  evaluation_result_art_theory:
+    type: uri_folder
+    description: Results for the art theory category.
+    optional: True
+  evaluation_result_med_sci:
+    type: uri_folder
+    description: Results for the basic medical science category.
+    optional: True
+  evaluation_result_biology:
+    type: uri_folder
+    description: Results for the biology category.
+    optional: True
+  evaluation_result_chem:
+    type: uri_folder
+    description: Results for the chemistry category.
+    optional: True
+  evaluation_result_clin_med:
+    type: uri_folder
+    description: Results for the clinical medicine category.
+    optional: True
+  evaluation_result_comp_sci:
+    type: uri_folder
+    description: Results for the computer science category.
+    optional: True
+  evaluation_result_design:
+    type: uri_folder
+    description: Results for the design category.
+    optional: True
+  evaluation_result_diag:
+    type: uri_folder
+    description: Results for the diagnostics category.
+    optional: True
+  evaluation_result_econ:
+    type: uri_folder
+    description: Results for the economy category.
+    optional: True
+  evaluation_result_electro:
+    type: uri_folder
+    description: Results for the electronics category.
+    optional: True
+  evaluation_result_energy:
+    type: uri_folder
+    description: Results for the energy and power category.
+    optional: True
+  evaluation_result_fin:
+    type: uri_folder
+    description: Results for the finance category.
+    optional: True
+  evaluation_result_geo:
+    type: uri_folder
+    description: Results for the geography category.
+    optional: True
+  evaluation_result_hist:
+    type: uri_folder
+    description: Results for the history category.
+    optional: True
+  evaluation_result_lit:
+    type: uri_folder
+    description: Results for the literature category.
+    optional: True
+  evaluation_result_mngm:
+    type: uri_folder
+    description: Results for the management category.
+    optional: True
+  evaluation_result_mrkt:
+    type: uri_folder
+    description: Results for the marketing category.
+    optional: True
+  evaluation_result_mat:
+    type: uri_folder
+    description: Results for the materials category.
+    optional: True
+  evaluation_result_math:
+    type: uri_folder
+    description: Results for the math category.
+    optional: True
+  evaluation_result_me:
+    type: uri_folder
+    description: Results for the mechanical engineering category.
+    optional: True
+  evaluation_result_mus:
+    type: uri_folder
+    description: Results for the music category.
+    optional: True
+  evaluation_result_pharm:
+    type: uri_folder
+    description: Results for the pharmacy category.
+    optional: True
+  evaluation_result_phys:
+    type: uri_folder
+    description: Results for the physics category.
+    optional: True
+  evaluation_result_psych:
+    type: uri_folder
+    description: Results for the psychology category.
+    optional: True
+  evaluation_result_pub_health:
+    type: uri_folder
+    description: Results for the public health category.
+    optional: True
+  evaluation_result_soc:
+    type: uri_folder
+    description: Results for the sociology category.
+    optional: True
+
+outputs:
+  final_evaluation_result:
+    type: uri_file
+    description: Final evaluation result.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/versions/28
+command: >-
+  python -m aml_benchmark.mmmu_aggregator.main
+  $[[--evaluation_result_accounting ${{inputs.evaluation_result_accounting}}]] 
+  $[[--evaluation_result_agriculture ${{inputs.evaluation_result_agriculture}}]] 
+  $[[--evaluation_result_arch_eng ${{inputs.evaluation_result_arch_eng}}]] 
+  $[[--evaluation_result_art ${{inputs.evaluation_result_art}}]] 
+  $[[--evaluation_result_art_theory ${{inputs.evaluation_result_art_theory}}]] 
+  $[[--evaluation_result_med_sci ${{inputs.evaluation_result_med_sci}}]] 
+  $[[--evaluation_result_biology ${{inputs.evaluation_result_biology}}]] 
+  $[[--evaluation_result_chem ${{inputs.evaluation_result_chem}}]] 
+  $[[--evaluation_result_clin_med ${{inputs.evaluation_result_clin_med}}]] 
+  $[[--evaluation_result_comp_sci ${{inputs.evaluation_result_comp_sci}}]] 
+  $[[--evaluation_result_design ${{inputs.evaluation_result_design}}]] 
+  $[[--evaluation_result_diag ${{inputs.evaluation_result_diag}}]] 
+  $[[--evaluation_result_econ ${{inputs.evaluation_result_econ}}]] 
+  $[[--evaluation_result_electro ${{inputs.evaluation_result_electro}}]] 
+  $[[--evaluation_result_energy ${{inputs.evaluation_result_energy}}]] 
+  $[[--evaluation_result_fin ${{inputs.evaluation_result_fin}}]] 
+  $[[--evaluation_result_geo ${{inputs.evaluation_result_geo}}]] 
+  $[[--evaluation_result_hist ${{inputs.evaluation_result_hist}}]] 
+  $[[--evaluation_result_lit ${{inputs.evaluation_result_lit}}]] 
+  $[[--evaluation_result_mngm ${{inputs.evaluation_result_mngm}}]] 
+  $[[--evaluation_result_mrkt ${{inputs.evaluation_result_mrkt}}]] 
+  $[[--evaluation_result_mat ${{inputs.evaluation_result_mat}}]] 
+  $[[--evaluation_result_math ${{inputs.evaluation_result_math}}]] 
+  $[[--evaluation_result_me ${{inputs.evaluation_result_me}}]] 
+  $[[--evaluation_result_mus ${{inputs.evaluation_result_mus}}]] 
+  $[[--evaluation_result_pharm ${{inputs.evaluation_result_pharm}}]] 
+  $[[--evaluation_result_phys ${{inputs.evaluation_result_phys}}]] 
+  $[[--evaluation_result_psych ${{inputs.evaluation_result_psych}}]] 
+  $[[--evaluation_result_pub_health ${{inputs.evaluation_result_pub_health}}]] 
+  $[[--evaluation_result_soc ${{inputs.evaluation_result_soc}}]] 
+  --final_evaluation_result ${{outputs.final_evaluation_result}}
