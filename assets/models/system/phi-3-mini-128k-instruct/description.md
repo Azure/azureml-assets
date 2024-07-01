@@ -1,58 +1,102 @@
-## Model Details
+## Model Summary
 
-Phi-3 Mini-128K-Instruct is a 3.8B parameters, lightweight, state-of-the-art open model built upon datasets used for Phi-2 - synthetic data and filtered websites - with a focus on very high-quality, reasoning dense data. The model belongs to the Phi-3 model family, and the Mini version comes in two variants 4K and 128K which is the context length (in tokens) it can support.
+The Phi-3-Mini-128K-Instruct is a 3.8 billion-parameter, lightweight, state-of-the-art open model trained using the Phi-3 datasets.
+This dataset includes both synthetic data and filtered publicly available website data, with an emphasis on high-quality and reasoning-dense properties.
+The model belongs to the Phi-3 family with the Mini version in two variants 4K and 128K which is the context length (in tokens) that it can support.
 
-The model underwent a rigorous enhancement process, incorporating both supervised fine-tuning and direct preference optimization to ensure precise instruction adherence and robust safety measures.
-When assessed against benchmarks testing common sense, language understanding, math, code, long context and logical reasoning, Phi-3 Mini-128K-Instruct showcased a robust and state-of-the-art performance among models with less than 13 billion parameters.
-
+After initial training, the model underwent a post-training process that involved supervised fine-tuning and direct preference optimization to enhance its ability to follow instructions and adhere to safety measures.
+When evaluated against benchmarks that test common sense, language understanding, mathematics, coding, long-term context, and logical reasoning, the Phi-3 Mini-128K-Instruct demonstrated robust and state-of-the-art performance among models with fewer than 13 billion parameters.
 Resources and Technical Documentation:
 
-+ [Phi-3 Microsoft Blog](https://aka.ms/phi3blog-april)
-+ [Phi-3 Technical Report](https://aka.ms/phi3-tech-report)
-
-## Training Details
-
-### **Model**
-
-* Architecture: Phi-3 Mini-128K-Instruct has 3.8B parameters and is a dense decoder-only Transformer model. The model is fine-tuned with Supervised fine-tuning (SFT) and Direct Preference Optimization (DPO) to ensure alignment with human preferences and safety guidlines.
-* Inputs: Text. It is best suited for prompts using chat format.
-* Context length: 128K tokens
-* GPUs: 512 H100-80G
-* Training time: 7 days
-* Training data: 3.3T tokens
-* Outputs: Generated text in response to the input
-* Dates: Our models were trained between February and April 2024
-* Status: This is a static model trained on an offline dataset with cutoff date October 2023. Future versions of the tuned models may be released as we improve models.
-
-### **Datasets**
-
-The training data includes a wide variety of sources, totaling 3.3 trillion tokens, and is a combination of 
-1) Publicly available documents filtered rigorously for quality, selected high-quality educational data, and code; 
-2) Newly created synthetic, “textbook-like” data for the purpose of teaching math, coding, common sense reasoning, general knowledge of the world (science, daily activities, theory of mind, etc.); 
-3) High quality chat format supervised data covering various topics to reflect human preferences on different aspects such as instruct-following, truthfulness, honesty and helpfulness.
+🏡 [Phi-3 Portal](https://azure.microsoft.com/en-us/products/phi-3) <br>
+📰 [Phi-3 Microsoft Blog](https://aka.ms/Phi-3Build2024) <br>
+📖 [Phi-3 Technical Report](https://aka.ms/phi3-tech-report) <br>
+👩‍🍳 [Phi-3 Cookbook](https://github.com/microsoft/Phi-3CookBook) <br>
+🖥️ [Try It](https://aka.ms/try-phi3)
 
 ## Intended Uses
 
-### **Primary use cases**
+**Primary use cases**
 
 The model is intended for commercial and research use in English. The model provides uses for applications which require:
 
 1) Memory/compute constrained environments
 2) Latency bound scenarios
-3) Strong reasoning (especially math and logic)
+3) Strong reasoning (especially code, math and logic)
 
-The model is designed to accelerate research on language and multimodal models, for use as a building block for generative AI powered features. 
+Our model is designed to accelerate research on language and multimodal models, for use as a building block for generative AI powered features. 
 
-### **Use case considerations**
+**Use case considerations**
 
-The model is not specifically designed or evaluated for all downstream purposes. Developers should consider common limitations of language models as they select use cases, and evaluate and mitigate for accuracy, safety, and fariness before using within a specific downstream use case, particularly for high risk scenarios. Developers should be aware of and adhere to applicable laws or regulations (including privacy, trade compliance laws, etc.) that are relevant to their use case.
+Our models are not specifically designed or evaluated for all downstream purposes. Developers should consider common limitations of language models as they select use cases, and evaluate and mitigate for accuracy, safety, and fariness before using within a specific downstream use case, particularly for high risk scenarios. Developers should be aware of and adhere to applicable laws or regulations (including privacy, trade compliance laws, etc.) that are relevant to their use case.
 
-Nothing contained in this Model Card should be interpreted as or deemed a restriction or modification to the license the model is released under.  
+***Nothing contained in this Model Card should be interpreted as or deemed a restriction or modification to the license the model is released under.*** 
 
+## Release Notes 
+
+This is an update over the original instruction-tuned Phi-3-mini release based on valuable customer feedback. 
+The model used additional post-training data leading to substantial gains on long-context understanding, instruction following, and structure output. 
+We also improve multi-turn conversation quality, explicitly support <|system|> tag, and significantly improve reasoning capability. 
+We believe most use cases will benefit from this release, but we encourage users to test in their particular AI applications.
+We appreciate the enthusiastic adoption of the Phi-3 model family, and continue to welcome all feedback from the community. 
+
+These tables below highlights improvements on instruction following, structure output, reasoning, and long-context understanding of the new release on our public and internal benchmark datasets.
+
+| Benchmarks | Original | June 2024 Update |
+|------------|----------|------------------|
+| Instruction Extra Hard | 5.7 | 5.9 |
+| Instruction Hard | 5.0 | 5.2 |
+| JSON Structure Output | 1.9 | 60.1 |
+| XML Structure Output | 47.8 | 52.9 |
+| GPQA	| 25.9	| 29.7 |
+| MMLU	| 68.1	| 69.7 |
+| **Average**	| **25.7**	| **37.3** |
+
+RULER: a retrieval-based benchmark for long context understanding
+
+| Model             | 4K   | 8K   | 16K  | 32K  | 64K  | 128K | Average |
+|-------------------|------|------|------|------|------|------|---------|
+| Original          | 86.7 | 78.1 | 75.6 | 70.3 | 58.9 | 43.3 | **68.8**    |
+| June 2024 Update  | 92.4 | 91.1 | 90.8 | 87.9 | 79.8 | 65.6 | **84.6**    |
+
+RepoQA: a benchmark for long context code understanding
+
+| Model             | Python | C++ | Rust | Java | TypeScript | Average |
+|-------------------|--------|-----|------|------|------------|---------|
+| Original          | 27     | 29  | 40   | 33   | 33         | **32.4**    |
+| June 2024 Update  | 85     | 63  | 72   | 93   | 72         | **77**      |
+
+### Tokenizer
+
+Phi-3 Mini-128K-Instruct supports a vocabulary size of up to `32064` tokens. 
+
+## Training
+
+### Model
+
+* Architecture: Phi-3 Mini-128K-Instruct has 3.8B parameters and is a dense decoder-only Transformer model. The model is fine-tuned with Supervised fine-tuning (SFT) and Direct Preference Optimization (DPO) to ensure alignment with human preferences and safety guidlines.
+* Inputs: Text. It is best suited for prompts using chat format.
+* Context length: 128K tokens
+* GPUs: 512 H100-80G
+* Training time: 10 days
+* Training data: 4.9T tokens
+* Outputs: Generated text in response to the input
+* Dates: Our models were trained between May and June 2024
+* Status: This is a static model trained on an offline dataset with cutoff date October 2023. Future versions of the tuned models may be released as we improve models.
+* Release dates: June, 2024.
+
+### Datasets
+
+Our training data includes a wide variety of sources, totaling 4.9 trillion tokens, and is a combination of 
+1) Publicly available documents filtered rigorously for quality, selected high-quality educational data, and code; 
+2) Newly created synthetic, “textbook-like” data for the purpose of teaching math, coding, common sense reasoning, general knowledge of the world (science, daily activities, theory of mind, etc.); 
+3) High quality chat format supervised data covering various topics to reflect human preferences on different aspects such as instruct-following, truthfulness, honesty and helpfulness.
+
+We are focusing on the quality of data that could potentially improve the reasoning ability for the model, and we filter the publicly available documents to contain the correct level of knowledge. As an example, the result of a game in premier league in a particular day might be good training data for frontier models, but we need to remove such information to leave more model capacity for reasoning for the small size models. More details about data can be found in the [Phi-3 Technical Report](https://aka.ms/phi3-tech-report).
 
 ## Benchmarks
 
-We report the results for Phi-3-Mini-128K-Instruct on standard open-source benchmarks measuring the model's reasoning ability (both common sense reasoning and logical reasoning). We compare to Phi-2, Mistral-7b-v0.1, Mixtral-8x7b, Gemma 7B, and GPT-3.5.
+We report the results under completion format for Phi-3-Mini-128K-Instruct on standard open-source benchmarks measuring the model's reasoning ability (both common sense reasoning and logical reasoning). We compare to Mistral-7b-v0.1, Mixtral-8x7b, Gemma 7B, Llama-3-8B-Instruct, and GPT-3.5.
 
 All the reported numbers are produced with the exact same pipeline to ensure that the numbers are comparable. These numbers might differ from other published numbers due to slightly different choices in the evaluation.
 
@@ -62,27 +106,53 @@ More specifically, we do not change prompts, pick different few-shot examples, c
 
 The number of k–shot examples is listed per-benchmark. 
 
-|| Phi-3-Mini-128K-In<br>3.8b (this model) | Phi-3-Small<br>7b (preview) | Phi-3-Medium<br>14b (preview) | Phi-2<br>2.7b | Mistral<br>7b | Gemma<br>7b | Mixtral<br>8x7b | GPT-3.5<br>version 1106 |
-|---|---|---|---|---|---|---|---|---|
-|MMLU <br>5-Shot |68.10|75.60|78.20|56.3|61.70|63.60|70.50|71.40|
-|HellaSwag <br> 5-Shot |74.50|78.70|83.00|53.6|58.50|49.80|70.40|78.80|
-|ANLI <br> 7-Shot |52.80|55.00|58.70|42.5|47.10|48.70|55.20|58.10|
-|GSM-8K <br> 0-Shot; CoT |83.60|88.90|90.30|61.1|46.40|59.80|64.70|78.10|
-|MedQA <br> 2-Shot |55.30|58.20|69.40|40.9|50.00|49.60|62.20|63.40|
-|AGIEval <br> 0-Shot |36.90|45.00|48.40|29.8|35.10|42.10|45.20|48.40|
-|TriviaQA <br> 5-Shot |57.10|59.10|75.60|45.2|75.20|72.30|82.20|85.80|
-|Arc-C <br> 10-Shot |84.00|90.70|91.00|75.9|78.60|78.30|87.30|87.40|
-|Arc-E <br> 10-Shot |95.20|97.10|97.80|88.5|90.60|91.40|95.60|96.30|
-|PIQA <br> 5-Shot |83.60|87.80|87.70|60.2|77.70|78.10|86.00|86.60|
-|SociQA <br> 5-Shot |76.10|79.00|80.20|68.3|74.60|65.50|75.90|68.30|
-|BigBench-Hard <br> 0-Shot |71.50|74.90|81.30|59.4|57.30|59.60|69.70|68.30|
-|WinoGrande <br> 5-Shot |72.50|82.50|81.40|54.7|54.20|55.60|62.00|68.80|
-|OpenBookQA <br> 10-Shot |80.60|88.40|87.20|73.6|79.80|78.60|85.80|86.00|
-|BoolQ <br> 0-Shot |78.70|82.90|86.60| -- |72.20|66.00|76.60|79.10|
-|CommonSenseQA <br> 10-Shot |78.00|80.30|82.60|69.3|72.60|76.20|78.10|79.60|
-|TruthfulQA <br> 10-Shot |63.20|68.70|75.70| -- |53.00|52.10|60.10|67.70|
-|HumanEval <br> 0-Shot |57.90|59.10|55.50|59|28.00|34.10|37.80|62.20|
-|MBPP <br> 3-Shot |62.50|71.40|74.50|60.6|50.80|51.50|60.20|77.80|
+| Category | Benchmark | Phi-3-Mini-128K-Ins | Gemma-7B | Mistral-7B | Mixtral-8x7B | Llama-3-8B-Ins | GPT3.5-Turbo-1106 |
+|----------|-----------|---------------------|----------|------------|--------------|----------------|-------------------|
+| Popular aggregated benchmark | AGI Eval <br>5-shot| 39.5 | 42.1 | 35.1 | 45.2 | 42 | 48.4 |
+| | MMLU <br>5-shot | 69.7 | 63.6 | 61.7 | 70.5 | 66.5 | 71.4 |
+| | BigBench Hard <br>3-shot | 72.1 | 59.6 | 57.3 | 69.7 | 51.5 | 68.3 |
+| Language Understanding | ANLI <br>7-shot | 52.3 | 48.7 | 47.1 | 55.2 | 57.3 | 58.1 |
+| | HellaSwag <br>5-shot | 70.5 | 49.8 | 58.5 | 70.4 | 71.1 | 78.8 |
+| Reasoning | ARC Challenge <br>10-shot | 85.5 | 78.3 | 78.6 | 87.3 | 82.8 | 87.4 |
+| | BoolQ <br>0-shot | 77.1 | 66 | 72.2 | 76.6 | 80.9 | 79.1 |
+| | MedQA <br>2-shot | 56.4 | 49.6 | 50 | 62.2 | 60.5 | 63.4 |
+| | OpenBookQA <br>10-shot | 78.8 | 78.6 | 79.8 | 85.8 | 82.6 | 86 |
+| | PIQA <br>5-shot | 80.1 | 78.1 | 77.7 | 86 | 75.7 | 86.6 |
+| | GPQA <br>0-shot | 29.7 | 2.9 | 15 | 6.9 | 32.4 | 29.9 |
+| | Social IQA <br>5-shot | 74.7 | 65.5 | 74.6 | 75.9 | 73.9 | 68.3 |
+| | TruthfulQA (MC2) <br>10-shot | 64.8 | 52.1 | 53 | 60.1 | 63.2 | 67.7 |
+| | WinoGrande <br>5-shot | 71.0 | 55.6 | 54.2 | 62 | 65 | 68.8 |
+| Factual Knowledge | TriviaQA <br>5-shot | 57.8 | 72.3 | 75.2 | 82.2 | 67.7 | 85.8 |
+| Math | GSM8K CoTT <br>8-shot | 85.3 | 59.8 | 46.4 | 64.7 | 77.4 | 78.1 |
+| Code Generation | HumanEval <br>0-shot | 60.4 | 34.1 | 28.0 | 37.8 | 60.4 | 62.2 |
+| | MBPP <br>3-shot | 70.0 | 51.5 | 50.8 | 60.2 | 67.7 | 77.8 |
+| **Average** | | **66.4** | **56.0** | **56.4** | **64.4** | **65.5** | **70.3** |
+
+**Long Context**: Phi-3 Mini-128K-Instruct supports 128K context length, therefore the model is capable of several long context tasks including long document/meeting summarization, long document QA. 
+
+| Benchmark     | Phi-3 Mini-128K-Instruct | Mistral-7B | Mixtral 8x7B | LLaMA-3-8B-Instruct |
+|---------------|--------------------------|------------|--------------|---------------------|
+| GovReport     | 25.3                     | 4.9        | 20.3         | 10.3                |
+| QMSum         | 21.9                     | 15.5       | 20.6         | 2.9                 |
+| Qasper        | 41.6                     | 23.5       | 26.6         | 8.1                 |
+| SQuALITY      | 24.1                     | 14.7       | 16.2         | 25                  |
+| SummScreenFD  | 16.8                     | 9.3        | 11.3         | 5.1                 |
+| **Average**   | **25.9**                 | **13.6**   | **19.0**     | **10.3**            |
+
+We take a closer look at different categories across 100 public benchmark datasets at the table below: 
+
+| Category | Phi-3-Mini-128K-Instruct | Gemma-7B | Mistral-7B | Mixtral 8x7B | Llama-3-8B-Instruct | GPT-3.5-Turbo |
+|----------|--------------------------|----------|------------|--------------|---------------------|---------------|
+| Popular aggregated benchmark | 60.6 | 59.4 | 56.5 | 66.2 | 59.9 | 67.0 |
+| Reasoning | 69.4 | 60.3 | 62.8 | 68.1 | 69.6 | 71.7 |
+| Language understanding | 57.5 | 57.6 | 52.5 | 66.1 | 63.2 | 67.7 |
+| Code generation | 61.0 | 45.6 | 42.9 | 52.7 | 56.4 | 70.4 |
+| Math | 51.6 | 35.8 | 25.4 | 40.3 | 41.1 | 52.8 |
+| Factual knowledge | 35.8 | 46.7 | 49.8 | 58.6 | 43.1 | 63.4 |
+| Multilingual | 56.4 | 66.5 | 57.4 | 66.7 | 66.6 | 71.0 |
+| Robustness | 61.1 | 38.4 | 40.6 | 51.0 | 64.5 | 69.3 |
+
+Overall, the model with only 3.8B-param achieves a similar level of language understanding and reasoning ability as much larger models. However, it is still fundamentally limited by its size for certain tasks. The model simply does not have the capacity to store too much world knowledge, which can be seen for example with low performance on TriviaQA. However, we believe such weakness can be resolved by augmenting Phi-3-Mini with a search engine.  
 
 ## Finetuning samples
 Task|Dataset|Python sample (Notebook)
@@ -117,32 +187,6 @@ Chat completion|<a href="https://huggingface.co/datasets/HuggingFaceH4/ultrachat
 }
 ```
 
-## Hardware Requirements
-Note that by default, the Phi-3-mini model uses flash attention, which requires certain types of GPU hardware to run. We have tested on the following GPU types:
-* NVIDIA A100
-* NVIDIA A6000
-* NVIDIA H100
-
-If you want to run the model on:
-* NVIDIA V100 or earlier generation GPUs: call AutoModelForCausalLM.from_pretrained() with attn_implementation="eager"
-* CPU: use the **GGUF** quantized models [4K](https://aka.ms/Phi3-mini-4k-instruct-gguf)
-+ Optimized inference on GPU, CPU, and Mobile: use the **ONNX** models [4K](https://aka.ms/Phi3-mini-4k-instruct-onnx)
-
-
-## Cross Platform Support
-
-ONNX runtime ecosystem now supports Phi-3 Mini models across platforms and hardware. You can find the optimized ONNX models [here](https://aka.ms/Phi3-ONNX-HF).
-
-Optimized Phi-3 models are also published here in ONNX format, to run with ONNX Runtime on CPU and GPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs, with the precision best suited to each of these targets. DirectML support lets developers bring hardware acceleration to Windows devices at scale across AMD, Intel, and NVIDIA GPUs.  
-Along with DirectML, ONNX Runtime provides cross platform support for Phi-3 across a range of devices CPU, GPU, and mobile.
-
-Here are some of the optimized configurations we have added: 
-
-1. ONNX models for int4 DML: Quantized to int4 via AWQ
-2. ONNX model for fp16 CUDA
-3. ONNX model for int4 CUDA: Quantized to int4 via RTN
-4. ONNX model for int4 CPU and Mobile: Quantized to int4 via RTN
-
 ## Responsible AI Considerations
 
 Like other language models, the Phi series models can potentially behave in ways that are unfair, unreliable, or offensive. Some of the limiting behaviors to be aware of include:
@@ -161,10 +205,40 @@ Developers should apply responsible AI best practices and are responsible for en
 + Generation of Harmful Content: Developers should assess outputs for their context and use available safety classifiers or custom solutions appropriate for their use case. 
 + Misuse: Other forms of misuse such as fraud, spam, or malware production may be possible, and developers should ensure that their applications do not violate applicable laws and regulations.
 
+## Cross Platform Support 
 
+[ONNX runtime](https://onnxruntime.ai/blogs/accelerating-phi-3) now supports Phi-3 mini models across platforms and hardware.  
+
+Optimized phi-3 models are also published here in ONNX format, to run with ONNX Runtime on CPU and GPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs, with the precision best suited to each of these targets. DirectML GPU acceleration is supported for Windows desktops GPUs (AMD, Intel, and NVIDIA).   
+
+Along with DML, ONNX Runtime provides cross platform support for Phi3 mini across a range of devices CPU, GPU, and mobile.  
+
+Here are some of the optimized configurations we have added:  
+
+1. ONNX models for int4 DML: Quantized to int4 via AWQ 
+2. ONNX model for fp16 CUDA 
+3. ONNX model for int4 CUDA: Quantized to int4 via RTN 
+4. ONNX model for int4 CPU and Mobile: Quantized to int4 via RTN 
+
+## Software
+
+* [PyTorch](https://github.com/pytorch/pytorch)
+* [Transformers](https://github.com/huggingface/transformers)
+* [Flash-Attention](https://github.com/HazyResearch/flash-attention)
+
+## Hardware
+Note that by default, the Phi-3 Mini-128K-Instruct model uses flash attention, which requires certain types of GPU hardware to run. We have tested on the following GPU types:
+* NVIDIA A100
+* NVIDIA A6000
+* NVIDIA H100
+
+If you want to run the model on:
+* NVIDIA V100 or earlier generation GPUs: call AutoModelForCausalLM.from_pretrained() with attn_implementation="eager"
+* Optimized inference on GPU, CPU, and Mobile: use the **ONNX** models [128K](https://aka.ms/phi3-mini-128k-instruct-onnx)
+  
 ## License
 
-The model is licensed under the [MIT license](https://huggingface.co/microsoft/Phi-3-mini-128k/resolve/main/LICENSE).
+The model is licensed under the MIT license.
 
 ## Trademarks
 
