@@ -4,13 +4,7 @@
 """Test file for StoreUrl."""
 
 import pytest
-<<<<<<< HEAD
 from unittest.mock import Mock, patch
-=======
-import os
-from unittest.mock import Mock, patch
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient, BlobServiceClient
@@ -68,21 +62,9 @@ class TestStoreUrl:
         assert store_url.get_hdfs_url() == expected_hdfs_path
         assert store_url.get_abfs_url() == expected_abfs_path
 
-<<<<<<< HEAD
         # before we support credential-less data, should raise InvalidInputError
         with pytest.raises(InvalidInputError):
             store_url.get_container_client()
-=======
-        # We support credential-less with secure store url.
-        if store_url._is_secure():
-            container = store_url.get_container_client()
-            assert container is not None
-            assert isinstance(container.credential, AzureMLOnBehalfOfCredential)
-        else:
-            with pytest.raises(InvalidInputError,
-                               match=r"Token credential is only supported with secure HTTPS protocol..*"):
-                store_url.get_container_client()
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, credential_type, relative_path, expected_protocol, expected_hdfs_path, "
@@ -131,58 +113,21 @@ class TestStoreUrl:
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-<<<<<<< HEAD
                 "AzureDataLakeGen2", None, "/", "http",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "/", None,
                 FileSystemClient("https://my_account.dfs.core.windows.net", "my_container")
-=======
-                "AzureDataLakeGen2", None, "/", "https",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "/", AzureMLOnBehalfOfCredential(),
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
-                                 AzureMLOnBehalfOfCredential())
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-<<<<<<< HEAD
                 "AzureBlob", "None", "/rpath", "http",
                 "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
                 "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
                 "/rpath", None,
                 ContainerClient("http://my_account.blob.core.windows.net", "my_container")
             )
-=======
-                "AzureBlob", "None", "/rpath", "https",
-                "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "/rpath", AzureMLOnBehalfOfCredential(),
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container",
-                                AzureMLOnBehalfOfCredential())
-            ),
-            # TODO: Update this UT with how the unsecure URL should work with credential-less. Or can we remove it?
-            # (
-            #     "azureml://datastores/my_datastore/paths/path/to/folder",
-            #     "AzureDataLakeGen2", None, "/", "http",
-            #     "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-            #     "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-            #     "/", None,
-            #     FileSystemClient("https://my_account.dfs.core.windows.net", "my_container")
-            # ),
-            # (
-            #     "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
-            #     "/paths/path/to/folder",
-            #     "AzureBlob", "None", "/rpath", "http",
-            #     "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
-            #     "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-            #     "/rpath", None,
-            #     ContainerClient("http://my_account.blob.core.windows.net", "my_container")
-            # )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         ]
     )
     def test_store_url_with_azureml_path(
@@ -332,95 +277,6 @@ class TestStoreUrl:
             store_url = StoreUrl(path, mock_ws)
             assert store_url.is_local_path() == is_local_path
 
-<<<<<<< HEAD
-=======
-    PATHS = [
-        "my/folder/folder1/folder2/file1.jsonl",
-        "my/folder/folder1/file2.jsonl",
-        "my/folder/folder3/file3.csv",
-        "my/folder/file4.jsonl",
-        "my/folder/folder1/folder2",
-        "my/folder/folder1",
-        "my/folder/folder3",
-        "my/folder/folder4",  # empty folder
-        "my/folder/folder4/folder5"
-    ]
-
-    @pytest.mark.parametrize(
-        "path_names, base_folder, pattern, expected_folder, expected_result",
-        [
-            (PATHS, "/my/folder", "/*.jsonl", "my/folder/", True),
-            (PATHS, "/my/folder", "*/*.jsonl", "my/folder/", True),
-            (PATHS, "/my/folder", "*/*/*.jsonl", "my/folder/", True),
-            (PATHS, "/my/folder", "*/*/*/*.jsonl", "my/folder/", False),
-            (PATHS, "/my/folder", "/folder1/*.jsonl", "my/folder/folder1/", True),
-            (PATHS, "/my/folder", "/folder1/folder2/*.jsonl", "my/folder/folder1/folder2/", True),
-            (PATHS, "/my/folder", "/folder1/folder3/*.jsonl", "my/folder/folder1/folder3/", False),
-            (PATHS, "/my/folder", "/folder1/folder3/*.csv", "my/folder/folder1/folder3/", False),
-            (PATHS, "/my/folder", "/folder1/folder4/*.jsonl", "my/folder/folder1/folder4/", False),
-            (PATHS, "/my/folder", "/folder4/*.jsonl", "my/folder/folder4/", False),
-            (PATHS, "/my/folder", "/folder4/*/*.jsonl", "my/folder/folder4/", False),
-            (PATHS, "/my/folder", "/*1/*.jsonl", "my/folder/", True),
-            (PATHS, "/my/folder", "/folder1/f?ld*2/*.jsonl", "my/folder/folder1/", True),  # both ? and * wildcard
-            # store url points to container root folder
-            (["file1.jsonl"], "", "*.jsonl", "", True),
-            (["file1.jsonl"], "", "*.csv", "", False),
-            (["folder1/file1.jsonl", "folder1"], "", "*/*.jsonl", "", True),
-            (["folder1/file1.jsonl", "folder1"], "", "folder1/*.jsonl", "folder1/", True),
-            (["folder1/file1.jsonl", "folder1"], "", "*/*.csv", "", False),
-        ]
-    )
-    def test_any_files(self, path_names, base_folder, pattern, expected_folder, expected_result):
-        """Test any_files()."""
-        def construct_mock_blob(name):
-            mock_blob = Mock(is_directory='.' not in name)
-            mock_blob.name = name
-            return mock_blob
-
-        def list_blobs(name_starts_with):
-            assert name_starts_with == expected_folder, \
-                f"expected non wildcard path to be {expected_folder}, but {name_starts_with} is given"
-            # if condition to return only folders/files under the sub folder
-            return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
-
-        def get_paths(path, recursive: bool):
-            assert path == expected_folder, f"expected non wildcard path to be {expected_folder}, but {path} is given"
-            assert recursive, "get_paths() should be called with recursive=True"
-            return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
-
-        for store_type in ["blob", "gen2"]:
-            if store_type == "blob":
-                base_url = f"wasbs://my_container@my_account.blob.core.windows.net{base_folder}"
-                mock_container_client = Mock(spec=ContainerClient)
-                mock_container_client.list_blobs.side_effect = list_blobs
-            else:
-                base_url = f"abfss://my_container@my_account.dfs.core.windows.net{base_folder}"
-                mock_container_client = Mock(spec=FileSystemClient)
-                mock_container_client.get_paths.side_effect = get_paths
-            store_url = StoreUrl(base_url)
-            assert store_url.any_files(pattern, mock_container_client) is expected_result
-
-    @pytest.mark.parametrize(
-        "pattern, expected_result",
-        [
-            ("2023/10/11/20/*.jsonl", True),
-            ("2023/10/11/*/*.jsonl", True),
-            ("2023/10/*/*/*.jsonl", True),
-            ("2023/*/*/*/*.jsonl", True),
-            ("2023/10/11/*/*.csv", False),
-            ("2023/10/12/*/*.jsonl", False),
-            ("2023/12/*/*/*.jsonl", False),
-            ("2023/10/1?/*/m??_*_only.jsonl", True),
-            ("2023/10/?2/*/*.jsonl", False)
-        ]
-    )
-    def test_any_files_local(self, pattern, expected_result):
-        """Test any_files() for local file system."""
-        base_path = os.path.abspath(f"{os.path.dirname(__file__)}/raw_mdc_data")
-        store_url = StoreUrl(base_path)
-        assert store_url.any_files(pattern) is expected_result
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 def assert_credentials_are_equal(credential1, credential2):
     """Assert 2 credentials are equal."""
@@ -442,9 +298,6 @@ def assert_credentials_are_equal(credential1, credential2):
         assert credential1.account_key == credential2.account_key
     elif isinstance(credential1, DefaultAzureCredential):
         assert isinstance(credential2, DefaultAzureCredential)
-    elif isinstance(credential1, AzureMLOnBehalfOfCredential):
-        assert isinstance(credential2, AzureMLOnBehalfOfCredential)
-        assert credential1._credential.get_client() == credential2._credential.get_client()
     else:
         raise NotImplementedError(f"Unsupported credential type: {type(credential1)}")
 
@@ -465,6 +318,6 @@ def assert_container_clients_are_equal(container_client1, container_client2):
     elif isinstance(container_client1, FileSystemClient):
         assert isinstance(container_client2, FileSystemClient)
         assert container_client1.file_system_name == container_client2.file_system_name
-        assert_container_clients_properties_are_equal()
+        assert_container_clients_properties_are_equal
     else:
         raise NotImplementedError(f"Unsupported container client type: {type(container_client1)}")

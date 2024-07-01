@@ -28,7 +28,6 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     MLFLOW_FLAVORS,
-    SaveStrategy,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
@@ -52,10 +51,6 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
 
-<<<<<<< HEAD
-=======
-PHI3_MINI_4K_INSTRUCT_MODEL_TYPE = "phi3mini"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
@@ -180,7 +175,6 @@ ACFT_REGEX_PREFIX = "acft_regex:"
 
 DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
     Tasks.TEXT_GENERATION,
-    Tasks.CHAT_COMPLETION
 ]
 DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
@@ -192,11 +186,6 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
-<<<<<<< HEAD
-=======
-    HfModelTypes.PHI_LONGROPE,
-    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -208,11 +197,6 @@ FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
-<<<<<<< HEAD
-=======
-    HfModelTypes.PHI_LONGROPE,
-    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
@@ -220,11 +204,6 @@ FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
     HfModelTypes.FALCON,
     HfModelTypes.MISTRAL,
     HfModelTypes.MIXTRAL,
-<<<<<<< HEAD
-=======
-    HfModelTypes.PHI_LONGROPE,
-    PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 ]
 
 
@@ -485,18 +464,6 @@ def get_parser():
         type=str2bool,
         default="false",
         help="Loads Optimizer, Scheduler and Trainer state for finetuning if true",
-    )
-    parser.add_argument(
-        "--save_strategy",
-        type=str,
-        default=SaveStrategy.EVALUATION_STRATEGY,
-        help="The checkpoint save strategy to adopt during training.",
-    )
-    parser.add_argument(
-        "--save_steps",
-        type=int,
-        default=100,
-        help="Number of update steps between two checkpoint saves if save_strategy='steps'",
     )
     parser.add_argument(
         "--save_total_limit",
@@ -787,49 +754,6 @@ def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder:
     return ds_config_json
 
 
-def is_vllm_enabled(task_name: str, finetune_config: Dict[str, Any]) -> bool:
-    """Read :flag `inferencing_config.enable_vllm` to enable vllm for finetuned model.
-
-    1. vllm support is disabled by default.
-    2. To enable vllm support update the param :inferencing_config.enable_vllm to True.
-    3. Legacy support
-        vllm support for text generation task is enabled by default.
-        To disable it set the param :inferencing_config.enable_vllm to False.
-    """
-    if (
-        finetune_config.get("inferencing_config") is not None and
-        finetune_config["inferencing_config"].get("enable_vllm") is not None
-    ):
-        enable_vllm = bool(finetune_config["inferencing_config"]["enable_vllm"])
-        enabled_or_disabled_warn_msg = "enabled" if enable_vllm else "disabled"
-        logger.warning(f"Vllm inferencing is {enabled_or_disabled_warn_msg} for {task_name} from finetune config.")
-        return enable_vllm
-    # legacy support for already supported models
-    elif task_name == Tasks.TEXT_GENERATION:
-        logger.warning(
-            f"Vllm inferencing is auto enabled for {task_name}. "
-            "Set the :param `inferencing_config.enable_vllm to False` to disable it."
-        )
-        return True
-    return False  # default case
-
-
-def setup_vllm(task_name: str, finetune_config: Dict[str, Any], base_model_metadata: Dict[str, Any]) -> Dict[str, Any]:
-    """Enable/disable vllm for finetuned model inferencing."""
-    if not is_vllm_enabled(task_name, finetune_config):
-        removed_base_image = base_model_metadata.pop("azureml.base_image", None)
-        if removed_base_image is not None:
-            logger.warning(f"Removed base image meta data for mitigation of FT model not deployable issue, \
-                        base image value is {removed_base_image}.")
-    else:
-        if base_model_metadata.get("azureml.base_image") is not None:
-            logger.info(
-                "Adding inferencing base image {} for {} task.\
-                ".format(base_model_metadata.get("azureml.base_image"), task_name)
-            )
-    return base_model_metadata
-
-
 def resolve_deepspeed_config(args: Namespace) -> str:
     """Identify the right deepspeed config to be used based on user passed parameters."""
     # Check for deepspeed config via input port
@@ -970,26 +894,6 @@ def set_flash_attention(args: Namespace):
 
 def set_gradient_checkpointing(args: Namespace):
     """Set Gradient checkpointing related parameters."""
-<<<<<<< HEAD
-=======
-    if args.apply_lora and not args.apply_deepspeed:
-        # do not set `gradient_checkpointing` for LoRA only training as it fails with the following error:
-        # RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following
-        # reasons: 1) Use of a module parameter outside the `forward` function. Please make sure model parameters
-        # are not shared across multiple concurrent forward-backward passes. or try to use _set_static_graph() as
-        # a workaround if this module graph does not change during training loop.2) Reused parameters in multiple
-        # reentrant backward passes. For example, if you use multiple `checkpoint` functions to wrap the same part
-        # of your model, it would result in the same set of parameters been used by different reentrant backward
-        # passes multiple times, and hence marking a variable ready multiple times. DDP does not support such use
-        # cases in default. You can try to use _set_static_graph() as a workaround if your module graph does not
-        # change over iterations.
-        # Parameter at index xxx has been marked as ready twice. This means that multiple autograd engine  hooks
-        # have fired for this particular parameter during this iteration. You can set the environment variable
-        # TORCH_DISTRIBUTED_DEBUG to either INFO or DETAIL to print parameter names for further debugging.
-        logger.info("Not setting `gradient_checkpointing` to True for LoRA only finetuning.")
-        return
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
@@ -1219,14 +1123,8 @@ def finetune(args: Namespace):
 
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
-            raise ACFTValidationException._with_error(
-                    AzureMLError.create(
-                        ACFTUserError,
-                        pii_safe_message=(
-                            f"Quantized finetune is not supported for model family: {args.model_type}."
-                        )
-                    )
-                )
+            raise ValueError(
+                f"Looks like quantized finetune is enabled for model family: {args.model_type} which is not supported")
         logger.info("Enabling QLoRA finetuning")
         if not args.apply_lora:
             logger.info("Lora is not enabled. Setting it to true.")
@@ -1262,13 +1160,8 @@ def finetune(args: Namespace):
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
 
-    if args.save_strategy == SaveStrategy.EVALUATION_STRATEGY:
-        logger.info(f"Setting save strategy to evaluation strategy: {args.evaluation_strategy}, {args.eval_steps}")
-        args.save_strategy = args.evaluation_strategy
-        args.save_steps = args.eval_steps
-
-    # setup vllm for finetuned model inference
-    metadata = setup_vllm(args.task_name, args.finetune_config, metadata)
+    args.save_strategy = args.evaluation_strategy
+    args.save_steps = args.eval_steps
 
     if args.task_name not in [Tasks.TEXT_GENERATION]:
         removed_base_image = metadata.pop("azureml.base_image", None)

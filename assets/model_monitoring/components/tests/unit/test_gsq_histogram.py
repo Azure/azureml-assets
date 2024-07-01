@@ -12,17 +12,12 @@ import uuid
 import pandas as pd
 import pyarrow as pa
 from generation_safety_quality.annotation_compute_histogram.run import (
-<<<<<<< HEAD
     _check_and_format_azure_endpoint_url,
     apply_annotation,
     SIMILARITY,
     AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
     AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
     GPT_4,
-=======
-    apply_annotation,
-    SIMILARITY,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     TEST_CONNECTION,
     THRESHOLD_PARAMS,
     ALL_METRIC_NAMES,
@@ -33,20 +28,11 @@ from generation_safety_quality.annotation_compute_histogram.run import (
 from shared_utilities import io_utils
 from shared_utilities.momo_exceptions import (
     DataNotFoundError, InvalidInputError)
-<<<<<<< HEAD
-=======
-from shared_utilities.constants import MDC_CHAT_HISTORY_COLUMN
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 import spark_mltable  # noqa, to enable spark.read.mltable
 
 
 QUESTION = 'question'
 EVALUATION = 'evaluation'
-<<<<<<< HEAD
-=======
-GPT_4 = 'gpt-4'
-CHAT_HISTORY = MDC_CHAT_HISTORY_COLUMN
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 @pytest.fixture(scope="module")
@@ -77,7 +63,6 @@ def gsq_preprocessor_test_setup():
 class TestGSQHistogram:
     """Test class for GSQ histogram component and utilities."""
 
-<<<<<<< HEAD
     def test_gsq_invalid_deployment_url(self):
         """Test _check_and_format_azure_endpoint_url method in GSQ component."""
         url_pattern = AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN
@@ -107,8 +92,6 @@ class TestGSQHistogram:
         expected_format = f"https://{valid_url}/openai/deployments/{model}?api-version={version}"
         assert formatted_url == expected_format
 
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def test_gsq_apply_annotation(self, code_zip_test_setup,
                                   gsq_preprocessor_test_setup):
         """Test apply_annotation method in GSQ component."""
@@ -184,18 +167,6 @@ class TestGSQHistogram:
         # remove test folder
         shutil.rmtree(mltable_path_copy)
 
-<<<<<<< HEAD
-=======
-    def test_gsq_with_chat_history_column_name(self, code_zip_test_setup,
-                                               gsq_preprocessor_test_setup):
-        """Test dataset with extra chat history column."""
-        metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
-        mltable_path = get_chat_history_mltable_path()
-        call_apply_annotation(
-            ",".join(metric_names), completion_column_name="output",
-            context_column_name=CHAT_HISTORY, mltable_path=mltable_path)
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def test_gsq_with_added_passthrough_columns(self, code_zip_test_setup,
                                                 gsq_preprocessor_test_setup):
         """Test dataset with extra passthrough columns added."""
@@ -283,17 +254,6 @@ def write_empty_production_data():
     return mltable_path
 
 
-<<<<<<< HEAD
-=======
-def get_chat_history_mltable_path():
-    """Get chat history mltable path."""
-    test_file_dir = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(
-        test_file_dir, "..", "e2e", "resources",
-        "mltable_chat_history_data_small")
-
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 def get_mltable_path():
     """Get mltable path."""
     test_file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -322,7 +282,6 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     if mltable_path is None:
         mltable_path = get_mltable_path()
     test_path = get_test_path(None, "test_output")
-<<<<<<< HEAD
     fuse_prefix = "file://"
     histogram_path = get_test_path(test_path, "histogram")
     sample_index_path = get_test_path(test_path, "samples_index")
@@ -330,13 +289,6 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     samples_index_file_path = fuse_prefix + sample_index_path
     import fsspec
     fs = fsspec.filesystem("file")
-=======
-    histogram_path = get_test_path(test_path, "histogram")
-    sample_index_path = get_test_path(test_path, "samples_index")
-    histogram_file_path = histogram_path
-    samples_index_file_path = sample_index_path
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     if threshold_args is None:
         threshold_args = {threshold: 5 for threshold in THRESHOLD_PARAMS}
     violations = {
@@ -348,15 +300,9 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
     }
 
     for k, v in violations.items():
-<<<<<<< HEAD
         violations[k] = fuse_prefix + get_test_path(test_path, v)
 
     evaluation_path = fuse_prefix + get_test_path(test_path, EVALUATION)
-=======
-        violations[k] = get_test_path(test_path, v)
-
-    evaluation_path = get_test_path(test_path, EVALUATION)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     apply_annotation(
         metric_names=metric_names,
@@ -375,10 +321,6 @@ def call_apply_annotation(metric_names, prompt_column_name=QUESTION,
         ground_truth_column_name=None,
         samples_index=samples_index_file_path,
         violations=violations,
-<<<<<<< HEAD
         evaluation=evaluation_path,
         file_system=fs
-=======
-        evaluation=evaluation_path
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     )

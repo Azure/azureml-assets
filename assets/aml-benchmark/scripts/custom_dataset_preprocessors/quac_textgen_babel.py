@@ -8,6 +8,7 @@
 from typing import Any, Dict, List, Union
 import argparse
 import json
+import logging as logger
 import pandas as pd
 
 
@@ -15,7 +16,6 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type=str, required=True)
     parser.add_argument("--output_path", type=str, required=True)
-    parser.add_argument('--additional_parameters', type=str, default='null', required=False)
     argss = parser.parse_args()
     return argss
 
@@ -26,6 +26,10 @@ def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
     :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
+    if not file_path.endswith(".jsonl"):
+        mssg = f"Input file '{file_path}' is not a .jsonl file."
+        logger.ERROR(mssg)
+        raise ValueError(mssg)
     data_dicts = []
     with open(file_path, "r", encoding="utf8") as file:
         for i, line in enumerate(file):
@@ -52,7 +56,7 @@ def _write_to_jsonl_file(
     return
 
 
-def _run(input_path: str, output_path: str,  additional_args: dict = None) -> None:
+def _run(input_path: str, output_path: str) -> None:
     """Entry function to read, run and write the processed the data."""
     data = _read_jsonl_file(input_path)
     processed_data = run_processor(data)
@@ -60,7 +64,7 @@ def _run(input_path: str, output_path: str,  additional_args: dict = None) -> No
 
 
 def run_processor(
-    data: List[Dict[str, Any]], additional_args: dict = None
+    data: List[Dict[str, Any]]
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom processor function. The user needs to modify this function with their custom processing logic.

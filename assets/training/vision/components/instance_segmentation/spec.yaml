@@ -5,11 +5,7 @@ description: Component to finetune AutoML legacy models for instance segmentatio
 
 name: train_instance_segmentation_model
 display_name: Image Instance Segmentation AutoML Legacy Model Finetune
-<<<<<<< HEAD
 version: 0.0.8
-=======
-version: 0.0.10
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 is_deterministic: false
 
@@ -224,11 +220,7 @@ outputs:
 
 code: ../src
 
-<<<<<<< HEAD
 environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/21
-=======
-environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/27
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 command: >-
   python -m instance_segmentation.run

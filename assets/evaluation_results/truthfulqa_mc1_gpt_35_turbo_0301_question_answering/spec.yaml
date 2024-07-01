@@ -1,10 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_gpt_35_turbo_0301_question_answering
-<<<<<<< HEAD
 version: 2.02.04
-=======
-version: 2.03.05
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: truthfulqa_mc1_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for truthfulqa mc1 dataset
 dataset_family: truthfulqa
@@ -12,7 +8,6 @@ dataset_name: truthfulqa_mc1
 
 model_name: gpt-35-turbo-0301
 model_version: "0301"
-<<<<<<< HEAD
 model_asset_id: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/703844
 
 relationships:
@@ -20,16 +15,6 @@ relationships:
     assetId: azureml://registries/azure-openai-v2/models/gpt-35-turbo/versions/703844
 
 tags:
-=======
-model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
-
-relationships:
-  - relationshipType: Source
-    assetId: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
-
-tags:
-  evaluation_type: text_generation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: question-answering
   accuracy_metric_name: exact_match
 

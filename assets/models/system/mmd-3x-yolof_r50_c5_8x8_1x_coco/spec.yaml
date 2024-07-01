@@ -30,10 +30,6 @@ tags:
   SharedComputeCapacityEnabled: ''
   openmmlab_model_id: mmd-3x-yolof_r50_c5_8x8_1x_coco
   training_dataset: COCO
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   license: apache-2.0
   model_specific_defaults:
     apply_deepspeed: 'false'
@@ -117,8 +113,4 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND40rs_v2
     ]
-<<<<<<< HEAD
 version: 11
-=======
-version: 12
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

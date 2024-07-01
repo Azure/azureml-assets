@@ -1,10 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: register_model
-<<<<<<< HEAD
 version: 0.0.12
-=======
-version: 0.0.14
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 type: command
 
 is_deterministic: True
@@ -13,15 +9,11 @@ display_name: Register model
 description:
   Register a model to a workspace or a registry. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
 
-<<<<<<< HEAD
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/14
-=======
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/15
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 code: ../../src
 command: >-
-  python -u register.py
+  python register.py
   --model_path ${{inputs.model_path}}
   $[[--model_type ${{inputs.model_type}}]]
   $[[--model_name ${{inputs.model_name}}]]
@@ -30,6 +22,7 @@ command: >-
   $[[--model_download_metadata ${{inputs.model_download_metadata}}]]
   $[[--model_description "${{inputs.model_description}}"]]
   $[[--model_metadata ${{inputs.model_metadata}}]]
+  $[[--model_import_job_path  ${{inputs.model_import_job_path }}]]
   --registration_details_folder ${{outputs.registration_details_folder}}
 
 inputs:
@@ -76,6 +69,11 @@ inputs:
     type: uri_file
     optional: true
     description: JSON/YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+  
+  model_import_job_path :
+    type: uri_file
+    optional: true 
+    description: JSON file that contains the job path of model to have lineage.
 
 outputs:
   registration_details_folder:

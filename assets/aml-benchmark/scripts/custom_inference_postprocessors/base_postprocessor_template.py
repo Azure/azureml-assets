@@ -5,9 +5,10 @@
 
 """Base template for custom inference postprocessor script."""
 
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Union
 import argparse
 import json
+import logging as logger
 import pandas as pd
 
 
@@ -30,12 +31,6 @@ def _parse_args():
         type=str,
         help="Path to the jsonl output file to write the processed data."
     )
-    parser.add_argument(
-        "--additional_parameters",
-        type=str,
-        default='null',
-        help="Additional parameter values set in other fields of the component in a pipeline."
-    )
     argss = parser.parse_args()
     return argss
 
@@ -46,6 +41,10 @@ def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
     :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
+    if not file_path.endswith(".jsonl"):
+        mssg = f"Input file '{file_path}' is not a .jsonl file."
+        logger.ERROR(mssg)
+        raise ValueError(mssg)
     data_dicts = []
     with open(file_path, "r", encoding="utf8") as file:
         for i, line in enumerate(file):
@@ -87,21 +86,19 @@ def _write_to_jsonl_file(
 def _run(
     prediction_dataset: str,
     output_path: str,
-    ground_truth_dataset: str = None,
-    additional_args: Optional[dict] = None,
+    ground_truth_dataset: str = None
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     pred_data = _read_jsonl_file(prediction_dataset)
-    predictions = run_prediction_extractor(pred_data, additional_args)
+    predictions = run_prediction_extractor(pred_data)
     if ground_truth_dataset:
         actual_data = _read_jsonl_file(ground_truth_dataset)
-        ground_truths = run_ground_truth_extractor(actual_data, additional_args)
+        ground_truths = run_ground_truth_extractor(actual_data)
     _write_to_jsonl_file(predictions, ground_truths, output_path)
 
 
 def run_ground_truth_extractor(
-    data: List[Dict[str, Any]],
-    additional_args: dict = None
+    data: List[Dict[str, Any]]
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom processor function to extract the ground truth.
@@ -114,14 +111,12 @@ def run_ground_truth_extractor(
 
 
 def run_prediction_extractor(
-    data: List[Dict[str, Any]],
-    additional_args: dict = None
+    data: List[Dict[str, Any]]
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     Run the custom processor function to extract the ground truth.
 
     :param data: Data loaded from _read_jsonl_file function.
-    :param additional_args: Additional parameters.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
@@ -131,7 +126,4 @@ def run_prediction_extractor(
 
 if __name__ == "__main__":
     argss = _parse_args()
-    _run(
-        argss.prediction_dataset, argss.output_dataset,
-        argss.ground_truth_dataset, json.loads(argss.additional_parameters)
-    )
+    _run(argss.prediction_dataset, argss.ground_truth_dataset, argss.output_dataset)

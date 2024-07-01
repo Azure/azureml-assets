@@ -33,23 +33,14 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'shap==0.41.0' \
-<<<<<<< HEAD
                 'interpret-community==0.30.0' \
                 'Pillow>=10.2.0' \
                 'Werkzeug==2.2.3' \
-=======
-                'interpret-community==0.31.0' \
-                'Pillow>=10.3.0' \
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
                 'setuptools>=65.5.1' \
                 'numpy==1.22.0' \
                 'scipy==1.10.0' \
                 'statsmodels==0.14.0' \
-<<<<<<< HEAD
                 'rai-core-flask==0.7.4'
-=======
-                'gunicorn>=22.0.0'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
@@ -58,14 +49,6 @@ RUN pip install 'pyarrow>=14.0.1'
 # To resolve vulnerability issue regarding crytography
 RUN pip install 'cryptography>=42.0.4'
 
-<<<<<<< HEAD
-=======
-# To resolve vulnerability issue
-RUN pip install 'Werkzeug>=3.0.3' \
-                'tqdm>=4.66.3' \
-                'onnx>=1.16.0'
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 RUN pip freeze
 
 # This is needed for mpi to locate libpython

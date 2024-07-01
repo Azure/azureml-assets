@@ -38,13 +38,8 @@ def _get_aggregated_trace_log_spark_df_schema() -> StructType:
             StructField("session_id", StringType(), True),
             StructField("start_time", TimestampType(), False),
             StructField("end_time", TimestampType(), False),
-<<<<<<< HEAD
             StructField("input", StringType(), False),
             StructField("output", StringType(), False),
-=======
-            StructField("input", StringType(), True),
-            StructField("output", StringType(), True),
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
             StructField("root_span", StringType(), True),
         ]
     )

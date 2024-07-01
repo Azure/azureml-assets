@@ -117,14 +117,6 @@ AGGREGATED_GROUNDEDNESS_PASS_RATE_METRIC_NAME = "AggregatedGroundednessPassRate"
 AGGREGATED_FLUENCY_PASS_RATE_METRIC_NAME = "AggregatedFluencyPassRate"
 AGGREGATED_SIMILARITY_PASS_RATE_METRIC_NAME = "AggregatedSimilarityPassRate"
 AGGREGATED_RELEVANCE_PASS_RATE_METRIC_NAME = "AggregatedRelevancePassRate"
-<<<<<<< HEAD
-=======
-AVERAGE_COHERENCE_SCORE_METRIC_NAME = "AverageCoherenceScore"
-AVERAGE_GROUNDEDNESS_SCORE_METRIC_NAME = "AverageGroundednessScore"
-AVERAGE_FLUENCY_SCORE_METRIC_NAME = "AverageFluencyScore"
-AVERAGE_SIMILARITY_SCORE_METRIC_NAME = "AverageSimilarityScore"
-AVERAGE_RELEVANCE_SCORE_METRIC_NAME = "AverageRelevanceScore"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 # model performance metric names
 ACCURACY_METRIC_NAME = "Accuracy"
@@ -156,7 +148,6 @@ RETRIEVAL_QUERY_TYPE_COLUMN = "retrieval_query_type"
 RETRIEVAL_TOP_K_COLUMN = "retrieval_top_k"
 DEFAULT_TOPIC_NAME = "disparate"
 PROMPT_FLOW_INPUT_COLUMN = "prompt_flow_input"
-<<<<<<< HEAD
 
 GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Similarity"]
 GOOD_METRICS_VALUE = 5
@@ -167,56 +158,13 @@ TEXT_SPLITTER = "#<Splitter>#"
 GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
 P_VALUE_THRESHOLD = 0.05
 MEAN_THRESHOLD = 3
-=======
-RETRIEVAL_DOC_COLUMN = "retrieved_doc"
-MODIFIED_PROMPT_COLUMN = "modified_prompt_column"
-QUERY_INTENTION_COLUMN = "query_intention"
-
-GSQ_METRICS_LIST = ["Fluency", "Coherence", "Groundedness", "Relevance", "Similarity"]
-GOOD_METRICS_VALUE = 5
-GOOD_METRICS_THRESHOLD = 5
-METRICS_VIOLATION_THRESHOLD = 4
-LOW_RETRIEVAL_SCORE_THRESHOLD = 4
-HIGH_RETRIEVAL_SCORE_THRESHOLD = 5
-RETRIEVAL_SPAN_TYPE = "Retrieval"
-EMBEDDING_SPAN_TYPE = "Embedding"
-TEXT_SPLITTER = "#<Splitter>#"
-
-TTEST_NAME = "t-test"
-GROUP_TOPIC_MIN_SAMPLE_SIZE = 10
-P_VALUE_THRESHOLD = 0.05
-MEAN_THRESHOLD = 3
-API_CALL_RETRY_BACKOFF_FACTOR = 4
-API_CALL_RETRY_MAX_COUNT = 10
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 INDEX_ACTION_TYPE = "Index Action"
 ACTION_DESCRIPTION = "The application's response quality is low due to suboptimal index retrieval. Please update the index with ID '{index_id}' to address this issue."  # noqa
 MAX_SAMPLE_SIZE = 20
 DEFAULT_RETRIEVAL_SCORE = 0
-<<<<<<< HEAD
 
-=======
-INVALID_LLM_SCORE = -1
-
-APP_TRACES_INPUTS_EVENT_NAME = "promptflow.function.inputs"
-APP_TRACES_OUTPUT_EVENT_NAME = "promptflow.function.output"
-APP_TRACES_RETRIEVAL_QUERY_EVENT_NAME = "promptflow.retrieval.query"
-APP_TRACES_RETRIEVAL_DOCUMENT_EVENT_NAME = "promptflow.retrieval.documents"
-APP_TRACES_EMBEDDINGS_EVENT_NAME = "promptflow.embedding.embeddings"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 # util
 MLFLOW_RUN_ID = "MLFLOW_RUN_ID"
 MAX_RETRY_COUNT = 3
-<<<<<<< HEAD
-=======
-
-# Exception error messages
-MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE = "Failed to use AML OBO token for data read and/or write." + \
-    " This is most likely due to the datastore being credential-less," + \
-    " but we don't fully support that scenario right now." + \
-    " Please add credentials (account key/SAS token) to the datastore where your" + \
-    " data is being stored and resubmit the Monitor. Else check the full error message:" + \
-    " {message}"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

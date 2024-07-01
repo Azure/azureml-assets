@@ -43,14 +43,6 @@ MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
         ("model-microsoft-good", False, True, None, True),
         ("model-microsoft-bad-asset-name", False, True, None, False),
         ("model-microsoft-bad-spec", False, True, None, False),
-<<<<<<< HEAD
-=======
-        ("evaluationresult/invalid_evaluation_type", False, True, None, False),
-        ("evaluationresult/text_embeddings_correct", False, True, None, True),
-        ("evaluationresult/text_embeddings_incorrect", False, True, None, False),
-        ("evaluationresult/text_generation_correct", False, True, None, True),
-        ("evaluationresult/text_generation_incorrect", False, True, None, False),
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,

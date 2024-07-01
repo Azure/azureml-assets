@@ -16,10 +16,6 @@ from typing import List
 from azure.ai.ml import load_model
 from azure.ai.ml.entities import Model
 from azure.ai.ml.operations._run_history_constants import JobStatus
-<<<<<<< HEAD
-=======
-from azure.core.exceptions import ClientAuthenticationError
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from azure.identity import AzureCliCredential
 
 import azureml.assets as assets
@@ -50,7 +46,6 @@ MODEL_VALIDATION_RESULTS_FOLDER = "validation_results"
 VALIDATION_SUMMARY = "results.json"
 SUPPORTED_INFERENCE_SKU_FILE_NAME = "config/supported_inference_skus.json"
 SUPPORTED_INFERENCE_SKU_FILE_PATH = Path(__file__).parent / SUPPORTED_INFERENCE_SKU_FILE_NAME
-<<<<<<< HEAD
 
 # credential and mlcient initialization
 # credential might not always be present
@@ -62,8 +57,6 @@ try:
 except Exception as e:
     credential = None
     logger.log_warning(f"Exception in creating credential. {e}")
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 class MLFlowModelProperties:
@@ -95,13 +88,6 @@ class MLFlowModelTags:
 
     # This enables model to use shared quota for deployment
     SHARED_COMPUTE_CAPACITY = "SharedComputeCapacityEnabled"
-<<<<<<< HEAD
-=======
-
-    # make sure all prod models has hiddenlayerscanned tag added
-    # model scan and tag has to be added manually currently
-    HIDDEN_LAYERS_SCANNED = "hiddenlayerscanned"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 class ModelValidationState:
@@ -765,7 +751,6 @@ def confirm_min_sku_spec(
     Returns:
         int: Number of errors.
     """
-<<<<<<< HEAD
     subscription_id = os.getenv("SUBSCRIPTION_ID", None)
     if not (credential and subscription_id):
         logger.log_warning("credential or subscription_id missing. Skipping min sku valdn")
@@ -773,15 +758,6 @@ def confirm_min_sku_spec(
 
     try:
         all_sku_details = get_all_sku_details(credential, subscription_id)
-=======
-    subscription_id = os.getenv("SUBSCRIPTION_ID")
-    if not subscription_id:
-        logger.log_warning("subscription_id missing. Skipping min sku valdn")
-        return 0
-
-    try:
-        all_sku_details = get_all_sku_details(AzureCliCredential(), subscription_id)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         min_disk = min_cpu_mem = min_ngpus = min_ncpus = -1
         for sku in supported_skus:
             sku_details = all_sku_details.get(sku)
@@ -829,15 +805,8 @@ def confirm_min_sku_spec(
             )
 
             return 1
-<<<<<<< HEAD
     except Exception as e:
         _log_error(asset_file_name_with_path, f"Exception in fetching SKU details => {e}")
-=======
-    except ClientAuthenticationError as e:
-        logger.log_warning(f"Failed to log in to Azure, skipping min sku valdn. {e}")
-    except Exception as e:
-        _log_error(asset_file_name_with_path, f"Exception in fetching SKU details: {e}")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         return 1
     return 0
 
@@ -881,20 +850,6 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         _log_error(asset_config.file_name_with_path, f"{MLFlowModelTags.LICENSE} missing")
         error_count += 1
 
-<<<<<<< HEAD
-=======
-    # TODO: skip hidden layer valdn till most models are scanned
-    # if MLFlowModelTags.HIDDEN_LAYERS_SCANNED not in model.tags:
-    #     _log_error(
-    #         asset_config.file_name_with_path,
-    #         (
-    #             "`hiddenlayerscanned` tag missing. "
-    #             "Model is not scanned by HiddenLayer ModelScanner tool. Please scan the model and retry"
-    #         )
-    #     )
-    #     error_count += 1
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     # shared compute check
     if MLFlowModelTags.SHARED_COMPUTE_CAPACITY not in model.tags:
         _log_error(asset_config.file_name_with_path, f"Tag {MLFlowModelTags.SHARED_COMPUTE_CAPACITY} missing")
@@ -1105,30 +1060,10 @@ def validate_assets(input_dirs: List[Path],
                 if check_environment_version:
                     error_count += validate_environment_version(asset_config)
 
-<<<<<<< HEAD
             if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
                 error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
-=======
-            if asset_config.type == assets.AssetType.EVALUATIONRESULT:
-                error_count += validate_tags(asset_config, 'evaluationresult/tag_values_shared.yaml')
-
-                asset_spec = asset_config._spec._yaml
-                evaluation_type = asset_spec.get('tags', {}).get('evaluation_type', None)
-
-                if evaluation_type == 'text_generation':
-                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_generation.yaml')
-                elif evaluation_type == 'text_embeddings':
-                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_embeddings.yaml')
-                else:
-                    _log_error(
-                        asset_config.file_name_with_path,
-                        f"Asset '{asset_config.name}' has unknown evaluation_type: '{evaluation_type}'"
-                    )
-                    error_count += 1
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
             if asset_config.type == assets.AssetType.PROMPT:
-                error_count += validate_tags(asset_config, 'tag_values_shared.yaml')
                 error_count += validate_tags(asset_config, 'tag_values_prompt.yaml')
 
             # Validate categories

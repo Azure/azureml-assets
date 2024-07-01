@@ -4,11 +4,7 @@ type: pipeline
 name: feature_attribution_drift_signal_monitor
 display_name: Feature Attribution Drift - Signal Monitor
 description: Computes the feature attribution between a baseline and production data assets.
-<<<<<<< HEAD
 version: 0.3.28
-=======
-version: 0.3.34
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 is_deterministic: true
 
 inputs:
@@ -48,11 +44,7 @@ outputs:
 jobs:
   compute_baseline_explanations:
     type: spark
-<<<<<<< HEAD
     component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.17
-=======
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.22
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       baseline_data:
         type: mltable
@@ -71,11 +63,7 @@ jobs:
       type: aml_token
   compute_production_explanations:
     type: spark
-<<<<<<< HEAD
     component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.17
-=======
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.22
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       baseline_data:
         type: mltable
@@ -94,11 +82,7 @@ jobs:
       type: aml_token
   compute_feature_attribution:
     type: spark
-<<<<<<< HEAD
     component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics/versions/0.3.14
-=======
-    component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics/versions/0.3.19
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       production_data:
         type: mltable
@@ -117,11 +101,7 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-<<<<<<< HEAD
     component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.17
-=======
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.22
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       signal_metrics:
         type: mltable
@@ -142,11 +122,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-<<<<<<< HEAD
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.17
-=======
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.23
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     inputs:
       signal_metrics:
         type: mltable

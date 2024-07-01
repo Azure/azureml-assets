@@ -5,8 +5,4 @@ test:
   pytest:
     enabled: true
     conda_environment: ../../dev_conda_env.yaml
-<<<<<<< HEAD
     tests_dir: ../../tests/batch_benchmark_inference
-=======
-    tests_dir: ../../tests/batch_output_formatter
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

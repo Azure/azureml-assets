@@ -25,7 +25,7 @@ RUN pip install 'azureml-core=={{latest-pypi-version}}' \
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-telemetry=={{latest-pypi-version}}' \
-                'gunicorn>=22.0.0'
+                'Werkzeug==2.2.3'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
@@ -38,14 +38,8 @@ RUN pip install 'cryptography>=42.0.4'
 # see issue https://github.com/huggingface/datasets/issues/6182
 RUN pip install git+https://github.com/huggingface/evaluate.git
 
-<<<<<<< HEAD
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.4'
-=======
-# To resolve vulnerability issue
-RUN pip install 'Werkzeug>=3.0.3'
-RUN pip install 'tqdm>=4.66.3'
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 RUN pip freeze
 

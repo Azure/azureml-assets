@@ -7,15 +7,16 @@ import re
 import json
 import codecs
 import argparse
+import logging as logger
 import pandas as pd
 import sys
 from io import StringIO
 from jinja2 import Environment
 from datasets import load_dataset
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
-REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
+REGEX_EXPR = """((?:.*?def(?=.*?(decode|find_zero|make_palindrome)).*?def.*?|.*?def.*?))(?=(?:
 \\S|$))"""
 CODE_GENERATION_DEBUG = False
 
@@ -39,25 +40,23 @@ def _parse_args():
         type=str,
         help="Path to the jsonl output file to write the processed data."
     )
-    parser.add_argument(
-        "--additional_parameters",
-        type=str,
-        default='null',
-        help="Additional parameter values set in other fields of the component in a pipeline."
-    )
     argss = parser.parse_args()
     return argss
 
 
-def _read_input_file(file_path: str) -> List[Dict[str, Any]]:
-    """Read files that have content in the json format and return a list of dictionaries.
+def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
+    """Read `.jsonl` file and return a list of dictionaries.
 
     :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
+    if not file_path.endswith(".jsonl"):
+        mssg = f"Input file '{file_path}' is not a .jsonl file."
+        logger.ERROR(mssg)
+        raise ValueError(mssg)
     data_dicts = []
     with open(file_path, "r", encoding="utf8") as file:
-        for line in file:
+        for i, line in enumerate(file):
             data_dicts.append(json.loads(line))
     return data_dicts
 
@@ -110,14 +109,13 @@ def _extract_text_from_markdown_tag(input_string: str, tag_type='python') -> str
 def _run(
     prediction_dataset: str,
     output_path: str,
-    ground_truth_dataset: str = None,
-    additional_args: Optional[dict] = None,
+    ground_truth_dataset: str = None
 ) -> None:
     """Entry function to read, run and write the processed the data."""
     if prediction_dataset:
-        pred_data = _read_input_file(prediction_dataset)
+        pred_data = _read_jsonl_file(prediction_dataset)
         if ground_truth_dataset:
-            task_id = _read_input_file(ground_truth_dataset)
+            task_id = _read_jsonl_file(ground_truth_dataset)
             pred_with_task_id, label_key, prediction_key = merge_id(task_id, pred_data)
 
     # Post processing the prediction and ground truth columns
@@ -135,9 +133,9 @@ def merge_id(
     """
     Merge the task_id with the prediction data.
 
-    :param label_data: Label data loaded from _read_input_file function.
+    :param label_data: Label data loaded from _read_jsonl_file function.
     :type: List[Dict[str, Any]]
-    :param pred_data: Prediction data loaded from _read_input_file function.
+    :param pred_data: Prediction data loaded from _read_jsonl_file function.
     :type: List[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
@@ -186,7 +184,6 @@ def run_humaneval_postprocessor(
     # Post processing the prediction and ground truth columns
     for row in pred_dict_full:
         gt = "\n" + row["test"] + "\n" + "check(" + row["entry_point"] + ")"
-<<<<<<< HEAD
         if str("def " + row["entry_point"] + "(") in row["original_prediction"]:
             # If the model regenerates the prompt/ function name
             pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type='python')
@@ -198,38 +195,9 @@ def run_humaneval_postprocessor(
             else:
                 prefix = "    "
             pred_combined_prompt = row["prompt"] + "\n" + prefix + original_prediction
-=======
-        tag_type = "python" if "```python" in row["original_prediction"] else ""
-
-        # Extract the prediction data from the markdown tags
-        pred_combined_prompt = _extract_text_from_markdown_tag(row["original_prediction"], tag_type)
-
-        # Get the index of the first function definition and return keyword
-        def_index = pred_combined_prompt.find("def ")
-        func_name_index = pred_combined_prompt.find(str("def " + row["entry_point"]))
-        return_keyword_index = pred_combined_prompt.find("return")
-
-        # If function definition is not present or present after the initial function body prediction
-        if def_index == -1 or return_keyword_index < def_index or func_name_index == -1:
-            # If spaces were stripped from endpoint responses, add those back.
-            if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
-                prefix = ""
-            else:
-                prefix = "    "
-            pred_combined_prompt = row["prompt"] + "\n" + prefix + pred_combined_prompt
-        else:
-            # If function name is present in the prediction, then remove from prompt
-            prompt_header = row["prompt"].split(str("def " + row["entry_point"]))[0]
-            # Removing spaces from the beginning of the prediction
-            if len(pred_combined_prompt) > 0 and pred_combined_prompt[0].isspace():
-                pred_combined_prompt = pred_combined_prompt.lstrip()
-            pred_combined_prompt = prompt_header + "\n" + pred_combined_prompt
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         # Applying regex on the prediction column
         if regex_exp:
-            regex_exp_func = regex_exp.replace("FUNCNAME", row["entry_point"])
-            pred = apply_regex_expr(pred_combined_prompt, regex_exp_func)
+            pred = apply_regex_expr(pred_combined_prompt, regex_exp)
         else:
             pred = pred_combined_prompt
         if CODE_GENERATION_DEBUG is True:
@@ -312,7 +280,4 @@ def apply_regex_expr(
 
 if __name__ == "__main__":
     argss = _parse_args()
-    _run(
-        argss.prediction_dataset, argss.output_dataset,
-        argss.ground_truth_dataset, json.loads(argss.additional_parameters)
-    )
+    _run(argss.prediction_dataset, argss.output_dataset, argss.ground_truth_dataset)

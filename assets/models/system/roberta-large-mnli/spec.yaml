@@ -19,10 +19,6 @@ tags:
   datasets: multi_nli, wikipedia, bookcorpus
   SharedComputeCapacityEnabled: ""
   huggingface_model_id: roberta-large-mnli
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   inference_compute_allow_list:
     [
       Standard_DS4_v2,

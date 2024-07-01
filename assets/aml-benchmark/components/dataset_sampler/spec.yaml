@@ -4,11 +4,7 @@ type: command
 name: dataset_sampler
 display_name: Dataset Sampler
 description: Samples a dataset containing JSONL file(s).
-<<<<<<< HEAD
 version: 0.0.3
-=======
-version: 0.0.6
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 inputs:
   dataset: 
@@ -51,11 +47,7 @@ outputs:
     description: Path to the jsonl file where the sampled dataset will be saved.
 
 code: ../src
-<<<<<<< HEAD
 environment: azureml://registries/azureml/environments/model-evaluation/versions/20
-=======
-environment: azureml://registries/azureml/environments/model-evaluation/versions/25
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 command: >-
   python -m aml_benchmark.dataset_sampler.main 
   --dataset ${{inputs.dataset}} 

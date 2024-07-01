@@ -4,15 +4,7 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   SHA: 133a221b8aa7292a167afc5127cb63fb5005638b
-<<<<<<< HEAD
   inference-min-sku-spec: 6|1|112|336
-=======
-  finetuning-tasks: text-to-image
-  finetune-min-sku-spec: 6|1|112|736
-  finetune-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
-  inference-min-sku-spec: 6|1|112|736
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
@@ -20,10 +12,6 @@ tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail-m
   task: text-to-image
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   huggingface_model_id: CompVis/stable-diffusion-v1-4
   author: CompVis
   training_dataset: LAION-5B
@@ -38,17 +26,4 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
-<<<<<<< HEAD
 version: 9
-=======
-  finetune_compute_allow_list:
-    [
-      Standard_NC6s_v3,
-      Standard_NC12s_v3,
-      Standard_NC24s_v3,
-      Standard_ND40rs_v2,
-      Standard_ND96amsr_A100_v4,
-      Standard_ND96asr_v4
-    ]
-version: 11
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

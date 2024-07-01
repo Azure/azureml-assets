@@ -19,10 +19,6 @@ tags:
   task: fill-mask
   datasets: ""
   huggingface_model_id: microsoft/deberta-xlarge
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   inference_compute_allow_list:
     [
       Standard_DS5_v2,

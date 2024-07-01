@@ -13,10 +13,6 @@ tags:
   datasets: squad
   license: apache-2.0
   task: question-answering
-<<<<<<< HEAD
-=======
-  hiddenlayerscanned: ""
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   SharedComputeCapacityEnabled: ''  
   huggingface_model_id: distilbert-base-uncased-distilled-squad
   inference_compute_allow_list:

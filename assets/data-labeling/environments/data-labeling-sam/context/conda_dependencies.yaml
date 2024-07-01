@@ -10,7 +10,7 @@ dependencies:
   - azureml-contrib-dataset=={{latest-pypi-version}}
   - azureml-dataset-runtime[fuse,pandas]
   - azureml-defaults=={{latest-pypi-version}}
-  - azure-ml-component
+  - azure-ml-component==0.9.18.post2
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-contrib-services=={{latest-pypi-version}}
   - torch-tb-profiler~=0.4.0

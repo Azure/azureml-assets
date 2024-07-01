@@ -5,24 +5,16 @@
 
 import copy
 import datetime
-from typing import Any, Dict, Optional, Tuple, List
-
+from typing import Any, Dict, Optional, Tuple
 import pandas as pd
-import tiktoken
-from azureml._common._error_definition.azureml_error import AzureMLError
 
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
-<<<<<<< HEAD
 from aml_benchmark.utils.exceptions import BenchmarkUserException
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
-=======
-from aml_benchmark.utils.exceptions import BenchmarkUserException, BenchmarkSystemException
-from aml_benchmark.utils.error_definitions import BenchmarkUserError, BenchmarkSystemError
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 logger = get_logger(__name__)
@@ -84,7 +76,7 @@ class ResultConverters:
             return self._get_fallback_output()
         return self._get_raw_output(result)
 
-    def convert_result_perf(self, result: Dict[str, Any], use_tiktoken: bool) -> Dict[str, Any]:
+    def convert_result_perf(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the result to perf metrics."""
         if not self.is_result_success(result):
             return self._get_fallback_output(is_perf=True)
@@ -118,8 +110,6 @@ class ResultConverters:
         if self._model.is_oss_model():
             usage['input_token_count'] = self._get_oss_input_token(usage)
             usage['output_token_count'] = self._get_oss_output_token(result, usage)
-        if use_tiktoken:
-            usage['input_token_count'], usage['output_token_count'] = self._get_tiktoken_count(result)
         for k in ["output_token_count", "input_token_count"]:
             if usage[k] == -1:
                 del usage[k]
@@ -212,26 +202,6 @@ class ResultConverters:
         input_parameters = ResultConverters._get_oss_input_parameters(result)
         return input_parameters.get("max_new_tokens", perf_metrics.get('output_token_count', -1))
 
-<<<<<<< HEAD
-=======
-    def _get_tiktoken_count(self, result: Any) -> Tuple[int, int]:
-        input: List[str] = self._get_request_content(result)
-        if self._model.is_oss_model():
-            output: str = ResultConverters._get_oss_response_result(result)
-        elif self._model.is_aoai_model():
-            output: str = ResultConverters._get_aoai_response_result(result)
-        else:
-            raise BenchmarkSystemException._with_error(
-                AzureMLError.create(
-                    BenchmarkSystemError,
-                    error_details=f"Unsupported model type: {self._model.model_type}. Expected `oss` or `aoai`."))
-
-        encoding = tiktoken.get_encoding("cl100k_base")
-        input_tokens = sum([len(encoding.encode(input_str)) for input_str in input])
-        output_tokens = len(encoding.encode(output))
-        return input_tokens, output_tokens
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     def _get_additional_columns_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         additional_columns_data = {}
         if self._additional_columns:
@@ -268,31 +238,11 @@ class ResultConverters:
     def _get_response(result: Dict[str, Any]) -> Any:
         return result.get('response', None)
 
-    def _get_request_content(self, result: Dict[str, Any]) -> List[str]:
+    def _get_request_content(self, result: Dict[str, Any]) -> Any:
         if self._model.is_aoai_model():
-            request = self._get_request(result)
-            if "prompt" in request:
-                return [request["prompt"]]
-            elif "messages" in request:
-                return [my_dict.get('content', '') for my_dict in request['messages']]
-            else:
-                raise BenchmarkSystemException._with_error(
-                    AzureMLError.create(
-                        BenchmarkSystemError,
-                        error_details=("Cannot find key `prompt` or `messages` "
-                                       f"for model type aoai in `request`: {request}.")))
+            return self._get_request(result)['messages'][0]['content']
         elif self._model.is_oss_model():
-            request = self._get_request(result)['input_data']['input_string']
-            if isinstance(request[0], str):
-                return [content for content in request]
-            elif isinstance(request[0], dict):
-                return [my_dict.get('content', '') for my_dict in request]
-            else:
-                raise BenchmarkSystemException._with_error(
-                    AzureMLError.create(
-                        BenchmarkSystemError,
-                        error_details=("Expected `str` or `dict` for model type oss. "
-                                       f"Unknown type of `request`: {request}.")))
+            return self._get_request(result)['input_data']['input_string']
 
     @staticmethod
     def _get_aoai_response_result(result: Dict[str, Any]) -> Any:

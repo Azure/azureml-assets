@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Tests for claude endpoint."""
-<<<<<<< HEAD
 import sys
 import unittest
 
@@ -17,16 +16,6 @@ print(get_src_dir())
 from aml_benchmark.utils.online_endpoint.claude_online_endpoint import ClaudeOnlineEndpoint  # noqa: E402
 from aml_benchmark.batch_benchmark_score.batch_score.utils.exceptions import BenchmarkUserException  # noqa: E402
 from aml_benchmark.batch_benchmark_score.batch_score.utils.error_definitions import BenchmarkUserError  # noqa: E402
-=======
-import unittest
-from unittest.mock import patch
-
-from ddt import ddt, data
-
-from aml_benchmark.utils.online_endpoint.claude_online_endpoint import ClaudeOnlineEndpoint
-from aml_benchmark.batch_benchmark_score.batch_score.utils.exceptions import BenchmarkUserException
-from aml_benchmark.batch_benchmark_score.batch_score.utils.error_definitions import BenchmarkUserError
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 @ddt

@@ -106,10 +106,6 @@ def _get_base_configuration():
         "image_input_folder": None,
         "initial_worker_count": 100,
         "input_schema_version": 1,
-<<<<<<< HEAD
-=======
-        "logging_metadata": "{}",
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         "max_retry_time_interval": 600,
         "max_worker_count": 200,
         "mini_batch_results_out_directory": '~/resources/mini_batch_results_output_directory',

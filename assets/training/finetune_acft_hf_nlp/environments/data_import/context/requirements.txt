@@ -1,2 +1,0 @@
-azureml_acft_common_components=={{latest-pypi-version}}
-azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}

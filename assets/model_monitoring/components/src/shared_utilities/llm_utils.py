@@ -5,7 +5,6 @@
 
 import os
 import re
-<<<<<<< HEAD
 import json
 import time
 from abc import abstractmethod, ABC
@@ -14,12 +13,6 @@ from azure.core.credentials import AccessToken, TokenCredential
 from azure.ai.ml.identity import CredentialUnavailableError
 from azure.ai.ml.identity._internal import _scopes_to_resource
 from urllib.request import Request, urlopen
-=======
-import time
-from abc import abstractmethod, ABC
-import requests
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -42,15 +35,6 @@ OPENAI_REQUEST_PARAMS = [
 AUTHORIZATION = "Authorization"
 BEARER = "Bearer"
 API_KEY = "api-key"
-<<<<<<< HEAD
-=======
-TEMPERATURE_VALUE = 0.0
-TOP_P_VALUE = 1.0
-NUM_SAMPLES_VALUE = 1
-FREQUENCY_PENALTY_VALUE = 0.0
-PRESENCE_PENALTY_VALUE = 0.0
-STOP_VALUE = None
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 # Timeout per each request: 5min
 HTTP_REQUEST_TIMEOUT = 300
@@ -63,7 +47,6 @@ LISTSECRETS_API_PATTERN = "https://management.azure.com{}/listsecrets?api-versio
 AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN = "https://{}/openai/deployments/{}"
 
 
-<<<<<<< HEAD
 # --- The following is copied from the yet to be released azureml-featurestore.
 # TODO: replace with import once it's released.
 class AzureMLHoboSparkOnBehalfOfCredential(TokenCredential):
@@ -224,8 +207,6 @@ def _send_request(url, data=None, headers=None, method=None):
 
 # END of copied code from azureml-featurestore
 
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 class _APITokenManager(ABC):
     def __init__(
         self,
@@ -239,7 +220,6 @@ class _APITokenManager(ABC):
         self.last_refresh_time = None
 
     def get_aad_credential(self):
-<<<<<<< HEAD
         return AzureMLHoboSparkOnBehalfOfCredential(
             AZUREML_SYNAPSE_CLUSTER_IDENTIFIER=os.environ.get(
                 "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER", "spark.synapse.clusteridentifier"
@@ -250,9 +230,6 @@ class _APITokenManager(ABC):
             AZUREML_RUN_ID=os.environ["AZUREML_RUN_ID"],
             AZUREML_RUN_TOKEN_EXPIRY=os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
         )
-=======
-        return AzureMLOnBehalfOfCredential()
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     @abstractmethod
     def get_token(self):
@@ -351,11 +328,7 @@ def _request_api(session,
         "Content-Type": "application/json",
     }
 
-<<<<<<< HEAD
     print(f"Using {token_manager.auth_header} authentication")
-=======
-    # print(f"Using {token_manager.auth_header} authentication")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     if token_manager.auth_header == BEARER:
         headers[AUTHORIZATION] = f"{BEARER} {token}"
     elif token_manager.auth_header == API_KEY:
@@ -364,7 +337,6 @@ def _request_api(session,
     time_start = time.time()
 
     # print headers without disclosing token
-<<<<<<< HEAD
     headers_output = {
         h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
         for h in headers
@@ -374,30 +346,14 @@ def _request_api(session,
         f"\n    with headers: {headers_output}"
         f"\n    and params: {request_params}"
     )
-=======
-    # headers_output = {
-    #     h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
-    #     for h in headers
-    # }
-    # print(
-    #     f"Sending request \n    to endpoint: {endpoint_url}"
-    #     f"\n    with headers: {headers_output}"
-    #     f"\n    and params: {request_params}"
-    # )
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     response = session.post(
         endpoint_url,
         headers=headers,
         json=request_params,
         timeout=HTTP_REQUEST_TIMEOUT)
     time_taken = str(time.time() - time_start)
-<<<<<<< HEAD
     print(f"Received response from endpoint: {response.__dict__}")
     print(f"Time taken to receive response: {time_taken}")
-=======
-    # print(f"Received response from endpoint: {response.__dict__}")
-    # print(f"Time taken to receive response: {time_taken}")
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     if response.status_code == 200:
         response_data = response.json()
 
@@ -446,20 +402,3 @@ def get_openai_request_args(args):
     }
     request_args["model"] = args.model_deployment_name
     return request_args
-<<<<<<< HEAD
-=======
-
-
-def get_llm_request_args(model_deployment_name):
-    """Get openai request parameters."""
-    request_args = {
-        "temperature": TEMPERATURE_VALUE,
-        "top_p": TOP_P_VALUE,
-        "num_samples": NUM_SAMPLES_VALUE,
-        "frequency_penalty": FREQUENCY_PENALTY_VALUE,
-        "presence_penalty": PRESENCE_PENALTY_VALUE,
-        "model": model_deployment_name
-    }
-    request_args["model"] = model_deployment_name
-    return request_args
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

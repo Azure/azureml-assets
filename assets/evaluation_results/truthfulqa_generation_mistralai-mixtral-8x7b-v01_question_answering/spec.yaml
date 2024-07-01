@@ -1,17 +1,12 @@
 type: evaluationresult
 name: truthfulqa_generation_mistralai-mixtral-8x7b-v01_question_answering
-<<<<<<< HEAD
 version: 2.02.04
-=======
-version: 2.27.05
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: truthfulqa_generation_mistralai-Mixtral-8x7B-v01_question_answering
 description: mistralai-Mixtral-8x7B-v01 run for truthfulqa_generation dataset
 dataset_family: truthfulqa
 dataset_name: truthfulqa_generation
 
 model_name: mistralai-Mixtral-8x7B-v01
-<<<<<<< HEAD
 model_version: "4"
 model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/4
 
@@ -20,30 +15,13 @@ relationships:
     assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/4
 
 tags:
-=======
-model_version: "12"
-model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/12
-
-relationships:
-  - relationshipType: Source
-    assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/12
-
-tags:
-  evaluation_type: text_generation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: question-answering
   accuracy_metric_name: nan
 
 metrics:
-<<<<<<< HEAD
   coherence: 3.860465
   fluency: 4.201958
   GPTSimilarity: 2.635251
-=======
-  coherence: 3.88848
-  fluency: 4.170343
-  GPTSimilarity: 2.542892
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 properties:

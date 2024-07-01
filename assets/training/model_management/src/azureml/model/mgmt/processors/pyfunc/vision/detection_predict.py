@@ -113,9 +113,6 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                     from mmdet.structures.mask import bitmap_to_polygon
 
                     polygon, _ = bitmap_to_polygon(masks[i])
-                    polygon = _remove_invalid_segments(polygon)
-                    if not polygon:
-                        continue
                     box[ISLiterals.POLYGON] = _normalize_polygon(polygon, (image_width, image_height))
                 cur_image_preds[ODLiterals.BOXES].append(box)
             predictions.append(cur_image_preds)

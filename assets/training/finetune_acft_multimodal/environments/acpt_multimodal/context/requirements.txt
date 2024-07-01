@@ -11,11 +11,7 @@ deepspeed==0.13.1
 optimum==1.16.1
 accelerate==0.25.0
 diffusers==0.24.0
-<<<<<<< HEAD
 onnxruntime-training==1.15.1
-=======
-onnxruntime-training==1.18.0
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 scipy==1.10.0
 mpi4py==3.1.4
 sentencepiece==0.1.99
@@ -25,11 +21,7 @@ bitsandbytes==0.41.0
 einops==0.6.1
 certifi==2023.07.22
 numpy==1.22
-<<<<<<< HEAD
 azure-ai-ml==1.13.0
-=======
-azure-ai-ml==1.16.1
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 azureml-dataprep==4.12.4
 # Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
 azureml-metrics==0.0.33

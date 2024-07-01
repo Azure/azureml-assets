@@ -4,11 +4,7 @@ type: command
 tags:
     Preview: ""
 
-<<<<<<< HEAD
 version: 0.0.51
-=======
-version: 0.0.60
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 name: llm_rag_generate_embeddings
 display_name: LLM - Generate Embeddings
 is_deterministic: true
@@ -35,7 +31,7 @@ inputs:
   # Embeddings settings
   embeddings_model:
     type: string
-    optional: True
+    default: "hugging_face://model/sentence-transformers/all-mpnet-base-v2"
     description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
   batch_size:
     type: integer
@@ -63,11 +59,7 @@ code: '../src'
 command: >-
   python -m azureml.rag.tasks.embed
   --chunks_source '${{inputs.chunks_source}}'
-<<<<<<< HEAD
   --embeddings_model ${{inputs.embeddings_model}}
-=======
-  $[[--embeddings_model ${{inputs.embeddings_model}}]]
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   $[[--embeddings_container '${{inputs.embeddings_container}}']]
   --output '${{outputs.embeddings}}'
   --batch_size ${{inputs.batch_size}}

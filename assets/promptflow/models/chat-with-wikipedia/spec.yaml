@@ -9,8 +9,4 @@ properties:
   azureml.promptflow.description: Create a chatbot that leverages Wikipedia data to ground the responses.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-<<<<<<< HEAD
 version: 10
-=======
-version: 11
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa

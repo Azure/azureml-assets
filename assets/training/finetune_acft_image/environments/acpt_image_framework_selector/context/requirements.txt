@@ -1,9 +1,5 @@
 azureml-acft-common-components~={{latest-pypi-version}}
-<<<<<<< HEAD
 azure-ai-ml==1.13.0
-=======
-azure-ai-ml==1.16.1
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 mldesigner
 mlflow
 azureml-mlflow

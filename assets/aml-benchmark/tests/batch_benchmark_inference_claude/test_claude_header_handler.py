@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Tests for ClaudeHeaderHandler."""
-<<<<<<< HEAD
 import sys
 import unittest
 
@@ -15,14 +14,6 @@ print(get_src_dir())
 from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claude import (  # noqa: E402
     claude_header_handler)
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel  # noqa: E402
-=======
-import unittest
-from unittest.mock import Mock
-
-from aml_benchmark.batch_benchmark_score.batch_score.header_handlers.claude import (
-    claude_header_handler)
-from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
 
 class TestClaudeHeaderHandler(unittest.TestCase):
@@ -45,8 +36,5 @@ class TestClaudeHeaderHandler(unittest.TestCase):
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     # import sys;sys.argv = ['', 'Test.testName']
-=======
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     unittest.main()

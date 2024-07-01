@@ -4,12 +4,9 @@
 """Evaluator."""
 
 import ast
-import re
 import pandas as pd
 import numpy as np
 from abc import abstractmethod
-
-from PIL import Image
 
 from exceptions import (
     DataValidationException,
@@ -31,9 +28,6 @@ from constants import (
     ChatCompletionConstants
 )
 from image_constants import ImageDataFrameParams, ODISLiterals
-from azureml.core import Run
-from azureml.data.datapath import DataPath
-from azureml.data.dataset_factory import FileDatasetFactory
 from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
     ImageOdIsEvaluator,
 )
@@ -70,10 +64,6 @@ class EvaluatorFactory:
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
             TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
             TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator,
-<<<<<<< HEAD
-=======
-            TASK.IMAGE_GENERATION: ImageGenerationEvaluator,
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
         }
 
     def get_evaluator(self, task_type, config=None):
@@ -621,7 +611,7 @@ class ChatCompletionEvaluator(Evaluator):
         #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
             y_pred_formatted = [
-                list(item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0].values())[0]
+                item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0]["0"]
                 for idx, item in y_pred.iterrows()
             ]
         # dataframe wih just predictions appended to conversations
@@ -786,57 +776,3 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
                                                      **self.metrics_config)
 
         return metrics
-
-
-class ImageGenerationEvaluator(Evaluator):
-    """Evaluator for image generation."""
-
-    DATASTORE_URL_TEMPLATE = "AmlDatastore://([^/]+)((/[^/]+)+)$"
-
-    def evaluate(self, y_test, y_pred, **kwargs):
-        """Evaluate generated images.
-
-        Compare feature space distribution of real images with that of generated images.
-
-        Args:
-            y_test (pd.DataFrame): pandas DataFrame with column "label", containing real images
-            y_pred (pd.DataFrame): pandas DataFrame with column "predictions", containing generated images
-        Returns:
-            Dict: Dict of metrics
-        """
-        metrics = compute_metrics(
-            task_type=constants.Tasks.IMAGE_GENERATION,
-            y_test=self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME]),
-            y_pred=self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS]),
-            **self.metrics_config
-        )
-        return metrics
-
-    def _download_images(self, image_urls):
-        # Get the workspace of the run.
-        run = Run.get_context()
-        workspace = run.experiment.workspace
-
-        def maybe_make_data_path(image_url):
-            # Check if this url refers to datastore and if not, keep it as is.
-            match = re.search(self.DATASTORE_URL_TEMPLATE, image_url)
-            if match is None:
-                return image_url
-
-            # Make DataPath from datastore name and file path.
-            groups = match.groups()
-            return DataPath(workspace.datastores.get(groups[0]), groups[1])
-
-        # Convert URLs referring to datastore to DataPath format.
-        image_urls = [maybe_make_data_path(image_url) for image_url in image_urls]
-
-        images = []
-
-        # Download images and load them as `PIL Image`'s.
-        remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
-        local_image_file_names = remote_image_files.download()
-        for local_image_file_name in local_image_file_names:
-            image = Image.open(local_image_file_name).convert("RGB")
-            images.append(image)
-
-        return images

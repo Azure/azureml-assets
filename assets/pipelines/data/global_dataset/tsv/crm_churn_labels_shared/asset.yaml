@@ -1,6 +1,0 @@
-name: crm_churn_labels_shared
-version: 3
-type: data
-spec: spec.yaml
-categories:
-  - pipeline

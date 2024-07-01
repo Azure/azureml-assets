@@ -1,10 +1,6 @@
 type: evaluationresult
 name: mmlu_social_sciences_mistral_large_question_answering
-<<<<<<< HEAD
 version: 2.02.04
-=======
-version: 2.19.040
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: mmlu_social_sciences_mistral_large_question_answering
 description: mistral-large run for mmlu_social_sciences dataset
 dataset_family: mmlu
@@ -19,10 +15,6 @@ relationships:
     assetId: azureml://registries/azureml-mistral/models/Mistral-large/versions/1
 
 tags:
-<<<<<<< HEAD
-=======
-  evaluation_type: text_generation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: question-answering
   accuracy_metric_name: exact_match
 

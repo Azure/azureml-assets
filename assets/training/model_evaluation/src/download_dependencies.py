@@ -9,17 +9,16 @@ from logging_utilities import (
     custom_dimensions, get_logger, log_traceback, swallow_all_exceptions, get_azureml_exception
 )
 from azureml.telemetry.activity import log_activity
-<<<<<<< HEAD
 from error_definitions import DownloadDependenciesError, InvalidModel
-=======
-from error_definitions import InvalidModel
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 from exceptions import ModelValidationException
 from validation import _validate_model
 from constants import ArgumentLiterals, TelemetryConstants
 
-import sys
-import subprocess
+try:
+    from pip import main as pipmain
+except ImportError:
+    from pip._internal import main as pipmain
+REQUIREMENTS_FILE = "./requirements.txt"
 
 custom_dimensions.app_name = TelemetryConstants.DOWNLOAD_MODEL_DEPENDENCIES
 logger = get_logger(name=__name__)
@@ -60,34 +59,15 @@ def main():
                     continue
                 install_deps += [line.strip()]
 
-        no_install = []
         if len(install_deps) > 0:
             try:
-                command = [sys.executable, '-m', 'pip', 'install'] + install_deps
-                command_str = ' '.join(command)
-                logger.info(f"Installing dependencies. Executing command: {command_str}")
-                subprocess.check_output(command, stderr=subprocess.STDOUT)
+                pipmain(["install"] + install_deps)
             except Exception as e:
-                logger.warning(f"Installing dependencies failed with error:\n{e.stdout.decode('utf-8')}")
-                logger.info("Installing dependencies one by one.")
-
-                command = [sys.executable, '-m', 'pip', 'install', 'dep']
-                for dep in install_deps:
-                    try:
-                        command[-1] = dep
-                        command_str = ' '.join(command)
-                        logger.info(f"Installing dependencies. Executing command: {command_str}")
-                        subprocess.check_output(command, stderr=subprocess.STDOUT)
-                    except Exception as e:
-                        logger.warning(f"Installing dependency {dep} failed with error:\n{e.stdout.decode('utf-8')}")
-                        no_install += [dep]
-
-        if len(no_install):
-            no_install = "\n".join(no_install)
-            logger.warning(
-                f"Could not install following dependencies - \n{no_install}"
-                f"\nSome functionality might not work as expected."
-            )
+                message_kwargs = {"dependencies": ' '.join(install_deps)}
+                exception = get_azureml_exception(ModelValidationException, DownloadDependenciesError, e,
+                                                  error=repr(e), **message_kwargs)
+                log_traceback(exception, logger)
+                raise exception
 
 
 if __name__ == "__main__":

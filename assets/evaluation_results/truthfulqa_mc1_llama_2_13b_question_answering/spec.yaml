@@ -1,10 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_llama_2_13b_question_answering
-<<<<<<< HEAD
 version: 2.02.04
-=======
-version: 2.19.040
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 display_name: truthfulqa_mc1_llama_2_13b_question_answering
 description: llama-2-13b run for truthfulqa_mc1 dataset
 dataset_family: truthfulqa
@@ -19,10 +15,6 @@ relationships:
     assetId: azureml://registries/azureml-meta/models/Llama-2-13b/versions/14
 
 tags:
-<<<<<<< HEAD
-=======
-  evaluation_type: text_generation
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
   task: question-answering
   accuracy_metric_name: exact_match
 

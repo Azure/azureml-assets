@@ -3,57 +3,8 @@
 
 ### 🐛 Bugs Fixed
 
-<<<<<<< HEAD
 ## 1.16.42 (2024-04-03)
 ### 🐛 Bugs Fixed
-=======
-## 1.16.53 (2024-06-28)
-### 🐛 Bugs Fixed
-- [#3102](https://github.com/Azure/azureml-assets/pull/3102) Don't auth to Azure during import of validate_assets
-
-## 1.16.52 (2024-06-03)
-### 🚀 New Features
-- [#3000](https://github.com/Azure/azureml-assets/pull/3000) Allow use of azcopy's --overwrite flag
-
-## 1.16.51 (2024-05-30)
-### 🐛 Bugs Fixed
-- [#2991](https://github.com/Azure/azureml-assets/pull/2991) Generate SAS tokens for data assets
-
-## 1.16.50 (2024-05-22)
-### 🐛 Bugs Fixed
-- [#2956](https://github.com/Azure/azureml-assets/pull/2956) Update embeddings asset task type
-
-## 1.16.49 (2024-05-17)
-### 🐛 Bugs Fixed
-- [#2935](https://github.com/Azure/azureml-assets/pull/2935) Update the manifest file to include additional configs
-
-## 1.16.48 (2024-05-17)
-### 🐛 Bugs Fixed
-- [#2934](https://github.com/Azure/azureml-assets/pull/2934) Update asset validation check for EvaluationResult
-
-## 1.16.47 (2024-05-17)
-### 🐛 Bugs Fixed
-- [#2933](https://github.com/Azure/azureml-assets/pull/2933) skip hiddenlayerscanned tags till most models are scanned
-
-## 1.16.46 (2024-05-15)
-### 🐛 Bugs Fixed
-- [#2907](https://github.com/Azure/azureml-assets/pull/2907) add hiddenlayerscanned tags valdn
-
-## 1.16.45 (2024-04-24)
-### 🐛 Bugs Fixed
-- [#2773](https://github.com/Azure/azureml-assets/pull/2773) Add h100 skus to supported inference skus list
-
-## 1.16.44 (2024-04-19)
-### 🐛 Bugs Fixed
-- [#2730](https://github.com/Azure/azureml-assets/pull/2730) Fix ACR task timeout keys
-
-## 1.16.43 (2024-04-19)
-### 🐛 Bugs Fixed
-- [#2726](https://github.com/Azure/azureml-assets/pull/2726) Set overall ACR task timeout
-
-## 1.16.42 (2024-04-03)
-### 🐛 Bugs Fixed
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 - [#2591](https://github.com/Azure/azureml-assets/pull/2637) Exclude yanked version for `latest-pypi-version`
 
 ## 1.16.41 (2024-03-27)

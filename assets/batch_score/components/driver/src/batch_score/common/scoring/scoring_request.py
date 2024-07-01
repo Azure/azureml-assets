@@ -17,10 +17,6 @@ class ScoringRequest:
 
     __BATCH_REQUEST_METADATA = "_batch_request_metadata"
     __REQUEST_METADATA = "request_metadata"
-<<<<<<< HEAD
-=======
-    __CUSTOM_ID = "custom_id"
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
     def __init__(
             self,
@@ -59,11 +55,6 @@ class ScoringRequest:
         # These properties do not need to be sent to the model & will be added to the output file directly
         self.__request_metadata = self.__cleaned_payload_obj.pop(self.__BATCH_REQUEST_METADATA, None)
         self.__request_metadata = self.__cleaned_payload_obj.pop(self.__REQUEST_METADATA, self.__request_metadata)
-<<<<<<< HEAD
-=======
-        # If custom_id exists (V2 input schema), make sure it is not sent to MIR endpoint
-        self.__CUSTOM_ID = self.__cleaned_payload_obj.pop(self.__CUSTOM_ID, None)
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
 
         self.__cleaned_payload = json.dumps(self.__cleaned_payload_obj, cls=BatchComponentJSONEncoder)
         self.__loggable_payload = json.dumps(self.__loggable_payload_obj, cls=BatchComponentJSONEncoder)
@@ -145,15 +136,6 @@ class ScoringRequest:
         """Get the segment id."""
         return self.__segment_id
 
-<<<<<<< HEAD
-=======
-    # read-only
-    @property
-    def custom_id(self) -> str:
-        """Get the custom id. Only valid for V2 input schema."""
-        return self.__CUSTOM_ID
-
->>>>>>> 7a54b91f3a492ed00e3033a99450bbc4df36a0fa
     @estimated_cost.setter
     def estimated_cost(self, cost: int):
         """Set the estimated cost."""
