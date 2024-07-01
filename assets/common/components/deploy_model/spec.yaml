@@ -13,7 +13,7 @@ environment: azureml://registries/azureml/environments/python-sdk-v2/versions/15
 
 code: ../../src
 command: >-
-  python deploy.py
+  python -u deploy.py
   $[[--registration_details_folder ${{inputs.registration_details_folder}}]]
   $[[--model_id ${{inputs.model_id}}]]
   $[[--inference_payload ${{inputs.inference_payload}}]]
