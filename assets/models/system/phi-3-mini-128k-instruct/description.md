@@ -49,7 +49,7 @@ These tables below highlights improvements on instruction following, structure o
 | JSON Structure Output | 1.9 | 60.1 |
 | XML Structure Output | 47.8 | 52.9 |
 | GPQA	| 25.9	| 29.7 |
-| MMLU	| 68.1	| 60.7 |
+| MMLU	| 68.1	| 69.7 |
 | **Average**	| **25.7**	| **37.3** |
 
 RULER: a retrieval-based benchmark for long context understanding
