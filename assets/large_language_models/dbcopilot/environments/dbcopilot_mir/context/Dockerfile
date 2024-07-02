@@ -18,8 +18,7 @@ RUN NGINX_CONF=/etc/nginx/sites-enabled/app; \
 
 # Copy the environment file
 COPY ./requirements.txt ./
-RUN curl -o lemma.map.txt https://ragsample.blob.core.windows.net/ragdata/grounding/db_copilot/resource/lemma.map.txt && \
-    curl -o db_copilot_tool-0.1.23-py3-none-any.whl https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl
+RUN curl -o lemma.map.txt https://ragsample.blob.core.windows.net/ragdata/grounding/db_copilot/resource/lemma.map.txt
 ENV DBCOPILOT_GROUNDING_LEMMA_PATH=/lemma.map.txt
 
 # dbcopilot environment
@@ -30,7 +29,7 @@ RUN python -m pip install --upgrade pip && \
     pip install promptflow-image-bundle[azure]==0.3.0 && \
     pip install promptflow-vectordb==0.2.10 && \
     ## Install dbcopilot
-    pip install db_copilot_tool-0.1.23-py3-none-any.whl
+    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
