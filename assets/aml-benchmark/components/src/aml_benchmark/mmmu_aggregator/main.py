@@ -4,6 +4,7 @@
 """Entry script for MMMU Aggregator Component."""
 
 import argparse
+import json
 
 from aml_benchmark.utils.io import read_json_data, save_json_to_file
 from aml_benchmark.utils.logging import get_logger
@@ -93,10 +94,15 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=f"{__file__}")
     for short_name in SHORT_NAMES:
        parser.add_argument(
-            "--evaluation_result_{short_name}",
+            f"--evaluation_result_{short_name}",
             type=str,
             default=None,
         )
+    parser.add_argument(
+        f"--final_evaluation_result",
+        type=str,
+        default=None,
+    )
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
@@ -112,23 +118,30 @@ def main(args) -> None:
     """
     quality_metrics = {}
     for short_name in SHORT_NAMES:
-        quality_metrics[short_name] = read_json_data(getattr(args, "evaluation_result_{short_name}"))
-    print("x1", quality_metrics)
+        quality_metrics[short_name] = read_json_data(getattr(args, f"evaluation_result_{short_name}"))
+    print("x1", {
+        k: {k2: v2 for k2, v2 in v.items() if k2 in {"num_instances", "accuracy"}}
+        for k, v in quality_metrics.items()
+    })
 
-    sum_num_instances = sum([m["num_instances"] for m in quality_metrics.values()])
-    sum_accuracies = sum([m["accuracy"] for m in quality_metrics.values()])
-    print("x2", float(sum_accuracies) / sum_num_instances)
+    def get_average_metric_value(metric_value_lst, metric_name):
+        sum_num_instances = sum([m["num_instances"] for m in metric_value_lst])
+        weighted_sum_metric = sum([m["num_instances"] * m[metric_name] for m in metric_value_lst])
+        return float(weighted_sum_metric) / sum_num_instances
 
-    ln2sn = {v: k for k, v in LONG_NAME_BY_SHORT_NAME}
+    final_results = {
+        "overall": get_average_metric_value(list(quality_metrics.values()), "accuracy")
+    }
+
+    ln2sn = {v: k for k, v in LONG_NAME_BY_SHORT_NAME.items()}
     for domain, long_names in DOMAIN_CAT2SUB_CAT.items():
         metrics = [quality_metrics[ln2sn[long_name]] for long_name in long_names]
-        sum_num_instances = sum([m["num_instances"] for m in metrics])
-        sum_accuracies = sum([m["accuracy"] for m in metrics])
-        print("x3", domain, float(sum_accuracies) / sum_num_instances)
+        final_results[domain] = get_average_metric_value(metrics, "accuracy")
+
+    with open(args.final_evaluation_result, "wt") as f:
+        json.dump(final_results, f)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(
-        evaluation_result_accounting=args.evaluation_result_accounting,
-    )
+    main(args)
