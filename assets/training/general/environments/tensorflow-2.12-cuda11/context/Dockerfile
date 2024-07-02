@@ -8,10 +8,14 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # Create conda environment
 COPY conda_dependencies.yaml .
-RUN HOROVOD_WITH_TENSORFLOW=1 conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
+RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
+
+RUN conda run -p $CONDA_PREFIX
+
+RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
