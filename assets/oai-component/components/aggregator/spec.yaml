@@ -1,0 +1,35 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: aggregator
+display_name: Aggregate Predictions
+description: Aggregate Predictions
+
+version: 0.0.2
+type: command
+tags:
+  type: aggregator
+  sub_type: aggregate_predictions
+
+inputs:
+  predictions_data:
+    type: uri_file
+    optional: false
+    mode: ro_mount
+    description: "Predicted Data as JSON Lines URI_FILE"
+  aggregator_config_params:
+    type: string
+    optional: true
+    description: "JSON Serialized string of aggregator_config"
+
+outputs:
+  evaluation_result:
+    type: uri_folder
+
+is_deterministic: True
+code: ../../src
+environment: azureml://registries/azureml/environments/model-evaluation/versions/16
+
+command: >-
+  python aggregate_predictions.py
+  --data '${{inputs.predictions_data}}'
+  --evaluation_result '${{outputs.evaluation_result}}'
+  $[[--config_str '${{inputs.aggregator_config_params}}']]
