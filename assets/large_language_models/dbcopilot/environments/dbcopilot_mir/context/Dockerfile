@@ -29,7 +29,7 @@ RUN python -m pip install --upgrade pip && \
     pip install promptflow-image-bundle[azure]==0.3.0 && \
     pip install promptflow-vectordb==0.2.10 && \
     ## Install dbcopilot
-    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.24-py3-none-any.whl
+    pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.22-py3-none-any.whl
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
