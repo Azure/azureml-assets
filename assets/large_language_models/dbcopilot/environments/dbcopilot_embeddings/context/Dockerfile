@@ -33,7 +33,8 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Copy the environment file
 COPY ./requirements.txt ./
-RUN curl -o lemma.map.txt https://ragsample.blob.core.windows.net/ragdata/grounding/db_copilot/resource/lemma.map.txt
+RUN curl -o lemma.map.txt https://ragsample.blob.core.windows.net/ragdata/grounding/db_copilot/resource/lemma.map.txt && \
+    curl -o db_copilot_tool-0.1.23-py3-none-any.whl https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl
 ENV DBCOPILOT_GROUNDING_LEMMA_PATH=/lemma.map.txt
 
 # dbcopilot environment
@@ -42,7 +43,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  promptflow-vectordb==0.2.10 && \
-    pip install  https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl &&\
+    pip install  db_copilot_tool-0.1.23-py3-none-any.whl &&\
     pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1"
 
 # Fix vunerabilities
