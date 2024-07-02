@@ -1,0 +1,11 @@
+name: minimal-ubuntu22.04-py39-cpu-inference
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: true
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests
+categories: ["Inference"]
