@@ -1,0 +1,68 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: sshleifer-tiny-gpt2
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  SHA: 5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be
+  inference-min-sku-spec: 12|1|220|64
+  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  evaluation-min-sku-spec: 6|1|112|128
+  evaluation-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  finetune-min-sku-spec: 40|8|672|2900
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  finetuning-tasks: text-generation
+  languages : en
+  license : mit
+
+tags:
+  Featured: ""
+  SharedComputeCapacityEnabled: ""
+  huggingface_model_id: sshleifer/tiny-gpt2
+  inference_compute_allow_list:
+    [ 
+      STANDARD_DS4_V2
+      Standard_DS5_v2,
+      Standard_D16a_v4,
+      Standard_D16as_v4,
+      Standard_D32a_v4,
+      Standard_D32as_v4,
+      Standard_D48a_v4,
+      Standard_D48as_v4,
+      Standard_D64a_v4,
+      Standard_D64as_v4,
+      Standard_D96a_v4,
+      Standard_D96as_v4,
+      Standard_F4s_v2,
+      Standard_FX4mds,
+      Standard_F8s_v2,
+      Standard_FX12mds,
+      Standard_F16s_v2,
+      Standard_F32s_v2,
+      Standard_F48s_v2,
+      Standard_F64s_v2,
+      Standard_F72s_v2,
+      Standard_FX24mds,
+      Standard_FX36mds,
+      Standard_FX48mds,
+      Standard_E2s_v3,
+      Standard_E4s_v3,
+      Standard_E8s_v3,
+      Standard_E16s_v3,
+      Standard_E32s_v3,
+      Standard_E48s_v3,
+      Standard_E64s_v3,
+      Standard_NC4as_T4_v3,
+      Standard_NC6s_v3,
+      Standard_NC8as_T4_v3,
+      Standard_NC12s_v3,
+      Standard_NC16as_T4_v3,
+      Standard_NC24s_v3,
+      Standard_NC64as_T4_v3,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND40rs_v2,
+    ]    
+version: 1
