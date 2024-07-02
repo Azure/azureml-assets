@@ -355,7 +355,9 @@ def get_vqa_dataset(
     mltable_dataframe = mltable.to_pandas_dataframe()
 
     # Initialize the output dataframe with the input and label columns.
-    column_names = list(set(input_column_names + [label_column_name] + [VQALiterals.ANSWER_OPTIONS]))
+    column_names = list(set(
+        input_column_names + [label_column_name] + [VQALiterals.ANSWER_OPTIONS, VQALiterals.MORE_IMAGES]
+    ))
     df = pd.DataFrame(columns=column_names)
 
     DATASTORE_URL_TEMPLATE = "AmlDatastore://([^/]+)((/[^/]+)+)$"
@@ -374,21 +376,52 @@ def get_vqa_dataset(
         groups = match.groups()
         return DataPath(workspace.datastores.get(groups[0]), groups[1])
 
-    image_urls = [maybe_make_data_path(image_url) for image_url in mltable_dataframe[SettingLiterals.IMAGE_URL]]
-    remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
-    local_image_file_names = remote_image_files.download()
+    def download_images(image_urls1):
+        if len(image_urls1) == 0:
+            return []
+        image_urls2 = [maybe_make_data_path(image_url) for image_url in image_urls1]
+        remote_image_files = FileDatasetFactory.from_files(image_urls2, is_file=True)
+        local_image_file_names = remote_image_files.download()
 
-    for local_image_file_name, question, answer_options, label in zip(
-        local_image_file_names, mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[VQALiterals.ANSWER_OPTIONS],
-        mltable_dataframe[SettingLiterals.LABEL]
+        return local_image_file_names
+
+    # image_urls = [maybe_make_data_path(image_url) for image_url in mltable_dataframe[SettingLiterals.IMAGE_URL]]
+    # remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
+    # local_image_file_names = remote_image_files.download()
+
+    # for local_image_file_name, question, answer_options, label in zip(
+    #     local_image_file_names, mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[VQALiterals.ANSWER_OPTIONS],
+    #     mltable_dataframe[SettingLiterals.LABEL]
+    # ):
+    for image_url, question, label, answer_options, more_image_urls in zip(
+        mltable_dataframe[SettingLiterals.IMAGE_URL], mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[SettingLiterals.LABEL],
+        mltable_dataframe[VQALiterals.ANSWER_OPTIONS], mltable_dataframe[VQALiterals.MORE_IMAGES],
     ):
+        # image_urls = [maybe_make_data_path(image_url)]
+        # remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
+        # local_image_file_names = remote_image_files.download()
+        # local_image_file_name = local_image_file_names[0]
+
+        local_image_file_name = download_images([image_url])[0]
+        print("y1", local_image_file_name)
         image = base64.encodebytes(read_image(local_image_file_name)).decode("utf-8")
+
+        print("y2", more_image_urls)
+        if len(more_image_urls) > 0:
+            more_images = [
+                base64.encodebytes(read_image(download_images([image_url_b])[0])).decode("utf-8")
+                for image_url_b in more_image_urls.split("||")
+            ]
+        else:
+            more_images = []
+
         df = df.append(
             {
                 input_column_names[0]: image,
                 input_column_names[1]: question,
                 label_column_name: label,
                 VQALiterals.ANSWER_OPTIONS: answer_options,
+                VQALiterals.MORE_IMAGES: more_images,
             },
             ignore_index=True
         )

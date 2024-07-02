@@ -880,9 +880,9 @@ def _clean_and_validate_dataset(data, keep_columns, batch_size=None):
 
     # TODO support batched=True and handle processing multiple examples in lambda
     try:
-        data['to_filter'] = data.apply(lambda x: all(_check_if_non_empty(x[col]) for col in keep_columns), axis=1)
-        data = data.loc[data['to_filter']]
-        data = data.drop('to_filter', axis=1)
+        # data['to_filter'] = data.apply(lambda x: all(_check_if_non_empty(x[col]) for col in keep_columns), axis=1)
+        # data = data.loc[data['to_filter']]
+        # data = data.drop('to_filter', axis=1)
         post_filter_examples = len(data)
     except Exception as e:
         exception = get_azureml_exception(DataLoaderException, FilteringDataError, e, error=repr(e))
@@ -932,7 +932,7 @@ def prepare_data(data, task, all_cols, label_column_name=None,
     """
     print("c0.0", data.columns)
     print("c0.1", all_cols)
-    print("cb.2", label_column_name)
+    print("c0.2", label_column_name)
     print("c0.3", extra_y_test_cols)
 
     data = _clean_and_validate_dataset(data, all_cols, batch_size)

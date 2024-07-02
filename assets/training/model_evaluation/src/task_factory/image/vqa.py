@@ -65,13 +65,14 @@ class ImageVQAPredictor(PredictWrapper):
             for answer in answer_batch[self.answer_key]:
                 answers.append(answer)
         """
-
         print("d1", X_test.columns)
 
-        for image, question, options in zip(X_test["image"], X_test["question"], X_test["answer_options"]):
+        for image, question, options, more_images in zip(
+            X_test["image"], X_test["question"], X_test["answer_options"], X_test["more_images"]
+        ):
             content = []
             previous = 0
-            for match in re.finditer("<image [0-9]>", question):
+            for match, current_image in zip(re.finditer("<image [0-9]>", question), [image] + more_images):
                 i, j = match.span()
                 if previous < i:
                     content.append({
@@ -81,7 +82,7 @@ class ImageVQAPredictor(PredictWrapper):
                 content.append({
                     "type": "image_url",
                     "image_url": {
-                        "url": f"data:image/jpeg;base64,{image}"
+                        "url": f"data:image/jpeg;base64,{current_image}"
                     }
                 })
                 previous = j

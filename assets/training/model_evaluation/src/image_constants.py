@@ -70,3 +70,4 @@ class VQALiterals:
 
     QUESTION = "question"
     ANSWER_OPTIONS = "answer_options"
+    MORE_IMAGES = "more_images"

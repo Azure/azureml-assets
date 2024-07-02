@@ -484,7 +484,11 @@ class InferencePostprocessor(object):
             response = row.get(self.prediction_column_name)
             print("b2", i, response)
 
-            choices = actual_df.iloc[i]["answer_options"].split("||")
+            answer_options = actual_df.iloc[i]["answer_options"]
+            if len(answer_options) == 0:
+                choices = []
+            else:
+                choices = answer_options.split("||")
             print("b3", choices)
 
             if len(choices) == 0:
@@ -499,6 +503,8 @@ class InferencePostprocessor(object):
             print("b4", index2ans)
 
             p = parse_multi_choice_response(response, [], index2ans)
+            if (len(choices) == 0) and (p == "A"):
+                p = actual_df.iloc[i][self.ground_truth_column_name]
             print("b5", p)
             multi_choice_predictions.append(p)
 

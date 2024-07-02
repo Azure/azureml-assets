@@ -116,13 +116,13 @@ class MMMUAdapter(VisionDatasetAdapter):
 
     def get_pil_image(self, instance):
         """Extract the instance's image as a PIL image."""
-        # TODO(rdondera): add support for multiple images.
         return instance["image_1"]
 
     def get_other_fields(self, instance):
         return {
             "question": instance["question"],
             "answer_options": "||".join(ast.literal_eval(instance["options"])),
+            "more_images": [instance[f"image_{i}"] for i in range(2, 8) if instance[f"image_{i}"] is not None],
         }
 
 

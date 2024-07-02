@@ -194,6 +194,9 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
             image_file_path = os.path.join(temporary_directory.name, image_file_name)
             vision_dataset_adapter.get_pil_image(instance).save(image_file_path)
 
+            # Increment the image counter.
+            image_counter += 1
+
             # Get the current label.
             label = vision_dataset_adapter.get_label(instance)
 
@@ -211,8 +214,17 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
             # Store task specific fields.
             instance.update(other_fields)
 
-            # Increment the image counter.
-            image_counter += 1
+            more_images = instance["more_images"]
+            for i, image in enumerate(more_images):
+                image_file_name = get_image_file_name(image_counter=image_counter)
+                image_file_path = os.path.join(temporary_directory.name, image_file_name)
+                image.save(image_file_path)
+
+                image_counter += 1
+
+                more_images[i] = "{}/{}".format(datastore_directory_url, image_file_name)
+
+            instance["more_images"] = "||".join(instance["more_images"])
 
             return instance
 
@@ -224,6 +236,7 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
                 "label": Value(dtype="string", id=None),
                 "question": Value(dtype="string", id=None),
                 "answer_options": Value(dtype="string", id=None),
+                "more_images": Value(dtype="string", id=None),
             })
         )
 
