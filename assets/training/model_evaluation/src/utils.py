@@ -930,17 +930,28 @@ def prepare_data(data, task, all_cols, label_column_name=None,
     Returns:
         _type_: _description_
     """
+    print("c0.0", data.columns)
+    print("c0.1", all_cols)
+    print("cb.2", label_column_name)
+    print("c0.3", extra_y_test_cols)
+
     data = _clean_and_validate_dataset(data, all_cols, batch_size)
+    print("c0.4", data.columns)
 
     X_test, y_test = data, None
     if len(X_test) == 0:
         return X_test, y_test
 
     if extra_y_test_cols is not None and label_column_name is not None:
-        # IF extra_y_test_cols is not None, label_column_name should also be not None;
-        # extra_y_test_cols is accepted only for text-gen
-        X_test, y_test = data.drop(extra_y_test_cols + [label_column_name], axis=1), \
-                         data[extra_y_test_cols + [label_column_name]]
+        if task == constants.TASK.IMAGE_VQA:
+            X_test = data.drop([label_column_name], axis=1)
+            y_test = data[extra_y_test_cols + [label_column_name]]
+            print("c1", X_test.columns, y_test.columns)
+        else:
+            # IF extra_y_test_cols is not None, label_column_name should also be not None;
+            # extra_y_test_cols is accepted only for text-gen
+            X_test, y_test = data.drop(extra_y_test_cols + [label_column_name], axis=1), \
+                            data[extra_y_test_cols + [label_column_name]]
     elif label_column_name is not None:
         X_test, y_test = data.drop(label_column_name, axis=1), data[label_column_name]
     elif extra_y_test_cols is not None:
@@ -970,7 +981,9 @@ def prepare_data(data, task, all_cols, label_column_name=None,
         if isinstance(X_test, pd.Series):
             X_test = X_test.to_frame()
     if _has_multiple_output and y_test is not None and not isinstance(y_test.iloc[0], str):
+        print("c2")
         if isinstance(y_test.iloc[0], np.ndarray):
+            print("c3")
             y_test = y_test.apply(lambda x: x.tolist())
         y_test = y_test.astype(str)
 
@@ -1014,6 +1027,7 @@ def prepare_data(data, task, all_cols, label_column_name=None,
             raise exception
 
     if y_test is not None:
+        print("c4")
         y_test = y_test.values
 
     return X_test, y_test

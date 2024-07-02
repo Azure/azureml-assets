@@ -76,6 +76,10 @@ class ModelPredictionRunner:
         Raises:
             ModelValidationException: _description_
         """
+        print("a1.1", input_column_names)
+        print("a1.2", label_column_name)
+        print("a1.3", extra_y_test_cols)
+
         self.model_uri = model_uri
         self.task = task
         self.config = config
@@ -121,11 +125,14 @@ class ModelPredictionRunner:
         Returns:
             _type_: _description_
         """
+        print("b1", test_data)
+
         all_cols = list(self.input_column_names)
         if self.label_column_name is not None:
             all_cols += [self.label_column_name]
         if self.extra_y_test_cols is not None:
             all_cols += self.extra_y_test_cols
+        all_cols = list(set(all_cols))
 
         data, file_ext = read_model_prediction_data(
             test_data, self.input_column_names, self.label_column_name, self.task, self.batch_size

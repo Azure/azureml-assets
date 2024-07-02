@@ -43,7 +43,6 @@ class ImageVQAPredictor(PredictWrapper):
             api_key=API_KEY,
         )
 
-
     def predict(self, X_test, **kwargs) -> List[str]:
         """???
 
@@ -67,7 +66,9 @@ class ImageVQAPredictor(PredictWrapper):
                 answers.append(answer)
         """
 
-        for image, question in zip(X_test["image"], X_test["question"]):
+        print("d1", X_test.columns)
+
+        for image, question, options in zip(X_test["image"], X_test["question"], X_test["answer_options"]):
             content = []
             previous = 0
             for match in re.finditer("<image [0-9]>", question):
@@ -89,23 +90,33 @@ class ImageVQAPredictor(PredictWrapper):
                     "type": "text",
                     "text": question[previous:]
                 })
+            content.append({
+                "type": "text",
+                "text": "The options are" + "".join(
+                    ["\n" + chr(ord("A") + i) + " " + option for i, option in enumerate(options.split("||"))]
+                )
+            })
 
-            completion = self.client.chat.completions.create(
-                model=DEPLOYMENT,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful assistant."
-                    },
-                    {
-                        "role": "user",
-                        "content": content,
-                    },
-                ],
-            )
+            try:
+                completion = self.client.chat.completions.create(
+                    model=DEPLOYMENT,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a helpful assistant."
+                        },
+                        {
+                            "role": "user",
+                            "content": content,
+                        },
+                    ],
+                )
+                full_answer = json.loads(completion.to_json())
+                answer = full_answer["choices"][0]["message"]["content"]
+            except Exception as e:
+                logger.info(f"question {question} produced exception {e}")
+                answer = "Not available."
 
-            full_answer = json.loads(completion.to_json())
-            answer = full_answer["choices"][0]["message"]["content"]
             answers.append(answer)
 
         return answers

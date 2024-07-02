@@ -355,7 +355,8 @@ def get_vqa_dataset(
     mltable_dataframe = mltable.to_pandas_dataframe()
 
     # Initialize the output dataframe with the input and label columns.
-    df = pd.DataFrame(columns=input_column_names + [label_column_name] + [VQALiterals.ANSWER_OPTIONS])
+    column_names = list(set(input_column_names + [label_column_name] + [VQALiterals.ANSWER_OPTIONS]))
+    df = pd.DataFrame(columns=column_names)
 
     DATASTORE_URL_TEMPLATE = "AmlDatastore://([^/]+)((/[^/]+)+)$"
 
