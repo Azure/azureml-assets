@@ -18,6 +18,8 @@ RUN NGINX_CONF=/etc/nginx/sites-enabled/app; \
 
 # Copy the environment file
 COPY ./requirements.txt ./
+RUN curl -o lemma.map.txt https://ragsample.blob.core.windows.net/ragdata/grounding/db_copilot/resource/lemma.map.txt
+ENV DBCOPILOT_GROUNDING_LEMMA_PATH=/lemma.map.txt
 
 # dbcopilot environment
 RUN python -m pip install --upgrade pip && \
@@ -32,7 +34,7 @@ RUN python -m pip install --upgrade pip && \
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 && \
+    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1&& \
     conda deactivate"
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout
