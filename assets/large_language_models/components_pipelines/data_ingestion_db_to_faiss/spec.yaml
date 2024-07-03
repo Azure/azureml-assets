@@ -144,7 +144,7 @@ jobs:
       output_grounding_context_file: ${{parent.outputs.db_context}}
     environment_variables:
       MANAGED_IDENTITY_ENABLED: ${{parent.inputs.managed_identity_enabled}}
-    component: "azureml:llm_dbcopilot_grounding:0.0.62"
+    component: "azureml:llm_dbcopilot_grounding:0.0.63"
     type: command
   generate_meta_embeddings:
     type: command
