@@ -91,12 +91,13 @@ class ImageVQAPredictor(PredictWrapper):
                     "type": "text",
                     "text": question[previous:]
                 })
-            content.append({
-                "type": "text",
-                "text": "The options are" + "".join(
-                    ["\n" + chr(ord("A") + i) + " " + option for i, option in enumerate(options.split("||"))]
-                )
-            })
+            if len(options) > 0:
+                content.append({
+                    "type": "text",
+                    "text": "The options are" + "".join(
+                        ["\n" + chr(ord("A") + i) + " " + option for i, option in enumerate(options.split("||"))]
+                    )
+                })
 
             try:
                 completion = self.client.chat.completions.create(
@@ -115,6 +116,8 @@ class ImageVQAPredictor(PredictWrapper):
                 full_answer = json.loads(completion.to_json())
                 answer = full_answer["choices"][0]["message"]["content"]
             except Exception as e:
+                if "429" in str(e):
+                    raise
                 logger.info(f"question {question} produced exception {e}")
                 answer = "Not available."
 
