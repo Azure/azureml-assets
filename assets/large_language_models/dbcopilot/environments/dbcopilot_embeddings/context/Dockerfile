@@ -72,5 +72,5 @@ ENV LANG C.UTF-8
 # >
 ENV JAVA_VERSION 21-ea+22
 
-#COPY setup.sh .
-#RUN bash setup.sh
+COPY setup.sh .
+RUN bash setup.sh
