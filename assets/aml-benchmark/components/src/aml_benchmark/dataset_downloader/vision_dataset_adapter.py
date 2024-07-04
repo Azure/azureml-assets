@@ -11,6 +11,7 @@ from typing import Optional
 from datasets import Dataset
 from PIL import Image
 
+from aml_benchmark.utils.constants import CAPTION_SEPARATOR
 from aml_benchmark.utils.logging import get_logger
 
 
@@ -113,11 +114,11 @@ class MSCOCOAdapter(VisionDatasetAdapter):
 
     def get_label(self, instance):
         """Extract the instance's label as a string."""
-        return "||".join(instance["caption"])
+        return CAPTION_SEPARATOR.join(instance["annotations"]["caption"])
 
     def get_pil_image(self, instance):
         """Extract the instance's image as a PIL image."""
-        return Image.open(instance["image"]["path"])
+        return instance["image"]
 
 
 class VisionDatasetAdapterFactory:
@@ -135,13 +136,10 @@ class VisionDatasetAdapterFactory:
             "mscoco": MSCOCOAdapter,
         }
 
-        logger.info("dataset info: {}".format(dataset.info))
-
         # Select the adapter class based on the dataset name. If name not available or not recognized, do not make
         # an adapter.
-        if not hasattr(dataset.info, "dataset_name"):
-            return None
-        if dataset.info.dataset_name not in VISION_ADAPTERS_BY_DATASET_NAME:
+        if VISION_ADAPTERS_BY_DATASET_NAME.get(getattr(dataset.info, "dataset_name", None)) is None:
+            logger.info("Not making a vision adapter for dataset with info {}.".format(dataset.info))
             return None
         adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME[dataset.info.dataset_name]
 
