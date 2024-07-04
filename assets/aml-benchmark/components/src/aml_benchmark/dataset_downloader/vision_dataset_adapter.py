@@ -11,6 +11,11 @@ from typing import Optional
 from datasets import Dataset
 from PIL import Image
 
+from aml_benchmark.utils.logging import get_logger
+
+
+logger = get_logger(__name__)
+
 
 class VisionDatasetAdapter(ABC):
     """Abstract class for adapting HF vision datasets to internal format."""
@@ -103,6 +108,18 @@ class GTSRBAdapter(VisionDatasetAdapter):
         return Image.open(io.BytesIO(instance["Path"]["bytes"]))
 
 
+class MSCOCOAdapter(VisionDatasetAdapter):
+    """Adapter for MSCOCO HF dataset."""
+
+    def get_label(self, instance):
+        """Extract the instance's label as a string."""
+        return "||".join(instance["caption"])
+
+    def get_pil_image(self, instance):
+        """Extract the instance's image as a PIL image."""
+        return Image.open(instance["image"]["path"])
+
+
 class VisionDatasetAdapterFactory:
     """Factory for making vision dataset adapters based on dataset names."""
 
@@ -115,7 +132,10 @@ class VisionDatasetAdapterFactory:
             "patch_camelyon": PatchCamelyonAdapter,
             "resisc45": Resisc45Adapter,
             "gtsrb": GTSRBAdapter,
+            "mscoco": MSCOCOAdapter,
         }
+
+        logger.info("dataset info: {}".format(dataset.info))
 
         # Select the adapter class based on the dataset name. If name not available or not recognized, do not make
         # an adapter.
