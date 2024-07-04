@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.2
+version: 0.0.3
 name: multimodal_classification_pipeline
 display_name: Multimodal Classification Pipeline
 description: Pipeline component for multimodal classification models.
