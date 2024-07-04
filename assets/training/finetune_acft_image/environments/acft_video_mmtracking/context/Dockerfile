@@ -9,9 +9,10 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # # # Install mmcv-full and mmdet
+
+RUN mim install mmtrack==0.14.0
 # Request for scipy installation to avoid error in mmcv-full installation
 RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
-RUN mim install mmtrack==0.14.0
 RUN mim install mmcv-full==1.7.1
 # # Note that MMDet installs pycocotools
 # Note: mmdet should be installed via mim to access the model zoo config folder.
