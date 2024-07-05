@@ -4,14 +4,17 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:{{lates
 USER root
 RUN apt-get -y update
 
+RUN pip install --upgrade pip setuptools wheel
+RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
+RUN pip install scipy==1.10.1
+
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # # # Install mmcv-full and mmdet
 # Request for scipy installation to avoid error in mmcv-full installation
-RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
-RUN pip install scipy==1.10.1
+
 RUN mim install mmtrack==0.14.0
 RUN mim install mmcv-full==1.7.1
 # # Note that MMDet installs pycocotools
