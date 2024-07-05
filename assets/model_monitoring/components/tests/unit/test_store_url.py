@@ -11,7 +11,7 @@ from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.core.credentials import AzureSasCredential
 from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
-from azure.storage.filedatalake import FileSystemClient
+from azure.storage.filedatalake import FileSystemClient, DataLakeDirectoryClient
 from azureml.core import Datastore
 from azureml.exceptions import UserErrorException
 from shared_utilities.store_url import StoreUrl
@@ -354,6 +354,11 @@ class TestStoreUrl:
             # if condition to return only folders/files under the sub folder
             return [construct_mock_blob(name) for name in path_names if name.startswith(expected_folder)]
 
+        def get_directory_client(folder):
+            mock_dir_client = Mock(spec=DataLakeDirectoryClient)
+            mock_dir_client.exists.return_value = any(name.startswith(folder) for name in path_names)
+            return mock_dir_client
+
         def get_paths(path, recursive: bool):
             assert path == expected_folder, f"expected non wildcard path to be {expected_folder}, but {path} is given"
             assert recursive, "get_paths() should be called with recursive=True"
@@ -367,6 +372,7 @@ class TestStoreUrl:
             else:
                 base_url = f"abfss://my_container@my_account.dfs.core.windows.net{base_folder}"
                 mock_container_client = Mock(spec=FileSystemClient)
+                mock_container_client.get_directory_client.side_effect = get_directory_client
                 mock_container_client.get_paths.side_effect = get_paths
             store_url = StoreUrl(base_url)
             assert store_url.any_files(pattern, mock_container_client) is expected_result
