@@ -252,7 +252,7 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml://registries/azureml-batch-score/components/batch_score/versions/2.0.20240621.1
+    component: azureml://registries/azureml-batch-score/components/batch_score_llm/versions/2.0.20240607.2
     inputs:
       async_mode: false
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
