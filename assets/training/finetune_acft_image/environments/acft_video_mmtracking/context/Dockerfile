@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:{{lates
 USER root
 RUN apt-get -y update
 
-RUN pip install --upgrade pip setuptools wheel
+RUN pip install --upgrade pip setuptools==69.5.1 wheel
 RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
 RUN pip install scipy==1.10.1
 
