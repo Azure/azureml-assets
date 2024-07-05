@@ -223,8 +223,11 @@ class StoreUrl:
         if not container_client:  # local
             return any(glob.iglob(full_path_pattern))
         if isinstance(container_client, FileSystemClient):  # gen2
-            paths = container_client.get_paths(non_wildcard_path, True)
-            file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]
+            if container_client.get_directory_client(non_wildcard_path).exists():
+                paths = container_client.get_paths(non_wildcard_path, True)
+                file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]
+            else:
+                return False
         else:  # blob
             blobs = container_client.list_blobs(name_starts_with=non_wildcard_path)
             file_names = [blob.name[len(non_wildcard_path):] for blob in blobs]
