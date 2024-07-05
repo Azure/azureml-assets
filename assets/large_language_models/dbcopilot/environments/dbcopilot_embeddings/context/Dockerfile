@@ -33,8 +33,6 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Copy the environment file
 COPY ./requirements.txt ./
-RUN curl -o lemma.map.txt https://dbcopilotstorageaccount.blob.core.windows.net/dbcopilotdata/grounding/db_copilot/resource/lemma.map.txt?sv=2022-11-02&ss=bfqt&srt=sc&sp=rwdlacupiytfx&se=2024-07-03T10:59:54Z&st=2024-07-03T02:59:54Z&spr=https&sig=An%2FZJfdAMQLNiqP51lDJM1sADhBV%2BOqn%2B1VfsDOZaz4%3D
-ENV DBCOPILOT_GROUNDING_LEMMA_PATH=/lemma.map.txt
 
 # dbcopilot environment
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
@@ -42,7 +40,6 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  promptflow-vectordb==0.2.10 && \
-    pip install  https://dbcopilotstorageaccount.blob.core.windows.net/dbcopilotdata/dbcopilot/db_copilot_tool-0.1.23-py3-none-any.whl?sv=2022-11-02&ss=bfqt&srt=sc&sp=rwdlacupiytfx&se=2024-07-03T10:59:54Z&st=2024-07-03T02:59:54Z&spr=https&sig=An%2FZJfdAMQLNiqP51lDJM1sADhBV%2BOqn%2B1VfsDOZaz4%3D &&\
     pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1"
 
 # Fix vunerabilities
