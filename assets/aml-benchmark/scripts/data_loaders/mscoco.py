@@ -91,8 +91,10 @@ _URLS = {
         "annotations": {
             "train_validation": "http://images.cocodataset.org/annotations/annotations_trainval2017.zip",
             "stuff_train_validation": "http://images.cocodataset.org/annotations/stuff_annotations_trainval2017.zip",
-            "panoptic_train_validation": \
-            "http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip",
+            "panoptic_train_validation": (
+                "http://images.cocodataset.org/annotations/"
+                "panoptic_annotations_trainval2017.zip"
+            ),
             "test_image_info": "http://images.cocodataset.org/annotations/image_info_test2017.zip",
             "unlabeled": "http://images.cocodataset.org/annotations/image_info_unlabeled2017.zip",
         },
