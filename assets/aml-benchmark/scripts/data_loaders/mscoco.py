@@ -1,3 +1,12 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Data Loading Script for MSCOCO.
+
+Adapted from https://github.com/shunk031/huggingface-datasets_MSCOCO/blob/main/MSCOCO.py to only download validation
+images.
+"""
+
 import abc
 import json
 import logging
@@ -50,8 +59,7 @@ _DESCRIPTION = """
 _HOMEPAGE = """
 """
 
-_LICENSE = """
-"""
+_LICENSE = "https://creativecommons.org/licenses/by/4.0/legalcode"
 
 _URLS = {
     "2014": {
