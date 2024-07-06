@@ -83,7 +83,7 @@ def resolve_configuration(
     :param configuration: Configuration of the dataset to download.
     :return: list of configurations to download.
     """
-    available_configs = get_dataset_config_names(dataset_name)
+    available_configs = get_dataset_config_names(dataset_name, trust_remote_code=True)
 
     if configuration is None:
         if len(available_configs) > 1:
@@ -122,7 +122,7 @@ def resolve_split(
     :return: list of splits to download.
     """
     available_splits = get_dataset_split_names(
-        path=dataset_name, config_name=configuration
+        path=dataset_name, config_name=configuration, trust_remote_code=True
     )
     if split == ALL:
         return available_splits
