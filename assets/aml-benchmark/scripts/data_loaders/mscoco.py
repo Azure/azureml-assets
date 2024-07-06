@@ -201,7 +201,7 @@ SUPER_CATEGORIES: Final[List[str]] = [
 
 
 @dataclass
-class AnnotationInfo(object):
+class AnnotationInfo(object):  # noqa: D101,D102,D103,D107
     description: str
     url: str
     version: str
@@ -210,18 +210,18 @@ class AnnotationInfo(object):
     date_created: str
 
     @classmethod
-    def from_dict(cls, json_dict: JsonDict) -> "AnnotationInfo":
+    def from_dict(cls, json_dict: JsonDict) -> "AnnotationInfo":  # noqa: D101,D102,D103,D107
         return cls(**json_dict)
 
 
 @dataclass
-class LicenseData(object):
+class LicenseData(object):  # noqa: D101,D102,D103,D107
     url: str
     license_id: LicenseId
     name: str
 
     @classmethod
-    def from_dict(cls, json_dict: JsonDict) -> "LicenseData":
+    def from_dict(cls, json_dict: JsonDict) -> "LicenseData":  # noqa: D101,D102,D103,D107
         return cls(
             license_id=json_dict["id"],
             url=json_dict["url"],
@@ -230,7 +230,7 @@ class LicenseData(object):
 
 
 @dataclass
-class ImageData(object):
+class ImageData(object):  # noqa: D101,D102,D103,D107
     image_id: ImageId
     license_id: LicenseId
     file_name: str
@@ -241,7 +241,7 @@ class ImageData(object):
     flickr_url: str
 
     @classmethod
-    def from_dict(cls, json_dict: JsonDict) -> "ImageData":
+    def from_dict(cls, json_dict: JsonDict) -> "ImageData":  # noqa: D101,D102,D103,D107
         return cls(
             image_id=json_dict["id"],
             license_id=json_dict["license"],
@@ -254,18 +254,18 @@ class ImageData(object):
         )
 
     @property
-    def shape(self) -> Tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:  # noqa: D101,D102,D103,D107
         return (self.height, self.width)
 
 
 @dataclass
-class CategoryData(object):
+class CategoryData(object):  # noqa: D101,D102,D103,D107
     category_id: int
     name: str
     supercategory: str
 
     @classmethod
-    def from_dict(cls, json_dict: JsonDict) -> "CategoryData":
+    def from_dict(cls, json_dict: JsonDict) -> "CategoryData":  # noqa: D101,D102,D103,D107
         return cls(
             category_id=json_dict["id"],
             name=json_dict["name"],
@@ -274,17 +274,17 @@ class CategoryData(object):
 
 
 @dataclass
-class AnnotationData(object):
+class AnnotationData(object):  # noqa: D101,D102,D103,D107
     annotation_id: AnnotationId
     image_id: ImageId
 
 
 @dataclass
-class CaptionsAnnotationData(AnnotationData):
+class CaptionsAnnotationData(AnnotationData):  # noqa: D101,D102,D103,D107
     caption: str
 
     @classmethod
-    def from_dict(cls, json_dict: JsonDict) -> "CaptionsAnnotationData":
+    def from_dict(cls, json_dict: JsonDict) -> "CaptionsAnnotationData":  # noqa: D101,D102,D103,D107
         return cls(
             annotation_id=json_dict["id"],
             image_id=json_dict["image_id"],
@@ -292,18 +292,18 @@ class CaptionsAnnotationData(AnnotationData):
         )
 
 
-class UncompressedRLE(TypedDict):
+class UncompressedRLE(TypedDict):  # noqa: D101,D102,D103,D107
     counts: List[int]
     size: Tuple[int, int]
 
 
-class CompressedRLE(TypedDict):
+class CompressedRLE(TypedDict):  # noqa: D101,D102,D103,D107
     counts: bytes
     size: Tuple[int, int]
 
 
 @dataclass
-class InstancesAnnotationData(AnnotationData):
+class InstancesAnnotationData(AnnotationData):  # noqa: D101,D102,D103,D107
     segmentation: Union[np.ndarray, CompressedRLE]
     area: float
     iscrowd: bool
@@ -317,7 +317,7 @@ class InstancesAnnotationData(AnnotationData):
         iscrowd: bool,
         height: int,
         width: int,
-    ) -> CompressedRLE:
+    ) -> CompressedRLE:  # noqa: D101,D102,D103,D107
         if iscrowd:
             rle = cocomask.frPyObjects(segmentation, h=height, w=width)
         else:
@@ -329,7 +329,7 @@ class InstancesAnnotationData(AnnotationData):
     @classmethod
     def rle_segmentation_to_binary_mask(
         cls, segmentation, iscrowd: bool, height: int, width: int
-    ) -> np.ndarray:
+    ) -> np.ndarray:  # noqa: D101,D102,D103,D107
         rle = cls.compress_rle(
             segmentation=segmentation, iscrowd=iscrowd, height=height, width=width
         )
@@ -342,7 +342,7 @@ class InstancesAnnotationData(AnnotationData):
         iscrowd: bool,
         height: int,
         width: int,
-    ) -> np.ndarray:
+    ) -> np.ndarray:  # noqa: D101,D102,D103,D107
         binary_mask = cls.rle_segmentation_to_binary_mask(
             segmentation=segmentation, iscrowd=iscrowd, height=height, width=width
         )
@@ -354,7 +354,7 @@ class InstancesAnnotationData(AnnotationData):
         json_dict: JsonDict,
         images: Dict[ImageId, ImageData],
         decode_rle: bool,
-    ) -> "InstancesAnnotationData":
+    ) -> "InstancesAnnotationData":  # noqa: D101,D102,D103,D107
         segmentation = json_dict["segmentation"]
         image_id = json_dict["image_id"]
         image_data = images[image_id]
@@ -393,7 +393,7 @@ class InstancesAnnotationData(AnnotationData):
 
 
 @dataclass
-class PersonKeypoint(object):
+class PersonKeypoint(object):  # noqa: D101,D102,D103,D107
     x: int
     y: int
     v: int
@@ -401,18 +401,18 @@ class PersonKeypoint(object):
 
 
 @dataclass
-class PersonKeypointsAnnotationData(InstancesAnnotationData):
+class PersonKeypointsAnnotationData(InstancesAnnotationData):  # noqa: D101,D102,D103,D107
     num_keypoints: int
     keypoints: List[PersonKeypoint]
 
     @classmethod
-    def v_keypoint_to_state(cls, keypoint_v: int) -> str:
+    def v_keypoint_to_state(cls, keypoint_v: int) -> str:  # noqa: D101,D102,D103,D107
         return KEYPOINT_STATE[keypoint_v]
 
     @classmethod
     def get_person_keypoints(
         cls, flatten_keypoints: List[int], num_keypoints: int
-    ) -> List[PersonKeypoint]:
+    ) -> List[PersonKeypoint]:  # noqa: D101,D102,D103,D107
         keypoints_x = flatten_keypoints[0::3]
         keypoints_y = flatten_keypoints[1::3]
         keypoints_v = flatten_keypoints[2::3]
@@ -431,7 +431,7 @@ class PersonKeypointsAnnotationData(InstancesAnnotationData):
         json_dict: JsonDict,
         images: Dict[ImageId, ImageData],
         decode_rle: bool,
-    ) -> "PersonKeypointsAnnotationData":
+    ) -> "PersonKeypointsAnnotationData":  # noqa: D101,D102,D103,D107
         segmentation = json_dict["segmentation"]
         image_id = json_dict["image_id"]
         image_data = images[image_id]
@@ -478,13 +478,13 @@ class PersonKeypointsAnnotationData(InstancesAnnotationData):
         )
 
 
-class LicenseDict(TypedDict):
+class LicenseDict(TypedDict):  # noqa: D101,D102,D103,D107
     license_id: LicenseId
     name: str
     url: str
 
 
-class BaseExample(TypedDict):
+class BaseExample(TypedDict):  # noqa: D101,D102,D103,D107
     image_id: ImageId
     image: PilImage
     file_name: str
@@ -497,22 +497,22 @@ class BaseExample(TypedDict):
     license: LicenseDict
 
 
-class CaptionAnnotationDict(TypedDict):
+class CaptionAnnotationDict(TypedDict):  # noqa: D101,D102,D103,D107
     annotation_id: AnnotationId
     caption: str
 
 
-class CaptionExample(BaseExample):
+class CaptionExample(BaseExample):  # noqa: D101,D102,D103,D107
     annotations: List[CaptionAnnotationDict]
 
 
-class CategoryDict(TypedDict):
+class CategoryDict(TypedDict):  # noqa: D101,D102,D103,D107
     category_id: CategoryId
     name: str
     supercategory: str
 
 
-class InstanceAnnotationDict(TypedDict):
+class InstanceAnnotationDict(TypedDict):  # noqa: D101,D102,D103,D107
     annotation_id: AnnotationId
     area: float
     bbox: Bbox
@@ -523,31 +523,31 @@ class InstanceAnnotationDict(TypedDict):
     segmentation: np.ndarray
 
 
-class InstanceExample(BaseExample):
+class InstanceExample(BaseExample):  # noqa: D101,D102,D103,D107
     annotations: List[InstanceAnnotationDict]
 
 
-class KeypointDict(TypedDict):
+class KeypointDict(TypedDict):  # noqa: D101,D102,D103,D107
     x: int
     y: int
     v: int
     state: str
 
 
-class PersonKeypointAnnotationDict(InstanceAnnotationDict):
+class PersonKeypointAnnotationDict(InstanceAnnotationDict):  # noqa: D101,D102,D103,D107
     num_keypoints: int
     keypoints: List[KeypointDict]
 
 
-class PersonKeypointExample(BaseExample):
+class PersonKeypointExample(BaseExample):  # noqa: D101,D102,D103,D107
     annotations: List[PersonKeypointAnnotationDict]
 
 
-class MsCocoProcessor(object, metaclass=abc.ABCMeta):
-    def load_image(self, image_path: str) -> PilImage:
+class MsCocoProcessor(object, metaclass=abc.ABCMeta):  # noqa: D101,D102,D103,D107
+    def load_image(self, image_path: str) -> PilImage:  # noqa: D101,D102,D103,D107
         return Image.open(image_path)
 
-    def load_annotation_json(self, ann_file_path: str) -> JsonDict:
+    def load_annotation_json(self, ann_file_path: str) -> JsonDict:  # noqa: D101,D102,D103,D107
         logger.info(f"Load annotation json from {ann_file_path}")
         with open(ann_file_path, "r") as rf:
             ann_json = json.load(rf)
@@ -555,7 +555,7 @@ class MsCocoProcessor(object, metaclass=abc.ABCMeta):
 
     def load_licenses_data(
         self, license_dicts: List[JsonDict]
-    ) -> Dict[LicenseId, LicenseData]:
+    ) -> Dict[LicenseId, LicenseData]:  # noqa: D101,D102,D103,D107
         licenses = {}
         for license_dict in license_dicts:
             license_data = LicenseData.from_dict(license_dict)
@@ -566,7 +566,7 @@ class MsCocoProcessor(object, metaclass=abc.ABCMeta):
         self,
         image_dicts: List[JsonDict],
         tqdm_desc: str = "Load images",
-    ) -> Dict[ImageId, ImageData]:
+    ) -> Dict[ImageId, ImageData]:  # noqa: D101,D102,D103,D107
         images = {}
         for image_dict in tqdm(image_dicts, desc=tqdm_desc):
             image_data = ImageData.from_dict(image_dict)
@@ -577,14 +577,14 @@ class MsCocoProcessor(object, metaclass=abc.ABCMeta):
         self,
         category_dicts: List[JsonDict],
         tqdm_desc: str = "Load categories",
-    ) -> Dict[CategoryId, CategoryData]:
+    ) -> Dict[CategoryId, CategoryData]:  # noqa: D101,D102,D103,D107
         categories = {}
         for category_dict in tqdm(category_dicts, desc=tqdm_desc):
             category_data = CategoryData.from_dict(category_dict)
             categories[category_data.category_id] = category_data
         return categories
 
-    def get_features_base_dict(self):
+    def get_features_base_dict(self):  # noqa: D101,D102,D103,D107
         return {
             "image_id": ds.Value("int64"),
             "image": ds.Image(),
@@ -603,11 +603,11 @@ class MsCocoProcessor(object, metaclass=abc.ABCMeta):
         }
 
     @abc.abstractmethod
-    def get_features(self, *args, **kwargs) -> ds.Features:
+    def get_features(self, *args, **kwargs) -> ds.Features:  # noqa: D101,D102,D103,D107
         raise NotImplementedError
 
     @abc.abstractmethod
-    def load_data(self, ann_dicts: List[JsonDict], tqdm_desc: str = "", **kwargs):
+    def load_data(self, ann_dicts: List[JsonDict], tqdm_desc: str = "", **kwargs):  # noqa: D101,D102,D103,D107
         assert tqdm_desc != "", "tqdm_desc must be provided."
         raise NotImplementedError
 
@@ -619,12 +619,12 @@ class MsCocoProcessor(object, metaclass=abc.ABCMeta):
         annotations: Dict[ImageId, List[CaptionsAnnotationData]],
         licenses: Dict[LicenseId, LicenseData],
         **kwargs,
-    ):
+    ):  # noqa: D101,D102,D103,D107
         raise NotImplementedError
 
 
-class CaptionsProcessor(MsCocoProcessor):
-    def get_features(self, *args, **kwargs) -> ds.Features:
+class CaptionsProcessor(MsCocoProcessor):  # noqa: D101,D102,D103,D107
+    def get_features(self, *args, **kwargs) -> ds.Features:  # noqa: D101,D102,D103,D107
         features_dict = self.get_features_base_dict()
         annotations = ds.Sequence(
             {
@@ -641,7 +641,7 @@ class CaptionsProcessor(MsCocoProcessor):
         ann_dicts: List[JsonDict],
         tqdm_desc: str = "Load captions data",
         **kwargs,
-    ) -> Dict[ImageId, List[CaptionsAnnotationData]]:
+    ) -> Dict[ImageId, List[CaptionsAnnotationData]]:  # noqa: D101,D102,D103,D107
         annotations = defaultdict(list)
         for ann_dict in tqdm(ann_dicts, desc=tqdm_desc):
             ann_data = CaptionsAnnotationData.from_dict(ann_dict)
@@ -655,7 +655,7 @@ class CaptionsProcessor(MsCocoProcessor):
         annotations: Dict[ImageId, List[CaptionsAnnotationData]],
         licenses: Dict[LicenseId, LicenseData],
         **kwargs,
-    ) -> Iterator[Tuple[int, CaptionExample]]:
+    ) -> Iterator[Tuple[int, CaptionExample]]:  # noqa: D101,D102,D103,D107
         for idx, image_id in enumerate(images.keys()):
             image_data = images[image_id]
             image_anns = annotations[image_id]
@@ -676,8 +676,8 @@ class CaptionsProcessor(MsCocoProcessor):
             yield idx, example  # type: ignore
 
 
-class InstancesProcessor(MsCocoProcessor):
-    def get_features_instance_dict(self, decode_rle: bool):
+class InstancesProcessor(MsCocoProcessor):  # noqa: D101,D102,D103,D107
+    def get_features_instance_dict(self, decode_rle: bool):  # noqa: D101,D102,D103,D107
         segmentation_feature = (
             ds.Image()
             if decode_rle
@@ -707,7 +707,7 @@ class InstancesProcessor(MsCocoProcessor):
             },
         }
 
-    def get_features(self, decode_rle: bool) -> ds.Features:
+    def get_features(self, decode_rle: bool) -> ds.Features:  # noqa: D101,D102,D103,D107
         features_dict = self.get_features_base_dict()
         annotations = ds.Sequence(
             self.get_features_instance_dict(decode_rle=decode_rle)
@@ -721,7 +721,7 @@ class InstancesProcessor(MsCocoProcessor):
         images: Dict[ImageId, ImageData],
         decode_rle: bool,
         tqdm_desc: str = "Load instances data",
-    ) -> Dict[ImageId, List[InstancesAnnotationData]]:
+    ) -> Dict[ImageId, List[InstancesAnnotationData]]:  # noqa: D101,D102,D103,D107
         annotations = defaultdict(list)
         ann_dicts = sorted(ann_dicts, key=lambda d: d["image_id"])
 
@@ -740,7 +740,7 @@ class InstancesProcessor(MsCocoProcessor):
         annotations: Dict[ImageId, List[InstancesAnnotationData]],
         licenses: Dict[LicenseId, LicenseData],
         categories: Dict[CategoryId, CategoryData],
-    ) -> Iterator[Tuple[int, InstanceExample]]:
+    ) -> Iterator[Tuple[int, InstanceExample]]:  # noqa: D101,D102,D103,D107
         for idx, image_id in enumerate(images.keys()):
             image_data = images[image_id]
             image_anns = annotations[image_id]
@@ -766,8 +766,8 @@ class InstancesProcessor(MsCocoProcessor):
             yield idx, example  # type: ignore
 
 
-class PersonKeypointsProcessor(InstancesProcessor):
-    def get_features(self, decode_rle: bool) -> ds.Features:
+class PersonKeypointsProcessor(InstancesProcessor):  # noqa: D101,D102,D103,D107
+    def get_features(self, decode_rle: bool) -> ds.Features:  # noqa: D101,D102,D103,D107
         features_dict = self.get_features_base_dict()
         features_instance_dict = self.get_features_instance_dict(decode_rle=decode_rle)
         features_instance_dict.update(
@@ -793,7 +793,7 @@ class PersonKeypointsProcessor(InstancesProcessor):
         images: Dict[ImageId, ImageData],
         decode_rle: bool,
         tqdm_desc: str = "Load person keypoints data",
-    ) -> Dict[ImageId, List[PersonKeypointsAnnotationData]]:
+    ) -> Dict[ImageId, List[PersonKeypointsAnnotationData]]:  # noqa: D101,D102,D103,D107
         annotations = defaultdict(list)
         ann_dicts = sorted(ann_dicts, key=lambda d: d["image_id"])
 
@@ -811,7 +811,7 @@ class PersonKeypointsProcessor(InstancesProcessor):
         annotations: Dict[ImageId, List[PersonKeypointsAnnotationData]],
         licenses: Dict[LicenseId, LicenseData],
         categories: Dict[CategoryId, CategoryData],
-    ) -> Iterator[Tuple[int, PersonKeypointExample]]:
+    ) -> Iterator[Tuple[int, PersonKeypointExample]]:  # noqa: D101,D102,D103,D107
         for idx, image_id in enumerate(images.keys()):
             image_data = images[image_id]
             image_anns = annotations[image_id]
@@ -838,7 +838,7 @@ class PersonKeypointsProcessor(InstancesProcessor):
             yield idx, example  # type: ignore
 
 
-class MsCocoConfig(ds.BuilderConfig):
+class MsCocoConfig(ds.BuilderConfig):  # noqa: D101,D102,D103,D107
     YEARS: Tuple[int, ...] = (
         2014,
         2017,
@@ -858,7 +858,7 @@ class MsCocoConfig(ds.BuilderConfig):
         data_dir: Optional[str] = None,
         data_files: Optional[DataFilesDict] = None,
         description: Optional[str] = None,
-    ) -> None:
+    ) -> None:  # noqa: D101,D102,D103,D107
         super().__init__(
             name=self.config_name(year=year, task=coco_task),
             version=version,
@@ -874,10 +874,10 @@ class MsCocoConfig(ds.BuilderConfig):
         self.processor = self.get_processor()
         self.decode_rle = decode_rle
 
-    def _check_year(self, year: int) -> None:
+    def _check_year(self, year: int) -> None:  # noqa: D101,D102,D103,D107
         assert year in self.YEARS, year
 
-    def _check_task(self, task: Union[str, Sequence[str]]) -> None:
+    def _check_task(self, task: Union[str, Sequence[str]]) -> None:  # noqa: D101,D102,D103,D107
         if isinstance(task, str):
             assert task in self.TASKS, task
         elif isinstance(task, list) or isinstance(task, tuple):
@@ -887,11 +887,11 @@ class MsCocoConfig(ds.BuilderConfig):
             raise ValueError(f"Invalid task: {task}")
 
     @property
-    def year(self) -> int:
+    def year(self) -> int:  # noqa: D101,D102,D103,D107
         return self._year
 
     @property
-    def task(self) -> str:
+    def task(self) -> str:  # noqa: D101,D102,D103,D107
         if isinstance(self._task, str):
             return self._task
         elif isinstance(self._task, list) or isinstance(self._task, tuple):
@@ -899,7 +899,7 @@ class MsCocoConfig(ds.BuilderConfig):
         else:
             raise ValueError(f"Invalid task: {self._task}")
 
-    def get_processor(self) -> MsCocoProcessor:
+    def get_processor(self) -> MsCocoProcessor:  # noqa: D101,D102,D103,D107
         if self.task == "captions":
             return CaptionsProcessor()
         elif self.task == "instances":
@@ -910,7 +910,7 @@ class MsCocoConfig(ds.BuilderConfig):
             raise ValueError(f"Invalid task: {self.task}")
 
     @classmethod
-    def config_name(cls, year: int, task: Union[str, Sequence[str]]) -> str:
+    def config_name(cls, year: int, task: Union[str, Sequence[str]]) -> str:  # noqa: D101,D102,D103,D107
         if isinstance(task, str):
             return f"{year}-{task}"
         elif isinstance(task, list) or isinstance(task, tuple):
@@ -920,7 +920,7 @@ class MsCocoConfig(ds.BuilderConfig):
             raise ValueError(f"Invalid task: {task}")
 
 
-def dataset_configs(year: int, version: ds.Version) -> List[MsCocoConfig]:
+def dataset_configs(year: int, version: ds.Version) -> List[MsCocoConfig]:  # noqa: D101,D102,D103,D107
     return [
         MsCocoConfig(
             year=year,
@@ -950,30 +950,30 @@ def dataset_configs(year: int, version: ds.Version) -> List[MsCocoConfig]:
     ]
 
 
-def configs_2014(version: ds.Version) -> List[MsCocoConfig]:
+def configs_2014(version: ds.Version) -> List[MsCocoConfig]:  # noqa: D101,D102,D103,D107
     return dataset_configs(year=2014, version=version)
 
 
-def configs_2017(version: ds.Version) -> List[MsCocoConfig]:
+def configs_2017(version: ds.Version) -> List[MsCocoConfig]:  # noqa: D101,D102,D103,D107
     return dataset_configs(year=2017, version=version)
 
 
-class MsCocoDataset(ds.GeneratorBasedBuilder):
+class MsCocoDataset(ds.GeneratorBasedBuilder):  # noqa: D101,D102,D103,D107
     VERSION = ds.Version("1.0.0")
     BUILDER_CONFIG_CLASS = MsCocoConfig
     BUILDER_CONFIGS = configs_2014(version=VERSION) + configs_2017(version=VERSION)
 
     @property
-    def year(self) -> int:
+    def year(self) -> int:  # noqa: D101,D102,D103,D107
         config: MsCocoConfig = self.config  # type: ignore
         return config.year
 
     @property
-    def task(self) -> str:
+    def task(self) -> str:  # noqa: D101,D102,D103,D107
         config: MsCocoConfig = self.config  # type: ignore
         return config.task
 
-    def _info(self) -> ds.DatasetInfo:
+    def _info(self) -> ds.DatasetInfo:  # noqa: D101,D102,D103,D107
         processor: MsCocoProcessor = self.config.processor  # type: ignore
         features = processor.get_features(decode_rle=self.config.decode_rle)  # type: ignore
         return ds.DatasetInfo(
@@ -984,7 +984,7 @@ class MsCocoDataset(ds.GeneratorBasedBuilder):
             features=features,
         )
 
-    def _split_generators(self, dl_manager: ds.DownloadManager):
+    def _split_generators(self, dl_manager: ds.DownloadManager):  # noqa: D101,D102,D103,D107
         file_paths = dl_manager.download_and_extract(_URLS[f"{self.year}"])
 
         imgs = file_paths["images"]  # type: ignore
@@ -1019,7 +1019,7 @@ class MsCocoDataset(ds.GeneratorBasedBuilder):
 
     def _generate_train_val_examples(
         self, split: str, base_image_dir: str, base_annotation_dir: str
-    ):
+    ):  # noqa: D101,D102,D103,D107
         image_dir = os.path.join(base_image_dir, f"{split}{self.year}")
 
         ann_dir = os.path.join(base_annotation_dir, "annotations")
@@ -1053,7 +1053,7 @@ class MsCocoDataset(ds.GeneratorBasedBuilder):
             licenses=licenses,
         )
 
-    def _generate_test_examples(self, test_image_info_path: str):
+    def _generate_test_examples(self, test_image_info_path: str):  # noqa: D101,D102,D103,D107
         raise NotImplementedError
 
     def _generate_examples(
@@ -1062,7 +1062,7 @@ class MsCocoDataset(ds.GeneratorBasedBuilder):
         base_image_dir: Optional[str] = None,
         base_annotation_dir: Optional[str] = None,
         test_image_info_path: Optional[str] = None,
-    ):
+    ):  # noqa: D101,D102,D103,D107
         if split == "test" and test_image_info_path is not None:
             yield from self._generate_test_examples(
                 test_image_info_path=test_image_info_path
