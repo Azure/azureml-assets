@@ -151,7 +151,7 @@ def download_dataset_from_hf(
     for split in splits:
         logger.info(f"Downloading - Configuration: '{configuration}', Split: '{split}'.")
         try:
-            dataset = load_dataset(path=dataset_name, name=configuration, split=split)
+            dataset = load_dataset(path=dataset_name, name=configuration, split=split, trust_remote_code=True)
         except Exception as e:
             mssg = f"Error downloading dataset: {e}"
             raise DatasetDownloadException._with_error(
