@@ -80,10 +80,19 @@ class StoreUrl:
     def get_credential(self) -> Union[
             str, ClientSecretCredential, AzureSasCredential, None]:
         """Get credential for this store url."""
+        def valid_aml_obo_credential():
+            '''validate AzureMLOnBehalfOfCredential can be used in the environment before returns it.'''
+            from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
+            aml_obo_credential = AzureMLOnBehalfOfCredential()
+            try:
+                _ = aml_obo_credential.get_token()
+                return aml_obo_credential
+            except CredentialUnavailableError as cue:
+                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
+
         if not self._datastore:
-            from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
             print("Using AML OBO credential from StoreUrl.get_credential() because the internal datastore is None.")
-            return AzureMLOnBehalfOfCredential()
+            return valid_aml_obo_credential()
         elif self._datastore.datastore_type == "AzureBlob":
             if self._datastore.credential_type == "AccountKey":
                 print("Using acount key credential from StoreUrl.get_credential() with blob datastore.")
@@ -92,10 +101,9 @@ class StoreUrl:
                 print("Using SAS token credential from StoreUrl.get_credential() with blob datastore.")
                 return AzureSasCredential(self._datastore.sas_token)
             elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
-                from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-                print("Using AML OBO credential from StoreUrl.get_credential() with blob datastore"
-                      " where the saved credential type is null.")
-                return AzureMLOnBehalfOfCredential()
+                print("Using AML OBO credential from StoreUrl.get_credential() with blob datastore "
+                      "whose credential type is null.")
+                return valid_aml_obo_credential()
             else:
                 raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
                                         "only AccountKey and Sas are supported.")
@@ -105,10 +113,9 @@ class StoreUrl:
                 return ClientSecretCredential(tenant_id=self._datastore.tenant_id, client_id=self._datastore.client_id,
                                               client_secret=self._datastore.client_secret)
             else:
-                from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-                print("Using AML OBO credential from StoreUrl.get_credential() with Gen2 datastore"
-                      " where the saved credential info does not have client secret available to authenticate with.")
-                return AzureMLOnBehalfOfCredential()
+                print("Using AML OBO credential from StoreUrl.get_credential() with Gen2 datastore "
+                      "whose saved credential info does not have client secret available to authenticate with.")
+                return valid_aml_obo_credential()
         else:
             raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
                                     "only Azure Blob and Azure Data Lake Gen2 are supported.")
@@ -180,18 +187,12 @@ class StoreUrl:
 
         container_client = self.get_container_client()
         relative_path = relative_path.strip("/")
-        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
-        try:
-            if isinstance(container_client, FileSystemClient):
-                return container_client.get_directory_client(f"{self.path}/{relative_path}").exists()
-            else:
-                full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
-                blobs = container_client.list_blobs(name_starts_with=full_path)
-                return any(blobs)
-        except Exception as cue:
-            if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
-            raise cue
+        if isinstance(container_client, FileSystemClient):
+            return container_client.get_directory_client(f"{self.path}/{relative_path}").exists()
+        else:
+            full_path = f"{self.path}/{relative_path}/" if relative_path else f"{self.path}/"
+            blobs = container_client.list_blobs(name_starts_with=full_path)
+            return any(blobs)
 
     def any_files(self, relative_path_pattern: str,
                   container_client: Union[FileSystemClient, ContainerClient, None] = None) -> bool:
@@ -251,18 +252,12 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
-        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
-        try:
-            if isinstance(container_client, FileSystemClient):
-                with container_client.get_file_client(full_path) as file_client:
-                    return file_client.download_file().readall().decode()
-            else:
-                with container_client.get_blob_client(full_path) as blob_client:
-                    return blob_client.download_blob().readall().decode()
-        except Exception as cue:
-            if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
-            raise cue
+        if isinstance(container_client, FileSystemClient):
+            with container_client.get_file_client(full_path) as file_client:
+                return file_client.download_file().readall().decode()
+        else:
+            with container_client.get_blob_client(full_path) as blob_client:
+                return blob_client.download_blob().readall().decode()
 
     def write_file(self, file_content: Union[str, bytes], relative_path: str = None, overwrite: bool = False,
                    credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None) -> dict:
@@ -272,24 +267,18 @@ class StoreUrl:
 
         container_client = self.get_container_client(credential)
         full_path = f"{self.path}/{relative_path.strip('/')}" if relative_path else self.path
-        # TODO: edit this check block after we are able to support submitting managed identity MoMo graphs.
-        try:
-            if isinstance(container_client, FileSystemClient):
-                with container_client.get_file_client(full_path) as file_client:
-                    if not file_client.exists():
-                        # when writing to a Gen2 storage location,
-                        # if the file doesn't exist we can't just use upload_data() as it will throw errors.
-                        # Instead use this work around to create the file, append data, and flush the data commit.
-                        return self._create_file_and_append_content(container_client, file_content, full_path)
-                    # upload_data() works fine with Gen2 if the file exists.
-                    return file_client.upload_data(file_content, overwrite=overwrite)
-            else:
-                with container_client.get_blob_client(full_path) as blob_client:
-                    return blob_client.upload_blob(file_content, overwrite=overwrite)
-        except Exception as cue:
-            if "AzureML Spark On Behalf of credentials not available in this environment" in str(cue):
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
-            raise cue
+        if isinstance(container_client, FileSystemClient):
+            with container_client.get_file_client(full_path) as file_client:
+                if not file_client.exists():
+                    # when writing to a Gen2 storage location,
+                    # if the file doesn't exist we can't just use upload_data() as it will throw errors.
+                    # Instead use this work around to create the file, append data, and flush the data commit.
+                    return self._create_file_and_append_content(container_client, file_content, full_path)
+                # upload_data() works fine with Gen2 if the file exists.
+                return file_client.upload_data(file_content, overwrite=overwrite)
+        else:
+            with container_client.get_blob_client(full_path) as blob_client:
+                return blob_client.upload_blob(file_content, overwrite=overwrite)
 
     @staticmethod
     def _normalize_local_path(local_path: str) -> str:
