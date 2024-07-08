@@ -10,18 +10,16 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # # # Install mmcv-full and mmdet
 # Request for scipy installation to avoid error in mmcv-full installation
-RUN pip install --upgrade pip setuptools wheel
-RUN apt-get -y install build-essential gfortran libopenblas-dev liblapack-dev
-# RUN apt-get install -y gfortran libopenblas-dev liblapack-dev libblas-dev libatlas-base-dev
-# RUN pip install scipy==1.7.3
-RUN mim install --no-cache-dir mmtrack==0.14.0
+RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
+RUN mim install mmtrack==0.14.0
 RUN mim install mmcv-full==1.7.1
 # # Note that MMDet installs pycocotools
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==2.28.2
 
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
-# RUN pip install scipy==1.10.1
+RUN pip install azure-ai-ml==1.13.0
+RUN pip install scipy==1.10.1
 RUN pip install gunicorn==22.0.0
 
 # It is recommended to upgrade to numpy version 1.23.5 to address the numpy.core.multiarray issue
