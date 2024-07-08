@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install --upgrade pip setuptools wheel
 RUN apt-get -y install build-essential gfortran libopenblas-dev liblapack-dev
 # RUN apt-get install -y gfortran libopenblas-dev liblapack-dev libblas-dev libatlas-base-dev
-RUN pip install scipy==1.7.3
+# RUN pip install scipy==1.7.3
 RUN mim install --no-cache-dir mmtrack==0.14.0
 RUN mim install mmcv-full==1.7.1
 # # Note that MMDet installs pycocotools
