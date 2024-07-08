@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.54 (2024-07-08)
+### 🐛 Bugs Fixed
+- [#3127](https://github.com/Azure/azureml-assets/pull/3127) Test pipeline
+
 ## 1.16.53 (2024-06-28)
 ### 🐛 Bugs Fixed
 - [#3102](https://github.com/Azure/azureml-assets/pull/3102) Don't auth to Azure during import of validate_assets
