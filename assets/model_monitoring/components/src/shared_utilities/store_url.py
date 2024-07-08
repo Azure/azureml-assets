@@ -77,18 +77,29 @@ class StoreUrl:
             url = f"{url}/{relative_path.lstrip('/')}"
         return url
 
-    def get_credential(self) -> Union[
+    def get_credential(self, validate_aml_obo_credential: bool = True) -> Union[
             str, ClientSecretCredential, AzureSasCredential, None]:
         """Get credential for this store url."""
         def valid_aml_obo_credential():
-            '''validate AzureMLOnBehalfOfCredential can be used in the environment before returns it.'''
-            from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
-            aml_obo_credential = AzureMLOnBehalfOfCredential()
+            """validate AzureMLOnBehalfOfCredential can be used in the environment before returns it."""
+            if not self._is_secure():
+                raise InvalidInputError(
+                    "Unsecure credential-less data is not supported. "
+                    "Please use either a secure or a credential url for the StoreUrl.")
             try:
-                _ = aml_obo_credential.get_token()
-                return aml_obo_credential
-            except CredentialUnavailableError as cue:
-                raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
+                from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
+                aml_obo_credential = AzureMLOnBehalfOfCredential()
+                if validate_aml_obo_credential:
+                    try:
+                        _ = aml_obo_credential.get_token()
+                    except CredentialUnavailableError as cue:
+                        raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
+                else:
+                    return aml_obo_credential
+            except ModuleNotFoundError:
+                print("Failed to import AzureMLOnBehalfOfCredential. "
+                      "Cannot check if unsecure URL was used with token credential. "
+                      "Continuing and expecting no failures...")
 
         if not self._datastore:
             print("Using AML OBO credential from StoreUrl.get_credential() because the internal datastore is None.")
@@ -137,8 +148,8 @@ class StoreUrl:
 
     def get_container_client(
             self,
-            credential: Union[
-                str, AzureSasCredential, ClientSecretCredential, None] = None
+            credential: Union[str, AzureSasCredential, ClientSecretCredential, None] = None,
+            validate_aml_obo_credential: bool = True
             ) -> Union[FileSystemClient, ContainerClient, None]:
         """
         Get container client for this store url.
@@ -159,17 +170,8 @@ class StoreUrl:
 
         # fallback to AzureMLOnBehalfOfCredential for credential less datastore for now.
         # Requires that we submit MoMo component with managed identity or will fail later on.
-        credential = credential or self.get_credential()
+        credential = credential or self.get_credential(validate_aml_obo_credential)
         account_url_scheme = "https" if self._is_secure() else "http"
-        try:
-            from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-            if not self._is_secure() and isinstance(credential, AzureMLOnBehalfOfCredential):
-                raise InvalidInputError("Token credential is only supported with secure HTTPS protocol."
-                                        "Please use a secure url for the StoreUrl.")
-        except ModuleNotFoundError:
-            print("Failed to import AzureMLOnBehalfOfCredential. "
-                  "Cannot check if unsecure URL was used with token credential. "
-                  "Continuing and expecting no failures...")
 
         if self.store_type == "blob":
             return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",

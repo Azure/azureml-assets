@@ -66,12 +66,12 @@ class TestStoreUrl:
 
         # We support credential-less with secure store url.
         if store_url._is_secure():
-            container = store_url.get_container_client()
+            container = store_url.get_container_client(validate_aml_obo_credential=False)
             assert container is not None
             assert isinstance(container.credential, AzureMLOnBehalfOfCredential)
         else:
             with pytest.raises(InvalidInputError,
-                               match=r"Token credential is only supported with secure HTTPS protocol..*"):
+                               match=r"Unsecure credential-less data is not supported...*"):
                 store_url.get_container_client()
 
     @pytest.mark.parametrize(
@@ -202,8 +202,10 @@ class TestStoreUrl:
              f"/paths/path/to/folder{expected_relative_path}")
 
         if expected_credential:
-            assert_credentials_are_equal(store_url.get_credential(), expected_credential)
-            assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+            assert_credentials_are_equal(store_url.get_credential(validate_aml_obo_credential=False),
+                                         expected_credential)
+            assert_container_clients_are_equal(store_url.get_container_client(validate_aml_obo_credential=False),
+                                               expected_container_client)
         else:
             # should raise InvalidInputError for credential less data
             with pytest.raises(InvalidInputError):
