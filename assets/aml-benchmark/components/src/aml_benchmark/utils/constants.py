@@ -63,6 +63,10 @@ class IntermediateNames:
     IMAGE_FILE_NAME_TEMPLATE = "image_{image_counter:09d}.png"
 
 
+# TODO: enforce use of same value as in training/model_evaluation/src/image_constants.py.
+CAPTION_SEPARATOR = "||"
+
+
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Benchmark"
 }
