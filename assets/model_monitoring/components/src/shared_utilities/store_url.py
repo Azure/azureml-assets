@@ -81,7 +81,7 @@ class StoreUrl:
             str, ClientSecretCredential, AzureSasCredential, None]:
         """Get credential for this store url."""
         def valid_aml_obo_credential():
-            """validate AzureMLOnBehalfOfCredential can be used in the environment before returns it."""
+            """Validate AzureMLOnBehalfOfCredential can be used in the environment before returns it."""
             if not self._is_secure():
                 raise InvalidInputError(
                     "Unsecure credential-less data is not supported. "
