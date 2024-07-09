@@ -27,10 +27,10 @@ dependencies:
   - lightgbm==3.2.1
   - msrest==0.6.21
   - mltable==1.6.1
-  - openai==1.35.10
+  - openai==1.35.12
   - azure-ai-ml==1.17.1
   - mldesigner==0.1.0b18
   - tiktoken
   - idna==3.7
   - pydantic==2.8.2
-  - mteb==1.12.74
+  - mteb==1.12.75
