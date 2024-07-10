@@ -839,6 +839,7 @@ class ImageGenerationEvaluator(Evaluator):
             return np.array(image_pil)
 
         metrics = {}
+        metrics["artifacts"] = {}
 
         with tempfile.TemporaryDirectory() as ground_truth_folder_name:
             self._download_images2(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME], ground_truth_folder_name)
