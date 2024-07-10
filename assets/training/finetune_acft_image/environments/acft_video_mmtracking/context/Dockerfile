@@ -28,4 +28,5 @@ RUN pip install numpy==1.23.5
 # https://github.com/open-mmlab/mmdetection/issues/10962
 RUN pip install yapf==0.40.1
 
+
 # dummy number to change when needing to force rebuild without changing the definition: 1
