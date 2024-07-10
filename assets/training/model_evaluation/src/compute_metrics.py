@@ -1,6 +1,25 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import subprocess
+import sys
+
+# install_deps = ["azureml-metrics[image]==0.1.0.132125791", "torch-fidelity"]
+# command = [sys.executable, '-m', 'pip', 'install'] + ["--extra-index-url", "https://azuremlsdktestpypi.azureedge.net/automl-vision-tests/132125791"] + install_deps
+# command_str = ' '.join(command)
+# print(f"Installing dependencies. Executing command: {command_str}")
+# print("x1", subprocess.check_output(command, stderr=subprocess.STDOUT))
+
+# print("x2", subprocess.check_output(["pip", "show", "azureml_metrics"], stderr=subprocess.STDOUT))
+
+install_deps = ["clean-fid"]
+command = [sys.executable, '-m', 'pip', 'install'] + install_deps
+command_str = ' '.join(command)
+print(f"Installing dependencies. Executing command: {command_str}")
+print("x1", subprocess.check_output(command, stderr=subprocess.STDOUT))
+
+
+
 """Main script for compute metrics."""
 import azureml.evaluate.mlflow as aml_mlflow
 import json

@@ -219,6 +219,8 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
             })
         )
 
+        dataset = dataset.filter(lambda example: len(example["label"]) > 0)
+
         # Upload the images to datastore.
         datastore.upload(src_dir=temporary_directory.name, target_path=datastore_directory_name)
 

@@ -4,9 +4,13 @@
 """Vision dataset adapters."""
 
 import io
+import os
+import random
+import tempfile
 
 from abc import ABC, abstractmethod
 from typing import Optional
+import urllib.request
 
 from datasets import Dataset
 from PIL import Image
@@ -112,9 +116,26 @@ class GTSRBAdapter(VisionDatasetAdapter):
 class MSCOCOAdapter(VisionDatasetAdapter):
     """Adapter for MSCOCO HF dataset."""
 
+    CAPTIONS_GOLDEN_SET_URL = "https://raw.githubusercontent.com/mingyuanzhou/SiD-LSG/main/prompts/captions.txt"
+
+    def __init__(self, _):
+        with tempfile.TemporaryDirectory() as temporary_directory_name:
+            file_name = os.path.join(temporary_directory_name, "captions.txt")
+            urllib.request.urlretrieve(self.CAPTIONS_GOLDEN_SET_URL, filename=file_name)
+
+            self.captions_golden_set = set([l[:-1] for l in open(file_name, "rt")])
+
     def get_label(self, instance):
         """Extract the instance's label as a string."""
-        return CAPTION_SEPARATOR.join(instance["annotations"]["caption"])
+
+        # return CAPTION_SEPARATOR.join(instance["annotations"]["caption"])
+
+        # i = random.randint(0, len(instance["annotations"]["caption"]) - 1)
+        # return instance["annotations"]["caption"][i]
+
+        return CAPTION_SEPARATOR.join([
+            c for c in instance["annotations"]["caption"] if c in self.captions_golden_set
+        ])
 
     def get_pil_image(self, instance):
         """Extract the instance's image as a PIL image."""

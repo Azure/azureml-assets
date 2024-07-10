@@ -7,9 +7,11 @@ import ast
 import re
 import pandas as pd
 import numpy as np
+import tempfile
 from abc import abstractmethod
 
 from PIL import Image
+import torchvision.transforms as transforms
 
 from exceptions import (
     DataValidationException,
@@ -785,6 +787,19 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
         return metrics
 
 
+class CenterCropLongEdge(object):
+    """
+    this code is borrowed from https://github.com/ajbrock/BigGAN-PyTorch
+    MIT License
+    Copyright (c) 2019 Andy Brock
+    """ 
+    def __call__(self, img):
+        return transforms.functional.center_crop(img, min(img.size))
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+
 class ImageGenerationEvaluator(Evaluator):
     """Evaluator for image generation."""
 
@@ -801,12 +816,40 @@ class ImageGenerationEvaluator(Evaluator):
         Returns:
             Dict: Dict of metrics
         """
-        metrics = compute_metrics(
-            task_type=constants.Tasks.IMAGE_GENERATION,
-            y_test=self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME]),
-            y_pred=self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS]),
-            **self.metrics_config
-        )
+        # metrics = compute_metrics(
+        #     task_type=constants.Tasks.IMAGE_GENERATION,
+        #     y_test=self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME]),
+        #     y_pred=self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS]),
+        #     **self.metrics_config
+        # )
+        # return metrics
+
+        from cleanfid import fid
+
+        resize_size = 256
+
+        center_crop_trsf = CenterCropLongEdge()
+        def resize_and_center_crop(image_np):
+            image_pil = Image.fromarray(image_np) 
+            image_pil = center_crop_trsf(image_pil)
+
+            if resize_size is not None:
+                image_pil = image_pil.resize((resize_size, resize_size),
+                                            Image.LANCZOS)
+            return np.array(image_pil)
+
+        metrics = {}
+
+        with tempfile.TemporaryDirectory() as ground_truth_folder_name:
+            self._download_images2(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME], ground_truth_folder_name)
+            with tempfile.TemporaryDirectory() as predictions_folder_name:
+                self._download_images2(y_pred[ImageDataFrameParams.PREDICTIONS], predictions_folder_name)
+                fid = fid.compute_fid(
+                    ground_truth_folder_name, predictions_folder_name,
+                    model_name="inception_v3", custom_image_tranform=resize_and_center_crop
+                )
+        metrics["metrics"] = {"fid": fid}
+
         return metrics
 
     def _download_images(self, image_urls):
@@ -837,3 +880,25 @@ class ImageGenerationEvaluator(Evaluator):
             images.append(image)
 
         return images
+
+    def _download_images2(self, image_urls, local_folder_name):
+        # Get the workspace of the run.
+        run = Run.get_context()
+        workspace = run.experiment.workspace
+
+        def maybe_make_data_path(image_url):
+            # Check if this url refers to datastore and if not, keep it as is.
+            match = re.search(self.DATASTORE_URL_TEMPLATE, image_url)
+            if match is None:
+                return image_url
+
+            # Make DataPath from datastore name and file path.
+            groups = match.groups()
+            return DataPath(workspace.datastores.get(groups[0]), groups[1])
+
+        # Convert URLs referring to datastore to DataPath format.
+        image_urls = [maybe_make_data_path(image_url) for image_url in image_urls]
+
+        # Download images to specified folder.
+        remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
+        remote_image_files.download(local_folder_name)
