@@ -4,11 +4,12 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:{{lates
 USER root
 RUN apt-get -y update
 
+# Install required packages from pypi
+COPY requirements.txt .
+RUN pip install -r requirements.txt --no-cache-dir
 
 # # # Install mmcv-full and mmdet
 # Request for scipy installation to avoid error in mmcv-full installation
-RUN pip install openmim==0.3.9
-RUN pip install mmengine==0.8.4
 RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
 RUN mim install mmtrack==0.14.0
 RUN mim install mmcv-full==1.7.1
@@ -16,12 +17,7 @@ RUN mim install mmcv-full==1.7.1
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==2.28.2
 
-# Install required packages from pypi
-COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
-
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
-RUN pip install azure-ai-ml==1.13.0
 RUN pip install scipy==1.10.1
 RUN pip install gunicorn==22.0.0
 
