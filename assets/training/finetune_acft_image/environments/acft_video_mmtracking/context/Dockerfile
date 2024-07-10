@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:biweekly.202406.1
 
 USER root
 RUN apt-get -y update
@@ -27,6 +27,5 @@ RUN pip install numpy==1.23.5
 # pin required version of yapf to avoid breaking changes in newer versions
 # https://github.com/open-mmlab/mmdetection/issues/10962
 RUN pip install yapf==0.40.1
-
 
 # dummy number to change when needing to force rebuild without changing the definition: 1
