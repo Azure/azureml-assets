@@ -4,7 +4,7 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   SHA: 514d47be2925f7b5d845bbb34a29d5c73ccf53d8
-  inference-min-sku-spec: 96|8|1924|2900
+  inference-min-sku-spec: 96|8|1800|2900
   inference-recommended-sku: Standard_ND96amsr_A100_v4
   languages: fr, it, de, es, en
 tags:
@@ -20,7 +20,7 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: mistralai
-version: 2
+version: 3
 description: |
   The Mixtral-8x22B-Instruct-v0.1 Large Language Model (LLM) is an instruct fine-tuned version of the [Mixtral-8x22B-v0.1](https://huggingface.co/mistralai/Mixtral-8x22B-v0.1).
 
