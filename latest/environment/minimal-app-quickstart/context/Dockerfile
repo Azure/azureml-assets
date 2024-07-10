@@ -23,3 +23,4 @@ USER dockeruser
 COPY . .
 
 CMD ["/bin/sh", "entrypoint.sh"]
+

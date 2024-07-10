@@ -4,7 +4,7 @@ description: >-
   AzureML minimal app quickstart environment.
 
 name: "minimal-app-quickstart"
-version: "4"
+version: "5"
 
 build:
   path: "context"
