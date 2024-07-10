@@ -4,20 +4,21 @@
 import subprocess
 import sys
 
-# install_deps = ["azureml-metrics[image]==0.1.0.132125791", "torch-fidelity"]
-# command = [sys.executable, '-m', 'pip', 'install'] + ["--extra-index-url", "https://azuremlsdktestpypi.azureedge.net/automl-vision-tests/132125791"] + install_deps
-# command_str = ' '.join(command)
-# print(f"Installing dependencies. Executing command: {command_str}")
-# print("x1", subprocess.check_output(command, stderr=subprocess.STDOUT))
-
-# print("x2", subprocess.check_output(["pip", "show", "azureml_metrics"], stderr=subprocess.STDOUT))
-
-install_deps = ["clean-fid"]
+install_deps = ["torch==1.13.1", "torchvision==0.14.1", "clean-fid"]
 command = [sys.executable, '-m', 'pip', 'install'] + install_deps
 command_str = ' '.join(command)
 print(f"Installing dependencies. Executing command: {command_str}")
 print("x1", subprocess.check_output(command, stderr=subprocess.STDOUT))
 
+print("x2", subprocess.check_output(["pip", "show", "torch"], stderr=subprocess.STDOUT))
+
+import torch
+
+print("x3")
+
+torch._C._cuda_init()
+
+print("x4")
 
 
 """Main script for compute metrics."""
