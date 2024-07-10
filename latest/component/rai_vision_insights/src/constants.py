@@ -25,8 +25,8 @@ class DataPaths:
     FRIDGE_OD_BLOB_URL = BLOB_STORAGE_URL +\
         "computervision/odFridgeObjects/images/"
     FRIDGE_OD_DOWNLOAD_URL = (
-        "https://cvbp-secondary.z19.web.core.windows.net/" +
-        "datasets/object_detection/odFridgeObjects.zip"
+        "https://publictestdatasets.blob.web.core.windows.net/" +
+        "computervision/odFridgeObjects.zip"
     )
     FRIDGE_OD_DOWNLOAD_URL_DATASETS = (
         "https://publictestdatasets.blob.core.windows.net/" +
