@@ -174,10 +174,10 @@ class StoreUrl:
         account_url_scheme = "https" if self._is_secure() else "http"
 
         if self.store_type == "blob":
-            return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.core.windows.net",
+            return ContainerClient(account_url=f"{account_url_scheme}://{self.account_name}.blob.{self._endpoint}",
                                    container_name=self.container_name, credential=credential)
         elif self.store_type == "dfs":
-            return FileSystemClient(account_url=f"{account_url_scheme}://{self.account_name}.dfs.core.windows.net",
+            return FileSystemClient(account_url=f"{account_url_scheme}://{self.account_name}.dfs.{self._endpoint}",
                                     file_system_name=self.container_name, credential=credential)
         else:
             raise InvalidInputError(f"Unsupported store type: {self.store_type}, only blob and dfs are supported.")
@@ -324,10 +324,9 @@ class StoreUrl:
 
     def _set_properties(self, ws: Workspace):
         url = urlparse(self._base_url)
-        # TODO sovereign endpoint
-        self._endpoint = "core.windows.net"
         if url.scheme in ["https", "http"]:
-            pattern = r"(?P<scheme>http|https)://(?P<account_name>[^\.]+).(?P<store_type>blob|dfs).core.windows.net/" \
+            pattern = r"(?P<scheme>http|https)://(?P<account_name>[^\.]+).(?P<store_type>blob|dfs)." \
+                      r"(?P<endpoint>core\.windows\.net|core\.usgovcloudapi\.net|core\.chinacloudapi\.cn)/" \
                       r"(?P<container>[^/]+)(?P<path>$|/(.*))"
             matches = re.match(pattern, self._base_url)
             if not matches:
@@ -337,10 +336,13 @@ class StoreUrl:
             self.account_name = matches.group("account_name")
             self.container_name = matches.group("container")
             self.path = matches.group("path").strip("/")
+            self._endpoint = matches.group("endpoint")
             self._datastore = None
         elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
             pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+)." \
-                      r"(?P<store_type>blob|dfs).core.windows.net(?P<path>$|/(.*))"
+                      r"(?P<store_type>blob|dfs)." \
+                      r"(?P<endpoint>core\.windows\.net|core\.usgovcloudapi\.net|core\.chinacloudapi\.cn)" \
+                      r"(?P<path>$|/(.*))"
             matches = re.match(pattern, self._base_url)
             if not matches:
                 raise InvalidInputError(f"Unsupported uri as uri_folder: {self._base_url}")
@@ -349,6 +351,7 @@ class StoreUrl:
             self.account_name = matches.group("account_name")
             self.container_name = matches.group("container")
             self.path = matches.group("path").strip("/")
+            self._endpoint = matches.group("endpoint")
             self._datastore = None
         elif url.scheme == "azureml":
             if ':' in url.path:  # azureml:<data_name>:<version> asset path
@@ -379,6 +382,7 @@ class StoreUrl:
                 self._scheme = StoreUrl._SCHEME_MAP[f"{self.store_type}&{self._datastore.protocol}"]
                 self.account_name = self._datastore.account_name
                 self.container_name = self._datastore.container_name
+                self._endpoint = self._datastore.endpoint
         else:
             # file or other scheme, return original path directly
             self.account_name = None  # _account_name is None is the indicator that return the original base_path
