@@ -32,8 +32,8 @@ def load_fridge_dataset():
     os.makedirs("data", exist_ok=True)
 
     # download data
-    download_url = ("https://cvbp-secondary.z19.web.core.windows.net/" +
-                    "datasets/image_classification/fridgeObjects.zip")
+    download_url = ("https://publictestdatasets.blob.core.windows.net/" +
+                    "computervision/fridgeObjects.zip")
     data_file = "./data/fridgeObjects.zip"
     urlretrieve(download_url, filename=data_file)
 
