@@ -32,6 +32,7 @@ RUN pip install 'azureml-dataset-runtime==1.56.0' \
                 'azureml-automl-dnn-vision==1.56.0'
 
 RUN pip install 'shap==0.41.0' \
+                'scikit-learn>=1.5.1' \
                 'interpret-community==0.31.0' \
                 'Pillow>=10.3.0' \
                 'setuptools>=65.5.1' \
