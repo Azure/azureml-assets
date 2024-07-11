@@ -126,6 +126,25 @@ class MMMUAdapter(VisionDatasetAdapter):
         }
 
 
+class VQA2Adapter(VisionDatasetAdapter):
+    """Adapter for the VQA V2 HF dataset."""
+
+    def get_label(self, instance):
+        """Extract the instance's label as a string."""
+        return instance["multiple_choice_answer"]
+
+    def get_pil_image(self, instance):
+        """Extract the instance's image as a PIL image."""
+        return instance["image"]
+
+    def get_other_fields(self, instance):
+        return {
+            "question": instance["question"],
+            "answer_options": "||".join(set([a["answer"] for a in instance["answers"]])),
+            "more_images": [],
+        }
+
+
 class VisionDatasetAdapterFactory:
     """Factory for making vision dataset adapters based on dataset names."""
 
@@ -139,14 +158,19 @@ class VisionDatasetAdapterFactory:
             "resisc45": Resisc45Adapter,
             "gtsrb": GTSRBAdapter,
             "mmmu": MMMUAdapter,
+            "VQAv2": VQA2Adapter,
         }
 
         # Select the adapter class based on the dataset name. If name not available or not recognized, do not make
         # an adapter.
         if not hasattr(dataset.info, "dataset_name"):
+            if "VQA" in dataset.info.description:
+                adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME["VQAv2"]
+            else:
+                return None
+        elif dataset.info.dataset_name not in VISION_ADAPTERS_BY_DATASET_NAME:
             return None
-        if dataset.info.dataset_name not in VISION_ADAPTERS_BY_DATASET_NAME:
-            return None
-        adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME[dataset.info.dataset_name]
+        else:
+            adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME[dataset.info.dataset_name]
 
         return adapter_cls(dataset)
