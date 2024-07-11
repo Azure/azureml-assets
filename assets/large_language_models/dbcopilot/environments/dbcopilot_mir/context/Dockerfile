@@ -27,9 +27,7 @@ RUN python -m pip install --upgrade pip && \
     pip install promptflow-image-bundle[azure]==0.3.0 && \
     pip install promptflow-vectordb==0.2.10 && \
     ## Install dbcopilot
-    pip install db-copilot-tool==0.0.4
-
-ENV DBCOPILOT_GROUNDING_LEMMA_PATH=/opt/miniconda/envs/amlenv/lib/python3.9/site-packages/db_copilot_tool/resource/lemma.map.txt
+    pip install db-copilot-tool==0.0.5
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
