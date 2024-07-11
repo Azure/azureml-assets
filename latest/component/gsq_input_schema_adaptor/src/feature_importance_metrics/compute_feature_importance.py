@@ -166,6 +166,54 @@ def compute_explanations(model, train_data, test_data, categorical_features, tar
     return global_explanation.global_importance_values
 
 
+def get_unique_column_name(column, index):
+    """Get a unique column name.
+
+    :param column: The column name.
+    :type column: string
+    :param index: The index to append to the column name.
+    :type index: int
+    :return: The unique column name.
+    :rtype: string
+    """
+    return f"{column}_({index})"
+
+
+def rename_invalid_columns(lgbm_df):
+    """Rename columns with invalid names.
+
+    :param lgbm_df: The baseline data with the lgbm unsupported column types marked as category type
+    :type lgbm_df: pandas.DataFrame
+    :return: dictionary of column names with invalid characters mapped to valid names
+    :rtype: dict
+    """
+    column_rename_map = {}
+    # In case this changes please see CheckAllowedJSON function in common.h:
+    # https://github.com/microsoft/LightGBM/blob/master/include/LightGBM/utils/common.h#L886
+    invalid_chars = ",[]{}\":"
+    for column in lgbm_df.columns:
+        if any(char in column for char in invalid_chars):
+            new_column = column
+            for char in invalid_chars:
+                new_column = new_column.replace(char, "_")
+            # make sure the new column name is unique
+            # if not, keep appending (index) to end
+            index = 0
+            unique_column = new_column
+            while True:
+                is_duplicate = (unique_column in lgbm_df.columns or
+                                unique_column in column_rename_map.values())
+                if is_duplicate:
+                    unique_column = get_unique_column_name(new_column, index)
+                    new_column = unique_column
+                    index += 1
+                else:
+                    break
+            column_rename_map[column] = new_column
+    if column_rename_map:
+        lgbm_df.rename(columns=column_rename_map, inplace=True)
+
+
 def compute_feature_importance(task_type, target_column, lgbm_df, categorical_features):
     """Compute feature importance of baseline data.
 
@@ -180,6 +228,7 @@ def compute_feature_importance(task_type, target_column, lgbm_df, categorical_fe
     :return: list of feature importances in the order of the columns in the baseline data
     :rtype: list[float]
     """
+    rename_invalid_columns(lgbm_df)
     model = get_model(task_type, target_column, lgbm_df)
     train_data, test_data = get_train_test_data(lgbm_df)
     baseline_explanations = compute_explanations(
