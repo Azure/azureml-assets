@@ -321,12 +321,13 @@ class StoreUrl:
         return os.path.isdir(full_path)
 
     _SCHEME_MAP = {"blob&https": "wasbs", "blob&http": "wasb", "dfs&https": "abfss", "dfs&http": "abfs"}
+    _STORAGE_ENDPOINTS_REGEX = r"core\.windows\.net|core\.usgovcloudapi\.net|core\.chinacloudapi\.cn|core\.microsoft\.scloud|core\.eaglex\.ic\.gov"  # noqa: E501
 
     def _set_properties(self, ws: Workspace):
         url = urlparse(self._base_url)
         if url.scheme in ["https", "http"]:
-            pattern = r"(?P<scheme>http|https)://(?P<account_name>[^\.]+).(?P<store_type>blob|dfs)." \
-                      r"(?P<endpoint>core\.windows\.net|core\.usgovcloudapi\.net|core\.chinacloudapi\.cn)/" \
+            pattern = r"(?P<scheme>http|https)://(?P<account_name>[^\.]+)\.(?P<store_type>blob|dfs)\." \
+                      f"(?P<endpoint>{StoreUrl._STORAGE_ENDPOINTS_REGEX})/" \
                       r"(?P<container>[^/]+)(?P<path>$|/(.*))"
             matches = re.match(pattern, self._base_url)
             if not matches:
@@ -339,9 +340,8 @@ class StoreUrl:
             self._endpoint = matches.group("endpoint")
             self._datastore = None
         elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
-            pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+)." \
-                      r"(?P<store_type>blob|dfs)." \
-                      r"(?P<endpoint>core\.windows\.net|core\.usgovcloudapi\.net|core\.chinacloudapi\.cn)" \
+            pattern = r"(?P<scheme>wasbs|abfss|wasb|abfs)://(?P<container>[^@]+)@(?P<account_name>[^\.]+)\." \
+                      fr"(?P<store_type>blob|dfs)\.(?P<endpoint>{StoreUrl._STORAGE_ENDPOINTS_REGEX})" \
                       r"(?P<path>$|/(.*))"
             matches = re.match(pattern, self._base_url)
             if not matches:
