@@ -5,7 +5,7 @@ description: >-
   grounding database components.
 
 name: "llm-dbcopilot-embeddings"
-version: "59"
+version: "60"
 build:
   path: "context"
   dockerfile_path: "Dockerfile"
