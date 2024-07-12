@@ -136,7 +136,7 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
     except InvalidInputError as iie:
         print(f"Unretriable InvalidInputError writing mltable file: {iie}")
         raise iie
-    except Exception as e:
+    except Exception:
         print(f"Error writing mltable file: \n{traceback.format_exc()}")
         return False
 
