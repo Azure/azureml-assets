@@ -3,19 +3,21 @@
 
 """This file contains utilities to read write data."""
 
-from enum import Enum
 import numpy as np
 import time
+import traceback
 import yaml
+
 from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.dataprep.api.mltable._mltable_helper import UserErrorException
+from enum import Enum
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType
-from .constants import MAX_RETRY_COUNT
 from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
 from shared_utilities.store_url import StoreUrl
+from .constants import MAX_RETRY_COUNT
 
 
 class NoDataApproach(Enum):
@@ -134,8 +136,8 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
     except InvalidInputError as iie:
         print(f"Unretriable InvalidInputError writing mltable file: {iie}")
         raise iie
-    except Exception as e:
-        print(f"Error writing mltable file: {e}")
+    except Exception:
+        print(f"Error writing mltable file: \n{traceback.format_exc()}")
         return False
 
 
