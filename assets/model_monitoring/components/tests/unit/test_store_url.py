@@ -36,9 +36,9 @@ class TestStoreUrl:
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
-                "http://my_account.blob.core.windows.net/my_container/path/to/folder",
-                "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder"
+                "http://my_account.blob.core.eaglex.ic.gov/my_container/path/to/folder",
+                "wasb://my_container@my_account.blob.core.eaglex.ic.gov/path/to/folder",
+                "abfs://my_container@my_account.dfs.core.eaglex.ic.gov/path/to/folder"
             ),
             (
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
@@ -51,9 +51,9 @@ class TestStoreUrl:
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder"
+                "abfs://my_container@my_account.dfs.core.microsoft.scloud/path/to/folder",
+                "abfs://my_container@my_account.dfs.core.microsoft.scloud/path/to/folder",
+                "abfs://my_container@my_account.dfs.core.microsoft.scloud/path/to/folder"
             ),
             (
                 "abfss://my_container@my_account.dfs.core.usgovcloudapi.net/path/to/folder",
@@ -87,6 +87,8 @@ class TestStoreUrl:
     PUBLIC_ENDPOINT = "core.windows.net"
     USGOV_ENDPOINT = "core.usgovcloudapi.net"
     CHINA_ENDPOINT = "core.chinacloudapi.cn"
+    USSEC_ENDPOINT = "core.microsoft.scloud"
+    USNAT_ENDPOINT = "core.eaglex.ic.gov"
 
     @pytest.mark.parametrize(
         "azureml_path, datastore_type, endpoint, credential_type, relative_path, expected_protocol, "
@@ -136,21 +138,21 @@ class TestStoreUrl:
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-                "AzureDataLakeGen2", PUBLIC_ENDPOINT, None, "/", "https",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureDataLakeGen2", USSEC_ENDPOINT, None, "/", "https",
+                f"abfss://my_container@my_account.dfs.{USSEC_ENDPOINT}/path/to/folder",
+                f"abfss://my_container@my_account.dfs.{USSEC_ENDPOINT}/path/to/folder",
                 "/", AzureMLOnBehalfOfCredential(),
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
+                FileSystemClient(f"https://my_account.dfs.{USSEC_ENDPOINT}", "my_container",
                                  AzureMLOnBehalfOfCredential())
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", PUBLIC_ENDPOINT, "None", "/rpath", "https",
-                "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureBlob", USNAT_ENDPOINT, "None", "/rpath", "https",
+                f"wasbs://my_container@my_account.blob.{USNAT_ENDPOINT}/path/to/folder",
+                f"abfss://my_container@my_account.dfs.{USNAT_ENDPOINT}/path/to/folder",
                 "/rpath", AzureMLOnBehalfOfCredential(),
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container",
+                ContainerClient(f"https://my_account.blob.{USNAT_ENDPOINT}", "my_container",
                                 AzureMLOnBehalfOfCredential())
             ),
             # TODO: Update this UT with how the unsecure URL should work with credential-less. Or can we remove it?
