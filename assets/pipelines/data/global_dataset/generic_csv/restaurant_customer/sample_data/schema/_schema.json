@@ -1,0 +1,178 @@
+{
+  "columnAttributes": [
+    {
+      "name": "userID",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "latitude",
+      "type": "Numeric",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "longitude",
+      "type": "Numeric",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "smoker",
+      "type": "Binary",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "bool",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "drink_level",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "dress_preference",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "ambience",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "transport",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "marital_status",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "hijos",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "birth_year",
+      "type": "Numeric",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "interest",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "personality",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "religion",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "activity",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "color",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "weight",
+      "type": "Numeric",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "int64",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "budget",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "height",
+      "type": "Numeric",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "float64",
+        "isNullable": false
+      }
+    }
+  ],
+  "featureChannels": [],
+  "labelColumns": {},
+  "scoreColumns": {}
+}

@@ -1,0 +1,6 @@
+name: german_credit_card_uci
+version: 3
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

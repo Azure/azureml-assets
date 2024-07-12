@@ -1,0 +1,31 @@
+type: evaluationresult
+name: gsm8k_phi-3-small-128k-instruct_question_answering
+version: 2.06.18
+display_name: gsm8k_Phi-3-small-128k-instruct_question_answering
+description: Phi-3-small-128k-instruct run for gsm8k dataset
+dataset_family: gsm8k
+dataset_name: gsm8k
+
+model_name: Phi-3-small-128k-instruct
+model_version: "7"
+model_asset_id: azureml://registries/models-staging/models/Phi-3-small-128k-instruct/versions/7
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/models-staging/models/Phi-3-small-128k-instruct/versions/7
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.8923426838514026
+
+
+properties:
+  n_shot: 8
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "test"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

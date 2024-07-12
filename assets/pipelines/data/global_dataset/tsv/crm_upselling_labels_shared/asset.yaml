@@ -1,0 +1,6 @@
+name: crm_upselling_labels_shared
+version: 3
+type: data
+spec: spec.yaml
+categories:
+  - pipeline

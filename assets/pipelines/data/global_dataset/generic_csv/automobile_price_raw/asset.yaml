@@ -1,5 +1,5 @@
 name: automobile_price_raw
-version: 1.0.0
+version: 3
 type: data
 spec: spec.yaml
 categories:

@@ -3,7 +3,7 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.27
+version: 0.0.29
 type: command
 tags:
   type: evaluation
@@ -31,6 +31,7 @@ inputs:
       chat-completion,
       image-object-detection,
       image-instance-segmentation,
+      image-generation,
     ]
     description: "Task type"
   test_data:
@@ -81,7 +82,7 @@ outputs:
 
 is_deterministic: True
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/27
+environment: azureml://registries/azureml/environments/model-evaluation/versions/28
 
 command: >-
   python download_dependencies.py

@@ -17,7 +17,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_prediction_drift_model_monitor_job(
-    submit_pipeline_job, ml_client, get_component, experiment_name, baseline_data, target_data,
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data,
     expect_failure: bool = False
 ):
     prediction_drift_signal_monitor = get_component(

@@ -12,6 +12,7 @@ tags:
   Preview: ''
   SharedComputeCapacityEnabled: ''
   hiddenlayerscanned: ''
+  huggingface_model_id: projecte-aina/aguila-7b
   inference_compute_allow_list:
    [
       Standard_NC6s_v3,
@@ -26,5 +27,6 @@ tags:
   inference_supported_envs:
     - vllm
   license: apache-2.0
+  disable-batch: "true"
   task: text-generation
 version: 1

@@ -189,3 +189,14 @@ APP_TRACES_EMBEDDINGS_EVENT_NAME = "promptflow.embedding.embeddings"
 # util
 MLFLOW_RUN_ID = "MLFLOW_RUN_ID"
 MAX_RETRY_COUNT = 3
+
+# Exception error messages
+MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE = (
+    "Failed to use AML OBO token to access data. This is most likely due to the datastore being credential-less. "
+    "Please follow below steps to enable Model Monitor job to access credential-less data:\n"
+    # TODO: add link to documentation once available
+    "1. Attach a user-assigned managed identity(UAMI) to the AML workspace if there is none attached yet.\n"
+    "2. Grant the UAMI proper permissions to access to the data source.\n"
+    "3. Update the workspace level property systemDatastoresAuthMode to 'identity'.\n"
+    "Or, you can simply add credentials to the datastore where your data is being stored and resubmit the Monitor.\n"
+    "Check the full error message: {message}")

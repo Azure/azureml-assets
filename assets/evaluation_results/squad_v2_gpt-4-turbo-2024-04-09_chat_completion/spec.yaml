@@ -1,0 +1,32 @@
+type: evaluationresult
+name: squad_v2_gpt-4-turbo-2024-04-09_chat_completion
+version: 2.13.06
+display_name: squad_v2_gpt-4-turbo-2024-04-09_chat_completion
+description: squad_v2_gpt-4-turbo-2024-04-09_chat_completion
+dataset_family: squad_v2
+dataset_name: squad_v2
+
+model_name: gpt-4-turbo-2024-04-09
+model_version: "turbo-2024-04-09"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  relevance: 4.038785834738618
+  GPTSimilarity: 3.4300758213984834
+
+
+properties:
+  n_shot: 2
+  evaluation_sampling_ratio: 0.2
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"

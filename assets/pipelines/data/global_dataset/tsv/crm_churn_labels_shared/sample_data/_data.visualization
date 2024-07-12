@@ -1,0 +1,500 @@
+{
+  "visualizationType": "default",
+  "data": {
+    "records": [
+      [
+        -1
+      ],
+      [
+        1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ],
+      [
+        -1
+      ]
+    ],
+    "features": [
+      {
+        "name": "Col1",
+        "index": 0,
+        "elementType": "int64",
+        "featureType": "Numeric Feature"
+      }
+    ],
+    "numberOfRows": 50000,
+    "numberOfColumns": 1,
+    "name": null
+  },
+  "statistics": {
+    "records": [
+      [
+        -0.85312,
+        -1.0,
+        -1.0,
+        1.0,
+        0.5217199530727081,
+        2,
+        0
+      ]
+    ],
+    "features": [
+      {
+        "name": "Mean",
+        "index": 0,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Median",
+        "index": 1,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Min",
+        "index": 2,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Max",
+        "index": 3,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Standard Deviation",
+        "index": 4,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Unique Values",
+        "index": 5,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      },
+      {
+        "name": "Missing Values",
+        "index": 6,
+        "elementType": "float64",
+        "featureType": "Numeric Feature"
+      }
+    ],
+    "numberOfRows": 1,
+    "numberOfColumns": 7,
+    "name": null
+  },
+  "layout": {
+    "records": [
+      [
+        {
+          "Bins": [
+            {
+              "x": -1.0,
+              "dx": 0.19999999999999996,
+              "y": 46328,
+              "numElements": 0
+            },
+            {
+              "x": -0.8,
+              "dx": 0.20000000000000007,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -0.6,
+              "dx": 0.20000000000000007,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -0.3999999999999999,
+              "dx": 0.19999999999999996,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": -0.19999999999999996,
+              "dx": 0.19999999999999996,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 0.0,
+              "dx": 0.20000000000000018,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 0.20000000000000018,
+              "dx": 0.19999999999999996,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 0.40000000000000013,
+              "dx": 0.19999999999999996,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 0.6000000000000001,
+              "dx": 0.19999999999999996,
+              "y": 0,
+              "numElements": 0
+            },
+            {
+              "x": 0.8,
+              "dx": 0.19999999999999996,
+              "y": 3672,
+              "numElements": 0
+            }
+          ],
+          "NumberOfRecords": 50000
+        },
+        {
+          "median": -1.0,
+          "boxBottom": -1.0,
+          "boxTop": -1.0,
+          "whiskerBottom": -1,
+          "whiskerTop": -1,
+          "outliers": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    ],
+    "features": [
+      {
+        "name": "Histogram",
+        "index": 0,
+        "elementType": "object",
+        "featureType": "Object Feature"
+      },
+      {
+        "name": "Boxplot",
+        "index": 1,
+        "elementType": "object",
+        "featureType": "Object Feature"
+      }
+    ],
+    "numberOfRows": 1,
+    "numberOfColumns": 2,
+    "name": null
+  }
+}

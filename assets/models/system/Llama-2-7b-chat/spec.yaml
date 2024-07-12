@@ -5,10 +5,13 @@ path: ./
 
 properties:
   languages: EN
-  evaluation-min-sku-spec: 6|1|112|336
-  inference-min-sku-spec: 12|2|224|672
+  evaluation-min-sku-spec: 6|1|112|736
+  inference-min-sku-spec: 12|2|224|1474
+  finetune-min-sku-spec: 40|2|440|128
   evaluation-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: chat-completion
   azureml.copyRegistryFilesToWorkspace: true
   SharedComputeCapacityEnabled: true
 
@@ -23,6 +26,12 @@ tags:
   maas-inference: true
   SharedComputeCapacityEnabled: ""
   training_datasets: Publicly available sources
+  finetune_compute_allow_list:
+    - Standard_ND40rs_v2
+    - Standard_NC48ads_A100_v4
+    - Standard_NC96ads_A100_v4
+    - Standard_ND96asr_v4
+    - Standard_ND96amsr_A100_v4
   evaluation_compute_allow_list:
     - Standard_NC6s_v3
     - Standard_NC12s_v3
@@ -43,8 +52,11 @@ tags:
     Standard_ND96asr_v4: 8
     Standard_ND96amsr_A100_v4: 8
     Default: 1
+  model_specific_defaults:
+    apply_deepspeed: "true"
+    apply_lora: "true"
   inference_supported_envs:
     - vllm
     - ds_mii
 
-version: 21
+version: 23

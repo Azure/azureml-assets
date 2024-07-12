@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: chat_completion_finetune
-version: 0.0.49
+version: 0.0.51
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Chat Completion Finetune
 description: Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_finetune) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/57
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/62
 
 code: ../../../src/finetune
 
