@@ -12,6 +12,11 @@ from typing import Optional
 from datasets import Dataset
 from PIL import Image
 
+from aml_benchmark.utils.logging import get_logger
+
+
+logger = get_logger(__name__)
+
 
 class VisionDatasetAdapter(ABC):
     """Abstract class for adapting HF vision datasets to internal format."""
@@ -131,7 +136,7 @@ class VQA2Adapter(VisionDatasetAdapter):
 
     def get_label(self, instance):
         """Extract the instance's label as a string."""
-        return instance["multiple_choice_answer"]
+        return "||".join(set([a["answer"] for a in instance["answers"]]))
 
     def get_pil_image(self, instance):
         """Extract the instance's image as a PIL image."""
@@ -139,8 +144,8 @@ class VQA2Adapter(VisionDatasetAdapter):
 
     def get_other_fields(self, instance):
         return {
-            "question": instance["question"],
-            "answer_options": "||".join(set([a["answer"] for a in instance["answers"]])),
+            "question": instance["question"] + " <image 1>",
+            "answer_options": "",
             "more_images": [],
         }
 
@@ -158,19 +163,14 @@ class VisionDatasetAdapterFactory:
             "resisc45": Resisc45Adapter,
             "gtsrb": GTSRBAdapter,
             "mmmu": MMMUAdapter,
-            "VQAv2": VQA2Adapter,
+            "vq_av2": VQA2Adapter,
         }
 
         # Select the adapter class based on the dataset name. If name not available or not recognized, do not make
         # an adapter.
-        if not hasattr(dataset.info, "dataset_name"):
-            if "VQA" in dataset.info.description:
-                adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME["VQAv2"]
-            else:
-                return None
-        elif dataset.info.dataset_name not in VISION_ADAPTERS_BY_DATASET_NAME:
+        if VISION_ADAPTERS_BY_DATASET_NAME.get(getattr(dataset.info, "dataset_name", None)) is None:
+            logger.info("Not making a vision adapter for dataset with info {}.".format(dataset.info))
             return None
-        else:
-            adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME[dataset.info.dataset_name]
+        adapter_cls = VISION_ADAPTERS_BY_DATASET_NAME[dataset.info.dataset_name]
 
         return adapter_cls(dataset)
