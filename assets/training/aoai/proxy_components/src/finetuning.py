@@ -172,7 +172,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             hyperparameters=hyperparameters,
             extra_headers=hyperparameters_1p,
             suffix=suffix)
-
+        
+        logger.debug(f"Response of the finetune create call : {str(finetune_job)}")
         logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {finetune_job.id}")
 
         return finetune_job.id
