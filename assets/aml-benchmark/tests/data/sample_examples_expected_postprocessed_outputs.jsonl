@@ -11,3 +11,4 @@
 {"name":"gsm8k_empty_prediction", "final_answer":"18","prediction":""}
 {"name":"gsm8k_no_regex_found", "final_answer":"3","prediction":""}
 {"name":"human-eval-custom-script", "prediction": "from typing import List\n\n\ndef intersperse(numbers: List[int], delimeter: int) -> List[int]:\n    \"\"\" Insert a number 'delimeter' between every two consecutive elements of input list `numbers'\n    >>> intersperse([], 4)\n    []\n    >>> intersperse([1, 2, 3], 4)\n    [1, 4, 2, 4, 3]\n    \"\"\"\n\n", "ground_truth": "\n\n\nMETADATA = {\n    'author': 'jt',\n    'dataset': 'test'\n}\n\n\ndef check(candidate):\n    assert candidate([], 7) == []\n    assert candidate([5, 6, 3, 2], 8) == [5, 8, 6, 8, 3, 8, 2]\n    assert candidate([2, 2, 2], 2) == [2, 2, 2, 2, 2]\n\ncheck(intersperse)"}
+{"name":"math", "prediction": "\\frac{1023}{1024}", "answer": "\\frac{1023}{1024}"}
