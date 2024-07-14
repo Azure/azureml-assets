@@ -306,7 +306,7 @@ def run_prediction_extractor(
         out_dict = {}
         shot_sep = _convert_to_unicode(additional_args.get("separator"))
         text = extract_final_answer(format(row.get(pred_key).split(shot_sep)[0]))
-        out_dict[pred_key] = text
+        out_dict[pred_key] = text if text is not None else ""
         ret_data.append(out_dict)
     return ret_data
 
