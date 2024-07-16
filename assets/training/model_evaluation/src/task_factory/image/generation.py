@@ -40,11 +40,17 @@ class ImageGenerationPredictor(PredictWrapper):
         # Get the batch size if specified, else set to default 1.
         batch_size = kwargs.get(ImagePredictionsLiterals.BATCH_SIZE, 1)
 
+        # Get relevant parameters if specified.
+        predict_args = {name: kwargs.get(name) for name in [ImagePredictionsLiterals.GUIDANCE_SCALE]}
+
         with ImageUploader() as image_uploader:
             # Go through prompts batch by batch.
             for idx in range(0, len(X_test), batch_size):
                 # Run model prediction on current batch.
-                image_batch = self.model.predict(X_test.iloc[idx:(idx + batch_size)])
+                image_batch = self.model.predict(
+                    X_test.iloc[idx:(idx + batch_size)],
+                    **predict_args
+                )
 
                 # Save batch of generated images in the default datastore.
                 for encoded_image_bytes in image_batch[self.image_key]:
