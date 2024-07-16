@@ -4,6 +4,7 @@
 """Vision dataset adapters."""
 
 import io
+import random
 
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -11,7 +12,6 @@ from typing import Optional
 from datasets import Dataset
 from PIL import Image
 
-from aml_benchmark.utils.constants import CAPTION_SEPARATOR
 from aml_benchmark.utils.logging import get_logger
 
 
@@ -112,9 +112,15 @@ class GTSRBAdapter(VisionDatasetAdapter):
 class MSCOCOAdapter(VisionDatasetAdapter):
     """Adapter for MSCOCO HF dataset."""
 
+    SEED = 0
+
+    def __init__(self, _):
+        random.seed(self.SEED)
+
     def get_label(self, instance):
         """Extract the instance's label as a string."""
-        return CAPTION_SEPARATOR.join(instance["annotations"]["caption"])
+        caption_index = random.randint(0, len(instance["annotations"]["caption"]) - 1)
+        return instance["annotations"]["caption"][caption_index]
 
     def get_pil_image(self, instance):
         """Extract the instance's image as a PIL image."""
