@@ -1,6 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import subprocess
+import sys
+
+install_deps = ["torch==1.13.1", "torchvision==0.14.1"]
+command = [sys.executable, '-m', 'pip', 'install'] + install_deps
+command_str = " ".join(command)
+print(f"Installing dependencies. Executing command: {command_str}.")
+print(subprocess.check_output(command, stderr=subprocess.STDOUT))
+
 """Main script for compute metrics."""
 import azureml.evaluate.mlflow as aml_mlflow
 import json
