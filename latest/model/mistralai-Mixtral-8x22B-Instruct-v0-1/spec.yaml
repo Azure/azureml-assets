@@ -20,7 +20,7 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: mistralai
-version: 3
+version: 4
 description: |
   The Mixtral-8x22B-Instruct-v0.1 Large Language Model (LLM) is an instruct fine-tuned version of the [Mixtral-8x22B-v0.1](https://huggingface.co/mistralai/Mixtral-8x22B-v0.1).
 
