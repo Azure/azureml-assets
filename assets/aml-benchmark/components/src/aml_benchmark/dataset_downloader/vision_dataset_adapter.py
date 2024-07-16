@@ -115,6 +115,7 @@ class MSCOCOAdapter(VisionDatasetAdapter):
     SEED = 0
 
     def __init__(self, _):
+        """Make adapter, initializing random number generator."""
         random.seed(self.SEED)
 
     def get_label(self, instance):
