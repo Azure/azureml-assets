@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/responsibleai-text-ubuntu20.04-py38-cpu
+  name: azureml/curated/responsibleai-text
   os: linux
   context:
     dir: context
