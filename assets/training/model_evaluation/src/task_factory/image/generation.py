@@ -41,7 +41,7 @@ class ImageGenerationPredictor(PredictWrapper):
         batch_size = kwargs.get(ImagePredictionsLiterals.BATCH_SIZE, 1)
 
         # Get relevant parameters if specified.
-        predict_args = {name: kwargs.get(name) for name in [ImagePredictionsLiterals.GUIDANCE_SCALE]}
+        predict_args = {name: kwargs[name] for name in [ImagePredictionsLiterals.GUIDANCE_SCALE] if name in kwargs}
 
         with ImageUploader() as image_uploader:
             # Go through prompts batch by batch.
