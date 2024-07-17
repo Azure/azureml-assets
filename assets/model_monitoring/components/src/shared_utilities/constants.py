@@ -201,7 +201,17 @@ MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE = (
     "Or, you can simply add credentials to the datastore where your data is being stored and resubmit the Monitor.\n"
     "Check the full error message: {message}")
 
-UAI_MISS_PERMISSION_ERROR_MESSAGE = (
-    "User-assigned managed identity(UAMI) doesn't have permission to get access of default storage account. "
-    "Please grant Storage Blob Data Contributor role of default storage account to the UAMI."
+IDENTITY_MISS_PERMISSION_ERROR_MESSAGE = (
+    "{identity} doesn't have permission to get access of default storage account. "
+    "Please grant Storage Blob Data Contributor role of default storage account to the identity."
+)
+
+ACCOUNT_KEY_MISS_PERMISSION_ERROR_MESSAGE = (
+    "Failed to use account key to get access of default storage account. "
+    "Please double check if the account key is valid."
+)
+
+SAS_TOKEN_MISS_PERMISSION_ERROR_MESSAGE = (
+    "Failed to use sas token to get access of default storage account. "
+    "Please double check if the sas token is valid and has enough permissions to access the storage account."
 )
