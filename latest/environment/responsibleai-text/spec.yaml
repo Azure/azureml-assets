@@ -3,8 +3,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   AzureML Responsible AI Text environment.
 
-name: "responsibleai-text-ubuntu20.04-py38-cpu"
-version: "56"
+name: "responsibleai-text"
+version: "1"
 
 build:
   path: "context"

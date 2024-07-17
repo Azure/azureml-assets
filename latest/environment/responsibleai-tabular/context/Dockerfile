@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20240712.v1
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai-tabular
 
 # Install wkhtmltopdf for pdf rendering from html
 RUN apt-get -y update && apt-get -y install wkhtmltopdf
