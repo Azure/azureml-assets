@@ -260,8 +260,8 @@ class TestStoreUrl:
         """Test StoreUrl any_files with exception."""
         with patch.object(ContainerClient, "list_blobs", side_effect=HttpResponseError()):
             with pytest.raises(HttpResponseError):
-                base_url = f"wasbs://my_container@my_account.blob.core.windows.net"
-                container_client = ContainerClient(f"https://my_account.blob.core.windows.net", "my_container", 
+                base_url = "wasbs://my_container@my_account.blob.core.windows.net"
+                container_client = ContainerClient("https://my_account.blob.core.windows.net", "my_container",
                                                    SharedKeyCredentialPolicy("my_account", "my_account_key"))
                 store_url = StoreUrl(base_url)
                 store_url.any_files("*.jsonl", container_client)
