@@ -4,7 +4,7 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   SHA: 499f4b3093afb3defc03f599356b9dae13462379
-  inference-min-sku-spec: 96|8|1924|2900
+  inference-min-sku-spec: 96|8|1800|2900
   inference-recommended-sku: Standard_ND96amsr_A100_v4
   languages: moe, fr, it, de, es, en
 tags:
@@ -20,4 +20,4 @@ tags:
   license: apache-2.0
   task: text-generation
   author: mistralai
-version: 3
+version: 5
