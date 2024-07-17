@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Main script for compute metrics."""
+
 import subprocess
 import sys
 
@@ -10,7 +12,6 @@ command_str = " ".join(command)
 print(f"Installing dependencies. Executing command: {command_str}.")
 print(subprocess.check_output(command, stderr=subprocess.STDOUT))
 
-"""Main script for compute metrics."""
 import azureml.evaluate.mlflow as aml_mlflow  # noqa: E402
 import json  # noqa: E402
 from azureml.telemetry.activity import log_activity  # noqa: E402
