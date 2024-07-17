@@ -1,4 +1,4 @@
-name: responsibleai-vision-ubuntu20.04-py38-cpu
+name: responsibleai-text
 version: auto
 type: environment
 spec: spec.yaml
