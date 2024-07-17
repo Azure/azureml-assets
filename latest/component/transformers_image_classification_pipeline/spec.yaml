@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.17
+version: 0.0.18
 name: transformers_image_classification_pipeline
 display_name: Image Classification HuggingFace Transformers Pipeline
 description: Pipeline component for image classification using HuggingFace transformers
@@ -455,7 +455,7 @@ outputs:
 jobs:
   finetune_common_validation:
     type: command
-    component: azureml:finetune_common_validation:0.0.4
+    component: azureml:finetune_common_validation:0.0.5
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_path: ${{parent.inputs.mlflow_model}}
@@ -478,7 +478,7 @@ jobs:
 
   image_classification_model_import:
     type: command
-    component: azureml:transformers_image_classification_model_import:0.0.15
+    component: azureml:transformers_image_classification_model_import:0.0.16
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -490,7 +490,7 @@ jobs:
 
   image_classification_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.15
+    component: azureml:transformers_image_classification_finetune:0.0.16
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -545,7 +545,7 @@ jobs:
 
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.25
+    component: azureml:model_prediction:0.0.28
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
@@ -560,7 +560,7 @@ jobs:
 
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.25
+    component: azureml:compute_metrics:0.0.28
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
