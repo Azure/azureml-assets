@@ -64,9 +64,9 @@ _LICENSE = "https://creativecommons.org/licenses/by/4.0/legalcode"
 _URLS = {
     "2014": {
         "images": {
-            "train": "http://images.cocodataset.org/zips/train2014.zip",
+            # "train": "http://images.cocodataset.org/zips/train2014.zip",
             "validation": "http://images.cocodataset.org/zips/val2014.zip",
-            "test": "http://images.cocodataset.org/zips/test2014.zip",
+            # "test": "http://images.cocodataset.org/zips/test2014.zip",
         },
         "annotations": {
             "train_validation": "http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
