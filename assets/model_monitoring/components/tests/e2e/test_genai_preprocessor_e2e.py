@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import Spark, AmlTokenConfiguration, ManagedIdentityConfiguration
 from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
@@ -17,7 +17,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_genai_preprocessor_job(
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
-    input_data, start_time, end_time, expect_failure: bool = False
+    input_data, start_time, end_time, identity_type, expect_failure: bool = False
 ):
     genai_preprocessor_component = get_component(COMPONENT_NAME_GENAI_PREPROCESSOR)
 
@@ -29,7 +29,7 @@ def _submit_genai_preprocessor_job(
             input_data=Input(path=input_data, mode="direct", type="uri_folder"),
         )
 
-        genai_preprocessor_output.identity = AmlTokenConfiguration()
+        genai_preprocessor_output.identity = identity_type
         genai_preprocessor_output.resources = {
             'instance_type': 'Standard_E4S_V3',
             'runtime_version': '3.3',
@@ -67,17 +67,19 @@ class TestGenAIPreprocessorE2E:
     """Test class."""
 
     @pytest.mark.parametrize(
-        "input_data, start_time, end_time",
+        "input_data, start_time, end_time, use_aml_token",
         [
             # traditional model
-            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-06T00:00:00Z"),
+            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-06T00:00:00Z", True),
+            (DATA_ASSET_GENAI_RAW_LOG_MODEL_INPUTS, "2024-02-05T00:00:00Z", "2024-02-06T00:00:00Z", False),
             # log with events
-            (DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS, "2024-04-08T00:00:00Z", "2024-04-10T20:00:00Z")
+            (DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS, "2024-04-08T00:00:00Z", "2024-04-10T20:00:00Z", True),
+            (DATA_ASSET_GENAI_RAW_LOG_WITH_EVENTS, "2024-04-08T00:00:00Z", "2024-04-10T20:00:00Z", False)
         ]
     )
     def test_mdc_preprocessor_successful(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name, input_data,
-        start_time, end_time
+        start_time, end_time, use_aml_token: bool
     ):
         """Test the happy path scenario for Gen AI preprocessor."""
         pipeline_job = _submit_genai_preprocessor_job(
@@ -87,7 +89,8 @@ class TestGenAIPreprocessorE2E:
             test_suite_name,
             input_data,
             start_time,
-            end_time
+            end_time,
+            AmlTokenConfiguration() if use_aml_token else ManagedIdentityConfiguration()
         )
 
         assert pipeline_job.status == "Completed"

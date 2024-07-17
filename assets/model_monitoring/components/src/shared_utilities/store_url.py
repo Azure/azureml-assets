@@ -11,11 +11,12 @@ from typing import Union, Tuple
 import fnmatch
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
+from azure.core.exceptions import HttpResponseError
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
 from azureml.core import Workspace, Run, Datastore
 from azureml.exceptions import UserErrorException
-from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
+from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE, UAI_MISS_PERMISSION_ERROR_MESSAGE
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -91,7 +92,8 @@ class StoreUrl:
                 aml_obo_credential = AzureMLOnBehalfOfCredential()
                 if validate_aml_obo_credential:
                     try:
-                        _ = aml_obo_credential.get_token()
+                        _ = aml_obo_credential.get_token("https://management.azure.com/.default")
+                        return aml_obo_credential
                     except CredentialUnavailableError as cue:
                         raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
                 else:
@@ -225,15 +227,21 @@ class StoreUrl:
         container_client = container_client or self.get_container_client()
         if not container_client:  # local
             return any(glob.iglob(full_path_pattern))
-        if isinstance(container_client, FileSystemClient):  # gen2
-            if container_client.get_directory_client(non_wildcard_path).exists():
-                paths = container_client.get_paths(non_wildcard_path, True)
-                file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]
+        try:
+            if isinstance(container_client, FileSystemClient):  # gen2
+                if container_client.get_directory_client(non_wildcard_path).exists():
+                    paths = container_client.get_paths(non_wildcard_path, True)
+                    file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]
+                else:
+                    return False
+            else:  # blob
+                blobs = container_client.list_blobs(name_starts_with=non_wildcard_path)
+                file_names = [blob.name[len(non_wildcard_path):] for blob in blobs]
+        except HttpResponseError as hre:
+            if hre.status_code == 403:
+                raise InvalidInputError(UAI_MISS_PERMISSION_ERROR_MESSAGE)
             else:
-                return False
-        else:  # blob
-            blobs = container_client.list_blobs(name_starts_with=non_wildcard_path)
-            file_names = [blob.name[len(non_wildcard_path):] for blob in blobs]
+                raise hre
         return any_files(file_names, path_pattern)
 
     def is_local_path(self) -> bool:

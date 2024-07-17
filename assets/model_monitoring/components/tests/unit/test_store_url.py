@@ -13,6 +13,7 @@ from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient, DataLakeDirectoryClient
 from azureml.core import Datastore
+from azure.core.exceptions import HttpResponseError
 from azureml.exceptions import UserErrorException
 from shared_utilities.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
@@ -254,6 +255,16 @@ class TestStoreUrl:
                 _ = StoreUrl("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws"
                              "/datastores/my_datastore/paths/path/to/folder",
                              mock_ws)
+
+    def test_store_url_any_files_with_http_exception(self):
+        """Test StoreUrl any_files with exception."""
+        with patch.object(ContainerClient, "list_blobs", side_effect=HttpResponseError()):
+            with pytest.raises(HttpResponseError):
+                base_url = f"wasbs://my_container@my_account.blob.core.windows.net"
+                container_client = ContainerClient(f"https://my_account.blob.core.windows.net", "my_container", 
+                                                   SharedKeyCredentialPolicy("my_account", "my_account_key"))
+                store_url = StoreUrl(base_url)
+                store_url.any_files("*.jsonl", container_client)
 
     @pytest.mark.parametrize(
         "base_url, relative_path, expected_root_path, expected_abfs_url",

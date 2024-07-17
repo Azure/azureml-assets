@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import Spark, AmlTokenConfiguration, ManagedIdentityConfiguration
 from azure.ai.ml.exceptions import JobException
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
@@ -17,7 +17,7 @@ from tests.e2e.utils.constants import (
 
 def _submit_mdc_preprocessor_job(
     submit_pipeline_job, ml_client: MLClient, get_component, experiment_name,
-    extract_correlation_id, input_data, start_time, end_time, expect_failure: bool = False
+    extract_correlation_id, input_data, start_time, end_time, identity_type, expect_failure: bool = False
 ):
     mdc_preprocessor_component = get_component(COMPONENT_NAME_MDC_PREPROCESSOR)
 
@@ -30,7 +30,7 @@ def _submit_mdc_preprocessor_job(
             extract_correlation_id=extract_correlation_id
         )
 
-        mdc_preprocessor_output.identity = AmlTokenConfiguration()
+        mdc_preprocessor_output.identity = identity_type
         mdc_preprocessor_output.resources = {
             'instance_type': 'Standard_E4S_V3',
             'runtime_version': '3.3',
@@ -64,17 +64,19 @@ class TestMDCPreprocessorE2E:
     """Test class."""
 
     @pytest.mark.parametrize(
-        "input_data, start_time, end_time",
+        "input_data, start_time, end_time, use_aml_token",
         [
             # traditional model
-            (DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT, "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z"),
+            (DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT, "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z", True),
+            (DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT, "2023-01-29T00:00:00Z", "2023-02-03T00:00:00Z", False),
             # LLM model
-            (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z")
+            (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z", True),
+            (DATA_ASSET_LLM_INPUTS, "2023-10-24T22:00:00Z", "2023-10-24T23:00:00Z", False)
         ]
     )
     def test_mdc_preprocessor_successful(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name, input_data,
-        start_time, end_time
+        start_time, end_time, use_aml_token: bool
     ):
         """Test the happy path scenario for MDC preprocessor."""
         for extract_correlation_id in [True, False]:
@@ -86,7 +88,8 @@ class TestMDCPreprocessorE2E:
                 extract_correlation_id,
                 input_data,
                 start_time,
-                end_time
+                end_time,
+                AmlTokenConfiguration() if use_aml_token else ManagedIdentityConfiguration()
             )
 
         assert pipeline_job.status == "Completed"

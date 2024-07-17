@@ -200,3 +200,8 @@ MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE = (
     "3. Update the workspace level property systemDatastoresAuthMode to 'identity'.\n"
     "Or, you can simply add credentials to the datastore where your data is being stored and resubmit the Monitor.\n"
     "Check the full error message: {message}")
+
+UAI_MISS_PERMISSION_ERROR_MESSAGE = (
+    "User-assigned managed identity(UAMI) doesn't have permission to get access of default storage account. "
+    "Please grant Storage Blob Data Contributor role of default storage account to the UAMI."
+)
