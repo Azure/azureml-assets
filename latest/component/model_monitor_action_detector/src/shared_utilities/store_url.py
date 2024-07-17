@@ -11,11 +11,18 @@ from typing import Union, Tuple
 import fnmatch
 from azure.identity import ClientSecretCredential
 from azure.core.credentials import AzureSasCredential
+from azure.core.exceptions import HttpResponseError
 from azure.storage.blob import ContainerClient
 from azure.storage.filedatalake import FileSystemClient
 from azureml.core import Workspace, Run, Datastore
 from azureml.exceptions import UserErrorException
-from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
+from shared_utilities.constants import (
+    MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE,
+    IDENTITY_MISS_PERMISSION_ERROR_MESSAGE,
+    ACCOUNT_KEY_MISS_PERMISSION_ERROR_MESSAGE,
+    SAS_TOKEN_MISS_PERMISSION_ERROR_MESSAGE
+)
+
 from shared_utilities.momo_exceptions import InvalidInputError
 
 
@@ -91,11 +98,10 @@ class StoreUrl:
                 aml_obo_credential = AzureMLOnBehalfOfCredential()
                 if validate_aml_obo_credential:
                     try:
-                        _ = aml_obo_credential.get_token()
+                        _ = aml_obo_credential.get_token("https://management.azure.com/.default")
                     except CredentialUnavailableError as cue:
                         raise InvalidInputError(MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE.format(message=str(cue)))
-                else:
-                    return aml_obo_credential
+                return aml_obo_credential
             except ModuleNotFoundError:
                 print("Failed to import AzureMLOnBehalfOfCredential. "
                       "Cannot check if unsecure URL was used with token credential. "
@@ -225,15 +231,22 @@ class StoreUrl:
         container_client = container_client or self.get_container_client()
         if not container_client:  # local
             return any(glob.iglob(full_path_pattern))
-        if isinstance(container_client, FileSystemClient):  # gen2
-            if container_client.get_directory_client(non_wildcard_path).exists():
-                paths = container_client.get_paths(non_wildcard_path, True)
-                file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]
+        try:
+            if isinstance(container_client, FileSystemClient):  # gen2
+                if container_client.get_directory_client(non_wildcard_path).exists():
+                    paths = container_client.get_paths(non_wildcard_path, True)
+                    file_names = [path.name[len(non_wildcard_path):] for path in paths if not path.is_directory]
+                else:
+                    return False
+            else:  # blob
+                blobs = container_client.list_blobs(name_starts_with=non_wildcard_path)
+                file_names = [blob.name[len(non_wildcard_path):] for blob in blobs]
+        except HttpResponseError as hre:
+            if hre.status_code == 403:
+                error_message = self._get_no_permission_message()
+                raise InvalidInputError(error_message)
             else:
-                return False
-        else:  # blob
-            blobs = container_client.list_blobs(name_starts_with=non_wildcard_path)
-            file_names = [blob.name[len(non_wildcard_path):] for blob in blobs]
+                raise hre
         return any_files(file_names, path_pattern)
 
     def is_local_path(self) -> bool:
@@ -286,6 +299,29 @@ class StoreUrl:
     def _normalize_local_path(local_path: str) -> str:
         """Normalize local path."""
         return local_path[7:] if local_path.startswith("file://") else local_path
+
+    def _get_no_permission_message(self) -> str:
+        """Check the data credentail type and generate the no permission error message."""
+        if not self._datastore:
+            return IDENTITY_MISS_PERMISSION_ERROR_MESSAGE.format(identity="User-assigned managed identity")
+        elif self._datastore.datastore_type == "AzureBlob":
+            if self._datastore.credential_type == "AccountKey":
+                return ACCOUNT_KEY_MISS_PERMISSION_ERROR_MESSAGE
+            elif self._datastore.credential_type == "Sas":
+                return SAS_TOKEN_MISS_PERMISSION_ERROR_MESSAGE
+            elif self._datastore.credential_type is None or self._datastore.credential_type == "None":
+                return IDENTITY_MISS_PERMISSION_ERROR_MESSAGE.format(identity="User-assigned managed identity")
+            else:
+                raise InvalidInputError(f"Unsupported credential type: {self._datastore.credential_type}, "
+                                        "only AccountKey and Sas are supported.")
+        elif self._datastore.datastore_type == "AzureDataLakeGen2":
+            if self._datastore.tenant_id and self._datastore.client_id and self._datastore.client_secret:
+                return IDENTITY_MISS_PERMISSION_ERROR_MESSAGE.format(identity=f"Client {self._datastore.client_id}")
+            else:
+                return IDENTITY_MISS_PERMISSION_ERROR_MESSAGE.format(identity="User-assigned managed identity")
+        else:
+            raise InvalidInputError(f"Unsupported datastore type: {self._datastore.datastore_type}, "
+                                    "only Azure Blob and Azure Data Lake Gen2 are supported.")
 
     def _read_local_file_content(self, relative_path: str = None) -> str:
         """Read file content from local path."""
