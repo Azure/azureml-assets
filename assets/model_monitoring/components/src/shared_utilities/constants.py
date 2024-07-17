@@ -213,5 +213,5 @@ ACCOUNT_KEY_MISS_PERMISSION_ERROR_MESSAGE = (
 
 SAS_TOKEN_MISS_PERMISSION_ERROR_MESSAGE = (
     "Failed to use sas token to get access of default storage account. "
-    "Please double check if the sas token is valid and has enough permissions to access the storage account."
+    "Please double check if the sas token is not expired and has enough permissions to access the storage account."
 )
