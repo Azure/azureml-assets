@@ -253,4 +253,5 @@ def validate_column_names(df):
     """Validate if column name has dot, which is by deign for accessing nested fields. Throw invalid input error."""
     for column in df.columns:
         if "." in column:
-            raise InvalidInputError(f"Column name {column} has a dot, which is not supported. Please rename the column and retry.")
+            raise InvalidInputError(f"Column name {column} has a dot, which is not supported. " + \
+                "Please rename the column and retry.")
