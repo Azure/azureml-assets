@@ -46,7 +46,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda && \
-    pip install cryptography==42.0.5 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 tqdm==4.66.3 requests==2.32.0 azure-identity==1.16.1 urllib3==2.2.2 certifi==2024.07.04&& \
+    pip install cryptography==42.0.5 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 tqdm==4.66.3 requests==2.32.0 azure-identity==1.17.1 urllib3==2.2.2 certifi==2024.07.04&& \
     conda deactivate"
 
 # Install certificates and other utilities
