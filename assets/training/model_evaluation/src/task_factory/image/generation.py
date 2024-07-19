@@ -47,10 +47,7 @@ class ImageGenerationPredictor(PredictWrapper):
             # Go through prompts batch by batch.
             for idx in range(0, len(X_test), batch_size):
                 # Run model prediction on current batch.
-                image_batch = self.model.predict(
-                    X_test.iloc[idx:(idx + batch_size)],
-                    **predict_args
-                )
+                image_batch = self.model.predict(X_test.iloc[idx:(idx + batch_size)], **predict_args)
 
                 # Save batch of generated images in the default datastore.
                 for encoded_image_bytes in image_batch[self.image_key]:
