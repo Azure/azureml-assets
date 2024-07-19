@@ -14,6 +14,17 @@ RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
+# install transformers patch
+COPY transformers.patch .
+# conda run -n model-evaluation
+RUN pip uninstall transformers -y && \
+    git clone https://github.com/huggingface/transformers.git && \
+    cd transformers && \
+    git checkout fc35907f95459d7a6c5281dfadd680b6f7b620e3 && \
+    git apply ../transformers.patch && \
+    python3 setup.py bdist_wheel && \
+    pip install dist/*.whl
+
 # Prepend path to AzureML conda environment
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
