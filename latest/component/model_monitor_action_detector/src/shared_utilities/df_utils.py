@@ -247,3 +247,11 @@ def has_duplicated_columns(df: pyspark_sql.DataFrame) -> bool:
     col_names = df.columns
     col_names_set = set(col_names)
     return len(col_names) > len(col_names_set)
+
+
+def validate_column_names(df):
+    """Validate if column name has dot, which is by deign for accessing nested fields. Throw invalid input error."""
+    for column in df.columns:
+        if "." in column:
+            raise InvalidInputError(f"Column name {column} has a dot, which is not supported. " +
+                                    "Please rename the column and retry.")

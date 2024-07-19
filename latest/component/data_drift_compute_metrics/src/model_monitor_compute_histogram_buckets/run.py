@@ -9,6 +9,7 @@ from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
+from shared_utilities.df_utils import validate_column_names
 from shared_utilities.event_utils import post_warning_event
 
 
@@ -42,6 +43,9 @@ def run():
         df1 = df2
     elif df2 is None:
         df2 = df1
+
+    validate_column_names(df1)
+    validate_column_names(df2)
 
     histogram_buckets = compute_histogram_buckets(df1,
                                                   df2,

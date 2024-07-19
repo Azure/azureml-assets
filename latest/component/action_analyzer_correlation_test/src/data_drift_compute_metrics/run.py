@@ -9,6 +9,7 @@ from data_drift_compute_metrics.io_utils import (
     output_computed_measures_tests,
 )
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error
+from shared_utilities.df_utils import validate_column_names
 from data_drift_compute_metrics.compute_data_drift import compute_data_drift_measures_tests
 
 
@@ -37,6 +38,8 @@ def run():
     production_df = try_read_mltable_in_spark_with_error(
         args.production_dataset, "production_dataset"
     )
+    validate_column_names(baseline_df)
+    validate_column_names(production_df)
 
     if args.feature_names:
         features = try_read_mltable_in_spark_with_error(args.feature_names, "feature_names")
