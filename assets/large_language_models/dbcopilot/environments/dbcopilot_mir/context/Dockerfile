@@ -24,7 +24,7 @@ RUN pip install -r requirements.txt
 # Update vulnerable packages
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 certifi==2024.07.04 && \
+    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.17.1 certifi==2024.07.04 && \
     conda deactivate"
 
 # Configure NGINX
