@@ -15,7 +15,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     # Update pip and install Python packages
     python -m pip install --upgrade pip && \
-    pip install promptflow-image-bundle[azure]==0.3.0 promptflow-vectordb==0.2.10 db-copilot-tool==0.0.6 azure-identity==1.17.1
+    pip install promptflow-image-bundle[azure]==0.3.0 promptflow-vectordb==0.2.10 db-copilot-tool==0.0.6 azure-identity==1.16.1
 
 # Copy the environment file
 COPY ./requirements.txt ./
@@ -24,7 +24,7 @@ RUN pip install -r requirements.txt
 # Update vulnerable packages
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.17.1 certifi==2024.07.04 && \
+    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1 certifi==2024.07.04 && \
     conda deactivate"
 
 # Configure NGINX
