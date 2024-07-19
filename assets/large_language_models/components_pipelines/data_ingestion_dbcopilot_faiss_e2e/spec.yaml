@@ -117,6 +117,11 @@ inputs:
     default: false
     optional: true
     description: "Whether to connect using managed identity."
+  egress_public_network_access:
+    type: string
+    optional: true
+    default: "enabled"
+    description: "This option allows the resource to send outbound traffic to the public Internet or not, there are two choices disabled and enabled, the default is enabled"
 outputs:
   grounding_index:
     type: uri_folder
@@ -291,6 +296,7 @@ jobs:
       knowledge_pieces: ${{parent.inputs.knowledge_pieces}}
       include_views: ${{parent.inputs.include_views}}
       instruct_template: ${{parent.inputs.instruct_template}}
+      egress_public_network_access: ${{parent.inputs.egress_public_network_access}}
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}
