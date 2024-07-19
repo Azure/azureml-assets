@@ -7,6 +7,7 @@ import argparse
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import regexp_replace
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
+from shared_utilities.df_utils import validate_column_names
 from compute_data_quality_statistics import compute_data_quality_statistics
 
 
@@ -21,6 +22,7 @@ def run():
     args = parser.parse_args()
 
     df = try_read_mltable_in_spark_with_error(args.baseline_data, "baseline_data")
+    validate_column_names(df)
 
     metric_unique_df = compute_data_quality_statistics(df,
                                                        args.override_numerical_features,
