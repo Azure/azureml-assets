@@ -57,7 +57,7 @@ outputs:
     description: Directory where the benchmark metrics will be saved.
 
 code: ../src
-environment: azureml://registries/azureml-preview-test1/environments/model-benchmark/versions/0.1
+environment: azureml://registries/azureml/environments/model-evaluation/versions/30
 command: >-
   python -m aml_benchmark.benchmark_embedding_model.main
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
