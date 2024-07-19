@@ -27,13 +27,13 @@ RUN python -m pip install --upgrade pip && \
     pip install promptflow-image-bundle[azure]==0.3.0 && \
     pip install promptflow-vectordb==0.2.10 && \
     ## Install dbcopilot
-    pip install db-copilot-tool==0.0.5 \
+    pip install db-copilot-tool==0.0.6 \
     pip install azure-identity==1.17.1
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1&& \
+    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1 certifi==2024.07.04&& \
     conda deactivate"
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout
