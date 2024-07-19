@@ -403,10 +403,10 @@ def get_vqa_dataset(
         # local_image_file_name = local_image_file_names[0]
 
         local_image_file_name = download_images([image_url])[0]
-        print("y1", local_image_file_name)
+        # print("y1", local_image_file_name)
         image = base64.encodebytes(read_image(local_image_file_name)).decode("utf-8")
 
-        print("y2", more_image_urls)
+        # print("y2", more_image_urls)
         if len(more_image_urls) > 0:
             more_images = [
                 base64.encodebytes(read_image(download_images([image_url_b])[0])).decode("utf-8")
