@@ -23,7 +23,7 @@ RUN git clone https://github.com/huggingface/transformers.git && \
     python setup.py bdist_wheel && \
     pip install dist/*.whl
 
-COPY modeling_llama.py /opt/conda/envs/ptca/lib/python3.8/site-packages/transformers/models/llama/modeling_llama.py
+COPY modeling_llama /opt/conda/envs/ptca/lib/python3.8/site-packages/transformers/models/llama/modeling_llama.py
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
