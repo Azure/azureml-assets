@@ -87,15 +87,15 @@ metrics_str = [
         ]
 metrics_str_df = create_pyspark_dataframe(metrics_str, columns)
 
-expected_breached_str = [
-        (TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME, "0.367", "0.5"),
-        (PEARSONS_CHI_SQUARED_TEST_METRIC_NAME, "0.367", "0.5"),
-        (NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME, "0.367", "0.5"),
-        (AVERAGE_COHERENCE_SCORE_METRIC_NAME, "3.0", "20.0"),
-        (AVERAGE_GROUNDEDNESS_SCORE_METRIC_NAME, "3.0", "5.0"),
-        (AVERAGE_FLUENCY_SCORE_METRIC_NAME, "3.0", "100.0"),
+expected_breached_data = [
+        (TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME, 0.367, 0.5),
+        (PEARSONS_CHI_SQUARED_TEST_METRIC_NAME, 0.367, 0.5),
+        (NORMALIZED_DISCOUNTED_CUMULATIVE_GAIN_METRIC_NAME, 0.367, 0.5),
+        (AVERAGE_COHERENCE_SCORE_METRIC_NAME, 3.0, 20.0),
+        (AVERAGE_GROUNDEDNESS_SCORE_METRIC_NAME, 3.0, 5.0),
+        (AVERAGE_FLUENCY_SCORE_METRIC_NAME, 3.0, 100.0),
     ]
-expected_breached_str_df = create_pyspark_dataframe(expected_breached_str, columns)
+expected_breached_df = create_pyspark_dataframe(expected_breached_data, columns)
 
 null_data = [
     (TWO_SAMPLE_KOLMOGOROV_SMIRNOV_TEST_METRIC_NAME, None, None),
@@ -144,6 +144,7 @@ clean_double_data = [
 ]
 clean_double_data_df = create_pyspark_dataframe(clean_double_data, columns)
 
+
 @pytest.mark.unit
 class TestEvaluateMetricsThreshold:
     """Test class for evaluate metrics threshold component."""
@@ -151,7 +152,7 @@ class TestEvaluateMetricsThreshold:
     @pytest.mark.parametrize("metrics_df, breached_metrics_df",
                              [(metrics_breached_df, metrics_breached_df),
                               (metrics_not_breached_df, emptyRDD),
-                              (metrics_str_df, expected_breached_str_df)])
+                              (metrics_str_df, expected_breached_df)])
     def test_calculate_metrics_breach(
             self,
             metrics_df,
@@ -159,7 +160,6 @@ class TestEvaluateMetricsThreshold:
     ):
         """Test calculate metrics breach."""
         actual_breached_metrics_df = calculate_metrics_breach(metrics_df)
-        actual_breached_metrics_df.show()
         assert breached_metrics_df.count() == actual_breached_metrics_df.count()
         assert sorted(breached_metrics_df.collect()) == sorted(actual_breached_metrics_df.collect())
 
