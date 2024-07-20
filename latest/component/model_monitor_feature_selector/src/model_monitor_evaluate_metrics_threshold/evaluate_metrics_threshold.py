@@ -25,6 +25,10 @@ from shared_utilities.constants import (
 )
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
+from pyspark.sql.types import (
+    StringType,
+    DoubleType
+)
 
 
 # For the list of metrics, the users expect the value should be greater than the threshold,
@@ -72,13 +76,15 @@ def _clean_metrics_df(metrics_df: DataFrame) -> DataFrame:
         F.col(SIGNAL_METRICS_METRIC_VALUE).isNotNull()
     )
 
-    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
-        F.col(SIGNAL_METRICS_THRESHOLD_VALUE) != F.lit("")
-    )
+    if is_not_nan_metrics_threshold_df.schema[SIGNAL_METRICS_THRESHOLD_VALUE].dataType == StringType():
+        is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
+            F.col(SIGNAL_METRICS_THRESHOLD_VALUE) != F.lit("")
+        )
 
-    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
-        F.col(SIGNAL_METRICS_METRIC_VALUE) != F.lit("")
-    )
+    if is_not_nan_metrics_threshold_df.schema[SIGNAL_METRICS_METRIC_VALUE].dataType == StringType():
+        is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
+            F.col(SIGNAL_METRICS_METRIC_VALUE) != F.lit("")
+        )
 
     return is_not_nan_metrics_threshold_df
 
@@ -101,6 +107,11 @@ def evaluate_metrics_threshold(
 
 def calculate_metrics_breach(metrics_threshold_df: DataFrame):
     """Calculate the breached metrics by the given thresholds."""
+    metrics_threshold_df = metrics_threshold_df.withColumn(SIGNAL_METRICS_THRESHOLD_VALUE,
+                                                           F.col(SIGNAL_METRICS_THRESHOLD_VALUE).cast(DoubleType()))
+    metrics_threshold_df = metrics_threshold_df.withColumn(SIGNAL_METRICS_METRIC_VALUE,
+                                                           F.col(SIGNAL_METRICS_METRIC_VALUE).cast(DoubleType()))
+
     metrics_threshold_breached_df = metrics_threshold_df.where(
         (F.col(SIGNAL_METRICS_METRIC_NAME).isin(Metric_Value_Should_Greater_Than_Threshold) &
          (F.col(SIGNAL_METRICS_METRIC_VALUE) < F.col(SIGNAL_METRICS_THRESHOLD_VALUE))) |
