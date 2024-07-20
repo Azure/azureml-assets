@@ -16,7 +16,6 @@ RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
 
 # install transformers patch
 COPY transformers.patch .
-# conda run -n model-evaluation
 RUN pip uninstall transformers -y && \
     git clone https://github.com/huggingface/transformers.git && \
     cd transformers && \
