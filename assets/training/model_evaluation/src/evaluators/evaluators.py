@@ -809,17 +809,6 @@ class ImageGenerationEvaluator(Evaluator):
             self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME], ground_truth_folder_name)
             self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS], predictions_folder_name)
 
-            import os
-
-            def count_files(folder_name):
-                return len(
-                    [
-                        file_name
-                        for file_name in os.listdir(folder_name)
-                        if os.path.isfile(os.path.join(folder_name, file_name))
-                    ]
-                )
-
             metrics = compute_metrics(
                 task_type=constants.Tasks.IMAGE_GENERATION,
                 y_test=ground_truth_folder_name, y_pred=predictions_folder_name,
