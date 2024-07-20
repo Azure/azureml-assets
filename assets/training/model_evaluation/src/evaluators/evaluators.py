@@ -4,7 +4,9 @@
 """Evaluator."""
 
 import ast
+import os
 import re
+import shutil
 import tempfile
 
 import pandas as pd
@@ -806,6 +808,18 @@ class ImageGenerationEvaluator(Evaluator):
              tempfile.TemporaryDirectory() as predictions_folder_name:
             self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME], ground_truth_folder_name)
             self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS], predictions_folder_name)
+
+            import os
+
+            def count_files(folder_name):
+                return len(
+                    [
+                        file_name
+                        for file_name in os.listdir(folder_name)
+                        if os.path.isfile(os.path.join(folder_name, file_name))
+                    ]
+                )
+
             metrics = compute_metrics(
                 task_type=constants.Tasks.IMAGE_GENERATION,
                 y_test=ground_truth_folder_name, y_pred=predictions_folder_name,
@@ -831,6 +845,11 @@ class ImageGenerationEvaluator(Evaluator):
         # Convert URLs referring to datastore to DataPath format.
         image_urls = [maybe_make_data_path(image_url) for image_url in image_urls]
 
-        # Download images to specified folder.
+        # Download images to temporary folder.
         remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
-        remote_image_files.download(local_folder_name)
+        local_image_file_names = remote_image_files.download()
+
+        # Move images to specified folder.
+        for i, local_image_file_name in enumerate(local_image_file_names):
+            f = os.path.splitext(local_image_file_name)[1]
+            shutil.move(local_image_file_name, os.path.join(local_folder_name, f"image_{i:09d}{f}"))
