@@ -1,0 +1,21 @@
+name: responsibleai-tabular
+channels:
+  - conda-forge
+  - defaults
+  - anaconda
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+    - responsibleai~=0.36.0
+    - raiwidgets~=0.36.0
+    - markupsafe<=2.0.1
+    - itsdangerous==2.0.1
+    - mlflow
+    - scikit-learn~=1.5.1
+    - pdfkit==1.0.0
+    - plotly==5.6.0
+    - kaleido==0.2.1
+    - mltable==1.5.0
+    - responsibleai-tabular-automl==0.14.0
+    - https://publictestdatasets.blob.core.windows.net/packages/pypi/raiwidgets_big_data/raiwidgets_big_data-0.12.0-py3-none-any.whl

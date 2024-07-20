@@ -1,0 +1,28 @@
+name: responsibleai-vision
+channels:
+  - conda-forge
+  - defaults
+  - anaconda
+  - pytorch
+dependencies:
+  - python=3.9
+  - pip
+  - pytorch
+  - torchvision
+  - captum
+  - cpuonly
+  - pip:
+    - ml-wrappers~=0.5.5
+    - responsibleai~=0.36.0
+    - raiwidgets~=0.36.0
+    - mlflow
+    - markupsafe<=2.1.2
+    - itsdangerous<=2.1.2
+    - vision_explanation_methods
+    - responsibleai-vision==0.3.8
+    - opencv-python==4.4.0.46
+    - mltable==1.5.0
+    - fastai
+    - ipython<8.13
+    - typing-extensions<4.6.1
+    - gevent-websocket

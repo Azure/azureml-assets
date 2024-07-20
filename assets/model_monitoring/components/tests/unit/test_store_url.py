@@ -13,6 +13,7 @@ from azure.storage.blob import ContainerClient, BlobServiceClient
 from azure.storage.blob._shared.authentication import SharedKeyCredentialPolicy
 from azure.storage.filedatalake import FileSystemClient, DataLakeDirectoryClient
 from azureml.core import Datastore
+from azure.core.exceptions import HttpResponseError
 from azureml.exceptions import UserErrorException
 from shared_utilities.store_url import StoreUrl
 from shared_utilities.momo_exceptions import InvalidInputError
@@ -36,9 +37,9 @@ class TestStoreUrl:
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
-                "http://my_account.blob.core.windows.net/my_container/path/to/folder",
-                "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder"
+                "http://my_account.blob.core.eaglex.ic.gov/my_container/path/to/folder",
+                "wasb://my_container@my_account.blob.core.eaglex.ic.gov/path/to/folder",
+                "abfs://my_container@my_account.dfs.core.eaglex.ic.gov/path/to/folder"
             ),
             (
                 "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
@@ -51,10 +52,20 @@ class TestStoreUrl:
                 "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder"
             ),
             (
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder"
-            )
+                "abfs://my_container@my_account.dfs.core.microsoft.scloud/path/to/folder",
+                "abfs://my_container@my_account.dfs.core.microsoft.scloud/path/to/folder",
+                "abfs://my_container@my_account.dfs.core.microsoft.scloud/path/to/folder"
+            ),
+            (
+                "abfss://my_container@my_account.dfs.core.usgovcloudapi.net/path/to/folder",
+                "abfss://my_container@my_account.dfs.core.usgovcloudapi.net/path/to/folder",
+                "abfss://my_container@my_account.dfs.core.usgovcloudapi.net/path/to/folder"
+            ),
+            (
+                "https://my_account.blob.core.chinacloudapi.cn/my_container/path/to/folder",
+                "wasbs://my_container@my_account.blob.core.chinacloudapi.cn/path/to/folder",
+                "abfss://my_container@my_account.dfs.core.chinacloudapi.cn/path/to/folder"
+            ),
         ]
     )
     def test_store_url(self, store_base_url, expected_hdfs_path, expected_abfs_path):
@@ -66,76 +77,83 @@ class TestStoreUrl:
 
         # We support credential-less with secure store url.
         if store_url._is_secure():
-            container = store_url.get_container_client()
+            container = store_url.get_container_client(validate_aml_obo_credential=False)
             assert container is not None
             assert isinstance(container.credential, AzureMLOnBehalfOfCredential)
         else:
             with pytest.raises(InvalidInputError,
-                               match=r"Token credential is only supported with secure HTTPS protocol..*"):
+                               match=r"Unsecure credential-less data is not supported...*"):
                 store_url.get_container_client()
 
+    PUBLIC_ENDPOINT = "core.windows.net"
+    USGOV_ENDPOINT = "core.usgovcloudapi.net"
+    CHINA_ENDPOINT = "core.chinacloudapi.cn"
+    USSEC_ENDPOINT = "core.microsoft.scloud"
+    USNAT_ENDPOINT = "core.eaglex.ic.gov"
+
     @pytest.mark.parametrize(
-        "azureml_path, datastore_type, credential_type, relative_path, expected_protocol, expected_hdfs_path, "
-        "expected_abfs_path, expected_relative_path, expected_credential, expected_container_client",
+        "azureml_path, datastore_type, endpoint, credential_type, relative_path, expected_protocol, "
+        "expected_hdfs_path, expected_abfs_path, expected_relative_path, expected_credential, "
+        "expected_container_client",
         [
             (
                 "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "AccountKey", None, "https",
-                "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureBlob", PUBLIC_ENDPOINT, "AccountKey", None, "https",
+                f"wasbs://my_container@my_account.blob.{PUBLIC_ENDPOINT}/path/to/folder",
+                f"abfss://my_container@my_account.dfs.{PUBLIC_ENDPOINT}/path/to/folder",
                 "", "my_account_key",
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container",
+                ContainerClient(f"https://my_account.blob.{PUBLIC_ENDPOINT}", "my_container",
                                 SharedKeyCredentialPolicy("my_account", "my_account_key"))
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-                "AzureDataLakeGen2", "ServicePrincipal", "rpath", "https",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureDataLakeGen2", PUBLIC_ENDPOINT, "ServicePrincipal", "rpath", "https",
+                f"abfss://my_container@my_account.dfs.{PUBLIC_ENDPOINT}/path/to/folder",
+                f"abfss://my_container@my_account.dfs.{PUBLIC_ENDPOINT}/path/to/folder",
                 "/rpath",
                 ClientSecretCredential("00000", "my_client_id", "my_client_secret"),
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
+                FileSystemClient(f"https://my_account.dfs.{PUBLIC_ENDPOINT}", "my_container",
                                  ClientSecretCredential("00000", "my_client_id", "my_client_secret"))
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "Sas", "rpath/to/target", "https",
-                "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureBlob", USGOV_ENDPOINT, "Sas", "rpath/to/target", "https",
+                f"wasbs://my_container@my_account.blob.{USGOV_ENDPOINT}/path/to/folder",
+                f"abfss://my_container@my_account.dfs.{USGOV_ENDPOINT}/path/to/folder",
                 "/rpath/to/target",
                 AzureSasCredential("my_sas_token"),
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container",
+                ContainerClient(f"https://my_account.blob.{USGOV_ENDPOINT}", "my_container",
                                 AzureSasCredential("my_sas_token"))
             ),
             (
                 "azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "AccountKey", "", "http",
-                "wasb://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfs://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureBlob", CHINA_ENDPOINT, "AccountKey", "", "http",
+                f"wasb://my_container@my_account.blob.{CHINA_ENDPOINT}/path/to/folder",
+                f"abfs://my_container@my_account.dfs.{CHINA_ENDPOINT}/path/to/folder",
                 "", "my_account_key",
-                ContainerClient("http://my_account.blob.core.windows.net", "my_container",
+                ContainerClient(f"http://my_account.blob.{CHINA_ENDPOINT}", "my_container",
                                 SharedKeyCredentialPolicy("my_account", "my_account_key"))
             ),
             (
                 "azureml://datastores/my_datastore/paths/path/to/folder",
-                "AzureDataLakeGen2", None, "/", "https",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureDataLakeGen2", USSEC_ENDPOINT, None, "/", "https",
+                f"abfss://my_container@my_account.dfs.{USSEC_ENDPOINT}/path/to/folder",
+                f"abfss://my_container@my_account.dfs.{USSEC_ENDPOINT}/path/to/folder",
                 "/", AzureMLOnBehalfOfCredential(),
-                FileSystemClient("https://my_account.dfs.core.windows.net", "my_container",
+                FileSystemClient(f"https://my_account.dfs.{USSEC_ENDPOINT}", "my_container",
                                  AzureMLOnBehalfOfCredential())
             ),
             (
                 "azureml://subscriptions/sub_id/resourcegroups/my_rg/workspaces/my_ws/datastores/my_datastore"
                 "/paths/path/to/folder",
-                "AzureBlob", "None", "/rpath", "https",
-                "wasbs://my_container@my_account.blob.core.windows.net/path/to/folder",
-                "abfss://my_container@my_account.dfs.core.windows.net/path/to/folder",
+                "AzureBlob", USNAT_ENDPOINT, "None", "/rpath", "https",
+                f"wasbs://my_container@my_account.blob.{USNAT_ENDPOINT}/path/to/folder",
+                f"abfss://my_container@my_account.dfs.{USNAT_ENDPOINT}/path/to/folder",
                 "/rpath", AzureMLOnBehalfOfCredential(),
-                ContainerClient("https://my_account.blob.core.windows.net", "my_container",
+                ContainerClient(f"https://my_account.blob.{USNAT_ENDPOINT}", "my_container",
                                 AzureMLOnBehalfOfCredential())
             ),
             # TODO: Update this UT with how the unsecure URL should work with credential-less. Or can we remove it?
@@ -159,20 +177,20 @@ class TestStoreUrl:
         ]
     )
     def test_store_url_with_azureml_path(
-        self, azureml_path, datastore_type, credential_type, relative_path, expected_protocol, expected_hdfs_path,
-        expected_abfs_path, expected_relative_path, expected_credential, expected_container_client
+        self, azureml_path, datastore_type, endpoint, credential_type, relative_path, expected_protocol,
+        expected_hdfs_path, expected_abfs_path, expected_relative_path, expected_credential, expected_container_client
     ):
         """Test StoreUrl constructor with azureml path."""
         mock_ws = Mock(subscription_id="sub_id", resource_group="my_rg")
         mock_ws.name = "my_ws"
-        mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint="core.windows.net",
+        mock_datastore = Mock(datastore_type=datastore_type, protocol=expected_protocol, endpoint=endpoint,
                               account_name="my_account", container_name="my_container", subscription_id="store_sub_id",
                               resource_group="store_rg", workspace=mock_ws)
         mock_datastore.name = "my_datastore"
         if datastore_type == "AzureBlob":
             mock_container_client = Mock(
                 spec=ContainerClient, account_name="my_account", container_name="my_container",
-                url=f"{expected_protocol}://my_account.blob.core.windows.net/my_container",
+                url=f"{expected_protocol}://my_account.blob.{endpoint}/my_container",
                 credential=SharedKeyCredentialPolicy("my_account", "my_account_key")
                     if credential_type == "AccountKey" else expected_credential)
             mock_blob_svc = Mock(spec=BlobServiceClient)
@@ -200,10 +218,13 @@ class TestStoreUrl:
         assert store_url.get_azureml_url(relative_path) == \
             ("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws/datastores/my_datastore"
              f"/paths/path/to/folder{expected_relative_path}")
+        assert store_url._endpoint == endpoint
 
         if expected_credential:
-            assert_credentials_are_equal(store_url.get_credential(), expected_credential)
-            assert_container_clients_are_equal(store_url.get_container_client(), expected_container_client)
+            assert_credentials_are_equal(store_url.get_credential(validate_aml_obo_credential=False),
+                                         expected_credential)
+            assert_container_clients_are_equal(store_url.get_container_client(validate_aml_obo_credential=False),
+                                               expected_container_client)
         else:
             # should raise InvalidInputError for credential less data
             with pytest.raises(InvalidInputError):
@@ -234,6 +255,16 @@ class TestStoreUrl:
                 _ = StoreUrl("azureml://subscriptions/sub_id/resourceGroups/my_rg/workspaces/my_ws"
                              "/datastores/my_datastore/paths/path/to/folder",
                              mock_ws)
+
+    def test_store_url_any_files_with_http_exception(self):
+        """Test StoreUrl any_files with exception."""
+        with patch.object(ContainerClient, "list_blobs", side_effect=HttpResponseError()):
+            with pytest.raises(HttpResponseError):
+                base_url = "wasbs://my_container@my_account.blob.core.windows.net"
+                container_client = ContainerClient("https://my_account.blob.core.windows.net", "my_container",
+                                                   SharedKeyCredentialPolicy("my_account", "my_account_key"))
+                store_url = StoreUrl(base_url)
+                store_url.any_files("*.jsonl", container_client)
 
     @pytest.mark.parametrize(
         "base_url, relative_path, expected_root_path, expected_abfs_url",

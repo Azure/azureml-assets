@@ -221,3 +221,24 @@ class TestComputeFeatureImportanceMetrics:
             compute_feature_importance(CLASSIFICATION, "IS_FRAUD_LIKELIHOOD",
                                        get_fraud_data_copy,
                                        categorical_features_lgbm)
+
+    def test_columns_with_special_chars(self, get_fraud_data):
+        """Test with special characters in column names."""
+        # Fixes the error from lightgbm according to customer telemetry:
+        # lightgbm.basic.LightGBMError: Do not support special JSON characters in feature name.
+        categorical_features_lgbm = ["TRANSACTIONID", "ACCOUNTID",
+                                     "TIMESTAMPSTR", "TIMESTAMP",
+                                     "ISPROXYIP"]
+        numerical_features = ["TRANSACTIONAMOUNT", "TRANSACTIONAMOUNTUSD",
+                              "DIGITALITEMCOUNT"]
+        get_fraud_data_copy = get_fraud_data.copy()
+        target_column = "IS_FRAUD"
+        get_fraud_data_copy[target_column][2] = "1"
+        # add special characters to one of the column names (,[]{}":) that lightgbm does not accept
+        special_col_name = "ACCOUNTID,[]{}\":"
+        get_fraud_data_copy.rename(columns={"ACCOUNTID": special_col_name}, inplace=True)
+        categorical_features_lgbm[1] = special_col_name
+        mark_categorical_column(get_fraud_data_copy, target_column, categorical_features_lgbm, numerical_features)
+        compute_feature_importance(CLASSIFICATION, target_column,
+                                   get_fraud_data_copy,
+                                   categorical_features_lgbm)
