@@ -47,7 +47,8 @@ def main():
             "azureml_evaluate_mlflow",
             "azureml-evaluate-mlflow",
             "azureml_metrics",
-            "azureml-metrics"
+            "azureml-metrics",
+            "transformers",
         ]
         install_deps = []
         with open(reqs_file, "r") as f:
@@ -56,6 +57,7 @@ def main():
                     continue
                 install_deps += [line.strip()]
 
+        install_deps += ["transformers==4.41.2"]
         no_install = []
         if len(install_deps) > 0:
             try:
