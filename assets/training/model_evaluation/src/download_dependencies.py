@@ -49,6 +49,7 @@ def main():
             "azureml_metrics",
             "azureml-metrics",
             "transformers",
+            "torchvision",
         ]
         install_deps = []
         with open(reqs_file, "r") as f:
@@ -57,7 +58,7 @@ def main():
                     continue
                 install_deps += [line.strip()]
 
-        install_deps += ["transformers==4.41.2"]
+        install_deps += ["transformers==4.41.2", "torchvision==0.17.2"]
         no_install = []
         if len(install_deps) > 0:
             try:
