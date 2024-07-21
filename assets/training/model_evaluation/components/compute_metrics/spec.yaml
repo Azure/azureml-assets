@@ -77,7 +77,7 @@ outputs:
 
 is_deterministic: True
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/29
+environment: azureml://registries/azureml/environments/model-evaluation/versions/32
 
 command: >-
   python compute_metrics.py
