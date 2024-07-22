@@ -87,7 +87,7 @@ outputs:
 jobs:
   validation_trigger_model_evaluation:
     type: command
-    component: azureml:validation_trigger_model_evaluation:0.0.29
+    component: azureml:validation_trigger_model_evaluation:0.0.30
     compute: '${{parent.inputs.compute_name}}'
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
