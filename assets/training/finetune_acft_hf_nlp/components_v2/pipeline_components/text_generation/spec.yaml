@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-version: 0.0.19
+version: 0.0.20
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
@@ -69,6 +69,12 @@ inputs:
 
   # Finetuning parameters
   # Training parameters
+  max_seq_length:
+    type: integer
+    optional: true
+    default: -1
+    description: Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
+
   num_train_epochs:
     type: integer
     default: 1
@@ -170,7 +176,7 @@ jobs:
       ground_truth_key: '${{parent.inputs.ground_truth_key}}'
       batch_size: 1000
       pad_to_max_length: "false"
-      max_seq_length: 4096
+      max_seq_length: '${{parent.inputs.max_seq_length}}'
       number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
       apply_lora: "true"
       lora_alpha: 128
