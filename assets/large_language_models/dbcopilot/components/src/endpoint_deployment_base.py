@@ -79,6 +79,7 @@ class EndpointDeploymentBase(OBOComponentBase):
         extra_environment_variables: Dict[str, str] = None,
         model: Optional[Model] = None,
         sku: str = "Standard_DS3_v2",
+        egress_public_network_access: str = "enabled",
     ):
         from utils.asset_utils import get_full_env_path
 
@@ -126,6 +127,7 @@ class EndpointDeploymentBase(OBOComponentBase):
                 max_concurrent_requests_per_instance=1000,
                 max_queue_wait_ms=90000,
             ),
+            egress_public_network_access=egress_public_network_access,
         )
         logging.info("Deployment: %s", deployment)
         ml_client = self.ml_client
