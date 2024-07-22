@@ -132,7 +132,7 @@ class Predictor:
             if isinstance(input_texts[0], list):
                 if self.task_type == SupportedTask.CHAT_COMPLETION:
                     input_texts = [i[0] for i in input_texts]
-                input_texts = [i[0] if len(i) == 0 else [j.strip() for j in i] for i in input_texts]
+                input_texts = [i[0] if len(i) == 1 else [j.strip() for j in i] for i in input_texts]
             data = {
                     "input_data": {
                         "input_string": input_texts,
@@ -140,7 +140,7 @@ class Predictor:
                     }
             }
             data.update({'task_type': self.task_type})
-            #logger.info(f"Input Data: {data}")
+            logger.info(f"Input Data: {data}")
 
             payload = MIRPayload.from_dict(data)
             payload.update_params(get_generator_params(payload.params))
@@ -389,7 +389,7 @@ def is_fsdp_enabled():
         and strtobool(os.environ.get("FSDP_CPU_RAM_EFFICIENT_LOADING", "False")) == 1
     )
 
-@swallow_all_exceptions
+@swallow_all_exceptions(logger)
 def main():
     """Initialize text-generation-inference server and client."""
     extra_params = {}
@@ -472,7 +472,7 @@ def main():
             )
             if not os.path.exists(tokenizer_path):
                 tokenizer_path = model_path
-        engine_config, task_config, default_generator_configs, task_type = build_configs_from_model(
+        engine_config, task_config, default_generator_configs, task_type, model_info = build_configs_from_model(
             mlmodel,
             model_path,
             config_path,
