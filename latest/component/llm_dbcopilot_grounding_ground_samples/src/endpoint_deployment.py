@@ -58,6 +58,7 @@ class EndpointDeployment(EndpointDeploymentBase):
         sku: str = "Standard_DS3_v2",
         include_views: bool = False,
         instruct_template: str = None,
+        egress_public_network_access: str = "enabled"
     ):
         """deploy_endpoint."""
         from utils.asset_utils import get_datastore_uri
@@ -116,4 +117,5 @@ class EndpointDeployment(EndpointDeploymentBase):
                     "MANAGED_IDENTITY_ENABLED": managed_identity_enabled,
                 },
                 sku=sku,
+                egress_public_network_access=egress_public_network_access,
             )
