@@ -72,7 +72,7 @@ inputs:
   max_seq_length:
     type: integer
     optional: true
-    default: -1
+    default: 8192
     description: Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
 
   num_train_epochs:
