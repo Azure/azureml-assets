@@ -12,6 +12,7 @@ from azureml.dataprep.api.errorhandlers import ExecutionError
 from azureml.dataprep.api.mltable._mltable_helper import UserErrorException
 from enum import Enum
 from pyspark.sql import SparkSession, DataFrame
+from pyspark.errors import AnalysisException
 from pyspark.sql.types import StructType
 from shared_utilities.constants import MISSING_OBO_CREDENTIAL_HELPFUL_ERROR_MESSAGE
 from shared_utilities.event_utils import post_warning_event
@@ -203,7 +204,15 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
             raise Exception("Failed to write mltable yaml file after multiple retries.")
         time.sleep(1)
 
-    metrics_df.write.mode("overwrite").parquet(base_path+"/data/")
+    try:
+        metrics_df.write.mode("overwrite").parquet(base_path+"/data/")
+    except AnalysisException as ae:
+        if 'Found duplicate column' in ae.message:
+            # if have duplicate columns, try to save the dataframe after turning case-sensitive to True
+            print("Tried to save the spark dataframe but found duplicate columns. Trying to save with case-sensitive flag enabled.")
+            spark = init_spark()
+            spark.conf.set('spark.sql.caseSensitive', True)
+            metrics_df.write.mode("overwrite").parquet(base_path+"/data/")
 
 
 def np_encoder(object):
