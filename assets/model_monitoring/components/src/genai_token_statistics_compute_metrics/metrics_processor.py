@@ -54,12 +54,8 @@ class MetricsProcessor:
     def create_span_tree_from_dataframe(self, df: DataFrame) -> List[Optional[SpanTreeNode]]:
         """Create a list of SpanTrees from a DataFrame."""
         # Convert the DataFrame to an RDD and then to a list of Rows
-        rows = df.rdd.map(lambda row: row).collect()
-
-        # Create a SpanTree for each row
-        span_trees = [self.create_span_tree_from_dataframe_row(row) for row in rows]
-        return span_trees
-
+        df.rdd.foreach(self.process_row)
+    
     def process(self, df_traces: DataFrame):
         """Process the aggregated trace data to compute metrics.
 
@@ -67,26 +63,35 @@ class MetricsProcessor:
             df_traces (DataFrame): Aggregated traces from the GenAI processor.
         """
         df_traces = df_traces.select(ROOT_SPAN_COLUMN)
-        span_trees = self.create_span_tree_from_dataframe(df_traces)
+        self.create_span_tree_from_dataframe(df_traces)
 
-        for tree in span_trees:
-            for span in tree:
-                span_type = span.span_type
-                if span_type in INCLUDE_SPAN_TYPE:
-                    attributes = json.loads(span.get_node_attribute(attribute_key="attributes"))
-                    parent = tree.get_span_tree_node_by_span_id(span.parent_id)
-                    # in some cases we have LLM/Embedding span with no parent so need to check
-                    # before accessing its parent object
-                    parent_input = None
-                    parent_output = None
-                    if parent is not None:
-                        parent_input = parent.input
-                        parent_output = parent.output
+    def process_row(self, row: Row):
+        """Process the aggregated trace data to compute metrics.
 
-                    self.calculate_metrics(attributes=attributes,
-                                           span_type=span_type,
-                                           root_input=parent_input,
-                                           root_output=parent_output)
+        Args:
+            df_traces (DataFrame): Aggregated traces from the GenAI processor.
+        """
+        tree = self.create_span_tree_from_dataframe_row(row)
+        if tree is None:
+            return
+        
+        for span in tree:
+            span_type = span.span_type
+            if span_type in INCLUDE_SPAN_TYPE:
+                attributes = json.loads(span.get_node_attribute(attribute_key="attributes"))
+                parent = tree.get_span_tree_node_by_span_id(span.parent_id)
+                # in some cases we have LLM/Embedding span with no parent so need to check
+                # before accessing its parent object
+                parent_input = None
+                parent_output = None
+                if parent is not None:
+                    parent_input = parent.input
+                    parent_output = parent.output
+
+                self.calculate_metrics(attributes=attributes,
+                                       span_type=span_type,
+                                       root_input=parent_input,
+                                       root_output=parent_output)
         self.calculate_averages()
 
     def metrics_generator(self):
