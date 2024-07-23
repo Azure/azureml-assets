@@ -346,7 +346,7 @@ def generate_synthetic_data(
 
             # wait for results to complete
             future_results = {
-                result["idx"]: result 
+                result["idx"]: result
                 for result in [future.result() for future in as_completed(futures)]
             }
 
