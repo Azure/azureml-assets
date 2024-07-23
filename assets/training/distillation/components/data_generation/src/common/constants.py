@@ -5,7 +5,7 @@
 
 
 # COMPONENT META
-COMPONENT_NAME = "oss_generate_data"
+COMPONENT_NAME = "oss_distillation_generate_data"
 
 # DATA GENERATOR VALIDATION
 SUPPORTED_FILE_FORMATS = [".jsonl"]
