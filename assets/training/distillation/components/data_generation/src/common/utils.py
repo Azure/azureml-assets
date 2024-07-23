@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 """Data generator utils."""
 
@@ -79,7 +78,8 @@ def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCreden
         return credential
     except Exception:
         logger.error("Azure CLI cred failed")
-    return None
+
+    raise Exception("Error creating credentials.")
 
 
 def get_workspace() -> Workspace:
@@ -103,7 +103,7 @@ def get_workspace_mlclient(workspace: Workspace = None) -> MLClient:
             resource_group_name=workspace.resource_group,
             workspace_name=workspace.name
         )
-    return None
+    raise Exception("Error creating MLClient. No credentials or workspace found")
 
 
 def get_online_endpoint_key(mlclient_ws: MLClient, endpoint_name: str) -> str:
