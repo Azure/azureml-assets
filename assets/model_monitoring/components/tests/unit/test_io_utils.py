@@ -12,7 +12,7 @@ from src.shared_utilities.io_utils import (
 
 
 @pytest.mark.unit
-class TestDFUtils:
+class TestIOUtils:
     def test_save_spark_df_as_mltable_duplicate_case_sensitive_columns(self):
         """Test the save dataframe as mltable functionality."""
         spark = init_spark()
