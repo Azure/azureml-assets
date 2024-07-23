@@ -185,7 +185,7 @@ def read_mltable_in_spark(mltable_path: str):
             raise se
 
 
-def save_spark_df_as_mltable(metrics_df, folder_path: str):
+def save_spark_df_as_mltable(metrics_df: DataFrame, folder_path: str):
     """Save spark dataframe as mltable."""
     base_path = folder_path.rstrip('/')
     output_path_pattern = base_path + "/data/*.parquet"
