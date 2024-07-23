@@ -157,14 +157,21 @@ def get_parser():
         type=int,
         default=DEFAULT_REQUEST_BATCH_SIZE,
         required=False,
-        help="No of data records to process in one go. This would be limited by teacher model deployment concurrency level.",
+        help="No of data records to process at a time.",
     )
     parser.add_argument(
         "--min_endpoint_success_ratio",
         type=float,
         required=False,
         default=DEFAULT_SUCCESS_RATIO,
-        help=f"The minimum value of (successful_requests / total_requests) required for classifying inference as successful. If (successful_requests / total_requests) < min_endpoint_success_ratio, the experiment will be marked as failed. By default it is {DEFAULT_SUCCESS_RATIO}. (0 means all requests are allowed to fail while 1 means no request should fail.)"
+        help=(
+            f"The minimum value of "
+            "(successful_requests / total_requests) required for classifying inference as successful. "
+            "If (successful_requests / total_requests) < min_endpoint_success_ratio, "
+            "the experiment will be marked as failed. "
+            f"By default it is {DEFAULT_SUCCESS_RATIO}. "
+            "(0 means all requests are allowed to fail while 1 means no request should fail.)"
+        )
     )
 
     parser.add_argument(
@@ -338,7 +345,10 @@ def generate_synthetic_data(
                     )
 
             # wait for results to complete
-            future_results = {result["idx"]: result for result in [future.result() for future in as_completed(futures)]}
+            future_results = {
+                result["idx"]: result 
+                for result in [future.result() for future in as_completed(futures)]
+            }
 
             idx = 0
             for idx, row in batch.iterrows():
@@ -376,7 +386,8 @@ def generate_synthetic_data(
         success_ratio = float(total_rows - error_count) / total_rows
         logger.info(f"Success rate was {success_ratio} for {input_file_path}")
         if success_ratio < min_endpoint_success_ratio:
-            raise Exception(f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}. Failing run")
+            msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
+            raise Exception(msg)
 
     logger.info("Processing train file")
     batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
@@ -433,14 +444,18 @@ def data_import(args: Namespace):
             raise Exception("Endpoint key is a requried parameter for data generation")
 
     if teacher_model_top_p < 0 or teacher_model_top_p > 1:
-        raise Exception(f"Invalid teacher_model_top_p. Value should be 0<=val<=1, but it is {teacher_model_top_p}")
+        raise Exception(
+            f"Invalid teacher_model_top_p. Value should be 0<=val<=1, but it is {teacher_model_top_p}")
     if teacher_model_temperature < 0 or teacher_model_temperature > 1:
-        raise Exception(f"Invalid teacher_model_temperature. Value should be 0<=val<=1, but it is {teacher_model_temperature}")
+        raise Exception(
+            f"Invalid teacher_model_temperature. Value should be 0<=val<=1, but it is {teacher_model_temperature}")
     if min_endpoint_success_ratio < 0 or min_endpoint_success_ratio > 1:
-        raise Exception(f"Invalid min_endpoint_success_ratio. Value should be 0<=val<=1, but it is {min_endpoint_success_ratio}")
+        raise Exception(
+            f"Invalid min_endpoint_success_ratio. Value should be 0<=val<=1, but it is {min_endpoint_success_ratio}")
 
     if request_batch_size <= 0 or request_batch_size > MAX_BATCH_SIZE:
-        raise Exception(f"Invalid request_batch_size. Value should be 0<=val<={MAX_BATCH_SIZE}, but it is {request_batch_size}")
+        raise Exception(
+            f"Invalid request_batch_size. Value should be 0<=val<={MAX_BATCH_SIZE}, but it is {request_batch_size}")
 
     inference_params = {
         MAX_NEW_TOKENS: teacher_model_max_new_tokens,

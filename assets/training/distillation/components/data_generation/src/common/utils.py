@@ -122,7 +122,8 @@ def get_online_endpoint_url(mlclient_ws: MLClient, endpoint_name: str) -> str:
         endpoint = mlclient_ws.online_endpoints.get(endpoint_name)
         return endpoint.scoring_uri
     except Exception as e:
-        logger.error(f"Exception in fetching online endpoint scoring URL for endpoint name: {endpoint_name}. Error {e}")
+        logger.error(
+            f"Exception in fetching online endpoint scoring URL for endpoint name: {endpoint_name}. Error {e}")
         return None
 
 
@@ -142,5 +143,6 @@ def get_serverless_endpoint_url(mlclient_ws: MLClient, endpoint_name: str) -> st
         endpoint = mlclient_ws.serverless_endpoints.get(endpoint_name)
         return endpoint.scoring_uri
     except Exception as e:
-        logger.error(f"Exception in fetching serverless endpoint scoring URL for endpoint name: {endpoint_name}. Error {e}")
+        logger.error(
+            f"Exception in fetching serverless endpoint scoring URL for endpoint name: {endpoint_name}. Error {e}")
         return None
