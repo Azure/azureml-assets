@@ -9,12 +9,11 @@ from src.shared_utilities.io_utils import (
     init_spark,
     save_spark_df_as_mltable,
 )
-from tests.e2e.utils.io_utils import create_pyspark_dataframe
 
 
 @pytest.mark.unit
 class TestDFUtils:
-    def test_save_spark_df_as_mltable(self):
+    def test_save_spark_df_as_mltable_duplicate_case_sensitive_columns(self):
         """Test the save dataframe as mltable functionality."""
         spark = init_spark()
         production_df = spark.createDataFrame([(1, "c", "bob"), (2, "d", "BOB")], ["id", "age", "Id"])
