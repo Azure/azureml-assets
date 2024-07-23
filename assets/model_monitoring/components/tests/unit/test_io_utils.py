@@ -17,6 +17,6 @@ class TestDFUtils:
     def test_save_spark_df_as_mltable(self):
         """Test the save dataframe as mltable functionality."""
         spark = init_spark()
-        production_df = spark.createDataFrame([(1, "c"), (2, "d")], ["id", "age", "Id"])
+        production_df = spark.createDataFrame([(1, "c", "bob"), (2, "d", "BOB")], ["id", "age", "Id"])
         save_spark_df_as_mltable(production_df, "localData")
         assert os.path.exists("localData/") == True
