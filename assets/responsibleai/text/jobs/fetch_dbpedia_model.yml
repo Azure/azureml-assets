@@ -16,7 +16,7 @@ outputs:
   model_output_path:
     type: path
 code: ./src_dbpedia/
-environment: azureml://registries/azureml/environments/responsibleai-text-ubuntu20.04-py38-cpu/versions/21
+environment: azureml://registries/azureml/environments/responsibleai-text/versions/1
 command: >-
   python fetch_text_model.py
   --model_base_name ${{inputs.model_base_name}}
