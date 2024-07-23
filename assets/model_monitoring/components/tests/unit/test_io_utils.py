@@ -18,4 +18,4 @@ class TestIOUtils:
         spark = init_spark()
         production_df = spark.createDataFrame([(1, "c", "bob"), (2, "d", "BOB")], ["id", "age", "Id"])
         save_spark_df_as_mltable(production_df, "localData")
-        assert os.path.exists("localData/") == True
+        assert os.path.exists("localData/") is True

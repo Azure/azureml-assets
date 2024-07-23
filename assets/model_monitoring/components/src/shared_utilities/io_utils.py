@@ -209,10 +209,13 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
     except AnalysisException as ae:
         if 'Found duplicate column' in str(ae):
             # if have duplicate columns, try to save the dataframe after turning case-sensitive to True
-            print("Tried to save the spark dataframe but found duplicate columns. Trying to save with case-sensitive flag enabled.")
+            print(
+                "Tried to save the spark dataframe but found duplicate columns."
+                " Trying to save with case-sensitive flag enabled.")
             spark = init_spark()
             spark.conf.set('spark.sql.caseSensitive', True)
             metrics_df.write.mode("overwrite").parquet(base_path+"/data/")
+            spark.conf.unset('spark.sql.caseSensitive')
 
 
 def np_encoder(object):
