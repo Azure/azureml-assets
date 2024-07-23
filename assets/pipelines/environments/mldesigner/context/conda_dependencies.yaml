@@ -8,3 +8,4 @@ dependencies:
   - azure-ai-ml=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - mldesigner=={{latest-pypi-version:pre}}
+  - urllib3=={{latest-pypi-version}}
