@@ -7,6 +7,9 @@ RUN apt-get -y update
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+# Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
+# Removing it from requirements.txt to avoid conflict with scikit-learn version
+RUN pip install azureml-metrics==0.0.33
 
 # Vulnerability fix
 RUN pip install datasets==2.15.0
