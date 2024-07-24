@@ -1,0 +1,4 @@
+{"y_test":  1, "y_pred": 1}
+{"y_test": 2, "y_pred": 2}
+{"y_test":  1, "y_pred": 2}
+{"y_test": 2, "y_pred": 1}

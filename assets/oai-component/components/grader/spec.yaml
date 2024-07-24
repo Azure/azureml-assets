@@ -1,0 +1,51 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: grader
+display_name: Grade Predictions
+description: grade Predictions
+
+version: 0.0.4
+type: command
+tags:
+  type: Grader
+  sub_type: grade_predictions
+
+inputs:
+  predictions_data:
+    type: uri_file
+    optional: false
+    mode: ro_mount
+    description: "Predicted Data as JSON Lines URI_FILE"
+  ground_truth_data:
+    type: uri_file
+    optional: false
+    mode: ro_mount
+    description: "Ground Truth Data as JSON Lines URI_FILE"
+  ground_truth_column:
+    type: string
+    optional: true
+    description: "Column name in ground truth data to be used for grading"
+  prediction_column:
+    type: string
+    optional: true
+    description: "Column name in prediction data to be used for grading"
+  grader_config_params:
+    type: string
+    optional: true
+    description: "JSON Serialized string of aggregator_config"
+
+outputs:
+  grader_result:
+    type: uri_file
+
+is_deterministic: True
+code: ../../src
+environment: azureml://registries/azureml/environments/model-evaluation/versions/16
+
+command: >-
+  python grade_model.py
+  --predictions_data '${{inputs.predictions_data}}'
+  --grader_result '${{outputs.grader_result}}'
+  --ground_truth '${{inputs.ground_truth_data}}'
+  $[[--config_str '${{inputs.grader_config_params}}']]
+  $[[--ground_truth_column '${{inputs.ground_truth_column}}']]
+  $[[--prediction_column '${{inputs.prediction_column}}']]
