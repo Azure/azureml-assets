@@ -176,7 +176,7 @@ class ServerlessEndpointDetails(EndpointDetails):
 
 class OnlineEndpointDetails(EndpointDetails):
     """Online endpoint details for data generation."""
-    
+
     def __init__(self, mlclient_ws: MLClient, endpoint_name: str):
         """Initialize endpoint details for managed online endpoint.
 
@@ -196,11 +196,11 @@ class OnlineEndpointDetails(EndpointDetails):
             raise Exception(f"Online endpoint fetch details failed with exception: {e}")
 
         all_deployments = self._get_deployments()
-        # fetch deployment with 100% traffic 
+        # fetch deployment with 100% traffic
         deployments = [
             deployment
             for deployment in all_deployments if deployment.name in [
-                deployment_name 
+                deployment_name
                 for deployment_name, traffic_percent in self._endpoint.traffic.items() if traffic_percent == 100
             ]
         ]
@@ -216,7 +216,7 @@ class OnlineEndpointDetails(EndpointDetails):
         # ensure endpoint and deployment is healthy
         logger.info(f"Endpoint provisioning state: {self._endpoint.provisioning_state}")
         logger.info(f"Deployment provisioning state: {self._deployment.provisioning_state}")
-        if not (self._endpoint.provisioning_state.lower() == "succeeded" \
+        if not (self._endpoint.provisioning_state.lower() == "succeeded"
                 and self._deployment.provisioning_state.lower() == "succeeded"):
             raise Exception(f"Endpoint {self._endpoint.name} or deployment {self._deployment.name} is unhealthy.")
 
@@ -249,7 +249,8 @@ class OnlineEndpointDetails(EndpointDetails):
             List[ManagedOnlineDeployment]: List of deployments
         """
         try:
-            self._deployments: List[ManagedOnlineDeployment] = self._mlclient.online_deployments.list(self._endpoint.name)
+            self._deployments: List[ManagedOnlineDeployment] = self._mlclient.online_deployments.list(
+                self._endpoint.name)
             return self._deployments
         except Exception as e:
             logger.error(f"Could not fetch deployments for endpoint: {self._endpoint.name}. Exception => {e}")
