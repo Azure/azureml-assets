@@ -37,11 +37,23 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         logger.debug(f"Starting fine-tune job, model: {model}, n_epochs: {n_epochs},\
                      batch_size: {batch_size}, learning_rate_multiplier: {learning_rate_multiplier},\
                      training_file_id: {training_file_id}, validation_file_id: {validation_file_id}, suffix: {suffix}")
-        hyperparameters: Hyperparameters = {
-            "n_epochs": n_epochs if n_epochs else "auto",
-            "batch_size": batch_size if batch_size else "auto",
-            "learning_rate_multiplier": learning_rate_multiplier if learning_rate_multiplier else "auto"
-        }
+        hyperparameters: Hyperparameters = {}
+
+        if n_epochs:
+            hyperparameters["n_epochs"] = n_epochs
+        else:
+            logger.info("num epochs not passed, it will be determined dynamically")
+
+        if batch_size:
+            hyperparameters["batch_size"] = batch_size
+        else:
+            logger.info("batch size not passed, it will be determined dynamically")
+
+        if learning_rate_multiplier:
+            hyperparameters["learning_rate_multiplier"] = learning_rate_multiplier
+        else:
+            logger.info("learning rate multiplier not passed, it will be determined dynamically")
+
         finetune_job = self.aoai_client.fine_tuning.jobs.create(
             model=model,
             training_file=training_file_id,
@@ -64,12 +76,19 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         if status not in terminal_statuses:
             logger.info(f'Job not in terminal status: {status}. Waiting.')
             last_event = None
+            last_metric_logged = 0
             while status not in terminal_statuses:
                 time.sleep(60)
                 finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.job_id)
                 status = finetune_job.status
                 logger.info(f"Finetuning job status : {status}")
                 last_event = self._log_events(last_event)
+
+                if finetune_job.result_files is not None:
+                    last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
+
+        # emitting metrics after status becomes terminal, just to ensure we do not miss any metric
+        last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
 
         if status == "failed":
             error = finetune_job.error
@@ -80,11 +99,8 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
             logger.info(f"finetune job: {self.job_id} got cancelled")
             return None
 
-        """metrics can be retrived only for successful finetune job"""
         finetuned_model_id = finetune_job.fine_tuned_model
         logger.info(f'Fine-tune job: {self.job_id} finished successfully. model id: {finetuned_model_id}')
-        logger.info("fetching training metrics from Azure OpenAI")
-        self._log_metrics(finetune_job)
         return finetuned_model_id
 
     def cancel_job(self):
@@ -95,7 +111,7 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
             exit()
         return self.aoai_client.fine_tuning.jobs.cancel(self.job_id)
 
-    def _log_metrics(self, finetune_job):
+    def _log_metrics(self, finetune_job, last_metric_logged):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
         result_file = finetune_job.result_files[0]
         if result_file is None:
@@ -109,13 +125,21 @@ class FineTuneComponent(AzureOpenAIProxyComponent):
         f = io.BytesIO(response.content)
         df = pd.read_csv(f)
 
+        if last_metric_logged >= len(df):
+            logger.info(f"no new metrics emitted since last iteration,\
+                        currently metrics logged till {last_metric_logged} steps")
+            return last_metric_logged
+
         for col in df.columns[1:]:
             values = df[['step', col]].dropna()
             # drop all rows with -1 as a value
             values = values[values[col] != -1]
+            values = values.iloc[last_metric_logged:]
             for i, row in values.iterrows():
                 mlflow.log_metric(key=col, value=row[col], step=int(row.step))
-        logger.info("logged training metrics for finetuning job")
+        last_metric_logged = len(df)
+        logger.info(f"logged training metrics for finetuning job till {last_metric_logged} steps")
+        return last_metric_logged
 
     def _log_events(self, last_event):
         """Log events like training started, running nth epoch etc."""
