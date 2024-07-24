@@ -42,15 +42,13 @@ from common.constants import (
     TOP_P,
     STOP_TOKEN,
     SUPPORTED_FILE_FORMATS,
+    SUPPORTED_TEACHER_MODEL_ASSET_IDS,
     VLLM_CHAT_SCORE_PATH,
 )
 
 from common.utils import (
     get_workspace_mlclient,
-    get_online_endpoint_key,
-    get_online_endpoint_url,
-    get_serverless_endpoint_key,
-    get_serverless_endpoint_url,
+    get_endpoint_details,
     retry,
 )
 
@@ -426,21 +424,23 @@ def data_import(args: Namespace):
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
     mlclient_ws = get_workspace_mlclient()
+    if not mlclient_ws:
+        raise Exception("Could not create MLClient for current workspace")
 
-    if teacher_model_endpoint_url is None:
-        if teacher_model_endpoint_name:
-            if mlclient_ws:
-                teacher_model_endpoint_url = get_serverless_endpoint_url(mlclient_ws, teacher_model_endpoint_name)\
-                    or get_online_endpoint_url(mlclient_ws, teacher_model_endpoint_name)
-        if not teacher_model_endpoint_url:
-            raise Exception("Endpoint URL is a requried parameter for data generation")
+    if teacher_model_endpoint_name:
+        endpoint_details = get_endpoint_details(mlclient_ws, teacher_model_endpoint_name)
+        teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
+        teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
+        teacher_model_asset_id = endpoint_details.get_deployed_model_id()
+        if teacher_model_asset_id not in SUPPORTED_TEACHER_MODEL_ASSET_IDS:
+            raise Exception(
+                f"teacher model asset id {teacher_model_asset_id} not in `[{SUPPORTED_TEACHER_MODEL_ASSET_IDS}]`"
+            )
 
-    if teacher_model_endpoint_key is None:
-        if teacher_model_endpoint_name:
-            if mlclient_ws:
-                teacher_model_endpoint_key = get_serverless_endpoint_key(mlclient_ws, teacher_model_endpoint_name)\
-                    or get_online_endpoint_key(mlclient_ws, teacher_model_endpoint_name)
-        if not teacher_model_endpoint_key:
+    if not teacher_model_endpoint_url:
+        raise Exception("Endpoint URL is a requried parameter for data generation")
+
+    if not teacher_model_endpoint_key:
             raise Exception("Endpoint key is a requried parameter for data generation")
 
     if teacher_model_top_p < 0 or teacher_model_top_p > 1:
