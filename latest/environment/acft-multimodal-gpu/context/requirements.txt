@@ -1,8 +1,11 @@
 azureml-acft-accelerator==0.0.57.post1
-azureml-evaluate-mlflow==0.0.57
+# azureml-evaluate-mlflow==0.0.57
 azureml-acft-common-components==0.0.57
 azureml-acft-contrib-hf-nlp==0.0.57.post5
-azureml-acft-multimodal-components==0.0.57
+# Temporarily commenting azureml_acft_multimodal_components since it is not supported in python 3.10 and we need to
+# upgrade to python 3.10 to address scikit-learn vulnerability(version 1.5.0) which requires python>=3.9
+# Uncomment the below line once azureml_acft_multimodal_components is supported in python 3.10
+# azureml_acft_multimodal_components==0.0.57
 # needed by multimodal
 mltable==1.5.0
 transformers==4.36.2
@@ -19,7 +22,6 @@ rouge-score==0.1.2
 sacrebleu==2.2.1
 bitsandbytes==0.41.0
 einops==0.6.1
-certifi==2023.07.22
 numpy==1.22
 azure-ai-ml==1.16.1
 azureml-dataprep==4.12.4
