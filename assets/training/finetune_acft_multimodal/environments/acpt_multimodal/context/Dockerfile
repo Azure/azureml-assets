@@ -5,7 +5,6 @@ USER root
 RUN apt-get -y update
 
 # Install required packages from pypi
-RUN pip install --ignore-requires-python azureml-acft-multimodal-components=={{latest-pypi-version}}
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -16,4 +15,5 @@ RUN pip install cryptography==42.0.5
 RUN pip install gunicorn==22.0.0
 RUN pip install onnxruntime==1.17.3
 RUN pip install onnx==1.16.0
+RUN pip install scikit-learn==1.5.0
 # dummy number to change when needing to force rebuild without changing the definition: 1
