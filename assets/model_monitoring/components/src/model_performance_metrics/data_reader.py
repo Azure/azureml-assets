@@ -4,6 +4,7 @@
 """This file contains the data reader for model performance compute metrics."""
 
 from shared_utilities.io_utils import try_read_mltable_in_spark, NoDataApproach
+from shared_utilities.df_utils import validate_column_names
 
 
 class DataReaderFactory:
@@ -67,6 +68,7 @@ class BaseTaskReader:
 
         """
         df = try_read_mltable_in_spark(file_name, "production_data", NoDataApproach.ERROR)
+        validate_column_names(df)
 
         ground_truth = df.select(ground_truths_column_name).toPandas()
 

@@ -47,7 +47,16 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e .
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.2 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.4 --no-cache-dir
+RUN pip uninstall transformers -y
+
+COPY ./transformers.patch ./transformers.patch
+RUN git clone https://github.com/huggingface/transformers.git && \
+    cd transformers && \
+    git checkout fc35907f95459d7a6c5281dfadd680b6f7b620e3 && \
+    git apply ../transformers.patch && \
+    python setup.py bdist_wheel && \
+    pip install dist/*.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

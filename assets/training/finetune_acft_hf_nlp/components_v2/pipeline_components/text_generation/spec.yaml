@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-version: 0.0.18
+version: 0.0.20
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
@@ -69,6 +69,12 @@ inputs:
 
   # Finetuning parameters
   # Training parameters
+  max_seq_length:
+    type: integer
+    optional: true
+    default: 4096
+    description: Default is 4096.
+
   num_train_epochs:
     type: integer
     default: 1
@@ -132,7 +138,7 @@ outputs:
 jobs:
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.18
+    component: azureml:oss_text_generation_data_import:0.0.20
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -150,7 +156,7 @@ jobs:
       user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
   oss_text_generation_finetune:
     type: command
-    component: azureml:oss_text_generation_finetune:0.0.18
+    component: azureml:oss_text_generation_finetune:0.0.20
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -170,7 +176,7 @@ jobs:
       ground_truth_key: '${{parent.inputs.ground_truth_key}}'
       batch_size: 1000
       pad_to_max_length: "false"
-      max_seq_length: 4096
+      max_seq_length: '${{parent.inputs.max_seq_length}}'
       number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
       apply_lora: "true"
       lora_alpha: 128
