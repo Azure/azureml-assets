@@ -25,4 +25,4 @@ einops==0.6.1
 numpy==1.22
 azure-ai-ml==1.16.1
 azureml-dataprep==4.12.4
-
+azureml-metrics==0.0.33
