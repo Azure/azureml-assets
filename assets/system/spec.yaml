@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  System environment with docker tools including Oras, Trivy.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.dir}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
