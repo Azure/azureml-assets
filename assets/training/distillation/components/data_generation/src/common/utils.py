@@ -107,6 +107,7 @@ def get_workspace_mlclient(workspace: Workspace = None) -> MLClient:
         )
     raise Exception("Error creating MLClient. No credentials or workspace found")
 
+
 class EndpointDetails(ABC):
     """Base class for endpoint details."""
 

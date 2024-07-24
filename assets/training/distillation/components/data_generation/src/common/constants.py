@@ -3,6 +3,8 @@
 
 """Data generatior constants."""
 
+import re
+
 
 # COMPONENT META
 COMPONENT_NAME = "oss_distillation_generate_data"
@@ -12,9 +14,10 @@ SUPPORTED_FILE_FORMATS = [".jsonl"]
 TRAIN_FILE_NAME = "train_input.jsonl"
 VALIDATION_FILE_NAME = "validation_input.jsonl"
 
-SUPPORTED_TEACHER_MODEL_ASSET_IDS = [
-    "azureml://registries/azureml-meta/models/Meta-Llama-3.1-405B-Instruct/versions/1"
-]
+SUPPORTED_TEACHER_MODEL_MAP = {
+    "Meta-Llama-3.1-405B-Instruct": re.compile(
+        r"^azureml://registries/azureml-meta/models/Meta-Llama-3.1-405B-Instruct(/versions/\d+)?$")
+}
 
 # Scoring paths
 VLLM_CHAT_SCORE_PATH = "/v1/chat/completions"

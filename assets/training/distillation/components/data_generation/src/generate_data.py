@@ -42,7 +42,7 @@ from common.constants import (
     TOP_P,
     STOP_TOKEN,
     SUPPORTED_FILE_FORMATS,
-    SUPPORTED_TEACHER_MODEL_ASSET_IDS,
+    SUPPORTED_TEACHER_MODEL_MAP,
     VLLM_CHAT_SCORE_PATH,
 )
 
@@ -432,16 +432,16 @@ def data_import(args: Namespace):
         teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
         teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
         teacher_model_asset_id = endpoint_details.get_deployed_model_id()
-        if teacher_model_asset_id not in SUPPORTED_TEACHER_MODEL_ASSET_IDS:
+        if not any(pat.match(teacher_model_asset_id) for name, pat in SUPPORTED_TEACHER_MODEL_MAP.items()):
             raise Exception(
-                f"teacher model asset id {teacher_model_asset_id} not in `[{SUPPORTED_TEACHER_MODEL_ASSET_IDS}]`"
+                f"Teacher model asset ID {teacher_model_asset_id} not in [{list(SUPPORTED_TEACHER_MODEL_MAP.keys())}]"
             )
 
     if not teacher_model_endpoint_url:
         raise Exception("Endpoint URL is a requried parameter for data generation")
 
     if not teacher_model_endpoint_key:
-            raise Exception("Endpoint key is a requried parameter for data generation")
+        raise Exception("Endpoint key is a requried parameter for data generation")
 
     if teacher_model_top_p < 0 or teacher_model_top_p > 1:
         raise Exception(
