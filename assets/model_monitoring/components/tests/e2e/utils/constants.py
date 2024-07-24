@@ -118,6 +118,7 @@ DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME = 'model_outputs_join_column'
 # Groundedness target dataset as a MLTable.
 DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:mltable_groundedness_preprocessed_target_small:1'
 DATA_ASSET_TRACE_LOGS_DATA_WITH_CONTEXT = 'azureml:mltable_trace_logs_gsq_adaptor_test:1'
+DATA_ASSET_TRACE_LOGS_CASE_SENSITIVE_COLUMNS = 'azureml:mltable_trace_logs_case_sensitive_columns_test:1'
 
 # Chat history data as a MLTable.
 DATA_ASSET_CHAT_HISTORY_DATA = 'azureml:mltable_chat_history_data_small:1'
