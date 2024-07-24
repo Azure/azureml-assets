@@ -5,6 +5,7 @@ USER root
 RUN apt-get -y update
 
 # Install required packages from pypi
+RUN pip install --ignore-requires-python azureml-acft-multimodal-components=={{latest-pypi-version}}
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 

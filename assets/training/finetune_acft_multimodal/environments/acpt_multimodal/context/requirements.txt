@@ -2,7 +2,6 @@ azureml-acft-accelerator=={{latest-pypi-version}}
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-common-components=={{latest-pypi-version}}
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-azureml-acft-multimodal-components=={{latest-pypi-version}}
 # needed by multimodal
 mltable==1.5.0
 transformers==4.36.2
@@ -19,7 +18,6 @@ rouge-score==0.1.2
 sacrebleu==2.2.1
 bitsandbytes==0.41.0
 einops==0.6.1
-certifi==2023.07.22
 numpy==1.22
 azure-ai-ml==1.16.1
 azureml-dataprep==4.12.4
