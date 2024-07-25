@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_chat_completion_pipeline
-version: 0.0.18
+version: 0.0.18.guptaaman
 type: pipeline
 display_name: OSS Chat Completion Pipeline
 description: FTaaS Pipeline component for chat completion
@@ -26,6 +26,13 @@ inputs:
     description: >-
       number of gpus to be used per node for finetuning, should be equal
       to number of gpu per node in the compute SKU used for finetune
+
+  number_of_node_finetuning:
+    type: integer
+    default: 1
+    optional: true
+    description: >-
+      number of nodes to be used for finetuning
 
   # Continual-Finetuning model path
   mlflow_model_path:
@@ -134,9 +141,13 @@ jobs:
       system_properties: '${{parent.inputs.system_properties}}'
   oss_chat_completion_finetune:
     type: command
-    component: azureml:oss_chat_completion_finetune:0.0.18
+    component: azureml:oss_chat_completion_finetune:0.0.18.guptaaman
     compute: '${{parent.inputs.compute_finetune}}'
+    distribution:
+      type: pytorch
+      process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
     resources:
+      instance_count: '${{parent.inputs.number_of_node_finetuning}}'
       instance_type: '${{parent.inputs.instance_type_finetune}}'
       properties:
         singularity:

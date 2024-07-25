@@ -1,12 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_chat_completion_finetune
-version: 0.0.18
+version: 0.0.18.guptaaman
 type: command
 
 is_deterministic: True
 
 display_name: OSS Chat Completion Finetune
 description: FTaaS component to finetune model for Chat Completion task
+
+distribution:
+  type: pytorch
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/62
 
