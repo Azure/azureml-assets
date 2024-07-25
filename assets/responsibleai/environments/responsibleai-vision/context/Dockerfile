@@ -31,12 +31,6 @@ RUN pip install 'azureml-core=={{latest-pypi-version}}' \
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-automl-dnn-vision=={{latest-pypi-version}}'
 
-# # Force install torch version >= 2.2.2 to override azureml-automl-dnn-vision version and fix remote execution issue
-# RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install torch>=2.2.2 --force-reinstall --no-deps
-# Install torch version >= 2.2.2 to override azureml-automl-dnn-vision version and fix remote execution issue
-RUN conda remove pytorch -y
-RUN conda install -c pytorch -p $AZUREML_CONDA_ENVIRONMENT_PATH pytorch>=2.2.2
-
 RUN pip install 'shap==0.41.0' \
                 'scikit-learn>=1.5.1' \
                 'interpret-community==0.31.0' \
@@ -58,6 +52,9 @@ RUN pip install 'cryptography>=42.0.4'
 RUN pip install 'Werkzeug>=3.0.3' \
                 'tqdm>=4.66.3' \
                 'onnx>=1.16.0'
+
+# To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
+RUN pip install 'torch>=2.2.2'
 
 RUN pip freeze
 
