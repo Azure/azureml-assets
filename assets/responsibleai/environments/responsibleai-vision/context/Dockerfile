@@ -34,6 +34,7 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 # # Force install torch version >= 2.2.2 to override azureml-automl-dnn-vision version and fix remote execution issue
 # RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install torch>=2.2.2 --force-reinstall --no-deps
 # Install torch version >= 2.2.2 to override azureml-automl-dnn-vision version and fix remote execution issue
+RUN conda remove pytorch -y
 RUN conda install -c pytorch -p $AZUREML_CONDA_ENVIRONMENT_PATH pytorch>=2.2.2
 
 RUN pip install 'shap==0.41.0' \
