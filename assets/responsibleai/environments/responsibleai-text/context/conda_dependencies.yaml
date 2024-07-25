@@ -26,3 +26,4 @@ dependencies:
     - datasets
     - typing-extensions<4.6.1
     - gevent-websocket
+    - torch>=2.2.2
