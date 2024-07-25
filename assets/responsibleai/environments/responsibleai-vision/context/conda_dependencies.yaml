@@ -24,6 +24,6 @@ dependencies:
     - mltable==1.5.0
     - fastai
     - ipython<8.13
-    - typing-extensions<4.6.1
+    - typing-extensions>=4.8.0
     - gevent-websocket
-    - torch>=2.2.2
+    # - torch>=2.2.2
