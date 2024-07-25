@@ -17,9 +17,18 @@ import re
 import tempfile
 import mlflow
 import socket
+import json
+import uuid
 
 import pandas as pd
-from azure.ai.generative.evaluate import evaluate
+from promptflow.core import AzureOpenAIModelConfiguration
+from promptflow.evals.evaluate import evaluate
+from promptflow.evals.evaluators import (
+    CoherenceEvaluator,
+    FluencyEvaluator,
+    GroundednessEvaluator,
+    RelevanceEvaluator,
+    SimilarityEvaluator)
 from shared_utilities.llm_utils import _WorkspaceConnectionTokenManager
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from pyspark.sql.functions import col
@@ -122,6 +131,14 @@ COMPACT_METRIC_NAME_TO_COLUMN = {
     FLUENCY: GPT_FLUENCY,
     COHERENCE: GPT_COHERENCE,
     SIMILARITY: GPT_SIMILARITY
+}
+
+EVALUATOR_NAME_TO_CLASS = {
+    GPT_GROUNDEDNESS: GroundednessEvaluator,
+    GPT_RELEVANCE: RelevanceEvaluator,
+    GPT_FLUENCY: FluencyEvaluator,
+    GPT_COHERENCE: CoherenceEvaluator,
+    GPT_SIMILARITY: SimilarityEvaluator
 }
 
 COLUMN_TO_COMPACT_METRIC_NAME = {v: k for k, v in COMPACT_METRIC_NAME_TO_COLUMN.items()}
@@ -314,6 +331,11 @@ def get_passthrough_cols(df):
     return passthrough_cols
 
 
+def format_data_column(column):
+    """Format data column in promptflow-evals config format."""
+    return "${data." + column + "}"
+
+
 def apply_annotation(
     *,
     metric_names,
@@ -485,6 +507,11 @@ def apply_annotation(
             for env_var_key, env_var_value in driver_env_vars.items():
                 os.environ[env_var_key] = env_var_value
             rows = []
+            input_columns = [PROMPT, COMPLETION]
+            if has_context:
+                input_columns.append(CONTEXT)
+            if has_ground_truth:
+                input_columns.append(GROUND_TRUTH)
             passthrough_cols = get_passthrough_cols(batch)
             for index, row in batch.iterrows():
                 qca = {PROMPT: row[PROMPT], COMPLETION: row[COMPLETION]}
@@ -498,32 +525,47 @@ def apply_annotation(
                 os.makedirs(DEFAULT_PROMPTFLOW_PATH, exist_ok=True)
             mlflow.set_tracking_uri(tracking_uri)
 
-            output_dir = tempfile.TemporaryDirectory()
+            input_dir = tempfile.TemporaryDirectory()
             evaluation_name = "gsq-evaluation"
             run_name = evaluation_name + "-child-run"
+            model_config = AzureOpenAIModelConfiguration(
+                azure_endpoint=api_base,
+                api_key=api_key,
+                azure_deployment=model_deployment_name,
+                api_version=api_version,
+            )
+            evaluators = {}
+            evaluator_config = {}
+            for metric_name in metrics_list:
+                evaluator = EVALUATOR_NAME_TO_CLASS[metric_name]
+                metric_name_compact = COLUMN_TO_COMPACT_METRIC_NAME[
+                    metric_name].lower()
+                evaluators[metric_name_compact] = evaluator(
+                    model_config=model_config)
+                evaluator_config[metric_name_compact] = {
+                    "answer": format_data_column(COMPLETION),
+                    "question": format_data_column(PROMPT)
+                }
+                config = evaluator_config[metric_name_compact]
+                if has_context:
+                    config["context"] = format_data_column(CONTEXT)
+                if has_ground_truth:
+                    config["ground_truth"] = format_data_column(GROUND_TRUTH)
+            # write rows to jsonl file
+            input_file_name = "eval_input_" + str(uuid.uuid4()) + ".jsonl"
+            input_file_path = os.path.join(input_dir.name, input_file_name)
+            with open(input_file_path, "w") as f:
+                for row in rows:
+                    f.write(json.dumps(row) + '\n')
             # get existing run
             with mlflow.start_run():
                 # create child run
                 with mlflow.start_run(nested=mlflow.active_run(), run_name=run_name) as run:
-                    evaluate(
+                    tabular_result = evaluate(
                         evaluation_name=evaluation_name,
-                        data=rows,
-                        task_type="qa",
-                        data_mapping={
-                            "question": PROMPT,
-                            "context": CONTEXT,
-                            "answer": COMPLETION,
-                            "ground_truth": GROUND_TRUTH
-                        },
-                        model_config={
-                            "api_version": api_version,
-                            "api_base": api_base,
-                            "api_type": AZURE,
-                            "api_key": api_key,
-                            "deployment_id": model_deployment_name
-                        },
-                        metrics_list=metrics_list,
-                        output_path=output_dir.name
+                        data=input_file_path,
+                        evaluators=evaluators,
+                        evaluator_config=evaluator_config
                     )
                     child_run_id = run.info.run_id
                     # add promptflow debug logs to run
@@ -532,18 +574,24 @@ def apply_annotation(
                     client = mlflow.tracking.MlflowClient()
                     client.log_artifacts(
                         child_run_id, DEFAULT_PROMPTFLOW_PATH, artifact_path=artifact_path)
-            tabular_result = pd.read_json(os.path.join(output_dir.name, "eval_results.jsonl"), lines=True)
+            # convert rows from result to pandas dataframe
+            tabular_result = pd.DataFrame(tabular_result["rows"])
             for passthrough_column, passthrough_values in passthrough_cols.items():
                 tabular_result[passthrough_column] = passthrough_values
             # rename metric columns
             try:
                 for column_name in metrics_list:
                     # set failures to -1
-                    tabular_result[column_name] = pd.to_numeric(tabular_result[column_name], errors='coerce')
-                    tabular_result[column_name].fillna(-1, inplace=True)
-                    tabular_result.rename(
-                        columns={column_name: COLUMN_TO_COMPACT_METRIC_NAME[column_name]},
-                        inplace=True)
+                    metric_name_compact = COLUMN_TO_COMPACT_METRIC_NAME[column_name]
+                    # output column names follow schema like "outputs.coherence.gpt_coherence"
+                    result_name = ("outputs." + metric_name_compact + "." + column_name).lower()
+                    tabular_result[result_name] = pd.to_numeric(tabular_result[result_name], errors='coerce')
+                    tabular_result[result_name].fillna(-1, inplace=True)
+                    tabular_result.rename(columns={result_name: metric_name_compact}, inplace=True)
+                for column_name in input_columns:
+                    # input column names follow schema like "inputs.context"
+                    result_name = "inputs." + column_name
+                    tabular_result.rename(columns={result_name: column_name}, inplace=True)
             except KeyError as e:
                 # raise new user error with more context
                 raise InvalidInputError(
