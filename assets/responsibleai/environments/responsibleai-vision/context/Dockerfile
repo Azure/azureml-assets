@@ -32,7 +32,7 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-automl-dnn-vision=={{latest-pypi-version}}'
 
 # Install torch version >= 2.2.2 to override azureml-automl-dnn-vision version and fix remote execution issue
-RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH torch>=2.2.2
+RUN conda install -c pytorch -p $AZUREML_CONDA_ENVIRONMENT_PATH torch>=2.2.2
 
 RUN pip install 'shap==0.41.0' \
                 'scikit-learn>=1.5.1' \
