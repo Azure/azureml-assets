@@ -16,6 +16,7 @@ LOCAL_DATA_FOLDER = "localData"
 
 @pytest.fixture(scope="function")
 def cleanup_data_folder():
+    """Function to cleanup local data folder after each test which will be saving dataframes."""
     # test will run and data will be populated. Afterwards, Cleanup directory
     yield
     shutil.rmtree(f"{LOCAL_DATA_FOLDER}/")
