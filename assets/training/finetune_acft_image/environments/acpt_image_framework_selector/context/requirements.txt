@@ -5,5 +5,4 @@ mlflow
 azureml-mlflow
 azureml-core
 requests
-certifi==2023.07.22
-setuptools==67.6.0
+setuptools>=71.1.0

@@ -1,0 +1,6 @@
+name: docker-tools
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["System"]
