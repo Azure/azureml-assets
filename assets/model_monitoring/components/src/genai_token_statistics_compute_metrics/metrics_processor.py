@@ -17,7 +17,7 @@ from shared_utilities.span_tree_utils import SpanTreeNode, SpanTree
 from shared_utilities.constants import (
     ROOT_SPAN_COLUMN
 )
-from typing import Optional, List
+from typing import Optional
 
 
 class MetricsProcessor:
@@ -35,18 +35,12 @@ class MetricsProcessor:
             return None
         return SpanTree.create_tree_from_json_string(row.root_span)
 
-    def create_span_tree_from_dataframe(self, df: DataFrame) -> List[Optional[SpanTreeNode]]:
-        """Create a list of SpanTrees from a DataFrame."""
-        # Convert the DataFrame to an RDD and then to a list of Rows
-        df.rdd.foreach(self.process_row)
-
     def process(self, df_traces: DataFrame):
         """Process the aggregated trace data to compute metrics.
 
         Args:
             df_traces (DataFrame): Aggregated traces from the GenAI processor.
         """
-        print("process")
         df_traces = df_traces.select(ROOT_SPAN_COLUMN)
         # Create an RDD of tuples with the necessary counts
         counts_and_requests_rdd = df_traces.rdd.flatMap(self.process_row)
@@ -98,7 +92,7 @@ class MetricsProcessor:
             df_traces (DataFrame): Aggregated traces from the GenAI processor.
         """
         tree = self.create_span_tree_from_dataframe_row(row)
-        print("tree before", tree)
+
         if tree is None:
             return []
         counts_and_requests = []
