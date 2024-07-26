@@ -121,7 +121,7 @@ class TestGenerationSafetyQualityModelMonitor:
     def test_generation_safety_quality_genai_case_sensitive_failure(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
     ):
-        """Test GSQ is successful with genai trace logs."""
+        """Test GSQ fails with genai trace logs that have same column name but different case."""
         pipeline_job = _submit_generation_safety_quality_model_monitor_job(
             submit_pipeline_job,
             ml_client,
