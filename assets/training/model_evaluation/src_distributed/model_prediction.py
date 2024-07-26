@@ -21,13 +21,14 @@ import time
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
 from local_constants import ArgumentLiterals, ModelPath, TEXT_TOKEN_TASKS, PerformanceColumns, FILTER_MODEL_PREDICTION_PARAMS
+from local_constants import LLM_FT_PREPROCESS_FILENAME, LLM_FT_CHAT_COMPLETION_KEY
 from itertools import repeat
 from accelerate import PartialState
 import torch.distributed as dist
 from datetime import datetime, timezone
 
 
-from data_utils import read_model_prediction_data, prepare_data
+from data_utils import read_model_prediction_data, prepare_data, prepare_chat_data_from_ft_pipeline
 from prepare_data import _clean_and_validate_dataset, validate_and_get_columns
 from exceptions import PredictException, DataLoaderException, ModelLoadingException
 from error_definitions import ModelPredictionInternalError, BadModel, BadInputData
@@ -113,7 +114,19 @@ class Predictor:
                         data,
                     ))
         return self.postprocess(result)
-    
+
+
+    def _make_chat_completion_data(self, input_df, last_chats, col_name):
+        appended_data = {col_name:[]}
+        input_rows = input_df.values.tolist()
+        for ind, datarow in enumerate(input_rows):
+            conversation = datarow[0]
+            conversation.append({"role":"assistant", "content":last_chats[ind]})
+            appended_data[col_name].append(conversation)
+        logger.info(f"Final Conversations: {appended_data}")
+        return pd.DataFrame(appended_data)
+
+
     def predict_single(self, data):
         """Predict single batch.
 
@@ -131,19 +144,26 @@ class Predictor:
             input_texts = X_test.values.tolist()
             if isinstance(input_texts[0], list):
                 if self.task_type == SupportedTask.CHAT_COMPLETION:
-                    input_texts = [i[0] for i in input_texts]
-                input_texts = [i[0] if len(i) == 1 else [j.strip() for j in i] for i in input_texts]
-            data = {
-                    "input_data": {
-                        "input_string": input_texts,
-                        "parameters": self.extra_params,
+                    input_data = []
+                    add_generation_prompt = self.extra_params.pop("add_generation_prompt", True)
+                    for itext in input_texts:
+                        input_data.append(self.tokenizer.apply_chat_template(itext[0], tokenize=False, add_generation_prompt=add_generation_prompt))
+                    input_texts = input_data[:]
+                    self.extra_params.update({"return_full_text": False})
+                    payload = MIRPayload(input_texts, self.extra_params, TaskType.CONVERSATIONAL, False)
+                else:
+                    input_texts = [i[0] if len(i) == 1 else [j.strip() for j in i] for i in input_texts]
+                    data = {
+                            "input_data": {
+                                "input_string": input_texts,
+                                "parameters": self.extra_params,
+                            }
                     }
-            }
-            data.update({'task_type': self.task_type})
-            logger.info(f"Input Data: {data}")
+                    payload = MIRPayload.from_dict(data)
+                    payload.update_params(get_generator_params(payload.params))
+            
 
-            payload = MIRPayload.from_dict(data)
-            payload.update_params(get_generator_params(payload.params))
+            
             logger.info(
                 f"Processing new request with parameters: {payload.params}"
             )
@@ -162,7 +182,6 @@ class Predictor:
                 end_ms = time.time() * 1000
                 outputs = [res.response for i, res in enumerate(inference_results)]
                 pred_probas = [res.scores for res in inference_results]
-                #logger.info(f"Outputs: {outputs}")
             perf_data = [{
                 PerformanceColumns.BATCH_SIZE_COLUMN_NAME: len(input_texts),
                 PerformanceColumns.START_TIME_COLUMN_NAME: datetime.fromtimestamp(start_ms / 1000, timezone.utc).isoformat(),
@@ -173,13 +192,17 @@ class Predictor:
                 PerformanceColumns.INPUT_CHARACTERS_COLUMN_NAME: len(gt) if isinstance(gt, str) else 1,
                 PerformanceColumns.INPUT_TOKENS_COLUMN_NAME: len(self.tokenizer(gt)) if self.tokenizer is not None else 0
             } for gt, pred in zip(input_texts, outputs)]
-            pred_df = pd.DataFrame(outputs, index=X_test.index, columns=["prediction"])
             pred_proba_df = pd.DataFrame(pred_probas, index=X_test.index)
+            perf_data = pd.DataFrame(perf_data)
+            if self.task_type == SupportedTask.CHAT_COMPLETION or self.task_type == TaskType.CONVERSATIONAL:
+                pred_df = self._make_chat_completion_data(X_test, outputs, col_name="prediction")
+                y_test = self._make_chat_completion_data(X_test, y_test, col_name="ground_truth")
+                return pred_df, y_test, perf_data, pred_proba_df
+            pred_df = pd.DataFrame(outputs, index=X_test.index, columns=["prediction"])
             if isinstance(y_test, pd.Series):
                 y_test = y_test.to_frame()
             elif isinstance(y_test, np.ndarray) or isinstance(y_test, list):
                 y_test = pd.DataFrame(y_test, index=X_test.index)
-            perf_data = pd.DataFrame(perf_data)
             return pred_df, y_test, perf_data, pred_proba_df
 
         except Exception as e:
@@ -280,6 +303,10 @@ def load_data(task, test_data, label_column_name, input_column_names, extra_y_te
         all_cols += extra_y_test_cols
 
     data = read_model_prediction_data(file_path=test_data, batch_size=batch_size)
+    if task == SupportedTask.CHAT_COMPLETION and os.path.isdir(test_data) and LLM_FT_PREPROCESS_FILENAME in os.listdir(test_data):
+        logger.info(f"Run from Finetune Pipeline. Fetching chat completion data from {test_data}")
+        data = map(prepare_chat_data_from_ft_pipeline, data)
+        return data
     data = map(_clean_and_validate_dataset, data, repeat(all_cols), repeat(batch_size))
     data = map(prepare_data, data, repeat(task), repeat(label_column_name),
                 repeat(False), repeat(extra_y_test_cols))
@@ -491,7 +518,7 @@ def main():
             enable_character_counts = True
             extra_params.pop("char_count_per_sample")
         tokenizer = None
-        if task_type in TEXT_TOKEN_TASKS and enable_token_counts:
+        if (task_type in TEXT_TOKEN_TASKS and enable_token_counts) or (task_type == SupportedTask.CHAT_COMPLETION or task_type == TaskType.CONVERSATIONAL):
             tokenizer = load_tokenizer(engine_config["tokenizer"], engine_config["ml_model_info"].get("hf_tokenizer_class", "AutoTokenizer"))
 
         g_fmscorer = FMScore(config)
