@@ -25,7 +25,7 @@ def cleanup_data_folder():
 class TestIOUtils:
     """Test class for IO utilities."""
 
-    def test_save_spark_df_as_mltable_normal(self, create_data_folder):
+    def test_save_spark_df_as_mltable_normal(self, cleanup_data_folder):
         """Test the save dataframe as mltable functionality."""
         spark = init_spark()
         production_df = spark.createDataFrame([(1, "c"), (2, "d")], ["id", "age"])
