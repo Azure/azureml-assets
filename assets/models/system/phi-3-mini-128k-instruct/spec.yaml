@@ -20,6 +20,10 @@ tags:
   author: microsoft
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
+  _aml_system_vanity_registry: "azureml-phi"
   inference_compute_allow_list:
     [ 
       Standard_NC24ads_A100_v4,

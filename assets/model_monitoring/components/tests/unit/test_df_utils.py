@@ -24,7 +24,9 @@ from src.shared_utilities.df_utils import (
     get_numerical_and_categorical_cols,
     modify_categorical_columns,
     try_get_df_column,
+    validate_column_names
 )
+from shared_utilities.momo_exceptions import InvalidInputError
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 from tests.unit.test_compute_data_quality_statistics import df_with_timestamp
 from tests.unit.utils.unit_test_utils import assert_spark_dataframe_equal
@@ -495,6 +497,16 @@ class TestDFUtils:
                             StructField("number", StringType(), True),
                         ]),
                     False,
+                ),
+                (
+                    [(False, 1.0, "a")],
+                    StructType(
+                        [
+                            StructField("input", BooleanType(), True),
+                            StructField("label", FloatType(), True),
+                            StructField("Input", StringType(), True),
+                        ]),
+                    True,
                 )
             ]
     )
@@ -503,3 +515,38 @@ class TestDFUtils:
         spark = self.init_spark()
         empty_df = spark.createDataFrame(input_data, input_data_columns)
         assert has_duplicated_columns(empty_df) == expected_output
+
+    @pytest.mark.parametrize(
+            "input_data, input_data_columns, expected_error",
+            [
+                ([], StructType([]), False),
+                (
+                    [(1.0, "b")],
+                    StructType(
+                        [
+                            StructField("column.1", FloatType()),
+                            StructField("column2", StringType()),
+                        ]),
+                    True,
+                ),
+                (
+                    [(1.0, "a")],
+                    StructType(
+                        [
+                            StructField("column1", FloatType()),
+                            StructField("column2", StringType()),
+                        ]),
+                    False,
+                )
+            ]
+    )
+    def test_validate_column_names(self, input_data: list, input_data_columns: list, expected_error: bool):
+        """Test validate column names."""
+        spark = self.init_spark()
+        df = spark.createDataFrame(input_data, input_data_columns)
+        if expected_error:
+            with pytest.raises(InvalidInputError) as ex:
+                validate_column_names(df)
+            assert "Column name column.1 has a dot" in str(ex.value)
+        else:
+            validate_column_names(df)
