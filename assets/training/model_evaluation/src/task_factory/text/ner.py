@@ -12,7 +12,7 @@ from constants import MODEL_FLAVOR
 logger = get_logger(name=__name__)
 
 
-def ner_predictor_wrapper_for_hftransformers(transformers_class, model_config):
+def ner_predictor_wrapper_for_hftransformers(transformers_class):
     """NER predictor for hftransformers."""
 
     def ner_predictor_for_transformers(X_test, params=None):
