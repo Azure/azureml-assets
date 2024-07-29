@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Text Classification Model Converter
 description: Component to convert the text classification finetune job output from pytorch to mlflow model
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/62
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/64
 
 code: ../../../src/model_converter
 
