@@ -5,18 +5,35 @@
 
 import re
 
-
 # COMPONENT META
 COMPONENT_NAME = "oss_distillation_generate_data"
+
+# REQUESTS
+REQUESTS_RETRY_DELAY = 5
 
 # DATA GENERATOR VALIDATION
 SUPPORTED_FILE_FORMATS = [".jsonl"]
 TRAIN_FILE_NAME = "train_input.jsonl"
 VALIDATION_FILE_NAME = "validation_input.jsonl"
 
+REGISTRY_MODEL_PATTERN = re.compile(r"^azureml:\/\/registries\/(.+)\/models\/(.+)(\/)?(?:versions\/(\d+):|)$")
+
+# SUPPORTED TEACHER MODEL
+# MAP keys are model name in registry, which maps to specific model details like registry and supported versions
 SUPPORTED_TEACHER_MODEL_MAP = {
-    "Meta-Llama-3.1-405B-Instruct": re.compile(
-        r"^azureml://registries/azureml-meta/models/Meta-Llama-3.1-405B-Instruct(/versions/\d+)?$")
+    "Meta-Llama-3.1-405B-Instruct": {
+        "supported_registries": ["azureml-meta"],
+        "supported_version_pattern": re.compile("\d+"),
+    }
+}
+
+# SUPPORTED STUDENT MODEL
+# MAP keys are model name in registry, which maps to specific model details like registry and supported versions
+SUPPORTED_STUDENT_MODEL_MAP = {
+    "Meta-Llama-3.1-8B-Instruct": {
+        "supported_registries": ["azureml-meta"],
+        "supported_version_pattern": re.compile("\d+"),
+    }
 }
 
 # Scoring paths

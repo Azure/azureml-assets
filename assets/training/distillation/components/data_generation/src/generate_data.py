@@ -42,13 +42,13 @@ from common.constants import (
     TOP_P,
     STOP_TOKEN,
     SUPPORTED_FILE_FORMATS,
-    SUPPORTED_TEACHER_MODEL_MAP,
     VLLM_CHAT_SCORE_PATH,
 )
 
 from common.utils import (
     get_workspace_mlclient,
     get_endpoint_details,
+    validate_teacher_model_details,
     retry,
 )
 
@@ -432,10 +432,7 @@ def data_import(args: Namespace):
         teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
         teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
         teacher_model_asset_id = endpoint_details.get_deployed_model_id()
-        if not any(pat.match(teacher_model_asset_id) for name, pat in SUPPORTED_TEACHER_MODEL_MAP.items()):
-            raise Exception(
-                f"Teacher model asset ID {teacher_model_asset_id} not in [{list(SUPPORTED_TEACHER_MODEL_MAP.keys())}]"
-            )
+        validate_teacher_model_details(teacher_model_asset_id)
 
     if not teacher_model_endpoint_url:
         raise Exception("Endpoint URL is a requried parameter for data generation")

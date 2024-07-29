@@ -14,12 +14,18 @@ from azure.identity import AzureCliCredential, ManagedIdentityCredential
 from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
+from typing import List, Tuple, Union
 
-from typing import List, Union
+from common.constants import (
+    REQUESTS_RETRY_DELAY,
+    REGISTRY_MODEL_PATTERN,
+    SUPPORTED_STUDENT_MODEL_MAP,
+    SUPPORTED_TEACHER_MODEL_MAP,
+)
 
 
 logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
-RETRY_DELAY = 5
+current_run: Run = Run.get_context()
 
 
 def retry(times: int):
@@ -42,7 +48,7 @@ def retry(times: int):
                     )
                     logger.warning(ex_msg)
                     if attempt < times:
-                        time.sleep(RETRY_DELAY)
+                        time.sleep(REQUESTS_RETRY_DELAY)
                     else:
                         logger.warning(
                             "Retried {} times when calling {}, now giving up!".format(times, func.__name__)
@@ -86,11 +92,10 @@ def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCreden
 
 def get_workspace() -> Workspace:
     """Return current workspace."""
-    run = Run.get_context()
-    if isinstance(run, _OfflineRun):
+    if isinstance(current_run, _OfflineRun):
         ws: Workspace = Workspace.from_config("config.json")
     else:
-        ws: Workspace = run.experiment.workspace
+        ws: Workspace = current_run.experiment.workspace
     return ws
 
 
@@ -284,3 +289,59 @@ def get_endpoint_details(mlclient_ws: MLClient, endpoint_name: str) -> EndpointD
     raise Exception(
         f"Could not fetch endpoint {endpoint_name} details for online or serverless deployment."
     )
+
+
+def _get_model_id_from_run_details():
+    # add implementation here to get student model id
+    pass
+
+
+def _get_model_details(model_asset_id, supported_model_map) -> Tuple[str, str, str]:
+    # try matching registry model pattern
+    if match := REGISTRY_MODEL_PATTERN.match(model_asset_id):
+        registry_name, model_name, model_version = match.group(1), match.group(2), match.group(3)
+        # check if model_name exists in supported list
+        if model_name not in supported_model_map:
+            raise Exception(f"Unsupported model name: {model_name}")
+        model_details = supported_model_map[model_name]
+        supported_registries = model_details["supported_registries"]
+        if registry_name not in supported_registries:
+            raise Exception(
+                f"Unsupported model registry name: {registry_name} for model {model_name}. "
+                f"Supported registries are: {supported_registries}."
+            )
+        supported_version_pattern = model_details["supported_version_pattern"]
+        if model_version and not supported_version_pattern.match(model_version):
+            raise Exception(
+                f"Unsupported model version: {model_version} for model {model_name}. "
+                f"Model version must match with pattern `{supported_version_pattern}`"
+            )
+        return registry_name, model_name, model_version
+    raise Exception(
+        f"`{model_asset_id}` does not match with model registry pattern. "
+        "Please ensure that model in registry is used for teacher and student model combination."
+    )
+
+
+def validate_teacher_model_details(model_asset_id: str) -> Tuple[str, str, str]:
+    """Validate and get teacher model details.
+
+    Args:
+        model_asset_id (str): registry model asset id
+
+    Returns:
+        Tuple[str, str, str]: Tuple containing registry name, model name and model version
+    """
+    return _get_model_details(model_asset_id, SUPPORTED_TEACHER_MODEL_MAP)
+
+
+def validate_student_model_details(model_asset_id: str) -> Tuple[str, str, str]:
+    """Validate and get student model details.
+
+    Args:
+        model_asset_id (str): registry model asset id
+
+    Returns:
+        Tuple[str, str, str]: Tuple containing registry name, model name and model version
+    """
+    return _get_model_details(model_asset_id, SUPPORTED_STUDENT_MODEL_MAP)
