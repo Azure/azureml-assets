@@ -21,7 +21,7 @@ outputs:
     type: path
 
 code: ./src_boston/
-environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/39
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/2
 command: >-
   python train.py
   --training_data ${{inputs.training_data}}
