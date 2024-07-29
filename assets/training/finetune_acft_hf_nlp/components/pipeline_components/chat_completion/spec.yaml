@@ -641,16 +641,14 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.30
+    component: azureml:compute_metrics:0.0.31
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
     inputs:
       task: chat-completion
       ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
-      ground_truth_column_name: '${{parent.inputs.ground_truth_key}}'
       prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
-      prediction_column_name: predictions
       prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'

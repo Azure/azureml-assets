@@ -21,7 +21,7 @@ import time
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
 from local_constants import ArgumentLiterals, ModelPath, TEXT_TOKEN_TASKS, PerformanceColumns, FILTER_MODEL_PREDICTION_PARAMS
-from local_constants import LLM_FT_PREPROCESS_FILENAME, LLM_FT_CHAT_COMPLETION_KEY
+from local_constants import LLM_FT_PREPROCESS_FILENAME, LLM_FT_CHAT_COMPLETION_KEY, ChatCompletionConstants
 from itertools import repeat
 from accelerate import PartialState
 import torch.distributed as dist
@@ -195,7 +195,9 @@ class Predictor:
             pred_proba_df = pd.DataFrame(pred_probas, index=X_test.index)
             perf_data = pd.DataFrame(perf_data)
             if self.task_type == SupportedTask.CHAT_COMPLETION or self.task_type == TaskType.CONVERSATIONAL:
-                pred_df = self._make_chat_completion_data(X_test, outputs, col_name="prediction")
+                pred_df = self._make_chat_completion_data(X_test, outputs,
+                                                          col_name=ChatCompletionConstants.OUTPUT_FULL_CONVERSATION)
+                pred_df[ChatCompletionConstants.OUTPUT] = outputs
                 y_test = self._make_chat_completion_data(X_test, y_test, col_name="ground_truth")
                 return pred_df, y_test, perf_data, pred_proba_df
             pred_df = pd.DataFrame(outputs, index=X_test.index, columns=["prediction"])
@@ -559,7 +561,8 @@ def main():
     logger.info(f"Type of each key: {[(k, type(v), len(v)) for k, v in collated_res[0].items()]}")
     y_pred_df, y_test_df, y_perf_df, y_pred_proba_df = _gather_predictions(collated_res)
 
-    y_pred_df.columns = ["predictions"]
+    if task_type != SupportedTask.CHAT_COMPLETION and task_type != TaskType.CONVERSATIONAL:
+        y_pred_df.columns = ["predictions"]
     ground_truth_columns = [label_column_name]
     if extra_y_test_cols is not None:
         ground_truth_columns += extra_y_test_cols

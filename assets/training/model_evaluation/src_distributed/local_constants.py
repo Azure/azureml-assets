@@ -196,3 +196,9 @@ FILTER_MODEL_PREDICTION_PARAMS = [
     "tokenizer_config",
     "generator_config"
 ]
+
+class ChatCompletionConstants:
+    """Chat completion constants."""
+
+    OUTPUT = "predictions"
+    OUTPUT_FULL_CONVERSATION = "prediction_appended"
