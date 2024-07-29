@@ -150,6 +150,26 @@ class VQA2Adapter(VisionDatasetAdapter):
         }
 
 
+class VizWizAdapter(VisionDatasetAdapter):
+    """Adapter for the VizWiz HF dataset."""
+
+    def get_label(self, instance):
+        """Extract the instance's label as a string."""
+        return "||".join(set(instance["answers"]))
+
+    def get_pil_image(self, instance):
+        """Extract the instance's image as a PIL image."""
+        return instance["image"]
+
+    def get_other_fields(self, instance):
+        return {
+            "question": instance["question"] + " <image 1>",
+            "answer_options": "",
+            "more_images": [],
+            "keep": instance["category"] != "unanswerable",
+        }
+
+
 class VisionDatasetAdapterFactory:
     """Factory for making vision dataset adapters based on dataset names."""
 
@@ -164,6 +184,7 @@ class VisionDatasetAdapterFactory:
             "gtsrb": GTSRBAdapter,
             "mmmu": MMMUAdapter,
             "vq_av2": VQA2Adapter,
+            "viz_wiz-vqa": VizWizAdapter,
         }
 
         # Select the adapter class based on the dataset name. If name not available or not recognized, do not make

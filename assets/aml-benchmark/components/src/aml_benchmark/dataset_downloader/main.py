@@ -237,8 +237,9 @@ def _save_dataset_to_jsonl(dataset: Dataset, dataset_file_path: str) -> None:
                 "question": Value(dtype="string", id=None),
                 "answer_options": Value(dtype="string", id=None),
                 "more_images": Value(dtype="string", id=None),
+                "keep": Value(dtype="bool", id=None),
             })
-        )
+        ).filter(lambda row: row.get("keep", True))
 
         # Upload the images to datastore.
         datastore.upload(src_dir=temporary_directory.name, target_path=datastore_directory_name)
