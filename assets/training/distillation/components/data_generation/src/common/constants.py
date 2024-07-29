@@ -16,14 +16,22 @@ SUPPORTED_FILE_FORMATS = [".jsonl"]
 TRAIN_FILE_NAME = "train_input.jsonl"
 VALIDATION_FILE_NAME = "validation_input.jsonl"
 
-REGISTRY_MODEL_PATTERN = re.compile(r"^azureml:\/\/registries\/(.+)\/models\/(.+)(\/)?(?:versions\/(\d+):|)$")
+SERVERLESS_ENDPOINT_URL_PATTERN = re.compile(
+    r"https:\/\/(?P<endpoint>[^.]+).(?P<region>[^.]+).models.ai.azure.com(?:\/(?P<path>.+))?"
+)
+ONLINE_ENDPOINT_URL_PATTERN = re.compile(
+    r"https:\/\/(?P<endpoint>[^.]+).(?P<region>[^.]+).inference.ml.azure.com(?:\/(?P<path>.+))?"
+)
+REGISTRY_MODEL_PATTERN = re.compile(
+    r"azureml:\/\/registries\/(?P<registry>[^\/]+)\/models\/(?P<model>[^\/]+)(?:\/versions\/(?P<version>\d+))?"
+)
 
 # SUPPORTED TEACHER MODEL
 # MAP keys are model name in registry, which maps to specific model details like registry and supported versions
 SUPPORTED_TEACHER_MODEL_MAP = {
     "Meta-Llama-3.1-405B-Instruct": {
         "supported_registries": ["azureml-meta"],
-        "supported_version_pattern": re.compile("\d+"),
+        "supported_version_pattern": re.compile(r"\d+"),
     }
 }
 
@@ -32,7 +40,7 @@ SUPPORTED_TEACHER_MODEL_MAP = {
 SUPPORTED_STUDENT_MODEL_MAP = {
     "Meta-Llama-3.1-8B-Instruct": {
         "supported_registries": ["azureml-meta"],
-        "supported_version_pattern": re.compile("\d+"),
+        "supported_version_pattern": re.compile(r"\d+"),
     }
 }
 

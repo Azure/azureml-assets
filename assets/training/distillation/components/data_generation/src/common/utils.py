@@ -299,15 +299,18 @@ def _get_model_id_from_run_details():
 def _get_model_details(model_asset_id, supported_model_map) -> Tuple[str, str, str]:
     # try matching registry model pattern
     if match := REGISTRY_MODEL_PATTERN.match(model_asset_id):
-        registry_name, model_name, model_version = match.group(1), match.group(2), match.group(3)
+        registry, model_name, model_version = match.group("registry"), match.group("model"), match.group("version")
         # check if model_name exists in supported list
         if model_name not in supported_model_map:
-            raise Exception(f"Unsupported model name: {model_name}")
+            raise Exception(
+                f"Unsupported model: {model_name} for distillation. "
+                f"Supported models are: {list(SUPPORTED_TEACHER_MODEL_MAP.keys())}"
+            )
         model_details = supported_model_map[model_name]
         supported_registries = model_details["supported_registries"]
-        if registry_name not in supported_registries:
+        if registry not in supported_registries:
             raise Exception(
-                f"Unsupported model registry name: {registry_name} for model {model_name}. "
+                f"Unsupported model registry name: {registry} for model {model_name}. "
                 f"Supported registries are: {supported_registries}."
             )
         supported_version_pattern = model_details["supported_version_pattern"]
@@ -316,7 +319,7 @@ def _get_model_details(model_asset_id, supported_model_map) -> Tuple[str, str, s
                 f"Unsupported model version: {model_version} for model {model_name}. "
                 f"Model version must match with pattern `{supported_version_pattern}`"
             )
-        return registry_name, model_name, model_version
+        return registry, model_name, model_version
     raise Exception(
         f"`{model_asset_id}` does not match with model registry pattern. "
         "Please ensure that model in registry is used for teacher and student model combination."
