@@ -12,7 +12,7 @@ from constants import MODEL_FLAVOR
 logger = get_logger(name=__name__)
 
 
-def ner_predictor_wrapper_for_hftransformers(transformers_class):
+def ner_predictor_wrapper_for_hftransformers(transformers_class, model_config):
     """NER predictor for hftransformers."""
 
     def ner_predictor_for_transformers(X_test, params=None):
@@ -24,7 +24,12 @@ def ner_predictor_wrapper_for_hftransformers(transformers_class):
         Returns:
             _type_: _description_
         """
-        transformers_class._override_model_config(params)
+        try:
+            transformers_class._override_model_config(params)
+        except AttributeError:
+            logger.info(f"Using newer version of mlflow.transformers._TransformersWrapper\
+                        model config override API")
+            transformers_class._merge_model_config_with_params(transformers_class.model_config, params)
         from azureml.evaluate.mlflow.hftransformers._task_based_predictors import NERPredictor
         predictor = NERPredictor(task_type="token-classification", model=transformers_class.pipeline.model,
                                  tokenizer=transformers_class.pipeline.tokenizer,
