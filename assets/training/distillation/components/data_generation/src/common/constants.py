@@ -17,10 +17,10 @@ TRAIN_FILE_NAME = "train_input.jsonl"
 VALIDATION_FILE_NAME = "validation_input.jsonl"
 
 SERVERLESS_ENDPOINT_URL_PATTERN = re.compile(
-    r"https:\/\/(?P<endpoint>[^.]+).(?P<region>[^.]+).models.ai.azure.com(?:\/(?P<path>.+))?"
+    r"https:\/\/(?P<endpoint>[^.]+)\.(?P<region>[^.]+)\.models\.ai\.azure\.com(?:\/(?P<path>.+))?"
 )
 ONLINE_ENDPOINT_URL_PATTERN = re.compile(
-    r"https:\/\/(?P<endpoint>[^.]+).(?P<region>[^.]+).inference.ml.azure.com(?:\/(?P<path>.+))?"
+    r"https:\/\/(?P<endpoint>[^.]+)\.(?P<region>[^.]+)\.inference\.ml\.azure\.com(?:\/(?P<path>.+))?"
 )
 REGISTRY_MODEL_PATTERN = re.compile(
     r"azureml:\/\/registries\/(?P<registry>[^\/]+)\/models\/(?P<model>[^\/]+)(?:\/versions\/(?P<version>\d+))?"
