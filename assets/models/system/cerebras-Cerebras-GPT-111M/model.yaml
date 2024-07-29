@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: models/huggingface/cerebras-Cerebras-GPT-111M/1708023151/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:ss
+  description: description.md
+  type: mlflow_model
