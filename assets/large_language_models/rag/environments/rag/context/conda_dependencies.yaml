@@ -8,7 +8,7 @@ dependencies:
 - scikit-learn
 - pip:
     # RAG package
-  - azureml-rag[azure,cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore]==0.2.34
+  - azureml-rag[azure,cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore,azure_cosmos_nosql]==0.2.35
     # Azure
   - azure-ai-formrecognizer==3.3.1
   - azure-identity=={{latest-pypi-version}}
