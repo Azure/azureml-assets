@@ -52,7 +52,7 @@ tags:
     precision: "16"
     ignore_mismatched_sizes: "false"
 
-version: 23
+version: 24
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.

@@ -38,7 +38,7 @@ tags:
   - Standard_ND96amsr_A100_v4
   - Standard_NC96ads_A100_v4
 
-version: 19
+version: 20
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.
