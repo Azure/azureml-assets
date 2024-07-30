@@ -445,7 +445,6 @@ def run():
         ground_truths_column_name, extra_y_test_cols = parse_input_ground_truth_col(
             args[ArgumentLiterals.GROUND_TRUTHS_COLUMN_NAME]
         )
-        print("b1", ground_truths_column_name, extra_y_test_cols)
 
         ground_truths = args[ArgumentLiterals.GROUND_TRUTHS]
         is_ground_truths_mltable = check_and_return_if_mltable(ground_truths)

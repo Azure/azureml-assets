@@ -125,8 +125,6 @@ class ModelPredictionRunner:
         Returns:
             _type_: _description_
         """
-        print("b1", test_data)
-
         all_cols = list(self.input_column_names)
         if self.label_column_name is not None:
             all_cols += [self.label_column_name]

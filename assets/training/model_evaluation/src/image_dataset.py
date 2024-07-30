@@ -8,10 +8,12 @@ from __future__ import annotations
 import base64
 import json
 import pandas as pd
+import os
 import re
 import torch
 import numpy as np
 
+from itertools import chain
 from mltable import load
 from PIL import Image
 from torch import Tensor
@@ -376,41 +378,48 @@ def get_vqa_dataset(
         groups = match.groups()
         return DataPath(workspace.datastores.get(groups[0]), groups[1])
 
-    def download_images(image_urls1):
-        if len(image_urls1) == 0:
-            return []
-        image_urls2 = [maybe_make_data_path(image_url) for image_url in image_urls1]
-        remote_image_files = FileDatasetFactory.from_files(image_urls2, is_file=True)
-        local_image_file_names = remote_image_files.download()
+    def download_images(image_urls):
+        if len(image_urls) == 0:
+            return {}
 
-        return local_image_file_names
+        data_path_image_urls = [maybe_make_data_path(image_url) for image_url in image_urls]
+        remote_image_files = FileDatasetFactory.from_files(data_path_image_urls, is_file=True)
+        local_image_file_paths = remote_image_files.download()
 
-    # image_urls = [maybe_make_data_path(image_url) for image_url in mltable_dataframe[SettingLiterals.IMAGE_URL]]
-    # remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
-    # local_image_file_names = remote_image_files.download()
+        local_image_file_paths_by_name = {os.path.basename(p): p for p in local_image_file_paths}
+        image_url_to_local_file_name = {
+            image_url: local_image_file_paths_by_name[os.path.basename(image_url)]
+            for image_url in image_urls
+        }
 
-    # for local_image_file_name, question, answer_options, label in zip(
-    #     local_image_file_names, mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[VQALiterals.ANSWER_OPTIONS],
-    #     mltable_dataframe[SettingLiterals.LABEL]
-    # ):
-    for image_url, question, label, answer_options, more_image_urls in zip(
+        return image_url_to_local_file_name
+
+    # Download all the images and map their URLs to file names.
+    more_image_urls = chain.from_iterable(
+        [
+            more_image_urls_str.split("||")
+            for more_image_urls_str in mltable_dataframe[VQALiterals.MORE_IMAGES]
+            if len(more_image_urls_str) > 0
+        ]
+    )
+    image_url_to_local_file_name = download_images(
+        list(mltable_dataframe[SettingLiterals.IMAGE_URL]) + list(more_image_urls)
+    )
+
+    for image_url, question, label, answer_options, more_image_urls_str in zip(
         mltable_dataframe[SettingLiterals.IMAGE_URL], mltable_dataframe[VQALiterals.QUESTION], mltable_dataframe[SettingLiterals.LABEL],
         mltable_dataframe[VQALiterals.ANSWER_OPTIONS], mltable_dataframe[VQALiterals.MORE_IMAGES],
     ):
-        # image_urls = [maybe_make_data_path(image_url)]
-        # remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
-        # local_image_file_names = remote_image_files.download()
-        # local_image_file_name = local_image_file_names[0]
-
-        local_image_file_name = download_images([image_url])[0]
-        # print("y1", local_image_file_name)
+        local_image_file_name = image_url_to_local_file_name[image_url]
         image = base64.encodebytes(read_image(local_image_file_name)).decode("utf-8")
 
-        # print("y2", more_image_urls)
-        if len(more_image_urls) > 0:
+        more_image_file_names = [
+            image_url_to_local_file_name[u] for u in more_image_urls_str.split("||") if len(more_image_urls_str) > 0
+        ]
+        if len(more_image_file_names) > 0:
             more_images = [
-                base64.encodebytes(read_image(download_images([image_url_b])[0])).decode("utf-8")
-                for image_url_b in more_image_urls.split("||")
+                base64.encodebytes(read_image(image_file_name)).decode("utf-8")
+                for image_file_name in more_image_file_names
             ]
         else:
             more_images = []
