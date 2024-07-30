@@ -269,10 +269,12 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
                         yaml.safe_dump(conda_dict, f)
                     logger.info("Updated conda.yaml file")
 
-    def is_t5_text_classification_finetune(self, model_type) -> bool:
-        """Check for t5 text-classification."""
-        return self.mlflow_task_type == MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION and \
-            model_type == HfModelTypes.T5
+    def is_env_64_finetune(self, model_type) -> bool:
+        """Check for env 64 tasks"""
+        return self.mlflow_task_type in [MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION, 
+                                         MLFlowHFFlavourTasks.QUESTION_ANSWERING, 
+                                         MLFlowHFFlavourTasks.CHAT_COMPLETION]
+            
 
     def convert_model(self) -> None:
         """Convert pytorch model to oss mlflow model."""
@@ -282,9 +284,9 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.set_mlflow_model_parameters(model)
 
         # Temp Fix:
-        # specific check for t5 text-classification so that base model dependencies doesn't get pass
-        # and use transformers version 4.40.0 from infer dependencies
-        if not self.is_t5_text_classification_finetune(model.config.model_type):
+        # specific check for env 64 supported components so that base model dependencies doesn't get pass
+        # and use transformers version 4.43.2 from infer dependencies
+        if not self.is_env_64_finetune(model.config.model_type):
             conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
             if conda_file_path.is_file():
                 self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
