@@ -20,6 +20,10 @@ tags:
   disable-batch: "true"
   task: chat-completion
   author: microsoft
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
+  _aml_system_vanity_registry: "azureml-phi"
   inference_compute_allow_list:
     [ 
       Standard_ND40rs_v2, 
@@ -53,4 +57,4 @@ tags:
     logging_steps: 10
     save_total_limit: 1
     max_seq_length: 4096
-version: 2
+version: 3

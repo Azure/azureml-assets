@@ -12,6 +12,11 @@ COPY data_import_run.py /azureml/data_import/run.py
 COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
+
+# clean conda and pip caches
+RUN rm -rf ~/.cache/pip
+
+RUN pip install mlflow==2.14.3
 RUN python -m nltk.downloader punkt
 RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
 

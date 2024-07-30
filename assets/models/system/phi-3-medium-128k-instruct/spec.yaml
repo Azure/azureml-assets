@@ -20,6 +20,10 @@ tags:
   author: microsoft
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
+  _aml_system_vanity_registry: "azureml-phi"
   inference_compute_allow_list:
     [ 
       Standard_NC48ads_A100_v4, 
@@ -50,4 +54,4 @@ tags:
     logging_steps: 10
     save_total_limit: 1
     max_seq_length: 4096
-version: 2
+version: 3

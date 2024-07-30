@@ -3,6 +3,9 @@
 
 """File containing function for finetune component."""
 
+# Remove when base image issues are resolved.
+import deepspeed
+
 import os
 import json
 import argparse
@@ -880,6 +883,8 @@ def main():
     """Driver function."""
     parser = get_parser()
     args, _ = parser.parse_known_args()
+
+    print(f"Deepspeed Version: {deepspeed.__version__}")
 
     if args.task_name in [Tasks.HF_SD_TEXT_TO_IMAGE]:
         parser = add_sd_args_to_parser(parser)
