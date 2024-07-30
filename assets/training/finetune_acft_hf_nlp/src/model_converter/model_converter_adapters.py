@@ -270,7 +270,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
                     logger.info("Updated conda.yaml file")
 
     def is_env_64_finetune(self) -> bool:
-        """Check for env 64 tasks"""
+        """Check for env 64 tasks."""
         return self.mlflow_task_type in [MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION,
                                          MLFlowHFFlavourTasks.QUESTION_ANSWERING,
                                          MLFlowHFFlavourTasks.CHAT_COMPLETION]
