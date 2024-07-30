@@ -318,8 +318,8 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.add_model_signature()
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
 
-        # Temp fix for t5 text-classification
-        if self.is_t5_text_classification_finetune(model.config.model_type):
+        # Temp fix for env 64 supported tasks
+        if self.is_env_64_finetune(model.config.model_type):
             self.remove_unwanted_packages(self.mlflow_model_save_path)
 
         logger.info("Saved MLFlow model using OSS flavour.")
