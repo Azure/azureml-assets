@@ -1,8 +1,0 @@
-general:
-  includes:
-  - "./general/jobs/"
-  jobs:
-    olive-optimizer-pipeline:
-      job: "./general/jobs/olive-optimizer-pipeline/pipeline.yml"
-    olive-optimizer-gpu-pipeline:
-      job: "./general/jobs/olive-optimizer-gpu-pipeline/pipeline.yml"
