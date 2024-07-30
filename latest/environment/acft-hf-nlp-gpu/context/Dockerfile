@@ -13,21 +13,10 @@ COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip uninstall transformers -y
-
-COPY ./transformers.patch ./transformers.patch
-RUN git clone https://github.com/huggingface/transformers.git && \
-    cd transformers && \
-    git checkout fc35907f95459d7a6c5281dfadd680b6f7b620e3 && \
-    # git apply ../transformers.patch && \
-    python setup.py bdist_wheel && \
-    pip install dist/*.whl
-
-COPY modeling_llama /opt/conda/envs/ptca/lib/python3.8/site-packages/transformers/models/llama/modeling_llama.py
-
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
+RUN pip install mlflow==2.14.3
 RUN python -m nltk.downloader punkt
 RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
 
