@@ -497,6 +497,16 @@ class TestDFUtils:
                             StructField("number", StringType(), True),
                         ]),
                     False,
+                ),
+                (
+                    [(False, 1.0, "a")],
+                    StructType(
+                        [
+                            StructField("input", BooleanType(), True),
+                            StructField("label", FloatType(), True),
+                            StructField("Input", StringType(), True),
+                        ]),
+                    True,
                 )
             ]
     )
