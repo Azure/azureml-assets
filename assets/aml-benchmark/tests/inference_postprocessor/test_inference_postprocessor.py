@@ -361,6 +361,13 @@ class TestInferencePostprocessorScript:
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, "\n\n",
                 None, None, ".", "last", None, None, None, None,
             ),
+            (
+                "math", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "answer", None, "\n\nQ. ",
+                None, None, None, None, None,
+                os.path.join(Constants.CUSTOM_INFERENCE_POSTPROCESSOR_SCRIPT_PATH, "math_postprocessor.py"),
+                None, None,
+            ),
 
         ],
     )
