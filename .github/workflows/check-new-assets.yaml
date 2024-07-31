@@ -4,7 +4,8 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+    paths:
+      - assets/**
   pull_request_target:
     branches:
       - main
@@ -15,6 +16,12 @@ on:
       - labeled
       - synchronize
       - reopened
+  workflow_dispatch:
+    inputs:
+      asset_dirs:
+        description: Asset directories
+        default: assets
+        required: true
 
 defaults:
   run:
