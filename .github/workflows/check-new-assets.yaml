@@ -26,10 +26,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Log event
-        run: |
-          echo "Workflow triggered by event: ${{ github.event_name }}"
-
       - name: Clone branch
         uses: actions/checkout@v3
 
