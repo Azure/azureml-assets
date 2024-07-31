@@ -620,7 +620,7 @@ class ChatCompletionEvaluator(Evaluator):
             logger.info("Found more than 1 col. Trying to fetch conversation.")
 
             def check_item(row_item: pd.Series):
-                """Helper function for converting input data to correct format for metrics package.
+                """Convert input data to correct format for metrics package.
 
                 Args:
                     row_item (pd.Series): Single row input from Dataframe
@@ -644,7 +644,7 @@ class ChatCompletionEvaluator(Evaluator):
         if y_test is not None and len(y_test) > 0:
 
             def check_y_test(row_item: pd.Series):
-                """Helper function for converting ground truth into correct format for metrics package.
+                """Convert ground truth into correct format for metrics package.
 
                 Args:
                     row_item (pd.Series): Single row input from Dataframe
