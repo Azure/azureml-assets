@@ -619,7 +619,12 @@ class ChatCompletionEvaluator(Evaluator):
         if len(y_pred.columns) > 1:
             logger.info("Found more than 1 col. Trying to fetch conversation.")
 
-            def check_item(row_item):
+            def check_item(row_item: pd.Series):
+                """Helper function for converting input data to correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
                 item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
                 if not item:
                     return row_item
@@ -638,7 +643,12 @@ class ChatCompletionEvaluator(Evaluator):
         # if ground truth is passed
         if y_test is not None and len(y_test) > 0:
 
-            def check_y_test(row_item):
+            def check_y_test(row_item: pd.Series):
+                """Helper function for converting ground truth into correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
                 item = row_item.get(y_test.columns[0])
                 if isinstance(item, str) or isinstance(item, dict):
                     return [item]

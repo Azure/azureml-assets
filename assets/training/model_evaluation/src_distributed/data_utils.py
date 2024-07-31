@@ -182,6 +182,7 @@ def read_multiple_files(path):
 
 def prepare_chat_data_from_ft_pipeline(data: pd.DataFrame):
     """Prepare Chat completion data from FT pipeline.
+
     Args:
         data: pd.DataFrame
     """
