@@ -1,15 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: text_generation_model_converter
+name: question_answering_model_converter
 version: 0.0.54
 type: command
 
 is_deterministic: true
 
-display_name: Text Generation Model Converter
-description: Component to convert the text generation finetune job output from pytorch
-  to mlflow model
+display_name: Question Answering Model Converter
+description: Component to convert the question answering finetune job output from
+  pytorch to mlflow model.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/63
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/64
 
 code: ../../../src/model_converter
 
@@ -34,4 +34,4 @@ outputs:
 
 command: >-
   python model_converter.py --model_path '${{inputs.model_path}}' $[[--system_properties
-  '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}'
+  '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}
