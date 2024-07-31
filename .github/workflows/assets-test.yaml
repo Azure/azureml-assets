@@ -37,15 +37,6 @@ defaults:
 
 jobs:
 
-  some-new-job:
-    name: Check new assets
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Log event
-        run: |
-          echo "Workflow triggered by event: ${{ github.event_name }}"
-
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
