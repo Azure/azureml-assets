@@ -4,24 +4,12 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/**
-  pull_request_target:
-    branches:
-      - main
-    paths:
-      - assets/**
     types:
       - opened
       - labeled
       - synchronize
       - reopened
   workflow_dispatch:
-    inputs:
-      asset_dirs:
-        description: Asset directories
-        default: assets
-        required: true
 
 defaults:
   run:
