@@ -36,7 +36,6 @@ defaults:
     shell: bash
 
 jobs:
-
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
@@ -57,11 +56,6 @@ jobs:
       default_asset_dirs: assets
 
     steps:
-
-      - name: Log event
-        run: |
-          echo "Workflow triggered by event: ${{ github.event_name }}"
-
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
@@ -120,11 +114,6 @@ jobs:
       id-token: write
     
     steps:
-
-      - name: Log event 2
-        run: |
-          echo "Workflow triggered by event: ${{ github.event_name }}"
-
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
@@ -192,10 +181,6 @@ jobs:
       pull-requests: write
 
     steps:
-
-      - name: Log event 3
-        run: |
-          echo "Workflow triggered by event: ${{ github.event_name }}"
       - name: Download test results
         id: download-artifact
         uses: actions/download-artifact@v3
