@@ -114,9 +114,6 @@ jobs:
       id-token: write
     
     steps:
-      - name: Log event
-        run: echo "Workflow triggered by event: ${{ github.event_name }}"
-
       - name: Clone branch
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
