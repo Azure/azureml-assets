@@ -11,6 +11,7 @@ properties:
   finetune-min-sku-spec: 96|4|880|256
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
+  freePlayground: "true"
   Featured: ""
   Preview: ""
   maas-inference: true
