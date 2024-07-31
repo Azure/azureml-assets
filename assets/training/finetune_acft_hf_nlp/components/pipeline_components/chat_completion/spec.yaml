@@ -618,7 +618,7 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   chat_completion_model_converter:
     type: command
-    component: azureml://registries/azureml/components/chat_completion_model_converter/versions/0.0.53
+    component: azureml:chat_completion_model_converter:0.0.52
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
