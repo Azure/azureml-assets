@@ -20,7 +20,7 @@ inputs:
     description: Pytorch model asset path. Pass the finetune job pytorch model output.
     mode: rw_mount
 
-  # Validation parameters
+  # validation parameters
   system_properties:
     type: string
     optional: true
