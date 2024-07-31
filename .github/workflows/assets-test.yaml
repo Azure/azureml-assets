@@ -181,9 +181,6 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Log event
-        run: echo "Workflow triggered by event: ${{ github.event_name }}"
-
       - name: Download test results
         id: download-artifact
         uses: actions/download-artifact@v3
