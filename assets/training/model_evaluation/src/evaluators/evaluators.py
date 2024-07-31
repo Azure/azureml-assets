@@ -626,7 +626,7 @@ class ChatCompletionEvaluator(Evaluator):
                     row_item (pd.Series): Single row input from Dataframe
                 """
                 item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
-                if not item:
+                if item is None:
                     return row_item
                 if isinstance(item, list) and isinstance(item[0], dict):
                     if item[0].get("role", False) and item[0].get("content", False):
