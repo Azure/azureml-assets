@@ -28,6 +28,9 @@ jobs:
       - name: Check event type
         run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
       
+      - name: debug
+        run: echo "${{ github.event_name }}"
+      
       - name: Check PR labels if forked
         if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
         run: |
