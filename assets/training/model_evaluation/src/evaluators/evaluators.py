@@ -618,6 +618,7 @@ class ChatCompletionEvaluator(Evaluator):
         #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
             logger.info("Found more than 1 col. Trying to fetch conversation.")
+
             def check_item(row_item):
                 item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
                 if not item:
@@ -636,12 +637,14 @@ class ChatCompletionEvaluator(Evaluator):
             y_pred_formatted = y_pred.values.tolist()
         # if ground truth is passed
         if y_test is not None and len(y_test) > 0:
+
             def check_y_test(row_item):
                 item = row_item.get(y_test.columns[0])
                 if isinstance(item, str) or isinstance(item, dict):
                     return [item]
                 if isinstance(item, list):
                     return item
+
             y_test = y_test.apply(check_y_test, axis=1).tolist()
             metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
                                       y_test=y_test, **self.metrics_config)

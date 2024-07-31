@@ -27,7 +27,7 @@ def ner_predictor_wrapper_for_hftransformers(transformers_class):
         try:
             transformers_class._override_model_config(params)
         except AttributeError:
-            logger.info(f"Using newer version of mlflow.transformers._TransformersWrapper\
+            logger.info("Using newer version of mlflow.transformers._TransformersWrapper\
                         model config override API")
             transformers_class._merge_model_config_with_params(transformers_class.model_config, params)
         from azureml.evaluate.mlflow.hftransformers._task_based_predictors import NERPredictor
