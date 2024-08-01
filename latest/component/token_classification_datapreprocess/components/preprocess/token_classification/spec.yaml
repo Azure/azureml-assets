@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: token_classification_datapreprocess
-version: 0.0.54
+version: 0.0.55
 type: command
 
 is_deterministic: true
