@@ -32,5 +32,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python model_converter.py --model_path '${{inputs.model_path}}' $[[--system_properties
-  '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}'
+  python model_converter.py --output_dir '${{outputs.mlflow_model_folder}}' --model_path '${{inputs.model_path}}' $[[--system_properties '${{inputs.system_properties}}']]
