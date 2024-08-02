@@ -74,6 +74,8 @@ COT_SYSTEM_PROMPT = (
     "Based on the reasoning, produce the final answer. "
     "Your response should be in JSON format without using any backticks. "
     "The JSON is a dictionary whose keys are 'reason' and 'answer_choice'."
+    "Always generate a syntactically correct JSON without using markdown and any additional words."
+
 )
 
 
