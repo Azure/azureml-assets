@@ -336,7 +336,7 @@ def generate_synthetic_data(
                     response: Response = _invoke_endpoint(url=url, key=endpoint_key,
                                                           data={"messages": synthetic_responses} | data)
                     if response.status_code != 200:
-                        break                    
+                        break
                     logger.info(f"response_text: {response.text}")
                     response_data = response.json()
 
@@ -533,7 +533,7 @@ def generate_synthetic_data(
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
     logger.info("Processing train file")
-    # TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type    
+    # TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type
     batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
     # batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
     logger.info("Data generated and saved for train file")
@@ -541,7 +541,7 @@ def generate_synthetic_data(
     if validation_file_path:
         logger.info("Processing validation file")
         batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
-        # TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type    
+        # TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type
         # batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
         logger.info("Data generated and saved for validation file")
 
