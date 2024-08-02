@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch1131:biweekly.202407.3.v1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch222:biweekly.202407.2.v1
 
 USER root
 RUN apt-get -y update
@@ -11,11 +11,13 @@ RUN pip install -r requirements.txt --no-cache-dir
 # # # Install mmcv-full and mmdet
 # Request for scipy installation to avoid error in mmcv-full installation
 RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
-RUN mim install mmtrack==0.14.0
-RUN mim install mmcv-full==1.7.1
-# # Note that MMDet installs pycocotools
-# Note: mmdet should be installed via mim to access the model zoo config folder.
-RUN mim install mmdet==2.28.2
+
+# [Temp Fix] To address PyTorch Distributed RPC Framework Remote Code Execution (RCE) Vulnerability - Working internally to get a compatbile image, will re-enable
+# RUN mim install mmtrack==0.14.0
+# RUN mim install mmcv-full==1.7.1
+# # # Note that MMDet installs pycocotools
+# # Note: mmdet should be installed via mim to access the model zoo config folder.
+# RUN mim install mmdet==2.28.2
 
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
 RUN pip install scipy==1.10.1

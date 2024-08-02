@@ -1,4 +1,4 @@
-azureml-metrics[video]~=0.0.57
+# azureml-metrics[video]~=0.0.57
 azureml-acft-accelerator==0.0.57.post1
 azureml-acft-common-components[image]~=0.0.57
 azureml-acft-image-components==0.0.57
