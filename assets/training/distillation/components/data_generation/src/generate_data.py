@@ -293,6 +293,7 @@ def generate_synthetic_data(
                 "text": None,
                 "exception": e,
             }
+
     def process_conversational_request(idx: str, data: dict, url: str, endpoint_key: str):
         """Process a single conversational request.
 
@@ -307,9 +308,9 @@ def generate_synthetic_data(
         """
         try:
             logger.info(f"request_data: {repr(data)}")
-            # Basic validation for the input data
+            #  Basic validation for the input data
             messages = data.pop("messages", [])
-            if not messages: # empty messages
+            if not messages:  # empty messages
                 return {
                     "idx": idx,
                     "status_code": None,
@@ -319,12 +320,12 @@ def generate_synthetic_data(
             first_message = messages[0]
             if first_message['role'] != 'system':
                 logger.warning(f"First message should be system, but got {first_message['role']}")
-                #TODO: handle this case
+                # TODO: handle this case
             for message in messages[1:]:
                 role = message['role']
                 if role not in ('system', 'user'):
                     logger.warning(f"role should be system or user, but got {role}")
-                    #TODO: handle this case
+                    # TODO: handle this case
             synthetic_responses = []
             for message in messages:
                 role = message['role']
@@ -332,7 +333,8 @@ def generate_synthetic_data(
                     synthetic_responses.append(message)
                 else:
                     # replace the assistant content from the model
-                    response: Response = _invoke_endpoint(url=url, key=endpoint_key, data={"messages": synthetic_responses} | data)
+                    response: Response = _invoke_endpoint(url=url, key=endpoint_key,
+                                                          data={"messages": synthetic_responses} | data)
                     if response.status_code != 200:
                         break                    
                     logger.info(f"response_text: {response.text}")
@@ -344,7 +346,7 @@ def generate_synthetic_data(
                         # response content should be structured as below for a successful vllm response
                         else response_data['choices'][0]["message"]["content"].strip()
                     )
-                    synthetic_responses.append({'role': 'assistant', 'content': prediction_result })
+                    synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
             return {
                 "idx": idx,
                 "status_code": response.status_code,
@@ -530,9 +532,8 @@ def generate_synthetic_data(
         if success_ratio < min_endpoint_success_ratio:
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
-
     logger.info("Processing train file")
-    #TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type    
+    # TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type    
     batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
     # batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
     logger.info("Data generated and saved for train file")
