@@ -8,11 +8,11 @@ channels:
 dependencies:
   - python=3.9
   - pip
-  - pytorch
+  - pytorch>=2.2.2
   - captum
   - cpuonly
   - pip:
-    - numpy==1.22.0
+    - numpy==1.23.0
     - ml-wrappers~=0.5.5
     - responsibleai~=0.36.0
     - raiwidgets~=0.36.0
@@ -24,5 +24,6 @@ dependencies:
     - transformers>=4.17.0
     - nlp-feature-extractors==0.1.0
     - datasets
-    - typing-extensions<4.6.1
+    - typing-extensions>=4.8.0
     - gevent-websocket
+    - torch>=2.2.2

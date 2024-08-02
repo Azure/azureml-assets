@@ -10,6 +10,7 @@ properties:
   finetune-min-sku-spec: 96|4|880|256
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
+  freePlayground: "true"
   Featured: ""
   Preview: ""
   huggingface_model_id: ""
@@ -20,6 +21,10 @@ tags:
   disable-batch: "true"
   task: chat-completion
   author: microsoft
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
+  _aml_system_vanity_registry: "azureml-phi"
   inference_compute_allow_list:
     [ 
       Standard_ND40rs_v2, 

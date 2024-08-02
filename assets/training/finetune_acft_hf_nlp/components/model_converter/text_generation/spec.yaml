@@ -1,0 +1,35 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: text_generation_model_converter
+version: 0.0.55
+type: command
+
+is_deterministic: True
+
+display_name: Text Generation Model Converter
+description: Component to convert the text generation finetune job output from pytorch to mlflow model
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/63
+
+code: ../../../src/model_converter
+
+inputs:
+  model_path:
+    type: uri_folder
+    optional: false
+    description: Pytorch model asset path. Pass the finetune job pytorch model output.
+    mode: rw_mount
+
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
+outputs:
+  mlflow_model_folder:
+    type: mlflow_model
+    description: Output folder containing _best_ finetuned model in mlflow format.
+    mode: rw_mount
+
+command: >-
+  python model_converter.py --model_path '${{inputs.model_path}}' $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}'
