@@ -617,16 +617,45 @@ class ChatCompletionEvaluator(Evaluator):
         """
         #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
-            y_pred_formatted = [
-                list(item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0].values())[0]
-                for idx, item in y_pred.iterrows()
-            ]
+            logger.info("Found more than 1 col. Trying to fetch conversation.")
+
+            def check_item(row_item: pd.Series):
+                """Convert input data to correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
+                item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
+                if item is None:
+                    return row_item
+                if isinstance(item, list) and isinstance(item[0], dict):
+                    if item[0].get("role", False) and item[0].get("content", False):
+                        return item
+                    else:
+                        if item[0].get("0", False):
+                            return item["0"]
+                return item
+
+            y_pred_formatted = y_pred.apply(check_item, axis=1).tolist()
         # dataframe wih just predictions appended to conversations
         else:
-            y_pred_formatted = y_pred.values.tolist()[0]
-        #  if ground truth is passed
+            y_pred_formatted = y_pred.values.tolist()
+        # if ground truth is passed
         if y_test is not None and len(y_test) > 0:
-            y_test = y_test.iloc[:, 0].apply(lambda x: [x]).tolist()
+
+            def check_y_test(row_item: pd.Series):
+                """Convert ground truth into correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
+                item = row_item.get(y_test.columns[0])
+                if isinstance(item, str) or isinstance(item, dict):
+                    return [item]
+                if isinstance(item, list):
+                    return item
+
+            y_test = y_test.apply(check_y_test, axis=1).tolist()
             metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
                                       y_test=y_test, **self.metrics_config)
         else:

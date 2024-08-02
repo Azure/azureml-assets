@@ -4,7 +4,7 @@
 """File to create AzureML Based Exceptions for Model Evaluation."""
 
 from azureml.exceptions import AzureMLException
-from constants import ExceptionLiterals
+from local_constants import ExceptionLiterals
 
 
 class ModelEvaluationException(AzureMLException):
