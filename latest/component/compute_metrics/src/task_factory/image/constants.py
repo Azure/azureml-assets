@@ -12,6 +12,7 @@ class ImagePredictionsLiterals:
     THRESHOLD = "threshold"
     BATCH_SIZE = "batch_size"
     GENERATED_IMAGE = "generated_image"
+    GUIDANCE_SCALE = "guidance_scale"
 
 
 class ImagePredictionsConstants:
