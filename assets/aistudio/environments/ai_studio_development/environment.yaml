@@ -1,0 +1,12 @@
+image:
+  name: azureml/curated/ai-studio-development
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
+  publish:
+    location: mcr
+    visibility: public
