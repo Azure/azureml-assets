@@ -4,12 +4,15 @@
 """Evaluator."""
 
 import ast
+import os
 import re
+import shutil
+import tempfile
+
 import pandas as pd
 import numpy as np
-from abc import abstractmethod
 
-from PIL import Image
+from abc import abstractmethod
 
 from exceptions import (
     DataValidationException,
@@ -830,15 +833,19 @@ class ImageGenerationEvaluator(Evaluator):
         Returns:
             Dict: Dict of metrics
         """
-        metrics = compute_metrics(
-            task_type=constants.Tasks.IMAGE_GENERATION,
-            y_test=self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME]),
-            y_pred=self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS]),
-            **self.metrics_config
-        )
+        with tempfile.TemporaryDirectory() as ground_truth_folder_name, \
+             tempfile.TemporaryDirectory() as predictions_folder_name:
+            self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME], ground_truth_folder_name)
+            self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS], predictions_folder_name)
+
+            metrics = compute_metrics(
+                task_type=constants.Tasks.IMAGE_GENERATION,
+                y_test=ground_truth_folder_name, y_pred=predictions_folder_name,
+                **self.metrics_config
+            )
         return metrics
 
-    def _download_images(self, image_urls):
+    def _download_images(self, image_urls, local_folder_name):
         # Get the workspace of the run.
         run = Run.get_context()
         workspace = run.experiment.workspace
@@ -856,13 +863,11 @@ class ImageGenerationEvaluator(Evaluator):
         # Convert URLs referring to datastore to DataPath format.
         image_urls = [maybe_make_data_path(image_url) for image_url in image_urls]
 
-        images = []
-
-        # Download images and load them as `PIL Image`'s.
+        # Download images to temporary folder.
         remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
         local_image_file_names = remote_image_files.download()
-        for local_image_file_name in local_image_file_names:
-            image = Image.open(local_image_file_name).convert("RGB")
-            images.append(image)
 
-        return images
+        # Move images to specified folder.
+        for i, local_image_file_name in enumerate(local_image_file_names):
+            f = os.path.splitext(local_image_file_name)[1]
+            shutil.move(local_image_file_name, os.path.join(local_folder_name, f"image_{i:09d}{f}"))
