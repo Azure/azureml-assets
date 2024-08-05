@@ -333,7 +333,8 @@ def generate_synthetic_data(
                 return {"idx": idx,
                         "status_code": None,
                         "messages": [],
-                        "exception": f"Incorrect format.\nFirst message should be system, but got {first_message['role']}",
+                        "exception": ("Incorrect format.\n"
+                                      f"First message should be system, but got {first_message['role']}"),
                         }
             for message in messages[1:]:
                 role = message['role']
@@ -370,7 +371,10 @@ def generate_synthetic_data(
                 "idx": idx,
                 "status_code": response.status_code,
                 "messages": synthetic_responses,
-                "exception": "Not able to generate synthetic response for all turns" if response.status_code != 200 else None,
+                "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
+                              if response.status_code != 200
+                              else
+                              None),
             }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
