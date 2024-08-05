@@ -43,6 +43,7 @@ from common.constants import (
     STOP_TOKEN,
     SUPPORTED_FILE_FORMATS,
     VLLM_CHAT_SCORE_PATH,
+    DataGenerationTaskType
 )
 
 from common.utils import (
@@ -180,6 +181,14 @@ def get_parser():
         help="This enables Chain of Thought"
     )
 
+    parser.add_argument(
+        "--data_generation_task_type",
+        type=str,
+        required=True,
+        help="This enables Chain of Thought",
+        choices=[v.value for v in DataGenerationTaskType]
+    )
+
     return parser
 
 
@@ -231,7 +240,8 @@ def generate_synthetic_data(
     generated_train_file_path: Path,
     generated_validation_file_path: Path,
     train_file_path: Path,
-    validation_file_path: Path = None,
+    data_generation_task_type: str,
+    validation_file_path: Path = None
 ):
     """Generate and save synthentic data under output_dataset.
 
@@ -533,16 +543,20 @@ def generate_synthetic_data(
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
     logger.info("Processing train file")
-    # TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type
-    batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
-    # batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
+
+    if data_generation_task_type == DataGenerationTaskType.CONVERSATIONAL:
+        batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
+    else:
+        batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
+
     logger.info("Data generated and saved for train file")
 
     if validation_file_path:
         logger.info("Processing validation file")
-        batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
-        # TODO: conditionally the batch_process_conversation_data based on the data_generation_task_type
-        # batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
+        if data_generation_task_type == DataGenerationTaskType.CONVERSATIONAL:
+            batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
+        else:
+            batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
         logger.info("Data generated and saved for validation file")
 
 
@@ -566,6 +580,7 @@ def data_import(args: Namespace):
     request_batch_size = args.request_batch_size
     min_endpoint_success_ratio = args.min_endpoint_success_ratio
     enable_cot_str = args.enable_chain_of_thought
+    data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
     _validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
@@ -634,6 +649,7 @@ def data_import(args: Namespace):
         generated_train_file_path=generated_train_file_path,
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,
+        data_generation_task_type=data_generation_task_type,
         validation_file_path=validation_file_path,
     )
 

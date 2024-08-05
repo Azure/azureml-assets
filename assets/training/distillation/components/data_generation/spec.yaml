@@ -83,8 +83,18 @@ inputs:
 
   enable_chain_of_thought:
     type: string
-    default: "true"
+    default: "false"
     description: Enable Chain of thought for data generation
+  
+  data_generation_task_type:
+    type: string
+    default: "conversational"
+    description: >
+      Data generation task type.
+      1. conversational: Generate conversational data (multi/single)
+      2. summarisation: Generate summarisation data
+      3. QnA: Generate QnA data
+      4. NLI: NLI data
 
 outputs:
   generated_train_file_path:
@@ -113,5 +123,6 @@ command: >-
   --request_batch_size ${{inputs.request_batch_size}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --enable_chain_of_thought ${{inputs.enable_chain_of_thought}}
+  --data_generation_task_type ${{inputs.data_generation_task_type}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}

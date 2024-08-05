@@ -4,7 +4,7 @@
 """Data generatior constants."""
 
 import re
-
+from enum import StrEnum, EnumMeta
 # COMPONENT META
 COMPONENT_NAME = "oss_distillation_generate_data"
 
@@ -84,3 +84,20 @@ class InferenceMode:
     HFTV2_TEXT_GENERATION = "hftv2_text_generation"
     VLLM_CHAT_COMPLETION = "vllm_chat_completion"
     VLLM_TEXT_GENERATION = "vllm_text_generation"
+
+
+class MetaEnum(EnumMeta):
+    def __contains__(cls, item):
+        try:
+            cls(item)
+        except ValueError:
+            return False
+        return True
+
+
+class DataGenerationTaskType(StrEnum, metaclass=MetaEnum):
+    math = "math"
+    nli = "nli"
+    conversation = "conversation"
+    summarization = "summarization"
+    question_answering = "QnA"

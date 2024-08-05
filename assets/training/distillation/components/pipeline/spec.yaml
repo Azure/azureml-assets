@@ -126,6 +126,9 @@ inputs:
     default: "false"
     description: Enable Chain of thought for data generation
 
+  data_generation_task_type:
+    type: string
+    description: Data generation task type
   ## OSS Finetune Input Parameters
   number_of_gpu_to_use_finetuning:
     type: integer
@@ -211,6 +214,7 @@ jobs:
       teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
+      data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
       teacher_model_top_p: '${{parent.inputs.teacher_model_top_p}}'
