@@ -101,7 +101,7 @@ class MetaEnum(EnumMeta):
 
 class DataGenerationTaskType(StrEnum, metaclass=MetaEnum):
     """Enum for data generation task types."""
-    
+
     math = "MATH"
     nli = "NLI"
     conversation = "CONVERSATION"
