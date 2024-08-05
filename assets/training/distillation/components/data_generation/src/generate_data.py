@@ -185,7 +185,7 @@ def get_parser():
         "--data_generation_task_type",
         type=str,
         required=True,
-        help="This enables Chain of Thought",
+        help="This helps in identifying the type of data generation task to generate the synthetic data.",
         choices=[v.value for v in DataGenerationTaskType]
     )
 
@@ -330,12 +330,21 @@ def generate_synthetic_data(
             first_message = messages[0]
             if first_message['role'] != 'system':
                 logger.warning(f"First message should be system, but got {first_message['role']}")
-                # TODO: handle this case
+                return {"idx": idx,
+                        "status_code": None,
+                        "messages": [],
+                        "exception": f"Incorrect format.\nFirst message should be system, but got {first_message['role']}",
+                        }
             for message in messages[1:]:
                 role = message['role']
-                if role not in ('system', 'user'):
+                if role not in ('assistant', 'user'):
                     logger.warning(f"role should be system or user, but got {role}")
-                    # TODO: handle this case
+                    return {"idx": idx,
+                            "status_code": None,
+                            "messages": [],
+                            "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
+                            }
+
             synthetic_responses = []
             for message in messages:
                 role = message['role']
@@ -361,7 +370,7 @@ def generate_synthetic_data(
                 "idx": idx,
                 "status_code": response.status_code,
                 "messages": synthetic_responses,
-                "exception": None,
+                "exception": "Not able to generate synthetic response for all turns" if response.status_code != 200 else None,
             }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
@@ -429,7 +438,7 @@ def generate_synthetic_data(
                 if future_result is None:
                     logger.error(f"row {idx} not found in future_results")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
-                if future_result['exception']:
+                elif future_result['exception']:
                     logger.error(f"row {idx} failed with exception: {future_result['exception']}")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
                 elif future_result['status_code'] != 200:
@@ -544,7 +553,7 @@ def generate_synthetic_data(
             raise Exception(msg)
     logger.info("Processing train file")
 
-    if data_generation_task_type == DataGenerationTaskType.CONVERSATIONAL:
+    if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
         batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
     else:
         batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
@@ -553,7 +562,7 @@ def generate_synthetic_data(
 
     if validation_file_path:
         logger.info("Processing validation file")
-        if data_generation_task_type == DataGenerationTaskType.CONVERSATIONAL:
+        if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
             batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
         else:
             batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)

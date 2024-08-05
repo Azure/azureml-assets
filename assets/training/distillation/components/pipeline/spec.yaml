@@ -128,7 +128,7 @@ inputs:
 
   data_generation_task_type:
     type: string
-    description: Data generation task type
+    description: This helps in identifying the type of data generation task to generate the synthetic data.
   ## OSS Finetune Input Parameters
   number_of_gpu_to_use_finetuning:
     type: integer

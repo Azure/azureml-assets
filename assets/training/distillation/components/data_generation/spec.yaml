@@ -90,11 +90,12 @@ inputs:
     type: string
     default: "conversational"
     description: >
-      Data generation task type.
-      1. conversational: Generate conversational data (multi/single)
-      2. summarisation: Generate summarisation data
-      3. QnA: Generate QnA data
-      4. NLI: NLI data
+      Data generation task type. Supported values are:
+      1. NLI: Generate NLI data
+      2. CONVERSATION: Generate conversational data (multi/single)
+      3. SUMMARIZATION: Generate summarization data
+      4. NLU_QUESTION_ANSWERING: Generate QnA data
+      5. MATH: Generate math data
 
 outputs:
   generated_train_file_path:
