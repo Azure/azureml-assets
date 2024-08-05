@@ -88,7 +88,10 @@ class InferenceMode:
 
 class MetaEnum(EnumMeta):
     """Metaclass for Enum classes. to use the in operator to check if a value is in the Enum."""
+
     def __contains__(cls, item):
+        """ Check if the item is in the Enum."""
+
         try:
             cls(item)
         except ValueError:
@@ -98,8 +101,9 @@ class MetaEnum(EnumMeta):
 
 class DataGenerationTaskType(StrEnum, metaclass=MetaEnum):
     """Enum for data generation task types."""
-    math = "math"
-    nli = "nli"
-    conversation = "conversation"
-    summarization = "summarization"
-    question_answering = "QnA"
+    
+    math = "MATH"
+    nli = "NLI"
+    conversation = "CONVERSATION"
+    summarization = "SUMMARIZATION"
+    nlu_question_answering = "NLU_QA"
