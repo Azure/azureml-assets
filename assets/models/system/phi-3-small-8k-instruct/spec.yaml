@@ -11,6 +11,13 @@ properties:
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   freePlayground: "true"
+  displayName: "Phi-3 small instruct (8k)"
+  summary: "A 7B parameters model, proves better quality than Phi-3-mini, with a focus on high-quality, reasoning-dense data."
+  textContextWindow: 131072
+  maxOutputTokens: 4096
+  languages: "en"
+  inputModalities: "text"
+  keywords: "Reasoning,Understanding"
   Featured: ""
   Preview: ""
   maas-inference: true

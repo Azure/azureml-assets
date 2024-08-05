@@ -11,6 +11,13 @@ properties:
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   freePlayground: "true"
+  displayName: "Phi-3 small instruct (128k)"
+  summary: "Same Phi-3-small model, but with a larger context size for RAG or few shot prompting."
+  textContextWindow: 131072
+  maxOutputTokens: 4096
+  languages: "en"
+  inputModalities: "text"
+  keywords: "Reasoning,Understanding,Large context"
   Featured: ""
   Preview: ""
   maas-inference: true

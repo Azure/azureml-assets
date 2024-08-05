@@ -11,6 +11,14 @@ properties:
   finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
   freePlayground: "true"
+  displayName: "Phi-3 mini instruct (4k)"
+  summary: "Tiniest member of the Phi-3 family. Optimized for both quality and low latency."
+  textContextWindow: 4096
+  maxOutputTokens: 4096
+  languages: "en"
+  inputModalities: "text"
+  trainingDataDate: "Oct 2023"
+  keywords: "Reasoning,Understanding,Low latency"
   Featured: ""
   Preview: ""
   maas-inference: true

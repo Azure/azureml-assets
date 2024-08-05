@@ -11,6 +11,14 @@ properties:
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   freePlayground: "true"
+  displayName: "Phi-3 medium instruct (128k)"
+  summary: "Same Phi-3-medium model, but with a larger context size for RAG or few shot prompting."
+  textContextWindow: 131072
+  maxOutputTokens: 4096
+  languages: "en"
+  inputModalities: "text"
+  trainingDataDate: "Oct 2023"
+  keywords: "Reasoning,Understanding,Large context"
   Featured: ""
   Preview: ""
   huggingface_model_id: ""
