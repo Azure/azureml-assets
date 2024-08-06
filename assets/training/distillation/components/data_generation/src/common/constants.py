@@ -4,7 +4,7 @@
 """Data generatior constants."""
 
 import re
-
+from enum import EnumMeta, Enum
 # COMPONENT META
 COMPONENT_NAME = "oss_distillation_generate_data"
 
@@ -85,3 +85,23 @@ class InferenceMode:
     HFTV2_TEXT_GENERATION = "hftv2_text_generation"
     VLLM_CHAT_COMPLETION = "vllm_chat_completion"
     VLLM_TEXT_GENERATION = "vllm_text_generation"
+
+
+class MetaEnum(EnumMeta):
+    """Metaclass for Enum classes. to use the in operator to check if a value is in the Enum."""
+
+    def __contains__(cls, item):
+        """Check if the item is in the Enum."""
+        try:
+            cls(item)
+        except ValueError:
+            return False
+        return True
+
+
+class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
+    """Enum for data generation task types."""
+
+    NLI = "NLI"
+    CONVERSATION = "CONVERSATION"
+    NLU_QUESTION_ANSWERING = "NLU_QA"
