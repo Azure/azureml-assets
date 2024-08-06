@@ -281,7 +281,7 @@ jobs:
       model_selector_output: ${{parent.jobs.model_import.outputs.output_dir}}
       preprocess_output: ${{parent.jobs.preprocess.outputs.output_dir}}
     outputs:
-      pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
+      pytorch_model_folder: ${{parent.outputs.pytorch_model_folder_finetune}}
   model_converter:
     type: command
     component: azureml:text_classification_model_converter:0.0.57
@@ -291,4 +291,4 @@ jobs:
     inputs:
       model_path: ${{parent.jobs.text_classification_finetune.outputs.pytorch_model_folder}}
     outputs:
-      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder_finetune}}
