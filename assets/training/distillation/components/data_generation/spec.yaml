@@ -83,7 +83,7 @@ inputs:
 
   enable_chain_of_thought:
     type: string
-    default: "false"
+    default: "true"
     description: Enable Chain of thought for data generation
   
   data_generation_task_type:
@@ -94,9 +94,9 @@ inputs:
       - NLU_QA
     description: >
       Data generation task type. Supported values are:
-      1. NLI: Generate NLI data
-      2. CONVERSATION: Generate conversational data (multi/single)
-      4. NLU_QUESTION_ANSWERING: Generate QnA data
+      1. NLI: Generate Natural Language Inference data
+      2. CONVERSATION: Generate conversational data (multi/single turn)
+      4. NLU_QA: Generate Natural Language Understanding data for Question Answering data
 
 outputs:
   generated_train_file_path:
