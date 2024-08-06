@@ -91,7 +91,7 @@ class MetaEnum(EnumMeta):
     """Metaclass for Enum classes. to use the in operator to check if a value is in the Enum."""
 
     def __contains__(cls, item):
-        """ Check if the item is in the Enum."""
+        """Check if the item is in the Enum."""
         try:
             cls(item)
         except ValueError:
