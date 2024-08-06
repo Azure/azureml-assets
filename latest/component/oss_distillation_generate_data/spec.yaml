@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
-version: 0.0.2
+version: 0.0.3
 type: command
 
 is_deterministic: true
@@ -90,6 +90,19 @@ inputs:
     default: "true"
     description: Enable Chain of thought for data generation
 
+  data_generation_task_type:
+    type: string
+    enum:
+    - NLI
+    - CONVERSATION
+    - NLU_QA
+    description: >
+      Data generation task type. Supported values are:
+      1. NLI: Generate Natural Language Inference data
+      2. CONVERSATION: Generate conversational data (multi/single turn)
+      3. NLU_QA: Generate Natural Language Understanding data for Question Answering
+      data
+
 outputs:
   generated_train_file_path:
     type: uri_file
@@ -117,5 +130,6 @@ command: >-
   --request_batch_size ${{inputs.request_batch_size}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --enable_chain_of_thought ${{inputs.enable_chain_of_thought}}
+  --data_generation_task_type ${{inputs.data_generation_task_type}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}
