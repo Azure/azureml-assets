@@ -128,7 +128,6 @@ inputs:
 
   data_generation_task_type:
     type: string
-    required: true
     enum:
       - NLI
       - CONVERSATION
