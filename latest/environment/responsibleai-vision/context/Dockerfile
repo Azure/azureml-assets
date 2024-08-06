@@ -24,12 +24,12 @@ RUN conda remove cryptography
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0'
 
 # Install azureml packages
-RUN pip install 'azureml-core==1.56.0' \
-                'azureml-mlflow==1.56.0' \
+RUN pip install 'azureml-core==1.57.0' \
+                'azureml-mlflow==1.57.0' \
                 'azureml-rai-utils==0.0.6'
 
-RUN pip install 'azureml-dataset-runtime==1.56.0' \
-                'azureml-automl-dnn-vision==1.56.0'
+RUN pip install 'azureml-dataset-runtime==1.57.0' \
+                'azureml-automl-dnn-vision==1.57.0'
 
 RUN pip install 'shap==0.41.0' \
                 'scikit-learn>=1.5.1' \

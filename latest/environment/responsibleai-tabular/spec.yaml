@@ -4,7 +4,7 @@ description: >-
   AzureML Responsible AI environment.
 
 name: "responsibleai-tabular"
-version: "2"
+version: "3"
 
 build:
   path: "context"
