@@ -147,6 +147,7 @@ class VQA2Adapter(VisionDatasetAdapter):
             "question": instance["question"] + " <image 1>",
             "answer_options": "",
             "more_images": [],
+            "keep": True,
         }
 
 
