@@ -2,20 +2,30 @@
 # Licensed under the MIT License.
 
 """Main script for compute metrics."""
-import azureml.evaluate.mlflow as aml_mlflow
-import json
-from azureml.telemetry.activity import log_activity
-from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 
-import constants
-from constants import ArgumentLiterals, ForecastingConfigContract, TASK, SubTask
-from exceptions import (
+import subprocess
+import sys
+
+install_deps = ["torch==1.13.1", "torchvision==0.14.1"]
+command = [sys.executable, '-m', 'pip', 'install'] + install_deps
+command_str = " ".join(command)
+print(f"Installing dependencies. Executing command: {command_str}.")
+print(subprocess.check_output(command, stderr=subprocess.STDOUT))
+
+import azureml.evaluate.mlflow as aml_mlflow  # noqa: E402
+import json  # noqa: E402
+from azureml.telemetry.activity import log_activity  # noqa: E402
+from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable  # noqa: E402
+
+import constants  # noqa: E402
+from constants import ArgumentLiterals, ForecastingConfigContract, TASK, SubTask  # noqa: E402
+from exceptions import (  # noqa: E402
     DataLoaderException,
     DataSavingException,
     DataValidationException,
     ComputeMetricsException,
 )
-from error_definitions import (
+from error_definitions import (  # noqa: E402
     ComputeMetricsInternalError,
     BadForecastData,
     BadFeatureColumnData,
@@ -26,11 +36,11 @@ from error_definitions import (
     BadEvaluationConfig,
     SavingOutputError,
 )
-from logging_utilities import (
+from logging_utilities import (  # noqa: E402
     custom_dimensions, current_run, get_logger, flush_logger,
     log_traceback, swallow_all_exceptions, get_azureml_exception
 )
-from utils import (
+from utils import (  # noqa: E402
     ArgumentParser,
     fetch_compute_metrics_args,
     check_and_return_if_mltable,
@@ -40,12 +50,12 @@ from utils import (
     parse_input_ground_truth_col,
     openai_init
 )
-from validation import validate_common_args, validate_compute_metrics_args
+from validation import validate_common_args, validate_compute_metrics_args  # noqa: E402
 
-from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
-import os
-import pandas as pd
-import numpy as np
+from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact  # noqa: E402
+import os  # noqa: E402
+import pandas as pd  # noqa: E402
+import numpy as np  # noqa: E402
 
 # Mark current path as allowed
 mark_path_as_loggable(os.path.dirname(__file__))
