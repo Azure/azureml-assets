@@ -133,7 +133,11 @@ inputs:
       - NLI
       - CONVERSATION
       - NLU_QA
-    description: This helps in identifying the type of data generation task to generate the synthetic data.
+    description: >
+      Data generation task type. Supported values are:
+      1. NLI: Generate Natural Language Inference data
+      2. CONVERSATION: Generate conversational data (multi/single turn)
+      4. NLU_QA: Generate Natural Language Understanding data for Question Answering data
 
   ## OSS Finetune Input Parameters
   number_of_gpu_to_use_finetuning:
