@@ -72,7 +72,7 @@ def get_parser():
     # in both places
     parser.add_argument(
         "--train_file_path",
-        type=partial(default_missing_path, default=None),
+        type=str,
         required=False,
         default=None,
         help="Train data path",
@@ -81,7 +81,7 @@ def get_parser():
     # in both places
     parser.add_argument(
         "--validation_file_path",
-        type=partial(default_missing_path, default=None),
+        type=str,
         required=False,
         default=None,
         help="Validation data path",
@@ -90,7 +90,7 @@ def get_parser():
     # in both places
     parser.add_argument(
         "--test_file_path",
-        type=partial(default_missing_path, default=None),
+        type=str,
         required=False,
         default=None,
         help="Test data path",
@@ -200,10 +200,16 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
         setattr(parsed_args, "finetune_config", {})
 
+    if parsed_args.task_name not in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
+        parsed_args.train_file_path = default_missing_path(parsed_args.train_file_path, default=None)
+        parsed_args.validation_file_path = default_missing_path(parsed_args.validation_file_path, default=None)
+        parsed_args.test_file_path = default_missing_path(parsed_args.test_file_path, default=None)
+
     # additional logging
     logger.info(f"Model name: {getattr(parsed_args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(parsed_args, 'task_name', None)}")
     logger.info(f"Model asset id: {getattr(parsed_args, 'model_asset_id', None)}")
+    logger.info(f"{parsed_args}")
 
     if getattr(parsed_args, "task_name", None) == Tasks.TRANSLATION and \
             getattr(parsed_args, "model_name", None) is not None:
