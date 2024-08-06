@@ -185,7 +185,11 @@ def get_parser():
         "--data_generation_task_type",
         type=str,
         required=True,
-        help="This helps in identifying the type of data generation task to generate the synthetic data.",
+        help="""Data generation task type. Supported values are:
+            1. NLI: Generate Natural Language Inference data
+            2. CONVERSATION: Generate conversational data (multi/single turn)
+            3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+            """,
         choices=[v.value for v in DataGenerationTaskType]
     )
 
