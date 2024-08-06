@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: nlp_multiclass_datapreprocessing
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: DataPreProcessing for AutoMLNLPMulticlass
 description: Component to preprocess data for automl nlp multiclass classification task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/16
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/62
 
 code: ../../../src/preprocess
 
@@ -28,13 +28,23 @@ inputs:
   # Inputs
   train_file_path:
     type: uri_file
-    optional: false
+    optional: true
     description: Enter the train file path
 
   valid_file_path:
     type: uri_file
-    optional: false
+    optional: true
     description: Enter the validation file path
+
+  train_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered training data asset in `mltable` format.
+
+  validation_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered validation data asset in `mltable` format.
 
   # Dataset parameters
   model_selector_output:
@@ -60,8 +70,10 @@ command: >-
   --sentence1_key sentences
   --label_key ${{inputs.label_column_name}}
   $[[--batch_size ${{inputs.batch_size}}]]
-  --train_file_path ${{inputs.train_file_path}}
-  --validation_file_path ${{inputs.valid_file_path}}
+  $[[--train_file_path '${{inputs.train_file_path}}']]
+  $[[--validation_file_path '${{inputs.valid_file_path}}']]
+  $[[--train_mltable_path '${{inputs.train_mltable_path}}']]
+  $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']]
   --model_selector_output ${{inputs.model_selector_output}}
   $[[--enable_long_range_text ${{inputs.enable_long_range_text}}]]
   --output_dir ${{outputs.output_dir}}
