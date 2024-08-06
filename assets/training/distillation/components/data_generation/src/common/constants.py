@@ -4,7 +4,7 @@
 """Data generatior constants."""
 
 import re
-from enum import StrEnum, EnumMeta
+from enum import EnumMeta, Enum
 # COMPONENT META
 COMPONENT_NAME = "oss_distillation_generate_data"
 
@@ -99,11 +99,9 @@ class MetaEnum(EnumMeta):
         return True
 
 
-class DataGenerationTaskType(StrEnum, metaclass=MetaEnum):
+class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     """Enum for data generation task types."""
 
-    MATH = "MATH"
     NLI = "NLI"
     CONVERSATION = "CONVERSATION"
-    SUMMARIZATION = "SUMMARIZATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"

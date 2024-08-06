@@ -352,9 +352,12 @@ def generate_synthetic_data(
                 if role in ('system', 'user'):
                     synthetic_responses.append(message)
                 else:
+                    data_with_inference_parameters = {"messages": synthetic_responses}
+                    for key, value in data.items():
+                        data_with_inference_parameters[key] = value
                     # replace the assistant content from the model
                     response: Response = _invoke_endpoint(url=url, key=endpoint_key,
-                                                          data={"messages": synthetic_responses} | data)
+                                                          data=data_with_inference_parameters)
                     if response.status_code != 200:
                         break
                     logger.info(f"response_text: {response.text}")
@@ -449,9 +452,7 @@ def generate_synthetic_data(
                     logger.warning(f"row {idx} request status_code: {future_result['status_code']} != 200")
                     error_map[future_result['status_code']] = error_map.get(future_result['status_code'], 0) + 1
                 else:
-                    answer = future_result['messages']
-                    output_data.append(answer)
-
+                    output_data.append({"messages": future_result['messages']})
             Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
             with open(output_file_path, 'w') as f:
                 for entry in output_data:

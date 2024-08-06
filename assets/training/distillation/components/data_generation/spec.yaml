@@ -88,14 +88,15 @@ inputs:
   
   data_generation_task_type:
     type: string
-    default: "conversational"
+    enum:
+      - NLI
+      - CONVERSATION
+      - NLU_QA
     description: >
       Data generation task type. Supported values are:
       1. NLI: Generate NLI data
       2. CONVERSATION: Generate conversational data (multi/single)
-      3. SUMMARIZATION: Generate summarization data
       4. NLU_QUESTION_ANSWERING: Generate QnA data
-      5. MATH: Generate math data
 
 outputs:
   generated_train_file_path:
