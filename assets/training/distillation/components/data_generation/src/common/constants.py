@@ -92,7 +92,6 @@ class MetaEnum(EnumMeta):
 
     def __contains__(cls, item):
         """ Check if the item is in the Enum."""
-
         try:
             cls(item)
         except ValueError:
