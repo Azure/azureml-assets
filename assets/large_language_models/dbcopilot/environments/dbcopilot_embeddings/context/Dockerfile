@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     git \
     git-man \
     libpython3.8-minimal=3.8.10-0ubuntu1~20.04.10 \
-    libpython3.8-stdlib=3.8.10-0ubuntu1~20.04.10\
+    libpython3.8-stdlib=3.8.10-0ubuntu1~20.04.10 \
     python3.8-minimal=3.8.10-0ubuntu1~20.04.10 \
     python3.8=3.8.10-0ubuntu1~20.04.10 &&\
     rm -rf /var/lib/apt/lists/*
