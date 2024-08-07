@@ -1321,7 +1321,7 @@ class AssetConfig(Config):
     @property
     def extra_tags_from_files(self) -> Dict[str, str]:
         extra_tags_from_files = {}
-        
+
         extra_tags_to_filepaths = self._yaml.get('extra_tags_from_files')
 
         if extra_tags_to_filepaths:
