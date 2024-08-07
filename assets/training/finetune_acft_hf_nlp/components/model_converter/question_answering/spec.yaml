@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_model_converter
-version: 0.0.54
+version: 0.0.56
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Question Answering Model Converter
 description: Component to convert the question answering finetune job output from pytorch to mlflow model.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/64
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/50
 
 code: ../../../src/model_converter
 
@@ -32,5 +32,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python model_converter.py --model_path '${{inputs.model_path}}' $[[--system_properties
-  '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}'
+  python model_converter.py --output_dir '${{outputs.mlflow_model_folder}}' --model_path '${{inputs.model_path}}' $[[--system_properties '${{inputs.system_properties}}']]
