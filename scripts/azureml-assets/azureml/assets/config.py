@@ -1319,6 +1319,19 @@ class AssetConfig(Config):
         return self._yaml.get('description_file')
 
     @property
+    def extra_tags_from_files(self) -> Dict[str, str]:
+        extra_tags_from_files = {}
+        
+        extra_tags_to_filepaths = self._yaml.get('extra_tags_from_files')
+
+        if extra_tags_to_filepaths:
+            for (tagKey, fpath) in extra_tags_to_filepaths.items():
+                tag_file_path = self._append_to_file_path(fpath)
+                with open(tag_file_path) as f:
+                    extra_tags_from_files[tagKey] = f.read()
+        return extra_tags_from_files
+
+    @property
     def description_file_with_path(self) -> Path:
         """Asset's description file."""
         description_file = self.description_file

@@ -64,6 +64,7 @@ class ModelAsset:
         try:
             self._model = load_model(spec_path)
             self._model.description = model_config.description
+            self._model.tags.update(model_config.extra_tags_from_files)
             self._model.type = model_config.type.value
         except Exception as e:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")

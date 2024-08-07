@@ -446,6 +446,8 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
         spec_path = asset.spec_with_path
         model_config = asset.extra_config_as_object()
 
+        extra_tags_from_files = model_config.extra_tags_from_files
+
         # get tags to update from model spec file
         tags_to_update = None
         try:
@@ -453,6 +455,9 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 model_spec = YAML().load(f)
                 tags = model_spec.get("tags", {})
                 properties = model_spec.get("properties", {})
+
+                if extra_tags_from_files:
+                    tags.update(extra_tags_from_files)
 
                 # convert tags, properties value to string
                 tags = stringify_dictionary(tags)

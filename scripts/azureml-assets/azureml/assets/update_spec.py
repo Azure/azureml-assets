@@ -114,6 +114,11 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
 
         # Replace description in spec
         contents_yaml['description'] = LiteralScalarString(description)
+    
+    # Handle extra tags
+    extra_tags_from_files = asset_config.extra_tags_from_files
+    for (tagKey, tagContent) in extra_tags_from_files.items():
+        contents_yaml['tags'][tagKey] = LiteralScalarString(tagContent)
 
     # Write spec
     if output_file == "-":
