@@ -43,14 +43,13 @@ from common.constants import (
     STOP_TOKEN,
     SUPPORTED_FILE_FORMATS,
     VLLM_CHAT_SCORE_PATH,
+    DataGenerationTaskType
 )
 
 from common.utils import (
     get_workspace_mlclient,
-    get_online_endpoint_key,
-    get_online_endpoint_url,
-    get_serverless_endpoint_key,
-    get_serverless_endpoint_url,
+    get_endpoint_details,
+    validate_teacher_model_details,
     retry,
 )
 
@@ -182,6 +181,18 @@ def get_parser():
         help="This enables Chain of Thought"
     )
 
+    parser.add_argument(
+        "--data_generation_task_type",
+        type=str,
+        required=True,
+        help="""Data generation task type. Supported values are:
+            1. NLI: Generate Natural Language Inference data
+            2. CONVERSATION: Generate conversational data (multi/single turn)
+            3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+            """,
+        choices=[v.value for v in DataGenerationTaskType]
+    )
+
     return parser
 
 
@@ -233,7 +244,8 @@ def generate_synthetic_data(
     generated_train_file_path: Path,
     generated_validation_file_path: Path,
     train_file_path: Path,
-    validation_file_path: Path = None,
+    data_generation_task_type: str,
+    validation_file_path: Path = None
 ):
     """Generate and save synthentic data under output_dataset.
 
@@ -248,7 +260,6 @@ def generate_synthetic_data(
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
     """
-
     def process_request(idx: str, enable_cot: bool, data: dict, url: str, endpoint_key: str) -> dict:
         """Process a single request.
 
@@ -297,10 +308,171 @@ def generate_synthetic_data(
                 "exception": e,
             }
 
+    def process_conversational_request(idx: str, data: dict, url: str, endpoint_key: str):
+        """Process a single conversational request.
+
+        Args:
+            idx (str): Row index in Input data.
+            data (dict): Payload dict
+            url (str): Endpoint URL
+            endpoint_key (str): key to authenticate endpoint request
+
+        Returns:
+            dict: result dictionary
+        """
+        try:
+            logger.info(f"request_data: {repr(data)}")
+            #  Basic validation for the input data
+            messages = data.pop("messages", [])
+            if not messages:  # empty messages
+                return {
+                    "idx": idx,
+                    "status_code": None,
+                    "messages": [],
+                    "exception": "Empty messages"
+                }
+            first_message = messages[0]
+            if first_message['role'] != 'system':
+                logger.warning(f"First message should be system, but got {first_message['role']}")
+                return {"idx": idx,
+                        "status_code": None,
+                        "messages": [],
+                        "exception": ("Incorrect format.\n"
+                                      f"First message should be system, but got {first_message['role']}"),
+                        }
+            for message in messages[1:]:
+                role = message['role']
+                if role not in ('assistant', 'user'):
+                    logger.warning(f"role should be system or user, but got {role}")
+                    return {"idx": idx,
+                            "status_code": None,
+                            "messages": [],
+                            "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
+                            }
+
+            synthetic_responses = []
+            for message in messages:
+                role = message['role']
+                if role in ('system', 'user'):
+                    synthetic_responses.append(message)
+                else:
+                    data_with_inference_parameters = {"messages": synthetic_responses}
+                    for key, value in data.items():
+                        data_with_inference_parameters[key] = value
+                    # replace the assistant content from the model
+                    response: Response = _invoke_endpoint(url=url, key=endpoint_key,
+                                                          data=data_with_inference_parameters)
+                    if response.status_code != 200:
+                        break
+                    logger.info(f"response_text: {response.text}")
+                    response_data = response.json()
+
+                    logger.info(f"JSON response: {response_data}")
+                    prediction_result = (
+                        None if response.status_code != 200
+                        # response content should be structured as below for a successful vllm response
+                        else response_data['choices'][0]["message"]["content"].strip()
+                    )
+                    synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
+            return {
+                "idx": idx,
+                "status_code": response.status_code,
+                "messages": synthetic_responses,
+                "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
+                              if response.status_code != 200
+                              else
+                              None),
+            }
+        except Exception as e:
+            logger.error(f"idx: {idx}. exception: {e}")
+            return {
+                "idx": idx,
+                "status_code": None,
+                "messages": [],
+                "exception": e,
+            }
+
     def replace_cot_system_message(messages: List[dict]) -> List[dict]:
         # Replace the system message without changing the original messages list
         cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
         return [(cot_system_message if message['role'] == 'system' else message) for message in messages]
+
+    def batch_process_conversation_data(input_file_path: Path, output_file_path: Path, batch_size: int) -> None:
+        """Batch process data and do a bulk request to teacher model endpoint.
+
+        Args:
+            input_file_path (Path): Input data file path
+            output_file_path (Path): Path to output directory
+            batch_size (int): Input batch size for processing rows in train and validation dataset
+
+        Raises:
+            Exception: if success ratio is less than min_endpoint_success_ratio
+        """
+        train_df = pd.read_json(input_file_path, lines=True, chunksize=batch_size)
+        total_rows = 0
+        error_count = 0
+        output_data = []
+        error_map = {}
+        ERROR = "error"
+
+        for batch in train_df:
+            total_rows += len(batch)
+            futures = []
+
+            with ThreadPoolExecutor() as executor:
+                for idx, row in batch.iterrows():
+                    messages = row.iloc[0]
+                    request_data = {
+                        "messages": messages,
+                        **inference_params,
+                    }
+                    futures.append(
+                        executor.submit(
+                            process_conversational_request,
+                            idx,
+                            request_data,
+                            teacher_model_endpoint_url,
+                            teacher_model_endpoint_key
+                        )
+                    )
+
+            # wait for results to complete
+            future_results = {
+                result["idx"]: result
+                for result in [future.result() for future in as_completed(futures)]
+            }
+
+            idx = 0
+            for idx, row in batch.iterrows():
+                future_result = future_results.get(idx)
+                logger.info(future_result)
+                if future_result is None:
+                    logger.error(f"row {idx} not found in future_results")
+                    error_map[ERROR] = error_map.get(ERROR, 0) + 1
+                elif future_result['exception']:
+                    logger.error(f"row {idx} failed with exception: {future_result['exception']}")
+                    error_map[ERROR] = error_map.get(ERROR, 0) + 1
+                elif future_result['status_code'] != 200:
+                    logger.warning(f"row {idx} request status_code: {future_result['status_code']} != 200")
+                    error_map[future_result['status_code']] = error_map.get(future_result['status_code'], 0) + 1
+                else:
+                    output_data.append({"messages": future_result['messages']})
+            Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
+            with open(output_file_path, 'w') as f:
+                for entry in output_data:
+                    f.write(json.dumps(entry) + '\n')
+
+        if error_map:
+            logger.info("Error summary. With key denoting non-200 status code or some other error.")
+            for k, v in error_map.items():
+                error_count += v
+                logger.warning(f"{k} => {v}")
+
+        success_ratio = float(total_rows - error_count) / total_rows
+        logger.info(f"Success rate was {success_ratio} for {input_file_path}")
+        if success_ratio < min_endpoint_success_ratio:
+            msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
+            raise Exception(msg)
 
     def batch_process_data(input_file_path: Path, output_file_path: Path, batch_size: int) -> None:
         """Batch process data and do a bulk request to teacher model endpoint.
@@ -388,14 +560,21 @@ def generate_synthetic_data(
         if success_ratio < min_endpoint_success_ratio:
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
-
     logger.info("Processing train file")
-    batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
+
+    if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
+        batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
+    else:
+        batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
+
     logger.info("Data generated and saved for train file")
 
     if validation_file_path:
         logger.info("Processing validation file")
-        batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
+        if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
+            batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
+        else:
+            batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
         logger.info("Data generated and saved for validation file")
 
 
@@ -419,6 +598,7 @@ def data_import(args: Namespace):
     request_batch_size = args.request_batch_size
     min_endpoint_success_ratio = args.min_endpoint_success_ratio
     enable_cot_str = args.enable_chain_of_thought
+    data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
     _validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
@@ -426,22 +606,21 @@ def data_import(args: Namespace):
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
     mlclient_ws = get_workspace_mlclient()
+    if not mlclient_ws:
+        raise Exception("Could not create MLClient for current workspace")
 
-    if teacher_model_endpoint_url is None:
-        if teacher_model_endpoint_name:
-            if mlclient_ws:
-                teacher_model_endpoint_url = get_serverless_endpoint_url(mlclient_ws, teacher_model_endpoint_name)\
-                    or get_online_endpoint_url(mlclient_ws, teacher_model_endpoint_name)
-        if not teacher_model_endpoint_url:
-            raise Exception("Endpoint URL is a requried parameter for data generation")
+    if teacher_model_endpoint_name:
+        endpoint_details = get_endpoint_details(mlclient_ws, teacher_model_endpoint_name)
+        teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
+        teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
+        teacher_model_asset_id = endpoint_details.get_deployed_model_id()
+        validate_teacher_model_details(teacher_model_asset_id)
 
-    if teacher_model_endpoint_key is None:
-        if teacher_model_endpoint_name:
-            if mlclient_ws:
-                teacher_model_endpoint_key = get_serverless_endpoint_key(mlclient_ws, teacher_model_endpoint_name)\
-                    or get_online_endpoint_key(mlclient_ws, teacher_model_endpoint_name)
-        if not teacher_model_endpoint_key:
-            raise Exception("Endpoint key is a requried parameter for data generation")
+    if not teacher_model_endpoint_url:
+        raise Exception("Endpoint URL is a requried parameter for data generation")
+
+    if not teacher_model_endpoint_key:
+        raise Exception("Endpoint key is a requried parameter for data generation")
 
     if teacher_model_top_p < 0 or teacher_model_top_p > 1:
         raise Exception(
@@ -488,6 +667,7 @@ def data_import(args: Namespace):
         generated_train_file_path=generated_train_file_path,
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,
+        data_generation_task_type=data_generation_task_type,
         validation_file_path=validation_file_path,
     )
 
