@@ -64,8 +64,9 @@ class ModelAsset:
         try:
             self._model = load_model(spec_path)
             self._model.description = model_config.description
-            self._model.tags = {k: util.resolve_from_file(self._model_config.__append_to_file_path(v)) for k, v in self._model.tags.items()}
             self._model.type = model_config.type.value
+            if self._model.tags:
+                self._model.tags = {k: util.resolve_from_file(self._model_config.__append_to_file_path(v)) for k, v in self._model.tags.items()}
         except Exception as e:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")
             return False
