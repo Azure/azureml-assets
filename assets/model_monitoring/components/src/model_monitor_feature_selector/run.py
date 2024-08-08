@@ -42,16 +42,12 @@ def run():
         input_df1 = input_df2
 
     feature_importance = None
-    try:
-        feature_importance = try_read_mltable_in_spark_with_error(args.feature_importance, "feature_importance")
-    except DataNotFoundError as e:
-        if args.filter_type == FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name:
-            raise e
-    except Exception:
-        if args.filter_type == FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name:
-            raise Exception(
-                "Error encountered when retrieving top N features. Please ensure target_column is defined."
-            )
+    if args.filter_type == FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name:
+        try:
+            feature_importance = try_read_mltable_in_spark_with_error(args.feature_importance, "feature_importance")
+        except Exception as e:
+            raise Exception(f"Error encountered when retrieving top N features. {e}. "
+                            "The feature importance step may not have completed successfully.")
 
     feature_selector = FeatureSelectorFactory().produce(
         feature_selector_type=args.filter_type,
