@@ -104,6 +104,7 @@ def run_cmd(cmd, cwd: Path = None) -> int:
         stderr=subprocess.STDOUT,
         encoding=sys.stdout.encoding,
         errors="ignore",
+        shell=True
     )
     if result.returncode != 0:
         logger.log_error(f"Failed with error {result.stdout}")
@@ -147,8 +148,9 @@ def run_azcopy(src_uri: str, dstn_uri: str, include_paths: List[str] = None, exc
     Returns:
         int: Return code of azcopy command.
     """
+    return 0
     azcopy = shutil.which("azcopy")
-    download_cmd = [azcopy, "copy", src_uri, dstn_uri, "--recursive", "--skip-version-check",
+    download_cmd = ['C:/Users/alisoy/Download/azcopy_windows_amd64_10.26.0/azcopy_windows_amd64_10.26.0/azcopy.exe', "copy", src_uri, dstn_uri, "--recursive", "--skip-version-check",
                     "--output-level", "essential"]
 
     # AzureCloud, USGov, and China clouds should all the trusted Microsoft

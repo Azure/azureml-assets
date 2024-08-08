@@ -1,0 +1,6 @@
+path:
+  uri: "./model.txt"
+  type: local
+publish:
+  description: description.md
+  type: custom_model

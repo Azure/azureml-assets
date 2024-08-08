@@ -314,7 +314,7 @@ def validate_update_component(
 
 def run_command(cmd: List[str]) -> CompletedProcess:
     """Run the command for and return result."""
-    result = run(cmd, capture_output=True, encoding=sys.stdout.encoding, errors="ignore")
+    result = run(cmd, capture_output=True, encoding=sys.stdout.encoding, errors="ignore", shell=True)
     return result
 
 
@@ -341,9 +341,14 @@ def create_asset_cli(
     asset: AssetConfig,
     registry_name: str,
     version: str,
-    debug: bool = None
+    ml_client: MLClient,
+    debug: bool = None,
 ) -> bool:
     """Create asset in registry."""
+
+    with open(asset.spec_with_path, 'r') as f:
+        f.read()
+
     cmd = asset_create_command(
         asset.type.value, str(asset.spec_with_path),
         registry_name, version, debug
@@ -388,15 +393,28 @@ def get_asset_details(
     asset_name: str,
     asset_version: str,
     registry_name: str,
+    ml_client: MLClient,
 ) -> Dict:
     """Get asset details."""
-    logger.print(f"Getting asset details for {asset_type} {asset_name} {asset_version} in {registry_name}")
+    logger.print(f"!Getting asset details for {asset_type} {asset_name} {asset_version} in {registry_name}")
+
+    try:
+        return ml_client.models.get(name=asset_name, version=asset_version)
+    except Exception as ex:
+        logger.log_error(f"Failed: {ex}")
+        return None
+
+    result = run_command(["az", "extension", "add", "--name", "ml"])
+    if result.returncode != 0:
+        logger.log_error(f"Failed to add extension: {result.stderr}")
+
     cmd = [
         "az", "ml", asset_type, "show",
         "--name", asset_name,
         "--version", asset_version,
         "--registry-name", registry_name,
     ]
+    # return None
     result = run_command(cmd)
     if result.returncode != 0:
         if "Could not find asset" not in result.stderr:
@@ -499,7 +517,7 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
     logger.print(f"Creating {asset.name} {version}")
 
     # Update model metadata, if it exists
-    if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
+    if get_asset_details(asset.type.value, asset.name, asset.version, registry_name, ml_client=ml_client):
         logger.print(f"{asset.name} {asset.version} already exists, updating the metadata")
         try:
             update_asset_metadata(asset=asset, ml_client=ml_client, allow_no_op_update=False)

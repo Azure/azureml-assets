@@ -1,0 +1,9 @@
+name: test-filetags-model
+type: custom_model
+path: https://amldevos5mguse01.blob.core.windows.net:443/azureml-de-4f565035-2fd9-543c-8ff8-58f4c1797b38
+version: '2'
+description: "## Model Summary\n\nThis is the description."
+properties: {}
+tags:
+  notes: "## Model Summary\n\nThis is the notes.222"
+  evaluation: "## Model Summary\n\nThis is the evaluation."
