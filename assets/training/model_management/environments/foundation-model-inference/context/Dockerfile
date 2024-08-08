@@ -47,14 +47,17 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e .
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.4 --no-cache-dir
-RUN pip uninstall transformers -y
+RUN pip install llm-optimized-inference --no-cache-dir
 
-COPY ./transformers.patch ./transformers.patch
-RUN git clone https://github.com/huggingface/transformers.git && \
-    cd transformers && \
-    git checkout fc35907f95459d7a6c5281dfadd680b6f7b620e3 && \
-    git apply ../transformers.patch && \
+RUN pip uninstall -y vllm
+
+COPY ./vllm-phi3-mini.patch ./vllm-phi3-mini.patch
+
+RUN git clone https://github.com/vllm-project/vllm.git && \
+    cd vllm && \
+    git checkout bb2fc08072db2d96e547407b4301fb6ba141d9d6 && \
+    git apply ../vllm-phi3-mini.patch && \
+    pip install -r requirements-cuda.txt && \
     python setup.py bdist_wheel && \
     pip install dist/*.whl
 
