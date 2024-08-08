@@ -14,6 +14,7 @@ from packaging import version
 from typing import Dict, List, Set, Tuple, Union
 import requests
 import sys
+import urllib.parse
 from azure.ai.ml._azure_environments import (
     AzureEnvironments,
     _get_default_cloud_name,
@@ -22,6 +23,7 @@ from azure.ai.ml._azure_environments import (
 from azure.identity import AzureCliCredential
 from azure.storage.blob import (
     BlobServiceClient,
+    ContainerClient,
     ContainerSasPermissions,
     generate_container_sas
 )
@@ -517,6 +519,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._container_name = container_name
         self._container_path = container_path
         self._token = None
+        self._uri = None
 
         # AzureCloud, USGov, and China clouds should all pull from the same endpoint
         # associated with AzureCloud. If the cloud is not one of these, then the
@@ -631,10 +634,58 @@ class AzureBlobstoreAssetPath(AssetPath):
             self._token = ""
             return uri
 
+    def get_container_client(self) -> ContainerClient:
+        """Get container client.
+
+        Returns:
+            ContainerClient: Container client object for the asset.
+        """
+        # Get URL to container, while preserving any SAS token
+        model_uri = urllib.parse.urlparse(self.uri)
+        container_uri = urllib.parse.urlunparse(model_uri._replace(path="/" + self.container_name))
+        container_client: ContainerClient = ContainerClient.from_container_url(container_url=container_uri)
+        return container_client
+
+    def get_files(self, strip_container_prefix: bool = True) -> List[dict]:
+        """Get the list of files that belong to the asset.
+
+        Args:
+            strip_container_path (bool, optional): Whether to strip the container prefix from the file names.
+                                                   Defaults to True.
+
+        Returns:
+            List[dict]: List of files and their sizes. Dicts have keys `name` and `size`.
+        """
+        container_client = self.get_container_client()
+        container_prefix = self.container_path + "/"
+        blobs = container_client.list_blobs(name_starts_with=container_prefix)
+
+        # Remove prefix if desired
+        starting_pos = len(container_prefix) if strip_container_prefix else 0
+        blobs = [{'name': blob.name[starting_pos:], 'size': blob.size} for blob in blobs]
+        return blobs
+
+    def get_file_contents(self, name: str, encoding: str = "UTF-8") -> Union[str, bytes]:
+        """Retrieve contents of a file from the asset.
+
+        Args:
+            name (str): File name, relative to the container path.
+            encoding (str, optional): Encoding to use when reading the file. Defaults to "UTF-8".
+
+        Returns:
+            Union[str, bytes]: File contents, as str if encoding is provided, otherwise bytes.
+        """
+        container_client = self.get_container_client()
+        container_prefix = self.container_path + "/"
+        file_contents = container_client.download_blob(container_prefix + name, encoding=encoding).readall()
+        return file_contents
+
     @property
     def uri(self) -> str:
-        """Asset URI."""
-        return self.get_uri()
+        """Asset URI. Value is cached after first call."""
+        if self._uri is None:
+            self._uri = self.get_uri()
+        return self._uri
 
     @property
     def storage_name(self) -> str:
@@ -647,14 +698,20 @@ class AzureBlobstoreAssetPath(AssetPath):
         return self._container_name
 
     @property
+    def container_path(self) -> str:
+        """Container path."""
+        return self._container_path
+
+    @property
     def token(self) -> str:
-        """Sas token."""
+        """SAS token."""
         return self._token
 
     @token.setter
     def token(self, value: str):
-        """Set sas token."""
+        """Set SAS token. Resets cached `uri` value."""
         self._token = value
+        self._uri = None
 
 
 class GitAssetPath(AssetPath):

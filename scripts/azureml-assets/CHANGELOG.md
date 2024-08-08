@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.55 (2024-08-08)
+### 🚀 New Features
+- [#3127](https://github.com/Azure/azureml-assets/pull/3127) Add additional features to AzureBlobstoreAssetPath
+
 ## 1.16.54 (2024-07-08)
 ### 🐛 Bugs Fixed
 - [#3127](https://github.com/Azure/azureml-assets/pull/3127) Test pipeline
