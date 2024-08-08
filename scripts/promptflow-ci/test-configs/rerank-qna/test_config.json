@@ -15,7 +15,7 @@
     },
     {
       "name": "llm",
-      "connection": "aoai_connection",
+      "connection": "Default_AzureOpenAI",
       "inputs": {
         "deployment_name": "gpt-35-turbo"
       }
