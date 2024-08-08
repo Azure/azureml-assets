@@ -116,8 +116,9 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
         # Replace description in spec
         contents_yaml['description'] = LiteralScalarString(description)
     
-    unresolved_tags = contents_yaml['tags']
-    contents_yaml['tags'] = {k: (LiteralScalarString(util.resolve_from_file(asset_config._append_to_file_path(v))) if os.path.isfile(asset_config._append_to_file_path(v)) else v) for k, v in unresolved_tags.items()}
+    if 'tags' in contents_yaml:
+        unresolved_tags = contents_yaml['tags']
+        contents_yaml['tags'] = {k: (LiteralScalarString(util.resolve_from_file(asset_config._append_to_file_path(v))) if os.path.isfile(asset_config._append_to_file_path(v)) else v) for k, v in unresolved_tags.items()}
 
     # Write spec
     if output_file == "-":
