@@ -73,8 +73,12 @@ COT_SYSTEM_PROMPT = (
     "Write out in a step by step manner your reasoning about the answer using no more than 80 words. "
     "Based on the reasoning, produce the final answer. "
     "Your response should be in JSON format without using any backticks. "
-    "The JSON is a dictionary whose keys are 'reason' and 'answer_choice'. "
+    "The JSON is a dictionary whose keys are 'reason' and {answer}. {additional_instructions}"
     "Always generate a syntactically correct JSON without using markdown and any additional words. "
+)
+MATH_INSTRUCTIONS = (
+    "Answer should be a plain number without containing any explanations, "
+    "reasoning, percentage or additional information. "
 )
 
 
@@ -105,3 +109,4 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     NLI = "NLI"
     CONVERSATION = "CONVERSATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"
+    MATH = "MATH"

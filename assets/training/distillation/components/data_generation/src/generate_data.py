@@ -29,6 +29,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from common.constants import (
     COMPONENT_NAME,
     COT_SYSTEM_PROMPT,
+    MATH_INSTRUCTIONS,
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
@@ -189,6 +190,7 @@ def get_parser():
             1. NLI: Generate Natural Language Inference data
             2. CONVERSATION: Generate conversational data (multi/single turn)
             3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+            4. MATH: Generate Math data
             """,
         choices=[v.value for v in DataGenerationTaskType]
     )
@@ -291,7 +293,8 @@ def generate_synthetic_data(
                 # Try loading JSON answer and filter 'answer_choice'
                 # if JSON loading fails, exception will be caught
                 # And this specific row would not be part of generated data
-                prediction_result = json.loads(prediction_result)['answer_choice']
+                key = 'answer' if data_generation_task_type == DataGenerationTaskType.MATH else 'answer_choice'
+                prediction_result = json.loads(prediction_result)[key]
 
             return {
                 "idx": idx,
@@ -394,7 +397,12 @@ def generate_synthetic_data(
 
     def replace_cot_system_message(messages: List[dict]) -> List[dict]:
         # Replace the system message without changing the original messages list
-        cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
+        answer = "'answer'" if data_generation_task_type == DataGenerationTaskType.MATH else "'answer_choice'"
+        instructions = MATH_INSTRUCTIONS if data_generation_task_type == DataGenerationTaskType.MATH else ""
+        cot_system_message = {
+            'role': 'system',
+            'content': COT_SYSTEM_PROMPT.format(answer=answer, additional_instructions=instructions)
+        }
         return [(cot_system_message if message['role'] == 'system' else message) for message in messages]
 
     def batch_process_conversation_data(input_file_path: Path, output_file_path: Path, batch_size: int) -> None:
