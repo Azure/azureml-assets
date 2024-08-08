@@ -12,8 +12,8 @@ dependencies:
 - cryptography=42.0.2
 - 'psutil>=5.2.2,<6.0.0'
 - tqdm
-- setuptools=65.5.1
-- wheel=0.38.1
+- setuptools=72.1.0
+- wheel=0.44.0
 - openssl=3.0.13
 - pip:
   - inference-schema
