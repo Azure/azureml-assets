@@ -7,7 +7,7 @@ import azureml.assets as assets
 from typing import Tuple
 from azure.ai.ml import load_model, MLClient
 from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage
-from azureml.assets.util import logger
+from azureml.assets.util import logger, util
 from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import CopyUpdater, copy_azure_artifacts, download_git_model
 from azureml.assets.deployment_config import AssetVersionUpdate
@@ -64,7 +64,7 @@ class ModelAsset:
         try:
             self._model = load_model(spec_path)
             self._model.description = model_config.description
-            self._model.tags.update(model_config.extra_tags_from_files)
+            self._model.tags = {k: util.resolve_from_file(self._model_config.__append_to_file_path(v)) for k, v in self._model.tags.items()}
             self._model.type = model_config.type.value
         except Exception as e:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")

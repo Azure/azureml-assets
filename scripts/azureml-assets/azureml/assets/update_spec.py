@@ -4,6 +4,7 @@
 """Update spec files."""
 
 import argparse
+import os
 import sys
 from git import Repo
 from pathlib import Path
@@ -114,11 +115,9 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
 
         # Replace description in spec
         contents_yaml['description'] = LiteralScalarString(description)
-
-    # Handle extra tags
-    extra_tags_from_files = asset_config.extra_tags_from_files
-    for (tagKey, tagContent) in extra_tags_from_files.items():
-        contents_yaml['tags'][tagKey] = LiteralScalarString(tagContent)
+    
+    unresolved_tags = contents_yaml['tags']
+    contents_yaml['tags'] = {k: (LiteralScalarString(util.resolve_from_file(asset_config._append_to_file_path(v))) if os.path.isfile(asset_config._append_to_file_path(v)) else v) for k, v in unresolved_tags.items()}
 
     # Write spec
     if output_file == "-":
