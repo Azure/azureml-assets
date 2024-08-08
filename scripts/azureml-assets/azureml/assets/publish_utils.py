@@ -446,6 +446,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
         spec_path = asset.spec_with_path
         model_config = asset.extra_config_as_object()
 
+        tags_to_update = None
         try:
             with open(spec_path) as f:
                 model_spec = YAML().load(f)

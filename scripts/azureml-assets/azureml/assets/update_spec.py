@@ -13,7 +13,7 @@ from ruamel.yaml.scalarstring import LiteralScalarString
 from typing import Dict
 
 import azureml.assets as assets
-import azureml.assets.util
+import azureml.assets.util as util
 from azureml.assets.util import logger
 from azureml.assets.util.util import resolve_from_file, resolve_from_file_for_asset
 
