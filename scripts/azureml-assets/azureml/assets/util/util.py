@@ -98,7 +98,7 @@ def resolve_from_file(value: str):
     """Resolves the value from a file if it is a file, otherwise returns the value
 
     Args:
-        value (str): value to try and resolve    
+        value (str): value to try and resolve
     """
     if os.path.isfile(value):
         with open(value, 'r') as f:
@@ -113,7 +113,7 @@ def resolve_from_file_for_asset(asset: assets.AssetConfig, value: str):
 
     Args:
         asset (AssetConfig): the asset to try and resolve the value for
-        value (str): value to try and resolve    
+        value (str): value to try and resolve
     """
     return resolve_from_file(asset._append_to_file_path(value))
 
