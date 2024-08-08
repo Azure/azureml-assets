@@ -642,7 +642,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         """
         # Get URL to container, while preserving any SAS token
         model_uri = urllib.parse.urlparse(self.uri)
-        container_uri = urllib.parse.urlunparse(model_uri._replace(path="/" + self.container_name))
+        container_uri = urllib.parse.urlunparse(model_uri._replace(path="/" + self._container_name))
         container_client: ContainerClient = ContainerClient.from_container_url(container_url=container_uri)
         return container_client
 
@@ -657,7 +657,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             List[dict]: List of files and their sizes. Dicts have keys `name` and `size`.
         """
         container_client = self.get_container_client()
-        container_prefix = self.container_path + "/"
+        container_prefix = self._container_path + "/"
         blobs = container_client.list_blobs(name_starts_with=container_prefix)
 
         # Remove prefix if desired
@@ -676,7 +676,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             Union[str, bytes]: File contents, as str if encoding is provided, otherwise bytes.
         """
         container_client = self.get_container_client()
-        container_prefix = self.container_path + "/"
+        container_prefix = self._container_path + "/"
         file_contents = container_client.download_blob(container_prefix + name, encoding=encoding).readall()
         return file_contents
 
