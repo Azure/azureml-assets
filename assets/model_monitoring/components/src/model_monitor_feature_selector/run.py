@@ -13,7 +13,7 @@ from model_monitor_feature_selector.selectors.feature_selector_type import (
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark, try_read_mltable_in_spark_with_error, save_spark_df_as_mltable
 )
-from shared_utilities.momo_exceptions import DataNotFoundError, InvalidInputError
+from shared_utilities.momo_exceptions import InvalidInputError
 
 
 def run():
