@@ -94,13 +94,17 @@ def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
                 return True
 
 
-def resolve_from_file(value):
+def resolve_from_file(value: str):
     if os.path.isfile(value):
         with open(value, 'r') as f:
             content = f.read()
         return content
     else:
         return value
+
+
+def resolve_from_file_for_asset(asset: assets.AssetConfig, value: str):
+    return resolve_from_file(asset._append_to_file_path(value))
 
 
 def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):

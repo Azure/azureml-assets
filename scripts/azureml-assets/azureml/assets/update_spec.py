@@ -13,8 +13,9 @@ from ruamel.yaml.scalarstring import LiteralScalarString
 from typing import Dict
 
 import azureml.assets as assets
-import azureml.assets.util as util
+import azureml.assets.util
 from azureml.assets.util import logger
+from azureml.assets.util.util import resolve_from_file, resolve_from_file_for_asset
 
 
 def create_template_data(asset_config: assets.AssetConfig, release_directory_root: Path = None, version: str = None,
@@ -115,10 +116,12 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
 
         # Replace description in spec
         contents_yaml['description'] = LiteralScalarString(description)
-    
+
     if 'tags' in contents_yaml:
         unresolved_tags = contents_yaml['tags']
-        contents_yaml['tags'] = {k: (LiteralScalarString(util.resolve_from_file(asset_config._append_to_file_path(v))) if os.path.isfile(asset_config._append_to_file_path(v)) else v) for k, v in unresolved_tags.items()}
+        contents_yaml['tags'] = {k: (LiteralScalarString(resolve_from_file_for_asset(asset_config, v))
+                                     if os.path.isfile(asset_config._append_to_file_path(v)) else v)
+                                     for k, v in unresolved_tags.items()}
 
     # Write spec
     if output_file == "-":
