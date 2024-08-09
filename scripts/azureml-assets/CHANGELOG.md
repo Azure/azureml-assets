@@ -3,9 +3,6 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.57 (2024-08-09)
-### 🚀 New Features
- 
 ## 1.16.56 (2024-08-09)
 ### 🚀 New Features
 - [#3232](https://github.com/Azure/azureml-assets/pull/3232) Add additional features to AzureBlobstoreAssetPath
