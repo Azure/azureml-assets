@@ -98,7 +98,7 @@ def resolve_from_file(value):
     """Resolve the value from a file if it is a file, otherwise returns the value.
 
     Args:
-        value (str): value to try and resolve
+        value: value to try and resolve
     """
     if os.path.isfile(value):
         with open(value, 'r') as f:
@@ -113,7 +113,7 @@ def resolve_from_file_for_asset(asset: assets.AssetConfig, value):
 
     Args:
         asset (AssetConfig): the asset to try and resolve the value for
-        value (str): value to try and resolve
+        value: value to try and resolve
     """
     if not isinstance(value, str):
         return value
@@ -121,6 +121,12 @@ def resolve_from_file_for_asset(asset: assets.AssetConfig, value):
 
 
 def is_file_relative_to_asset_path(asset: assets.AssetConfig, value):
+    """Check if the value from is a file with respect to the asset path.
+
+    Args:
+        asset (AssetConfig): the asset to try and resolve the value for
+        value: value to check
+    """
     if not isinstance(value, str):
         return False
     return os.path.isfile(asset._append_to_file_path(value))
