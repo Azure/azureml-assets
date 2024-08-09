@@ -4,7 +4,6 @@
 """Update spec files."""
 
 import argparse
-import os
 import sys
 from git import Repo
 from pathlib import Path
