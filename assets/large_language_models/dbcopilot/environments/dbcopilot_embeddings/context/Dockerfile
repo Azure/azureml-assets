@@ -14,10 +14,10 @@ RUN apt-get update && apt-get install -y \
     libc-dev-bin=2.31-0ubuntu9.16 \
     git \
     git-man \
-    libpython3.8-minimal=3.8.10-0ubuntu1~20.04.10 \
-    libpython3.8-stdlib=3.8.10-0ubuntu1~20.04.10 \
-    python3.8-minimal=3.8.10-0ubuntu1~20.04.10 \
-    python3.8=3.8.10-0ubuntu1~20.04.10 &&\
+    libpython3.8-minimal \
+    libpython3.8-stdlib \
+    python3.8-minimal \
+    python3.8 &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
@@ -43,7 +43,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
-    pip install  promptflow-vectordb==0.2.10 && \
+    pip install  promptflow-vectordb==0.2.13 && \
     pip install  db-copilot-tool==0.0.8 &&\
     pip install  cryptography==42.0.5 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1"
 
