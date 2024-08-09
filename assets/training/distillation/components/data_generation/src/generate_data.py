@@ -547,7 +547,7 @@ def generate_synthetic_data(
                     new_row.append(
                         {
                             "role": "assistant",
-                            "content": answer,
+                            "content": answer if isinstance(answer, str) else str(answer),
                         }
                     )
                     output_data.append({"messages": new_row})
