@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.56 (2024-08-09)
+### 🐛 Bugs Fixed
+- [#3238](https://github.com/Azure/azureml-assets/pull/3238) Check if value is string before appending to asset filepath
+
 ## 1.16.55 (2024-08-08)
 ### 🐛 Bugs Fixed
 - [#3230](https://github.com/Azure/azureml-assets/pull/3230) Add support for adding tags from filepaths
