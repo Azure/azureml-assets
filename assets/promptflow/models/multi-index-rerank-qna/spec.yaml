@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: multi-index-rerank-qna
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: standard
+  azureml.promptflow.name: Multi-Source Rerank Q&A
+  azureml.promptflow.description: Use LLM and reranked data from multiple indices to ground question and answering capabilities.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 1
