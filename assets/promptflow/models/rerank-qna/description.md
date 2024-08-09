@@ -1,4 +1,4 @@
-WIP
+This "Index Data Rerank Q&A" demonstrates Q&A application, enabled by reranking data from vector index stores and powered by GPT. It utilizes index stores and the rerank tool from Azure Machine Learning to provide grounded answers. You can ask a wide range of questions and receive responses based on your own stored data. The process involves taking the query, extracting pre-existing documents from vector index stores, reranking said documents for the most relevant context, and then using GPT to chat with you, given those documents.
 
 
 ### Inference samples

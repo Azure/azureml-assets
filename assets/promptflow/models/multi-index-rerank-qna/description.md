@@ -1,5 +1,4 @@
-WIP
-
+This "Multi-Source Rerank Q&A" demonstrates Q&A application, enabled by reranking data from multiple sources and powered by GPT. It utilizes indexed files and the rerank tool from Azure Machine Learning to provide grounded answers. You can ask a wide range of questions and receive responses based on a wide set of stored data. The process involves taking the query, extracting pre-existing documents across multiple sources, reranking said documents for the most relevant context, and then using GPT to chat with you, given those documents.
 
 ### Inference samples
 
