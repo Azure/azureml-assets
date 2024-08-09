@@ -7,7 +7,6 @@
 ### 🚀 New Features
 - [#3232](https://github.com/Azure/azureml-assets/pull/3232) Add additional features to AzureBlobstoreAssetPath
 
-
 ## 1.16.55 (2024-08-08)
 ### 🐛 Bugs Fixed
 - [#3230](https://github.com/Azure/azureml-assets/pull/3230) Add support for adding tags from filepaths
