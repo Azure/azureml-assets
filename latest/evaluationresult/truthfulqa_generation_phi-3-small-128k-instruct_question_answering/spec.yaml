@@ -18,7 +18,6 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
-
 metrics:
   coherence: 4.5495716034271725
   fluency: 4.582619339045288

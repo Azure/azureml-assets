@@ -9,6 +9,5 @@ description: Chatbot
 tags:
   modality: completion
   task: chat-completions
-
 data_uri: ./prompt
 template_path: prompt.yaml

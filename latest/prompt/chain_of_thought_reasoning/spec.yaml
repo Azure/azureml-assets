@@ -9,6 +9,5 @@ description: Chain of thought reasoning
 tags:
   modality: completion
   task: reasoning-and-insights
-
 data_uri: ./prompt
 template_path: prompt.yaml

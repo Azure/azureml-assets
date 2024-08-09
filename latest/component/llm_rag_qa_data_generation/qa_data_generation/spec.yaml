@@ -3,7 +3,6 @@ type: command
 
 tags:
   Preview: ""
-
 version: 0.0.66
 name: llm_rag_qa_data_generation
 display_name: LLM - Generate QnA Test Data

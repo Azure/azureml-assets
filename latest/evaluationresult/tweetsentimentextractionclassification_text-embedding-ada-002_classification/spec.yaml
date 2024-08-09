@@ -18,7 +18,6 @@ tags:
   evaluation_type: text_embeddings
   task: classification
   primary_metric: accuracy
-
 metrics:
   accuracy: 0.6181380871533673
 

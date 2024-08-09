@@ -9,6 +9,5 @@ tags:
   modality: completion
   task: recommendation
   industry: education
-
 data_uri: ./prompt
 template_path: prompt.yaml

@@ -9,6 +9,5 @@ description: Explain SQL query
 tags:
   modality: completion
   task: explain-code
-
 data_uri: ./prompt
 template_path: prompt.yaml

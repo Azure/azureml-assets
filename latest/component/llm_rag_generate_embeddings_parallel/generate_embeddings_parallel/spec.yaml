@@ -3,7 +3,6 @@ type: parallel
 
 tags:
   Preview: ""
-
 version: 0.0.68
 name: llm_rag_generate_embeddings_parallel
 display_name: LLM - Generate Embeddings Parallel

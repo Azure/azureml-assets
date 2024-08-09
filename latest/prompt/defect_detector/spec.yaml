@@ -9,6 +9,5 @@ description: Find defects on a test image based a reference image.
 tags:
   modality: image
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml

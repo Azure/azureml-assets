@@ -1,7 +1,7 @@
-# azureml-metrics[video]~=0.0.57
-azureml-acft-accelerator==0.0.57.post1
-azureml-acft-common-components[image]~=0.0.57
-azureml-acft-image-components==0.0.57
+# azureml-metrics[video]~=0.0.58
+azureml-acft-accelerator==0.0.58
+azureml-acft-common-components[image]~=0.0.58
+azureml-acft-image-components==0.0.58
 azureml-core==1.57.0
 azure-ai-ml==1.18.0
 requests>=2.31.0

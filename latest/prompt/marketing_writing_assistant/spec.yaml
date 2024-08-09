@@ -9,6 +9,5 @@ description: Marketing Writing Assistant Prompt
 tags:
   modality: chat
   task: chat-completions
-
 data_uri: ./prompt
 template_path: prompt.yaml

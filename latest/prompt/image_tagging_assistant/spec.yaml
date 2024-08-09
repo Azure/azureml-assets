@@ -9,6 +9,5 @@ description: Identify and list prevalent tags associated with the content of ima
 tags:
   modality: image
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml

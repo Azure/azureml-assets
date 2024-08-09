@@ -17,7 +17,6 @@ tags:
   evaluation_type: text_embeddings
   task: bitext_mining
   primary_metric: f1_score
-
 metrics:
   f1_score: 0.5178156023458084
 

@@ -5,6 +5,7 @@
 
 import difflib
 import filecmp
+import os
 import re
 import shutil
 from pathlib import Path
@@ -91,6 +92,44 @@ def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
                 return False
             if line1 is None and line2 is None:
                 return True
+
+
+def resolve_from_file(value):
+    """Resolve the value from a file if it is a file, otherwise returns the value.
+
+    Args:
+        value: value to try and resolve
+    """
+    if os.path.isfile(value):
+        with open(value, 'r') as f:
+            content = f.read()
+        return content
+    else:
+        return value
+
+
+def resolve_from_file_for_asset(asset: assets.AssetConfig, value):
+    """Resolve the value from a file for an asset if it is a file, otherwise returns the value.
+
+    Args:
+        asset (AssetConfig): the asset to try and resolve the value for
+        value: value to try and resolve
+    """
+    if not isinstance(value, str):
+        return value
+    return resolve_from_file(asset._append_to_file_path(value))
+
+
+def is_file_relative_to_asset_path(asset: assets.AssetConfig, value):
+    """Check if the value from is a file with respect to the asset path.
+
+    Args:
+        asset (AssetConfig): the asset to try and resolve the value for
+        value: value to check
+    """
+    if not isinstance(value, str):
+        return False
+    return os.path.isfile(asset._append_to_file_path(value))
 
 
 def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):

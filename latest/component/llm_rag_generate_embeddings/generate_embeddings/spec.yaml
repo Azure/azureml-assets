@@ -3,7 +3,6 @@ type: command
 
 tags:
   Preview: ""
-
 version: 0.0.62
 name: llm_rag_generate_embeddings
 display_name: LLM - Generate Embeddings

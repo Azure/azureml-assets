@@ -9,6 +9,5 @@ description: Natural language to Python
 tags:
   modality: completion
   task: natural-language-to-code
-
 data_uri: ./prompt
 template_path: prompt.yaml

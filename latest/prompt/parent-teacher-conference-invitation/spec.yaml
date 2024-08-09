@@ -9,6 +9,5 @@ tags:
   modality: completion
   task: content-creation
   industry: education
-
 data_uri: ./prompt
 template_path: prompt.yaml

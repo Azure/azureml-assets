@@ -9,8 +9,6 @@ tags:
   type: evaluation
   sub_type: validation
   Internal: ""
-
-# Pipeline inputs
 inputs:
   compute_name:
     type: string

@@ -9,6 +9,5 @@ description: Provide a summary and highlights of the property
 tags:
   modality: video
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml

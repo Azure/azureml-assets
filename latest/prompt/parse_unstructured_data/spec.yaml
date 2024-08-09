@@ -9,6 +9,5 @@ description: Parse unstructured data
 tags:
   modality: completion
   task: reasoning-and-insights
-
 data_uri: ./prompt
 template_path: prompt.yaml

@@ -18,7 +18,6 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-
 metrics:
   accuracy: 0.854
 

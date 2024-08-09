@@ -17,7 +17,6 @@ tags:
   evaluation_type: text_embeddings
   task: summarization
   primary_metric: spearman_correlation
-
 metrics:
   spearman_correlation: 0.3158887711857145
 

@@ -9,6 +9,5 @@ description: Summarize issue resolution from conversation
 tags:
   modality: completion
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml

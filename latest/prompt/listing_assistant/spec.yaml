@@ -10,6 +10,5 @@ description: Generate enticing vacation rental listings from images with specifi
 tags:
   modality: image
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml

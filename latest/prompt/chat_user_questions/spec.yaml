@@ -33,6 +33,5 @@ tags:
   modality: chat
   task: chat-completions
   industry: retail
-
 data_uri: ./prompt
 template_path: prompt.yaml

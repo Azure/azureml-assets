@@ -2,7 +2,6 @@ name: llm_rag_crack_chunk_embed_index_and_register
 version: 0.0.28
 tags:
   Preview: ""
-
 display_name: Crack, Chunk, Embed, Index, and Register Data
 is_deterministic: true
 type: command

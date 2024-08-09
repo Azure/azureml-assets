@@ -10,6 +10,5 @@ description: Analyze short videos to generate tags, content summaries, and targe
 tags:
   modality: video
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml

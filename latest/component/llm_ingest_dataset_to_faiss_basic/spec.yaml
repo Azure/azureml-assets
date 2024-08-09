@@ -3,7 +3,6 @@ type: pipeline
 
 tags:
   Preview: ""
-
 version: 0.0.78
 name: llm_ingest_dataset_to_faiss_basic
 display_name: LLM - Dataset to FAISS Pipeline

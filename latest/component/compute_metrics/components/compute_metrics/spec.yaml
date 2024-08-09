@@ -9,7 +9,6 @@ type: command
 tags:
   type: evaluation
   sub_type: compute_metrics
-
 inputs:
   task:
     type: string

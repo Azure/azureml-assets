@@ -19,18 +19,18 @@ dependencies:
   - azureml-defaults==1.57.0
   - azureml-mlflow==1.57.0
   - azureml-telemetry==1.57.0
-  - azureml-acft-common-components[image]==0.0.57
-  - azureml-evaluate-mlflow==0.0.57
-  - azureml-metrics[all]==0.0.57
+  - azureml-acft-common-components[image]==0.0.58
+  - azureml-evaluate-mlflow==0.0.58
+  - azureml-metrics[all]==0.0.58
   - xgboost==1.6.1
   - statsmodels==0.11.0
   - lightgbm==3.2.1
   - msrest==0.6.21
   - mltable==1.6.1
-  - openai==1.40.1
+  - openai==1.40.2
   - azure-ai-ml==1.18.0
   - mldesigner==0.1.0b18
   - tiktoken
   - idna==3.7
   - pydantic==2.8.2
-  - mteb==1.12.94
+  - mteb==1.13.0

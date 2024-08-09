@@ -9,6 +9,5 @@ description: Classify and detect intent
 tags:
   modality: completion
   task: text-classification
-
 data_uri: ./prompt
 template_path: prompt.yaml

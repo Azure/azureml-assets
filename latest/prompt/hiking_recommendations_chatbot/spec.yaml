@@ -9,6 +9,5 @@ description: Hiking Recommendations Chatbot
 tags:
   modality: chat
   task: chat-completions
-
 data_uri: ./prompt
 template_path: prompt.yaml

@@ -3,7 +3,6 @@ type: command
 
 tags:
   Preview: ""
-
 version: 0.0.40
 name: llm_rag_crack_and_chunk_and_embed
 display_name: LLM - Crack, Chunk and Embed Data

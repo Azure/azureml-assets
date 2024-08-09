@@ -10,6 +10,5 @@ description: Examine the test image to determine the specific stage of the apple
 tags:
   modality: image
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml

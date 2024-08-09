@@ -3,7 +3,6 @@ type: command
 
 tags:
   Preview: ""
-
 version: 0.0.66
 name: llm_rag_update_acs_index
 display_name: LLM - Update ACS Index

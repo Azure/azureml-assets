@@ -9,6 +9,5 @@ tags:
   modality: chat
   task: chat-completions
   industry: sustainability
-
 data_uri: ./prompt
 template_path: prompt.yaml

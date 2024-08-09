@@ -18,7 +18,6 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
-
 metrics:
   groundedness: 4.253794266441822
   relevance: 4.080134964150147

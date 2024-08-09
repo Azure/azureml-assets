@@ -10,7 +10,6 @@ description: Pipeline component for model evaluation for supported tasks. \ Gene
 tags:
   type: evaluation
   sub_type: subgraph
-
 inputs:
   compute_name:
     type: string

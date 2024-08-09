@@ -9,6 +9,5 @@ description: Provide overview descriptions for houses.
 tags:
   modality: image
   task: summarization
-
 data_uri: ./prompt
 template_path: prompt.yaml
