@@ -454,7 +454,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 tags = model_spec.get("tags", {})
                 properties = model_spec.get("properties", {})
 
-                tags = {k: resolve_from_file_for_asset(asset, v) for k, v in tags.items()}
+                tags = {k: resolve_from_file_for_asset(model_config, v) for k, v in tags.items()}
 
                 # convert tags, properties value to string
                 tags = stringify_dictionary(tags)
