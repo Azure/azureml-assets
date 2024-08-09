@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/ai-studio-development
+  name: azureml/curated/ai-studio-dev
   os: linux
   context:
     dir: context
