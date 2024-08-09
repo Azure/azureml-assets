@@ -149,7 +149,9 @@
       "Featur",
       "showno",
       "amlraipfmodels",
-      "zhizho"
+      "zhizho",
+      "rerank",
+      "Rerank"
     ],
     "flagWords": [
       "Prompt Flow"
