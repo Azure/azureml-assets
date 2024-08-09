@@ -517,7 +517,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         """
         self._storage_name = storage_name
         self._container_name = container_name
-        self._container_path = container_path
+        self._container_path = container_path.lstrip("/").rstrip("/")
         self._token = None
         self._uri = None
 
