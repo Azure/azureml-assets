@@ -13,7 +13,7 @@ Batch | N/A | N/A
 ```json
 {
     "inputs": {
-        "question": "How to use SDK V2?"
+        "query": "How to use SDK V2?"
     }
 }
 ```
@@ -22,7 +22,7 @@ Batch | N/A | N/A
 ```json
 {
     "outputs": {
-        "output": "To use the Azure Machine Learning Python SDK v2, you need to have an Azure Machine Learning workspace and the SDK installed. You can either create a compute instance, which automatically installs the SDK and is pre-configured for ML workflows, or use the provided commands to install the SDK. (Source: https://github.com/prakharg-msft/azureml-tutorials/blob/main//how-to-auto-train-image-models.md)"
+        "answer": "To use the Azure Machine Learning Python SDK v2, you need to have an Azure Machine Learning workspace and the SDK installed. You can either create a compute instance, which automatically installs the SDK and is pre-configured for ML workflows, or use the provided commands to install the SDK. (Source: https://github.com/prakharg-msft/azureml-tutorials/blob/main//how-to-auto-train-image-models.md)"
     }
 }
 ```
