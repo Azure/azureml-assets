@@ -640,7 +640,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:assets/training/finetune_acft_hf_nlp/components/pipeline_components/chat_completion/spec_tmp.yaml:0.0.57
+    component: azureml:ft_nlp_model_converter:0.0.57
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
