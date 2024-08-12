@@ -111,7 +111,7 @@ def resolve_from_file_for_asset(asset: assets.AssetConfig, value):
         value: value to try and resolve
     """
     if not is_file_relative_to_asset_path(asset, value):
-        return value    
+        return value
 
     path_value = value if isinstance(value, Path) else Path(value)
 
