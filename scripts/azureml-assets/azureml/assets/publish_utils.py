@@ -17,6 +17,7 @@ from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelCo
 from azureml.assets.deployment_config import AssetVersionUpdate
 from azureml.assets.model.model_utils import CopyUpdater, prepare_model, update_model_metadata
 from azureml.assets.util import logger
+from azureml.assets.util.util import resolve_from_file_for_asset
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
@@ -57,6 +58,9 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
+        print(asset_dict)
+        print("udpated spec")
+        logger.log_debug(f"updated spec: {asset_dict}")
         util.dump_yaml(asset_dict, spec_path)
         return True
     except Exception as e:
@@ -471,7 +475,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 tags = model_spec.get("tags", {})
                 properties = model_spec.get("properties", {})
 
-                tags = {k: util.util.resolve_from_file(model_config._append_to_file_path(v)) for k, v in tags.items()}
+                tags = {k: resolve_from_file_for_asset(model_config, v) for k, v in tags.items()}
 
                 # convert tags, properties value to string
                 tags = stringify_dictionary(tags)
