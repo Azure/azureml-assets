@@ -14,6 +14,6 @@ dependencies:
     - azureml-core=={{latest-pypi-version}}
     - pydantic>=2.8.2
     - pillow==10.4.0
-    - aiohttp==3.9.5
+    - aiohttp==3.10.2
     - numpy>=1.23.5
     - tqdm
