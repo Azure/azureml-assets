@@ -260,6 +260,38 @@ def generate_synthetic_data(
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
     """
+
+    def process_system_prompt(message: dict):
+        """Updates the system prompt depending on the task type and the flag enable_cot.
+        returns the original message unchanged if enable_cot is False or task type is conversation.
+
+        Args:
+            message (dict): System message
+
+        Returns:
+        message: System message with updated content
+        """
+        if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
+            cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
+            return cot_system_message
+        else:
+            return message
+
+    def normalize_messages(messages: List[dict]):
+        """Add dummy assistant turn if not present in the messages list.
+        This will help in normalizing the input data before generating synthetic data.
+
+        Args:
+            messages (list): List of conversation turns
+
+        Returns:
+            messages: List of conversation turns with dummy assistant turn added
+        """
+        if data_generation_task_type != DataGenerationTaskType.CONVERSATION:
+            if messages[-1]['role'] != 'assistant':
+                messages.append({'role': 'assistant', 'content': ''})
+        return messages
+
     def process_request(idx: str, data: dict, url: str, endpoint_key: str):
         """Process a single conversational request.
 
@@ -273,7 +305,7 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"request_data: {repr(data)}")
+            logger.info(f"Processing idx: {idx}")
             #  Basic validation for the input data
             messages = data.pop("messages", [])
             if not messages:  # empty messages
@@ -301,16 +333,12 @@ def generate_synthetic_data(
                             "messages": [],
                             "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
                             }
-
+            messages = normalize_messages(messages)
             synthetic_responses = []
             for message in messages:
                 role = message['role']
                 if role == 'system':
-                    if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-                        cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
-                        synthetic_responses.append(cot_system_message)
-                    else:
-                        synthetic_responses.append(message)
+                    synthetic_responses.append(process_system_prompt(message))
                 elif role == 'user':
                     synthetic_responses.append(message)
                 else:
@@ -322,22 +350,18 @@ def generate_synthetic_data(
                                                           data=data_with_inference_parameters)
                     if response.status_code != 200:
                         break
-                    logger.info(f"response_text: {response.text}")
                     response_data = response.json()
-
-                    logger.info(f"JSON response: {response_data}")
-                    prediction_result = (
-                        None if response.status_code != 200
-                        # response content should be structured as below for a successful vllm response
-                        else response_data['choices'][0]["message"]["content"].strip()
-                    )
+                    # response content should be structured as below for a successful vllm response
+                    prediction_result = response_data['choices'][0]["message"]["content"].strip()
                     synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
+            is_success = (response.status_code == 200)
+            logger.info(f"Processing idx: {idx} - {is_success}")
             return {
                 "idx": idx,
                 "status_code": response.status_code,
                 "messages": synthetic_responses,
                 "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
-                              if response.status_code != 200
+                              if not is_success
                               else
                               None),
             }
@@ -398,7 +422,6 @@ def generate_synthetic_data(
             idx = 0
             for idx, row in batch.iterrows():
                 future_result = future_results.get(idx)
-                logger.info(future_result)
                 if future_result is None:
                     logger.error(f"row {idx} not found in future_results")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
