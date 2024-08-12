@@ -616,9 +616,9 @@ jobs:
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
-  chat_completion_model_converter:
+  ft_nlp_model_converter:
     type: command
-    component: azureml:chat_completion_model_converter:0.0.57
+    component: azureml:ft_nlp_model_converter:0.0.57
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -637,7 +637,7 @@ jobs:
   #     task: chat-completion
   #     test_data: '${{parent.jobs.chat_completion_datapreprocess.outputs.output_dir}}'
   #     label_column_name: messages
-  #     mlflow_model: '${{parent.jobs.chat_completion_model_converter.outputs.mlflow_model_folder}}'
+  #     mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
   #     evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   # compute_metrics:
   #   type: command

@@ -669,9 +669,9 @@ jobs:
       model_selector_output: '${{parent.jobs.question_answering_model_import.outputs.output_dir}}'
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
-  question_answering_model_converter:
+  ft_nlp_model_converter:
     type: command
-    component: azureml:question_answering_model_converter:0.0.57
+    component: azureml:ft_nlp_model_converter:0.0.57
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -692,7 +692,7 @@ jobs:
       input_column_names: "'${{parent.inputs.question_key}}','${{parent.inputs.context_key}}'"
       batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       device: auto
-      mlflow_model: '${{parent.jobs.question_answering_model_converter.outputs.mlflow_model_folder}}'
+      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
