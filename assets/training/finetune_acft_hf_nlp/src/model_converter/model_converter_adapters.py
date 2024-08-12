@@ -20,7 +20,7 @@ from azureml.acft.common_components.utils.mlflow_utils import update_acft_metada
 
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import (
-    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants, HfModelTypes,
+    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants, HfModelTypes
 )
 
 import mlflow

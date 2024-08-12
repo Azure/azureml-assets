@@ -53,6 +53,9 @@ RUN pip install 'Werkzeug>=3.0.3' \
                 'tqdm>=4.66.3' \
                 'onnx>=1.16.0'
 
+# To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
+RUN pip install 'torch>=2.2.2'
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
