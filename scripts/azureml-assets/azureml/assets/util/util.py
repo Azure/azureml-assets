@@ -94,18 +94,13 @@ def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
                 return True
 
 
-def resolve_from_file(value):
-    """Resolve the value from a file if it is a file, otherwise returns the value.
-
-    Args:
-        value: value to try and resolve
-    """
+def _resolve_from_file(value):
     if os.path.isfile(value):
         with open(value, 'r') as f:
             content = f.read()
-        return content
+        return (True, content)
     else:
-        return value
+        return (False, None)
 
 
 def resolve_from_file_for_asset(asset: assets.AssetConfig, value):
@@ -123,7 +118,12 @@ def resolve_from_file_for_asset(asset: assets.AssetConfig, value):
     if not path_value.is_relative_to(asset.file_path):
         path_value = asset._append_to_file_path(path_value)
 
-    return resolve_from_file(path_value)
+    (is_resolved_from_file, resolved_value) = _resolve_from_file(path_value)
+
+    if is_resolved_from_file:
+        return resolved_value
+    else:
+        return value
 
 
 def is_file_relative_to_asset_path(asset: assets.AssetConfig, value):
