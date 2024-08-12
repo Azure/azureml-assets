@@ -1,6 +1,6 @@
 path:
   container_name: promptflowsamples
-  container_path: detect_defects/v2/model_folder/
+  container_path: detect_defects/v2/model_folder
   storage_name: zhizhosamples
   type: azureblob
 publish:
