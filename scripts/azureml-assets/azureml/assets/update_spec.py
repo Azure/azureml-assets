@@ -4,7 +4,6 @@
 """Update spec files."""
 
 import argparse
-import os
 import sys
 from git import Repo
 from pathlib import Path
@@ -15,7 +14,7 @@ from typing import Dict
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
-from azureml.assets.util.util import resolve_from_file_for_asset
+from azureml.assets.util.util import resolve_from_file_for_asset, is_file_relative_to_asset_path
 
 
 def create_template_data(asset_config: assets.AssetConfig, release_directory_root: Path = None, version: str = None,
@@ -120,7 +119,7 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     if 'tags' in contents_yaml:
         unresolved_tags = contents_yaml['tags']
         contents_yaml['tags'] = {k: (LiteralScalarString(resolve_from_file_for_asset(asset_config, v))
-                                     if os.path.isfile(asset_config._append_to_file_path(v)) else v)
+                                     if is_file_relative_to_asset_path(asset_config, v) else v)
                                  for k, v in unresolved_tags.items()}
 
     # Write spec
