@@ -14,7 +14,7 @@ COPY conda.yaml .
 #     conda run -p $CONDA_PREFIX pip cache purge && \
 #     conda clean -a -y
 # TODO: remove verbose flags
-RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q -v -v -v -v && \
+RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q -v && \
     rm conda.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
