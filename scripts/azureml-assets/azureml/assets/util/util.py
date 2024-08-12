@@ -98,7 +98,7 @@ def _resolve_from_file(value):
     if os.path.isfile(value):
         with open(value, 'r') as f:
             content = f.read()
-        return (True, content)
+            return (True, content)
     else:
         return (False, None)
 
