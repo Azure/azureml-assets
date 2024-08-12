@@ -1,5 +1,5 @@
 name: aoai-data-validation
-version: 0.0.1
+version: auto
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
