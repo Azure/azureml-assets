@@ -8,7 +8,7 @@ import filecmp
 import os
 import re
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePath
 from ruamel.yaml import YAML
 from typing import List, Tuple, Union
 
@@ -115,9 +115,15 @@ def resolve_from_file_for_asset(asset: assets.AssetConfig, value):
         asset (AssetConfig): the asset to try and resolve the value for
         value: value to try and resolve
     """
-    if not isinstance(value, str):
+    if not isinstance(value, str) and not isinstance(value, PurePath):
         return value
-    return resolve_from_file(asset._append_to_file_path(value))
+
+    path_value = value if isinstance(value, Path) else Path(value)
+
+    if not path_value.is_relative_to(asset.file_path):
+        path_value = asset._append_to_file_path(path_value)
+
+    return resolve_from_file(path_value)
 
 
 def is_file_relative_to_asset_path(asset: assets.AssetConfig, value):
@@ -127,9 +133,15 @@ def is_file_relative_to_asset_path(asset: assets.AssetConfig, value):
         asset (AssetConfig): the asset to try and resolve the value for
         value: value to check
     """
-    if not isinstance(value, str):
+    if not isinstance(value, str) and not isinstance(value, PurePath):
         return False
-    return os.path.isfile(asset._append_to_file_path(value))
+
+    path_value = value if isinstance(value, Path) else Path(value)
+
+    if not path_value.is_relative_to(asset.file_path):
+        path_value = asset._append_to_file_path(path_value)
+
+    return os.path.isfile(path_value)
 
 
 def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):
