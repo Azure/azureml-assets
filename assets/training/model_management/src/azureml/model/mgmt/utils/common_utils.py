@@ -27,7 +27,7 @@ from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, List, Optional, Tuple
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
+from huggingface_hub.hf_api import HfApi, ModelInfo
 
 
 HF_ENDPOINT = "https://huggingface.co"
@@ -275,9 +275,9 @@ def retry(times):
 def fetch_huggingface_model_info(model_id) -> ModelInfo:
     """Return Hugging face model info."""
     try:
-        model_list: List[ModelInfo] = hf_api.list_models(filter=ModelFilter(model_name=model_id))
+        model_list: List[ModelInfo] = hf_api.list_models(model_name=model_id)
         for info in model_list:
-            if model_id == info.modelId:
+            if model_id == info.id:
                 return info
     except Exception as e:
         raise AzureMLException._with_error(
