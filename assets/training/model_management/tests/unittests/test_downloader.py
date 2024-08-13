@@ -33,7 +33,7 @@ class TestDownloaders(unittest.TestCase):
             mock_api.list_models.return_value = [
                 create_namespace_from_dict(
                     {
-                        "modelId": "username/model_name",
+                        "id": "username/model_name",
                         "pipeline_tag": "task_name",
                         "tags": ["tag1", "tag2", "tag3"],
                         "sha": "123456789",
@@ -45,7 +45,7 @@ class TestDownloaders(unittest.TestCase):
             downloader = HuggingfaceDownloader(model_id, download_dir, token)
             downloader.download_model()
 
-            self.assertEqual(downloader.model_info.modelId, model_id)
+            self.assertEqual(downloader.model_info.model_id, model_id)
             self.assertEqual(downloader.model_info.pipeline_tag, "task_name")
             self.assertEqual(downloader.model_info.sha, "123456789")
             self.assertEqual(mock_api.list_models.call_count, 1)
