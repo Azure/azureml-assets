@@ -1,5 +1,5 @@
 azure-core==1.30.2
-azure-ai-ml==1.18.0
+azure-ai-ml==1.19.0
 azure-identity==1.17.1
 azureml-evaluate-mlflow==0.0.58
 ffmpeg-python==0.2.0
