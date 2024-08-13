@@ -1,5 +1,5 @@
 # PTCA Image (enabling Singularity Support)
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch201:biweekly.202408.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch222:biweekly.202408.2
 
 RUN apt-get update && apt-get -y upgrade
 
@@ -13,6 +13,7 @@ RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
     rm conda.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
+
 
 # install transformers patch
 COPY ./transformers.patch ./transformers.patch
