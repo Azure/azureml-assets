@@ -20,7 +20,7 @@ from azureml.acft.common_components.utils.mlflow_utils import update_acft_metada
 
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import (
-    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants, HfModelTypes
+    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants, HfModelTypes, Tasks
 )
 
 import mlflow
@@ -271,7 +271,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
 
     def is_t5_finetune(self, model_type) -> bool:
         """Check for t5 text-classification, translation, summarization."""
-        return self.component_args.task_name in [MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION, MLFlowHFFlavourTasks.TRANSLATION, MLFlowHFFlavourTasks.SUMMARIZATION] and \
+        return self.component_args.task_name in [Tasks.SINGLE_LABEL_CLASSIFICATION, Tasks.TRANSLATION, Tasks.SUMMARIZATION] and \
             model_type == HfModelTypes.T5
 
     def convert_model(self) -> None:
