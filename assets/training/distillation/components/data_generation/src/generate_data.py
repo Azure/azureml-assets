@@ -262,8 +262,9 @@ def generate_synthetic_data(
     """
 
     def process_system_prompt(message: dict):
-        """Updates the system prompt depending on the task type and the flag enable_cot.
-        returns the original message unchanged if enable_cot is False or task type is conversation.
+        """Update the system prompt depending on the task type and the flag enable_cot.
+
+        The original message unchanged if enable_cot is False or task type is conversation.
 
         Args:
             message (dict): System message
@@ -279,6 +280,7 @@ def generate_synthetic_data(
 
     def normalize_messages(messages: List[dict]):
         """Add dummy assistant turn if not present in the messages list.
+
         This will help in normalizing the input data before generating synthetic data.
 
         Args:
