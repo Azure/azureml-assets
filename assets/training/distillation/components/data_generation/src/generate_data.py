@@ -51,6 +51,7 @@ from common.utils import (
     get_endpoint_details,
     validate_teacher_model_details,
     retry,
+    LogDuration
 )
 
 
@@ -197,7 +198,7 @@ def get_parser():
 
 
 @retry(3)
-def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
+def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = {}) -> Response:
     """Invoke endpoint with payload data.
 
     Args:
@@ -212,8 +213,11 @@ def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
         "Content-Type": "application/json",
         "Authorization": f"Bearer {key}"
     }
-    response = requests.post(url, headers=request_headers, data=json.dumps(data))
-    return response
+
+    log_message = f"Invoking teacher model endpoint ({log_entry})"
+    with LogDuration(print_func=logger.info, label=log_message):
+        response = requests.post(url, headers=request_headers, data=json.dumps(data))
+        return response
 
 
 def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
@@ -274,31 +278,34 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"request_data: {repr(data)}")
-            response: Response = _invoke_endpoint(url=url, key=endpoint_key, data=data)
-            logger.info(f"response_text: {response.text}")
-            response_data = response.json()
-            logger.info(f"JSON response: {response_data}")
+            timer = LogDuration(print_func=logger.info, label=f"Generating synthetic data for idx {idx}")
+            with timer:
+                logger.info(f"request_data: {repr(data)}")
+                log_entry = {"idx": idx}
+                response: Response = _invoke_endpoint(url=url, key=endpoint_key, data=data, log_entry=log_entry)
+                logger.info(f"response_text: {response.text}")
+                response_data = response.json()
+                logger.info(f"JSON response: {response_data}")
 
-            # use jsonpath or regex to capture prediction result
-            prediction_result = (
-                None if response.status_code != 200
-                # response content should be structured as below for a successful vllm response
-                else response_data['choices'][0]["message"]["content"].strip()
-            )
+                # use jsonpath or regex to capture prediction result
+                prediction_result = (
+                    None if response.status_code != 200
+                    # response content should be structured as below for a successful vllm response
+                    else response_data['choices'][0]["message"]["content"].strip()
+                )
 
-            if enable_cot:
-                # Try loading JSON answer and filter 'answer_choice'
-                # if JSON loading fails, exception will be caught
-                # And this specific row would not be part of generated data
-                prediction_result = json.loads(prediction_result)['answer_choice']
+                if enable_cot:
+                    # Try loading JSON answer and filter 'answer_choice'
+                    # if JSON loading fails, exception will be caught
+                    # And this specific row would not be part of generated data
+                    prediction_result = json.loads(prediction_result)['answer_choice']
 
-            return {
-                "idx": idx,
-                "status_code": response.status_code,
-                "text": prediction_result,
-                "exception": None,
-            }
+                return {
+                    "idx": idx,
+                    "status_code": response.status_code,
+                    "text": prediction_result,
+                    "exception": None,
+                }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
             return {
@@ -321,68 +328,72 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"request_data: {repr(data)}")
-            #  Basic validation for the input data
-            messages = data.pop("messages", [])
-            if not messages:  # empty messages
-                return {
-                    "idx": idx,
-                    "status_code": None,
-                    "messages": [],
-                    "exception": "Empty messages"
-                }
-            first_message = messages[0]
-            if first_message['role'] != 'system':
-                logger.warning(f"First message should be system, but got {first_message['role']}")
-                return {"idx": idx,
+            timer = LogDuration(print_func=logger.info, label=f"Generating synthetic data for all turns of conversation for idx {idx}")
+            with timer:
+                logger.info(f"request_data: {repr(data)}")
+                #  Basic validation for the input data
+                messages = data.pop("messages", [])
+                if not messages:  # empty messages
+                    return {
+                        "idx": idx,
                         "status_code": None,
                         "messages": [],
-                        "exception": ("Incorrect format.\n"
-                                      f"First message should be system, but got {first_message['role']}"),
-                        }
-            for message in messages[1:]:
-                role = message['role']
-                if role not in ('assistant', 'user'):
-                    logger.warning(f"role should be system or user, but got {role}")
+                        "exception": "Empty messages"
+                    }
+                first_message = messages[0]
+                if first_message['role'] != 'system':
+                    logger.warning(f"First message should be system, but got {first_message['role']}")
                     return {"idx": idx,
                             "status_code": None,
                             "messages": [],
-                            "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
+                            "exception": ("Incorrect format.\n"
+                                        f"First message should be system, but got {first_message['role']}"),
                             }
+                for message in messages[1:]:
+                    role = message['role']
+                    if role not in ('assistant', 'user'):
+                        logger.warning(f"role should be system or user, but got {role}")
+                        return {"idx": idx,
+                                "status_code": None,
+                                "messages": [],
+                                "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
+                                }
 
-            synthetic_responses = []
-            for message in messages:
-                role = message['role']
-                if role in ('system', 'user'):
-                    synthetic_responses.append(message)
-                else:
-                    data_with_inference_parameters = {"messages": synthetic_responses}
-                    for key, value in data.items():
-                        data_with_inference_parameters[key] = value
-                    # replace the assistant content from the model
-                    response: Response = _invoke_endpoint(url=url, key=endpoint_key,
-                                                          data=data_with_inference_parameters)
-                    if response.status_code != 200:
-                        break
-                    logger.info(f"response_text: {response.text}")
-                    response_data = response.json()
+                synthetic_responses = []
+                for turn_id, message in messages:
+                    role = message['role']
+                    if role in ('system', 'user'):
+                        synthetic_responses.append(message)
+                    else:
+                        data_with_inference_parameters = {"messages": synthetic_responses}
+                        log_entry = {"idx": idx, "turn": turn_id}
+                        for key, value in data.items():
+                            data_with_inference_parameters[key] = value
+                        # replace the assistant content from the model
+                        response: Response = _invoke_endpoint(url=url, key=endpoint_key,
+                                                            data=data_with_inference_parameters,
+                                                            log_entry=log_entry)
+                        if response.status_code != 200:
+                            break
+                        logger.info(f"response_text: {response.text}")
+                        response_data = response.json()
 
-                    logger.info(f"JSON response: {response_data}")
-                    prediction_result = (
-                        None if response.status_code != 200
-                        # response content should be structured as below for a successful vllm response
-                        else response_data['choices'][0]["message"]["content"].strip()
-                    )
-                    synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
-            return {
-                "idx": idx,
-                "status_code": response.status_code,
-                "messages": synthetic_responses,
-                "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
-                              if response.status_code != 200
-                              else
-                              None),
-            }
+                        logger.info(f"JSON response: {response_data}")
+                        prediction_result = (
+                            None if response.status_code != 200
+                            # response content should be structured as below for a successful vllm response
+                            else response_data['choices'][0]["message"]["content"].strip()
+                        )
+                        synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
+                return {
+                    "idx": idx,
+                    "status_code": response.status_code,
+                    "messages": synthetic_responses,
+                    "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
+                                if response.status_code != 200
+                                else
+                                None),
+                }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
             return {
@@ -562,19 +573,23 @@ def generate_synthetic_data(
             raise Exception(msg)
     logger.info("Processing train file")
 
-    if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
-        batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
-    else:
-        batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
+    training_timer = LogDuration(print_func=logger.info, label=f"Batch processing training data with size {request_batch_size}")
+    with training_timer:
+        if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
+            batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
+        else:
+            batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
 
     logger.info("Data generated and saved for train file")
 
     if validation_file_path:
         logger.info("Processing validation file")
-        if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
-            batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
-        else:
-            batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
+        validation_timer = LogDuration(print_func=logger.info, label=f"Batch processing validation data with size {request_batch_size}")
+        with validation_timer:
+            if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
+                batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
+            else:
+                batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
         logger.info("Data generated and saved for validation file")
 
 
