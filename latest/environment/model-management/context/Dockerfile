@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch1131:biweekly.202408.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch201:biweekly.202402.1
 
 WORKDIR /
 
@@ -18,7 +18,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 ## Vulnerability fix
-RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.0 tornado==6.4.1 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.0
+RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.0 tornado==6.4.1 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.0 torch==2.2.2
+
 # List installed packages
 RUN pip list
 
