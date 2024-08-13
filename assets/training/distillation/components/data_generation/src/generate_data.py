@@ -51,6 +51,7 @@ from common.utils import (
     get_endpoint_details,
     validate_teacher_model_details,
     retry,
+    log_durations
 )
 
 
@@ -197,7 +198,7 @@ def get_parser():
 
 
 @retry(3)
-def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
+def _invoke_endpoint(url: str, key: str, data: dict, log_metadata: dict = None) -> Response:
     """Invoke endpoint with payload data.
 
     Args:
@@ -212,8 +213,10 @@ def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
         "Content-Type": "application/json",
         "Authorization": f"Bearer {key}"
     }
-    response = requests.post(url, headers=request_headers, data=json.dumps(data))
-    return response
+    log_metadata = log_metadata or {}
+    with log_durations(logger, f"POST request to teacher model endpoint: {log_metadata}"):
+        response = requests.post(url, headers=request_headers, data=json.dumps(data))
+        return response
 
 
 def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
@@ -337,7 +340,7 @@ def generate_synthetic_data(
                             }
             messages = normalize_messages(messages)
             synthetic_responses = []
-            for message in messages:
+            for turn_id, message in enumerate(messages):
                 role = message['role']
                 if role == 'system':
                     synthetic_responses.append(process_system_prompt(message))
@@ -349,7 +352,8 @@ def generate_synthetic_data(
                         data_with_inference_parameters[key] = value
                     # replace the assistant content from the model
                     response: Response = _invoke_endpoint(url=url, key=endpoint_key,
-                                                          data=data_with_inference_parameters)
+                                                          data=data_with_inference_parameters,
+                                                          log_metadata={"idx": idx, 'turn': turn_id})
                     if response.status_code != 200:
                         break
                     response_data = response.json()
