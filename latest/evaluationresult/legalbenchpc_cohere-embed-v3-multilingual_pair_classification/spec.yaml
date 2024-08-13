@@ -1,0 +1,23 @@
+type: evaluationresult
+name: legalbenchpc_cohere-embed-v3-multilingual_pair_classification
+version: 2.07.22
+display_name: LegalBenchPC_cohere-embed-v3-multilingual_pair_classification
+description: cohere-embed-v3-multilingual run for LegalBenchPC dataset
+dataset_name: LegalBenchPC
+dataset_family: LegalBenchPC
+
+model_name: cohere-embed-v3-multilingual
+model_version: "3"
+model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-multilingual/versions/3
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml-cohere/models/Cohere-embed-v3-multilingual/versions/3
+
+tags:
+  evaluation_type: text_embeddings
+  task: pair_classification
+  primary_metric: accuracy
+metrics:
+  accuracy: 0.64453125
+
+properties: {}

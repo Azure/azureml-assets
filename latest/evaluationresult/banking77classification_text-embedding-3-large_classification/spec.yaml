@@ -1,0 +1,23 @@
+type: evaluationresult
+name: banking77classification_text-embedding-3-large_classification
+version: 2.07.22
+display_name: Banking77Classification_text-embedding-3-large_classification
+description: text-embedding-3-large run for Banking77Classification dataset
+dataset_name: Banking77Classification
+dataset_family: Banking77Classification
+
+model_name: text-embedding-3-large
+model_version: "1"
+model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-large/versions/1
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai/models/text-embedding-3-large/versions/1
+
+tags:
+  evaluation_type: text_embeddings
+  task: classification
+  primary_metric: accuracy
+metrics:
+  accuracy: 0.8572402597402597
+
+properties: {}
