@@ -271,7 +271,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
 
     def is_t5_finetune(self, model_type) -> bool:
         """Check for t5 text-classification, translation, summarization"""
-        return self.mlflow_task_type in [MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION, MLFlowHFFlavourTasks.TRANSLATION, MLFlowHFFlavourTasks.SUMMARIZATION] and \
+        return self.component_args.task_name in [MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION, MLFlowHFFlavourTasks.TRANSLATION, MLFlowHFFlavourTasks.SUMMARIZATION] and \
             model_type == HfModelTypes.T5
 
     def convert_model(self) -> None:
