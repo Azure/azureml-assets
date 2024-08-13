@@ -277,7 +277,7 @@ def fetch_huggingface_model_info(model_id) -> ModelInfo:
     try:
         model_list: List[ModelInfo] = hf_api.list_models(model_name=model_id)
         for info in model_list:
-            if model_id == info.id:
+            if model_id == info.modelId:
                 return info
     except Exception as e:
         raise AzureMLException._with_error(
