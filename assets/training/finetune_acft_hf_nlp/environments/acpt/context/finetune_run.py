@@ -558,6 +558,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--convert_to_safetensors", "true",
     ]
     add_optional_param(cmd=cmd, component_param_name="registered_model_name", argparse_param_name="model_name")
+    add_optional_param(cmd=cmd, component_param_name="model_registration_tag", argparse_param_name="model_tag")
     _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder)
 
 
