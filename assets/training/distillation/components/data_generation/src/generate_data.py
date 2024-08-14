@@ -278,6 +278,7 @@ def generate_synthetic_data(
         else:
             return message
 
+
     def normalize_messages(messages: List[dict]):
         """Add dummy assistant turn if not present in the messages list.
 
@@ -307,7 +308,6 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"Processing idx: {idx}")
             #  Basic validation for the input data
             messages = data.pop("messages", [])
             if not messages:  # empty messages
@@ -453,13 +453,9 @@ def generate_synthetic_data(
         if success_ratio < min_endpoint_success_ratio:
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
-
     logger.info("Processing train file")
-
     batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
-
     logger.info("Data generated and saved for train file")
-
     if validation_file_path:
         logger.info("Processing validation file")
         batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
@@ -577,7 +573,6 @@ def main():
         log_level=logging.INFO,
     )
 
-    logger.info(args)
     data_import(args)
 
 
