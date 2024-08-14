@@ -280,12 +280,8 @@ def generate_synthetic_data(
         try:
             timer = LogDuration(print_func=logger.info, label=f"Generating synthetic data for idx {idx}")
             with timer:
-                logger.info(f"request_data: {repr(data)}")
-                log_entry = {"idx": idx}
-                response: Response = _invoke_endpoint(url=url, key=endpoint_key, data=data, log_entry=log_entry)
-                logger.info(f"response_text: {response.text}")
+                response: Response = _invoke_endpoint(url=url, key=endpoint_key, data=data)
                 response_data = response.json()
-                logger.info(f"JSON response: {response_data}")
 
                 # use jsonpath or regex to capture prediction result
                 prediction_result = (
@@ -360,7 +356,7 @@ def generate_synthetic_data(
                                 }
 
                 synthetic_responses = []
-                for turn_id, message in messages:
+                for turn_id, message in enumerate(messages):
                     role = message['role']
                     if role in ('system', 'user'):
                         synthetic_responses.append(message)
@@ -375,10 +371,7 @@ def generate_synthetic_data(
                                                             log_entry=log_entry)
                         if response.status_code != 200:
                             break
-                        logger.info(f"response_text: {response.text}")
                         response_data = response.json()
-
-                        logger.info(f"JSON response: {response_data}")
                         prediction_result = (
                             None if response.status_code != 200
                             # response content should be structured as below for a successful vllm response
@@ -456,7 +449,6 @@ def generate_synthetic_data(
             idx = 0
             for idx, row in batch.iterrows():
                 future_result = future_results.get(idx)
-                logger.info(future_result)
                 if future_result is None:
                     logger.error(f"row {idx} not found in future_results")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
