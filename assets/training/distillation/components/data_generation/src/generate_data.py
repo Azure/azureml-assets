@@ -336,6 +336,7 @@ def generate_synthetic_data(
                             "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
                             }
             messages = normalize_messages(messages)
+            last_status_code = None
             synthetic_responses = []
             for message in messages:
                 role = message['role']
@@ -350,17 +351,18 @@ def generate_synthetic_data(
                     # replace the assistant content from the model
                     response: Response = _invoke_endpoint(url=url, key=endpoint_key,
                                                           data=data_with_inference_parameters)
-                    if response.status_code != 200:
+                    last_status_code = response.status_code
+                    if last_status_code != 200:
                         break
                     response_data = response.json()
                     # response content should be structured as below for a successful vllm response
                     prediction_result = response_data['choices'][0]["message"]["content"].strip()
                     synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
-            is_success = (response.status_code == 200)
+            is_success = (last_status_code == 200)
             logger.info(f"Processing idx: {idx} - {is_success}")
             return {
                 "idx": idx,
-                "status_code": response.status_code,
+                "status_code": last_status_code,
                 "messages": synthetic_responses,
                 "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
                               if not is_success
