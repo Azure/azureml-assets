@@ -1,0 +1,30 @@
+type: evaluationresult
+name: social_iqa_meta-llama-3_1-405b-instruct_question_answering
+version: 2.12.08
+display_name: social_iqa_Meta-Llama-3_1-405B-Instruct_question_answering
+description: Meta-Llama-3.1-405B-Instruct run for social_iqa
+dataset_family: social_iqa
+dataset_name: social_iqa
+
+model_name: Meta-Llama-3.1-405B-Instruct
+model_version: "1"
+model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3.1-405B-Instruct/versions/1
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml-meta/models/Meta-Llama-3.1-405B-Instruct/versions/1
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+metrics:
+  accuracy: 0.805015353
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 0.3
+  fewshot_split: "train"

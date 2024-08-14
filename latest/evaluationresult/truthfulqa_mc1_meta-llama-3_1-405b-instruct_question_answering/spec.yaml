@@ -1,0 +1,30 @@
+type: evaluationresult
+name: truthfulqa_mc1_meta-llama-3_1-405b-instruct_question_answering
+version: 2.12.08
+display_name: truthfulqa_mc1_Meta-Llama-3_1-405B-Instruct_question_answering
+description: Meta-Llama-3.1-405B-Instruct run for truthfulqa_mc1
+dataset_family: truthfulqa_mc1
+dataset_name: truthfulqa_mc1
+
+model_name: Meta-Llama-3.1-405B-Instruct
+model_version: "1"
+model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3.1-405B-Instruct/versions/1
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml-meta/models/Meta-Llama-3.1-405B-Instruct/versions/1
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+metrics:
+  accuracy: 0.82374541
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
