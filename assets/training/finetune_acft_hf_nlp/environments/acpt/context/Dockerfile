@@ -17,10 +17,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN rm -rf ~/.cache/pip
 
 RUN pip install mlflow==2.14.3
-
-# temp fix for vulnerabilties, remove after pypi release
-RUN pip install scikit-learn==1.5.1
-
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
