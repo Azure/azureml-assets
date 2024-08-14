@@ -325,7 +325,6 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"request_data: {repr(data)}")
             #  Basic validation for the input data
             messages = data.pop("messages", [])
             if not messages:  # empty messages
@@ -529,7 +528,6 @@ def generate_synthetic_data(
             idx = 0
             for idx, row in batch.iterrows():
                 future_result = future_results.get(idx)
-                logger.info(future_result)
                 if future_result['exception']:
                     logger.error(f"row {idx} failed with exception: {future_result['exception']}")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
@@ -693,7 +691,6 @@ def main():
         log_level=logging.INFO,
     )
 
-    logger.info(args)
     data_import(args)
 
 
