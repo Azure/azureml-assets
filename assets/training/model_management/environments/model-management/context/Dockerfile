@@ -17,8 +17,12 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-## Vulnerability fix
-RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.0 tornado==6.4.1 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.0 torch==2.2.2
+# Vulnerability fix
+RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.0 tornado==6.4.1 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.0
+
+## This change is temporary and should be reverted once automl-dnn-vision is updated for torch dependencies
+## Change cuda version here if changed for base image
+RUN conda install pytorch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 pytorch-cuda=11.7 -c pytorch -c nvidia -y
 
 # List installed packages
 RUN pip list
