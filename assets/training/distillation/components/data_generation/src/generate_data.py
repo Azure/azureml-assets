@@ -318,7 +318,6 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"request_data: {repr(data)}")
             #  Basic validation for the input data
             messages = data.pop("messages", [])
             if not messages:  # empty messages
@@ -681,7 +680,6 @@ def main():
         log_level=logging.INFO,
     )
 
-    logger.info(args)
     data_import(args)
 
 
