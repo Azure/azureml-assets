@@ -6,6 +6,7 @@
 ## 1.16.57 (2024-08-12)
 ### 🐛 Bugs Fixed
 - [#3253](https://github.com/Azure/azureml-assets/pull/3253) Also accept Path types for populating tags from files
+- [#3254](https://github.com/Azure/azureml-assets/pull/3254) Return string value instead of Path if string doesn't resolve to a path
 
 ## 1.16.56 (2024-08-09)
 ### 🚀 New Features
