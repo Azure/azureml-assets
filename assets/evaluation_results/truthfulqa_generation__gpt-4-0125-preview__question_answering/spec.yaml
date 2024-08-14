@@ -1,0 +1,33 @@
+type: evaluationresult
+name: truthfulqa_generation__gpt-4-0125-preview__question_answering
+version: 2.12.08
+display_name: truthfulqa_generation__gpt-4-0125-Preview__chat_completion
+description: Benchmark__gpt40125__hf_truthful_qa__chat_completion
+dataset_family: truthfulqa_generation
+dataset_name: truthfulqa_generation
+
+model_name: gpt-4-0125-Preview
+model_version: "4"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4-0125-Preview/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4-0125-Preview/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: nan
+
+metrics:
+  coherence: 4.894607843137255
+  fluency: 4.951040391676867
+  GPTSimilarity: 3.744186046511628
+
+
+properties:
+  n_shot: 6
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "dev"
