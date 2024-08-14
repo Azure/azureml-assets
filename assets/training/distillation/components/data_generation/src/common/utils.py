@@ -359,13 +359,13 @@ def format_time(sec):
         return '%8.2f ms' % (sec * 1e3)
     else:
         return '%8.2f s' % sec
-
+    
 class LogDuration(object):
     """Times each function call or block execution.
     
     This class provides a mechanism to measure and log the duration of code execution.
     It can be used as a context manager to time a block of code and print the elapsed time
-    once the block is exited.
+    once the block is exited, or as a decorator to time the entire function call.
     """
 
     def __init__(self, print_func, label=None, unit='auto', threshold=-1, repr_len=25):
@@ -387,6 +387,9 @@ class LogDuration(object):
             ...     print(msg)
             >>> with LogDuration(print_func=logger, label="My block") as timer:
             ...     # Your code here
+            >>> @LogDuration(print_func=logger, label="My function")
+            ...     def foo():
+            ...         # Your code here
         """
         self.print_func = print_func
         self.label = label
@@ -414,3 +417,15 @@ class LogDuration(object):
         if duration >= self.threshold:
             duration_str = self.format_time(duration)
             self.print_func("%s : Completed in %s" % (self.label, duration_str) if self.label else duration_str)
+    
+    def __call__(self, func):
+        """Wrap the function with timing functionality."""
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            duration = time.time() - start_time
+            if duration >= self.threshold:
+                duration_str = self.format_time(duration)
+                self.print_func("%s : Completed in %s" % (self.label, duration_str) if self.label else duration_str)
+            return result
+        return wrapper

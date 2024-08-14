@@ -264,6 +264,7 @@ def generate_synthetic_data(
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
     """
+    @LogDuration(print_func=logger.info, label="Generating synthetic data for a single request")
     def process_request(idx: str, enable_cot: bool, data: dict, url: str, endpoint_key: str) -> dict:
         """Process a single request.
 
@@ -278,30 +279,29 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            timer = LogDuration(print_func=logger.info, label=f"Generating synthetic data for idx {idx}")
-            with timer:
-                response: Response = _invoke_endpoint(url=url, key=endpoint_key, data=data)
-                response_data = response.json()
+            log_entry = {"idx": idx}
+            response: Response = _invoke_endpoint(url=url, key=endpoint_key, data=data, log_entry=log_entry)
+            response_data = response.json()
 
-                # use jsonpath or regex to capture prediction result
-                prediction_result = (
-                    None if response.status_code != 200
-                    # response content should be structured as below for a successful vllm response
-                    else response_data['choices'][0]["message"]["content"].strip()
-                )
+            # use jsonpath or regex to capture prediction result
+            prediction_result = (
+                None if response.status_code != 200
+                # response content should be structured as below for a successful vllm response
+                else response_data['choices'][0]["message"]["content"].strip()
+            )
 
-                if enable_cot:
-                    # Try loading JSON answer and filter 'answer_choice'
-                    # if JSON loading fails, exception will be caught
-                    # And this specific row would not be part of generated data
-                    prediction_result = json.loads(prediction_result)['answer_choice']
+            if enable_cot:
+                # Try loading JSON answer and filter 'answer_choice'
+                # if JSON loading fails, exception will be caught
+                # And this specific row would not be part of generated data
+                prediction_result = json.loads(prediction_result)['answer_choice']
 
-                return {
-                    "idx": idx,
-                    "status_code": response.status_code,
-                    "text": prediction_result,
-                    "exception": None,
-                }
+            return {
+                "idx": idx,
+                "status_code": response.status_code,
+                "text": prediction_result,
+                "exception": None,
+            }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
             return {
@@ -311,6 +311,7 @@ def generate_synthetic_data(
                 "exception": e,
             }
 
+    @LogDuration(print_func=logger.info, label="Generating synthetic data for all turns of a conversational request")
     def process_conversational_request(idx: str, data: dict, url: str, endpoint_key: str):
         """Process a single conversational request.
 
@@ -324,69 +325,67 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            timer = LogDuration(print_func=logger.info, label=f"Generating synthetic data for all turns of conversation for idx {idx}")
-            with timer:
-                logger.info(f"request_data: {repr(data)}")
-                #  Basic validation for the input data
-                messages = data.pop("messages", [])
-                if not messages:  # empty messages
-                    return {
-                        "idx": idx,
+            logger.info(f"request_data: {repr(data)}")
+            #  Basic validation for the input data
+            messages = data.pop("messages", [])
+            if not messages:  # empty messages
+                return {
+                    "idx": idx,
+                    "status_code": None,
+                    "messages": [],
+                    "exception": "Empty messages"
+                }
+            first_message = messages[0]
+            if first_message['role'] != 'system':
+                logger.warning(f"First message should be system, but got {first_message['role']}")
+                return {"idx": idx,
                         "status_code": None,
                         "messages": [],
-                        "exception": "Empty messages"
-                    }
-                first_message = messages[0]
-                if first_message['role'] != 'system':
-                    logger.warning(f"First message should be system, but got {first_message['role']}")
+                        "exception": ("Incorrect format.\n"
+                                    f"First message should be system, but got {first_message['role']}"),
+                        }
+            for message in messages[1:]:
+                role = message['role']
+                if role not in ('assistant', 'user'):
+                    logger.warning(f"role should be system or user, but got {role}")
                     return {"idx": idx,
                             "status_code": None,
                             "messages": [],
-                            "exception": ("Incorrect format.\n"
-                                        f"First message should be system, but got {first_message['role']}"),
+                            "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
                             }
-                for message in messages[1:]:
-                    role = message['role']
-                    if role not in ('assistant', 'user'):
-                        logger.warning(f"role should be system or user, but got {role}")
-                        return {"idx": idx,
-                                "status_code": None,
-                                "messages": [],
-                                "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
-                                }
 
-                synthetic_responses = []
-                for turn_id, message in enumerate(messages):
-                    role = message['role']
-                    if role in ('system', 'user'):
-                        synthetic_responses.append(message)
-                    else:
-                        data_with_inference_parameters = {"messages": synthetic_responses}
-                        log_entry = {"idx": idx, "turn": turn_id}
-                        for key, value in data.items():
-                            data_with_inference_parameters[key] = value
-                        # replace the assistant content from the model
-                        response: Response = _invoke_endpoint(url=url, key=endpoint_key,
-                                                            data=data_with_inference_parameters,
-                                                            log_entry=log_entry)
-                        if response.status_code != 200:
-                            break
-                        response_data = response.json()
-                        prediction_result = (
-                            None if response.status_code != 200
-                            # response content should be structured as below for a successful vllm response
-                            else response_data['choices'][0]["message"]["content"].strip()
-                        )
-                        synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
-                return {
-                    "idx": idx,
-                    "status_code": response.status_code,
-                    "messages": synthetic_responses,
-                    "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
-                                if response.status_code != 200
-                                else
-                                None),
-                }
+            synthetic_responses = []
+            for turn_id, message in enumerate(messages):
+                role = message['role']
+                if role in ('system', 'user'):
+                    synthetic_responses.append(message)
+                else:
+                    data_with_inference_parameters = {"messages": synthetic_responses}
+                    log_entry = {"idx": idx, "turn": turn_id}
+                    for key, value in data.items():
+                        data_with_inference_parameters[key] = value
+                    # replace the assistant content from the model
+                    response: Response = _invoke_endpoint(url=url, key=endpoint_key,
+                                                        data=data_with_inference_parameters,
+                                                        log_entry=log_entry)
+                    if response.status_code != 200:
+                        break
+                    response_data = response.json()
+                    prediction_result = (
+                        None if response.status_code != 200
+                        # response content should be structured as below for a successful vllm response
+                        else response_data['choices'][0]["message"]["content"].strip()
+                    )
+                    synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
+            return {
+                "idx": idx,
+                "status_code": response.status_code,
+                "messages": synthetic_responses,
+                "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
+                            if response.status_code != 200
+                            else
+                            None),
+            }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
             return {
@@ -401,6 +400,7 @@ def generate_synthetic_data(
         cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
         return [(cot_system_message if message['role'] == 'system' else message) for message in messages]
 
+    @LogDuration(print_func=logger.info, label="Batch processing conversation data")
     def batch_process_conversation_data(input_file_path: Path, output_file_path: Path, batch_size: int) -> None:
         """Batch process data and do a bulk request to teacher model endpoint.
 
@@ -476,7 +476,8 @@ def generate_synthetic_data(
         if success_ratio < min_endpoint_success_ratio:
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
-
+        
+    @LogDuration(print_func=logger.info, label="Batch processing data")
     def batch_process_data(input_file_path: Path, output_file_path: Path, batch_size: int) -> None:
         """Batch process data and do a bulk request to teacher model endpoint.
 
@@ -565,23 +566,19 @@ def generate_synthetic_data(
             raise Exception(msg)
     logger.info("Processing train file")
 
-    training_timer = LogDuration(print_func=logger.info, label=f"Batch processing training data with size {request_batch_size}")
-    with training_timer:
-        if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
-            batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
-        else:
-            batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
+    if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
+        batch_process_conversation_data(train_file_path, generated_train_file_path, request_batch_size)
+    else:
+        batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
 
     logger.info("Data generated and saved for train file")
 
     if validation_file_path:
         logger.info("Processing validation file")
-        validation_timer = LogDuration(print_func=logger.info, label=f"Batch processing validation data with size {request_batch_size}")
-        with validation_timer:
-            if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
-                batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
-            else:
-                batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
+        if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
+            batch_process_conversation_data(validation_file_path, generated_validation_file_path, request_batch_size)
+        else:
+            batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
         logger.info("Data generated and saved for validation file")
 
 
