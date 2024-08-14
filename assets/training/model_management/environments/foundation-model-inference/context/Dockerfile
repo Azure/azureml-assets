@@ -44,19 +44,15 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # For local testing
 # Need to copy src code and install in editable mode
 # COPY . .
-# RUN pip install -e .
+# RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.4 --no-cache-dir
-RUN pip uninstall transformers -y
+RUN pip install llm-optimized-inference==0.2.7 --no-cache-dir
 
-COPY ./transformers.patch ./transformers.patch
-RUN git clone https://github.com/huggingface/transformers.git && \
-    cd transformers && \
-    git checkout fc35907f95459d7a6c5281dfadd680b6f7b620e3 && \
-    git apply ../transformers.patch && \
-    python setup.py bdist_wheel && \
-    pip install dist/*.whl
+RUN pip uninstall -y vllm
+
+# Install patched vllm wheel
+RUN pip install https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.5.3.post1-cp310-cp310-linux_x86_64.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
@@ -67,5 +63,6 @@ RUN chmod +x /var/runit/api_server/run
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
+ENV VLLM_WORKER_MULTIPROC_METHOD=spawn
 EXPOSE 5001
 CMD [ "runsvdir", "/var/runit" ]
