@@ -142,26 +142,6 @@ jobs:
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI : ${{parent.inputs.llm_connection}}
   ############
-  promptflow_creation_job:
-    type: command
-    resources:
-      instance_count: ${{parent.inputs.serverless_instance_count}}
-      instance_type: ${{parent.inputs.serverless_instance_type}}
-      properties:
-        compute_specification:
-          automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.78'
-    identity:
-      type: user_identity
-    inputs:
-      mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
-      mlindex_asset_uri: ${{parent.jobs.create_faiss_index_job.outputs.index}}
-      mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
-      llm_connection_name: ${{parent.inputs.llm_connection}}
-      llm_config: ${{parent.inputs.llm_config}}
-      embedding_connection: ${{parent.inputs.embedding_connection}}
-      embeddings_model: ${{parent.inputs.embeddings_model}}
-  ############
   embeddings_job:
     type: command
     resources:
