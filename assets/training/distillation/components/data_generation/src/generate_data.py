@@ -518,7 +518,6 @@ def generate_synthetic_data(
             idx = 0
             for idx, row in batch.iterrows():
                 future_result = future_results.get(idx)
-                logger.info(future_result)
                 if future_result['exception']:
                     logger.error(f"row {idx} failed with exception: {future_result['exception']}")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
