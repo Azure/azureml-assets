@@ -15,6 +15,7 @@ from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
 from typing import List, Tuple, Union
+from timeit import default_timer as timer
 
 from common.constants import (
     REQUESTS_RETRY_DELAY,
@@ -348,3 +349,83 @@ def validate_student_model_details(model_asset_id: str) -> Tuple[str, str, str]:
         Tuple[str, str, str]: Tuple containing registry name, model name and model version
     """
     return _get_model_details(model_asset_id, SUPPORTED_STUDENT_MODEL_MAP)
+
+def format_time(sec):
+    if sec < 1e-6:
+        return '%8.2f ns' % (sec * 1e9)
+    elif sec < 1e-3:
+        return '%8.2f mks' % (sec * 1e6)
+    elif sec < 1:
+        return '%8.2f ms' % (sec * 1e3)
+    else:
+        return '%8.2f s' % sec
+
+class LogDuration(object):
+    """Times each function call or block execution.
+    
+    This class provides a mechanism to measure and log the duration of code execution.
+    It can be used as a context manager to time a block of code and print the elapsed time
+    once the block is exited, or as a decorator to time the entire function call.
+    """
+
+    def __init__(self, print_func, label=None, unit='auto', threshold=-1, repr_len=25):
+        """Initialize timer parameters.
+        
+        Args:
+            print_func (callable): A function that will be called to print the duration message.
+            label (str, optional): An optional label to prepend to the duration message.
+            unit (str): The unit of time for displaying the duration. Options are 'ns', 'mks',
+                        'ms', 's' and 'auto'.
+            threshold (float): Minimum duration in seconds to trigger printing.
+            repr_len (int): The maximum length of the string represenation of the duration.
+        
+        Raises:
+            ValueError: If an unknown time unit is provided.
+        
+        Example:
+            >>> def log(msg):
+            ...     print(msg)
+            >>> with LogDuration(print_func=logger, label="My block") as timer:
+            ...     # Your code here
+            >>> @LogDuration(print_func=logger, label="My function")
+            ...     def foo():
+            ...         # Your code here
+        """
+        self.print_func = print_func
+        self.label = label
+        if unit not in self.TIME_FORMATS:
+            raise ValueError('Unknown time unit: %s. It should be ns, mks, ms, s or auto.' % unit)
+        self.format_time = self.TIME_FORMATS[unit]
+        self.threshold = threshold
+
+    TIME_FORMATS = {
+        'auto': format_time,
+        'ns': lambda sec: '%8.2f ns' % (sec * 1e9),
+        'mks': lambda sec: '%8.2f mks' % (sec * 1e6),
+        'ms': lambda sec: '%8.2f ms' % (sec * 1e3),
+        's': lambda sec: '%8.2f s' % sec,
+    }
+
+    def __enter__(self):
+        """Start the timer when entering the context manager."""
+        self.start = timer()
+        return self
+
+    def __exit__(self, *exc):
+        """Stop the timer and print the duration if it exceeds the threshold."""
+        duration = timer() - self.start
+        if duration >= self.threshold:
+            duration_str = self.format_time(duration)
+            self.print_func("%s : Completed in %s" % (self.label, duration_str) if self.label else duration_str)
+
+    def __call__(self, func):
+        """Wrap the function with timing functionality."""
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            duration = time.time() - start_time
+            if duration >= self.threshold:
+                duration_str = self.format_time(duration)
+                self.print_func("%s : Completed in %s" % (self.label, duration_str) if self.label else duration_str)
+            return result
+        return wrapper

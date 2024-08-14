@@ -51,6 +51,7 @@ from common.utils import (
     get_endpoint_details,
     validate_teacher_model_details,
     retry,
+    LogDuration
 )
 
 
@@ -197,7 +198,7 @@ def get_parser():
 
 
 @retry(3)
-def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
+def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = {}) -> Response:
     """Invoke endpoint with payload data.
 
     Args:
@@ -212,8 +213,11 @@ def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
         "Content-Type": "application/json",
         "Authorization": f"Bearer {key}"
     }
-    response = requests.post(url, headers=request_headers, data=json.dumps(data))
-    return response
+
+    log_message = f"Invoking teacher model endpoint ({log_entry})"
+    with LogDuration(print_func=logger.info, label=log_message):
+        response = requests.post(url, headers=request_headers, data=json.dumps(data))
+        return response
 
 
 def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
@@ -294,6 +298,7 @@ def generate_synthetic_data(
                 messages.append({'role': 'assistant', 'content': ''})
         return messages
 
+    @LogDuration(print_func=logger.info, label="Generating synthetic data for a conversation request")
     def process_request(idx: str, data: dict, url: str, endpoint_key: str):
         """Process a single conversational request.
 
@@ -337,7 +342,7 @@ def generate_synthetic_data(
             messages = normalize_messages(messages)
             last_status_code = None
             synthetic_responses = []
-            for message in messages:
+            for turn_id, message in enumerate(messages):
                 role = message['role']
                 if role == 'system':
                     synthetic_responses.append(process_system_prompt(message))
@@ -348,8 +353,10 @@ def generate_synthetic_data(
                     for key, value in data.items():
                         data_with_inference_parameters[key] = value
                     # replace the assistant content from the model
+                    log_entry = {"idx": idx, "turn": turn_id}
                     response: Response = _invoke_endpoint(url=url, key=endpoint_key,
-                                                          data=data_with_inference_parameters)
+                                                          data=data_with_inference_parameters,
+                                                          log_entry=log_entry)
                     last_status_code = response.status_code
                     if last_status_code != 200:
                         break
@@ -377,6 +384,7 @@ def generate_synthetic_data(
                 "exception": e,
             }
 
+    @LogDuration(print_func=logger.info, label="Batch processing conversation data")
     def batch_process_data(input_file_path: Path, output_file_path: Path, batch_size: int) -> None:
         """Batch process data and do a bulk request to teacher model endpoint.
 
