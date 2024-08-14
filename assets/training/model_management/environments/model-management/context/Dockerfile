@@ -22,7 +22,7 @@ RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.0 tornado==6.4.1 c
 
 ## This change is temporary and should be reverted once automl-dnn-vision is updated for torch dependencies
 ## Change cuda version here if changed for base image
-RUN conda install pytorch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+RUN pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2
 
 # List installed packages
 RUN pip list
