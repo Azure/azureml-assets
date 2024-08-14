@@ -278,7 +278,6 @@ def generate_synthetic_data(
         else:
             return message
 
-
     def normalize_messages(messages: List[dict]):
         """Add dummy assistant turn if not present in the messages list.
 
