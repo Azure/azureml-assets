@@ -1,0 +1,18 @@
+# Install Python SDK
+ipykernel
+openai>1.0
+# Promptflow
+promptflow[azure]>=1.11.0
+promptflow-evals
+promptflow-rag
+keyrings.alt
+# hardcoded the version of azureml-mlflow here for faster Docker image building speed
+azureml-mlflow==1.57.0
+# copilot dependencies
+langchain==0.1.17
+langchain-openai==0.1.6
+semantic-kernel
+pytest
+keyring
+# # inference server dependencies (moved to Docker file)
+# azureml-inference-server-http
