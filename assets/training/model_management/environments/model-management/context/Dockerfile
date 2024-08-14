@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py39-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 WORKDIR /
 
@@ -15,14 +15,20 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
     which azcopy | grep -o azcopy > /dev/null &&  echo "azcopy not installed" || echo "azcopy installed";
 
 COPY requirements.txt .
+
+# Switch to python==3.9 to prevent numpy==1.23.5 build failure
+# numpy==1.23.5 is a hard dependency in azureml-automl-dnn-vision
+# which is not compilable on py310.
+# Going forward  azureml-automl-dnn-vision needs to update version for torch and numpy
+RUN conda install python=3.9 -y
+
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
 RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.0 tornado==6.4.1 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.0
 
 ## This change is temporary and should be reverted once automl-dnn-vision is updated for torch dependencies
-## Change cuda version here if changed for base image
-RUN pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2
+RUN pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 horovod[pytorch]==0.28.1 --no-cache-dir
 
 # List installed packages
 RUN pip list
