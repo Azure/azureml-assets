@@ -218,15 +218,14 @@ def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> 
     log_entry = log_entry or {}
     idx = log_entry.get("idx", -1)
     turn = log_entry.get("turn" ,-1)
-    post_request = lambda: requests.post(url, headers=request_headers, data=json.dumps(data))
 
     # We don't want to log every request. Conditionally log some, to avoid overwhelming logs.
     if idx % 10 == 0 and turn % 2 == 0:
         log_message = f"Invoking teacher model endpoint for conversation id {idx} and turn {turn}"
         with LogDuration(print_func=logger.info, label=log_message):
-            return post_request()
+            return requests.post(url, headers=request_headers, data=json.dumps(data))
     
-    return post_request()
+    return requests.post(url, headers=request_headers, data=json.dumps(data))
 
 
 def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
