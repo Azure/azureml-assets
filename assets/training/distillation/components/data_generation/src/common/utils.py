@@ -426,6 +426,9 @@ class LogDuration(object):
             duration = time.time() - start_time
             if duration >= self.threshold:
                 duration_str = self.format_time(duration)
-                self.print_func("%s : Completed in %s" % (self.label, duration_str) if self.label else duration_str)
+                # To add more context to the logging.
+                idx = kwargs["idx"] if "idx" in kwargs else None
+                label = f"{self.label} (idx={idx})" if idx else self.label
+                self.print_func("%s : Completed in %s" % (label, duration_str) if self.label else duration_str)
             return result
         return wrapper

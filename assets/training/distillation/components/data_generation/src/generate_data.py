@@ -425,10 +425,10 @@ def generate_synthetic_data(
                     futures.append(
                         executor.submit(
                             process_request,
-                            idx,
-                            request_data,
-                            teacher_model_endpoint_url,
-                            teacher_model_endpoint_key
+                            idx=idx,
+                            data=request_data,
+                            url=teacher_model_endpoint_url,
+                            endpoint_key=teacher_model_endpoint_key
                         )
                     )
 
