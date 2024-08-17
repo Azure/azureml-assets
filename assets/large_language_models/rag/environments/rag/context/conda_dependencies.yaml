@@ -41,7 +41,7 @@ dependencies:
   - polling2~=0.5.0
   - psutil~=5.8.0
   - pymssql==2.2.7
-  - pymongo # explicitly install for [azure_cosmos_mongo_vcore, azure_cosmos_nosql]
+  - pymongo # explicitly install for [azure_cosmos_mongo_vcore]
   - pypdf~=3.17.1
   - sentence-transformers
   - sqlalchemy==1.4.46
