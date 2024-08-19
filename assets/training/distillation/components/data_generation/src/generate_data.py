@@ -23,6 +23,7 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
     swallow_all_exceptions,
 )
 from azureml._common._error_definition.azureml_error import AzureMLError
+from azureml.telemetry.activity import log_activity, monitor_with_activity
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -43,7 +44,8 @@ from common.constants import (
     STOP_TOKEN,
     SUPPORTED_FILE_FORMATS,
     VLLM_CHAT_SCORE_PATH,
-    DataGenerationTaskType
+    DataGenerationTaskType,
+    TelemetryConstants
 )
 
 from common.utils import (
@@ -55,7 +57,6 @@ from common.utils import (
 
 
 logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
-
 
 def get_parser():
     """
@@ -197,13 +198,14 @@ def get_parser():
 
 
 @retry(3)
-def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
+def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> Response:
     """Invoke endpoint with payload data.
 
     Args:
         url (str): Endpoint URL
         key (str): Endpoint key
-        data dict): Payload dictionary
+        data (dict): Payload dictionary
+        log_entry (dict): Metadata used for logging
 
     Returns:
         Response: Response from invocation
@@ -212,8 +214,19 @@ def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
         "Content-Type": "application/json",
         "Authorization": f"Bearer {key}"
     }
-    response = requests.post(url, headers=request_headers, data=json.dumps(data))
-    return response
+
+    log_entry = log_entry or {}
+    idx = log_entry.get("idx", -1)
+    turn = log_entry.get("turn" ,-1)
+
+    # We don't want to log every request. Conditionally log some, to avoid overwhelming logs.
+    if idx % 10 == 0 and turn % 2 == 0:
+        custom_logger_activity_name = f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
+        with log_activity(logger=logger, 
+                          activity_name=custom_logger_activity_name):
+            return requests.post(url, headers=request_headers, data=json.dumps(data))
+    
+    return requests.post(url, headers=request_headers, data=json.dumps(data))
 
 
 def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
@@ -294,6 +307,7 @@ def generate_synthetic_data(
                 messages.append({'role': 'assistant', 'content': ''})
         return messages
 
+    @monitor_with_activity(logger=logger, activity_name=TelemetryConstants.PROCESS_DATASET_RECORD)
     def process_request(idx: str, data: dict, url: str, endpoint_key: str):
         """Process a single conversational request.
 
@@ -337,7 +351,7 @@ def generate_synthetic_data(
             messages = normalize_messages(messages)
             last_status_code = None
             synthetic_responses = []
-            for message in messages:
+            for turn_id, message in enumerate(messages):
                 role = message['role']
                 if role == 'system':
                     synthetic_responses.append(process_system_prompt(message))
@@ -348,8 +362,10 @@ def generate_synthetic_data(
                     for key, value in data.items():
                         data_with_inference_parameters[key] = value
                     # replace the assistant content from the model
+                    log_entry = {"idx": idx, "turn": turn_id}
                     response: Response = _invoke_endpoint(url=url, key=endpoint_key,
-                                                          data=data_with_inference_parameters)
+                                                          data=data_with_inference_parameters,
+                                                          log_entry=log_entry)
                     last_status_code = response.status_code
                     if last_status_code != 200:
                         break
@@ -452,13 +468,17 @@ def generate_synthetic_data(
         if success_ratio < min_endpoint_success_ratio:
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
-    logger.info("Processing train file")
-    batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
-    logger.info("Data generated and saved for train file")
+    
+    with log_activity(logger=logger, activity_name=TelemetryConstants.BATCH_PROCESS_TRAINING_DATA):
+        logger.info("Processing train file")
+        batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
+        logger.info("Data generated and saved for train file")
+    
     if validation_file_path:
-        logger.info("Processing validation file")
-        batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
-        logger.info("Data generated and saved for validation file")
+        with log_activity(logger=logger, activity_name=TelemetryConstants.BATCH_PROCESS_VALIDATION_DATA):
+            logger.info("Processing validation file")
+            batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
+            logger.info("Data generated and saved for validation file")
 
 
 def data_import(args: Namespace):

@@ -105,3 +105,12 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     NLI = "NLI"
     CONVERSATION = "CONVERSATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"
+
+class TelemetryConstants:
+    """Telemetry constants that describe various activities performed
+    by the distillation components."""
+
+    INVOKE_MODEL_ENDPOINT = "invoke_model_endpoint"
+    BATCH_PROCESS_TRAINING_DATA = "batch_process_training_data"
+    BATCH_PROCESS_VALIDATION_DATA = "batch_process_validation_data"
+    PROCESS_DATASET_RECORD = "process_dataset_record"
