@@ -1,0 +1,24 @@
+type: evaluationresult
+name: toxicconversationsclassification_text-embedding-3-small_classification
+version: 2.07.22
+display_name: ToxicConversationsClassification_text-embedding-3-small_classification
+description: text-embedding-3-small run for ToxicConversationsClassification dataset
+dataset_name: ToxicConversationsClassification
+dataset_family: ToxicConversationsClassification
+
+model_name: text-embedding-3-small
+model_version: "1"
+model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-small/versions/1
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azure-openai/models/text-embedding-3-small/versions/1
+
+tags:
+    evaluation_type: text_embeddings
+    task: classification
+    primary_metric: accuracy
+
+metrics:
+    accuracy: 0.6217360000000001
+
+properties: {}
