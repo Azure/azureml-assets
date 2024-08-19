@@ -29,7 +29,7 @@ RUN pip install 'azureml-core==1.57.0' \
                 'azureml-rai-utils==0.0.6'
 
 RUN pip install 'azureml-dataset-runtime==1.57.0' \
-                'azureml-automl-dnn-vision==1.57.0'
+                'azureml-automl-dnn-vision==1.57.0.post1'
 
 RUN pip install 'shap==0.41.0' \
                 'scikit-learn>=1.5.1' \
