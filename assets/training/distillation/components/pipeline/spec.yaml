@@ -259,7 +259,7 @@ jobs:
 
   oss_chat_completion_finetune:
     type: command
-    component: azureml:oss_chat_completion_finetune:0.0.19
+    component: azureml:oss_chat_completion_finetune:0.0.21
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
