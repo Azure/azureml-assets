@@ -10,6 +10,8 @@ properties:
   finetune-min-sku-spec: 24|1|220|64
   finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
+  notes: "notes.md"
+  evaluation: "evaluation.md"
   freePlayground: "true"
   displayName: "Phi-3 mini instruct (4k)"
   summary: "Tiniest member of the Phi-3 family. Optimized for both quality and low latency."
