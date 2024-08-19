@@ -274,11 +274,8 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"request_data: {repr(data)}")
             response: Response = _invoke_endpoint(url=url, key=endpoint_key, data=data)
-            logger.info(f"response_text: {response.text}")
             response_data = response.json()
-            logger.info(f"JSON response: {response_data}")
 
             # use jsonpath or regex to capture prediction result
             prediction_result = (
@@ -321,7 +318,6 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            logger.info(f"request_data: {repr(data)}")
             #  Basic validation for the input data
             messages = data.pop("messages", [])
             if not messages:  # empty messages
@@ -364,10 +360,7 @@ def generate_synthetic_data(
                                                           data=data_with_inference_parameters)
                     if response.status_code != 200:
                         break
-                    logger.info(f"response_text: {response.text}")
                     response_data = response.json()
-
-                    logger.info(f"JSON response: {response_data}")
                     prediction_result = (
                         None if response.status_code != 200
                         # response content should be structured as below for a successful vllm response
@@ -445,7 +438,6 @@ def generate_synthetic_data(
             idx = 0
             for idx, row in batch.iterrows():
                 future_result = future_results.get(idx)
-                logger.info(future_result)
                 if future_result is None:
                     logger.error(f"row {idx} not found in future_results")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
@@ -525,7 +517,6 @@ def generate_synthetic_data(
             idx = 0
             for idx, row in batch.iterrows():
                 future_result = future_results.get(idx)
-                logger.info(future_result)
                 if future_result['exception']:
                     logger.error(f"row {idx} failed with exception: {future_result['exception']}")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
@@ -689,7 +680,6 @@ def main():
         log_level=logging.INFO,
     )
 
-    logger.info(args)
     data_import(args)
 
 
