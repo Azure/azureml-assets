@@ -105,6 +105,4 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     NLI = "NLI"
     CONVERSATION = "CONVERSATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"
-
-class ArgumentLiterals:
-    """Input Argument literals list."""
+    

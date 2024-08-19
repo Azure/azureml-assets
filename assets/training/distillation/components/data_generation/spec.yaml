@@ -108,7 +108,7 @@ outputs:
     description: Generated validation data
     mode: rw_mount
 
-code: src/
+code: ../../src
 command: >-
   python generate_data.py
   --train_file_path  ${{inputs.train_file_path}}
