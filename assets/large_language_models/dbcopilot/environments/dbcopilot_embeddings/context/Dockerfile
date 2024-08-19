@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:latest
 WORKDIR /
 
 USER root
