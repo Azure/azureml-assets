@@ -261,7 +261,7 @@ def generate_synthetic_data(
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
     """
 
-    def process_system_prompt(message: dict):
+    def process_system_prompt(message: dict) -> dict:
         """Update the system prompt depending on the task type and the flag enable_cot.
 
         The original message unchanged if enable_cot is False or task type is conversation.
@@ -270,7 +270,7 @@ def generate_synthetic_data(
             message (dict): System message
 
         Returns:
-        message: System message with updated content
+            message (dict): System message with updated content
         """
         if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
             cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
@@ -278,16 +278,16 @@ def generate_synthetic_data(
         else:
             return message
 
-    def normalize_messages(messages: List[dict]):
+    def normalize_messages(messages: List[dict]) -> List[dict]:
         """Add dummy assistant turn if not present in the messages list.
 
         This will help in normalizing the input data before generating synthetic data.
 
         Args:
-            messages (list): List of conversation turns
+            messages (list[dict]): List of conversation turns
 
         Returns:
-            messages: List of conversation turns with dummy assistant turn added
+            messages (list[dict]): List of conversation turns with dummy assistant turn added
         """
         if data_generation_task_type != DataGenerationTaskType.CONVERSATION:
             if messages[-1]['role'] != 'assistant':
