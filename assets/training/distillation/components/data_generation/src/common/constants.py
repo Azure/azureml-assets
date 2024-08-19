@@ -108,8 +108,7 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
 
 
 class TelemetryConstants:
-    """Telemetry constants that describe various activities performed
-    by the distillation components."""
+    """Telemetry constants that describe various activities performed by the distillation components."""
 
     INVOKE_MODEL_ENDPOINT = "invoke_model_endpoint"
     BATCH_PROCESS_TRAINING_DATA = "batch_process_training_data"
