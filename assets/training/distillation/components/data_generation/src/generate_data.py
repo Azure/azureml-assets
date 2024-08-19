@@ -58,6 +58,7 @@ from common.utils import (
 
 logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
 
+
 def get_parser():
     """
     Add arguments and returns the parser. Here we add all the arguments for all the tasks.
@@ -217,15 +218,14 @@ def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> 
 
     log_entry = log_entry or {}
     idx = log_entry.get("idx", -1)
-    turn = log_entry.get("turn" ,-1)
+    turn = log_entry.get("turn", -1)
 
     # We don't want to log every request. Conditionally log some, to avoid overwhelming logs.
     if idx % 10 == 0 and turn % 2 == 0:
         custom_logger_activity_name = f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
-        with log_activity(logger=logger, 
+        with log_activity(logger=logger,
                           activity_name=custom_logger_activity_name):
             return requests.post(url, headers=request_headers, data=json.dumps(data))
-    
     return requests.post(url, headers=request_headers, data=json.dumps(data))
 
 
@@ -468,12 +468,12 @@ def generate_synthetic_data(
         if success_ratio < min_endpoint_success_ratio:
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
-    
+
     with log_activity(logger=logger, activity_name=TelemetryConstants.BATCH_PROCESS_TRAINING_DATA):
         logger.info("Processing train file")
         batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
         logger.info("Data generated and saved for train file")
-    
+
     if validation_file_path:
         with log_activity(logger=logger, activity_name=TelemetryConstants.BATCH_PROCESS_VALIDATION_DATA):
             logger.info("Processing validation file")

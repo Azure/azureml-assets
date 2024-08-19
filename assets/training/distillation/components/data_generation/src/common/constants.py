@@ -106,6 +106,7 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     CONVERSATION = "CONVERSATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"
 
+
 class TelemetryConstants:
     """Telemetry constants that describe various activities performed
     by the distillation components."""
