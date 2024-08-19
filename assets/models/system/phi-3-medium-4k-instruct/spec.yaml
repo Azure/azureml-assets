@@ -10,6 +10,8 @@ properties:
   finetune-min-sku-spec: 96|4|880|256
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
+  notes: "notes.md"
+  evaluation: "evaluation.md"
   freePlayground: "true"
   displayName: "Phi-3 medium instruct (4k)"
   summary: "A 14B parameters model, proves better quality than Phi-3-mini, with a focus on high-quality, reasoning-dense data."
