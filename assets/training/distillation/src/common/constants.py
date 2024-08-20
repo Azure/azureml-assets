@@ -123,4 +123,5 @@ class TelemetryConstants:
     VALIDATE_INFERENCE_PARAMETERS = "validate_inference_parameters"
     VALIDATE_TRAINING_DATA = "validate_training_data"
     VALIDATE_VALIDATION_DATA = "validate_validation_data"
-    
+    VALIDATE_MODEL_INFERENCE = "validate_model_inference"
+
