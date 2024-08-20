@@ -114,3 +114,13 @@ class TelemetryConstants:
     BATCH_PROCESS_TRAINING_DATA = "batch_process_training_data"
     BATCH_PROCESS_VALIDATION_DATA = "batch_process_validation_data"
     PROCESS_DATASET_RECORD = "process_dataset_record"
+
+    VALIDATOR = "validator"
+    ML_CLIENT_INITIALISATION = "ml_client_initialisation"
+    VALIDATE_DATA_GENERATION_INPUTS = "validate_data_generation_inputs"
+    VALIDATE_FILE_PATH = "validate_file_path"
+    VALIDATE_TEACHER_MODEL_ENDPOINT = "validate_teacher_model_endpoint"
+    VALIDATE_INFERENCE_PARAMETERS = "validate_inference_parameters"
+    VALIDATE_TRAINING_DATA = "validate_training_data"
+    VALIDATE_VALIDATION_DATA = "validate_validation_data"
+    

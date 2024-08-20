@@ -21,7 +21,8 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 from generate_data import get_parser
 
 from common.constants import (
-    DataGenerationTaskType
+    DataGenerationTaskType,
+    TelemetryConstants
 )
 
 from common.utils import (
@@ -53,17 +54,16 @@ def update_finetuning_parser(parser: ArgumentParser):
 class PipelineInputsValidator:
     def __init__(self, args: Namespace) -> None:
         self._args = args
-        with log_activity(logger=logger, activity_name="ML_CLIENT_INITIALISATION"):
+        with log_activity(logger=logger, activity_name=TelemetryConstants.ML_CLIENT_INITIALISATION):
             ws_mlclient = get_workspace_mlclient()
             if not ws_mlclient:
                 raise Exception("Could not create MLClient for current workspace")
             self._mlclient = ws_mlclient
         
-        with log_activity(logger=logger, activity_name="VALIDATE_DATA_GENERATION_INPUTS"):
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_DATA_GENERATION_INPUTS):
             self._validate_data_generation_inputs()
     
     def _validate_model_endpoint_args(self):
-
         if self._args.teacher_model_endpoint_name:
             # This block should populate endpoint url & key, if not present already.
             pass
@@ -220,23 +220,23 @@ class PipelineInputsValidator:
 
     def _validate_data_generation_inputs(self):
         """Validate all input flags to the data-generation component."""  
-        with log_activity(logger=logger, activity_name="VALIDATE_FILE_PATH"):
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_FILE_PATH):
             files = [self._args.train_file_path, self._args.validation_file_path]
             validate_file_paths_with_supported_formats(file_paths=files)
             validate_file_exists(file_paths=files)
 
-        with log_activity(logger=logger, activity_name="VALIDATE_TEACHER_MODEL_ENDPOINT"):
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_TEACHER_MODEL_ENDPOINT):
             self._validate_model_endpoint_args()
             self._validate_model_endpoint()
         
-        with log_activity(logger=logger, activity_name="VALIDATE_INFERENCE_PARAMETERS"):
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_INFERENCE_PARAMETERS):
             self._validate_inference_parameters()
         
-        with log_activity(logger=logger, activity_name="VALIDATE_TRAINING_DATA"):
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_TRAINING_DATA):
             self._validate_dataset(self._args.train_file_path)
         
         if self._args.validation_file_path:
-            with log_activity(logger=logger, activity_name="VALIDATE_VALIDATION_DATA"):
+            with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_VALIDATION_DATA):
                 self._validate_dataset(self._args.validation_file_path)
 
 @swallow_all_exceptions(time_delay=5)
@@ -258,7 +258,7 @@ def main():
         log_level=logging.INFO
     )
 
-    with log_activity(logger=logger, activity_name="VALIDATOR"):
+    with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATOR):
         PipelineInputsValidator(args=args)
 
 if __name__ == "__main__":
