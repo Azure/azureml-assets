@@ -124,7 +124,6 @@ class PipelineInputsValidator:
             **record
         }
 
-        print(inference_params)
         headers = self._get_inference_request_headers()
         url = self._args.teacher_model_endpoint_url
         response = requests.post(url=url, headers=headers, data=json.dumps(inference_params))
@@ -256,42 +255,38 @@ class PipelineInputsValidator:
                     )
 
     def _validate_data_generation_inputs(self):
-        try:
-            """Validate all input flags to the data-generation component. Sequentially performs a set
-            of validations, each dependent on the previous validation.
+        """Validate all input flags to the data-generation component. Sequentially performs a set
+        of validations, each dependent on the previous validation.
 
-            1. Validate training/validation file paths and ensure files exist.
-            2. Validate teacher model endpoint arguments are passed for inference, and 
-            authenticity of the endpoint.
-            3. Validate that the passed inference parameters are within limits.
-            4. Validate integrity of datasets.
-            5. Validate a single inference call to the teacher model.
-            """  
-            with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_FILE_PATH):
-                files = [self._args.train_file_path, self._args.validation_file_path]
-                validate_file_paths_with_supported_formats(file_paths=files)
-                validate_file_exists(file_paths=files)
+        1. Validate training/validation file paths and ensure files exist.
+        2. Validate teacher model endpoint arguments are passed for inference, and 
+        authenticity of the endpoint.
+        3. Validate that the passed inference parameters are within limits.
+        4. Validate integrity of datasets.
+        5. Validate a single inference call to the teacher model.
+        """  
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_FILE_PATH):
+            files = [self._args.train_file_path, self._args.validation_file_path]
+            validate_file_paths_with_supported_formats(file_paths=files)
+            validate_file_exists(file_paths=files)
 
-            with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_TEACHER_MODEL_ENDPOINT):
-                self._validate_model_endpoint_args()
-                self._validate_model_endpoint()
-            
-            with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_INFERENCE_PARAMETERS):
-                self._validate_inference_parameters()
-            
-            with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_TRAINING_DATA):
-                self._validate_dataset(self._args.train_file_path)
-            
-            if self._args.validation_file_path:
-                with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_VALIDATION_DATA):
-                    self._validate_dataset(self._args.validation_file_path)
-            
-            with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_MODEL_INFERENCE):
-                self._validate_model_inference()
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_TEACHER_MODEL_ENDPOINT):
+            self._validate_model_endpoint_args()
+            self._validate_model_endpoint()
+        
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_INFERENCE_PARAMETERS):
+            self._validate_inference_parameters()
+        
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_TRAINING_DATA):
+            self._validate_dataset(self._args.train_file_path)
+        
+        if self._args.validation_file_path:
+            with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_VALIDATION_DATA):
+                self._validate_dataset(self._args.validation_file_path)
+        
+        with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATE_MODEL_INFERENCE):
+            self._validate_model_inference()
 
-        except Exception as e:
-            logger.error(f"Exception raised when validating data generation inputs: {e}")
-            return
 
 @swallow_all_exceptions(time_delay=5)
 def main():
