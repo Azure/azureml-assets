@@ -5,16 +5,21 @@
 
 import os
 import time
+from typing import List, Tuple, Union
+from urllib.parse import urlparse
 
 from abc import ABC, abstractmethod
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.ml.entities import ManagedOnlineEndpoint, ManagedOnlineDeployment, ServerlessEndpoint
 from azure.identity import AzureCliCredential, ManagedIdentityCredential
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
-from typing import List, Tuple, Union
+
 
 from common.constants import (
     REQUESTS_RETRY_DELAY,
@@ -348,3 +353,12 @@ def validate_student_model_details(model_asset_id: str) -> Tuple[str, str, str]:
         Tuple[str, str, str]: Tuple containing registry name, model name and model version
     """
     return _get_model_details(model_asset_id, SUPPORTED_STUDENT_MODEL_MAP)
+
+def get_base_url(url: str) -> str:
+    """Get base url."""
+    if not url:
+        return url
+
+    parse_result = urlparse(url)
+    return f"{parse_result.scheme}://{parse_result.netloc}"
+
