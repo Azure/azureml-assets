@@ -139,6 +139,27 @@ class PipelineInputsValidator:
 
         # TODO (nandakumars): validate batch size & success ratio.
 
+    def _validate_record_for_type_conversation(self, record: list) -> str:
+        if self._args.data_generation_task_type != DataGenerationTaskType.CONVERSATION:
+            return
+        
+        if len(record) < 3:
+            return f"Dataset needs to be of multi-turn for task type {DataGenerationTaskType.CONVERSATION}."
+
+    def _validate_record_for_type_NLI(self, record: list) -> str:
+        if self._args.data_generation_task_type != DataGenerationTaskType.NLI:
+            return
+        
+        if len(record) > 2:
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLI}."
+
+    def _validate_record_for_type_NLU_QA(self, record: list) -> str:
+        if self._args.data_generation_task_type != DataGenerationTaskType.NLU_QUESTION_ANSWERING:
+            return
+        
+        if len(record) > 2:
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING}"
+
     def _validate_record_by_task(self, record: list) -> dict:
         """
         Validates record in a dataset against the data generation task type.
@@ -147,14 +168,15 @@ class PipelineInputsValidator:
         Args:
             record (list): Sequence of messages
         """
-        task_type = self._args.data_generation_task_type
-        if task_type == DataGenerationTaskType.CONVERSATION and \
-        len(record) < 3:
-            return { "exception": f"Dataset needs to be of multi-turn for task type {DataGenerationTaskType.CONVERSATION}." }
+        validation_methods = [
+            self._validate_record_for_type_NLI,
+            self._validate_record_for_type_conversation,
+            self._validate_record_for_type_NLU_QA
+        ]
 
-        if task_type != DataGenerationTaskType.CONVERSATION and \
-        len(record) > 2:
-            return { "exception": f"Chat cannot be of type multi-turn." }
+        for method in validation_methods:
+            err = method(record=record)
+            if err: return { "exception": err }
 
     def _validate_message(self, id: int, message: dict) -> dict:
         """
