@@ -277,6 +277,7 @@ class PipelineInputsValidator:
         Raises:
             ACFTUserError: If a known validation error is caught
         """
+        # TODO (nandakumars): use a more robust validator like pydantic.
         df = self._get_dataframe(file_path=file_path)
         for batch in df:
             for idx, row in batch.iterrows():
@@ -334,7 +335,7 @@ def main():
     # Get data generation component input parameters.
     parser = get_parser()
     parser = update_finetuning_parser(parser=parser)
-    parser.add_argument("--validation-info", required=True, help="Validatoin data")
+    parser.add_argument("--validation_info", required=True, help="Validation status")
     args, _ = parser.parse_known_args()
     
     set_logging_parameters(
