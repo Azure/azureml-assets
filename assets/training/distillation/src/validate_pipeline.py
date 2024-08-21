@@ -281,6 +281,8 @@ class PipelineInputsValidator:
         for batch in df:
             for idx, row in batch.iterrows():
                 record = row.iloc[0]
+
+                # TODO (nandakumars): dispatch to multiple threads?
                 err = self._validate_dataset_record(record=record)
                 if err:
                     raise ACFTValidationException._with_error(
@@ -332,6 +334,7 @@ def main():
     # Get data generation component input parameters.
     parser = get_parser()
     parser = update_finetuning_parser(parser=parser)
+    parser.add_argument("--validation-info", required=True, help="Validatoin data")
     args, _ = parser.parse_known_args()
     
     set_logging_parameters(
@@ -347,6 +350,10 @@ def main():
 
     with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATOR):
         PipelineInputsValidator(args=args)
+
+    with open(args.validation_info, "w") as f:
+        # TODO (nandakumars): update with rich data?
+        f.write("Validation Completed")
 
 if __name__ == "__main__":
     main()
