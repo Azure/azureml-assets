@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: OSS Distillation Validate Pipeline
 description: Component to validate inputs to the distillation pipeline
 
-environment: <>
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/63
 
 code: ../../src
 
@@ -152,10 +152,9 @@ command: >-
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --enable_chain_of_thought ${{inputs.enable_chain_of_thought}}
   --data_generation_task_type ${{inputs.data_generation_task_type}}
-  --generated_train_file_path ${{outputs.generated_train_file_path}}
-  --generated_validation_file_path ${{outputs.generated_validation_file_path}}
   $[[--mlflow_model_path ${{inputs.mlflow_model_path}}]]
   $[[--pytorch_model_path ${{inputs.pytorch_model_path}}]]
   $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
   $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
   $[[--learning_rate ${{inputs.learning_rate}}]]
+  --validation_info ${{outputs.validation_info}}
