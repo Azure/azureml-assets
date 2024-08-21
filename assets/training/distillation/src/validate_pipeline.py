@@ -143,6 +143,9 @@ class PipelineInputsValidator:
         if self._args.data_generation_task_type != DataGenerationTaskType.CONVERSATION:
             return
         
+        if self._args.enable_chain_of_thought:
+            return f"Chain of thought is not supported for task type {DataGenerationTaskType.CONVERSATION}"
+        
         if len(record) < 3:
             return f"Dataset needs to be of multi-turn for task type {DataGenerationTaskType.CONVERSATION}."
 
@@ -200,6 +203,7 @@ class PipelineInputsValidator:
     def _validate_record_content(self, record: list) -> dict:
             """
             Validates content of a record and ensures messages are in the expected format.
+            Currently functional only for task type `CONVERSATION`, `NLI` & `NLU`.
             Returns dictionary containing exception, if any validation error is found.
 
             Args: 
