@@ -367,6 +367,7 @@ def add_task_specific_params(cmd: List[str], task_name: str, component_name: str
                 elif param_val["type"] == "input":
                     add_optional_input(cmd, param)
 
+
 def is_main_process():
     """
     Function for determining whether the current process is master.
@@ -375,13 +376,15 @@ def is_main_process():
     return os.environ.get('AZUREML_PROCESS_NAME', 'main') in {'main', 'rank_0'}
 
 
-def wait_at_barrier(barrier_file,num_processes):
+def wait_at_barrier(barrier_file, num_processes):
     with open(barrier_file, 'a+') as f:
         f.seek(0)
         lines = f.readlines()
         process_count = len(lines)
         process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-        logger.info(f'Process {process_name} has reached barrier, and process_count is {process_count} , in barrier file {barrier_file}')
+        logger.info(f'Process {process_name} has reached barrier, 
+                    and process_count is {process_count} , 
+                    in barrier file {barrier_file}')
         if process_count < num_processes:
             f.write(f"{os.getpid()} reached the barrier\n")
             logger.info(f"{os.getpid()} reached the barrier\n")
@@ -390,7 +393,10 @@ def wait_at_barrier(barrier_file,num_processes):
                 f.seek(0)
                 lines = f.readlines()
                 time.sleep(0.5)  # Polling interval
-        logger.info(f"Process {os.getpid()} has passed the barrier. and process name {process_name}")
+        logger.info(f"Process {os.getpid()} has passed the barrier.
+                     and process name {process_name}")
+        
+
 def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str,single_run=True,number_of_processes=1):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
@@ -409,7 +415,9 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
 
     if single_run:
         if is_main_process():
-            logger.info(f"Executing the command: {cmd}  in single run mode on main process. Process name is {process_name}")
+            logger.info(f"Executing the command: {cmd}  
+                        in single run mode on main process. 
+                        Process name is {process_name}")
             # Not setting stdout and stderr will stream all the logs directly to stdout
             process = subprocess.Popen(cmd)
 
@@ -467,7 +475,6 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
         logger.info(f"Created completion file: {completion_file}")
 
 
-
 def cleanup(completion_files_folder: str, model_selector_output: str,
             preprocess_output: str, pytorch_model_folder: str, mlflow_model_folder: str):
     """Cleanup intermediate files and folders that are not needed after successful run completion."""
@@ -513,6 +520,8 @@ def parse_to_int(s):
         return int(s)
     except ValueError:
         return 1
+    
+
 def _initiate_run(completion_files_folder: str, model_selector_output: str,
                   preprocess_output: str, pytorch_model_folder: str, mlflow_model_folder: str):
     """Run the model selector, preprocess, finetune and registration script."""
@@ -639,7 +648,8 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     ]
     add_optional_param(cmd=cmd, component_param_name="registered_model_name", argparse_param_name="model_name")
     _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder,single_run=True,number_of_processes=gpus)
-    
+
+
 @swallow_all_exceptions(time_delay=60)
 def run():
     """Run the main function."""
