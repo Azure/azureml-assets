@@ -33,8 +33,7 @@ inputs:
     type: string
     optional: True
     default: 'serverless'
-    description: >-
-    compute to be used for validation component
+    description: compute to be used for validation component
 
   compute_data_generation:
     type: string
@@ -245,7 +244,7 @@ jobs:
     outputs:
       validation_info:
         type: uri_file
-        path: azureml://<> # TODO (nandakumars): define path.
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
 
   oss_distillation_generate_data:
     type: command
@@ -275,6 +274,7 @@ jobs:
       teacher_model_presence_penalty: '${{parent.inputs.teacher_model_presence_penalty}}'
       request_batch_size: '${{parent.inputs.request_batch_size}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
+      validation_output: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
     outputs:
       generated_train_file_path: 
         type: uri_file
