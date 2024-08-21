@@ -148,4 +148,4 @@ class SystemPrompt:
 
     @classmethod
     def get_response_key(cls, task_type):
-        return "answer" if task_type == DataGenerationTaskType.MATH_CHOICE else "answer_choice"
+        return "answer" if task_type == DataGenerationTaskType.MATH_NUMERICAL else "answer_choice"
