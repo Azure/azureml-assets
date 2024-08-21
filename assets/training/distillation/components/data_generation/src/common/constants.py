@@ -67,20 +67,6 @@ DEFAULT_MAX_NEW_TOKENS = 128
 DEFAULT_TOP_P = 0.1
 DEFAULT_TEMPERATURE = 0.2
 
-# CHAIN OF THOUGHT (COT)
-COT_SYSTEM_PROMPT = (
-    "You are a helpful assistant. "
-    "Write out in a step by step manner your reasoning about the answer using no more than 80 words. "
-    "Based on the reasoning, produce the final answer. "
-    "Your response should be in JSON format without using any backticks. "
-    "The JSON is a dictionary whose keys are 'reason' and {answer}. {additional_instructions}"
-    "Always generate a syntactically correct JSON without using markdown and any additional words. "
-)
-MATH_INSTRUCTIONS = (
-    "Answer should be a plain number without containing any explanations, "
-    "reasoning, percentage or additional information. "
-)
-
 
 class InferenceMode:
     """Supported inference modes."""
@@ -109,4 +95,57 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     NLI = "NLI"
     CONVERSATION = "CONVERSATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"
-    MATH = "MATH"
+    MATH_NUMERICAL = "MATH_NUMERICAL"
+    MATH_CHOICE = "MATH_CHOICE"
+
+
+class SystemPrompt:
+    """Chain of Thought system prompts."""
+
+    DEFAULT_COT_SYSTEM_PROMPT = (
+        "You are a helpful assistant. "
+        "Write out in a step by step manner your reasoning about the answer using no more than 80 words. "
+        "Based on the reasoning, produce the final answer. "
+        "Your response should be in JSON format without using any backticks. "
+        "The JSON is a dictionary whose keys are {keys}. {additional_instructions}"
+        "Always generate a syntactically correct JSON without using markdown and any additional words. "
+    )
+
+    DEFAULT_KEYS = "'reason' and 'answer_choice'"
+
+    MATH_NUMERICAL_KEYS = "'reason' and 'answer'"
+
+    MATH_ADDITIONAL_INSTRUCTIONS = (
+        "Answer should be a plain number without containing any explanations, "
+        "reasoning, percentage or additional information. "
+    )
+
+    @classmethod
+    def default_cot_prompt(cls):
+        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.DEFAULT_KEYS, additional_instructions="")
+
+    @classmethod
+    def math_cot_prompt(cls):
+        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.MATH_NUMERICAL_KEYS,
+                                                    additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS
+                                                    )
+
+    @classmethod
+    def math_choice_cot_prompt(cls):
+        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.DEFAULT_KEYS,
+                                                    additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS
+                                                    )
+
+    @classmethod
+    def get_cot_prompt(cls, task_type: str):
+        if task_type == DataGenerationTaskType.MATH_NUMERICAL:
+            return cls.math_cot_prompt()
+
+        if task_type == DataGenerationTaskType.MATH_CHOICE:
+            return cls.math_choice_cot_prompt()
+
+        return cls.default_cot_prompt()
+
+    @classmethod
+    def get_response_key(cls, task_type):
+        return "answer" if task_type == DataGenerationTaskType.MATH_CHOICE else "answer_choice"

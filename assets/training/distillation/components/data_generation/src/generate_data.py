@@ -28,8 +28,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from common.constants import (
     COMPONENT_NAME,
-    COT_SYSTEM_PROMPT,
-    MATH_INSTRUCTIONS,
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
@@ -44,7 +42,8 @@ from common.constants import (
     STOP_TOKEN,
     SUPPORTED_FILE_FORMATS,
     VLLM_CHAT_SCORE_PATH,
-    DataGenerationTaskType
+    DataGenerationTaskType,
+    SystemPrompt
 )
 
 from common.utils import (
@@ -234,7 +233,7 @@ def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]])
                     )
                 )
             )
-
+    
 
 def generate_synthetic_data(
     teacher_model_endpoint_url: str,
@@ -293,7 +292,7 @@ def generate_synthetic_data(
                 # Try loading JSON answer and filter 'answer_choice'
                 # if JSON loading fails, exception will be caught
                 # And this specific row would not be part of generated data
-                key = 'answer' if data_generation_task_type == DataGenerationTaskType.MATH else 'answer_choice'
+                key = SystemPrompt.get_response_key(data_generation_task_type)
                 prediction_result = json.loads(prediction_result)[key]
 
             return {
@@ -397,11 +396,10 @@ def generate_synthetic_data(
 
     def replace_cot_system_message(messages: List[dict]) -> List[dict]:
         # Replace the system message without changing the original messages list
-        answer = "'answer'" if data_generation_task_type == DataGenerationTaskType.MATH else "'answer_choice'"
-        instructions = MATH_INSTRUCTIONS if data_generation_task_type == DataGenerationTaskType.MATH else ""
+        cot_prompt = SystemPrompt.get_cot_prompt(data_generation_task_type)
         cot_system_message = {
             'role': 'system',
-            'content': COT_SYSTEM_PROMPT.format(answer=answer, additional_instructions=instructions)
+            'content': cot_prompt
         }
         return [(cot_system_message if message['role'] == 'system' else message) for message in messages]
 
@@ -542,12 +540,14 @@ def generate_synthetic_data(
                     error_map[future_result['status_code']] = error_map.get(future_result['status_code'], 0) + 1
                 else:
                     new_row = row.copy().iloc[0]
-                    answer = future_result['text']
+
+                    # Math numerical task may return a int/float as that is a valid value in JSON
+                    answer = str(future_result['text'])
 
                     new_row.append(
                         {
                             "role": "assistant",
-                            "content": answer if isinstance(answer, str) else str(answer),
+                            "content": answer,
                         }
                     )
                     output_data.append({"messages": new_row})
