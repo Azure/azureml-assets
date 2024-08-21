@@ -392,15 +392,14 @@ def wait_at_barrier(barrier_file, num_processes):
                 lines = f.readlines()
                 time.sleep(0.5)  # Polling interval
         logger.info(f"Process {os.getpid()} has passed barrier with name {process_name}")
-        
 
-def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str,single_run=True,number_of_processes=1):
+
+def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str, single_run=True, number_of_processes=1):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
     completion_file = Path(completion_files_folder, f"{component_name}.complete.txt")
     barrier_file = Path(completion_files_folder, f"{component_name}.barrier.txt")
     Path(completion_files_folder).mkdir(parents=True, exist_ok=True)
-    
     if completion_file.exists():
         logger.info(f"Skipping {component_name} as completion file exists: {completion_file}")
         return
@@ -408,8 +407,6 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
     if not barrier_file.exists():
         Path(barrier_file).touch()
         logger.info(f'Barrier file {barrier_file} is created by process name {process_name}')
-    
-
     if single_run:
         if is_main_process():
             logger.info(f"Executing the command: {cmd} in single run mode on main process. Process name is {process_name}")
@@ -434,14 +431,12 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
             Path(completion_files_folder).mkdir(parents=True, exist_ok=True)
             Path(completion_file).touch()
             logger.info(f"Created completion file: {completion_file}")
-        
         logger.info(f"Waiting for completion file: {completion_file} , by rank : {process_name}")
         while not completion_file.exists():
             if is_main_process():
                 time.sleep(1)
             else:
                 pass
-            
         logger.info(f"Process name on subprocess entering count barrier : {process_name}")
         wait_at_barrier(barrier_file,number_of_processes)
         logger.info(f"Process name on subprocess exiting count barrier : {process_name}")
@@ -504,7 +499,7 @@ def initiate_run():
 
     _initiate_run(completion_files_folder, model_selector_output,
                   preprocess_output, pytorch_model_folder, mlflow_model_folder)
-    
+
     if is_main_process():
         cleanup(completion_files_folder, model_selector_output,
                     preprocess_output, pytorch_model_folder, mlflow_model_folder)
@@ -515,7 +510,7 @@ def parse_to_int(s):
         return int(s)
     except ValueError:
         return 1
-    
+
 
 def _initiate_run(completion_files_folder: str, model_selector_output: str,
                   preprocess_output: str, pytorch_model_folder: str, mlflow_model_folder: str):
@@ -534,7 +529,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     ]
     add_optional_input(cmd, "mlflow_model_path")
     add_optional_input(cmd, "pytorch_model_path")
-    _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder,single_run=True,number_of_processes=gpus)
+    _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder, single_run=True, number_of_processes=gpus)
     # preprocess
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.preprocess",
@@ -555,7 +550,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     if os.path.isfile(validation_file_path):
         cmd += ["--validation_file_path", validation_file_path]
 
-    _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder,single_run=True,number_of_processes=gpus)
+    _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder, single_run=True, number_of_processes=gpus)
 
     # finetune
     cmd = [
@@ -609,7 +604,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--mlflow_model_folder", mlflow_model_folder,
         "--output_model", decode_output_from_env_var('output_model')
     ]
-    _run_subprocess_cmd(cmd, component_name="finetune", completion_files_folder=completion_files_folder,single_run=False,number_of_processes=gpus)
+    _run_subprocess_cmd(cmd, component_name="finetune", completion_files_folder=completion_files_folder, single_run=False, number_of_processes=gpus)
 
     # validate lora weights
 
@@ -627,7 +622,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--train_file_path", os.path.join(decode_input_from_env_var("dataset_input") or "", "train_input.jsonl"),
     ]
     add_task_specific_params(cmd, task_name, component_name="validate_lora_weights")
-    _run_subprocess_cmd(cmd, component_name="validate_lora_weights", completion_files_folder=completion_files_folder,single_run=True,number_of_processes=gpus)
+    _run_subprocess_cmd(cmd, component_name="validate_lora_weights", completion_files_folder=completion_files_folder, single_run=True, number_of_processes=gpus)
 
     # model registration
     cmd = [
@@ -642,7 +637,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--convert_to_safetensors", "true",
     ]
     add_optional_param(cmd=cmd, component_param_name="registered_model_name", argparse_param_name="model_name")
-    _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder,single_run=True,number_of_processes=gpus)
+    _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder, single_run=True, number_of_processes=gpus)
 
 
 @swallow_all_exceptions(time_delay=60)
