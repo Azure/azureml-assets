@@ -369,18 +369,21 @@ def add_task_specific_params(cmd: List[str], task_name: str, component_name: str
 
 
 def is_main_process():
-    """To check if current process running this is master or rank_0 process.
+    """
+    To check if current process running this is master or rank_0 process.
+
     :return: Boolean for whether this process is master.
     """
-
     return os.environ.get('AZUREML_PROCESS_NAME', 'main') in {'main', 'rank_0'}
 
 
 def wait_at_barrier(barrier_file, num_processes):
-    """Execution barrier based on number of processes.
-    Execution will halt till number to process reaching the execution point is less than a given number.
-    barrier_file: File used to create execution barrier
-    num_processes: Number of process which need to reach barrier point
+    """
+    Execute barrier based on number of processes.
+    Control will halt till number to process reaching the execution point is less than a given number.
+
+    barrier_file: File used to create execution barrier.
+    num_processes: Number of process which need to reach barrier point.
     """
     with open(barrier_file, 'a+') as f:
         f.seek(0)
@@ -512,8 +515,11 @@ def initiate_run():
 
 
 def parse_to_int(s):
-    """To parse string to integer with default value in case of failure as 1
-    s: String which need to be parsed to integer"""
+    """
+    To parse string to integer with default value in case of failure as one.
+
+    s: String which need to be parsed to integer.
+    """
     try:
         return int(s)
     except ValueError:
