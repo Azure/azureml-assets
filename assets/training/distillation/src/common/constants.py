@@ -125,3 +125,13 @@ class TelemetryConstants:
     VALIDATE_VALIDATION_DATA = "validate_validation_data"
     VALIDATE_MODEL_INFERENCE = "validate_model_inference"
 
+class BackoffConstants:
+    """Defaults for retry with exponential backoff"""
+
+    MAX_RETRIES = 3
+    BASE_DELAY = 10
+    MAX_DELAY = 600
+    BACKOFF_FACTOR = 2
+    MAX_TIMEOUT_SEC = 180
+    RETRYABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504, None}
+

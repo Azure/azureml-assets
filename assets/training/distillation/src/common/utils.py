@@ -5,7 +5,7 @@
 
 import os
 import time
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional, Callable
 from urllib.parse import urlparse
 
 from abc import ABC, abstractmethod
@@ -26,6 +26,7 @@ from common.constants import (
     REGISTRY_MODEL_PATTERN,
     SUPPORTED_STUDENT_MODEL_MAP,
     SUPPORTED_TEACHER_MODEL_MAP,
+    BackoffConstants
 )
 
 
@@ -362,3 +363,78 @@ def get_base_url(url: str) -> str:
     parse_result = urlparse(url)
     return f"{parse_result.scheme}://{parse_result.netloc}"
 
+def _get_status_code(e: Exception) -> Optional[int]:
+    """
+    Get the status code from the exception.
+
+    :param e: Exception.
+    :return: Status code.
+    """
+    status_code = getattr(e, "status_code", None)
+    if status_code is None and getattr(e, "response", None) is not None:
+        status_code = getattr(e.response, "status_code", None)
+    return status_code
+
+def exponential_backoff(
+    max_retries: int = BackoffConstants.MAX_RETRIES,
+    base_delay: int = BackoffConstants.BASE_DELAY,
+    max_delay: int = BackoffConstants.MAX_DELAY,
+    backoff_factor: int = BackoffConstants.BACKOFF_FACTOR,
+) -> Callable:
+    """
+    Implement exponential backoff for retrying a function for a HTTP request. 
+    Use this function as a decorator.
+
+    :prama max_retries: Maximum number of retries.
+    :param base_delay: Base delay in seconds before the first retry.
+    :param max_delay: Maximum delay in seconds between retries.
+    :return: Decorated function.
+    """
+
+    def decorator(func: Callable) -> Callable:
+        def wrapper(*args, **kwargs):
+            retries = 0
+            delay = base_delay
+            while retries <= max_retries:
+                try:
+                    tick = time.time()
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    tock = time.time()
+                    status_code = _get_status_code(e)
+                    if status_code not in BackoffConstants.RETRYABLE_STATUS_CODES:
+                        raise ACFTValidationException._with_error(
+                            AzureMLError.create(
+                                ACFTUserError,
+                                pii_safe_message=(
+                                    f"Encountered unknown status code: {status_code}. ",
+                                )
+                            )
+                        )
+                    
+                    retries += 1
+                    if retries <= max_retries:
+                        backoff_delay = min(delay, max_delay)
+                        logger.info(
+                            (
+                                f"Retrying method `{func.__name__}` after {backoff_delay} sec. "
+                                f"Retry attempt: {retries}/{max_retries}. "
+                                f"Time spent: {round(tock - tick)} sec. "
+                                f"Error details: {e}"
+                            )
+                        )
+                        time.sleep(backoff_delay)
+                        delay *= backoff_factor
+                    else:
+                        raise ACFTValidationException._with_error(
+                            AzureMLError.create(
+                                ACFTUserError,
+                                pii_safe_message=(
+                                    f"Request failed after multiple tries with status code: {status_code}. ",
+                                )
+                            )
+                        )
+
+        return wrapper
+
+    return decorator

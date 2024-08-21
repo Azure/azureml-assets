@@ -33,7 +33,8 @@ from common.utils import (
     get_endpoint_details,
     get_workspace_mlclient,
     get_base_url,
-    validate_teacher_model_details
+    validate_teacher_model_details,
+    exponential_backoff
 )
 
 from common.validation import (
@@ -113,6 +114,7 @@ class PipelineInputsValidator:
         model_name = response_data.get("model_name")
         logger.info(f"Model validated, model name - {model_name}")
     
+    @exponential_backoff()
     def _validate_model_inference(self):
         """Validates a sample inference call.
         
