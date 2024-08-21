@@ -1,0 +1,56 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Phi-3.5-vision-instruct
+path: ./
+properties:
+  SharedComputeCapacityEnabled: true
+  languages: en
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
+tags:
+  freePlayground: "true"
+  displayName: "Phi-3.5 vision instruct (128k)"
+  summary: "Refresh of Phi-3-vision model."
+  textContextWindow: 131072
+  maxOutputTokens: 4096
+  languages: "en"
+  inputModalities: "text"
+  trainingDataDate: "Aug 2024"
+  keywords: "Reasoning,Understanding,Low latency"
+  licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+  playgroundRateLimitTier:  "low"
+  Featured: ""
+  Preview: ""
+  huggingface_model_id: ""
+  license: mit
+  disable-batch: "true"
+  task: chat-completion
+  author: microsoft
+  SharedComputeCapacityEnabled : ""
+  hiddenlayerscanned : ""
+  _aml_system_vanity_registry: "azureml-phi"
+  inference_compute_allow_list:
+    [ 
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4, 
+      Standard_ND96amsr_A100_v4,
+      Standard_NC96ads_A100_v4
+    ]
+  inference_supported_envs:
+    - vllm
+  model_specific_defaults:
+    apply_deepspeed: "true"
+    deepspeed_stage: 2
+    apply_lora: "true"
+    apply_ort: "false"
+    precision: 16
+    ignore_mismatched_sizes: "false"
+    num_train_epochs: 1
+    per_device_train_batch_size: 1
+    per_device_eval_batch_size: 1
+    gradient_accumulation_steps: 1
+    learning_rate: 5e-6
+    lr_scheduler_type: "cosine"
+    logging_strategy: "steps"
+    logging_steps: 10
+    save_total_limit: 1
+version: 2
