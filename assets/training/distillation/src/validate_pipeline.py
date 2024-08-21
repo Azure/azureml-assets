@@ -30,8 +30,10 @@ from common.constants import (
 )
 
 from common.utils import (
+    get_endpoint_details,
     get_workspace_mlclient,
-    get_base_url
+    get_base_url,
+    validate_teacher_model_details
 )
 
 from common.validation import (
@@ -41,6 +43,8 @@ from common.validation import (
     validate_model_top_p,
     validate_model_frequency_penalty,
     validate_model_presence_penalty,
+    validate_request_batch_size,
+    validate_min_endpoint_success_ratio
 )
 
 logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
@@ -78,9 +82,13 @@ class PipelineInputsValidator:
         }
 
     def _validate_model_endpoint_args(self):
-        if self._args.teacher_model_endpoint_name:
-            # This block should populate endpoint url & key, if not present already.
-            pass
+        endpoint_name = self._args.teacher_model_endpoint_name
+        if endpoint_name:
+            endpoint_details = get_endpoint_details(mlclient_ws=self._mlclient, endpoint_name=endpoint_name)
+            self._args.teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
+            self._args.teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
+            model_asset_id = endpoint_details.get_deployed_model_id()
+            validate_teacher_model_details(model_asset_id)
 
         if not self._args.teacher_model_endpoint_url \
         or not self._args.teacher_model_endpoint_key:
@@ -137,7 +145,9 @@ class PipelineInputsValidator:
         validate_model_presence_penalty(self._args.teacher_model_presence_penalty)
         validate_model_frequency_penalty(self._args.teacher_model_frequency_penalty)
 
-        # TODO (nandakumars): validate batch size & success ratio.
+        validate_request_batch_size(self._args.request_batch_size)
+        validate_min_endpoint_success_ratio(self._args.min_endpoint_success_ratio)
+
 
     def _validate_record_for_type_conversation(self, record: list) -> str:
         if self._args.data_generation_task_type != DataGenerationTaskType.CONVERSATION:

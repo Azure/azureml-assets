@@ -7,6 +7,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 
 from common.constants import (
     SUPPORTED_FILE_FORMATS,
+    MAX_BATCH_SIZE
 )
 
 def validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
@@ -90,3 +91,28 @@ def validate_model_presence_penalty(val: float):
                 )
             )
         )
+
+def validate_request_batch_size(val: int):
+    """Validate if requested batch size is well within limits."""
+    if val and (val <= 0 or val > MAX_BATCH_SIZE):
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Invalid request_batch_size. ",
+                    f"Value should be 0<=val<={MAX_BATCH_SIZE}, but is {val}"
+                )
+            )
+        )
+
+def validate_min_endpoint_success_ratio(val: int):
+    if val and (val < 0 or val > 1):
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Invalid min_endpoint_success_ration. ",
+                    f"Value sould be 0<=val<=1, but is {val}"
+                )
+            )
+        )       
