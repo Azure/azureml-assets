@@ -382,7 +382,7 @@ def wait_at_barrier(barrier_file, num_processes):
         lines = f.readlines()
         process_count = len(lines)
         process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-        logger.info(f'Process {process_name} at barrier,count is {process_count} ,in barrier file {barrier_file}')
+        logger.info(f'Process {process_name} at barrier, count is {process_count}, in barrier file {barrier_file}')
         if process_count < num_processes:
             f.write(f"{os.getpid()} reached the barrier\n")
             logger.info(f"{os.getpid()} reached the barrier\n")
@@ -391,8 +391,7 @@ def wait_at_barrier(barrier_file, num_processes):
                 f.seek(0)
                 lines = f.readlines()
                 time.sleep(0.5)  # Polling interval
-        logger.info(f"Process {os.getpid()} has passed the barrier.
-                     and process name {process_name}")
+        logger.info(f"Process {os.getpid()} has passed barrier with name {process_name}")
         
 
 def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str,single_run=True,number_of_processes=1):
