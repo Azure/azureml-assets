@@ -521,7 +521,6 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     nodes = parse_to_int(decode_param_from_env_var("Node_Count"))
     gpus = parse_to_int(decode_param_from_env_var("number_of_gpu_to_use_finetuning"))
     logger.info(f'Nodes are {nodes} , gpus are : { gpus}')
-    total_processes = max(nodes,1)*max(gpus,1)
 
     # model selector
     cmd = [
