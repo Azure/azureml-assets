@@ -382,9 +382,7 @@ def wait_at_barrier(barrier_file, num_processes):
         lines = f.readlines()
         process_count = len(lines)
         process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-        logger.info(f'Process {process_name} has reached barrier, 
-                    and process_count is {process_count} , 
-                    in barrier file {barrier_file}')
+        logger.info(f'Process {process_name} at barrier,count is {process_count} ,in barrier file {barrier_file}')
         if process_count < num_processes:
             f.write(f"{os.getpid()} reached the barrier\n")
             logger.info(f"{os.getpid()} reached the barrier\n")
@@ -415,9 +413,7 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
 
     if single_run:
         if is_main_process():
-            logger.info(f"Executing the command: {cmd}  
-                        in single run mode on main process. 
-                        Process name is {process_name}")
+            logger.info(f"Executing the command: {cmd} in single run mode on main process. Process name is {process_name}")
             # Not setting stdout and stderr will stream all the logs directly to stdout
             process = subprocess.Popen(cmd)
 
