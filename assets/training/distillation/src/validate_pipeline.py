@@ -27,6 +27,7 @@ from common.constants import (
     MAX_NEW_TOKENS,
     TEMPERATURE,
     TOP_P,
+    VLLM_CHAT_SCORE_PATH
 )
 
 from common.utils import (
@@ -102,6 +103,7 @@ class PipelineInputsValidator:
                 )
             )
     
+    @exponential_backoff()
     def _validate_model_endpoint(self):
         """Validates model endpoints availability by retrieving its details."""
         base_url = get_base_url(self._args.teacher_model_endpoint_url)
@@ -136,6 +138,8 @@ class PipelineInputsValidator:
 
         headers = self._get_inference_request_headers()
         url = self._args.teacher_model_endpoint_url
+        url = url if VLLM_CHAT_SCORE_PATH in url else f"{url}{VLLM_CHAT_SCORE_PATH}"
+        logger.info(f"Model endpoint: {url}")
         response = requests.post(url=url, headers=headers, data=json.dumps(inference_params))
         response.raise_for_status()
 
@@ -354,7 +358,7 @@ def main():
 
     with open(args.validation_info, "w") as f:
         # TODO (nandakumars): update with rich data?
-        f.write("Validation Completed")
+        f.write(json.dumps({ "validation_status": "ok" }))
 
 if __name__ == "__main__":
     main()
