@@ -379,7 +379,6 @@ def is_main_process():
 
 def wait_at_barrier(barrier_file, num_processes):
     """
-    Execute barrier based on number of processes.
     Control will halt till number to process reaching the execution point is less than a given number.
 
     barrier_file: File used to create execution barrier.
