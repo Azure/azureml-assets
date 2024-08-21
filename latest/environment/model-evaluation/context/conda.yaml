@@ -33,5 +33,5 @@ dependencies:
   - tiktoken
   - idna==3.7
   - pydantic==2.8.2
-  - mteb==1.14.5
+  - mteb==1.14.8
   - setuptools>=70.0.0
