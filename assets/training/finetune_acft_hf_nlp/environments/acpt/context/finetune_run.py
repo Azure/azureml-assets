@@ -394,7 +394,7 @@ def wait_at_barrier(barrier_file, num_processes):
         logger.info(f"Process {os.getpid()} has passed barrier with name {process_name}")
 
 
-def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str, 
+def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str,
                         single_run=True, number_of_processes=1):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
@@ -530,7 +530,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     ]
     add_optional_input(cmd, "mlflow_model_path")
     add_optional_input(cmd, "pytorch_model_path")
-    _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder, 
+    _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder,
                         single_run=True, number_of_processes=gpus)
     # preprocess
     cmd = [
