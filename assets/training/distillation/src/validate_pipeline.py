@@ -67,16 +67,24 @@ COMPONENT_NAME = "oss_distillation_validate_pipeline"
 
 
 def update_finetuning_parser(parser: ArgumentParser):
-    """
-    Updates parser with flags from finetuning task as part of the distillation
-    pipeline.
+    """Update parser with arguments to fine tuning component.
+    
+    Args:
+        parser (ArgumentParser): Parser object.
     """
     # TODO (nandakumars): add relevant finetuning arguments.
     return parser
 
 
 class PipelineInputsValidator:
+    """Dataclass for validating inputs to distillation pipeline."""
+
     def __init__(self, args: Namespace) -> None:
+        """Initialise validator.
+        
+        Args:
+            args (Namespace): Inputs flags to validate.
+        """
         self._args = args
         with log_activity(
             logger=logger, activity_name=TelemetryConstants.ML_CLIENT_INITIALISATION
@@ -131,7 +139,7 @@ class PipelineInputsValidator:
 
     @exponential_backoff()
     def _validate_model_endpoint(self):
-        """Validates model endpoints availability by retrieving its details."""
+        """Validate model endpoints availability by retrieving its details."""
         base_url = get_base_url(self._args.teacher_model_endpoint_url)
         request_headers = self._get_inference_request_headers()
 
@@ -144,7 +152,7 @@ class PipelineInputsValidator:
 
     @exponential_backoff()
     def _validate_model_inference(self):
-        """Validates a sample inference call.
+        """Validate a sample inference call.
 
         Raises:
             HTTPError: If one occured.
@@ -172,7 +180,7 @@ class PipelineInputsValidator:
         response.raise_for_status()
 
     def _validate_inference_parameters(self):
-        """Validates all body parameters passed as part of inference."""
+        """Validate all body parameters passed as part of inference."""
         validate_model_temperature(self._args.teacher_model_temperature)
         validate_model_top_p(self._args.teacher_model_top_p)
         validate_model_presence_penalty(self._args.teacher_model_presence_penalty)
@@ -210,9 +218,10 @@ class PipelineInputsValidator:
 
     def _validate_record_by_task(self, record: list) -> dict:
         """
-        Validates record in a dataset against the data generation task type.
+        Validate record in a dataset against the data generation task type.
+        
         Returns a dictionary containing exception if any validation error is found.
-
+        
         Args:
             record (list): Sequence of messages
         """
@@ -229,8 +238,9 @@ class PipelineInputsValidator:
 
     def _validate_message(self, id: int, message: dict) -> dict:
         """
-        Validates individual message in the dataset. Returns dictionary containing exception,
-        if any validation error is found.
+        Validate individual message in the dataset.
+
+        Returns dictionary containing exception, if any validation error is found.
 
         Args:
             id (int): id of the message in sequence of messages.
@@ -248,7 +258,8 @@ class PipelineInputsValidator:
 
     def _validate_record_content(self, record: list) -> dict:
         """
-        Validates content of a record and ensures messages are in the expected format.
+        Validate content of a record and ensures messages are in the expected format.
+
         Currently functional only for task type `CONVERSATION`, `NLI` & `NLU`.
         Returns dictionary containing exception, if any validation error is found.
 
@@ -282,7 +293,7 @@ class PipelineInputsValidator:
             return {"exception": e}
 
     def _validate_dataset_record(self, record: list) -> str:
-        """Validates a record in the dataset. Returns the validation error if found.
+        """Validate a record in the dataset. Returns the validation error if found.
 
         Args:
             record (list): Sequence of messages
@@ -299,7 +310,7 @@ class PipelineInputsValidator:
             return err["exception"]
 
     def _validate_dataset(self, file_path: str):
-        """Validates training/validation dataset passed to the data-generation component.
+        """Validate training/validation dataset passed to the data-generation component.
 
         Args:
             file_path (str): Path to the dataset
@@ -323,9 +334,9 @@ class PipelineInputsValidator:
                     )
 
     def _validate_data_generation_inputs(self):
-        """Validate all input flags to the data-generation component. Sequentially performs a set
-        of validations, each dependent on the previous validation.
-
+        """Validate all input flags to the data-generation component.
+        
+        Sequentially performs a set of validations, each dependent on the previous validation.
         1. Validate training/validation file paths and ensure files exist.
         2. Validate teacher model endpoint arguments are passed for inference, and
         authenticity of the endpoint.

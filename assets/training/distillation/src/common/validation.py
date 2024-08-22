@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Component validation utils."""
+
 from pathlib import Path
 from typing import List, Optional
 
@@ -118,6 +120,7 @@ def validate_request_batch_size(val: int):
 
 
 def validate_min_endpoint_success_ratio(val: int):
+    """Validate if requested endpoint success ration is well within limits."""
     if val and (val < 0 or val > 1):
         raise ACFTValidationException._with_error(
             AzureMLError.create(

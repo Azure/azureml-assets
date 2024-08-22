@@ -386,9 +386,10 @@ def exponential_backoff(
 ) -> Callable:
     """
     Implement exponential backoff for retrying a function for a HTTP request.
+    
     Use this function as a decorator.
 
-    :prama max_retries: Maximum number of retries.
+    :param max_retries: Maximum number of retries.
     :param base_delay: Base delay in seconds before the first retry.
     :param max_delay: Maximum delay in seconds between retries.
     :return: Decorated function.

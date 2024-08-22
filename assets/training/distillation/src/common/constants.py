@@ -128,7 +128,7 @@ class TelemetryConstants:
 
 
 class BackoffConstants:
-    """Defaults for retry with exponential backoff"""
+    """Defaults for retry with exponential backoff."""
 
     MAX_RETRIES = 3
     BASE_DELAY = 10
