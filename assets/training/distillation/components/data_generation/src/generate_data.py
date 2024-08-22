@@ -563,6 +563,7 @@ def data_import(args: Namespace):
     request_batch_size = args.request_batch_size
     min_endpoint_success_ratio = args.min_endpoint_success_ratio
     enable_cot_str = args.enable_chain_of_thought
+    enable_cod_str = args.enable_chain_of_density
     data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
@@ -572,6 +573,8 @@ def data_import(args: Namespace):
     logger.info("File format validation successful.")
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
+    enable_cod = True if enable_cod_str.lower() == "true" else False
+
     mlclient_ws = get_workspace_mlclient()
     if not mlclient_ws:
         raise Exception("Could not create MLClient for current workspace")
@@ -637,6 +640,7 @@ def data_import(args: Namespace):
         request_batch_size=request_batch_size,
         min_endpoint_success_ratio=min_endpoint_success_ratio,
         enable_cot=enable_cot,
+        enable_cod=enable_cod,
         generated_train_file_path=generated_train_file_path,
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,
