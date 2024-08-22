@@ -355,6 +355,7 @@ def validate_student_model_details(model_asset_id: str) -> Tuple[str, str, str]:
     """
     return _get_model_details(model_asset_id, SUPPORTED_STUDENT_MODEL_MAP)
 
+
 def get_base_url(url: str) -> str:
     """Get base url."""
     if not url:
@@ -362,6 +363,7 @@ def get_base_url(url: str) -> str:
 
     parse_result = urlparse(url)
     return f"{parse_result.scheme}://{parse_result.netloc}"
+
 
 def _get_status_code(e: Exception) -> Optional[int]:
     """
@@ -375,6 +377,7 @@ def _get_status_code(e: Exception) -> Optional[int]:
         status_code = getattr(e.response, "status_code", None)
     return status_code
 
+
 def exponential_backoff(
     max_retries: int = BackoffConstants.MAX_RETRIES,
     base_delay: int = BackoffConstants.BASE_DELAY,
@@ -382,7 +385,7 @@ def exponential_backoff(
     backoff_factor: int = BackoffConstants.BACKOFF_FACTOR,
 ) -> Callable:
     """
-    Implement exponential backoff for retrying a function for a HTTP request. 
+    Implement exponential backoff for retrying a function for a HTTP request.
     Use this function as a decorator.
 
     :prama max_retries: Maximum number of retries.
@@ -411,7 +414,7 @@ def exponential_backoff(
                                 )
                             )
                         )
-                    
+
                     retries += 1
                     if retries <= max_retries:
                         backoff_delay = min(delay, max_delay)

@@ -12,13 +12,11 @@ import requests
 from argparse import Namespace
 from requests import Response
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )

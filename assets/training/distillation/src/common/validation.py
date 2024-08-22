@@ -54,7 +54,7 @@ def validate_model_temperature(temperature: float):
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid teacher_model_temperature. ",
+                    "Invalid teacher_model_temperature. ",
                     f"Value should 0<=val<=1, but is {temperature}",
                 ),
             )
@@ -68,7 +68,7 @@ def validate_model_top_p(top_p: float):
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid teacher_model_top_p. ",
+                    "Invalid teacher_model_top_p. ",
                     f"Value should be 0<=val<=1, but is {top_p}",
                 ),
             )
@@ -82,7 +82,7 @@ def validate_model_frequency_penalty(val: float):
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid teacher_model_frequency_penalty. ",
+                    "Invalid teacher_model_frequency_penalty. ",
                     f"Value should be 0<=val<=2, but is {val}",
                 ),
             )
@@ -96,7 +96,7 @@ def validate_model_presence_penalty(val: float):
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid teacher_model_presence_penalty. ",
+                    "Invalid teacher_model_presence_penalty. ",
                     f"Value should be 0<=val<=2, but is {val}",
                 ),
             )
@@ -110,7 +110,7 @@ def validate_request_batch_size(val: int):
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid request_batch_size. ",
+                    "Invalid request_batch_size. ",
                     f"Value should be 0<=val<={MAX_BATCH_SIZE}, but is {val}",
                 ),
             )
@@ -123,7 +123,7 @@ def validate_min_endpoint_success_ratio(val: int):
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid min_endpoint_success_ration. ",
+                    "Invalid min_endpoint_success_ration. ",
                     f"Value sould be 0<=val<=1, but is {val}",
                 ),
             )

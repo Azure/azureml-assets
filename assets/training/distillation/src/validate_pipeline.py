@@ -288,7 +288,7 @@ class PipelineInputsValidator:
             record (list): Sequence of messages
         """
         if not record:
-            return f"Chat cannot be empty."
+            return "Chat cannot be empty."
 
         err = self._validate_record_by_task(record=record)
         if err and ("exception" in err):
@@ -321,7 +321,6 @@ class PipelineInputsValidator:
                             ),
                         )
                     )
-        
 
     def _validate_data_generation_inputs(self):
         """Validate all input flags to the data-generation component. Sequentially performs a set
