@@ -15,10 +15,20 @@ from pathlib import Path
 from typing import List, Optional
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
-from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
-from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml.acft.contrib.hf.nlp.constants.constants import (
+    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+)
+from azureml.acft.common_components import (
+    get_logger_app,
+    set_logging_parameters,
+    LoggingLiterals,
+)
+from azureml.acft.common_components.utils.error_handling.exceptions import (
+    ACFTValidationException,
+)
+from azureml.acft.common_components.utils.error_handling.error_definitions import (
+    ACFTUserError,
+)
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
@@ -30,6 +40,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from common.constants import (
     COMPONENT_NAME,
     COT_SYSTEM_PROMPT,
+    COD_SYSTEM_PROMPT,
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
@@ -45,7 +56,7 @@ from common.constants import (
     SUPPORTED_FILE_FORMATS,
     VLLM_CHAT_SCORE_PATH,
     DataGenerationTaskType,
-    TelemetryConstants
+    TelemetryConstants,
 )
 
 from common.utils import (
@@ -56,7 +67,9 @@ from common.utils import (
 )
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
+logger = get_logger_app(
+    "azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import"
+)
 
 
 def get_parser():
@@ -65,7 +78,9 @@ def get_parser():
 
     Those arguments that are not relevant for the input task should be ignored.
     """
-    parser = argparse.ArgumentParser(description="Model selector for hugging face models", allow_abbrev=False)
+    parser = argparse.ArgumentParser(
+        description="Model selector for hugging face models", allow_abbrev=False
+    )
 
     # File I/O
     parser.add_argument(
@@ -133,25 +148,22 @@ def get_parser():
         type=float,
         required=False,
         default=DEFAULT_TOP_P,
-        help="Teacher model top-p parameter"
+        help="Teacher model top-p parameter",
     )
     parser.add_argument(
         "--teacher_model_frequency_penalty",
         type=float,
         required=False,
-        help="Teacher model frequency parameter"
+        help="Teacher model frequency parameter",
     )
     parser.add_argument(
         "--teacher_model_presence_penalty",
         type=float,
         required=False,
-        help="Teacher model presense penalty"
+        help="Teacher model presense penalty",
     )
     parser.add_argument(
-        "--teacher_model_stop",
-        type=str,
-        required=False,
-        help="Teacher model stop "
+        "--teacher_model_stop", type=str, required=False, help="Teacher model stop "
     )
     parser.add_argument(
         "--request_batch_size",
@@ -172,7 +184,7 @@ def get_parser():
             "the experiment will be marked as failed. "
             f"By default it is {DEFAULT_SUCCESS_RATIO}. "
             "(0 means all requests are allowed to fail while 1 means no request should fail.)"
-        )
+        ),
     )
 
     parser.add_argument(
@@ -180,7 +192,7 @@ def get_parser():
         type=str,
         required=False,
         default="false",
-        help="This enables Chain of Thought"
+        help="This enables Chain of Thought",
     )
 
     parser.add_argument(
@@ -192,14 +204,16 @@ def get_parser():
             2. CONVERSATION: Generate conversational data (multi/single turn)
             3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
             """,
-        choices=[v.value for v in DataGenerationTaskType]
+        choices=[v.value for v in DataGenerationTaskType],
     )
 
     return parser
 
 
 @retry(3)
-def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> Response:
+def _invoke_endpoint(
+    url: str, key: str, data: dict, log_entry: dict = None
+) -> Response:
     """Invoke endpoint with payload data.
 
     Args:
@@ -213,7 +227,7 @@ def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> 
     """
     request_headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {key}"
+        "Authorization": f"Bearer {key}",
     }
 
     log_entry = log_entry or {}
@@ -222,9 +236,10 @@ def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> 
 
     # We don't want to log every request. Conditionally log some, to avoid overwhelming logs.
     if idx % 10 == 0 and turn % 2 == 0:
-        custom_logger_activity_name = f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
-        with log_activity(logger=logger,
-                          activity_name=custom_logger_activity_name):
+        custom_logger_activity_name = (
+            f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
+        )
+        with log_activity(logger=logger, activity_name=custom_logger_activity_name):
             return requests.post(url, headers=request_headers, data=json.dumps(data))
     return requests.post(url, headers=request_headers, data=json.dumps(data))
 
@@ -234,7 +249,7 @@ def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]])
     for file_path in file_paths:
         if file_path:
             file_suffix = Path(file_path).suffix.lower()
-            file_ext = file_suffix.split('?')[0]
+            file_ext = file_suffix.split("?")[0]
         if file_ext and file_ext not in SUPPORTED_FILE_FORMATS:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
@@ -242,7 +257,7 @@ def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]])
                     pii_safe_message=(
                         f"{file_path} is not in list of supported file formats. "
                         f"Supported file formats: {SUPPORTED_FILE_FORMATS}"
-                    )
+                    ),
                 )
             )
 
@@ -254,11 +269,12 @@ def generate_synthetic_data(
     request_batch_size: int,
     min_endpoint_success_ratio: float,
     enable_cot: bool,
+    enable_cod: bool,
     generated_train_file_path: Path,
     generated_validation_file_path: Path,
     train_file_path: Path,
     data_generation_task_type: str,
-    validation_file_path: Path = None
+    validation_file_path: Path = None,
 ):
     """Generate and save synthentic data under output_dataset.
 
@@ -269,6 +285,7 @@ def generate_synthetic_data(
         request_batch_size (int): Input batch size for processing rows in train and validation dataset
         min_endpoint_success_ratio (float): Minimum success ratio below which run will be considered a failure
         enable_cot (bool): Enable Chain of Thought processing
+        enable_cod (bool): Enable Chain of Density processing for text summarization task
         output_dataset (Path): Path to output directory
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
@@ -285,9 +302,19 @@ def generate_synthetic_data(
         Returns:
             message (dict): System message with updated content
         """
-        if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
+        if (
+            enable_cot
+            and data_generation_task_type != DataGenerationTaskType.CONVERSATION
+        ):
+            cot_system_message = {"role": "system", "content": COT_SYSTEM_PROMPT}
             return cot_system_message
+        elif (
+            enable_cod
+            and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION
+        ):
+            cod_system_message = {"role": "system", "content": COD_SYSTEM_PROMPT}
+            return cod_system_message
+
         else:
             return message
 
@@ -303,11 +330,13 @@ def generate_synthetic_data(
             messages (list[dict]): List of conversation turns with dummy assistant turn added
         """
         if data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            if messages[-1]['role'] != 'assistant':
-                messages.append({'role': 'assistant', 'content': ''})
+            if messages[-1]["role"] != "assistant":
+                messages.append({"role": "assistant", "content": ""})
         return messages
 
-    @monitor_with_activity(logger=logger, activity_name=TelemetryConstants.PROCESS_DATASET_RECORD)
+    @monitor_with_activity(
+        logger=logger, activity_name=TelemetryConstants.PROCESS_DATASET_RECORD
+    )
     def process_request(idx: str, data: dict, url: str, endpoint_key: str):
         """Process a single conversational request.
 
@@ -328,34 +357,40 @@ def generate_synthetic_data(
                     "idx": idx,
                     "status_code": None,
                     "messages": [],
-                    "exception": "Empty messages"
+                    "exception": "Empty messages",
                 }
             first_message = messages[0]
-            if first_message['role'] != 'system':
-                logger.warning(f"First message should be system, but got {first_message['role']}")
-                return {"idx": idx,
+            if first_message["role"] != "system":
+                logger.warning(
+                    f"First message should be system, but got {first_message['role']}"
+                )
+                return {
+                    "idx": idx,
+                    "status_code": None,
+                    "messages": [],
+                    "exception": (
+                        "Incorrect format.\n"
+                        f"First message should be system, but got {first_message['role']}"
+                    ),
+                }
+            for message in messages[1:]:
+                role = message["role"]
+                if role not in ("assistant", "user"):
+                    logger.warning(f"role should be system or user, but got {role}")
+                    return {
+                        "idx": idx,
                         "status_code": None,
                         "messages": [],
-                        "exception": ("Incorrect format.\n"
-                                      f"First message should be system, but got {first_message['role']}"),
-                        }
-            for message in messages[1:]:
-                role = message['role']
-                if role not in ('assistant', 'user'):
-                    logger.warning(f"role should be system or user, but got {role}")
-                    return {"idx": idx,
-                            "status_code": None,
-                            "messages": [],
-                            "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
-                            }
+                        "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}",
+                    }
             messages = normalize_messages(messages)
             last_status_code = None
             synthetic_responses = []
             for turn_id, message in enumerate(messages):
-                role = message['role']
-                if role == 'system':
+                role = message["role"]
+                if role == "system":
                     synthetic_responses.append(process_system_prompt(message))
-                elif role == 'user':
+                elif role == "user":
                     synthetic_responses.append(message)
                 else:
                     data_with_inference_parameters = {"messages": synthetic_responses}
@@ -363,26 +398,34 @@ def generate_synthetic_data(
                         data_with_inference_parameters[key] = value
                     # replace the assistant content from the model
                     log_entry = {"idx": idx, "turn": turn_id}
-                    response: Response = _invoke_endpoint(url=url, key=endpoint_key,
-                                                          data=data_with_inference_parameters,
-                                                          log_entry=log_entry)
+                    response: Response = _invoke_endpoint(
+                        url=url,
+                        key=endpoint_key,
+                        data=data_with_inference_parameters,
+                        log_entry=log_entry,
+                    )
                     last_status_code = response.status_code
                     if last_status_code != 200:
                         break
                     response_data = response.json()
                     # response content should be structured as below for a successful vllm response
-                    prediction_result = response_data['choices'][0]["message"]["content"].strip()
-                    synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
-            is_success = (last_status_code == 200)
+                    prediction_result = response_data["choices"][0]["message"][
+                        "content"
+                    ].strip()
+                    synthetic_responses.append(
+                        {"role": "assistant", "content": prediction_result}
+                    )
+            is_success = last_status_code == 200
             logger.info(f"Processing idx: {idx} - {is_success}")
             return {
                 "idx": idx,
                 "status_code": last_status_code,
                 "messages": synthetic_responses,
-                "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
-                              if not is_success
-                              else
-                              None),
+                "exception": (
+                    f"Not able to generate synthetic response for all turns for idx: {idx}"
+                    if not is_success
+                    else None
+                ),
             }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
@@ -393,7 +436,9 @@ def generate_synthetic_data(
                 "exception": e,
             }
 
-    def batch_process_data(input_file_path: Path, output_file_path: Path, batch_size: int) -> None:
+    def batch_process_data(
+        input_file_path: Path, output_file_path: Path, batch_size: int
+    ) -> None:
         """Batch process data and do a bulk request to teacher model endpoint.
 
         Args:
@@ -428,7 +473,7 @@ def generate_synthetic_data(
                             idx,
                             request_data,
                             teacher_model_endpoint_url,
-                            teacher_model_endpoint_key
+                            teacher_model_endpoint_key,
                         )
                     )
 
@@ -444,21 +489,29 @@ def generate_synthetic_data(
                 if future_result is None:
                     logger.error(f"row {idx} not found in future_results")
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
-                elif future_result['exception']:
-                    logger.error(f"row {idx} failed with exception: {future_result['exception']}")
+                elif future_result["exception"]:
+                    logger.error(
+                        f"row {idx} failed with exception: {future_result['exception']}"
+                    )
                     error_map[ERROR] = error_map.get(ERROR, 0) + 1
-                elif future_result['status_code'] != 200:
-                    logger.warning(f"row {idx} request status_code: {future_result['status_code']} != 200")
-                    error_map[future_result['status_code']] = error_map.get(future_result['status_code'], 0) + 1
+                elif future_result["status_code"] != 200:
+                    logger.warning(
+                        f"row {idx} request status_code: {future_result['status_code']} != 200"
+                    )
+                    error_map[future_result["status_code"]] = (
+                        error_map.get(future_result["status_code"], 0) + 1
+                    )
                 else:
-                    output_data.append({"messages": future_result['messages']})
+                    output_data.append({"messages": future_result["messages"]})
             Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
-            with open(output_file_path, 'w') as f:
+            with open(output_file_path, "w") as f:
                 for entry in output_data:
-                    f.write(json.dumps(entry) + '\n')
+                    f.write(json.dumps(entry) + "\n")
 
         if error_map:
-            logger.info("Error summary. With key denoting non-200 status code or some other error.")
+            logger.info(
+                "Error summary. With key denoting non-200 status code or some other error."
+            )
             for k, v in error_map.items():
                 error_count += v
                 logger.warning(f"{k} => {v}")
@@ -469,15 +522,24 @@ def generate_synthetic_data(
             msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
             raise Exception(msg)
 
-    with log_activity(logger=logger, activity_name=TelemetryConstants.BATCH_PROCESS_TRAINING_DATA):
+    with log_activity(
+        logger=logger, activity_name=TelemetryConstants.BATCH_PROCESS_TRAINING_DATA
+    ):
         logger.info("Processing train file")
-        batch_process_data(train_file_path, generated_train_file_path, request_batch_size)
+        batch_process_data(
+            train_file_path, generated_train_file_path, request_batch_size
+        )
         logger.info("Data generated and saved for train file")
 
     if validation_file_path:
-        with log_activity(logger=logger, activity_name=TelemetryConstants.BATCH_PROCESS_VALIDATION_DATA):
+        with log_activity(
+            logger=logger,
+            activity_name=TelemetryConstants.BATCH_PROCESS_VALIDATION_DATA,
+        ):
             logger.info("Processing validation file")
-            batch_process_data(validation_file_path, generated_validation_file_path, request_batch_size)
+            batch_process_data(
+                validation_file_path, generated_validation_file_path, request_batch_size
+            )
             logger.info("Data generated and saved for validation file")
 
 
@@ -504,7 +566,9 @@ def data_import(args: Namespace):
     data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
-    _validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
+    _validate_file_paths_with_supported_formats(
+        [args.train_file_path, args.validation_file_path]
+    )
     logger.info("File format validation successful.")
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
@@ -513,7 +577,9 @@ def data_import(args: Namespace):
         raise Exception("Could not create MLClient for current workspace")
 
     if teacher_model_endpoint_name:
-        endpoint_details = get_endpoint_details(mlclient_ws, teacher_model_endpoint_name)
+        endpoint_details = get_endpoint_details(
+            mlclient_ws, teacher_model_endpoint_name
+        )
         teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
         teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
         teacher_model_asset_id = endpoint_details.get_deployed_model_id()
@@ -527,22 +593,26 @@ def data_import(args: Namespace):
 
     if teacher_model_top_p < 0 or teacher_model_top_p > 1:
         raise Exception(
-            f"Invalid teacher_model_top_p. Value should be 0<=val<=1, but it is {teacher_model_top_p}")
+            f"Invalid teacher_model_top_p. Value should be 0<=val<=1, but it is {teacher_model_top_p}"
+        )
     if teacher_model_temperature < 0 or teacher_model_temperature > 1:
         raise Exception(
-            f"Invalid teacher_model_temperature. Value should be 0<=val<=1, but it is {teacher_model_temperature}")
+            f"Invalid teacher_model_temperature. Value should be 0<=val<=1, but it is {teacher_model_temperature}"
+        )
     if min_endpoint_success_ratio < 0 or min_endpoint_success_ratio > 1:
         raise Exception(
-            f"Invalid min_endpoint_success_ratio. Value should be 0<=val<=1, but it is {min_endpoint_success_ratio}")
+            f"Invalid min_endpoint_success_ratio. Value should be 0<=val<=1, but it is {min_endpoint_success_ratio}"
+        )
 
     if request_batch_size <= 0 or request_batch_size > MAX_BATCH_SIZE:
         raise Exception(
-            f"Invalid request_batch_size. Value should be 0<=val<={MAX_BATCH_SIZE}, but it is {request_batch_size}")
+            f"Invalid request_batch_size. Value should be 0<=val<={MAX_BATCH_SIZE}, but it is {request_batch_size}"
+        )
 
     inference_params = {
         MAX_NEW_TOKENS: teacher_model_max_new_tokens,
         TEMPERATURE: teacher_model_temperature,
-        TOP_P: teacher_model_top_p
+        TOP_P: teacher_model_top_p,
     }
 
     if teacher_model_frequency_penalty:
@@ -586,7 +656,7 @@ def main():
         acft_custom_dimensions={
             LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
             LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
-            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
         log_level=logging.INFO,
