@@ -126,17 +126,24 @@ inputs:
     default: "false"
     description: Enable Chain of thought for data generation
 
+  enable_chain_of_density:
+    type: string
+    default: "false"
+    description: Enable Chain of density for text summarization
+
   data_generation_task_type:
     type: string
     enum:
       - NLI
       - CONVERSATION
       - NLU_QA
+      - SUMMARIZATION
     description: >
       Data generation task type. Supported values are:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+      4. SUMMARIZATION: Generate Text Summary for Article
 
   ## OSS Finetune Input Parameters
   number_of_gpu_to_use_finetuning:
@@ -223,6 +230,7 @@ jobs:
       teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
+      enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'

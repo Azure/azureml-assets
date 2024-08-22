@@ -196,6 +196,14 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--enable_chain_of_density",
+        type=str,
+        required=False,
+        default="false",
+        help="This enables Chain of Density for Summarization",
+    )
+
+    parser.add_argument(
         "--data_generation_task_type",
         type=str,
         required=True,
@@ -203,6 +211,7 @@ def get_parser():
             1. NLI: Generate Natural Language Inference data
             2. CONVERSATION: Generate conversational data (multi/single turn)
             3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+            4. SUMMARIZATION: Generate Text Summary for Article
             """,
         choices=[v.value for v in DataGenerationTaskType],
     )
