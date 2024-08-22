@@ -105,7 +105,8 @@ Guidelines:
 - Missing entities can appear anywhere in the new summary.
 - Never drop entities from the previous summary. If space cannot be made, add fewer new entities.
 
-Answer only in JSON. The JSON should be a list (length 4) of dictionaries whose keys are "Missing_Entities" and "Denser_Summary". \
+Answer only in JSON. The JSON should be a list (length 4) of dictionaries \
+      whose keys are "Missing_Entities" and "Denser_Summary". \
 Ensure the JSON starts with a square bracket [, ends with a square bracket ], \
 and each dictionary within the array is separated by a comma. \
 The JSON should be syntactically correct and properly formatted. For example: \
