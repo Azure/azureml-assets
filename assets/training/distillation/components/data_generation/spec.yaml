@@ -97,7 +97,14 @@ inputs:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
-
+  
+  # Output of validation component.
+  validation_output:
+    type: uri_file
+    optional: true
+    description: Validation status.
+    mode: rw_mount
+    
 outputs:
   generated_train_file_path:
     type: uri_file

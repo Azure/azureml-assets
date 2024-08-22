@@ -100,17 +100,6 @@ inputs:
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
 
-  mlflow_model_path:
-    type: mlflow_model
-    optional: true
-    description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
-    mode: download
-  pytorch_model_path:
-    type: custom_model
-    optional: true
-    description: Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value.
-    mode: download
-
   num_train_epochs:
     type: integer
     default: 1
@@ -152,8 +141,6 @@ command: >-
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --enable_chain_of_thought ${{inputs.enable_chain_of_thought}}
   --data_generation_task_type ${{inputs.data_generation_task_type}}
-  $[[--mlflow_model_path ${{inputs.mlflow_model_path}}]]
-  $[[--pytorch_model_path ${{inputs.pytorch_model_path}}]]
   $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
   $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
   $[[--learning_rate ${{inputs.learning_rate}}]]
