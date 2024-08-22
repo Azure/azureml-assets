@@ -131,19 +131,9 @@ class SystemPrompt:
                                                     )
 
     @classmethod
-    def math_choice_cot_prompt(cls):
-        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.DEFAULT_KEYS,
-                                                    additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS
-                                                    )
-
-    @classmethod
     def get_cot_prompt(cls, task_type: str):
         if task_type == DataGenerationTaskType.MATH_NUMERICAL:
             return cls.math_cot_prompt()
-
-        if task_type == DataGenerationTaskType.MATH_CHOICE:
-            return cls.math_choice_cot_prompt()
-
         return cls.default_cot_prompt()
 
     @classmethod
