@@ -68,7 +68,7 @@ COMPONENT_NAME = "oss_distillation_validate_pipeline"
 
 def update_finetuning_parser(parser: ArgumentParser):
     """Update parser with arguments to fine tuning component.
-    
+
     Args:
         parser (ArgumentParser): Parser object.
     """
@@ -81,7 +81,7 @@ class PipelineInputsValidator:
 
     def __init__(self, args: Namespace) -> None:
         """Initialise validator.
-        
+
         Args:
             args (Namespace): Inputs flags to validate.
         """
@@ -219,9 +219,9 @@ class PipelineInputsValidator:
     def _validate_record_by_task(self, record: list) -> dict:
         """
         Validate record in a dataset against the data generation task type.
-        
+
         Returns a dictionary containing exception if any validation error is found.
-        
+
         Args:
             record (list): Sequence of messages
         """
@@ -335,7 +335,7 @@ class PipelineInputsValidator:
 
     def _validate_data_generation_inputs(self):
         """Validate all input flags to the data-generation component.
-        
+
         Sequentially performs a set of validations, each dependent on the previous validation.
         1. Validate training/validation file paths and ensure files exist.
         2. Validate teacher model endpoint arguments are passed for inference, and
