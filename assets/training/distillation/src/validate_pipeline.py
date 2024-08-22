@@ -383,7 +383,7 @@ class PipelineInputsValidator:
 
 @swallow_all_exceptions(time_delay=5)
 def main():
-
+    """Run validation."""
     # Get data generation component input parameters.
     parser = get_parser()
     parser = update_finetuning_parser(parser=parser)
@@ -410,5 +410,4 @@ def main():
 
 
 if __name__ == "__main__":
-    """Run main."""
     main()
