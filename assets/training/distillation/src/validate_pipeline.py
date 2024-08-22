@@ -101,6 +101,10 @@ class PipelineInputsValidator:
         key = self._args.teacher_model_endpoint_key
         return {"Content-Type": "application/json", "Authorization": f"Bearer {key}"}
 
+    def _get_cot_status(self) -> bool:
+        cot_enabled = self._args.enable_chain_of_thought
+        return cot_enabled.lower() == "true"
+
     def _validate_model_endpoint_args(self):
         endpoint_name = self._args.teacher_model_endpoint_name
         if endpoint_name:
@@ -181,7 +185,7 @@ class PipelineInputsValidator:
         if self._args.data_generation_task_type != DataGenerationTaskType.CONVERSATION:
             return
 
-        if self._args.enable_chain_of_thought:
+        if self._get_cot_status():
             return f"Chain of thought is not supported for task type {DataGenerationTaskType.CONVERSATION}"
 
         if len(record) < 3:
@@ -303,13 +307,10 @@ class PipelineInputsValidator:
         Raises:
             ACFTUserError: If a known validation error is caught
         """
-        # TODO (nandakumars): use a more robust validator like pydantic.
         df = self._get_dataframe(file_path=file_path)
         for batch in df:
             for idx, row in batch.iterrows():
                 record = row.iloc[0]
-
-                # TODO (nandakumars): dispatch to multiple threads?
                 err = self._validate_dataset_record(record=record)
                 if err:
                     raise ACFTValidationException._with_error(
@@ -320,6 +321,7 @@ class PipelineInputsValidator:
                             ),
                         )
                     )
+        
 
     def _validate_data_generation_inputs(self):
         """Validate all input flags to the data-generation component. Sequentially performs a set
