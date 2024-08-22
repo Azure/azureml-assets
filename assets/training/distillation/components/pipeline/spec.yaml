@@ -236,8 +236,6 @@ jobs:
       teacher_model_presence_penalty: '${{parent.inputs.teacher_model_presence_penalty}}'
       request_batch_size: '${{parent.inputs.request_batch_size}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
-      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
-      pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
       num_train_epochs: '${{parent.inputs.num_train_epochs}}'
       per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       learning_rate: '${{parent.inputs.learning_rate}}'
