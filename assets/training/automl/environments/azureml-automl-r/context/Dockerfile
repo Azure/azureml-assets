@@ -1,0 +1,61 @@
+FROM {pin-to-latest-mcr-version-tag:"mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{}"}
+
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl
+ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+
+ENV MLFLOW_MODEL_FOLDER="mlflow-model"
+# ENV AML_APP_ROOT="/var/mlflow_resources"
+# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
+
+ENV ENABLE_METADATA=true
+
+# begin conda create
+# Create conda environment
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    python=3.9 \
+    # begin conda dependencies
+    pip \
+    py-cpuinfo=5.0.0 \
+    joblib=1.2.0 \
+    setuptools-git \
+    'psutil>5.0.0,<6.0.0' \
+    pytorch=2.2.2 \
+    # end conda dependencies
+    -c conda-forge -c pytorch -c anaconda -c nvidia && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
+    conda clean -a -y
+# end conda create
+
+# begin pip install
+# Install pip dependencies
+RUN pip install {pin-to-extra-index} \
+                # begin pypi dependencies
+                '{pin-to-latest-pypi-version:"azureml-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-mlflow=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-pipeline-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-telemetry=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-interpret=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-responsibleai=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-automl-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-automl-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-train-automl-client=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-train-automl-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-train-automl=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-dataset-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-defaults=={}"}' \
+                # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
+                'mlflow-skinny==2.9.2' \
+                'xgboost==1.5.2' \
+                'prophet==1.1.4' \
+                'inference-schema' \
+                'mltable>=1.0.0'
+                # end pypi dependencies
+# end pip install
+
+# begin pip ad-hoc
+# Install pip ad-hoc dependencies for security updates
+RUN pip install --upgrade 'pyarrow==14.0.2'
+# end pip ad-hoc
+
