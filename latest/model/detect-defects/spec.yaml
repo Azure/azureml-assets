@@ -12,7 +12,7 @@ properties:
   inference-recommended-sku: Standard_DS3_v2
 tags:
   hiddenlayerscanned: ""
-version: 2
+version: 3
 description: |-
   The "Detect Defects" is a model designed for meticulous examination of images. It operates by employing GPT-4 Turbo with Vision to compare a test image against a reference image. Each analysis focuses on identifying variances or anomalies, classifying them as defects. This methodical comparison ensures that any discrepancies are accurately detected. The outcomes of these comparisons are then used to establish a comprehensive understanding of the product's quality, making it an essential tool in maintaining rigorous quality control standards.
 
