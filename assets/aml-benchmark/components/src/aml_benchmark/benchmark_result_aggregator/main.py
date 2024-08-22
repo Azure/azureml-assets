@@ -5,7 +5,7 @@
 from typing import Any, Dict, Optional, Tuple, cast
 import argparse
 from azureml.core import Run
-
+import json
 from aml_benchmark.utils.logging import get_logger, log_params_and_metrics
 from aml_benchmark.utils.io import read_json_data, save_json_to_file
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
@@ -260,6 +260,17 @@ def main(
     if model_registry is not None:
         result['model_registry'] = model_registry
         loggable_pipeline_params['model_registry'] = model_registry
+    telemetry_details = {
+        "parameters": {k.split('.', 1)[1]: v
+                       for k, v in result.get('mlflow_parameters', {})
+                       if k in ["downloader.dataset_name", "endpoint.endpoint_url", "endpoint.deployment_name"]},
+        # All those values which are float or int or string
+        "metrics": {k.split('.', 1)[1]: v
+                    for k, v in result.get('quality_metrics', {})
+                    if isinstance(v, int) or isinstance(v, float) or isinstance(v, str)}
+    }
+    telemetry_details['parameters']["task_name"] = result.get('simplified_pipeline_params', {}).get('quality.param.task', None)
+    logger.info(f"Telemetry details: {json.dumps(telemetry_details)}")
     save_json_to_file(result, output_dataset_path)
     log_params_and_metrics(
         parameters={**parameters, **loggable_pipeline_params},
