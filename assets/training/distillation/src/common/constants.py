@@ -5,6 +5,7 @@
 
 import re
 from enum import EnumMeta, Enum
+
 # COMPONENT META
 COMPONENT_NAME = "oss_distillation_generate_data"
 
@@ -125,6 +126,7 @@ class TelemetryConstants:
     VALIDATE_VALIDATION_DATA = "validate_validation_data"
     VALIDATE_MODEL_INFERENCE = "validate_model_inference"
 
+
 class BackoffConstants:
     """Defaults for retry with exponential backoff"""
 
@@ -134,4 +136,3 @@ class BackoffConstants:
     BACKOFF_FACTOR = 2
     MAX_TIMEOUT_SEC = 180
     RETRYABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504, None}
-
