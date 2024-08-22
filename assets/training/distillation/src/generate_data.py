@@ -20,7 +20,6 @@ from azureml.acft.common_components import get_logger_app, set_logging_parameter
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
-from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.telemetry.activity import log_activity, monitor_with_activity
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
