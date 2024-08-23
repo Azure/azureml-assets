@@ -92,15 +92,15 @@ inputs:
       - NLI
       - CONVERSATION
       - NLU_QA
-      - MATH_NUMERICAL
-      - MATH_CHOICE
+      - MATH
+      - MATH_MCQ
     description: >
       Data generation task type. Supported values are:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
-      4. MATH_NUMERICAL: Generate Math data for expected numerical responses
-      5. MATH_CHOICE: Generate Math data for multiple choice questions
+      4. MATH: Generate Math data for numerical responses
+      5. MATH_MCQ: Generate Math data for multiple choice questions
 
 outputs:
   generated_train_file_path:

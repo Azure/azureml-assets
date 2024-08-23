@@ -95,8 +95,8 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     NLI = "NLI"
     CONVERSATION = "CONVERSATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"
-    MATH_NUMERICAL = "MATH_NUMERICAL"
-    MATH_CHOICE = "MATH_CHOICE"
+    MATH = "MATH"
+    MATH_MCQ = "MATH_MCQ"
 
 
 class SystemPrompt:
@@ -132,10 +132,10 @@ class SystemPrompt:
 
     @classmethod
     def get_cot_prompt(cls, task_type: str):
-        if task_type == DataGenerationTaskType.MATH_NUMERICAL:
+        if task_type == DataGenerationTaskType.MATH:
             return cls.math_cot_prompt()
         return cls.default_cot_prompt()
 
     @classmethod
     def get_response_key(cls, task_type):
-        return "answer" if task_type == DataGenerationTaskType.MATH_NUMERICAL else "answer_choice"
+        return "answer" if task_type == DataGenerationTaskType.MATH else "answer_choice"

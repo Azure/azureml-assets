@@ -213,7 +213,7 @@ def _invoke_endpoint(url: str, key: str, data: dict) -> Response:
         "Content-Type": "application/json",
         "Authorization": f"Bearer {key}"
     }
-    response = requests.post(url, headers=request_headers, data=json.dumps(data))
+    response = requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
     return response
 
 
@@ -443,6 +443,7 @@ def generate_synthetic_data(
                     )
 
             # wait for results to complete
+            future_result = {}
             future_results = {
                 result["idx"]: result
                 for result in [future.result() for future in as_completed(futures)]
