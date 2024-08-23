@@ -10,6 +10,8 @@ properties:
   finetune-min-sku-spec: 24|1|220|64
   finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
+  notes: "notes.md"
+  evaluation: "evaluation.md"
   freePlayground: "true"
   displayName: "Phi-3 mini instruct (128k)"
   summary: "Same Phi-3-mini model, but with a larger context size for RAG or few shot prompting."
