@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Smoke tests running a job in the azureml-automl-r environment."""
+"""Smoke tests running a job in the azure-ai-ml-automl environment."""
 # This only tests that scikit-learn training can be dome in the environment.
 # After the environment is deployed, notebooks tests should be run before updating
 # the "Prod" label in the Jasmine service
@@ -19,8 +19,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 45)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_azureml_automl_r():
-    """Tests a sample job using azureml-automl-r as the environment."""
+def test_azure_ai_ml_automl():
+    """Tests a sample job using azure-ai-ml-automl as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -31,12 +31,12 @@ def test_azureml_automl_r():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "azureml-automl-r"
+    env_name = "azure-ai-ml-automl"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="azureml-automl-r",
-        description="azureml-automl-r environment created from a Docker context.",
+        name="azure-ai-ml-automl",
+        description="azure-ai-ml-automl environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -53,7 +53,7 @@ def test_azureml_automl_r():
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="sklearn-diabetes-example",
-        description="A test run of the azureml-automl-r curated environment",
+        description="A test run of the azure-ai-ml-automl curated environment",
         experiment_name="sklearnExperiment"
     )
 
