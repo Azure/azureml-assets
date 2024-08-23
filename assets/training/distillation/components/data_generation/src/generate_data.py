@@ -379,7 +379,7 @@ def generate_synthetic_data(
                     if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
                         key = SystemPrompt.get_response_key(data_generation_task_type)
                         prediction_result = json.loads(prediction_result)[key]
-                    synthetic_responses.append({'role': 'assistant', 'content': prediction_result})
+                    synthetic_responses.append({'role': 'assistant', 'content': str(prediction_result)})
             is_success = (last_status_code == 200)
             logger.info(f"Processing idx: {idx} - {is_success}")
             return {
