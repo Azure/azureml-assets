@@ -6,7 +6,7 @@ import logging
 import requests
 import pandas as pd
 import json
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -38,6 +38,7 @@ from common.constants import (
     TEMPERATURE,
     TOP_P,
     VLLM_CHAT_SCORE_PATH,
+    MIN_RECORDS_FOR_FT,
 )
 
 from common.utils import (
@@ -64,16 +65,6 @@ logger = get_logger_app(
 )
 
 COMPONENT_NAME = "oss_distillation_validate_pipeline"
-
-
-def update_finetuning_parser(parser: ArgumentParser):
-    """Update parser with arguments to fine tuning component.
-
-    Args:
-        parser (ArgumentParser): Parser object.
-    """
-    # TODO (nandakumars): add relevant finetuning arguments.
-    return parser
 
 
 class PipelineInputsValidator:
@@ -188,6 +179,19 @@ class PipelineInputsValidator:
 
         validate_request_batch_size(self._args.request_batch_size)
         validate_min_endpoint_success_ratio(self._args.min_endpoint_success_ratio)
+
+    def _validate_number_of_records(self, size: int):
+        """Validate number of records in the dataset."""
+        if size < MIN_RECORDS_FOR_FT:
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        "Number of records in the dataset are less than the minimum required for fine-tuning."
+                        f" Minimum records required: {MIN_RECORDS_FOR_FT}, but got {size}."
+                    ),
+                )
+            )
 
     def _validate_record_for_type_conversation(self, record: list) -> str:
         if self._args.data_generation_task_type != DataGenerationTaskType.CONVERSATION:
@@ -319,7 +323,9 @@ class PipelineInputsValidator:
             ACFTUserError: If a known validation error is caught
         """
         df = self._get_dataframe(file_path=file_path)
+        total_rows = 0
         for batch in df:
+            total_rows += len(batch)
             for idx, row in batch.iterrows():
                 record = row.iloc[0]
                 err = self._validate_dataset_record(record=record)
@@ -332,6 +338,8 @@ class PipelineInputsValidator:
                             ),
                         )
                     )
+
+        self._validate_number_of_records(size=total_rows)
 
     def _validate_data_generation_inputs(self):
         """Validate all input flags to the data-generation component.
@@ -386,7 +394,6 @@ def main():
     """Run validation."""
     # Get data generation component input parameters.
     parser = get_parser()
-    parser = update_finetuning_parser(parser=parser)
     parser.add_argument("--validation_info", required=True, help="Validation status")
     args, _ = parser.parse_known_args()
 
@@ -404,9 +411,9 @@ def main():
     with log_activity(logger=logger, activity_name=TelemetryConstants.VALIDATOR):
         PipelineInputsValidator(args=args)
 
-    with open(args.validation_info, "w") as f:
-        # TODO (nandakumars): update with rich data?
-        f.write(json.dumps({"validation_status": "ok"}))
+    if args.validation_info:
+        with open(args.validation_info, "w") as f:
+            f.write(json.dumps({"validation_status": "ok"}))
 
 
 if __name__ == "__main__":
