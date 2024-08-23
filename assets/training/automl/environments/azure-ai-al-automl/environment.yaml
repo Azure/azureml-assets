@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/azureml-automl-r
+  name: azureml/curated/azure-ai-ml-automl
   os: linux
   context:
     dir: context

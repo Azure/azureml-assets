@@ -1,4 +1,4 @@
-# azureml-automl-r Docker Environment 
+# azure-ai-ml-automl Docker Environment
 
 ## Overview
 This environment is used by Azure ML AutoML for training models.
