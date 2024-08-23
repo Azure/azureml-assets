@@ -233,7 +233,7 @@ def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]])
                     )
                 )
             )
-    
+
 
 def generate_synthetic_data(
     teacher_model_endpoint_url: str,
