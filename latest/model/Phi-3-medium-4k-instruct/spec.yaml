@@ -113,6 +113,7 @@ tags:
     \ focus on high-quality, reasoning-dense data."
   keywords: "Reasoning,Understanding"
   inputModalities: "text"
+  outputModalities: "text"
   languages: "en"
   textContextWindow: 4096
   maxOutputTokens: 4096

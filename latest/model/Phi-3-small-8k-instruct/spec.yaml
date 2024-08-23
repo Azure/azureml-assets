@@ -115,6 +115,7 @@ tags:
   maxOutputTokens: 4096
   languages: "en"
   inputModalities: "text"
+  outputModalities: "text"
   keywords: "Reasoning,Understanding"
   licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
     \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\

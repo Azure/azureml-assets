@@ -128,6 +128,7 @@ tags:
   maxOutputTokens: 4096
   languages: "en"
   inputModalities: "text"
+  outputModalities: "text"
   trainingDataDate: "Oct 2023"
   keywords: "Reasoning,Understanding,Low latency"
   licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
