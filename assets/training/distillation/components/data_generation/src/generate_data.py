@@ -189,7 +189,8 @@ def get_parser():
             1. NLI: Generate Natural Language Inference data
             2. CONVERSATION: Generate conversational data (multi/single turn)
             3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
-            4. MATH: Generate Math data
+            4. MATH: Generate Math data for numerical responses
+            5. MATH_MCQ: Generate Math data for multiple choice questions
             """,
         choices=[v.value for v in DataGenerationTaskType]
     )
