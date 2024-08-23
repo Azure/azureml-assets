@@ -288,10 +288,11 @@ def generate_synthetic_data(
             message (dict): System message with updated content
         """
         if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
+            cot_prompt = SystemPrompt.get_cot_prompt(data_generation_task_type)
+            cot_system_message = {'role': 'system', 'content': cot_prompt}
             return cot_system_message
-        else:
-            return message
+
+        return message
 
     def normalize_messages(messages: List[dict]) -> List[dict]:
         """Add dummy assistant turn if not present in the messages list.
