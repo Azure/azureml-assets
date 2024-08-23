@@ -36,3 +36,4 @@ dependencies:
   - pydantic==2.8.2
   - mteb==1.14.10
   - setuptools>=70.0.0
+  - rouge>=1.0.0,<2.0.0
