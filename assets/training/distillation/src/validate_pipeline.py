@@ -201,14 +201,16 @@ class PipelineInputsValidator:
             return f"Chain of thought is not supported for task type {DataGenerationTaskType.CONVERSATION}"
 
         if len(record) < 3:
-            return f"Dataset needs to be of multi-turn for task type {DataGenerationTaskType.CONVERSATION}."
+            return f"Dataset is not matching expected schema for task type {DataGenerationTaskType.CONVERSATION}. \
+                Expected format: [system, user, assistant]"
 
     def _validate_record_for_type_NLI(self, record: list) -> str:
         if self._args.data_generation_task_type != DataGenerationTaskType.NLI:
             return
 
         if len(record) > 2:
-            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLI}."
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLI}. \
+                Expected format: [system, user]"
 
     def _validate_record_for_type_NLU_QA(self, record: list) -> str:
         if (
@@ -218,7 +220,8 @@ class PipelineInputsValidator:
             return
 
         if len(record) > 2:
-            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING}"
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING} \
+                Expected format: [system, user]"
 
     def _validate_record_by_task(self, record: list) -> dict:
         """
@@ -293,6 +296,13 @@ class PipelineInputsValidator:
                     return {
                         "exception": f"Role at index {id} should be {expected_role}."
                     }
+            
+            task_type = self._args.data_generation_task_type
+            if task_type == DataGenerationTaskType.CONVERSATION and (len(record[1:]) % 2 != 0):
+                return {
+                    "exception": "There is an incomplete pair of 'user' and 'assistant' messages."
+                }
+            
         except Exception as e:
             return {"exception": e}
 
@@ -334,7 +344,7 @@ class PipelineInputsValidator:
                         AzureMLError.create(
                             ACFTUserError,
                             pii_safe_message=(
-                                f"Error validating dataset record {idx}: {err}"
+                                f"Error validating dataset record, context({idx}): {err}"
                             ),
                         )
                     )
