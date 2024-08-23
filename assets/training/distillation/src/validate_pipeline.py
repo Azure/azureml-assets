@@ -296,13 +296,15 @@ class PipelineInputsValidator:
                     return {
                         "exception": f"Role at index {id} should be {expected_role}."
                     }
-            
+
             task_type = self._args.data_generation_task_type
-            if task_type == DataGenerationTaskType.CONVERSATION and (len(record[1:]) % 2 != 0):
+            if task_type == DataGenerationTaskType.CONVERSATION and (
+                len(record[1:]) % 2 != 0
+            ):
                 return {
                     "exception": "There is an incomplete pair of 'user' and 'assistant' messages."
                 }
-            
+
         except Exception as e:
             return {"exception": e}
 
