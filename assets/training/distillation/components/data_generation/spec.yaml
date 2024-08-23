@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: OSS Distillation Generate Data
 description: Component to generate data from teacher model enpoint
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/63
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/66
 
 inputs:
   # Inputs

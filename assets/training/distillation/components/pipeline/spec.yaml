@@ -60,8 +60,8 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
+  # ########################### Data Generator Component ########################### #
 
-  ##  OSS Data generator Input Parameters
   train_file_path:
     type: uri_file
     description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
@@ -148,7 +148,8 @@ inputs:
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
 
-  ## OSS Finetune Input Parameters
+  # ########################### Finetuning Component ########################### #
+
   number_of_gpu_to_use_finetuning:
     type: integer
     default: 1
