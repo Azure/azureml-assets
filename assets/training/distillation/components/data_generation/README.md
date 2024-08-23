@@ -35,6 +35,7 @@ Component to generate data from teacher model enpoint
 | min_endpoint_success_ratio | The minimum value of (successful_requests / total_requests) required for classifying inference as successful. | number | True
 | enable_chain_of_thought | Enable Chain of thought for data generation. | string | True
 | data_generation_task_type | Data generation task types, supported values - NLI, CONVERSATION, NLU_QA. | string | False
+| validation_output | Validation status from validation component. | uri_file | True
 
 ## Outputs 
 

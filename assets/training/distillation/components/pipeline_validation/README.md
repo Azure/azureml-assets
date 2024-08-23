@@ -34,8 +34,6 @@ Component to validate all inputs to the distillation pipeline.
 | request_batch_size | No of data records to hit teacher model endpoint in one go. | integer | True
 | min_endpoint_success_ratio | The minimum value of (successful_requests / total_requests) required for classifying inference as successful. | number | True
 | enable_chain_of_thought | Enable Chain of thought for data generation. | string | True
-| mlflow_model_path | MLflow model asset path. Special characters like \ and ' are invalid in the parameter value. | mlflow_model | True
-| pytorch_model_path | Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value. | mlflow_model | True
 | num_train_epochs | Number of training epochs. | string | True
 | data_generation_task_type | Data generation task types, supported values - NLI, CONVERSATION, NLU_QA. | string | False
 | per_device_train_batch_size | Train batch size. | integer | True
