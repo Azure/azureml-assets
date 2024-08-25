@@ -393,9 +393,8 @@ def generate_synthetic_data(
                 "idx": idx,
                 "status_code": last_status_code,
                 "messages": synthetic_responses,
-                "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
-                    if not is_success
-                    else None
+                "exception": (
+                    f"Not able to generate synthetic response for all turns for idx: {idx}" if not is_success else None
                 ),
             }
         except Exception as e:
