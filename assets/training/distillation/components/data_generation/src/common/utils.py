@@ -108,7 +108,7 @@ def get_workspace_mlclient(workspace: Workspace = None) -> MLClient:
             credential,
             subscription_id=workspace.subscription_id,
             resource_group_name=workspace.resource_group,
-            workspace_name=workspace.name
+            workspace_name=workspace.name,
         )
     raise Exception("Error creating MLClient. No credentials or workspace found")
 

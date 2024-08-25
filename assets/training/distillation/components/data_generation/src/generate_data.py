@@ -30,6 +30,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from common.constants import (
     COMPONENT_NAME,
     COT_SYSTEM_PROMPT,
+    COD_SYSTEM_PROMPT,
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
@@ -45,7 +46,7 @@ from common.constants import (
     SUPPORTED_FILE_FORMATS,
     VLLM_CHAT_SCORE_PATH,
     DataGenerationTaskType,
-    TelemetryConstants
+    TelemetryConstants,
 )
 
 from common.utils import (
@@ -133,25 +134,25 @@ def get_parser():
         type=float,
         required=False,
         default=DEFAULT_TOP_P,
-        help="Teacher model top-p parameter"
+        help="Teacher model top-p parameter",
     )
     parser.add_argument(
         "--teacher_model_frequency_penalty",
         type=float,
         required=False,
-        help="Teacher model frequency parameter"
+        help="Teacher model frequency parameter",
     )
     parser.add_argument(
         "--teacher_model_presence_penalty",
         type=float,
         required=False,
-        help="Teacher model presense penalty"
+        help="Teacher model presense penalty",
     )
     parser.add_argument(
         "--teacher_model_stop",
         type=str,
         required=False,
-        help="Teacher model stop "
+        help="Teacher model stop ",
     )
     parser.add_argument(
         "--request_batch_size",
@@ -180,7 +181,15 @@ def get_parser():
         type=str,
         required=False,
         default="false",
-        help="This enables Chain of Thought"
+        help="This enables Chain of Thought",
+    )
+
+    parser.add_argument(
+        "--enable_chain_of_density",
+        type=str,
+        required=False,
+        default="false",
+        help="Enable chain of density method for summarization tasks",
     )
 
     parser.add_argument(
@@ -192,7 +201,7 @@ def get_parser():
             2. CONVERSATION: Generate conversational data (multi/single turn)
             3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
             """,
-        choices=[v.value for v in DataGenerationTaskType]
+        choices=[v.value for v in DataGenerationTaskType],
     )
 
     return parser
@@ -213,7 +222,7 @@ def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> 
     """
     request_headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {key}"
+        "Authorization": f"Bearer {key}",
     }
 
     log_entry = log_entry or {}
@@ -234,7 +243,7 @@ def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]])
     for file_path in file_paths:
         if file_path:
             file_suffix = Path(file_path).suffix.lower()
-            file_ext = file_suffix.split('?')[0]
+            file_ext = file_suffix.split("?")[0]
         if file_ext and file_ext not in SUPPORTED_FILE_FORMATS:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
@@ -242,7 +251,7 @@ def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]])
                     pii_safe_message=(
                         f"{file_path} is not in list of supported file formats. "
                         f"Supported file formats: {SUPPORTED_FILE_FORMATS}"
-                    )
+                    ),
                 )
             )
 
@@ -254,11 +263,12 @@ def generate_synthetic_data(
     request_batch_size: int,
     min_endpoint_success_ratio: float,
     enable_cot: bool,
+    enable_cod: bool,
     generated_train_file_path: Path,
     generated_validation_file_path: Path,
     train_file_path: Path,
     data_generation_task_type: str,
-    validation_file_path: Path = None
+    validation_file_path: Path = None,
 ):
     """Generate and save synthentic data under output_dataset.
 
@@ -269,15 +279,16 @@ def generate_synthetic_data(
         request_batch_size (int): Input batch size for processing rows in train and validation dataset
         min_endpoint_success_ratio (float): Minimum success ratio below which run will be considered a failure
         enable_cot (bool): Enable Chain of Thought processing
+        enable_cod (bool): Enable Chain of Density processing
         output_dataset (Path): Path to output directory
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
     """
 
     def process_system_prompt(message: dict) -> dict:
-        """Update the system prompt depending on the task type and the flag enable_cot.
+        """Update the system prompt depending on the task type and the flags enable_cot and enable_cod.
 
-        The original message unchanged if enable_cot is False or task type is conversation.
+        The original message unchanged if enable_cot and enable_cod are false
 
         Args:
             message (dict): System message
@@ -288,6 +299,9 @@ def generate_synthetic_data(
         if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
             cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
             return cot_system_message
+        elif enable_cod and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION:
+            cod_system_message = {"role": "system", "content": COD_SYSTEM_PROMPT}
+            return cod_system_message
         else:
             return message
 
@@ -303,8 +317,8 @@ def generate_synthetic_data(
             messages (list[dict]): List of conversation turns with dummy assistant turn added
         """
         if data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            if messages[-1]['role'] != 'assistant':
-                messages.append({'role': 'assistant', 'content': ''})
+            if messages[-1]["role"] != "assistant":
+                messages.append({"role": "assistant", "content": ""})
         return messages
 
     @monitor_with_activity(logger=logger, activity_name=TelemetryConstants.PROCESS_DATASET_RECORD)
@@ -328,7 +342,7 @@ def generate_synthetic_data(
                     "idx": idx,
                     "status_code": None,
                     "messages": [],
-                    "exception": "Empty messages"
+                    "exception": "Empty messages",
                 }
             first_message = messages[0]
             if first_message['role'] != 'system':
@@ -352,10 +366,10 @@ def generate_synthetic_data(
             last_status_code = None
             synthetic_responses = []
             for turn_id, message in enumerate(messages):
-                role = message['role']
-                if role == 'system':
+                role = message["role"]
+                if role == "system":
                     synthetic_responses.append(process_system_prompt(message))
-                elif role == 'user':
+                elif role == "user":
                     synthetic_responses.append(message)
                 else:
                     data_with_inference_parameters = {"messages": synthetic_responses}
@@ -381,8 +395,8 @@ def generate_synthetic_data(
                 "messages": synthetic_responses,
                 "exception": (f"Not able to generate synthetic response for all turns for idx: {idx}"
                               if not is_success
-                              else
-                              None),
+                    else None
+                ),
             }
         except Exception as e:
             logger.error(f"idx: {idx}. exception: {e}")
@@ -428,7 +442,7 @@ def generate_synthetic_data(
                             idx,
                             request_data,
                             teacher_model_endpoint_url,
-                            teacher_model_endpoint_key
+                            teacher_model_endpoint_key,
                         )
                     )
 
@@ -451,11 +465,11 @@ def generate_synthetic_data(
                     logger.warning(f"row {idx} request status_code: {future_result['status_code']} != 200")
                     error_map[future_result['status_code']] = error_map.get(future_result['status_code'], 0) + 1
                 else:
-                    output_data.append({"messages": future_result['messages']})
+                    output_data.append({"messages": future_result["messages"]})
             Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
-            with open(output_file_path, 'w') as f:
+            with open(output_file_path, "w") as f:
                 for entry in output_data:
-                    f.write(json.dumps(entry) + '\n')
+                    f.write(json.dumps(entry) + "\n")
 
         if error_map:
             logger.info("Error summary. With key denoting non-200 status code or some other error.")
@@ -501,6 +515,7 @@ def data_import(args: Namespace):
     request_batch_size = args.request_batch_size
     min_endpoint_success_ratio = args.min_endpoint_success_ratio
     enable_cot_str = args.enable_chain_of_thought
+    enable_cod_str = args.enable_chain_of_density
     data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
@@ -508,6 +523,7 @@ def data_import(args: Namespace):
     logger.info("File format validation successful.")
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
+    enable_cod = True if enable_cod_str.lower() == "true" else False
     mlclient_ws = get_workspace_mlclient()
     if not mlclient_ws:
         raise Exception("Could not create MLClient for current workspace")
@@ -539,10 +555,13 @@ def data_import(args: Namespace):
         raise Exception(
             f"Invalid request_batch_size. Value should be 0<=val<={MAX_BATCH_SIZE}, but it is {request_batch_size}")
 
+    if enable_cod and data_generation_task_type != DataGenerationTaskType.SUMMARIZATION:
+        raise ACFTUserError("enable_cod option is only applicable for Summarization task type")
+
     inference_params = {
         MAX_NEW_TOKENS: teacher_model_max_new_tokens,
         TEMPERATURE: teacher_model_temperature,
-        TOP_P: teacher_model_top_p
+        TOP_P: teacher_model_top_p,
     }
 
     if teacher_model_frequency_penalty:
@@ -567,6 +586,7 @@ def data_import(args: Namespace):
         request_batch_size=request_batch_size,
         min_endpoint_success_ratio=min_endpoint_success_ratio,
         enable_cot=enable_cot,
+        enable_cod=enable_cod,
         generated_train_file_path=generated_train_file_path,
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,
@@ -586,7 +606,7 @@ def main():
         acft_custom_dimensions={
             LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
             LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
-            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
         log_level=logging.INFO,

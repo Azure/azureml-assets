@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.5
+version: 0.0.6
 type: pipeline
 
 
@@ -126,6 +126,11 @@ inputs:
     default: "false"
     description: Enable Chain of thought for data generation
 
+  enable_chain_of_density:
+    type: string
+    default: "true"
+    description: Enable Chain of denstity for data generation
+
   data_generation_task_type:
     type: string
     enum:
@@ -205,7 +210,7 @@ outputs:
 jobs:
   oss_distillation_generate_data:
     type: command
-    component: azureml:oss_distillation_generate_data:0.0.4
+    component: azureml:oss_distillation_generate_data:0.0.5
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
@@ -218,6 +223,7 @@ jobs:
       teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
+      enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
