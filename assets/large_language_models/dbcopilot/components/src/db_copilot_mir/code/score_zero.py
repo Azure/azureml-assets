@@ -73,8 +73,7 @@ def init():
                 token_provider = get_bearer_token_provider(
                     DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
                 )
-                token = token_provider.get_token()
-                logging.info(f"Successfully obtained token: {token}")
+                logging.info("Successfully obtained token")
             except Exception as e:
                 logging.error(f"Failed to obtain token: {e}")
                 raise Exception(f"Failed to obtain token: {e}")
