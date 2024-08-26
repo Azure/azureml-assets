@@ -53,6 +53,7 @@ HFTV2_TEXT_GEN_SCORE_PATH = "/score"
 DEFAULT_SUCCESS_RATIO = 0.7
 DEFAULT_REQUEST_BATCH_SIZE = 10
 MAX_BATCH_SIZE = 100
+MIN_RECORDS_FOR_FT = 65
 
 # VLLM INFERENCE KEYS
 TOP_P = "top_p"
@@ -159,3 +160,24 @@ class TelemetryConstants:
     BATCH_PROCESS_TRAINING_DATA = "batch_process_training_data"
     BATCH_PROCESS_VALIDATION_DATA = "batch_process_validation_data"
     PROCESS_DATASET_RECORD = "process_dataset_record"
+
+    VALIDATOR = "validator"
+    ML_CLIENT_INITIALISATION = "ml_client_initialisation"
+    VALIDATE_DATA_GENERATION_INPUTS = "validate_data_generation_inputs"
+    VALIDATE_FILE_PATH = "validate_file_path"
+    VALIDATE_TEACHER_MODEL_ENDPOINT = "validate_teacher_model_endpoint"
+    VALIDATE_INFERENCE_PARAMETERS = "validate_inference_parameters"
+    VALIDATE_TRAINING_DATA = "validate_training_data"
+    VALIDATE_VALIDATION_DATA = "validate_validation_data"
+    VALIDATE_MODEL_INFERENCE = "validate_model_inference"
+
+
+class BackoffConstants:
+    """Defaults for retry with exponential backoff."""
+
+    MAX_RETRIES = 3
+    BASE_DELAY = 10
+    MAX_DELAY = 600
+    BACKOFF_FACTOR = 2
+    MAX_TIMEOUT_SEC = 180
+    RETRYABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504, None}
