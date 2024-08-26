@@ -155,7 +155,7 @@ inputs:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
-      4. SUMMARIZATION: Generate Text Summary for Article
+      4. SUMMARIZATION: Generate Key Summary for an Article
 
   # ########################### Finetuning Component ########################### #
 
