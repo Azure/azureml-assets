@@ -1,0 +1,4 @@
+azureml-metrics[generative-ai]
+promptflow
+promptflow-evals
+azure-identity
