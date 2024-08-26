@@ -1,4 +1,5 @@
-FROM {pin-to-latest-mcr-version-tag:"mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{}"}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
+
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -30,21 +31,21 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 
 # begin pip install
 # Install pip dependencies
-RUN pip install {pin-to-extra-index} \
+RUN pip install \
                 # begin pypi dependencies
-                '{pin-to-latest-pypi-version:"azureml-core=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-mlflow=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-pipeline-core=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-telemetry=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-interpret=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-responsibleai=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-automl-core=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-automl-runtime=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-train-automl-client=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-train-automl-runtime=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-train-automl=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-dataset-runtime=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-defaults=={}"}' \
+                azureml-core=={{latest-pypi-version}}
+                azureml-mlflow=={{latest-pypi-version}}
+                azureml-pipeline-core=={{latest-pypi-version}}
+                azureml-telemetry=={{latest-pypi-version}}
+                azureml-interpret=={{latest-pypi-version}}
+                azureml-responsibleai=={{latest-pypi-version}}
+                azureml-automl-core=={{latest-pypi-version}}
+                azureml-automl-runtime=={{latest-pypi-version}}
+                azureml-train-automl-client=={{latest-pypi-version}}
+                azureml-train-automl-runtime=={{latest-pypi-version}}
+                azureml-train-automl=={{latest-pypi-version}}
+                azureml-dataset-runtime=={{latest-pypi-version}}
+                azureml-defaults=={{latest-pypi-version}}
                 # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
                 'mlflow-skinny==2.9.2' \
                 'xgboost==1.5.2' \
