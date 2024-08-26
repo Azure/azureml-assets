@@ -1,14 +1,16 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: oss_distillation_generate_data
-version: 0.0.5
+name: oss_distillation_validate_pipeline
+version: 0.0.1
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
-display_name: OSS Distillation Generate Data
-description: Component to generate data from teacher model enpoint
+display_name: OSS Distillation Validate Pipeline
+description: Component to validate inputs to the distillation pipeline
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/66
+
+code: ../../src
 
 inputs:
   # Inputs
@@ -92,36 +94,38 @@ inputs:
       - NLI
       - CONVERSATION
       - NLU_QA
-      - MATH
-      - MATH_MCQ
     description: >
       Data generation task type. Supported values are:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
-      4. MATH: Generate Math data for numerical responses
-      5. MATH_MCQ: Generate Math data for multiple choice questions
-  
-  # Output of validation component.
-  validation_output:
-    type: uri_file
+
+  num_train_epochs:
+    type: integer
+    default: 1
     optional: true
+    description: training epochs
+
+  per_device_train_batch_size:
+    type: integer
+    default: 1
+    optional: true
+    description: Train batch size
+
+  learning_rate:
+    type: number
+    default: 3e-04
+    optional: true
+    description: Start learning rate.
+
+outputs:
+  validation_info:
+    type: uri_file
     description: Validation status.
     mode: rw_mount
-    
-outputs:
-  generated_train_file_path:
-    type: uri_file
-    description: Generated train data
-    mode: rw_mount
-  generated_validation_file_path:
-    type: uri_file
-    description: Generated validation data
-    mode: rw_mount
 
-code: ../../src
 command: >-
-  python generate_data.py
+  python validate_pipeline.py
   --train_file_path  ${{inputs.train_file_path}}
   $[[--validation_file_path  ${{inputs.validation_file_path}}]]
   $[[--teacher_model_endpoint_name ${{inputs.teacher_model_endpoint_name}}]]
@@ -137,5 +141,7 @@ command: >-
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   --enable_chain_of_thought ${{inputs.enable_chain_of_thought}}
   --data_generation_task_type ${{inputs.data_generation_task_type}}
-  --generated_train_file_path ${{outputs.generated_train_file_path}}
-  --generated_validation_file_path ${{outputs.generated_validation_file_path}}
+  $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
+  $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
+  $[[--learning_rate ${{inputs.learning_rate}}]]
+  --validation_info ${{outputs.validation_info}}
