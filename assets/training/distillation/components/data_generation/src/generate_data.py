@@ -354,14 +354,18 @@ def generate_synthetic_data(
             messages = normalize_messages(messages)
             last_status_code = None
             synthetic_responses = []
+            inference_data = []
             for turn_id, message in enumerate(messages):
                 role = message['role']
                 if role == 'system':
-                    synthetic_responses.append(process_system_prompt(message))
+                    # Data for fine-tune job should not include CoT prompt
+                    synthetic_responses.append(message)
+                    inference_data.append(process_system_prompt(message))
                 elif role == 'user':
                     synthetic_responses.append(message)
+                    inference_data.append(message)
                 else:
-                    data_with_inference_parameters = {"messages": synthetic_responses}
+                    data_with_inference_parameters = {"messages": inference_data}
                     for key, value in data.items():
                         data_with_inference_parameters[key] = value
                     # replace the assistant content from the model
@@ -376,9 +380,11 @@ def generate_synthetic_data(
                     # response content should be structured as below for a successful vllm response
                     prediction_result = response_data['choices'][0]["message"]["content"].strip()
 
+                    # For CoT prompts, need to remove the reasoning and only use the answer
                     if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
                         key = SystemPrompt.get_response_key(data_generation_task_type)
                         prediction_result = json.loads(prediction_result)[key]
+
                     synthetic_responses.append({'role': 'assistant', 'content': str(prediction_result)})
             is_success = (last_status_code == 200)
             logger.info(f"Processing idx: {idx} - {is_success}")
