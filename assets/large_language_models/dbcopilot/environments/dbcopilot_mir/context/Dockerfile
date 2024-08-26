@@ -12,7 +12,9 @@ RUN apt-get update \
     python3.10-minimal \
     python3.10 \
     libpython3.10-minimal \
-    libpython3.10-stdlib \
+    libpython3.10-stdlib  \
+    curl=7.81.0-1ubuntu1.17 \
+    libcurl4=7.81.0-1ubuntu1.17 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,7 +31,7 @@ RUN python -m pip install --upgrade pip && \
     pip install -r requirements.txt && \
     # Install promptflow environment
     pip install promptflow-image-bundle[azure]==0.3.0 && \
-    pip install promptflow-vectordb==0.2.10 && \
+    pip install promptflow-vectordb==0.2.10 promptflow-tools==1.4.0 && \
     ## Install dbcopilot
     pip install db-copilot-tool==0.0.8 &&\
     pip install setuptools==70.0.0 grpcio==1.56.2
