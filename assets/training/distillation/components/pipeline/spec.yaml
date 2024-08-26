@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.6
+version: 0.0.7
 type: pipeline
 
 
@@ -251,7 +251,7 @@ jobs:
 
   oss_distillation_generate_data:
     type: command
-    component: azureml:oss_distillation_generate_data:0.0.5
+    component: azureml:oss_distillation_generate_data:0.0.6
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
