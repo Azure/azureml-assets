@@ -1,4 +1,4 @@
-name: aml-automl
+name: ai-ml-automl
 version: auto
 type: environment
 spec: spec.yaml
