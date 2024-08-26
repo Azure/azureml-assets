@@ -149,7 +149,7 @@ command: >-
   --request_batch_size ${{inputs.request_batch_size}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
-  $[[--enable_chain_ of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
   $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
