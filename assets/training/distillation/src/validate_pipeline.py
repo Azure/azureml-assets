@@ -223,6 +223,17 @@ class PipelineInputsValidator:
             return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING} \
                 Expected format: [system, user]"
 
+    def _validate_record_for_type_summarization(self, record: list) -> str:
+        if (
+            self._args.data_generation_task_type
+            != DataGenerationTaskType.SUMMARIZATION
+        ):
+            return
+
+        if len(record) > 2:
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.SUMMARIZATION} \
+                Expected format: [system, user]"
+
     def _validate_record_by_task(self, record: list) -> dict:
         """
         Validate record in a dataset against the data generation task type.
@@ -236,6 +247,7 @@ class PipelineInputsValidator:
             self._validate_record_for_type_NLI,
             self._validate_record_for_type_conversation,
             self._validate_record_for_type_NLU_QA,
+            self._validate_record_for_type_summarization,
         ]
 
         for method in validation_methods:
@@ -267,7 +279,7 @@ class PipelineInputsValidator:
         """
         Validate content of a record and ensures messages are in the expected format.
 
-        Currently functional only for task type `CONVERSATION`, `NLI` & `NLU`.
+        Currently functional only for task type `CONVERSATION`, `SUMMARIZATION`, `NLI` & `NLU`.
         Returns dictionary containing exception, if any validation error is found.
 
         Args:
