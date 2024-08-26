@@ -17,14 +17,7 @@ from azureml.acft.common_components import (
     set_logging_parameters,
     LoggingLiterals,
 )
-from azureml.acft.common_components.utils.error_handling.exceptions import (
-    ACFTValidationException,
-)
-from azureml.acft.common_components.utils.error_handling.error_definitions import (
-    ACFTUserError,
-)
 from azureml.telemetry.activity import log_activity
-from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
@@ -47,6 +40,7 @@ from common.utils import (
     get_base_url,
     validate_teacher_model_details,
     exponential_backoff,
+    generic_validation_error
 )
 
 from common.validation import (
@@ -58,6 +52,7 @@ from common.validation import (
     validate_model_presence_penalty,
     validate_request_batch_size,
     validate_min_endpoint_success_ratio,
+    ConversationModel
 )
 
 logger = get_logger_app(
@@ -119,13 +114,8 @@ class PipelineInputsValidator:
             not self._args.teacher_model_endpoint_url
             or not self._args.teacher_model_endpoint_key
         ):
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(
-                    ACFTUserError,
-                    pii_safe_message=(
-                        "Endpoint URL and key are required fields for data generation."
-                    ),
-                )
+            raise generic_validation_error(
+                "Endpoint URL and key are required fields for data generation."
             )
 
     @exponential_backoff()
@@ -183,147 +173,10 @@ class PipelineInputsValidator:
     def _validate_number_of_records(self, size: int):
         """Validate number of records in the dataset."""
         if size < MIN_RECORDS_FOR_FT:
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(
-                    ACFTUserError,
-                    pii_safe_message=(
-                        "Number of records in the dataset are less than the minimum required for fine-tuning."
-                        f" Minimum records required: {MIN_RECORDS_FOR_FT}, but got {size}."
-                    ),
-                )
+            raise generic_validation_error(
+                "Number of records in the dataset are less than the minimum required for fine-tuning."
+                f" Minimum records required: {MIN_RECORDS_FOR_FT}, but got {size}."
             )
-
-    def _validate_record_for_type_conversation(self, record: list) -> str:
-        if self._args.data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            return
-
-        if self._get_cot_status():
-            return f"Chain of thought is not supported for task type {DataGenerationTaskType.CONVERSATION}"
-
-        if len(record) < 3:
-            return f"Dataset is not matching expected schema for task type {DataGenerationTaskType.CONVERSATION}. \
-                Expected format: [system, user, assistant]"
-
-    def _validate_record_for_type_NLI(self, record: list) -> str:
-        if self._args.data_generation_task_type != DataGenerationTaskType.NLI:
-            return
-
-        if len(record) > 2:
-            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLI}. \
-                Expected format: [system, user]"
-
-    def _validate_record_for_type_NLU_QA(self, record: list) -> str:
-        if (
-            self._args.data_generation_task_type
-            != DataGenerationTaskType.NLU_QUESTION_ANSWERING
-        ):
-            return
-
-        if len(record) > 2:
-            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING} \
-                Expected format: [system, user]"
-
-    def _validate_record_by_task(self, record: list) -> dict:
-        """
-        Validate record in a dataset against the data generation task type.
-
-        Returns a dictionary containing exception if any validation error is found.
-
-        Args:
-            record (list): Sequence of messages
-        """
-        validation_methods = [
-            self._validate_record_for_type_NLI,
-            self._validate_record_for_type_conversation,
-            self._validate_record_for_type_NLU_QA,
-        ]
-
-        for method in validation_methods:
-            err = method(record=record)
-            if err:
-                return {"exception": err}
-
-    def _validate_message(self, id: int, message: dict) -> dict:
-        """
-        Validate individual message in the dataset.
-
-        Returns dictionary containing exception, if any validation error is found.
-
-        Args:
-            id (int): id of the message in sequence of messages.
-            message (dict): Message object in sequence of messages.
-        """
-        allowed_roles = ["system", "user", "assistant"]
-        if "role" not in message:
-            return f"Message at index {id} is missing 'role'."
-
-        if message["role"] not in allowed_roles:
-            return f"Invalid 'role' at index {id}."
-
-        if "content" not in message:
-            return f"Message at index {id} is missing 'content'."
-
-    def _validate_record_content(self, record: list) -> dict:
-        """
-        Validate content of a record and ensures messages are in the expected format.
-
-        Currently functional only for task type `CONVERSATION`, `NLI` & `NLU`.
-        Returns dictionary containing exception, if any validation error is found.
-
-        Args:
-            record (list): Sequence of messages
-        """
-        try:
-            if record[0].get("role") != "system":
-                role = record[0].get("role")
-                return {
-                    "exception": f"First message should be of role 'system' but got {role}."
-                }
-
-            expected_roles = ["user", "assistant"]
-            for id, message in enumerate(record[1:], start=1):
-                if not isinstance(message, dict):
-                    return {
-                        "exception": f"Message at index {id} should be a dictionary."
-                    }
-
-                err = self._validate_message(id=id, message=message)
-                if err:
-                    return {"exception": err}
-
-                expected_role = expected_roles[(id - 1) % 2]
-                if message.get("role") != expected_role:
-                    return {
-                        "exception": f"Role at index {id} should be {expected_role}."
-                    }
-
-            task_type = self._args.data_generation_task_type
-            if task_type == DataGenerationTaskType.CONVERSATION and (
-                len(record[1:]) % 2 != 0
-            ):
-                return {
-                    "exception": "There is an incomplete pair of 'user' and 'assistant' messages."
-                }
-
-        except Exception as e:
-            return {"exception": e}
-
-    def _validate_dataset_record(self, record: list) -> str:
-        """Validate a record in the dataset. Returns the validation error if found.
-
-        Args:
-            record (list): Sequence of messages
-        """
-        if not record:
-            return "Chat cannot be empty."
-
-        err = self._validate_record_by_task(record=record)
-        if err and ("exception" in err):
-            return err["exception"]
-
-        err = self._validate_record_content(record=record)
-        if err and ("exception" in err):
-            return err["exception"]
 
     def _validate_dataset(self, file_path: str):
         """Validate training/validation dataset passed to the data-generation component.
@@ -339,16 +192,13 @@ class PipelineInputsValidator:
         for batch in df:
             total_rows += len(batch)
             for idx, row in batch.iterrows():
-                record = row.iloc[0]
-                err = self._validate_dataset_record(record=record)
-                if err:
-                    raise ACFTValidationException._with_error(
-                        AzureMLError.create(
-                            ACFTUserError,
-                            pii_safe_message=(
-                                f"Error validating dataset record, context({idx}): {err}"
-                            ),
-                        )
+                try:
+                    data = row.to_dict()
+                    data["task_type"] = self._args.data_generation_task_type
+                    ConversationModel.model_validate(data)
+                except Exception as e:
+                    raise generic_validation_error(
+                        f"Error validating record at index {idx}. Error: {str(e)}"
                     )
 
         self._validate_number_of_records(size=total_rows)

@@ -109,6 +109,14 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     NLU_QUESTION_ANSWERING = "NLU_QA"
 
 
+class ChatRoles(str, Enum, metaclass=MetaEnum):
+    """Allowed roles for chat completion."""
+
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
+    
+
 class TelemetryConstants:
     """Telemetry constants that describe various activities performed by the distillation components."""
 

@@ -41,7 +41,8 @@ from common.constants import (
     STOP_TOKEN,
     VLLM_CHAT_SCORE_PATH,
     DataGenerationTaskType,
-    TelemetryConstants
+    TelemetryConstants,
+    ChatRoles
 )
 
 from common.utils import (
@@ -52,7 +53,9 @@ from common.utils import (
 )
 
 from common.validation import (
-    validate_file_paths_with_supported_formats
+    validate_file_paths_with_supported_formats,
+    ConversationModel,
+    MessageModel
 )
 
 logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
@@ -255,7 +258,7 @@ def generate_synthetic_data(
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
     """
 
-    def process_system_prompt(message: dict) -> dict:
+    def process_system_prompt(message: MessageModel) -> MessageModel:
         """Update the system prompt depending on the task type and the flag enable_cot.
 
         The original message unchanged if enable_cot is False or task type is conversation.
@@ -267,29 +270,29 @@ def generate_synthetic_data(
             message (dict): System message with updated content
         """
         if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            cot_system_message = {'role': 'system', 'content': COT_SYSTEM_PROMPT}
+            cot_system_message = {'role': ChatRoles.SYSTEM, 'content': COT_SYSTEM_PROMPT}
             return cot_system_message
         else:
             return message
 
-    def normalize_messages(messages: List[dict]) -> List[dict]:
+    def normalize_messages(messages: List[MessageModel]) -> List[MessageModel]:
         """Add dummy assistant turn if not present in the messages list.
 
         This will help in normalizing the input data before generating synthetic data.
 
         Args:
-            messages (list[dict]): List of conversation turns
+            messages (list[MessageModel]): List of conversation turns
 
         Returns:
-            messages (list[dict]): List of conversation turns with dummy assistant turn added
+            messages (list[MessageModel]): List of conversation turns with dummy assistant turn added
         """
         if data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            if messages[-1]['role'] != 'assistant':
-                messages.append({'role': 'assistant', 'content': ''})
+            if messages[-1].role != ChatRoles.ASSISTANT:
+                messages.append({'role': ChatRoles.ASSISTANT, 'content': ''})
         return messages
 
     @monitor_with_activity(logger=logger, activity_name=TelemetryConstants.PROCESS_DATASET_RECORD)
-    def process_request(idx: str, data: dict, url: str, endpoint_key: str):
+    def process_request(idx: str, data: ConversationModel, inference_params: dict, url: str, endpoint_key: str):
         """Process a single conversational request.
 
         Args:
@@ -302,47 +305,19 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            #  Basic validation for the input data
-            messages = data.pop("messages", [])
-            if not messages:  # empty messages
-                return {
-                    "idx": idx,
-                    "status_code": None,
-                    "messages": [],
-                    "exception": "Empty messages"
-                }
-            first_message = messages[0]
-            if first_message['role'] != 'system':
-                logger.warning(f"First message should be system, but got {first_message['role']}")
-                return {"idx": idx,
-                        "status_code": None,
-                        "messages": [],
-                        "exception": ("Incorrect format.\n"
-                                      f"First message should be system, but got {first_message['role']}"),
-                        }
-            for message in messages[1:]:
-                role = message['role']
-                if role not in ('assistant', 'user'):
-                    logger.warning(f"role should be system or user, but got {role}")
-                    return {"idx": idx,
-                            "status_code": None,
-                            "messages": [],
-                            "exception": f"Incorrect format.\nRole should be assistant or user, but got {role}"
-                            }
-            messages = normalize_messages(messages)
+            messages = normalize_messages(data.messages)
             last_status_code = None
             synthetic_responses = []
             for turn_id, message in enumerate(messages):
-                role = message['role']
-                if role == 'system':
+                role = message.role
+                if role == ChatRoles.SYSTEM:
                     synthetic_responses.append(process_system_prompt(message))
-                elif role == 'user':
+                elif role == ChatRoles.USER:
                     synthetic_responses.append(message)
                 else:
-                    data_with_inference_parameters = {"messages": synthetic_responses}
-                    for key, value in data.items():
-                        data_with_inference_parameters[key] = value
-                    # replace the assistant content from the model
+                    data_with_inference_parameters = {"messages": synthetic_responses, **inference_params}
+
+                    # Replace the assistant content from the model
                     log_entry = {"idx": idx, "turn": turn_id}
                     response: Response = _invoke_endpoint(url=url, key=endpoint_key,
                                                           data=data_with_inference_parameters,
@@ -398,16 +373,13 @@ def generate_synthetic_data(
 
             with ThreadPoolExecutor() as executor:
                 for idx, row in batch.iterrows():
-                    messages = row.iloc[0]
-                    request_data = {
-                        "messages": messages,
-                        **inference_params,
-                    }
+                    data = ConversationModel(**row.to_dict(), task_type=data_generation_task_type)
                     futures.append(
                         executor.submit(
                             process_request,
                             idx,
-                            request_data,
+                            data,
+                            inference_params,
                             teacher_model_endpoint_url,
                             teacher_model_endpoint_key
                         )

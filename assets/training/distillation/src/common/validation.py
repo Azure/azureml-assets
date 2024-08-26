@@ -5,6 +5,8 @@
 
 from pathlib import Path
 from typing import List, Optional
+from typing_extensions import Self
+from pydantic import BaseModel, model_validator, ValidationError
 
 from azureml.acft.common_components.utils.error_handling.exceptions import (
     ACFTValidationException,
@@ -14,7 +16,45 @@ from azureml.acft.common_components.utils.error_handling.error_definitions impor
 )
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from common.constants import SUPPORTED_FILE_FORMATS, MAX_BATCH_SIZE
+from common.constants import (
+    SUPPORTED_FILE_FORMATS,
+    MAX_BATCH_SIZE,
+    DataGenerationTaskType,
+    ChatRoles,
+)
+
+
+class MessageModel(BaseModel):
+    role: ChatRoles
+    content: str
+
+
+class ConversationModel(BaseModel):
+    messages: List[MessageModel]
+    task_type: DataGenerationTaskType
+
+    # This will run only after internal parsing is completed.
+    @model_validator(mode="after")
+    def validate_messages(self) -> Self:
+        messages = self.messages
+        if not messages or messages[0].role != ChatRoles.SYSTEM:
+            raise ValidationError(
+                f"First message should be from {ChatRoles.SYSTEM}",
+            )
+
+        if self.task_type == DataGenerationTaskType.CONVERSATION:
+            validate_task_type_conversation(messages)
+        else:
+            validate_generic_chat(messages)
+
+        # Validate that the conversation is in the expected order.
+        expected_input_roles = [ChatRoles.USER, ChatRoles.ASSISTANT]
+        for i, message in enumerate(messages[1:], start=1):
+            expected_role = expected_input_roles[(i - 1) % 2]
+            if message.role != expected_role:
+                raise ValidationError(
+                    f"Message at index {i} should be from the '{expected_role}' role, but got '{message.role}'."
+                )
 
 
 def validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
@@ -130,4 +170,22 @@ def validate_min_endpoint_success_ratio(val: int):
                     f"Value sould be 0<=val<=1, but is {val}",
                 ),
             )
+        )
+
+
+def validate_task_type_conversation(messages: List[MessageModel]):
+    """Validate conversation task type."""
+    if len(messages) < 3 or (len(messages[1:]) % 2 != 0):
+        raise ValidationError(
+            f"For task type {DataGenerationTaskType.CONVERSATION}, \
+            there must be a 'system' message followed by at least one pair of 'user' and 'assistant' roles."
+        )
+
+
+def validate_generic_chat(messages: List[MessageModel]):
+    """Validate generic chat task type, applies to NLI and NLU_QA."""
+    if len(messages) != 2:
+        raise ValueError(
+            f"For {DataGenerationTaskType.NLI} and {DataGenerationTaskType.NLU_QUESTION_ANSWERING}, \
+                there must be exactly two messages: 'system' followed by 'user'."
         )

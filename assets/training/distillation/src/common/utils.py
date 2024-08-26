@@ -20,7 +20,6 @@ from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
 
-
 from common.constants import (
     REQUESTS_RETRY_DELAY,
     REGISTRY_MODEL_PATTERN,
@@ -442,3 +441,20 @@ def exponential_backoff(
         return wrapper
 
     return decorator
+
+
+def generic_validation_error(error_message: str) -> ACFTValidationException:
+    """
+    Create a generic validation error.
+
+    :param error_message: Error message.
+    :return: Validation error.
+    """
+    return ACFTValidationException._with_error(
+        AzureMLError.create(
+            ACFTUserError,
+            pii_safe_message=(
+                error_message,
+            )
+        )
+    )
