@@ -385,6 +385,7 @@ def wait_at_barrier(barrier_file, num_processes):
     barrier_file: File used to create execution barrier.
     num_processes: Number of process which need to reach barrier point.
     """
+    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
     with open(barrier_file, 'a+') as f:
         portalocker.lock(f, portalocker.LOCK_EX)
         try:
@@ -395,7 +396,6 @@ def wait_at_barrier(barrier_file, num_processes):
                 f.write(f"{os.getpid()} reached the barrier\n")
                 f.flush()
                 portalocker.unlock(f)
-                process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
                 logger.info(f'Process {process_name} at barrier, count is {process_count},')
                 logger.info(f'in barrier file {barrier_file}')
         finally:
