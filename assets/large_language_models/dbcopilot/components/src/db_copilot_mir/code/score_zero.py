@@ -77,6 +77,7 @@ def init():
                 logging.info(f"Successfully obtained token: {token}")
             except Exception as e:
                 logging.error(f"Failed to obtain token: {e}")
+                raise Exception(f"Failed to obtain token: {e}")
             embedding_aoai_connection = AzureOpenAIConnection(
                 token_provider=token_provider,
                 api_base=secret_manager.get("embedding-aoai-api-base"),
