@@ -158,7 +158,7 @@ class EndpointDeploymentBase(OBOComponentBase):
         except Exception as e:
             logging.error(f"Deployment failed: {e}")
             logs = ml_client.online_deployments.get_logs(
-                name=deployment_name, endpoint_name=endpoint_name, lines=100
+                name=deployment_name, endpoint_name=endpoint_name, lines=300
             )
             logging.error(f"Endpoint deployment logs: {logs}")
             raise e
