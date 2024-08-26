@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
-version: 0.0.4
+version: 0.0.5
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: OSS Distillation Generate Data
 description: Component to generate data from teacher model enpoint
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/63
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/66
 
 inputs:
   # Inputs
@@ -103,6 +103,13 @@ inputs:
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering
       data
 
+  # Output of validation component.
+  validation_output:
+    type: uri_file
+    optional: true
+    description: Validation status.
+    mode: rw_mount
+
 outputs:
   generated_train_file_path:
     type: uri_file
@@ -113,7 +120,7 @@ outputs:
     description: Generated validation data
     mode: rw_mount
 
-code: src/
+code: ../../src
 command: >-
   python generate_data.py
   --train_file_path  ${{inputs.train_file_path}}
