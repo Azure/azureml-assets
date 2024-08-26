@@ -6,6 +6,7 @@
 import os
 import subprocess
 import logging
+import portalocker
 import json
 from pathlib import Path
 import shutil
@@ -385,18 +386,26 @@ def wait_at_barrier(barrier_file, num_processes):
     num_processes: Number of process which need to reach barrier point.
     """
     with open(barrier_file, 'a+') as f:
-        f.seek(0)
-        lines = f.readlines()
-        process_count = len(lines)
-        process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-        logger.info(f'Process {process_name} at barrier, count is {process_count}, in barrier file {barrier_file}')
-        if process_count < num_processes:
-            f.write(f"{os.getpid()} reached the barrier\n")
-            logger.info(f"{os.getpid()} reached the barrier\n")
-            f.flush()
+        portalocker.lock(f, portalocker.LOCK_EX)
+        try:
+            f.seek(0)
+            lines = f.readlines()
+            process_count = len(lines)
+            if process_count < num_processes:
+                f.write(f"{os.getpid()} reached the barrier\n")
+                f.flush()
+                portalocker.unlock(f)
+                process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
+                logger.info(f'Process {process_name} at barrier, count is {process_count},')
+                logger.info(f'in barrier file {barrier_file}')
+        finally:
+            portalocker.unlock(f)
+        with open(barrier_file, 'a+') as f:
             while len(lines) < num_processes:
+                portalocker.lock(f, portalocker.LOCK_EX)
                 f.seek(0)
                 lines = f.readlines()
+                portalocker.unlock(f)
                 time.sleep(0.5)  # Polling interval
         logger.info(f"Process {os.getpid()} has passed barrier with name {process_name}")
 
