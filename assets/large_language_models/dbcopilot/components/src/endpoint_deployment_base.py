@@ -62,6 +62,13 @@ class EndpointDeploymentBase(OBOComponentBase):
                         }
                     )
                     logging.info("Using workspace connection key for OpenAI")
+                else:
+                    logging.info("Using managed identity for OpenAI")
+                    secrets.update(
+                        {
+                            f"{connection_type}-aoai-api-base": connection.target,
+                        }
+                    )
         else:
             raise ValueError(
                 "Please specify the connection id (AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING & AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT) for embedding and chat"  # noqa: E501
