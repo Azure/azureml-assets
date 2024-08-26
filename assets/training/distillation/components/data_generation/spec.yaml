@@ -84,13 +84,13 @@ inputs:
   enable_chain_of_thought:
     type: string
     optional: true
-    default: "true"
+    default: "false"
     description: Enable Chain of thought for data generation
   
   enable_chain_of_density:
     type: string
     optional: true
-    default: "true"
+    default: "false"
     description: Enable Chain of density for text summarization
 
   data_generation_task_type:
