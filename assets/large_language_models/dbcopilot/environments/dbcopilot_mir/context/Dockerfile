@@ -8,7 +8,7 @@ RUN apt-get update \
     && curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc \
     && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y msodbcsql18=18.3.3.1-1  \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18=18.3.3.1-1 \
     python3.10-minimal \
     python3.10 \
     libpython3.10-minimal \
