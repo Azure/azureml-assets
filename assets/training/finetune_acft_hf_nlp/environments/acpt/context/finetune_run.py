@@ -395,12 +395,13 @@ def wait_at_barrier(barrier_file, num_processes):
             if process_count < num_processes:
                 f.write(f"{os.getpid()} reached the barrier\n")
                 f.flush()
+                os.fsync(f.fileno())
                 portalocker.unlock(f)
                 logger.info(f'Process {process_name} at barrier, count is {process_count},')
                 logger.info(f'in barrier file {barrier_file}')
         finally:
             portalocker.unlock(f)
-        with open(barrier_file, 'a+') as f:
+        with open(barrier_file, 'r') as f:
             while len(lines) < num_processes:
                 portalocker.lock(f, portalocker.LOCK_EX)
                 f.seek(0)
@@ -445,7 +446,6 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
                     )
                 )
             logger.info(f"{component_name} completed successfully")
-            Path(completion_files_folder).mkdir(parents=True, exist_ok=True)
             Path(completion_file).touch()
             logger.info(f"Created completion file: {completion_file}")
         logger.info(f"Waiting for completion file: {completion_file}, by rank : {process_name}")
