@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azureml.contrib.services.aml_request import AMLRequest, rawhttp
 from azureml.contrib.services.aml_response import AMLResponse
 from db_copilot.contract.memory_core import MemoryItem
@@ -51,18 +52,43 @@ def init():
     # setting up db copilot
     with open(os.path.join(current_dir, "secrets.json")) as f:
         secret_manager: dict = json.load(f)
-        embedding_aoai_connection = AzureOpenAIConnection(
-            api_key=secret_manager.get("embedding-aoai-api-key"),
-            api_base=secret_manager.get("embedding-aoai-api-base"),
-            api_type="azure",
-            api_version="2023-03-15-preview",
-        )
-        chat_aoai_connection = AzureOpenAIConnection(
-            api_key=secret_manager.get("chat-aoai-api-key"),
-            api_base=secret_manager.get("chat-aoai-api-base"),
-            api_type="azure",
-            api_version="2023-03-15-preview",
-        )
+        api_key = secret_manager.get("embedding-aoai-api-key", None)
+        if api_key:
+            logging.info("Using api_key access Azure OpenAI")
+            embedding_aoai_connection = AzureOpenAIConnection(
+                api_key=secret_manager.get("embedding-aoai-api-key"),
+                api_base=secret_manager.get("embedding-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
+            chat_aoai_connection = AzureOpenAIConnection(
+                api_key=secret_manager.get("chat-aoai-api-key"),
+                api_base=secret_manager.get("chat-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
+        else:
+            logging.info("using managed identity access Azure OpenAI")
+            try:
+                token_provider = get_bearer_token_provider(
+                    DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                )
+                token = token_provider.get_token()
+                logging.info(f"Successfully obtained token: {token}")
+            except Exception as e:
+                logging.error(f"Failed to obtain token: {e}")
+            embedding_aoai_connection = AzureOpenAIConnection(
+                token_provider=token_provider,
+                api_base=secret_manager.get("embedding-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
+            chat_aoai_connection = AzureOpenAIConnection(
+                token_provider=token_provider,
+                api_base=secret_manager.get("chat-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
         embedding_deploy_name = secret_manager.get("embedding-deploy-name")
         chat_deploy_name = secret_manager.get("chat-deploy-name")
     shared_config_file = os.path.join(current_dir, "shared_config.json")
