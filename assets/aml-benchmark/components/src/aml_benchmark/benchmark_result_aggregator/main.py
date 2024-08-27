@@ -106,7 +106,7 @@ def _get_run_params(run_definition: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         for param_name, param_value in node_params.items():
             AZUREML_PARAM_PREFIX = "AZUREML_PARAMETER_"
             if param_name.startswith(AZUREML_PARAM_PREFIX):
-                param_name = param_name[len(AZUREML_PARAM_PREFIX) :]
+                param_name = param_name[len(AZUREML_PARAM_PREFIX):]
             params[param_name] = param_value
     return params
 
