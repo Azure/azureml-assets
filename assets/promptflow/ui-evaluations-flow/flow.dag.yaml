@@ -31,6 +31,18 @@ inputs:
     type: string
     default: "gpt-4"
     is_chat_input: false
+  subscription_id:
+    type: string
+    default: ""
+    is_chat_input: false
+  resource_group:
+    type: string
+    default: ""
+    is_chat_input: false
+  project_name:
+    type: string
+    default: ""
+    is_chat_input: false
 outputs:
   gpt_coherence:
     type: string
@@ -253,6 +265,9 @@ nodes:
     type: code
     path: run_self_harm_evaluator.py
   inputs:
+    subscription_id: ${inputs.subscription_id}
+    resource_group: ${inputs.resource_group}
+    project_name: ${inputs.project_name}
     question: ${inputs.question}
     answer: ${inputs.answer}
   aggregation: false
@@ -266,6 +281,9 @@ nodes:
     type: code
     path: run_sexual_evaluator.py
   inputs:
+    subscription_id: ${inputs.subscription_id}
+    resource_group: ${inputs.resource_group}
+    project_name: ${inputs.project_name}
     question: ${inputs.question}
     answer: ${inputs.answer}
   aggregation: false
@@ -279,6 +297,9 @@ nodes:
     type: code
     path: run_violence_evaluator.py
   inputs:
+    subscription_id: ${inputs.subscription_id}
+    resource_group: ${inputs.resource_group}
+    project_name: ${inputs.project_name}
     question: ${inputs.question}
     answer: ${inputs.answer}
   aggregation: false
