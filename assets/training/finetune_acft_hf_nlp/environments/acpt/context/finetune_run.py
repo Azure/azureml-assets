@@ -531,7 +531,14 @@ def parse_to_int(s):
     try:
         return int(s)
     except ValueError:
-        return 1
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            f"Invalid value {s} entered, it should be a number."
+                        )
+                    )
+                )
 
 
 def _initiate_run(completion_files_folder: str, model_selector_output: str,
