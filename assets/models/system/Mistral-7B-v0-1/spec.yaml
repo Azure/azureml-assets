@@ -70,5 +70,5 @@ tags:
     - ds_mii
   license: apache-2.0
   task: text-generation
-  author: mistralai
+  author: Mistral
 version: 17
