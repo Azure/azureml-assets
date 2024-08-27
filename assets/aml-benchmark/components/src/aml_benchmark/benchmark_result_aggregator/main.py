@@ -294,7 +294,7 @@ def main(
         if isinstance(v, int) or isinstance(v, float) or isinstance(v, str):
             try:
                 key = k.split(".", 1)[1]
-            except Exception as e:
+            except Exception:
                 key = k
             telemetry_details["metrics"][key] = v
     telemetry_details["parameters"]["task_name"] = result.get(
