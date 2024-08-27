@@ -25,10 +25,7 @@ RUN conda install python=3.9 -y
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
-RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.0 tornado==6.4.1 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.0
-
-## This change is temporary and should be reverted once automl-dnn-vision is updated for torch dependencies
-RUN pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 horovod[pytorch]==0.28.1 --no-cache-dir
+RUN pip install Pillow gunicorn onnx idna tqdm requests==2.32.1 tornado==6.4.1 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.1
 
 # List installed packages
 RUN pip list
