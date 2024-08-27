@@ -60,6 +60,7 @@ def validate_input(question: str,
                     required_fields,
                     metric_name)
             else:
+                logger.info("%s is not selected." % metric_name)
         elif metric_name in selected_metrics[MetricGroup.SAFETY_METRICS]:
             if selected_metrics[MetricGroup.SAFETY_METRICS][metric_name]:
                 data_validation[metric_name] = validate_metric_input(
@@ -67,4 +68,5 @@ def validate_input(question: str,
                         required_fields,
                         metric_name)
             else:
+                logger.info("%s is not selected." % metric_name)
     return data_validation
