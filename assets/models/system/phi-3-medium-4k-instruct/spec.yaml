@@ -17,6 +17,7 @@ tags:
   summary: "A 14B parameters model, proves better quality than Phi-3-mini, with a focus on high-quality, reasoning-dense data."
   keywords: "Reasoning,Understanding"
   inputModalities: "text"
+  outputModalities: "text"
   languages: "en"
   textContextWindow: 4096
   maxOutputTokens: 4096
