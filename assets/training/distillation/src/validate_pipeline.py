@@ -198,7 +198,7 @@ class PipelineInputsValidator:
                     ConversationModel.model_validate(data)
                 except Exception as e:
                     raise generic_validation_error(
-                        f"Error validating record at index {idx}. Error: {str(e)}"
+                        f"Error validating data-set record at index {idx}. Error: {str(e)}"
                     )
 
         self._validate_number_of_records(size=total_rows)
