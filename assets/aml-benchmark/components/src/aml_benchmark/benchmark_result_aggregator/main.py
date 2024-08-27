@@ -286,14 +286,17 @@ def main(
                 "endpoint.endpoint_url",
                 "endpoint.deployment_name",
             ]
-        },
-        # All those values which are float or int or string
-        "metrics": {
-            k.split(".", 1)[1]: v
-            for k, v in result.get("quality_metrics", {}).items()
-            if isinstance(v, int) or isinstance(v, float) or isinstance(v, str)
-        },
+        }
     }
+    telemetry_details["metrics"] = {}
+    for k, v in result.get("quality_metrics", {}).items():
+        # All those values which are float or int or string
+        if isinstance(v, int) or isinstance(v, float) or isinstance(v, str):
+            try:
+                key = k.split(".", 1)[1]
+            except Exception as e:
+                key = k
+            telemetry_details["metrics"][key] = v
     telemetry_details["parameters"]["task_name"] = result.get(
         "simplified_pipeline_params", {}
     ).get("quality.param.task", None)
