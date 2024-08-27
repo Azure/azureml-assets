@@ -182,7 +182,7 @@ class PipelineInputsValidator:
 
     def _validate_number_of_records(self, size: int):
         """Validate number of records in the dataset."""
-        if size < MIN_RECORDS_FOR_FT:
+        if size < MIN_RECORDS_FOR_FT and self._args.data_generation_task_type != DataGenerationTaskType.MATH:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
@@ -223,6 +223,14 @@ class PipelineInputsValidator:
             return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING} \
                 Expected format: [system, user]"
 
+    def _validate_record_for_type_MATH(self, record: list) -> str:
+        if self._args.data_generation_task_type != DataGenerationTaskType.MATH:
+            return
+
+        if len(record) > 2:
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.MATH} \
+                Expected format: [system, user]"
+
     def _validate_record_by_task(self, record: list) -> dict:
         """
         Validate record in a dataset against the data generation task type.
@@ -236,6 +244,7 @@ class PipelineInputsValidator:
             self._validate_record_for_type_NLI,
             self._validate_record_for_type_conversation,
             self._validate_record_for_type_NLU_QA,
+            self._validate_record_for_type_MATH
         ]
 
         for method in validation_methods:
