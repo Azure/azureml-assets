@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.4
+version: 0.0.6
 type: pipeline
 
 
@@ -9,6 +9,10 @@ description: Component to generate data from teacher model enpoint and finetune 
 
 inputs:
   # Compute parameters
+  instance_type_pipeline_validation:
+    type: string
+    optional: True
+    description: Instance type to be used for validation component. The parameter compute_pipeline_validation must be set to 'serverless' for instance_type to be used.
   instance_type_data_generation:
     type: string
     optional: true
@@ -24,6 +28,12 @@ inputs:
     optional: true
     default: Singularity.ND96amrs_A100_v4
     description: Instance type to be used for finetune component in case of virtual cluster compute, eg. Singularity.ND40_v2. The parameter compute_finetune must be set to 'serverless' for instance_type to be used
+
+  compute_pipeline_validation:
+    type: string
+    optional: True
+    default: 'serverless'
+    description: compute to be used for validation component
 
   compute_data_generation:
     type: string
@@ -50,8 +60,8 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
+  # ########################### Data Generator Component ########################### #
 
-  ##  OSS Data generator Input Parameters
   train_file_path:
     type: uri_file
     description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
@@ -138,7 +148,8 @@ inputs:
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
 
-  ## OSS Finetune Input Parameters
+  # ########################### Finetuning Component ########################### #
+
   number_of_gpu_to_use_finetuning:
     type: integer
     default: 1
@@ -203,17 +214,43 @@ outputs:
     mode: rw_mount
 
 jobs:
+  oss_distillation_validate_pipeline:
+    type: command
+    component: azureml:oss_distillation_validate_pipeline:0.0.1
+    compute: '${{parent.inputs.compute_pipeline_validation}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
+    identity:
+      type: user_identity
+    inputs:
+      train_file_path: '${{parent.inputs.train_file_path}}'
+      validation_file_path: '${{parent.inputs.validation_file_path}}'
+      teacher_model_endpoint_name: '${{parent.inputs.teacher_model_endpoint_name}}'
+      teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
+      teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
+      enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
+      data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
+      teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
+      teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
+      teacher_model_top_p: '${{parent.inputs.teacher_model_top_p}}'
+      teacher_model_frequency_penalty: '${{parent.inputs.teacher_model_frequency_penalty}}'
+      teacher_model_presence_penalty: '${{parent.inputs.teacher_model_presence_penalty}}'
+      request_batch_size: '${{parent.inputs.request_batch_size}}'
+      min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
+      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
+      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
+      learning_rate: '${{parent.inputs.learning_rate}}'
+    outputs:
+      validation_info:
+        type: uri_file
+        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
+
   oss_distillation_generate_data:
     type: command
     component: azureml:oss_distillation_generate_data:0.0.4
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
-      properties:
-        singularity:
-          imageVersion: ''
-          SLATier: 'Premium'
-          priority: 'Medium'
     identity:
       type: user_identity
     inputs:  
@@ -231,6 +268,7 @@ jobs:
       teacher_model_presence_penalty: '${{parent.inputs.teacher_model_presence_penalty}}'
       request_batch_size: '${{parent.inputs.request_batch_size}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
+      validation_output: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
     outputs:
       generated_train_file_path: 
         type: uri_file

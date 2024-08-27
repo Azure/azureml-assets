@@ -12,17 +12,14 @@ import requests
 from argparse import Namespace
 from requests import Response
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
-from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.telemetry.activity import log_activity, monitor_with_activity
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -42,7 +39,6 @@ from common.constants import (
     TEMPERATURE,
     TOP_P,
     STOP_TOKEN,
-    SUPPORTED_FILE_FORMATS,
     VLLM_CHAT_SCORE_PATH,
     DataGenerationTaskType,
     TelemetryConstants
@@ -55,6 +51,9 @@ from common.utils import (
     retry,
 )
 
+from common.validation import (
+    validate_file_paths_with_supported_formats
+)
 
 logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
 
@@ -227,24 +226,6 @@ def _invoke_endpoint(url: str, key: str, data: dict, log_entry: dict = None) -> 
                           activity_name=custom_logger_activity_name):
             return requests.post(url, headers=request_headers, data=json.dumps(data))
     return requests.post(url, headers=request_headers, data=json.dumps(data))
-
-
-def _validate_file_paths_with_supported_formats(file_paths: List[Optional[str]]):
-    """Check if the file path is in the list of supported formats."""
-    for file_path in file_paths:
-        if file_path:
-            file_suffix = Path(file_path).suffix.lower()
-            file_ext = file_suffix.split('?')[0]
-        if file_ext and file_ext not in SUPPORTED_FILE_FORMATS:
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(
-                    ACFTUserError,
-                    pii_safe_message=(
-                        f"{file_path} is not in list of supported file formats. "
-                        f"Supported file formats: {SUPPORTED_FILE_FORMATS}"
-                    )
-                )
-            )
 
 
 def generate_synthetic_data(
@@ -504,7 +485,7 @@ def data_import(args: Namespace):
     data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
-    _validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
+    validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
     logger.info("File format validation successful.")
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
