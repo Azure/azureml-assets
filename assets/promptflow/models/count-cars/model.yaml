@@ -1,7 +1,7 @@
 path:
-  container_name: promptflowsamples
-  container_path: count_cars/v2/model_folder
-  storage_name: zhizhosamples
+  container_name: models
+  container_path: promptflow/count_cars/v2/model_folder
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md

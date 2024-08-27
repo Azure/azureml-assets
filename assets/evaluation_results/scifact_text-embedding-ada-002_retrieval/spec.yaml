@@ -1,0 +1,24 @@
+type: evaluationresult
+name: scifact_text-embedding-ada-002_retrieval
+version: 2.07.22
+display_name: SciFact_text-embedding-ada-002_retrieval
+description: text-embedding-ada-002 run for SciFact dataset
+dataset_name: SciFact
+dataset_family: SciFact
+
+model_name: text-embedding-ada-002
+model_version: "2"
+model_asset_id: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
+
+tags:
+    evaluation_type: text_embeddings
+    task: retrieval
+    primary_metric: ndcg_at_10
+
+metrics:
+    ndcg_at_10: 0.72779
+
+properties: {}
