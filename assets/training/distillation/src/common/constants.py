@@ -154,20 +154,24 @@ class SystemPrompt:
 
     @classmethod
     def default_cot_prompt(cls):
+        """Get the default chain of thought prompt."""
         return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.DEFAULT_KEYS, additional_instructions="")
 
     @classmethod
     def math_cot_prompt(cls):
+        """Get the math chain of thought prompt for datasets expecting numeric answers."""
         return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.MATH_NUMERICAL_KEYS,
                                                     additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS
                                                     )
 
     @classmethod
     def get_cot_prompt(cls, task_type: str):
+        """Get the chain of thought prompt for the given task type."""
         if task_type == DataGenerationTaskType.MATH:
             return cls.math_cot_prompt()
         return cls.default_cot_prompt()
 
     @classmethod
     def get_response_key(cls, task_type):
+        """Get the key to index into the returned json based on the task type."""
         return "answer" if task_type == DataGenerationTaskType.MATH else "answer_choice"
