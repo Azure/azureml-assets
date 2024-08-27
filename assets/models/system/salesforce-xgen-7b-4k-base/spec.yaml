@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: salesforce-xgen-7b-4k-base
+path: ./
+properties:
+  SHA: "99369809516d711298f987ed372b1c0e51500268"
+  model_id: "Salesforce/xgen-7b-4k-base"
+  languages: "en"
+tags:
+  Featured: ''
+  Preview: ''
+  license: Apache 2.0
+  task: text-generation
+version: 1
