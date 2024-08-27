@@ -17,7 +17,7 @@ inputs:
     is_chat_input: false
   metrics:
     type: string
-    default: gpt_groundedness,f1_score,gpt_fluency,gpt_coherence,gpt_similarity,gpt_relevance,violence,self_harm
+    default: gpt_groundedness,f1_score,gpt_fluency,gpt_coherence,gpt_similarity,gpt_relevance,violence,self_harm,hate_unfairness,sexual
     is_chat_input: false
   threshold:
     type: int
@@ -369,7 +369,5 @@ nodes:
 node_variants: {}
 environment_variables:
   PF_WORKER_COUNT: 2
-  AZURE_OPENAI_API_KEY: "73963c03086243b3ae5665565fcaae42"
-  AZURE_OPENAI_ENDPOINT: "https://eastus.api.cognitive.microsoft.com/"
 environment:
   python_requirements_txt: requirements.txt

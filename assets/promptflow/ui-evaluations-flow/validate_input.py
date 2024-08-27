@@ -44,7 +44,6 @@ def validate_input(question: str,
             [QAField.QUESTION, QAField.ANSWER]),
         Metric.F1Score: set(
             [QAField.ANSWER, QAField.GROUND_TRUTH]),
-        MetricGroup.SAFETY_METRICS: set([QAField.ANSWER]),
         Metric.HateFairness: set([QAField.QUESTION, QAField.ANSWER, QAField.GROUND_TRUTH]),
         Metric.SelfHarm: set([QAField.QUESTION, QAField.ANSWER]),
         Metric.Sexual: set([QAField.QUESTION, QAField.ANSWER]),
@@ -61,10 +60,11 @@ def validate_input(question: str,
                     required_fields,
                     metric_name)
             else:
-                logger.info("%s is not selected." % metric_name)
-        elif metric_name == MetricGroup.SAFETY_METRICS:
-            data_validation[metric_name] = validate_metric_input(
-                    input_data_validation,
-                    required_fields,
-                    metric_name)
+        elif metric_name in selected_metrics[MetricGroup.SAFETY_METRICS]:
+            if selected_metrics[MetricGroup.SAFETY_METRICS][metric_name]:
+                data_validation[metric_name] = validate_metric_input(
+                        input_data_validation,
+                        required_fields,
+                        metric_name)
+            else:
     return data_validation
