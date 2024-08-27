@@ -147,7 +147,6 @@ nodes:
     type: code
     path: run_gpt_coherence_evaluator.py
   inputs:
-    connection: raisvcaoaiint
     question: ${inputs.question}
     answer: ${inputs.answer}
   aggregation: false
@@ -161,7 +160,6 @@ nodes:
     type: code
     path: run_gpt_fluency_evaluator.py
   inputs:
-    connection: raisvcaoaiint
     question: ${inputs.question}
     answer: ${inputs.answer}
   aggregation: false
@@ -175,7 +173,6 @@ nodes:
     type: code
     path: run_gpt_relevance_evaluator.py
   inputs:
-    connection: raisvcaoaiint
     deployment_name: ${inputs.deployment_name}
     answer: ${inputs.answer}
     context: ${inputs.context}
@@ -191,7 +188,6 @@ nodes:
     type: code
     path: run_gpt_similarity_evaluator.py
   inputs:
-    connection: raisvcaoaiint
     deployment_name: ${inputs.deployment_name}
     question: ${inputs.question}
     answer: ${inputs.answer}
@@ -356,7 +352,6 @@ nodes:
     type: code
     path: run_gpt_groundedness_evaluator.py
   inputs:
-    connection: raisvcaoaiint
     answer: ${inputs.answer}
     context: ${inputs.context}
   activate:

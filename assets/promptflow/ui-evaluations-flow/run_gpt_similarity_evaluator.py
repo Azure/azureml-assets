@@ -5,7 +5,7 @@ from run_gpt_based_evaluator import run_gpt_based_evaluator
 
 
 @tool
-def run_gpt_similarity(connection, question, answer, ground_truth):
+def run_gpt_similarity(question, answer, ground_truth):
     inputs = {
         "question": question,
         "answer": answer,
@@ -13,6 +13,5 @@ def run_gpt_similarity(connection, question, answer, ground_truth):
     }
     return run_gpt_based_evaluator(
         SimilarityEvaluator,
-        connection,
         inputs,
     )

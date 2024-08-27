@@ -5,7 +5,7 @@ from run_gpt_based_evaluator import run_gpt_based_evaluator
 
 
 @tool
-def run_gpt_relevance_evaluator(connection, answer, context, ground_truth):
+def run_gpt_relevance_evaluator(answer, context, ground_truth):
     inputs = {
         "answer": answer,
         "context": context,
@@ -13,6 +13,5 @@ def run_gpt_relevance_evaluator(connection, answer, context, ground_truth):
     }
     return run_gpt_based_evaluator(
         RelevanceEvaluator,
-        connection,
         inputs,
     )
