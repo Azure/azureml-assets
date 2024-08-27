@@ -29,7 +29,7 @@ inputs:
     is_chat_input: false
   deployment_name:
     type: string
-    default: "ui-eval-test"
+    default: "gpt-4"
     is_chat_input: false
 outputs:
   gpt_coherence:
@@ -147,6 +147,8 @@ nodes:
     type: code
     path: run_gpt_coherence_evaluator.py
   inputs:
+    connection:
+    deployment_name: ${inputs.deployment_name}
     question: ${inputs.question}
     answer: ${inputs.answer}
   aggregation: false
@@ -160,6 +162,8 @@ nodes:
     type: code
     path: run_gpt_fluency_evaluator.py
   inputs:
+    connection:
+    deployment_name: ${inputs.deployment_name}
     question: ${inputs.question}
     answer: ${inputs.answer}
   aggregation: false
@@ -173,10 +177,11 @@ nodes:
     type: code
     path: run_gpt_relevance_evaluator.py
   inputs:
+    connection:
     deployment_name: ${inputs.deployment_name}
+    question: ${inputs.question}
     answer: ${inputs.answer}
     context: ${inputs.context}
-    ground_truth: ${inputs.ground_truth}
   aggregation: false
   activate:
     when: ${validate_input.output.gpt_coherence}
@@ -188,6 +193,7 @@ nodes:
     type: code
     path: run_gpt_similarity_evaluator.py
   inputs:
+    connection:
     deployment_name: ${inputs.deployment_name}
     question: ${inputs.question}
     answer: ${inputs.answer}
@@ -288,10 +294,10 @@ nodes:
   inputs:
     f1_score_results: ${run_f1_score_evaluator.output}
     groundedness_results: ${parse_groundedness_response.output}
-    gpt_coherence_results: ${run_gpt_coherence_evaluator.results}
-    gpt_fluency_results: ${run_gpt_fluency_evaluator.results}
-    gpt_relevance_results: ${run_gpt_relevance_evaluator.results}
-    gpt_similarity_results: ${run_gpt_similarity_evaluator.results}
+    gpt_coherence_results: ${run_gpt_coherence_evaluator.output}
+    gpt_fluency_results: ${run_gpt_fluency_evaluator.output}
+    gpt_relevance_results: ${run_gpt_relevance_evaluator.output}
+    gpt_similarity_results: ${run_gpt_similarity_evaluator.output}
     hate_unfairness_results: ${run_hate_unfairness_evaluator.output}
     self_harm_results: ${run_self_harm_evaluator.output}
     sexual_results: ${run_sexual_evaluator.output}
@@ -352,6 +358,8 @@ nodes:
     type: code
     path: run_gpt_groundedness_evaluator.py
   inputs:
+    connection:
+    deployment_name: ${inputs.deployment_name}
     answer: ${inputs.answer}
     context: ${inputs.context}
   activate:

@@ -5,13 +5,14 @@ from run_gpt_based_evaluator import run_gpt_based_evaluator
 
 
 @tool
-def run_gpt_relevance_evaluator(answer, context, ground_truth):
+def run_gpt_relevance_evaluator(deployment_name, answer, context, question):
     inputs = {
         "answer": answer,
         "context": context,
-        "ground_truth": ground_truth,
+        "question": question,
     }
     return run_gpt_based_evaluator(
         RelevanceEvaluator,
         inputs,
+        deployment_name
     )
