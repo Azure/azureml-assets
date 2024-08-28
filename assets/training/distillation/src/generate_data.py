@@ -278,7 +278,7 @@ def generate_synthetic_data(
         min_endpoint_success_ratio (float): Minimum success ratio below which run will be considered a failure
         enable_cot (bool): Enable Chain of Thought processing
         enable_cod (bool): Enable Chain of Density processing for text summarization task
-        summary_word_count (int): Maximum word count for text summarization 
+        summary_word_count (int): Maximum word count for text summarization
         output_dataset (Path): Path to output directory
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
