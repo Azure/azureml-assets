@@ -74,7 +74,10 @@ class TestDatasetDownloaderComponent:
             file_count = len(get_dataset_config_names(path))
         elif split == "all":
             configs = configuration.split(",")
-            file_count = sum(len(get_dataset_split_names(path, config)) for config in configs)
+            kwargs = {}
+            if script is not None:
+                kwargs['trust_remote_code'] = True
+            file_count = sum(len(get_dataset_split_names(path, config, **kwargs)) for config in configs)
         self._verify_output(pipeline_job, temp_dir, file_count)
         assert_logged_params(
             pipeline_job.name,
