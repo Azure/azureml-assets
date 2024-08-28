@@ -103,6 +103,7 @@ inputs:
     - NLI
     - CONVERSATION
     - NLU_QA
+    - MATH
     - SUMMARIZATION
     description: >
       Data generation task type. Supported values are:
@@ -110,7 +111,8 @@ inputs:
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering
       data
-      4. SUMMARIZATION: Generate Key Summary for an Article
+      4. MATH: Generate Math data for numerical responses
+      5. SUMMARIZATION: Generate Key Summary for an Article
 
 
   # Output of validation component.
