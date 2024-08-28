@@ -52,7 +52,7 @@ def retry(times: int):
                     ex_msg = "Exception thrown when attempting to run {}, attempt {} of {}".format(
                         func.__name__, attempt, times
                     )
-                    logger.warning(ex_msg)
+                    (ex_msg)
                     if attempt < times:
                         time.sleep(REQUESTS_RETRY_DELAY)
                     else:
@@ -77,14 +77,14 @@ def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCreden
         logger.info("Using MSI creds")
         return credential
     except Exception:
-        logger.error("MSI auth failed")
+        logger.warning("MSI auth failed")
     try:
         credential = AzureMLOnBehalfOfCredential()
         credential.get_token("https://management.azure.com/.default")
         logger.info("Using OBO creds")
         return credential
     except Exception:
-        logger.error("OBO cred failed")
+        logger.warning("OBO cred failed")
     try:
         credential = AzureCliCredential()
         credential.get_token("https://management.azure.com/.default")
