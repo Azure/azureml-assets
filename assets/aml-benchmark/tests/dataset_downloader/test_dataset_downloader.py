@@ -67,16 +67,15 @@ class TestDatasetDownloaderComponent:
         )
         ml_client.jobs.stream(pipeline_job.name)
         print(pipeline_job)
-
+        kwargs = {}
+        if script is not None:
+            kwargs['trust_remote_code'] = True
         file_count = 1
         path = dataset_name if dataset_name else script
         if configuration == "all":
-            file_count = len(get_dataset_config_names(path))
+            file_count = len(get_dataset_config_names(path, **kwargs))
         elif split == "all":
             configs = configuration.split(",")
-            kwargs = {}
-            if script is not None:
-                kwargs['trust_remote_code'] = True
             file_count = sum(len(get_dataset_split_names(path, config, **kwargs)) for config in configs)
         self._verify_output(pipeline_job, temp_dir, file_count)
         assert_logged_params(
