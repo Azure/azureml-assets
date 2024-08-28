@@ -202,7 +202,6 @@ def get_parser():
         help="Maximum word count for text summarization ",
     )
 
-
     parser.add_argument(
         "--data_generation_task_type",
         type=str,
