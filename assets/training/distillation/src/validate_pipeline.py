@@ -271,7 +271,7 @@ class PipelineInputsValidator:
             self._validate_record_for_type_NLI,
             self._validate_record_for_type_conversation,
             self._validate_record_for_type_NLU_QA,
-            self._validate_record_for_type_MATH
+            self._validate_record_for_type_MATH,
             self._validate_record_for_type_summarization,
         ]
 
