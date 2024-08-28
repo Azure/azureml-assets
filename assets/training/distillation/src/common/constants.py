@@ -223,3 +223,4 @@ class SystemPrompt:
     def get_cod_prompt(cls, word_count: int):
         """Get the chain of thought prompt for the given task type."""
         return cls.DEFAULT_COD_SYSTEM_PROMPT.format(word_count=word_count)
+    
