@@ -70,7 +70,6 @@ DEFAULT_MAX_NEW_TOKENS = 128
 DEFAULT_TOP_P = 0.1
 DEFAULT_TEMPERATURE = 0.2
 
-# CHAIN OF THOUGHT (COD)
 COD_SYSTEM_PROMPT = """\
 You will generate increasingly concise, entity-dense summaries of the given article.
 
