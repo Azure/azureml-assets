@@ -143,6 +143,12 @@ inputs:
     default: "false"
     description: Enable Chain of density for text summarization
 
+  summary_word_count:
+    type: integer
+    optional: true
+    default: 80
+    description: Maximum word count for text summarization 
+
   data_generation_task_type:
     type: string
     enum:
@@ -239,6 +245,7 @@ jobs:
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
+      summary_word_count: '${{parent.inputs.summary_word_count}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
@@ -271,6 +278,7 @@ jobs:
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
+      summary_word_count: '${{parent.inputs.summary_word_count}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'

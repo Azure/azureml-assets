@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
-version: 0.0.6
+version: 0.0.5
 type: command
 
 is_deterministic: True
@@ -93,6 +93,12 @@ inputs:
     default: "false"
     description: Enable Chain of density for text summarization
 
+  summary_word_count:
+    type: integer
+    optional: true
+    default: 80
+    description: Maximum word count for text summarization 
+
   data_generation_task_type:
     type: string
     enum:
@@ -141,7 +147,9 @@ command: >-
   --request_batch_size ${{inputs.request_batch_size}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
-  $[[--enable_chain_ of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--summary_word_count ${{inputs.summary_word_count}}]]
+  
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}

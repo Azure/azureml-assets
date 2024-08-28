@@ -27,7 +27,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from common.constants import (
     COMPONENT_NAME,
     COT_SYSTEM_PROMPT,
-    COD_SYSTEM_PROMPT,
+    
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
@@ -43,6 +43,8 @@ from common.constants import (
     VLLM_CHAT_SCORE_PATH,
     DataGenerationTaskType,
     TelemetryConstants,
+    SystemPrompt,
+    DEFAULT_SUMMARY_WORD_COUNT,
 )
 
 from common.utils import (
@@ -193,6 +195,15 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--summary_word_count",
+        type=int,
+        required=False,
+        default=DEFAULT_SUMMARY_WORD_COUNT,
+        help="Maximum word count for text summarization ",
+    )
+
+
+    parser.add_argument(
         "--data_generation_task_type",
         type=str,
         required=True,
@@ -250,6 +261,7 @@ def generate_synthetic_data(
     min_endpoint_success_ratio: float,
     enable_cot: bool,
     enable_cod: bool,
+    summary_word_count: int,
     generated_train_file_path: Path,
     generated_validation_file_path: Path,
     train_file_path: Path,
@@ -266,6 +278,7 @@ def generate_synthetic_data(
         min_endpoint_success_ratio (float): Minimum success ratio below which run will be considered a failure
         enable_cot (bool): Enable Chain of Thought processing
         enable_cod (bool): Enable Chain of Density processing for text summarization task
+        summary_word_count (int): Maximum word count for text summarization 
         output_dataset (Path): Path to output directory
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
@@ -292,9 +305,9 @@ def generate_synthetic_data(
             enable_cod
             and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION
         ):
-            cod_system_message = {"role": "system", "content": COD_SYSTEM_PROMPT}
+            cod_prompt = SystemPrompt.get_cod_prompt(summary_word_count)
+            cod_system_message = {"role": "system", "content": cod_prompt}
             return cod_system_message
-
         else:
             return message
 
@@ -544,6 +557,7 @@ def data_import(args: Namespace):
     min_endpoint_success_ratio = args.min_endpoint_success_ratio
     enable_cot_str = args.enable_chain_of_thought
     enable_cod_str = args.enable_chain_of_density
+    summary_word_count = args.summary_word_count
     data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
@@ -619,6 +633,7 @@ def data_import(args: Namespace):
         min_endpoint_success_ratio=min_endpoint_success_ratio,
         enable_cot=enable_cot,
         enable_cod=enable_cod,
+        summary_word_count=summary_word_count,
         generated_train_file_path=generated_train_file_path,
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,

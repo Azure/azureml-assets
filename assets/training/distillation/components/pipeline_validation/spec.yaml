@@ -95,6 +95,12 @@ inputs:
     default: "false"
     description: Enable Chain of density for text summarization
 
+  summary_word_count:
+    type: integer
+    optional: true
+    default: 80
+    description: Maximum word count for text summarization 
+    
   data_generation_task_type:
     type: string
     enum:
@@ -150,6 +156,7 @@ command: >-
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--summary_word_count ${{inputs.summary_word_count}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
   $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
