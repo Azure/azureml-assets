@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
-version: 0.0.5
+version: 0.0.6
 type: command
 
 is_deterministic: True
@@ -83,20 +83,30 @@ inputs:
 
   enable_chain_of_thought:
     type: string
-    default: "true"
+    optional: true
+    default: "false"
     description: Enable Chain of thought for data generation
   
+  enable_chain_of_density:
+    type: string
+    optional: true
+    default: "false"
+    description: Enable Chain of density for text summarization
+
   data_generation_task_type:
     type: string
     enum:
       - NLI
       - CONVERSATION
       - NLU_QA
+      - SUMMARIZATION
     description: >
       Data generation task type. Supported values are:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+      4. SUMMARIZATION: Generate Key Summary for an Article
+
   
   # Output of validation component.
   validation_output:
@@ -130,7 +140,8 @@ command: >-
   $[[--teacher_model_stop ${{inputs.teacher_model_stop}}]]
   --request_batch_size ${{inputs.request_batch_size}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
-  --enable_chain_of_thought ${{inputs.enable_chain_of_thought}}
+  $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
+  $[[--enable_chain_ of_density ${{inputs.enable_chain_of_density}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}
