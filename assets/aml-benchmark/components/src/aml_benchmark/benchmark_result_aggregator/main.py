@@ -20,6 +20,22 @@ from aml_benchmark.utils.aml_run_utils import (
 
 logger = get_logger(__name__)
 
+dataset_config_map = {
+    ("formal_logic,high_school_european_history,high_school_us_history,"
+     "high_school_world_history,international_law,jurisprudence,logical_fallacies,"
+     "moral_disputes,moral_scenarios,philosophy,prehistory,professional_law,world_religions"): "mmlu_humanities",
+    ("business_ethics,clinical_knowledge,college_medicine,global_facts,human_aging,management,"
+     "marketing,medical_genetics,miscellaneous,nutrition,professional_accounting,"
+     "professional_medicine,virology"): "mmlu_other",
+    ("econometrics,high_school_geography,high_school_government_and_politics,high_school_macroeconomics,"
+     "high_school_microeconomics,high_school_psychology,human_sexuality,professional_psychology,public_relations,",
+     "security_studies,sociology,us_foreign_policy"): "mmlu_social_sciences",
+    ("abstract_algebra,anatomy,astronomy,college_biology,college_chemistry,college_computer_science,"
+     "college_mathematics,college_physics,computer_security,conceptual_physics,electrical_engineering,"
+     "elementary_mathematics,high_school_biology,high_school_chemistry,high_school_computer_science,"
+     "high_school_mathematics,high_school_physics,high_school_statistics,machine_learning"): "mmlu_stem",
+}
+
 
 def _parse_args() -> argparse.Namespace:
     """Parse the arguments for the component."""
@@ -106,7 +122,7 @@ def _get_run_params(run_definition: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         for param_name, param_value in node_params.items():
             AZUREML_PARAM_PREFIX = "AZUREML_PARAMETER_"
             if param_name.startswith(AZUREML_PARAM_PREFIX):
-                param_name = param_name[len(AZUREML_PARAM_PREFIX):]
+                param_name = param_name[len(AZUREML_PARAM_PREFIX) :]
             params[param_name] = param_value
     return params
 
@@ -276,22 +292,25 @@ def main(
     if model_registry is not None:
         result["model_registry"] = model_registry
         loggable_pipeline_params["model_registry"] = model_registry
-    telemetry_details = {
-        "parameters": {
-            k.split(".", 1)[1]: v
-            for k, v in result.get("mlflow_parameters", {}).items()
-            if k
-            in [
-                "downloader.dataset_name",
-                "endpoint.endpoint_url",
-                "endpoint.deployment_name",
-            ]
-        }
+    telemetry_details = {"parameters": {}, "metrics": {}}
+    required_keys = {
+        "downloader.dataset_name": "dataset_name",
+        "endpoint.endpoint_url": "endpoint_url",
+        "endpoint.deployment_name": "deployment_name",
+        "endpoint.model_type": "model_type",
     }
-    telemetry_details["metrics"] = {}
+    mlflow_parameters = result.get("mlflow_parameters", {})
+    for key, telemetry_key in required_keys.items():
+        telemetry_details["parameters"][telemetry_key] = mlflow_parameters.get(key, None)
+        if key == "downloader.dataset_name":
+            dataset_name = telemetry_details["parameters"][telemetry_key]
+            if dataset_name is None:
+                config_name = mlflow_parameters.get("downloader.configuration", None)
+                telemetry_details["parameters"][telemetry_key] = dataset_config_map.get(config_name, None)
+
     for k, v in result.get("quality_metrics", {}).items():
         # All those values which are float or int or string
-        if isinstance(v, int) or isinstance(v, float) or isinstance(v, str):
+        if isinstance(v, (int, float, str)):
             try:
                 key = k.split(".", 1)[1]
             except Exception:
