@@ -133,8 +133,15 @@ inputs:
 
   enable_chain_of_thought:
     type: string
+    optional: true
     default: "false"
     description: Enable Chain of thought for data generation
+
+  enable_chain_of_density:
+    type: string
+    optional: true
+    default: "false"
+    description: Enable Chain of density for text summarization
 
   data_generation_task_type:
     type: string
@@ -143,12 +150,14 @@ inputs:
       - CONVERSATION
       - NLU_QA
       - MATH
+      - SUMMARIZATION
     description: >
       Data generation task type. Supported values are:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
       4. MATH: Generate Math data for numerical responses
+      5. SUMMARIZATION: Generate Key Summary for an Article
 
   # ########################### Finetuning Component ########################### #
 
@@ -231,6 +240,7 @@ jobs:
       teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
+      enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
@@ -262,6 +272,7 @@ jobs:
       teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
+      enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
