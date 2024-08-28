@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
-version: 0.0.6
+version: 0.0.5
 type: command
 
 is_deterministic: True
@@ -143,7 +143,7 @@ command: >-
   --request_batch_size ${{inputs.request_batch_size}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
-  $[[--enable_chain_ of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}
