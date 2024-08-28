@@ -52,7 +52,7 @@ def retry(times: int):
                     ex_msg = "Exception thrown when attempting to run {}, attempt {} of {}".format(
                         func.__name__, attempt, times
                     )
-                    (ex_msg)
+                    logger.warning(ex_msg)
                     if attempt < times:
                         time.sleep(REQUESTS_RETRY_DELAY)
                     else:
