@@ -39,6 +39,7 @@ from common.constants import (
     TOP_P,
     VLLM_CHAT_SCORE_PATH,
     MIN_RECORDS_FOR_FT,
+    MATH_MIN_RECORDS_FOR_FT
 )
 
 from common.utils import (
@@ -186,13 +187,15 @@ class PipelineInputsValidator:
 
     def _validate_number_of_records(self, size: int):
         """Validate number of records in the dataset."""
-        if size < MIN_RECORDS_FOR_FT and self._args.data_generation_task_type != DataGenerationTaskType.MATH:
+        task_type = self._args.data_generation_task_type
+        min_records = MIN_RECORDS_FOR_FT if task_type != DataGenerationTaskType.MATH else MATH_MIN_RECORDS_FOR_FT
+        if size < min_records:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
                     pii_safe_message=(
                         "Number of records in the dataset are less than the minimum required for fine-tuning."
-                        f" Minimum records required: {MIN_RECORDS_FOR_FT}, but got {size}."
+                        f" Minimum records required for task {task_type}: {min_records}, but got {size}."
                     ),
                 )
             )
