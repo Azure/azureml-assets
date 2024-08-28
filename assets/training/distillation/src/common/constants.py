@@ -200,8 +200,8 @@ class SystemPrompt:
         "\n- The first summary should be long (4-5 sentences, ~{word_count} words) yet highly non-specific,"
         " containing little information beyond the entities marked as missing. Use overly verbose language and fillers"
         ' (e.g., "this article discusses") to reach ~{word_count} words.'
-        "\n- Make every word count: rewrite the previous summary to improve flow"
-         " and make space for additional entities."
+        "\n- Make every word count: rewrite the previous summary to improve flow "
+        "and make space for additional entities."
         '\n- Make space with fusion, compression, and removal of uninformative phrases like "the article discusses".'
         "\n- The summaries should become highly dense and concise yet self-contained, "
         "i.e., easily understood without the article."
