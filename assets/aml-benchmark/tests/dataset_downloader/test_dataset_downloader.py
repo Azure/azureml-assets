@@ -177,7 +177,7 @@ class TestDatasetDownloaderScript:
         if dataset_name == "winogrande" and configuration is None:
             expected_exception_mssg = (
                 f"Multiple configurations available for dataset '{dataset_name}'. Please specify either one of "
-                f"the following: {get_dataset_config_names(dataset_name)} or 'all'."
+                f"the following: {get_dataset_config_names(dataset_name, trust_remote_code=True)} or 'all'."
             )
         elif dataset_name == "some_random_name":
             expected_exception_mssg = f"FileNotFoundError: Dataset '{dataset_name}' doesn't exist on the Hub"
