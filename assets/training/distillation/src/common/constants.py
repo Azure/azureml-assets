@@ -113,6 +113,7 @@ The JSON should be syntactically correct and properly formatted. For example: \
 Please ensure that each dense summary should be no more than 80 words.
 """
 
+AUTH_TOKEN_SCOPE = "https://management.azure.com/.default"
 
 class InferenceMode:
     """Supported inference modes."""
