@@ -4,4 +4,4 @@ tiktoken>=0.3.3
 StrEnum>=0.4.15
 pyDispatcher>=2.0.7
 
--r ../../src/batch_score/root/requirements.txt
+-r ../src/batch_score/requirements.txt
