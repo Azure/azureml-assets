@@ -42,7 +42,7 @@ from common.constants import (
     DataGenerationTaskType,
     TelemetryConstants,
     SystemPrompt,
-    DEFAULT_SUMMARY_WORD_COUNT,
+    DEFAULT_MAX_LEN_SUMMARY,
 )
 
 from common.utils import (
@@ -193,10 +193,10 @@ def get_parser():
     )
 
     parser.add_argument(
-        "--summary_word_count",
+        "--max_len_summary",
         type=int,
         required=False,
-        default=DEFAULT_SUMMARY_WORD_COUNT,
+        default=DEFAULT_MAX_LEN_SUMMARY,
         help="Maximum word count for text summarization ",
     )
 
@@ -561,7 +561,7 @@ def data_import(args: Namespace):
     min_endpoint_success_ratio = args.min_endpoint_success_ratio
     enable_cot_str = args.enable_chain_of_thought
     enable_cod_str = args.enable_chain_of_density
-    summary_word_count = args.summary_word_count
+    max_len_summary = args.max_len_summary
     data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
@@ -637,7 +637,7 @@ def data_import(args: Namespace):
         min_endpoint_success_ratio=min_endpoint_success_ratio,
         enable_cot=enable_cot,
         enable_cod=enable_cod,
-        summary_word_count=summary_word_count,
+        max_len_summary=max_len_summary,
         generated_train_file_path=generated_train_file_path,
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,
