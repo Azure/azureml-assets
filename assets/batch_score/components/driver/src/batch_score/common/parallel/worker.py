@@ -11,7 +11,6 @@ from collections import deque
 
 import aiohttp
 
-from ...batch_pool.quota.quota_client import QuotaUnavailableException
 from ...utils.common import str2bool
 from ...utils import timeout_utils
 from .. import constants
@@ -86,7 +85,7 @@ class Worker:
             "BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST",
             "True"))
 
-        lu.get_logger().debug("Worker {}: Created".format(self.id))
+        lu.get_logger().debug(f"Worker {self.id}: Created")
 
     def is_running(self) -> bool:
         """Check whether the worker is running."""
@@ -94,14 +93,14 @@ class Worker:
 
     def stop(self):
         """Stop the worker."""
-        lu.get_logger().debug("Worker {}: Stopped".format(self.id))
+        lu.get_logger().debug(f"Worker {self.id}: Stopped")
         self.__is_running = False
 
     async def start(self):
         """Start the worker."""
         self.__is_running = True
         lu.set_worker_id(self.id)
-        lu.get_logger().debug("Worker {}: Started".format(self.id))
+        lu.get_logger().debug(f"Worker {self.id}: Started")
 
         while (self._configuration.async_mode or len(self.__scoring_request_queue) > 0) and self.__is_running:
             if len(self.__scoring_request_queue) == 0:
@@ -113,9 +112,7 @@ class Worker:
             if self._configuration.async_mode:
                 mini_batch_id = queue_item.scoring_request.mini_batch_context.mini_batch_id
                 set_mini_batch_id(mini_batch_id)
-                lu.get_logger().debug(
-                    "Worker {}: Picked an queue item from mini-batch {}"
-                    .format(self.id, mini_batch_id))
+                lu.get_logger().debug(f"Worker {self.id}: Picked an queue item from mini-batch {mini_batch_id}")
 
             start, end = 0, 0
 
@@ -172,22 +169,20 @@ class Worker:
                 elif e.status_code == 429 or e.model_response_code == "429":
                     wait_time = back_off
 
-                    is_quota_429 = isinstance(e, QuotaUnavailableException)
-
                     value = self.get_client_settings(
                         ClientSettingsKey.COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME) or "False"
 
                     count_only_quota_429s_toward_total_request_time: bool = (value.lower() == "true")
 
-                    if count_only_quota_429s_toward_total_request_time and not is_quota_429:
+                    if count_only_quota_429s_toward_total_request_time:
                         # Non-quota 429 responses don't contribute to the total wait time.
-                        lu.get_logger().debug(
-                            "Worker {}: Encountered non-quota 429 response."
-                            " Not adding to total wait time.")
+                        lu.get_logger().debug(f"Worker {self.id}: Encountered non-quota 429 response. "
+                                              f"Not adding to total wait time.")
                         pass
                     else:
                         queue_item.scoring_request.total_wait_time += wait_time
-                        lu.get_logger().warning("Worker {}: Insufficient quota: Encountered quota 429 response.")
+                        lu.get_logger().warning(f"Worker {self.id}: Insufficient quota: "
+                                                f"Encountered quota 429 response.")
 
                 self.__request_metrics.add_result(
                     request_id=queue_item.scoring_request.internal_id,
@@ -217,12 +212,11 @@ class Worker:
         self.__is_running = False
 
         if self._configuration.async_mode:
-            lu.get_logger().debug(
-                "Worker {}: Finished processing an queue item from mini-batch {}"
-                .format(self.id, mini_batch_id))
+            lu.get_logger().debug(f"Worker {self.id}: Finished processing an queue item "
+                                  f"from mini-batch {mini_batch_id}")
             set_mini_batch_id(None)
         else:
-            lu.get_logger().debug("Worker {}: Finished".format(self.id))
+            lu.get_logger().debug(f"Worker {self.id}: Finished")
 
     def get_client_settings(self, client_settings_key: ClientSettingsKey):
         """Get client settings."""

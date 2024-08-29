@@ -45,7 +45,7 @@ class MinibatchAggregator:
 
         if isinstance(event, BatchScoreMinibatchStartedEvent):
             self._start_event_per_minibatch[event.minibatch_id] = event
-            self._emit_endpoint_health_events = event.batch_pool is not None
+            self._emit_endpoint_health_events = True
 
     def clear(self, minibatch_id: str) -> None:
         """Clear the minibatch maps after the aggregation is done."""
@@ -68,7 +68,8 @@ class MinibatchAggregator:
             self,
             minibatch_id: str,
             end_time: datetime,
-            output_row_count: int) -> BatchScoreMinibatchCompletedEvent:
+            output_row_count: int,
+            logging_metadata: dict = None) -> BatchScoreMinibatchCompletedEvent:
         """Summarize the minibatch events into a BatchScoreMinibatchCompletedEvent."""
         http_request_completed_events = self._http_request_completed_events_per_minibatch[minibatch_id]
         http_request_durations_ms = [e.duration_ms for e in http_request_completed_events] or [0]
@@ -89,7 +90,6 @@ class MinibatchAggregator:
         return BatchScoreMinibatchCompletedEvent(
             minibatch_id=minibatch_id,
             scoring_url=self._start_event_per_minibatch[minibatch_id].scoring_url,
-            batch_pool=self._start_event_per_minibatch[minibatch_id].batch_pool,
             quota_audience=self._start_event_per_minibatch[minibatch_id].quota_audience,
             model_name=self._model_name,
             retry_count=self._start_event_per_minibatch[minibatch_id].retry_count,
@@ -101,6 +101,7 @@ class MinibatchAggregator:
             succeeded_row_count=len([e for e in rows_completed_events if e.is_successful]),
             failed_row_count=len([e for e in rows_completed_events if not e.is_successful]),
             output_row_count=output_row_count,
+            logging_metadata=logging_metadata,
 
             http_request_count=len(http_request_completed_events),
             http_request_succeeded_count=len(
@@ -128,7 +129,7 @@ class MinibatchAggregator:
             total_duration_ms=1000 * (minibatch_end_time - minibatch_start_time),
         )
 
-    def summarize_endpoints(self, minibatch_id: str) -> list:
+    def summarize_endpoints(self, minibatch_id: str, logging_metadata: dict = None) -> list:
         """Summarize the minibatch events into a list of BatchScoreMinibatchEndpointHealthEvents."""
         if not self._emit_endpoint_health_events:
             return []
@@ -145,8 +146,8 @@ class MinibatchAggregator:
             event = BatchScoreMinibatchEndpointHealthEvent(
                 minibatch_id=minibatch_id,
                 scoring_url=endpoint_uri,
-                batch_pool=self._start_event_per_minibatch[minibatch_id].batch_pool,
                 quota_audience=self._start_event_per_minibatch[minibatch_id].quota_audience,
+                logging_metadata=logging_metadata,
 
                 http_request_count=len(http_request_completed_events),
                 http_request_succeeded_count=len(

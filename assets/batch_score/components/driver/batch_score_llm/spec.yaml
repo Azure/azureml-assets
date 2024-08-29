@@ -2,13 +2,12 @@ $schema: http://azureml/sdk-2-0/ParallelComponent.json
 type: parallel
 
 name: batch_score_llm
-version: 1.1.9
+version: 1.2.0
 display_name: Batch Score Large Language Models
 is_deterministic: False
 
 inputs:
-  # Predefined arguments for parallel job:
-  # https://learn.microsoft.com/en-us/azure/machine-learning/reference-yaml-job-parallel?source=recommendations#predefined-arguments-for-parallel-job
+  # Predefined arguments for parallel job: https://learn.microsoft.com/en-us/azure/machine-learning/reference-yaml-job-parallel?source=recommendations#predefined-arguments-for-parallel-job
   resume_from:
     type: string
     optional: True
@@ -57,9 +56,10 @@ task:
   # Using --append_row_safe_output true
   program_arguments: >-
     $[[--amlbi_async_mode ${{inputs.async_mode}}]]
+    --amlbi_dataframe_mixed_types true
     --append_row_safe_output true
     --configuration_file ${{inputs.configuration_file}}
     --partitioned_scoring_results ${{outputs.mini_batch_results_output_directory}}
     $[[--resume_from ${{inputs.resume_from}}]]
-  environment: azureml://registries/azureml/environments/model-evaluation/versions/30
+  environment: azureml://registries/azureml/environments/model-evaluation/versions/34
   append_row_to: ${{outputs.job_output_path}}

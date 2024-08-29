@@ -7,6 +7,7 @@ import asyncio
 
 import aiohttp
 
+from ...common.configuration.configuration import Configuration
 from ...common.scoring.generic_scoring_client import (
     HttpResponseHandler,
     HttpScoringResponse,
@@ -27,11 +28,11 @@ from ...utils.common import get_mini_batch_id
 class AoaiHttpResponseHandler(HttpResponseHandler):
     """Defines the AOAI HTTP response handler."""
 
-    DEFAULT_MAX_RETRIES = 3
     RETRIABLE_STATUS_CODES = [408, 429]
 
-    def __init__(self, tally_handler: TallyFailedRequestHandler):
+    def __init__(self, tally_handler: TallyFailedRequestHandler, configuration: Configuration):
         """Initialize AoaiHttpResponseHandler."""
+        self._configuration = configuration
         self.__tally_handler = tally_handler
 
     def handle_response(
@@ -100,15 +101,15 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
     def is_retriable(
         self,
         http_status: int,
-        scoring_request: ScoringRequest,
-        max_retries: int = DEFAULT_MAX_RETRIES
+        scoring_request: ScoringRequest
     ) -> bool:
         """Is the http status retriable."""
         if (http_status in self.RETRIABLE_STATUS_CODES):
             return True
         elif http_status and http_status >= 500:
             scoring_request.retry_count_for_limited_retries += 1
-            return scoring_request.retry_count_for_limited_retries < max_retries
+            return scoring_request.retry_count_for_limited_retries < self._configuration.server_error_retries \
+                and self._configuration.server_error_retries > 0
         return False
 
     def _handle_exception(

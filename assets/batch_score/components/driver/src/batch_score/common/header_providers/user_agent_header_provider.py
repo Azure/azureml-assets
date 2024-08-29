@@ -15,12 +15,10 @@ class UserAgentHeaderProvider(HeaderProvider):
     def __init__(
             self,
             component_version: str,
-            batch_pool: str = None,
             quota_audience: str = None,
             user_agent_segment: str = None):
         """Initialize the UserAgentHeaderProvider."""
         self._component_version = component_version
-        self._batch_pool = batch_pool
         self._quota_audience = quota_audience
         self._user_agent_segment = user_agent_segment
 
@@ -30,7 +28,7 @@ class UserAgentHeaderProvider(HeaderProvider):
 
     def _get_user_agent(self) -> str:
         """Get the user agent string."""
-        if not self._batch_pool and not self._quota_audience:
+        if not self._quota_audience:
             return 'BatchScore:{}/Run:{}{}'.format(
                 self._component_version,
                 os.environ.get(constants.OS_ENVIRON_RUN_ID, "DNE"),
@@ -38,7 +36,7 @@ class UserAgentHeaderProvider(HeaderProvider):
             )
 
         workload_id = ":".join(
-            [x for x in [self._batch_pool, self._quota_audience, self._user_agent_segment] if x is not None])
+            [x for x in [self._quota_audience, self._user_agent_segment] if x is not None])
 
         return 'BatchScore:{}/{}/Run:{}:{}'.format(
             self._component_version,

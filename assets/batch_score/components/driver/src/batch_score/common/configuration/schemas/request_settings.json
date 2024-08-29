@@ -29,6 +29,12 @@
             "type": "integer",
             "default": 1,
             "description": "The version of input schema used in the input data - By default, this will be 1."
+        },
+        "server_error_retries": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 10,
+            "description": "The maximum number of server errors (5xx) allowed for a single row before the batch scoring job is considered failed. If set to 0, the job will not fail due to errors."
         }
     }
 }

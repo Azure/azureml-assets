@@ -114,14 +114,12 @@ class AppInsightsEventsClient(EventsClient):
                  worker_id: ContextVar,
                  mini_batch_id: ContextVar,
                  quota_audience: ContextVar,
-                 batch_pool: ContextVar,
                  component_version: str):
         """Initialize AppInsightsEventsClient."""
         self.__custom_dimensions = custom_dimensions
         self.__worker_id = worker_id
         self.__mini_batch_id = mini_batch_id
         self.__quota_audience = quota_audience
-        self.__batch_pool = batch_pool
         self.__component_version = component_version
         self.__logger = logging.getLogger("BatchComponentMetricsLogger")
         self.__logger.propagate = False
@@ -134,7 +132,6 @@ class AppInsightsEventsClient(EventsClient):
         custom_dimensions["MiniBatchId"] = self.__mini_batch_id.get()
         custom_dimensions["WorkerId"] = self.__worker_id.get()
         custom_dimensions["QuotaAudience"] = self.__quota_audience.get()
-        custom_dimensions["BatchPool"] = self.__batch_pool.get()
         custom_dimensions["ComponentVersion"] = self.__component_version
 
     def emit_request_completed(

@@ -58,11 +58,14 @@ def get_retriable_type(
         return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
 
     if response_status == 424:
-        if model_response_code in ["408", "504", "500"]:
+        if model_response_code == "408":
             return RetriableType.RETRY_ON_SAME_ENDPOINT
 
         if model_response_code == "429":
             return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT
+
+        if model_response_code in ["500", "504"]:
+            return RetriableType.RETRY_UNTIL_MAX_RETRIES
 
         if model_response_reason in ["model_not_ready", "too_few_model_instance"]:
             return RetriableType.RETRY_ON_DIFFERENT_ENDPOINT

@@ -41,6 +41,7 @@ class BatchScoreEvent(ABC):
     authentication_type: AuthenticationType = field(init=False, default=None)
     api_type: ApiType = field(init=False, default=None)
     async_mode: bool = field(init=False, default=None)
+    logging_metadata: dict = field(init=True, default=None)
 
     def __post_init__(self) -> None:
         """Definition of post init for batch score event."""

@@ -16,7 +16,7 @@ from ..events import event_utils
 from ..minibatch_aggregator import MinibatchAggregator
 
 
-def setup_minibatch_aggregator_event_handlers():
+def setup_minibatch_aggregator_event_handlers(logging_metadata: dict = None):
     """Set up minibatch aggregator event handlers."""
     add_handler(_handle_batch_score_event, signal=Signal.EmitTelemetryEvent)
     add_handler(_handle_generate_minibatch_summary, signal=Signal.GenerateMinibatchSummary)
@@ -42,14 +42,19 @@ def _handle_generate_minibatch_summary(
     minibatch_id: str = None,
     timestamp: datetime = None,
     output_row_count: int = None,
+    logging_metadata: dict = None,
     sender=None
 ):
     summary_event = _minibatch_aggregator.summarize(
         minibatch_id=minibatch_id,
         end_time=timestamp,
         output_row_count=output_row_count,
+        logging_metadata=logging_metadata
     )
-    endpoint_health_events = _minibatch_aggregator.summarize_endpoints(minibatch_id=minibatch_id)
+    endpoint_health_events = _minibatch_aggregator.summarize_endpoints(
+        minibatch_id=minibatch_id,
+        logging_metadata=logging_metadata
+    )
     _minibatch_aggregator.clear(minibatch_id=minibatch_id)
 
     emit_event(batch_score_event=summary_event)

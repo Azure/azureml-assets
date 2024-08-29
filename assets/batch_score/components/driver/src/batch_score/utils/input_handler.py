@@ -50,9 +50,7 @@ class InputHandler(ABC):
         int_forceable_properties = [
             "max_tokens",
             "n",
-            "logprobs",
             "best_of",
-            "n_epochs",
             "batch_size",
             "classification_n_classes"]
 

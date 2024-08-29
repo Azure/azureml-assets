@@ -114,11 +114,13 @@ class Signal(StrEnum):
 def generate_minibatch_summary(
         minibatch_id: str,
         timestamp: datetime = None,
-        output_row_count: int = None):
+        output_row_count: int = None,
+        logging_metadata: dict = None):
     """Generate the minibatch summary."""
     dispatcher.send(
         signal=Signal.GenerateMinibatchSummary,
         minibatch_id=minibatch_id,
         timestamp=timestamp or datetime.now(),
         output_row_count=output_row_count or 0,
+        logging_metadata=logging_metadata
     )

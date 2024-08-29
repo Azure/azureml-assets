@@ -20,6 +20,7 @@ from .scoring_result import ScoringResult
 from ..header_providers.header_provider import HeaderProvider
 
 from ..telemetry.scoring_logging import (
+    get_logger,
     ScoreFailedLog,
     ScoreFailedWithExceptionLog,
     ScoreStartLog,
@@ -116,6 +117,7 @@ class GenericScoringClient:
                 internal_id=str(uuid.uuid4()),
                 x_ms_client_request_id=str(uuid.uuid4()),
                 timeout=timeout,
+                is_validating_request=True
             )
 
         if http_response.status in [401, 403]:
@@ -140,6 +142,7 @@ class GenericScoringClient:
         internal_id: str,
         x_ms_client_request_id: str,
         timeout: aiohttp.ClientTimeout = None,
+        is_validating_request=False
     ) -> HttpScoringResponse:
         """Send HTTP request to scoring url."""
         try:
@@ -153,7 +156,8 @@ class GenericScoringClient:
                     response,
                     worker_id,
                     internal_id,
-                    x_ms_client_request_id)
+                    x_ms_client_request_id,
+                    is_validating_request)
         except Exception as ex:
             return self._log_and_create_http_scoring_response_from_exception(
                 ex,
@@ -166,7 +170,8 @@ class GenericScoringClient:
         response: aiohttp.ClientResponse,
         worker_id: str,
         internal_id: str,
-        x_ms_client_request_id: str
+        x_ms_client_request_id: str,
+        is_validating_request=False
     ) -> HttpScoringResponse:
         """Create an instance of HTTP scoring response."""
         http_response = HttpScoringResponse(
@@ -179,16 +184,20 @@ class GenericScoringClient:
             return http_response
 
         error_response = await response.text()
-        ScoreFailedLog(
-            worker_id=worker_id,
-            internal_id=internal_id,
-            x_ms_client_request_id=x_ms_client_request_id,
-            scoring_url=self._scoring_url,
-            status_code="NONE" if response is None else response.status,
-            reason="NONE" if response is None else response.reason,
-            response_headers="NONE" if response is None else response.headers,
-            response_payload=error_response
-        ).log()
+
+        if is_validating_request and http_response.status == 400:
+            get_logger().info("Successfully validated the auth for the configured endpoint")
+        else:
+            ScoreFailedLog(
+                worker_id=worker_id,
+                internal_id=internal_id,
+                x_ms_client_request_id=x_ms_client_request_id,
+                scoring_url=self._scoring_url,
+                status_code="NONE" if response is None else response.status,
+                reason="NONE" if response is None else response.reason,
+                response_headers="NONE" if response is None else response.headers,
+                response_payload=error_response
+            ).log()
 
         try:
             http_response.payload = json.loads(error_response)

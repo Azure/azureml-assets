@@ -3,7 +3,6 @@
 
 """Command line argument specification."""
 
-from ...batch_pool.quota.quota_client import QuotaClient
 from ...utils.common import str2bool
 from ..common_enums import ApiType
 
@@ -99,14 +98,6 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
         'required': False,
         'type': str,
     },
-    '--batch_pool': {
-        'const': None,
-        'default': None,
-        'help': 'The name of the batch pool.',
-        'nargs': '?',
-        'required': False,
-        'type': str,
-    },
     '--batch_size_per_request': {
         'default': 1,
         'help': 'The number of rows to score against the model in a single HTTP request.'
@@ -191,13 +182,6 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
     '--quota_audience': {
         'default': None,
         'help': 'Quota audience.',
-        'required': False,
-        'type': str,
-    },
-    '--quota_estimator': {
-        'choices': QuotaClient.ESTIMATORS.keys(),
-        'default': 'completion',
-        'help': 'Quota estimator.',
         'required': False,
         'type': str,
     },

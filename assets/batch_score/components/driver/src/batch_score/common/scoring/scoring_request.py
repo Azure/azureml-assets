@@ -10,6 +10,7 @@ from ...utils.json_encoder_extensions import BatchComponentJSONEncoder
 from ..post_processing.mini_batch_context import MiniBatchContext
 from ..request_modification.input_transformer import InputTransformer
 from .scoring_attempt import ScoringAttempt
+from ..common_enums import InputType
 
 
 class ScoringRequest:
@@ -18,6 +19,7 @@ class ScoringRequest:
     __BATCH_REQUEST_METADATA = "_batch_request_metadata"
     __REQUEST_METADATA = "request_metadata"
     __CUSTOM_ID = "custom_id"
+    __INPUT_TYPE_PROPERTY = "input_type"
 
     def __init__(
             self,
@@ -58,6 +60,8 @@ class ScoringRequest:
         self.__request_metadata = self.__cleaned_payload_obj.pop(self.__REQUEST_METADATA, self.__request_metadata)
         # If custom_id exists (V2 input schema), make sure it is not sent to MIR endpoint
         self.__CUSTOM_ID = self.__cleaned_payload_obj.pop(self.__CUSTOM_ID, None)
+        # Pop the input type if present
+        self.__input_type: InputType = self.__cleaned_payload_obj.pop(self.__INPUT_TYPE_PROPERTY, InputType.Unknown)
 
         self.__cleaned_payload = json.dumps(self.__cleaned_payload_obj, cls=BatchComponentJSONEncoder)
         self.__loggable_payload = json.dumps(self.__loggable_payload_obj, cls=BatchComponentJSONEncoder)
@@ -144,6 +148,11 @@ class ScoringRequest:
     def custom_id(self) -> str:
         """Get the custom id. Only valid for V2 input schema."""
         return self.__CUSTOM_ID
+
+    @property
+    def input_type(self) -> InputType:
+        """Get the classification input type."""
+        return self.__input_type
 
     @estimated_cost.setter
     def estimated_cost(self, cost: int):

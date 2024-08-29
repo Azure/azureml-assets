@@ -10,9 +10,8 @@ class EndpointType(StrEnum):
     """Endpoint Type."""
 
     AOAI = 'AOAI'
-    BatchPool = 'BatchPool'
     Serverless = 'Serverless'
-    MIR = 'MIR'
+    Null = "Null"
 
 
 class AuthenticationType(StrEnum):
@@ -33,3 +32,12 @@ class ApiType(StrEnum):
     Vesta = 'vesta'
     VestaChatCompletion = 'vesta_chat_completion'
     Embedding = 'embedding'
+
+
+class InputType(StrEnum):
+    """Input Type of the request."""
+
+    TextOnly = "text_only"
+    Image = "image_only"
+    ImageAndText = "image_and_text"
+    Unknown = "Unknown"

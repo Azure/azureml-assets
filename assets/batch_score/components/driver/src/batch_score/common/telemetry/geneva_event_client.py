@@ -97,6 +97,9 @@ class GenevaEventClient():
         extension_fields['endpoint_type'] = str(event.endpoint_type)
         extension_fields['event_time'] = event.event_time.isoformat()
 
+        if event.logging_metadata:
+            extension_fields.update(event.logging_metadata)
+
         return extension_fields
 
     def _get_client_os(self, client_os):

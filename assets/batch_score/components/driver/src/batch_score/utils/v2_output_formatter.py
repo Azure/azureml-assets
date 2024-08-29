@@ -74,7 +74,8 @@ class V2OutputFormatter(OutputFormatter):
         return list(map(self._stringify_output, output_list))
 
     def __get_request_id(self, scoring_request: ScoringResult):
-        return scoring_request.response_headers.get("x-request-id", "")
+        if scoring_request.response_headers is not None:
+            return scoring_request.response_headers.get("x-request-id", "")
 
     def _get_response_obj(self, result: dict):
         if result.get("response") is None:

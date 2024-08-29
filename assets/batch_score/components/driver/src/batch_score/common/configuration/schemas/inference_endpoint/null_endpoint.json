@@ -1,5 +1,5 @@
 {
-    "$id": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint/azureml_serverless_endpoint.json",
+    "$id": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint/null_endpoint.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "unevaluatedProperties": false,
     "required": [
@@ -8,11 +8,11 @@
     ],
     "properties": {
         "type": {
-            "const": "azureml_serverless_endpoint"
+            "const": "null_endpoint"
         },
         "url": {
             "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint_url.json",
-            "pattern": "inference\\.ai\\.azure\\.com|models\\.ai\\.azure\\.com"
+            "pattern": "null\\.inference\\.io"
         }
     }
 }

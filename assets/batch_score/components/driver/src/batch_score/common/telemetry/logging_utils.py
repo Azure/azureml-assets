@@ -25,7 +25,6 @@ _events_client: EventsClient = None
 _ctx_worker_id = ContextVar("Async worker ID", default=None)
 _ctx_mini_batch_id = ContextVar("Async mini-batch ID", default=None)
 _ctx_quota_audience = ContextVar("Async quota audience", default=None)
-_ctx_batch_pool = ContextVar("Async batch pool", default=None)
 
 _pre_init_logger: logging.LoggerAdapter = logging.getLogger("PreInitLogger")
 _pre_init_logger.setLevel(logging.DEBUG)
@@ -40,34 +39,15 @@ class UTCFormatter(logging.Formatter):
     converter = time.gmtime
 
 
-class CustomerLogsFilter(logging.Filter):
-    """Customer log filter."""
+class StdoutLogsFilter(logging.Filter):
+    """Stdout log filter."""
 
     def __init__(self, log_level: str):
-        """Initialize CustomerLogsFilter."""
+        """Initialize StdoutLogsFilter."""
         self.log_level = logging.getLevelName(log_level)
 
     def filter(self, record):
         """Filter the record based on the given rule."""
-        """
-        Customers can see:
-         - All logs higher than INFO level, even for internal classes,
-         - For INFO and DEBUG, customer sees no logs from internal classes.
-         - For all other logs, customer sees their requested log level and higher.
-        """
-        if record.levelno > logging.INFO:
-            return True
-        message = record.getMessage()
-        for internal_class in [
-                'AIMD',
-                'Conductor',
-                'Gatherer',
-                'ParallelDriver',
-                'QuotaClient',
-                'RoutingClient',
-                'WaitTimeCongestionDetector']:
-            if message.startswith(internal_class):
-                return False
         return record.levelno >= self.log_level
 
 
@@ -96,7 +76,7 @@ def setup_logger(
     # The root logger has a pre-configured stream handler to log to stdout.
     # A filter is added to clean up the logs sent to customer.
     stream_handler = logging.root.handlers[0]
-    stream_handler.addFilter(CustomerLogsFilter(stdout_log_level_upper))
+    stream_handler.addFilter(StdoutLogsFilter(stdout_log_level_upper))
 
     _custom_dimensions = __calculate_custom_dimensions()
 
@@ -125,7 +105,6 @@ def setup_logger(
             _ctx_worker_id,
             _ctx_mini_batch_id,
             _ctx_quota_audience,
-            _ctx_batch_pool,
             component_version)
     else:
         _events_client = EventsClient()
@@ -160,7 +139,6 @@ def get_logger():
     custom_dimensions["WorkerId"] = _ctx_worker_id.get()
     custom_dimensions["MiniBatchId"] = _ctx_mini_batch_id.get()
     custom_dimensions["QuotaAudience"] = _ctx_quota_audience.get()
-    custom_dimensions["BatchPool"] = _ctx_batch_pool.get()
 
     extra = {
         "custom_dimensions": custom_dimensions,
@@ -202,16 +180,6 @@ def get_quota_audience():
 def set_quota_audience(quota_audience: str):
     """Set quota audience."""
     _ctx_quota_audience.set(quota_audience)
-
-
-def get_batch_pool():
-    """Get batch pool."""
-    return _ctx_batch_pool.get()
-
-
-def set_batch_pool(batch_pool: str):
-    """Set batch pool."""
-    _ctx_batch_pool.set(batch_pool)
 
 
 def __calculate_custom_dimensions():

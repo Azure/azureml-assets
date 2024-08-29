@@ -8,9 +8,7 @@ import os
 from collections import deque
 
 import aiohttp
-from aiohttp import TraceConfig
 
-from ...batch_pool.routing.routing_client import RoutingClient
 from ..configuration.client_settings import NullClientSettingsProvider
 from ..configuration.configuration import Configuration
 from ..post_processing.gatherer import Gatherer
@@ -34,8 +32,7 @@ class Conductor:
         configuration: Configuration,
         loop: asyncio.AbstractEventLoop,
         scoring_client: ScoringClient,
-        routing_client: RoutingClient,
-        trace_configs: "list[TraceConfig]" = None,
+        trace_configs: list = None,
         finished_callback=None,
     ):
         """Initialize Conductor."""
@@ -53,7 +50,6 @@ class Conductor:
             self.__target_worker_count = self._configuration.initial_worker_count
 
         self.__client_session: aiohttp.ClientSession = self.__get_session()
-        self.__routing_client: RoutingClient = routing_client
         self.__workers: list[Worker] = []
         self.__scoring_request_queue: deque = deque()
         self.__scoring_result_queue: deque = deque()
@@ -65,9 +61,7 @@ class Conductor:
             self.__minibatch_index_set = set()
             self.__failed_scoring_result_queue: deque = deque()
 
-        # When the target is a single endpoint, the routing client is not present.
-        # Then default to NullClientSettingsProvider.
-        self.__clients_settings_provider = self.__routing_client or NullClientSettingsProvider()
+        self.__clients_settings_provider = NullClientSettingsProvider()
         self.__cas = AIMD(
             request_metrics=self.__request_metrics,
             client_settings_provider=self.__clients_settings_provider)
@@ -124,6 +118,7 @@ class Conductor:
             event_utils.generate_minibatch_summary(
                 minibatch_id=mini_batch_context.minibatch_index,
                 output_row_count=0,
+                logging_metadata=self._configuration.logging_metadata
             )
             return
 

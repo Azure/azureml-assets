@@ -19,7 +19,6 @@ class BatchScoreMinibatchEndpointHealthEvent(BatchScoreEvent):
 
     minibatch_id: str = field(init=True, default=None)
     scoring_url: str = field(init=True, default=None)
-    batch_pool: str = field(init=True, default=None)
     quota_audience: str = field(init=True, default=None)
 
     # HTTP request counts

@@ -89,6 +89,7 @@ class FileConfigurationValidator:
         instance["request_settings"].setdefault("properties", {})
         instance["request_settings"].setdefault("timeout", 600)
         instance["request_settings"].setdefault("input_schema_version", 1)
+        instance["request_settings"].setdefault("server_error_retries", 10)
 
         # log_settings
         instance.setdefault("log_settings", {})

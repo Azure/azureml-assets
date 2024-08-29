@@ -21,7 +21,7 @@
         },
         "logging_metadata": {
             "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/dictionary_with_string_values.json",
-            "description": "Metadata to include in kusto logs.",
+            "description": "Metadata to include in kusto logs. Can provide upto 20 key-value pairs; each key and value must be a string which does not exceed 50 characters.",
             "default": {}
         }
     }

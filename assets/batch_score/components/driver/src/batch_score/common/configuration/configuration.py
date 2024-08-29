@@ -23,7 +23,6 @@ class Configuration(Namespace):
     app_insights_log_level: str = field(init=True, default="debug")
     async_mode: bool = field(init=True, default=False)
     authentication_type: str = field(init=True, default=None)
-    batch_pool: str = field(init=True, default=None)
     batch_size_per_request: int = field(init=True, default=1)
     configuration_file: str = field(init=True, default=None)
     connection_name: str = field(init=True, default=None)
@@ -39,12 +38,12 @@ class Configuration(Namespace):
     online_endpoint_url: str = field(init=True, default=None)
     output_behavior: str = field(init=True, default=None)
     quota_audience: str = field(init=True, default=None)
-    quota_estimator: str = field(init=True, default=None)
     request_path: str = field(init=True, default=None)
     save_mini_batch_results: str = field(init=True, default=None)
     scoring_url: str = field(init=True, default=None)
     segment_large_requests: str = field(init=True, default=None)
     segment_max_token_size: int = field(init=True, default=None)
+    server_error_retries: int = field(init=True, default=10)
     service_namespace: str = field(init=True, default=None)
     split_output: bool = field(init=True, default=False)
     stdout_log_level: str = field(init=True, default="debug")
@@ -137,10 +136,6 @@ class Configuration(Namespace):
             )
         )
 
-    def is_sahara(self) -> bool:
-        """Check if the target endpoint is for sahara models."""
-        return self.batch_pool and self.batch_pool.lower() == "sahara-global"
-
     def is_vesta(self) -> bool:
         """Check if the target endpoint is for vesta models."""
         return (
@@ -176,16 +171,20 @@ class Configuration(Namespace):
         """Check if the target endpoint is MIR serverless."""
         return self.scoring_url and constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url
 
+    def is_null_endpoint(self) -> bool:
+        """Check if the target endpoint is a null endpoint for testing."""
+        return self.scoring_url and constants.NULL_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url
+
     def get_endpoint_type(self) -> EndpointType:
         """Get endpoint type."""
         if self.is_aoai_endpoint():
             return EndpointType.AOAI
         elif self.is_serverless_endpoint():
             return EndpointType.Serverless
-        elif self.batch_pool and self.quota_audience and self.service_namespace:
-            return EndpointType.BatchPool
+        elif self.is_null_endpoint():
+            return EndpointType.Null
         else:
-            return EndpointType.MIR
+            raise NotImplementedError("Endpoint type not supported.")
 
     def get_api_type(self) -> ApiType:
         """Get api type."""

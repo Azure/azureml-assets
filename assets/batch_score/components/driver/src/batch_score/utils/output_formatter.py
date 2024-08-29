@@ -8,7 +8,6 @@ from abc import ABC, abstractmethod
 
 from ..common.scoring.scoring_result import ScoringResult
 from .json_encoder_extensions import BatchComponentJSONEncoder
-from ..batch_pool.quota.estimators import EmbeddingsEstimator
 from ..common.telemetry import logging_utils as lu
 
 
@@ -68,10 +67,6 @@ class OutputFormatter(ABC):
             self.__validate_response_data_length(numrequests, numresults)
             output_index_to_embedding_info_map = self.__build_output_idx_to_embedding_mapping(response_data)
             update_prompt_tokens = self.__tiktoken_estimates_succeeded(token_count_estimates, numrequests)
-            if not update_prompt_tokens:
-                # Single online endpoints will not have computed token estimates, as this occurs in quota client.
-                token_count_estimates = self.__tiktoken_estimates_retry(request)
-                update_prompt_tokens = self.__tiktoken_estimates_succeeded(token_count_estimates, numrequests)
         else:
             # Result has error; response_obj["error"]. Copy this for each request in batch below.
             numresults = -1
@@ -147,23 +142,6 @@ class OutputFormatter(ABC):
             lu.get_logger().warn(f"Input length {input_length} does not match token estimate "
                                  "length {token_est_length}. Skipping prompt_tokens count overrides.")
         return length_matches
-
-    def __tiktoken_estimates_retry(self, request_obj: dict) -> "tuple[int]":
-        """
-        Return token counts for the inputs within a batch.
-
-        Args:
-            request_obj: The request dictionary.
-        """
-        lu.get_logger().debug("Attempting to calculate tokens for the embedding input batch.")
-        if self.estimator is None:
-            self.estimator = EmbeddingsEstimator()
-        token_counts = self.estimator.estimate_request_cost(request_obj)
-        if token_counts == 1:
-            # This occurs if tiktoken module fails. See DV3Estimator for more info on why this could fail.
-            return ()
-        else:
-            return token_counts
 
     def __validate_response_data_length(self, numrequests, numresults):
         """

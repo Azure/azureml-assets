@@ -16,6 +16,8 @@ from .file_configuration_validator import FileConfigurationValidator
 class FileConfigurationParser:
     """Parser for file-base configuration."""
 
+    # Limits on logging_metadata: This field can take upto 20 key-value pairs
+    # Each key and value must be a string which does not exceed 50 characters
     MAX_METADATA_FIELDS = 20
     MAX_METADATA_CHAR_LENGTH = 50
 
@@ -40,12 +42,14 @@ class FileConfigurationParser:
 
         logging_metadata = config.get('log_settings', {}).get('logging_metadata')
         if isinstance(logging_metadata, dict):
-            reduced_metadata = {}
-            for idx, (key, value) in enumerate(logging_metadata.items()):
-                if idx >= self.MAX_METADATA_FIELDS:
-                    break
-                reduced_metadata[key[:self.MAX_METADATA_CHAR_LENGTH]] = value[:self.MAX_METADATA_CHAR_LENGTH]
-            logging_metadata = json.dumps(reduced_metadata)
+            logging_metadata = {
+                key[:self.MAX_METADATA_CHAR_LENGTH]: value[:self.MAX_METADATA_CHAR_LENGTH]
+                for idx, (key, value) in enumerate(logging_metadata.items())
+                if idx < self.MAX_METADATA_FIELDS
+            }
+            user_agent_identifier = config.get('request_settings', {}).get('user_agent_identifier')
+            if user_agent_identifier:
+                logging_metadata["UserAgentIdentifier"] = user_agent_identifier
 
         if config.get('output_settings', {}).get('save_partitioned_scoring_results'):
             output_behavior = 'summary_only'
@@ -63,7 +67,6 @@ class FileConfigurationParser:
             app_insights_log_level=config.get('log_settings', {}).get('app_insights_log_level'),
             async_mode=async_mode,
             authentication_type=config.get('authentication', {}).get('type'),
-            batch_pool=None,
             batch_size_per_request=config.get('api', {}).get('batch_size_per_request'),
             configuration_file=None,
             connection_name=config.get('authentication', {}).get('name'),
@@ -78,12 +81,12 @@ class FileConfigurationParser:
             online_endpoint_url=None,
             output_behavior=output_behavior,
             quota_audience=None,
-            quota_estimator=None,
             request_path=None,
             save_mini_batch_results=save_mini_batch_results,
             scoring_url=config.get('inference_endpoint', {}).get('url'),
             segment_large_requests=config.get('api', {}).get('response_segment_size') > 0,
             segment_max_token_size=config.get('api', {}).get('response_segment_size'),
+            server_error_retries=config.get('request_settings', {}).get('server_error_retries'),
             service_namespace=None,
             split_output=config.get('output_settings', {}).get('split_output'),
             stdout_log_level=config.get('log_settings', {}).get('stdout_log_level'),

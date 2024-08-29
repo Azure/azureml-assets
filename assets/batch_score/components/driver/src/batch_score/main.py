@@ -3,26 +3,20 @@
 
 """Entry script for batch score component."""
 
-import aiohttp
 import asyncio
 import os
 import sys
 import time
 import traceback
-import json
 
 import pandas as pd
 
-from .batch_pool.meds_client import MEDSClient
-from .batch_pool.routing.routing_client import RoutingClient
 from .common import constants
 from .common.auth.token_provider import TokenProvider
-from .common.common_enums import EndpointType
 from .common.configuration.configuration import Configuration
 from .common.configuration.metadata import Metadata
 from .common.configuration.configuration_parser_factory import ConfigurationParserFactory
 from .common.parallel import parallel_driver as parallel
-from .common.header_providers.header_provider_factory import HeaderProviderFactory
 from .common.post_processing.callback_factory import CallbackFactory
 from .common.post_processing.mini_batch_context import MiniBatchContext
 from .common.post_processing.result_utils import (
@@ -50,6 +44,7 @@ from .common.request_modification.modifiers.vesta_image_encoder import ImageEnco
 from .common.request_modification.modifiers.vesta_image_modifier import (
     VestaImageModifier,
 )
+from .common.request_modification.modifiers.input_type_modifier import InputTypeModifier
 from .common.scoring.scoring_client_factory import ScoringClientFactory
 from .common.telemetry import logging_utils as lu
 from .common.telemetry.event_listeners.geneva_event_listener import setup_geneva_event_handlers
@@ -115,7 +110,7 @@ def init():
     event_utils.setup_context_vars(configuration, metadata)
     setup_geneva_event_handlers()
     setup_job_log_event_handlers()
-    setup_minibatch_aggregator_event_handlers()
+    setup_minibatch_aggregator_event_handlers(logging_metadata=configuration.logging_metadata)
 
     token_provider = TokenProvider(token_file_path=configuration.token_file_path)
 
@@ -130,22 +125,17 @@ def init():
                  metadata.component_version)
 
     # Emit init started event
-    init_started_event = BatchScoreInitStartedEvent()
+    init_started_event = BatchScoreInitStartedEvent(logging_metadata=configuration.logging_metadata)
     event_utils.emit_event(batch_score_event=init_started_event)
 
     configuration.log()
 
     setup_encoder(configuration.ensure_ascii)
 
-    routing_client = setup_routing_client(
-        configuration=configuration,
-        metadata=metadata,
-        token_provider=token_provider)
     scoring_client = ScoringClientFactory().setup_scoring_client(
         configuration=configuration,
         metadata=metadata,
-        token_provider=token_provider,
-        routing_client=routing_client)
+        token_provider=token_provider)
     trace_configs = setup_trace_configs()
     input_to_request_transformer = setup_input_to_request_transformer()
     input_to_log_transformer = setup_input_to_log_transformer()
@@ -163,7 +153,6 @@ def init():
     conductor = parallel.Conductor(
         configuration=configuration,
         loop=loop,
-        routing_client=routing_client,
         scoring_client=scoring_client,
         trace_configs=trace_configs,
         finished_callback=finished_callback,
@@ -183,7 +172,7 @@ def init():
     # Emit init completed event
     init_completed_event = BatchScoreInitCompletedEvent(
         init_duration_ms=((end - start) * 1000),
-        logging_metadata=json.loads(configuration.logging_metadata) if configuration.logging_metadata else None
+        logging_metadata=configuration.logging_metadata
     )
     event_utils.emit_event(batch_score_event=init_completed_event)
 
@@ -240,6 +229,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
         event_utils.generate_minibatch_summary(
             minibatch_id=mini_batch_context.mini_batch_id,
             output_row_count=len(ret),
+            logging_metadata=configuration.logging_metadata
         )
         lu.get_logger().info(f"Completed data subset, length {input_data.shape[0]}.")
         set_mini_batch_id(None)
@@ -280,6 +270,7 @@ def enqueue(input_data: pd.DataFrame, mini_batch_context):
         event_utils.generate_minibatch_summary(
             minibatch_id=mini_batch_id,
             output_row_count=0,
+            logging_metadata=configuration.logging_metadata
         )
         raise e
     finally:
@@ -311,19 +302,9 @@ async def get_application_insights_connection_string(
         lu.get_logger().info("Using the provided Application Insights connection string.")
         return connection_string
 
-    if configuration.get_endpoint_type() != EndpointType.BatchPool:
-        lu.get_logger().info("Application Insights connection string not provided. "
-                             "Application Insights logging will be disabled.")
-        return None
-
-    lu.get_logger().info("Application Insights connection string not provided, looking up from MEDS.")
-    header_provider = HeaderProviderFactory().get_header_provider_for_model_endpoint_discovery(
-        configuration=configuration,
-        metadata=metadata,
-        token_provider=token_provider)
-    meds_client = MEDSClient(header_provider=header_provider, configuration=configuration)
-    async with aiohttp.ClientSession() as session:
-        return await meds_client.get_application_insights_connection_string(session)
+    lu.get_logger().info("Application Insights connection string not provided. "
+                         "Application Insights logging will be disabled.")
+    return None
 
 
 def get_finished_batch_result() -> "dict[str, dict[str, any]]":
@@ -388,6 +369,7 @@ def setup_loop() -> asyncio.AbstractEventLoop:
 def setup_input_to_request_transformer() -> InputTransformer:
     """Set up the tranformer used to modify each row of the input data before it is sent to MIR for scoring."""
     modifiers: "list[RequestModifier]" = []
+    modifiers.append(InputTypeModifier())
     if configuration.is_vesta():
         modifiers.append(
             VestaImageModifier(image_encoder=ImageEncoder(image_input_folder_str=configuration.image_input_folder)))
@@ -424,28 +406,6 @@ def setup_input_to_output_transformer() -> InputTransformer:
     return InputTransformer(modifiers=modifiers)
 
 
-def setup_routing_client(
-        configuration: Configuration,
-        metadata: Metadata,
-        token_provider: TokenProvider) -> RoutingClient:
-    """Set up routing client."""
-    routing_client: RoutingClient = None
-    if configuration.batch_pool and configuration.service_namespace:
-        header_provider = HeaderProviderFactory().get_header_provider_for_model_endpoint_discovery(
-            configuration=configuration,
-            metadata=metadata,
-            token_provider=token_provider)
-
-        routing_client = RoutingClient(
-            header_provider=header_provider,
-            service_namespace=configuration.service_namespace,
-            target_batch_pool=configuration.batch_pool,
-            request_path=configuration.request_path,
-        )
-
-    return routing_client
-
-
 def _should_emit_prompts_to_job_log() -> bool:
     emit_prompts_to_job_log_env_var = os.environ.get(constants.BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG_ENV_VAR)
     if emit_prompts_to_job_log_env_var is None:
@@ -467,9 +427,9 @@ def _emit_minibatch_started_event(mini_batch_context, configuration, input_data)
         batch_score_event=BatchScoreMinibatchStartedEvent(
             minibatch_id=mini_batch_context.minibatch_index,
             scoring_url=configuration.scoring_url,
-            batch_pool=configuration.batch_pool,
             quota_audience=configuration.quota_audience,
             input_row_count=input_data.shape[0],
             retry_count=mini_batch_context.retry_count,
+            logging_metadata=configuration.logging_metadata
         )
     )

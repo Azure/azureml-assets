@@ -151,7 +151,6 @@ class WorkspaceConnectionAuthProvider(AuthProvider):
         resp = self._get_workspace_connection_by_name()
         return {
             EndpointType.AOAI: {'api-key': resp['properties']['credentials']['key']},
-            EndpointType.MIR: {'Authorization': f"Bearer {resp['properties']['credentials']['key']}"},
             EndpointType.Serverless: {'Authorization': resp['properties']['credentials']['key']},
         }[self._endpoint_type]
 
