@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.10
+version: 0.0.11
 
 inputs:
   input_dataset:
@@ -201,7 +201,7 @@ jobs:
   # Config generation
   config_generation:
     type: command
-    component: azureml:batch_benchmark_config_generator:0.0.5
+    component: azureml:batch_benchmark_config_generator:0.0.6
     inputs:
       scoring_url: ${{parent.inputs.endpoint_url}}
       connection_name: ${{parent.inputs.connections_name}}
