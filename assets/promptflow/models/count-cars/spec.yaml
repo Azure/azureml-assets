@@ -11,4 +11,4 @@ properties:
   inference-recommended-sku: Standard_DS3_v2
 tags:
   hiddenlayerscanned: ""
-version: 2
+version: 3

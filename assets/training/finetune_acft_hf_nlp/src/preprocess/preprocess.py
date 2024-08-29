@@ -151,6 +151,7 @@ def get_parser():
         default="SingleLabelClassification",
         help="Task Name",
     )
+    parser.add_argument("--num_train_epochs", default=1, type=int, help="training epochs")
 
     # NLP settings
     parser.add_argument(

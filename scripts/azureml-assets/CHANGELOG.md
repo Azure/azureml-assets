@@ -3,6 +3,21 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.57 (2024-08-12)
+### 🐛 Bugs Fixed
+- [#3253](https://github.com/Azure/azureml-assets/pull/3253) Also accept Path types for populating tags from files
+- [#3254](https://github.com/Azure/azureml-assets/pull/3254) Return string value instead of Path if string doesn't resolve to a path
+
+## 1.16.56 (2024-08-09)
+### 🚀 New Features
+- [#3232](https://github.com/Azure/azureml-assets/pull/3232) Add additional features to AzureBlobstoreAssetPath
+### 🐛 Bugs Fixed
+- [#3238](https://github.com/Azure/azureml-assets/pull/3238) Check if value is string before appending to asset filepath
+
+## 1.16.55 (2024-08-08)
+### 🚀 New Features
+- [#3230](https://github.com/Azure/azureml-assets/pull/3230) Add support for adding tags from filepaths
+
 ## 1.16.54 (2024-07-08)
 ### 🐛 Bugs Fixed
 - [#3127](https://github.com/Azure/azureml-assets/pull/3127) Test pipeline

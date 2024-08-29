@@ -1,0 +1,24 @@
+type: evaluationresult
+name: summeval_text-embedding-3-large_summarization
+version: 2.07.22
+display_name: SummEval_text-embedding-3-large_summarization
+description: text-embedding-3-large run for SummEval dataset
+dataset_name: SummEval
+dataset_family: SummEval
+
+model_name: text-embedding-3-large
+model_version: "1"
+model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-large/versions/1
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azure-openai/models/text-embedding-3-large/versions/1
+
+tags:
+    evaluation_type: text_embeddings
+    task: summarization
+    primary_metric: spearman_correlation
+
+metrics:
+    spearman_correlation: 0.2991603740929319
+
+properties: {}
