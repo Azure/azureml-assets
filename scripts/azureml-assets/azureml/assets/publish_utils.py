@@ -13,9 +13,9 @@ from string import Template
 from subprocess import CompletedProcess, run
 from tempfile import TemporaryDirectory
 from typing import Dict, List, Tuple, Union
-from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig
+from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig, DataConfig
 from azureml.assets.deployment_config import AssetVersionUpdate
-from azureml.assets.model.model_utils import CopyUpdater, prepare_model, update_model_metadata
+from azureml.assets.model.model_utils import CopyUpdater, prepare_model, update_model_metadata, prepare_data
 from azureml.assets.util import logger
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import Component, Environment, Model
@@ -92,6 +92,38 @@ def prepare_model_for_registration(
     )
     if success:
         success = update_spec(model, spec_file_path)
+        logger.print(f"updated spec file? {success}")
+    return success
+
+
+def prepare_data_for_registration(
+    data_config: DataConfig,
+    spec_file_path: Path,
+    temp_dir: Path,
+    ml_client: MLClient,
+    copy_updater: CopyUpdater = None,
+) -> bool:
+    """Prepare data.
+
+    :param data_config: Data Config object
+    :type data_config: DataConfig
+    :param spec_file_path: path to data spec file
+    :type spec_file_path: Path
+    :param temp_dir: temp dir for data operation
+    :type temp_dir: Path
+    :param ml_client: MLClient object
+    :type ml_client: MLClient
+    :param copy_updater: CopyUpdater object to update files during azcopy
+    :type copy_updater: CopyUpdater
+    :return: Data successfully prepared for creation in registry.
+    :rtype: bool
+    """
+    data, success = prepare_data(
+        spec_path=spec_file_path, data_config=data_config, temp_dir=temp_dir, ml_client=ml_client,
+        copy_updater=copy_updater
+    )
+    if success:
+        success = update_spec(data, spec_file_path)
         logger.print(f"updated spec file? {success}")
     return success
 
@@ -521,11 +553,19 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
                     return False
         elif asset.type == AssetType.MODEL:
             version = asset.version
-            model_config = asset.extra_config_as_object()
+            model_config: assets.ModelConfig = asset.extra_config_as_object()
             if not prepare_model_for_registration(model_config, asset.spec_with_path, Path(temp_dir), ml_client,
                                                   copy_updater):
                 logger.log_error("Failed to prepare model")
                 return False
+        elif asset.type == AssetType.DATA:
+            version = asset.version
+            data_config: assets.DataConfig = asset.extra_config_as_object()
+            if data_config is not None:
+                if not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), ml_client,
+                                                      copy_updater):
+                    logger.log_error("Failed to prepare data asset")
+                    return False
 
         # Create asset
         return create_asset_cli(
