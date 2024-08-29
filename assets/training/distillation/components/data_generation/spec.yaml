@@ -151,7 +151,6 @@ command: >-
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   $[[--max_len_summary ${{inputs.max_len_summary}}]]
-  
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}
