@@ -33,7 +33,7 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
 # Install azureml packages
 RUN pip install 'azureml-dataset-runtime==1.57.0' \
                 'azureml-core==1.57.0' \
-                'azureml-mlflow==1.57.0' \
+                'azureml-mlflow==1.57.0.post1' \
                 'azureml-telemetry==1.57.0' \
                 'azureml-rai-utils==0.0.6'
 

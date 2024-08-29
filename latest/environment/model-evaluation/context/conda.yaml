@@ -18,7 +18,7 @@ dependencies:
   - azureml-core==1.57.0
   - azureml-automl-core==1.57.0
   - azureml-defaults==1.57.0
-  - azureml-mlflow==1.57.0
+  - azureml-mlflow==1.57.0.post1
   - azureml-telemetry==1.57.0
   - azureml-acft-common-components[image]==0.0.59
   - azureml-evaluate-mlflow==0.0.59
@@ -28,7 +28,7 @@ dependencies:
   - lightgbm>=3.2.1,<4.2.0
   - msrest>=0.6.21,<0.7.1
   - mltable==1.6.1
-  - openai==1.42.0
+  - openai==1.43.0
   - azure-ai-ml==1.19.0
   - mldesigner==0.1.0b18
   - tiktoken
