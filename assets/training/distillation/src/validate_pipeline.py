@@ -110,7 +110,7 @@ class PipelineInputsValidator:
         return cod_enabled.lower() == "true"
 
     def _get_max_len_summary(self) -> bool:
-        return self._args.max_len_summary !=80
+        return self._args.max_len_summary != 80
 
     def _validate_model_endpoint_args(self):
         endpoint_name = self._args.teacher_model_endpoint_name
