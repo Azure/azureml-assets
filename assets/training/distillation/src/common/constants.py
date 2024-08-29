@@ -54,6 +54,7 @@ DEFAULT_SUCCESS_RATIO = 0.7
 DEFAULT_REQUEST_BATCH_SIZE = 10
 MAX_BATCH_SIZE = 100
 MIN_RECORDS_FOR_FT = 65
+MATH_MIN_RECORDS_FOR_FT = 40
 
 # VLLM INFERENCE KEYS
 TOP_P = "top_p"
@@ -71,6 +72,49 @@ DEFAULT_TEMPERATURE = 0.2
 
 # TEXT SUMMARIZATION DEFAULT OUTPUT WORD COUNT
 DEFAULT_SUMMARY_WORD_COUNT = 80
+
+COD_SYSTEM_PROMPT = """\
+You will generate increasingly concise, entity-dense summaries of the given article.
+
+Repeat the following 2 steps 4 times.
+
+Step 1. Identify 1-3 informative entities (";" delimited) from the article \
+    which are missing from the previously generated summary.
+Step 2. Write a new, denser summary of identical length which covers every entity \
+    and detail from the previous summary plus the missing entities.
+
+A missing entity is:
+- relevant to the main story,
+- specific yet concise (5 words or fewer),
+- novel (not in the previous summary),
+- faithful (present in the article),
+- anywhere (can be located anywhere in the article).
+
+Guidelines:
+- The first summary should be long (4-5 sentences, ~80 words) yet highly non-specific, \
+    containing little information beyond the entities marked as missing. Use overly verbose language and fillers\
+          (e.g., "this article discusses") to reach ~80 words.
+- Make every word count: rewrite the previous summary to improve flow and make space for additional entities.
+- Make space with fusion, compression, and removal of uninformative phrases like "the article discusses".
+- The summaries should become highly dense and concise yet self-contained, i.e., easily understood without the article.
+- Missing entities can appear anywhere in the new summary.
+- Never drop entities from the previous summary. If space cannot be made, add fewer new entities.
+
+Answer only in JSON. The JSON should be a list (length 4) of dictionaries \
+      whose keys are "Missing_Entities" and "Denser_Summary". \
+Ensure the JSON starts with a square bracket [, ends with a square bracket ], \
+and each dictionary within the array is separated by a comma. \
+The JSON should be syntactically correct and properly formatted. For example: \
+
+[
+  {"Missing_Entities": "<value1>", "Denser_Summary": "<value2>"},
+  {"Missing_Entities": "<value3>", "Denser_Summary": "<value4>"},
+  {"Missing_Entities": "<value5>", "Denser_Summary": "<value6>"},
+  {"Missing_Entities": "<value7>", "Denser_Summary": "<value8>"}
+]
+
+Please ensure that each dense summary should be no more than 80 words.
+"""
 
 
 class InferenceMode:
@@ -100,6 +144,7 @@ class DataGenerationTaskType(str, Enum, metaclass=MetaEnum):
     NLI = "NLI"
     CONVERSATION = "CONVERSATION"
     NLU_QUESTION_ANSWERING = "NLU_QA"
+    MATH = "MATH"
     MATH = "MATH"
     SUMMARIZATION = "SUMMARIZATION"
 
@@ -158,17 +203,14 @@ class SystemPrompt:
     @classmethod
     def default_cot_prompt(cls):
         """Get the default chain of thought prompt."""
-        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(
-            keys=cls.DEFAULT_KEYS, additional_instructions=""
-        )
+        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.DEFAULT_KEYS, additional_instructions="")
 
     @classmethod
     def math_cot_prompt(cls):
         """Get the math chain of thought prompt for datasets expecting numeric answers."""
-        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(
-            keys=cls.MATH_NUMERICAL_KEYS,
-            additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS,
-        )
+        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.MATH_NUMERICAL_KEYS,
+                                                    additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS
+                                                    )
 
     @classmethod
     def get_cot_prompt(cls, task_type: str):

@@ -26,7 +26,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from common.constants import (
     COMPONENT_NAME,
-    COT_SYSTEM_PROMPT,
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
@@ -209,7 +208,8 @@ def get_parser():
             1. NLI: Generate Natural Language Inference data
             2. CONVERSATION: Generate conversational data (multi/single turn)
             3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
-            4. SUMMARIZATION: Generate Text Summary for Article
+            4. MATH: Generate Math data for numerical responses
+            5. SUMMARIZATION: Generate Text Summary for Article
             """,
         choices=[v.value for v in DataGenerationTaskType],
     )
@@ -247,8 +247,8 @@ def _invoke_endpoint(
             f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
         )
         with log_activity(logger=logger, activity_name=custom_logger_activity_name):
-            return requests.post(url, headers=request_headers, data=json.dumps(data))
-    return requests.post(url, headers=request_headers, data=json.dumps(data))
+            return requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
+    return requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
 
 
 def generate_synthetic_data(
@@ -293,11 +293,9 @@ def generate_synthetic_data(
         Returns:
             message (dict): System message with updated content
         """
-        if (
-            enable_cot
-            and data_generation_task_type != DataGenerationTaskType.CONVERSATION
-        ):
-            cot_system_message = {"role": "system", "content": COT_SYSTEM_PROMPT}
+        if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
+            cot_prompt = SystemPrompt.get_cot_prompt(data_generation_task_type)
+            cot_system_message = {'role': 'system', 'content': cot_prompt}
             return cot_system_message
         elif (
             enable_cod
@@ -377,14 +375,18 @@ def generate_synthetic_data(
             messages = normalize_messages(messages)
             last_status_code = None
             synthetic_responses = []
+            inference_data = []
             for turn_id, message in enumerate(messages):
                 role = message["role"]
                 if role == "system":
-                    synthetic_responses.append(process_system_prompt(message))
+                    # Data for fine-tune job should not include CoT prompt
+                    synthetic_responses.append(message)
+                    inference_data.append(process_system_prompt(message))
                 elif role == "user":
                     synthetic_responses.append(message)
+                    inference_data.append(message)
                 else:
-                    data_with_inference_parameters = {"messages": synthetic_responses}
+                    data_with_inference_parameters = {"messages": inference_data}
                     for key, value in data.items():
                         data_with_inference_parameters[key] = value
                     # replace the assistant content from the model
@@ -400,11 +402,15 @@ def generate_synthetic_data(
                         break
                     response_data = response.json()
                     # response content should be structured as below for a successful vllm response
-                    prediction_result = response_data["choices"][0]["message"][
-                        "content"
-                    ].strip()
+                    prediction_result = response_data["choices"][0]["message"]["content"].strip()
+
+                    # For CoT prompts, need to remove the reasoning and only use the answer
+                    if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
+                        key = SystemPrompt.get_response_key(data_generation_task_type)
+                        prediction_result = json.loads(prediction_result)[key]
+
                     synthetic_responses.append(
-                        {"role": "assistant", "content": prediction_result}
+                        {"role": "assistant", "content": str(prediction_result)}
                     )
             is_success = last_status_code == 200
             logger.info(f"Processing idx: {idx} - {is_success}")
