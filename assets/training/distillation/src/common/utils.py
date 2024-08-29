@@ -71,15 +71,6 @@ def retry(times: int):
 def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCredential]:
     """Create and validate credentials."""
     auth_failures = ""
-    try:
-        logger.info("Trying OBO credentials.")
-        credential = AzureMLOnBehalfOfCredential()
-        credential.get_token(AUTH_TOKEN_SCOPE)
-        return credential
-    except Exception as e:
-        logger.info("Failed to get OBO credentials.")
-        auth_failures += f"OBO: {str(e)}. \n"
-
     msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
     if msi_client_id:
         logger.info("Trying ManagedIdentityCredentials.")
@@ -88,8 +79,17 @@ def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCreden
             credential.get_token(AUTH_TOKEN_SCOPE)
             return credential
         except Exception as e:
-            logger.info("Failed to get ManagedIdentityCredential.")
+            logger.info("Failed to get ManagedIdentityCredential. Falling back to OBO.")
             auth_failures += f"ManagedIdentity: {str(e)}. \n"
+
+    try:
+        logger.info("Trying OBO credentials.")
+        credential = AzureMLOnBehalfOfCredential()
+        credential.get_token(AUTH_TOKEN_SCOPE)
+        return credential
+    except Exception as e:
+        logger.info("Failed to get OBO credentials. Falling back to AzureCLI.")
+        auth_failures += f"OBO: {str(e)}. \n"
     
     try:
         logger.info("Trying AzureCliCredential.")
