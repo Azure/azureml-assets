@@ -13,15 +13,14 @@ import mltable
 import pandas as pd
 import pytest
 
-from src.batch_score.common.scoring.scoring_result import (
+from src.batch_score.root.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )
-from src.batch_score.batch_pool.quota.estimators import EmbeddingsEstimator
-from src.batch_score.utils.v1_output_formatter import V1OutputFormatter
-from src.batch_score.utils.v2_output_formatter import V2OutputFormatter
-from src.batch_score.utils.v1_input_schema_handler import V1InputSchemaHandler
-from src.batch_score.utils.v2_input_schema_handler import V2InputSchemaHandler
+from src.batch_score.root.utils.v1_output_formatter import V1OutputFormatter
+from src.batch_score.root.utils.v2_output_formatter import V2OutputFormatter
+from src.batch_score.root.utils.v1_input_schema_handler import V1InputSchemaHandler
+from src.batch_score.root.utils.v2_input_schema_handler import V2InputSchemaHandler
 
 MLTable_yaml = """
 type: mltable
@@ -287,8 +286,31 @@ def test_output_formatter_failed_result_batch(input_schema_version, tiktoken_fai
             assert "maximum context length is 8190 tokens" in output_obj["error"]["message"]["error"]["message"]
 
 
+def test_output_formatter_failed_empty_response_headers_batch():
+    """Test convert result list failed result batch case."""
+    # Arrange
+    batch_size_per_request = 2
+
+    inputlist = __get_input_batch(batch_size_per_request)
+    request_obj = {"input": inputlist, "custom_id": "task_123"}
+    result_list = [__get_failed_scoring_result_for_batch(request_obj, response_headers_empty=True)]
+
+    # Act
+    # Ensure output formatting is resilient to empty headers
+    output_formatter = V2OutputFormatter()
+    actual = output_formatter.format_output(result_list, batch_size_per_request)
+
+    # Assert
+    assert len(actual) == batch_size_per_request
+    for idx, result in enumerate(actual):
+        output_obj = json.loads(result)
+        assert output_obj["response"]["request_id"] is None
+        assert output_obj["response"]["status_code"] == 400
+        assert output_obj["error"]["message"]["error"]["type"] == "invalid_request_error"
+        assert "maximum context length is 8190 tokens" in output_obj["error"]["message"]["error"]["message"]
+
+
 @pytest.mark.parametrize("tiktoken_fails", [True, False])
-@pytest.mark.parametrize("online_endpoint_url", [True, False])
 @pytest.mark.parametrize("reorder_results", [True, False])
 @pytest.mark.parametrize("input_schema_version", [1, 2])
 def test_output_formatter_batch_20(
@@ -296,7 +318,6 @@ def test_output_formatter_batch_20(
         mock_get_logger,
         input_schema_version,
         reorder_results,
-        online_endpoint_url,
         tiktoken_fails):
     """Test convert result list batch size 20 case."""
     # Arrange
@@ -316,7 +337,7 @@ def test_output_formatter_batch_20(
             request_obj,
             outputlist,
             reorder_results,
-            online_endpoint_url or tiktoken_fails)
+            tiktoken_fails)
         inputlists.extend(inputlist)
         result_list.append(result)
     inputlist = __get_input_batch(additional_rows)
@@ -329,13 +350,7 @@ def test_output_formatter_batch_20(
         request_obj,
         outputlist,
         reorder_results,
-        online_endpoint_url or tiktoken_fails))
-
-    # Mock what happens if estimates are not filled in when converting to output list
-    if tiktoken_fails:
-        __mock_tiktoken_permanent_failure(monkeypatch)
-    else:
-        __mock_tiktoken_estimate(monkeypatch)
+        tiktoken_fails))
 
     # Act
     if input_schema_version == 1:
@@ -370,9 +385,6 @@ def test_output_formatter_batch_20(
         if tiktoken_fails:
             # Prompt tokens will equal total tokens (equals batch length)
             assert response_obj["usage"]["prompt_tokens"] == valid_batch_len
-        elif online_endpoint_url:
-            # Prompt tokens is batch index (see helper function: `__mock_tiktoken_estimate`)
-            assert response_obj["usage"]["prompt_tokens"] == valid_batch_idx
         else:
             # Batch pool case; prompt tokens is 10 + batch index (see helper function: `__get_token_counts`)
             assert response_obj["usage"]["prompt_tokens"] == valid_batch_idx + 10
@@ -476,7 +488,7 @@ def __get_scoring_result_for_batch(batch_size, request_obj, outputlist, reorder_
     return result
 
 
-def __get_failed_scoring_result_for_batch(request_obj, tiktoken_failed=False):
+def __get_failed_scoring_result_for_batch(request_obj, tiktoken_failed=False, response_headers_empty=False):
     token_counts = __get_token_counts(tiktoken_failed, request_obj["input"])
     result = ScoringResult(
         status=ScoringResultStatus.FAILURE,
@@ -484,7 +496,7 @@ def __get_failed_scoring_result_for_batch(request_obj, tiktoken_failed=False):
         end=0,
         model_response_code=400,
         request_metadata="Not important",
-        response_headers={"header1": "value"},
+        response_headers=None if response_headers_empty else {"header1": "value"},
         num_retries=2,
         token_counts=token_counts,
         request_obj=request_obj,
@@ -529,15 +541,3 @@ def __embedding_output_info(idx):
 def __random_string(length: int = 10):
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(length))
-
-
-def __mock_tiktoken_permanent_failure(monkeypatch):
-    def mock_tiktoken_failure(*args):
-        return 1
-    monkeypatch.setattr(EmbeddingsEstimator, "estimate_request_cost", mock_tiktoken_failure)
-
-
-def __mock_tiktoken_estimate(monkeypatch):
-    def mock_tiktoken_override(estimator, request_obj):
-        return [i for i in range(len(request_obj['input']))]
-    monkeypatch.setattr(EmbeddingsEstimator, "estimate_request_cost", mock_tiktoken_override)

@@ -9,16 +9,18 @@ import pandas as pd
 from aiohttp import TraceConfig
 from mock import MagicMock, patch
 
-from tests.fixtures.geneva_event_listener import mock_import
+from tests.batch_score.fixtures.geneva_event_listener import mock_import
 with patch('importlib.import_module', side_effect=mock_import):
-    import src.batch_score.main as main
+    import src.batch_score.root.main as main
 
-from src.batch_score.batch_pool.meds_client import MEDSClient
-from src.batch_score.common.common_enums import EndpointType
-from src.batch_score.common.configuration.configuration import Configuration
-from src.batch_score.common.post_processing.output_handler import SeparateFileOutputHandler, SingleFileOutputHandler
-from src.batch_score.common.telemetry.events import event_utils
-from src.batch_score.common.telemetry.trace_configs import (
+from src.batch_score.root.common.common_enums import EndpointType
+from src.batch_score.root.common.configuration.configuration import Configuration
+from src.batch_score.root.common.post_processing.output_handler import (
+    SeparateFileOutputHandler,
+    SingleFileOutputHandler
+)
+from src.batch_score.root.common.telemetry.events import event_utils
+from src.batch_score.root.common.telemetry.trace_configs import (
     ConnectionCreateEndTrace,
     ConnectionCreateStartTrace,
     ConnectionReuseconnTrace,
@@ -105,10 +107,10 @@ def test_output_handler_interface(
         use_separate_file_output_handler: bool):
     """Test output handler interface."""
     with patch(
-        "tests.unit.test_main.SeparateFileOutputHandler"
+        "tests.batch_score.unit.test_main.SeparateFileOutputHandler"
       ) as mock_separate_file_output_handler, \
         patch(
-        "tests.unit.test_main.SingleFileOutputHandler"
+        "tests.batch_score.unit.test_main.SingleFileOutputHandler"
       ) as mock_single_file_output_handler:
 
         input_data, mini_batch_context = _setup_main()
@@ -146,7 +148,6 @@ def test_run_emit_minibatch_started_event(mock_run_context):
     assert mock_emit_event.call_count == 1
     assert 'batch_score_event' in mock_emit_event.call_args_list[0].kwargs
     event = mock_emit_event.call_args_list[0].kwargs['batch_score_event']
-    assert event.batch_pool == main.configuration.batch_pool
     assert event.input_row_count == 0
     assert event.minibatch_id == 1
     assert event.quota_audience == main.configuration.quota_audience
@@ -166,6 +167,7 @@ def test_run_generate_minibatch_summary(mock_run_context):
     mock_generate_minibatch_summary.assert_called_once_with(
         minibatch_id=1,
         output_row_count=0,
+        logging_metadata=main.configuration.logging_metadata
     )
 
 
@@ -182,7 +184,6 @@ def test_enqueue_emit_minibatch_started_event(mock_run_context):
     assert mock_emit_event.call_count == 1
     assert 'batch_score_event' in mock_emit_event.call_args_list[0].kwargs
     event = mock_emit_event.call_args_list[0].kwargs['batch_score_event']
-    assert event.batch_pool == main.configuration.batch_pool
     assert event.input_row_count == 0
     assert event.minibatch_id == 1
     assert event.quota_audience == main.configuration.quota_audience
@@ -216,6 +217,7 @@ def test_enqueue_exception_generate_minibatch_summary(mock_run_context):
     mock_generate_minibatch_summary.assert_called_once_with(
         minibatch_id=1,
         output_row_count=0,
+        logging_metadata=main.configuration.logging_metadata
     )
 
 
@@ -232,10 +234,6 @@ conn2 = ("InstrumentationKey=22222222-2222-2222-2222-222222222222;"
 @pytest.mark.parametrize("from_configuration, endpoint_type, from_MEDS, expected", [
     # When a connection string is present in the configuration, it is used.
     (conn1, EndpointType.AOAI, None, conn1),
-    (conn1, EndpointType.BatchPool, None, conn1),
-    # When missing and the endpoint type is BatchPool, the value from MEDS is used.
-    (None, EndpointType.BatchPool, None, None),    # Missing in MEDS
-    (None, EndpointType.BatchPool, conn2, conn2),  # Present in MEDS
     # When missing and the endpoint type is not BatchPool, None is returned without using MEDS.
     (None, EndpointType.AOAI, None, None),
     (None, EndpointType.AOAI, conn2, None),
@@ -249,17 +247,14 @@ async def test_get_application_insights_connection_string(
     # Arrange
     configuration = Configuration(
         app_insights_connection_string=from_configuration,
-        batch_pool="batch_pool" if endpoint_type == EndpointType.BatchPool else None,
-        quota_audience="quota_audience" if endpoint_type == EndpointType.BatchPool else None,
-        service_namespace="service_namespace" if endpoint_type == EndpointType.BatchPool else None)
-    with patch.object(MEDSClient, "get_application_insights_connection_string") as mock_get_client_setting:
-        mock_get_client_setting.return_value = from_MEDS
+        quota_audience=None,
+        service_namespace=None)
 
-        # Act
-        connection_string = await main.get_application_insights_connection_string(
-            configuration=configuration,
-            metadata=MagicMock(),
-            token_provider=MagicMock())
+    # Act
+    connection_string = await main.get_application_insights_connection_string(
+        configuration=configuration,
+        metadata=MagicMock(),
+        token_provider=MagicMock())
 
     # Assert
     assert connection_string == expected
@@ -270,9 +265,9 @@ def _setup_main(par_exception=None):
     configuration.additional_properties = None
     configuration.batch_size_per_request = 1
     configuration.scoring_url = "https://scoring_url"
-    configuration.batch_pool = "batch_pool"
     configuration.quota_audience = "quota_audience"
     configuration.input_schema_version = 1
+    configuration.logging_metadata = {"DeploymentType": "LowPriority", "ModelName": "gpt4"}
     main.configuration = configuration
 
     main.input_handler = MagicMock()

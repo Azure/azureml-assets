@@ -3,23 +3,23 @@
 
 """This file contains fixtures to mock scoring client."""
 
-from unittest.mock import MagicMock
-
 import pytest
-
-from src.batch_score.batch_pool.scoring.pool_scoring_client import PoolScoringClient
-from src.batch_score.common.scoring.scoring_request import ScoringRequest
-from src.batch_score.common.scoring.scoring_result import ScoringResult
+from src.batch_score.root.common.header_providers.user_agent_header_provider import UserAgentHeaderProvider
+from src.batch_score.root.common.scoring.http_response_handler import HttpResponseHandler
+from src.batch_score.root.common.scoring.generic_scoring_client import GenericScoringClient
+from src.batch_score.root.common.scoring.scoring_request import ScoringRequest
+from src.batch_score.root.common.scoring.scoring_result import ScoringResult
 
 
 @pytest.fixture()
-def make_pool_scoring_client(make_quota_client, make_routing_client):
+def make_generic_scoring_client():
     """Mock scoring client."""
-    def make(quota_client=None, routing_client=None):
-        return PoolScoringClient(
-            create_mir_scoring_client=lambda _: MagicMock(),
-            quota_client=quota_client or make_quota_client(),
-            routing_client=routing_client or make_routing_client())
+    def make():
+        return GenericScoringClient(
+            header_provider=UserAgentHeaderProvider(component_version="1.0"),
+            http_response_handler=HttpResponseHandler(),
+            scoring_url="null.inference.io"
+        )
     return make
 
 
@@ -43,5 +43,5 @@ def mock_score(monkeypatch, make_scoring_result):
 
         return given_scoring_result
 
-    monkeypatch.setattr("src.batch_score.batch_pool.scoring.pool_scoring_client.PoolScoringClient.score", score)
+    monkeypatch.setattr("src.batch_score.root.common.scoring.generic_scoring_client.GenericScoringClient.score", score)
     return state

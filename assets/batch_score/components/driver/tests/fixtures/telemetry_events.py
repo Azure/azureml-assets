@@ -5,23 +5,24 @@
 
 import pytest
 from datetime import datetime, timezone
-import json
 
-from src.batch_score.common.common_enums import ApiType, AuthenticationType, EndpointType
-from src.batch_score.common.configuration.configuration import Configuration
-from src.batch_score.common.telemetry.events.event_utils import setup_context_vars
-from src.batch_score.common.telemetry.events.batch_score_event import BatchScoreEvent
-from src.batch_score.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
-from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score.root.common.common_enums import ApiType, AuthenticationType, EndpointType
+from src.batch_score.root.common.configuration.configuration import Configuration
+from src.batch_score.root.common.telemetry.events.event_utils import setup_context_vars
+from src.batch_score.root.common.telemetry.events.batch_score_event import BatchScoreEvent
+from src.batch_score.root.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
+from src.batch_score.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
     BatchScoreMinibatchEndpointHealthEvent
 )
-from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_started_event import (
+    BatchScoreMinibatchStartedEvent
+)
 
-from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
+from tests.batch_score.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
 
 TEST_EXPERIMENT_ID = "22222222-2222-2222-2222-222222222222"
 TEST_REGION = "eastus"
@@ -86,12 +87,8 @@ def make_batch_score_init_completed_event(mock_run_context, make_configuration, 
     """Make a mock BatchScoreInitCompletedEvent."""
     setup_context_vars(make_configuration, make_metadata)
 
-    if make_configuration.logging_metadata:
-        logging_metadata = json.loads(make_configuration.logging_metadata)
-    else:
-        logging_metadata = None
-
-    return update_common_fields(BatchScoreInitCompletedEvent(init_duration_ms=5, logging_metadata=logging_metadata))
+    return update_common_fields(BatchScoreInitCompletedEvent(init_duration_ms=5,
+                                                             logging_metadata=make_configuration.logging_metadata))
 
 
 @pytest.fixture
@@ -99,7 +96,7 @@ def make_batch_score_init_started_event(mock_run_context, make_configuration, ma
     """Make a mock BatchScoreInitStartedEvent."""
     setup_context_vars(make_configuration, make_metadata)
 
-    return update_common_fields(BatchScoreInitStartedEvent())
+    return update_common_fields(BatchScoreInitStartedEvent(logging_metadata=make_configuration.logging_metadata))
 
 
 @pytest.fixture
@@ -111,7 +108,6 @@ def make_batch_score_minibatch_completed_event(mock_run_context, make_configurat
     event = BatchScoreMinibatchCompletedEvent(
         minibatch_id='2',
         scoring_url=configuration.scoring_url,
-        batch_pool='test_pool',
         quota_audience='test_audience',
         model_name='test_model_name',
         retry_count=0,
@@ -155,7 +151,6 @@ def make_batch_score_minibatch_endpoint_health_event(mock_run_context, make_conf
     event = BatchScoreMinibatchEndpointHealthEvent(
         minibatch_id='2',
         scoring_url=configuration.scoring_url,
-        batch_pool='test_pool',
         quota_audience='test_audience',
 
         http_request_count=10,
@@ -183,10 +178,10 @@ def make_batch_score_minibatch_started_event(mock_run_context, make_configuratio
     event = BatchScoreMinibatchStartedEvent(
         minibatch_id='2',
         scoring_url=configuration.scoring_url,
-        batch_pool='test_pool',
         quota_audience='test_audience',
         input_row_count=10,
-        retry_count=0)
+        retry_count=0,
+        logging_metadata=make_configuration.logging_metadata)
 
     return update_common_fields(event)
 

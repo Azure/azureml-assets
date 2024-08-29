@@ -5,9 +5,9 @@
 
 import pytest
 
-from src.batch_score.common.common_enums import ApiType
-from src.batch_score.common.auth.auth_provider import EndpointType
-from src.batch_score.common.configuration.configuration_parser import (
+from src.batch_score.root.common.common_enums import ApiType
+from src.batch_score.root.common.auth.auth_provider import EndpointType
+from src.batch_score.root.common.configuration.configuration_parser import (
     ConfigurationParser,
 )
 
@@ -193,7 +193,6 @@ def test_is_serverless_endpoint(scoring_url, expected_is_serverless_endpoint):
      "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
     ("https://batchscore.cognitiveservices.azure.com/openai"
      "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
-    ("https://batchscore.inference.ml.azure.com/v1/completions", EndpointType.MIR),
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", EndpointType.Serverless)
 ])
 def test_get_endpoint_type(scoring_url, expected_endpoint_type):

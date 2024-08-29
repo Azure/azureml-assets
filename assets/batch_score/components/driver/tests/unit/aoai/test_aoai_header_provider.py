@@ -3,8 +3,8 @@
 
 """This file contains unit tests for aoai  header provider."""
 
-from src.batch_score.aoai.scoring.aoai_header_provider import AoaiHeaderProvider
-from src.batch_score.common.auth.auth_provider import EndpointType, WorkspaceConnectionAuthProvider
+from src.batch_score.root.aoai.scoring.aoai_header_provider import AoaiHeaderProvider
+from src.batch_score.root.common.auth.auth_provider import EndpointType, WorkspaceConnectionAuthProvider
 
 
 def test_get_headers_no_additional_headers(mocker):

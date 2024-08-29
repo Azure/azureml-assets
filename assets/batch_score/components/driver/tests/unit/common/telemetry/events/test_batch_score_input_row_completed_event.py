@@ -3,13 +3,13 @@
 
 """This file contains unit tests for batch score input row completed event."""
 
-from src.batch_score.common.configuration.configuration import Configuration
-from src.batch_score.common.telemetry.events import event_utils
-from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score.root.common.configuration.configuration import Configuration
+from src.batch_score.root.common.telemetry.events import event_utils
+from src.batch_score.root.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 
-from tests.fixtures.telemetry_events import (
+from tests.batch_score.fixtures.telemetry_events import (
     assert_common_fields,
     assert_run_context_fields,
     update_common_fields,

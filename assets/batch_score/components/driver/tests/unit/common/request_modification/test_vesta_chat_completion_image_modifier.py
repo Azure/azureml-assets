@@ -6,14 +6,14 @@
 import pytest
 from urllib.parse import urlparse
 
-from src.batch_score.common.request_modification.modifiers.vesta_chat_completion_image_modifier import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_chat_completion_image_modifier import (
     VestaChatCompletionImageModifier,
 )
-from src.batch_score.common.request_modification.modifiers.vesta_image_encoder import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_image_encoder import (
     FolderNotMounted,
     VestaImageModificationException,
 )
-from tests.fixtures.vesta_image_modifier import MOCKED_BINARY_FROM_URL
+from tests.batch_score.fixtures.vesta_image_modifier import MOCKED_BINARY_FROM_URL
 
 
 @pytest.mark.parametrize("expected_result, request_obj", [

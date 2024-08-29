@@ -3,7 +3,7 @@
 
 """This file contains unit tests for content type header provider."""
 
-from src.batch_score.common.header_providers.content_type_header_provider import (
+from src.batch_score.root.common.header_providers.content_type_header_provider import (
     ContentTypeHeaderProvider,
 )
 

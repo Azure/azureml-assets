@@ -10,16 +10,19 @@ import pytest
 
 from mock import ANY, patch
 
-from src.batch_score.aoai.scoring.aoai_response_handler import AoaiHttpResponseHandler
-from src.batch_score.common.scoring.http_scoring_response import HttpScoringResponse
-from src.batch_score.common.scoring.scoring_request import ScoringRequest
-from src.batch_score.common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
-from src.batch_score.common.scoring.scoring_result import (
+from src.batch_score.root.aoai.scoring.aoai_response_handler import AoaiHttpResponseHandler
+from src.batch_score.root.common.configuration.configuration import Configuration
+from src.batch_score.root.common.scoring.http_scoring_response import HttpScoringResponse
+from src.batch_score.root.common.scoring.scoring_request import ScoringRequest
+from src.batch_score.root.common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
+from src.batch_score.root.common.scoring.scoring_result import (
     RetriableException,
     ScoringResultStatus
 )
-from src.batch_score.common.telemetry.events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
-from tests.unit.utils.scoring_result_utils import assert_scoring_result
+from src.batch_score.root.common.telemetry.events.batch_score_request_completed_event import (
+    BatchScoreRequestCompletedEvent
+)
+from tests.batch_score.unit.utils.scoring_result_utils import assert_scoring_result
 
 
 test_end_time = 20.1
@@ -42,7 +45,7 @@ exceptions_to_raise = [
 def test_handle_response_returns_success_result(mock_run_context):
     """Test handle response returns success result."""
     # Arrange
-    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
+    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False), Configuration())
     http_response = HttpScoringResponse(
         status=200,
         payload={"usage": {
@@ -55,7 +58,7 @@ def test_handle_response_returns_success_result(mock_run_context):
                                                                              http_response)
 
     # Act
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+    with patch("src.batch_score.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         scoring_result = response_handler.handle_response(
             http_response,
             scoring_request,
@@ -81,13 +84,13 @@ def test_handle_response_non_retriable_exception_returns_failure(mock_run_contex
     # Arrange
     http_response = HttpScoringResponse(exception=Exception)
     scoring_request = _get_test_scoring_request()
-    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
+    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False), Configuration())
     expected_request_completed_event = _get_expected_request_completed_event(response_handler,
                                                                              scoring_request,
                                                                              http_response)
 
     # Act
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+    with patch("src.batch_score.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         scoring_result = response_handler.handle_response(
             http_response,
             scoring_request,
@@ -118,13 +121,13 @@ def test_handle_response_retriable_exception_throws_exception(exception_to_throw
     # Arrange
     http_response = HttpScoringResponse(exception=exception_to_throw, status=500)
     scoring_request = _get_test_scoring_request()
-    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
+    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False), Configuration())
     expected_request_completed_event = _get_expected_request_completed_event(response_handler,
                                                                              scoring_request,
                                                                              http_response)
 
     # Act & Assert
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+    with patch("src.batch_score.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         with pytest.raises(RetriableException) as ex:
             response_handler.handle_response(
                 http_response,
@@ -144,15 +147,15 @@ def test_handle_response_server_error_max_retries_reached(status_code, mock_run_
     http_response = HttpScoringResponse(status=status_code)
     scoring_request = _get_test_scoring_request()
     scoring_request.retry_count = 10
-    scoring_request.retry_count_for_limited_retries = 3
-    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
+    scoring_request.retry_count_for_limited_retries = 10
+    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False), Configuration())
     expected_request_completed_event = _get_expected_request_completed_event(
         response_handler,
         scoring_request,
         http_response)
 
     # Act
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+    with patch("src.batch_score.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         scoring_result = response_handler.handle_response(
             http_response,
             scoring_request,
@@ -187,13 +190,13 @@ def test_handle_response_retriable_status_code_throws_exception(status_code, moc
     # Arrange
     http_response = HttpScoringResponse(status=status_code, payload=failed_response_payload)
     scoring_request = _get_test_scoring_request()
-    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False))
+    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=False), Configuration())
     expected_request_completed_event = _get_expected_request_completed_event(response_handler,
                                                                              scoring_request,
                                                                              http_response)
 
     # Act & Assert
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+    with patch("src.batch_score.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         with pytest.raises(RetriableException) as ex:
             response_handler.handle_response(
                 http_response,
@@ -215,13 +218,15 @@ def test_handle_response_non_retriable_status_code_returns_failure(status_code,
     # Arrange
     http_response = HttpScoringResponse(status=status_code, payload=failed_response_payload)
     scoring_request = _get_test_scoring_request()
-    response_handler = AoaiHttpResponseHandler(TallyFailedRequestHandler(enabled=tally_handler_enable))
+    response_handler = AoaiHttpResponseHandler(
+        TallyFailedRequestHandler(enabled=tally_handler_enable),
+        Configuration())
     expected_request_completed_event = _get_expected_request_completed_event(response_handler,
                                                                              scoring_request,
                                                                              http_response)
 
     # Act
-    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+    with patch("src.batch_score.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
         scoring_result = response_handler.handle_response(
             http_response,
             scoring_request,

@@ -5,10 +5,10 @@
 
 import pytest
 
-from src.batch_score.common.request_modification.input_transformer import (
+from src.batch_score.root.common.request_modification.input_transformer import (
     InputTransformer,
 )
-from src.batch_score.common.request_modification.modifiers.request_modifier import (
+from src.batch_score.root.common.request_modification.modifiers.request_modifier import (
     RequestModifier,
 )
 

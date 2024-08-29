@@ -3,10 +3,10 @@
 
 """This file contains unit tests for input transformer."""
 
-from src.batch_score.common.request_modification.input_transformer import (
+from src.batch_score.root.common.request_modification.input_transformer import (
     InputTransformer,
 )
-from tests.fixtures.input_transformer import FakeRequestModifier
+from tests.batch_score.fixtures.input_transformer import FakeRequestModifier
 
 
 def test_input_transformer(mock_get_logger, make_input_transformer):

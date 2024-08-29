@@ -3,17 +3,19 @@
 
 """This file contains unit tests for geneva event client."""
 
-from src.batch_score.common.telemetry.geneva_event_client import GenevaEventClient
-from src.batch_score.common.telemetry.required_fields import RequiredFields
-from src.batch_score.common.telemetry.standard_fields import StandardFields
-from src.batch_score.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
-from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score.root.common.telemetry.geneva_event_client import GenevaEventClient
+from src.batch_score.root.common.telemetry.required_fields import RequiredFields
+from src.batch_score.root.common.telemetry.standard_fields import StandardFields
+from src.batch_score.root.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
+from src.batch_score.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_started_event import (
+    BatchScoreMinibatchStartedEvent
+)
 
-from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION, TEST_SCORING_URI
+from tests.batch_score.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION, TEST_SCORING_URI
 
 
 def test_generate_required_fields(mock_import_module, make_batch_score_init_completed_event):
@@ -122,7 +124,6 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
         # Event specific fields
         'minibatch_id': '2',
         'scoring_url': TEST_SCORING_URI,
-        'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
         'model_name': 'test_model_name',
         'retry_count': '0',
@@ -180,7 +181,6 @@ def test_generate_extension_fields_minibatch_started(mock_import_module, make_ba
         # Event specific fields
         'minibatch_id': '2',
         'scoring_url': TEST_SCORING_URI,
-        'batch_pool': 'test_pool',
         'quota_audience': 'test_audience',
         'input_row_count': '10',
         'retry_count': '0',
