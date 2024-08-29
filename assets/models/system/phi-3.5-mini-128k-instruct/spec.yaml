@@ -8,7 +8,7 @@ properties:
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   freePlayground: "true"
-  displayName: "Phi-3.5 mini instruct (128k)"
+  displayName: "Phi-3.5-mini instruct (128k)"
   summary: "Refresh of Phi-3-mini model."
   textContextWindow: 131072
   maxOutputTokens: 4096
