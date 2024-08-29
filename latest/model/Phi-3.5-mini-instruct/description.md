@@ -6,18 +6,8 @@ Phi-3.5-mini is a lightweight, state-of-the-art open model built upon datasets u
 📖 [Phi-3 Technical Report](https://arxiv.org/abs/2404.14219) <br>
 👩‍🍳 [Phi-3 Cookbook](https://github.com/microsoft/Phi-3CookBook) <br>
 
-### Model Summary
-|      |      |
-|------|------|
-| **Architecture** | Phi-3.5-mini has 3.8B parameters and is a dense decoder-only Transformer model using the same tokenizer as Phi-3 Mini. |
-| **Inputs** | Text. It is best suited for prompts using chat format. |
-| **Context length** | 128K tokens |
-| **GPUs** | 512 H100-80G |
-| **Training time** | 10 days |
-| **Training data** | 3.4T tokens |
-| **Outputs** | Generated text in response to the input |
-| **Dates** | Trained between June and August 2024 |
-| **Status** | This is a static model trained on an offline dataset with cutoff date October 2023 for publicly available data. Future versions of the tuned models may be released as we improve models. |
-| **Supported languages** | Arabic, Chinese, Czech, Danish, Dutch, English, Finnish, French, German, Hebrew, Hungarian, Italian, Japanese, Korean, Norwegian, Polish, Portuguese, Russian, Spanish, Swedish, Thai, Turkish, Ukrainian |
-| **Release date** | August 20, 2024 |
-| License | MIT |
+### Model Architecture
+Phi-3.5-mini has 3.8B parameters and is a dense decoder-only Transformer model using the same tokenizer as Phi-3 Mini. It is a text-only model best suited for prompts using chat format.
+
+### Training Data
+Phi-3.5-mini is a static model trained on an offline dataset with 3.4T tokens and a cutoff date October 2023 for publicly available data. Future versions of the tuned models may be released as we improve models.
