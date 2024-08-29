@@ -259,7 +259,7 @@ def generate_synthetic_data(
     min_endpoint_success_ratio: float,
     enable_cot: bool,
     enable_cod: bool,
-    summary_word_count: int,
+    max_len_summary: int,
     generated_train_file_path: Path,
     generated_validation_file_path: Path,
     train_file_path: Path,
@@ -301,7 +301,7 @@ def generate_synthetic_data(
             enable_cod
             and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION
         ):
-            cod_prompt = SystemPrompt.get_cod_prompt(summary_word_count)
+            cod_prompt = SystemPrompt.get_cod_prompt(max_len_summary)
             cod_system_message = {"role": "system", "content": cod_prompt}
             return cod_system_message
         else:
