@@ -9,6 +9,12 @@ RUN apt-get update \
     && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
     && ACCEPT_EULA=Y apt-get install -y msodbcsql18=18.3.3.1-1 \
+    python3.10-minimal \
+    python3.10 \
+    libpython3.10-minimal \
+    libpython3.10-stdlib  \
+    curl=7.81.0-1ubuntu1.17 \
+    libcurl4=7.81.0-1ubuntu1.17 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,14 +31,15 @@ RUN python -m pip install --upgrade pip && \
     pip install -r requirements.txt && \
     # Install promptflow environment
     pip install promptflow-image-bundle[azure]==0.3.0 && \
-    pip install promptflow-vectordb==0.2.10 && \
+    pip install promptflow-vectordb==0.2.10 promptflow-tools==1.4.0 && \
     ## Install dbcopilot
-    pip install db-copilot-tool==0.0.8
+    pip install db-copilot-tool==0.0.8 &&\
+    pip install setuptools==70.0.0 grpcio==1.56.2
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1 certifi==2024.07.04&& \
+    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1 certifi==2024.07.04 setuptools==70.0.0&& \
     conda deactivate"
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout

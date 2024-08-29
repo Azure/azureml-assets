@@ -9,6 +9,8 @@ from azure.ai.ml import load_model, load_data, MLClient, operations as ops
 from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage
 from azureml.assets.util import logger
 from azureml.assets.config import AssetType, PathType, Config, DataConfig, ModelConfig
+from azureml.assets.util.util import resolve_from_file_for_asset
+from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import CopyUpdater, copy_azure_artifacts, download_git_model
 from azureml.assets.deployment_config import AssetVersionUpdate
 from pathlib import Path
@@ -159,6 +161,9 @@ class ModelAsset(Asset):
             self._model = load_model(spec_path)
             self._model.description = model_config.description
             self._model.type = model_config.type.value
+            if self._model.tags:
+                self._model.tags = {k: resolve_from_file_for_asset(self._model_config, v)
+                                    for k, v in self._model.tags.items()}
         except Exception as e:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")
             return False

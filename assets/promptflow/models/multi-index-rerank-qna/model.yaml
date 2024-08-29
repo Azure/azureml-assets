@@ -1,0 +1,8 @@
+path:
+  container_name: gallery-samples
+  container_path: multi-index-rerank-qna
+  storage_name: azuremlragexamples
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

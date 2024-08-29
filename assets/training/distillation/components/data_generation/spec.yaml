@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
-version: 0.0.3
+version: 0.0.5
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: OSS Distillation Generate Data
 description: Component to generate data from teacher model enpoint
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/63
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/66
 
 inputs:
   # Inputs
@@ -83,21 +83,39 @@ inputs:
 
   enable_chain_of_thought:
     type: string
-    default: "true"
+    optional: true
+    default: "false"
     description: Enable Chain of thought for data generation
   
+  enable_chain_of_density:
+    type: string
+    optional: true
+    default: "false"
+    description: Enable Chain of density for text summarization
+
   data_generation_task_type:
     type: string
     enum:
       - NLI
       - CONVERSATION
       - NLU_QA
+      - MATH
+      - SUMMARIZATION
     description: >
       Data generation task type. Supported values are:
       1. NLI: Generate Natural Language Inference data
       2. CONVERSATION: Generate conversational data (multi/single turn)
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+      4. MATH: Generate Math data for numerical responses
+      5. SUMMARIZATION: Generate Key Summary for an Article
 
+  
+  # Output of validation component.
+  validation_output:
+    type: uri_file
+    description: Validation status.
+    mode: rw_mount
+    
 outputs:
   generated_train_file_path:
     type: uri_file
@@ -108,7 +126,7 @@ outputs:
     description: Generated validation data
     mode: rw_mount
 
-code: src/
+code: ../../src
 command: >-
   python generate_data.py
   --train_file_path  ${{inputs.train_file_path}}
@@ -124,7 +142,8 @@ command: >-
   $[[--teacher_model_stop ${{inputs.teacher_model_stop}}]]
   --request_batch_size ${{inputs.request_batch_size}}
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
-  --enable_chain_of_thought ${{inputs.enable_chain_of_thought}}
+  $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
+  $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}
