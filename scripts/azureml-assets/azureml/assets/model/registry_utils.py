@@ -121,7 +121,8 @@ class RegistryUtils:
 
 
 class Asset:
-    """Asset class"""
+    """Asset class."""
+
     def __init__(self, spec_path, extra_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
         """Initialize asset."""
         self._spec_path = spec_path
@@ -132,6 +133,7 @@ class Asset:
 
 class DataAsset(Asset):
     """Asset class for data."""
+
     def __init__(self, spec_path, data_config: DataConfig, registry_name, temp_dir, copy_updater: CopyUpdater = None):
         """Initialize data asset."""
         super().__init__(spec_path, data_config, registry_name, temp_dir, copy_updater)
@@ -154,6 +156,7 @@ class DataAsset(Asset):
 
 class ModelAsset(Asset):
     """Asset class for model."""
+
     def __init__(self, spec_path, model_config: ModelConfig, registry_name, temp_dir,
                  copy_updater: CopyUpdater = None):
         """Initialize model asset."""
