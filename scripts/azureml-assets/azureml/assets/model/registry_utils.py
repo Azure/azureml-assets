@@ -30,7 +30,8 @@ class RegistryUtils:
         return f"{asset_type}s" if asset_type != "data" else asset_type
 
     def get_operations_from_type(asset_type: AssetType, ml_client: MLClient) -> Union[
-                                 ops.ComponentOperations, ops.DataOperations, ops.EnvironmentOperations, ops.ModelOperations]:
+                                 ops.ComponentOperations, ops.DataOperations, ops.EnvironmentOperations,
+                                 ops.ModelOperations]:
         """Get MLCLient operations related to an asset type.
 
         Args:
@@ -85,7 +86,8 @@ class RegistryUtils:
         operations = RegistryUtils.get_operations_from_type(asset_type=asset_type, ml_client=ml_client)
         registry_name = operations._registry_name
 
-        asset_id = f"azureml://registries/{registry_name}/{asset_type_pluralized}/{asset_name}/versions/{asset_version}"
+        asset_id = f"azureml://registries/{registry_name}/{asset_type_pluralized}/" \
+                   f"{asset_name}/versions/{asset_version}"
         logger.print(f"getting data reference for asset {asset_id}")
         for cnt in range(1, RegistryUtils.RETRY_COUNT + 1):
             try:
@@ -152,7 +154,8 @@ class DataAsset(Asset):
 
 class ModelAsset(Asset):
     """Asset class for model."""
-    def __init__(self, spec_path, model_config: ModelConfig, registry_name, temp_dir, copy_updater: CopyUpdater = None):
+    def __init__(self, spec_path, model_config: ModelConfig, registry_name, temp_dir,
+                 copy_updater: CopyUpdater = None):
         """Initialize model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
         self._model_config = model_config
