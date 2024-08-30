@@ -97,7 +97,7 @@ inputs:
     optional: True
     description: Weight Decay Multiplier for training. Not applicable for embedding finetuning
 
-  completion_overrride:
+  completion_override:
     type: boolean
     optional: True  
 

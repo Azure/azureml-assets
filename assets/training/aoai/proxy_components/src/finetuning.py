@@ -284,7 +284,7 @@ def parse_args():
     parser.add_argument("--lora_dim", type=int)
     parser.add_argument("--n_ctx", type=int)
     parser.add_argument("--weight_decay_multiplier", type=float)
-    parser.add_argument("--completion_overrride", type=bool)
+    parser.add_argument("--completion_override", type=bool)
 
     args = parser.parse_args()
     return args
