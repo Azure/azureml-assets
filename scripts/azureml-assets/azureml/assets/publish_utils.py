@@ -555,16 +555,16 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
                     return False
         elif asset.type == AssetType.MODEL:
             version = asset.version
-            model_config: assets.ModelConfig = asset.extra_config_as_object()
+            model_config: ModelConfig = asset.extra_config_as_object()
             if not prepare_model_for_registration(model_config, asset.spec_with_path, Path(temp_dir), ml_client,
                                                   copy_updater):
                 logger.log_error("Failed to prepare model")
                 return False
         elif asset.type == AssetType.DATA:
             version = asset.version
-            data_config: assets.DataConfig = asset.extra_config_as_object()
-            if data_config is not None and not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), 
-                                                                             ml_client, copy_updater):
+            data_config: DataConfig = asset.extra_config_as_object()
+            if data_config is not None and not prepare_data_for_registration(data_config, asset.spec_with_path,
+                                                                             Path(temp_dir), ml_client, copy_updater):
                 logger.log_error("Failed to prepare data asset")
                 return False
 
