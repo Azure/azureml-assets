@@ -72,16 +72,15 @@ def retry(times: int):
 def get_credential() -> TokenCredential:
     """Create and validate credentials."""
     auth_failures = ""
-    msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-    if msi_client_id:
+    try:
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
         logger.info("Trying ManagedIdentityCredentials.")
         credential = ManagedIdentityCredential(client_id=msi_client_id)
-        try:
-            credential.get_token(AUTH_TOKEN_SCOPE)
-            return credential
-        except Exception as e:
-            logger.info("Failed to get ManagedIdentityCredential. Falling back to OBO.")
-            auth_failures += f"ManagedIdentity: {str(e)}. \n"
+        credential.get_token(AUTH_TOKEN_SCOPE)
+        return credential
+    except Exception as e:
+        logger.info("Failed to get ManagedIdentityCredential. Falling back to OBO.")
+        auth_failures += f"ManagedIdentity: {str(e)}. \n"
 
     try:
         logger.info("Trying OBO credentials.")
