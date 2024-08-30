@@ -25,7 +25,7 @@ class Hyperparameters_1P(BaseModel):
     lora_dim: Optional[int] = Field(...)
     weight_decay_multiplier: Optional[float] = Field(...)
     task_type: Optional[str] = Field(...)
-    completion_override: Optional[bool] = Field(...)
+    completion_override: Optional[bool] = Field(default=None)
 
     def get_dict(self) -> Dict[str, str]:
         """Get dictionary of hyperparameters."""

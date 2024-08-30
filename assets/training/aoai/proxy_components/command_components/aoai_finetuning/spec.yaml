@@ -99,7 +99,7 @@ inputs:
 
   completion_override:
     type: boolean
-    optional: True  
+    optional: True
 
 
 outputs:
