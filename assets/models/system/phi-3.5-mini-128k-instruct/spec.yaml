@@ -7,12 +7,14 @@ properties:
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
-  freePlayground: "false"
-  displayName: "Phi-3.5 mini instruct (128k)"
+  evaluation: "evalution.md"
+  notes: "notes.md"
+  freePlayground: "true"
+  displayName: "Phi-3.5-mini instruct (128k)"
   summary: "Refresh of Phi-3-mini model."
   textContextWindow: 131072
   maxOutputTokens: 4096
-  languages: "en"
+  languages: "en,ar,zh,cs,da,nl,fi,fr,de,he,hu,it,ja,ko,no,pl,pt,ru,es,sv,th,tr,uk"
   inputModalities: "text"
   outputModalities: "text"
   trainingDataDate: "Aug 2024"

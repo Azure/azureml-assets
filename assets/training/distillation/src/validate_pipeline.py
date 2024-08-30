@@ -39,6 +39,7 @@ from common.constants import (
     TOP_P,
     VLLM_CHAT_SCORE_PATH,
     MIN_RECORDS_FOR_FT,
+    MATH_MIN_RECORDS_FOR_FT
 )
 
 from common.utils import (
@@ -186,13 +187,15 @@ class PipelineInputsValidator:
 
     def _validate_number_of_records(self, size: int):
         """Validate number of records in the dataset."""
-        if size < MIN_RECORDS_FOR_FT:
+        task_type = self._args.data_generation_task_type
+        min_records = MIN_RECORDS_FOR_FT if task_type != DataGenerationTaskType.MATH else MATH_MIN_RECORDS_FOR_FT
+        if size < min_records:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
                     pii_safe_message=(
                         "Number of records in the dataset are less than the minimum required for fine-tuning."
-                        f" Minimum records required: {MIN_RECORDS_FOR_FT}, but got {size}."
+                        f" Minimum records required for task {task_type}: {min_records}, but got {size}."
                     ),
                 )
             )
@@ -236,6 +239,14 @@ class PipelineInputsValidator:
             return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING} \
                 Expected format: [system, user]"
 
+    def _validate_record_for_type_MATH(self, record: list) -> str:
+        if self._args.data_generation_task_type != DataGenerationTaskType.MATH:
+            return
+
+        if len(record) > 2:
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.MATH} \
+                Expected format: [system, user]"
+
     def _validate_record_for_type_summarization(self, record: list) -> str:
         if (
             self._args.data_generation_task_type
@@ -263,6 +274,7 @@ class PipelineInputsValidator:
             self._validate_record_for_type_NLI,
             self._validate_record_for_type_conversation,
             self._validate_record_for_type_NLU_QA,
+            self._validate_record_for_type_MATH,
             self._validate_record_for_type_summarization,
         ]
 
