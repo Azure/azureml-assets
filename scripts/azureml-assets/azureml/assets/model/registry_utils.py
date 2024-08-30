@@ -66,8 +66,6 @@ class RegistryUtils:
             # copy to registry blobstorage (this is supported for models & data assets)
             logger.print("get data ref for registry storage upload")
 
-            operations = RegistryUtils.get_operations_from_type(asset_type=asset_type, ml_client=ml_client)
-
             blob_uri, sas_uri = RegistryUtils.get_registry_data_reference(
                 asset_name, asset_version, asset_type, ml_client
             )
@@ -132,7 +130,7 @@ class Asset:
 
 class DataAsset(Asset):
     """Asset class for data."""
-    def __init__(self, spec_path, data_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
+    def __init__(self, spec_path, data_config: DataConfig, registry_name, temp_dir, copy_updater: CopyUpdater = None):
         """Initialize data asset."""
         super().__init__(spec_path, data_config, registry_name, temp_dir, copy_updater)
         self._data_config = data_config
@@ -154,7 +152,7 @@ class DataAsset(Asset):
 
 class ModelAsset(Asset):
     """Asset class for model."""
-    def __init__(self, spec_path, model_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
+    def __init__(self, spec_path, model_config: ModelConfig, registry_name, temp_dir, copy_updater: CopyUpdater = None):
         """Initialize model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
         self._model_config = model_config
