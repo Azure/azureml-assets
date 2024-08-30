@@ -412,6 +412,12 @@ def generate_synthetic_data(
                     synthetic_responses.append(
                         {"role": "assistant", "content": str(prediction_result)}
                     )
+
+                    if enable_cod and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION:
+                        pred = json.loads(prediction_result)
+                        summary = pred[-1]["Denser_Summary"]
+                        synthetic_responses.append({"role": "assistant", "content": str(summary)})
+
             is_success = last_status_code == 200
             logger.info(f"Processing idx: {idx} - {is_success}")
             return {
