@@ -409,14 +409,13 @@ def generate_synthetic_data(
                         key = SystemPrompt.get_response_key(data_generation_task_type)
                         prediction_result = json.loads(prediction_result)[key]
 
+                    if enable_cod and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION:
+                        result = json.loads(prediction_result)
+                        prediction_result = result[-1]["Denser_Summary"]
+
                     synthetic_responses.append(
                         {"role": "assistant", "content": str(prediction_result)}
                     )
-
-                    if enable_cod and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION:
-                        pred = json.loads(prediction_result)
-                        summary = pred[-1]["Denser_Summary"]
-                        synthetic_responses.append({"role": "assistant", "content": str(summary)})
 
             is_success = last_status_code == 200
             logger.info(f"Processing idx: {idx} - {is_success}")
