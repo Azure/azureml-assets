@@ -5,7 +5,7 @@
 
 import os
 import time
-from typing import List, Tuple, Union, Optional, Callable
+from typing import List, Tuple, Optional, Callable
 from urllib.parse import urlparse
 
 from abc import ABC, abstractmethod
@@ -20,6 +20,7 @@ from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
 from azure.core.exceptions import ClientAuthenticationError
+from azure.core.credentials import TokenCredential
 
 
 from common.constants import (
@@ -68,7 +69,7 @@ def retry(times: int):
     return decorator
 
 
-def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCredential]:
+def get_credential() -> TokenCredential:
     """Create and validate credentials."""
     auth_failures = ""
     msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
