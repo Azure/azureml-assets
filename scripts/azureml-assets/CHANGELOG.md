@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.58 (2024-09-03)
+### 🚀 New Features
+- [#3317](https://github.com/Azure/azureml-assets/pull/3317) Support for storage account access for data asset copy with SAS token
+
 ## 1.16.57 (2024-08-12)
 ### 🐛 Bugs Fixed
 - [#3253](https://github.com/Azure/azureml-assets/pull/3253) Also accept Path types for populating tags from files
