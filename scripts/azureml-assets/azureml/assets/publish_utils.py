@@ -15,7 +15,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig, DataConfig
 from azureml.assets.deployment_config import AssetVersionUpdate
-from azureml.assets.model.model_utils import CopyUpdater, prepare_model, update_model_metadata, prepare_data
+from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, update_model_metadata, prepare_data
 from azureml.assets.util import logger
 from azureml.assets.util.util import resolve_from_file_for_asset
 from azure.ai.ml import MLClient
