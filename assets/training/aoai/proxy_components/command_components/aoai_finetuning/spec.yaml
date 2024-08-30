@@ -126,4 +126,4 @@ command: >-
   $[[--n_ctx ${{inputs.n_ctx}}]]
   $[[--weight_decay_multiplier ${{inputs.weight_decay_multiplier}}]]
   --aoai_finetuning_output ${{outputs.aoai_finetuning_output}}
-  $[[--completion_overrride ${{inputs.completion_overrride}}]]
+  $[[--completion_override ${{inputs.completion_override}}]]
