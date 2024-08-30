@@ -11,6 +11,14 @@ description: FTaaS component to copy user training data to output
 environment: azureml://registries/azureml/environments/acft-hf-nlp-data-import/versions/3
 
 inputs:
+  task_name:
+    type: string
+    default: "ChatCompletion"
+    description: Finetune task name.
+    enum:
+    - "ChatCompletion"
+    - "TextGeneration"
+
   # Inputs
   train_file_path:
     type: uri_file
