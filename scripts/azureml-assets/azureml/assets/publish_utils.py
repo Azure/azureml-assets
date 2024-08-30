@@ -49,7 +49,7 @@ def sanitize_output(input: str) -> str:
 def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
-    :param asset: Asset loaded using load_*(component, environemnt, model) method.
+    :param asset: Asset loaded using load_*(component, environment, model) method.
     :type asset: Union[Component, Environment, Model]
     :param spec_path: path to asset spec file
     :type spec_path: Path
@@ -563,11 +563,10 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
         elif asset.type == AssetType.DATA:
             version = asset.version
             data_config: assets.DataConfig = asset.extra_config_as_object()
-            if data_config is not None:
-                if not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), ml_client,
-                                                      copy_updater):
-                    logger.log_error("Failed to prepare data asset")
-                    return False
+            if data_config is not None and not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), 
+                                                                             ml_client, copy_updater):
+                logger.log_error("Failed to prepare data asset")
+                return False
 
         # Create asset
         return create_asset_cli(
