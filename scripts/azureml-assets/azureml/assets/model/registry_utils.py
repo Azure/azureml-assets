@@ -8,12 +8,13 @@ from typing import Tuple, Union
 from azure.ai.ml import load_model, load_data, MLClient, operations as ops
 from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage
 from azureml.assets.util import logger
-from azureml.assets.config import AssetType, PathType, Config, DataConfig, ModelConfig
+from azureml.assets.config import AssetType, Config, DataConfig, ModelConfig
 from azureml.assets.util.util import resolve_from_file_for_asset
 from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import CopyUpdater, copy_azure_artifacts, download_git_model
 from azureml.assets.deployment_config import AssetVersionUpdate
 from pathlib import Path
+
 
 class RegistryUtils:
     """Registry utils."""
@@ -49,7 +50,7 @@ class RegistryUtils:
         elif asset_type == AssetType.MODEL:
             return ml_client.models
 
-    def _publish_to_registry(ml_client: MLClient, extra_config: Config, asset_name: str, asset_version: str, 
+    def _publish_to_registry(ml_client: MLClient, extra_config: Config, asset_name: str, asset_version: str,
                              asset_type: assets.AssetType, temp_dir: Path, copy_updater: CopyUpdater = None):
         src_uri = extra_config.path.uri
         if extra_config.path.type == PathType.GIT:
@@ -66,7 +67,6 @@ class RegistryUtils:
             logger.print("get data ref for registry storage upload")
 
             operations = RegistryUtils.get_operations_from_type(asset_type=asset_type, ml_client=ml_client)
-            registry_name = operations._registry_name
 
             blob_uri, sas_uri = RegistryUtils.get_registry_data_reference(
                 asset_name, asset_version, asset_type, ml_client
@@ -80,7 +80,8 @@ class RegistryUtils:
         except Exception as e:
             raise Exception(f"Error in copying artifacts to registry storage. Error {e}")
 
-    def get_registry_data_reference(asset_name: str, asset_version: str, asset_type: assets.AssetType, ml_client: MLClient) -> Tuple[str, str]:
+    def get_registry_data_reference(asset_name: str, asset_version: str, asset_type: assets.AssetType,
+                                    ml_client: MLClient) -> Tuple[str, str]:
         """Fetch data reference for asset in the registry."""
         asset_type_pluralized = RegistryUtils.pluralize_asset_type(asset_type)
         operations = RegistryUtils.get_operations_from_type(asset_type=asset_type, ml_client=ml_client)
@@ -141,11 +142,12 @@ class DataAsset(Asset):
         except Exception as e:
             logger.error(f"Error in loading data spec file at {spec_path}: {e}")
             return False
-    
+
     def prepare_data(self, ml_client: MLClient):
         """Prepare data for publish."""
-        data_registry_path = RegistryUtils._publish_to_registry(ml_client, self._data_config, self._data.name, 
-                                                                 self._data.version, AssetType.DATA, self._temp_dir, self._copy_updater)
+        data_registry_path = RegistryUtils._publish_to_registry(ml_client, self._data_config, self._data.name,
+                                                                self._data.version, AssetType.DATA, self._temp_dir,
+                                                                self._copy_updater)
         self._data.path = data_registry_path
         return self._data
 
@@ -181,8 +183,9 @@ class MLFlowModelAsset(ModelAsset):
 
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
-        model_registry_path = RegistryUtils._publish_to_registry(ml_client, self._model_config, self._model.name, 
-                                                                 self._model.version, AssetType.MODEL, self._temp_dir, self._copy_updater)
+        model_registry_path = RegistryUtils._publish_to_registry(ml_client, self._model_config, self._model.name,
+                                                                 self._model.version, AssetType.MODEL, self._temp_dir,
+                                                                 self._copy_updater)
         self._model.path = model_registry_path + "/" + MLFlowModelAsset.MLFLOW_MODEL_PATH
         return self._model
 
@@ -196,8 +199,9 @@ class CustomModelAsset(ModelAsset):
 
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
-        model_registry_path = RegistryUtils._publish_to_registry(ml_client, self._model_config, self._model.name, 
-                                                                 self._model.version, AssetType.MODEL, self._temp_dir, self._copy_updater)
+        model_registry_path = RegistryUtils._publish_to_registry(ml_client, self._model_config, self._model.name,
+                                                                 self._model.version, AssetType.MODEL, self._temp_dir,
+                                                                 self._copy_updater)
         self._model.path = model_registry_path
         return self._model
 
