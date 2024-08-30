@@ -119,7 +119,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         if validation_file_path is None:
             logger.debug(f"validation file not provided, train data will be split in\
-                         {utils.train_dataset_split_ratio} ratio to create validation data")
+                         {utils.Constants.train_dataset_split_ratio} ratio to create validation data")
 
         logger.debug(f"uploading training file : {train_file_name}")
         train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'),
@@ -284,6 +284,7 @@ def parse_args():
     parser.add_argument("--lora_dim", type=int)
     parser.add_argument("--n_ctx", type=int)
     parser.add_argument("--weight_decay_multiplier", type=float)
+    parser.add_argument("--completion_overrride", type=bool)
 
     args = parser.parse_args()
     return args
@@ -320,7 +321,7 @@ def main():
         logger.debug("hyperparameters: {}".format(hyperparameters))
 
         hyperparameters_1p = Hyperparameters_1P(**vars(args))
-        logger.debug("hyperparameters for 1P: {}".format(hyperparameters_1p))
+        logger.info("hyperparameters for 1P: {}".format(hyperparameters_1p))
 
         validate_train_data_upload_type(args)
 

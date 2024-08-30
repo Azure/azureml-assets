@@ -24,6 +24,8 @@ class Hyperparameters_1P(BaseModel):
     n_ctx: Optional[int] = Field(...)
     lora_dim: Optional[int] = Field(...)
     weight_decay_multiplier: Optional[float] = Field(...)
+    task_type: Optional[str] = Field(...)
+    completion_overrride: Optional[bool] = Field(...)
 
     def get_dict(self) -> Dict[str, str]:
         """Get dictionary of hyperparameters."""

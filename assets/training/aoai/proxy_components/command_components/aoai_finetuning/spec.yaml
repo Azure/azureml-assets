@@ -97,6 +97,10 @@ inputs:
     optional: True
     description: Weight Decay Multiplier for training. Not applicable for embedding finetuning
 
+  completion_overrride:
+    type: boolean
+    optional: True  
+
 
 outputs:
   aoai_finetuning_output:
@@ -122,3 +126,4 @@ command: >-
   $[[--n_ctx ${{inputs.n_ctx}}]]
   $[[--weight_decay_multiplier ${{inputs.weight_decay_multiplier}}]]
   --aoai_finetuning_output ${{outputs.aoai_finetuning_output}}
+  $[[--completion_overrride ${{inputs.completion_overrride}}]]
