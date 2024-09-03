@@ -16,7 +16,7 @@ from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig, DataConfig
 from azureml.assets.deployment_config import AssetVersionUpdate
 from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, update_model_metadata, \
-    prepare_data, pluralize_asset_type
+    prepare_data, RegistryUtils
 from azureml.assets.util import logger
 from azureml.assets.util.util import resolve_from_file_for_asset
 from azure.ai.ml import MLClient
@@ -445,7 +445,7 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
     :rtype: Tuple
     """
     REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
-                                        asset_type=pluralize_asset_type(asset_type)))
+                                        asset_type=RegistryUtils.pluralize_asset_type(asset_type)))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()
