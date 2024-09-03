@@ -82,4 +82,4 @@ jobs:
       # TODO: Remove "if" property, -c argument, and changed-scripts step above
       - name: Check code documentation
         if: steps.changed-scripts.outputs.all_modified_files != ''
-        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ OUTPUT1 }}"
+        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_modified_files }}"
