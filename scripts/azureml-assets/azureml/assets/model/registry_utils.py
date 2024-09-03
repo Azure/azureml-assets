@@ -51,7 +51,7 @@ class RegistryUtils:
             return ml_client.models
 
     def publish_to_registry(ml_client: MLClient, extra_config: Config, asset_name: str, asset_version: str,
-                             asset_type: assets.AssetType, temp_dir: Path, copy_updater: CopyUpdater = None):
+                            asset_type: assets.AssetType, temp_dir: Path, copy_updater: CopyUpdater = None):
         src_uri = extra_config.path.uri
         if extra_config.path.type == PathType.GIT:
             # download model locally (this is supported for models)
@@ -147,8 +147,8 @@ class DataAsset(Asset):
     def prepare_data(self, ml_client: MLClient):
         """Prepare data for publish."""
         data_registry_path = RegistryUtils.publish_to_registry(ml_client, self._data_config, self._data.name,
-                                                                self._data.version, AssetType.DATA, self._temp_dir,
-                                                                self._copy_updater)
+                                                               self._data.version, AssetType.DATA, self._temp_dir,
+                                                               self._copy_updater)
         self._data.path = data_registry_path
         return self._data
 
@@ -187,8 +187,8 @@ class MLFlowModelAsset(ModelAsset):
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
         model_registry_path = RegistryUtils.publish_to_registry(ml_client, self._model_config, self._model.name,
-                                                                 self._model.version, AssetType.MODEL, self._temp_dir,
-                                                                 self._copy_updater)
+                                                                self._model.version, AssetType.MODEL, self._temp_dir,
+                                                                self._copy_updater)
         self._model.path = model_registry_path + "/" + MLFlowModelAsset.MLFLOW_MODEL_PATH
         return self._model
 
@@ -203,8 +203,8 @@ class CustomModelAsset(ModelAsset):
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
         model_registry_path = RegistryUtils.publish_to_registry(ml_client, self._model_config, self._model.name,
-                                                                 self._model.version, AssetType.MODEL, self._temp_dir,
-                                                                 self._copy_updater)
+                                                                self._model.version, AssetType.MODEL, self._temp_dir,
+                                                                self._copy_updater)
         self._model.path = model_registry_path
         return self._model
 
