@@ -1,0 +1,91 @@
+name: scripts-syntax
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  scripts_validation_dir: scripts/validation
+  test_resources_dir: test/resources
+
+permissions:
+  # Required to clone repo
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-syntax-files:
+    name: Check syntax files
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+    
+      - name: Get changed Python scripts
+        id: changed-scripts
+        uses: tj-actions/changed-files@v35
+        with:
+          files_separator: ','
+          separator: ','
+          files: |
+            **/*.py
+
+      - name: Check changed Python scripts count
+        id: check-changed-scripts
+        run: |
+          if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
+            echo "No changed Python scripts"
+          fi
+
+  check-syntax:
+    name: Check syntax
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - name: Get changed Python scripts
+        id: changed-scripts
+        uses: tj-actions/changed-files@v35
+        with:
+          files_separator: ','
+          separator: ','
+          files: |
+            **/*.py
+      
+      - name: Check changed Python scripts count
+        run: |
+          if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
+            echo "No changed Python scripts"
+            exit 0
+          fi
+
+      - name: Use Python 3.10 or newer
+        uses: actions/setup-python@v4
+        with:
+          python-version: '>=3.10'
+      
+      - name: Install dependencies
+        run: pip install -r $scripts_validation_dir/requirements.txt
+
+      - name: Check for copyright notice
+        run: python $scripts_validation_dir/copyright_validation.py -i . -e $test_resources_dir
+      
+      - name: Check code health
+        run: python $scripts_validation_dir/code_health.py -i .
+      
+      # TODO: Remove "if" property, -c argument, and changed-scripts step above
+      - name: Check code documentation
+        if: steps.changed-scripts.outputs.all_modified_files != ''
+        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_modified_files }}"
