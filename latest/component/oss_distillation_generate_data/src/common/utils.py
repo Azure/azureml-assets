@@ -77,14 +77,14 @@ def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCreden
         logger.info("Using MSI creds")
         return credential
     except Exception:
-        logger.error("MSI auth failed")
+        logger.warning("MSI auth failed")
     try:
         credential = AzureMLOnBehalfOfCredential()
         credential.get_token("https://management.azure.com/.default")
         logger.info("Using OBO creds")
         return credential
     except Exception:
-        logger.error("OBO cred failed")
+        logger.warning("OBO cred failed")
     try:
         credential = AzureCliCredential()
         credential.get_token("https://management.azure.com/.default")
