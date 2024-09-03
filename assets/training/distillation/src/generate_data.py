@@ -12,7 +12,7 @@ import requests
 from argparse import Namespace
 from requests import Response
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
@@ -26,7 +26,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from common.constants import (
     COMPONENT_NAME,
-    COD_SYSTEM_PROMPT,
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
@@ -229,18 +228,23 @@ def _invoke_endpoint(
         "Authorization": f"Bearer {key}",
     }
 
-    log_entry = log_entry or {}
-    idx = log_entry.get("idx", -1)
-    turn = log_entry.get("turn", -1)
+    # log_entry = log_entry or {}
+    # idx = log_entry.get("idx", -1)
+    # turn = log_entry.get("turn", -1)
 
     # We don't want to log every request. Conditionally log some, to avoid overwhelming logs.
-    if idx % 10 == 0 and turn % 2 == 0:
-        custom_logger_activity_name = (
-            f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
-        )
-        with log_activity(logger=logger, activity_name=custom_logger_activity_name):
-            return requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
-    return requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
+    # if idx % 10 == 0 and turn % 2 == 0:
+    #     custom_logger_activity_name = (
+    #         f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
+    #     )
+    #     with log_activity(logger=logger, activity_name=custom_logger_activity_name):
+    #         return requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
+    try:
+        request = requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
+    except Exception:
+        logger.info(f"Request timed out. The request that time out was {data}")
+        raise Exception
+    return request
 
 
 def generate_synthetic_data(
@@ -283,19 +287,11 @@ def generate_synthetic_data(
         Returns:
             message (dict): System message with updated content
         """
-        if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-            cot_prompt = SystemPrompt.get_cot_prompt(data_generation_task_type)
+        cot_prompt = SystemPrompt.get_cot_prompt(data_generation_task_type)
+        if enable_cot and cot_prompt:
             cot_system_message = {'role': 'system', 'content': cot_prompt}
             return cot_system_message
-        elif (
-            enable_cod
-            and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION
-        ):
-            cod_system_message = {"role": "system", "content": COD_SYSTEM_PROMPT}
-            return cod_system_message
-
-        else:
-            return message
+        return message
 
     def normalize_messages(messages: List[dict]) -> List[dict]:
         """Add dummy assistant turn if not present in the messages list.
@@ -393,15 +389,8 @@ def generate_synthetic_data(
                     response_data = response.json()
                     # response content should be structured as below for a successful vllm response
                     prediction_result = response_data["choices"][0]["message"]["content"].strip()
+                    synthetic_responses.append({"role": "assistant", "content": prediction_result})
 
-                    # For CoT prompts, need to remove the reasoning and only use the answer
-                    if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
-                        key = SystemPrompt.get_response_key(data_generation_task_type)
-                        prediction_result = json.loads(prediction_result)[key]
-
-                    synthetic_responses.append(
-                        {"role": "assistant", "content": str(prediction_result)}
-                    )
             is_success = last_status_code == 200
             logger.info(f"Processing idx: {idx} - {is_success}")
             return {
@@ -423,6 +412,47 @@ def generate_synthetic_data(
                 "exception": e,
             }
 
+    def is_valid_request(idx: str, error_map: dict, result: Optional[dict]) -> bool:
+        ERROR = "error"
+        if result is None:
+            logger.error(f"row {idx} not found in future_results")
+            error_map[ERROR] = error_map.get(ERROR, 0) + 1
+            return False
+        elif result["exception"]:
+            logger.error(
+                f"row {idx} failed with exception: {result['exception']}"
+            )
+            error_map[ERROR] = error_map.get(ERROR, 0) + 1
+            return False
+        elif result["status_code"] != 200:
+            logger.warning(
+                f"row {idx} request status_code: {result['status_code']} != 200"
+            )
+            error_map[result["status_code"]] = (
+                error_map.get(result["status_code"], 0) + 1
+            )
+            return False
+        return True
+
+    def post_process_request(result: dict) -> dict:
+        """Post processing for different task types."""
+        key = SystemPrompt.get_response_key(data_generation_task_type)
+        if enable_cot and key:
+
+            # For single and multi-turn, the synthetic response will be the last message
+            synthetic_response = result["messages"][-1]
+            try:
+                prediction_result = json.loads(synthetic_response["content"])
+                synthetic_response["content"] = str(prediction_result[key])
+            except Exception as e:
+                return {
+                    "idx": result["idx"],
+                    "status_code": None,
+                    "messages": [],
+                    "exception": e
+                }
+        return result
+
     def batch_process_data(
         input_file_path: Path, output_file_path: Path, batch_size: int
     ) -> None:
@@ -441,7 +471,6 @@ def generate_synthetic_data(
         error_count = 0
         output_data = []
         error_map = {}
-        ERROR = "error"
 
         for batch in train_df:
             total_rows += len(batch)
@@ -473,23 +502,13 @@ def generate_synthetic_data(
             idx = 0
             for idx, row in batch.iterrows():
                 future_result = future_results.get(idx)
-                if future_result is None:
-                    logger.error(f"row {idx} not found in future_results")
-                    error_map[ERROR] = error_map.get(ERROR, 0) + 1
-                elif future_result["exception"]:
-                    logger.error(
-                        f"row {idx} failed with exception: {future_result['exception']}"
-                    )
-                    error_map[ERROR] = error_map.get(ERROR, 0) + 1
-                elif future_result["status_code"] != 200:
-                    logger.warning(
-                        f"row {idx} request status_code: {future_result['status_code']} != 200"
-                    )
-                    error_map[future_result["status_code"]] = (
-                        error_map.get(future_result["status_code"], 0) + 1
-                    )
-                else:
-                    output_data.append({"messages": future_result["messages"]})
+                post_processed_request = None
+                if is_valid_request(idx, error_map, future_result):
+                    post_processed_request = post_process_request(future_result)
+
+                if is_valid_request(idx, error_map, post_processed_request):
+                    output_data.append({"messages": post_processed_request["messages"]})
+
             Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
             with open(output_file_path, "w") as f:
                 for entry in output_data:
