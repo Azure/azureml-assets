@@ -1,4 +1,4 @@
-name: scripts-syntax
+name: scripts-syntax-testing
 
 on:
   pull_request:
@@ -44,6 +44,10 @@ jobs:
           if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
             echo "No changed Python scripts"
           fi
+          echo "Modified files: ${{ steps.changed-scripts.outputs.all_modified_files }}"
+          echo "changed-files=${{ steps.changed-scripts.outputs.all_modified_files }}" >> $GITHUB_OUTPUT
+          echo "changed-files: $changed-files"
+
 
   check-syntax:
     name: Check syntax
