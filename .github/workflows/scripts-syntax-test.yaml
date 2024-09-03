@@ -57,10 +57,6 @@ jobs:
     if: needs.check-syntax-files.outputs.my-changed-files != ''
 
     steps:
-      - env:
-          OUTPUT1: ${{ needs.check-syntax-files.outputs.my-changed-files }}
-        run: echo "$OUTPUT1"
-
       - name: Clone branch
         uses: actions/checkout@v3
         with:
@@ -77,8 +73,8 @@ jobs:
       - name: Check for copyright notice
         run: python $scripts_validation_dir/copyright_validation.py -i . -e $test_resources_dir
       
-      - name: Test echo
-        run: echo "OUTPUT1 is ${{ env.OUTPUT1 }}"
+      # - name: Test echo
+        # run: echo "OUTPUT1 is ${{ env.OUTPUT1 }}"
 
       - name: Check code health
         run: python $scripts_validation_dir/code_health.py -i .
@@ -86,5 +82,5 @@ jobs:
       # TODO: Remove "if" property, -c argument, and changed-scripts step above
       - name: Check code documentation
         run: |
-          echo "OUTPUT1 is ${{ env.OUTPUT1 }}"
-          python $scripts_validation_dir/doc_style.py -i . -c "${{ env.OUTPUT1 }}"
+          echo "changed files: ${{ needs.check-syntax-files.outputs.my-changed-files }}"
+          python $scripts_validation_dir/doc_style.py -i . -c " ${{ needs.check-syntax-files.outputs.my-changed-files }}"
