@@ -15,7 +15,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig, DataConfig
 from azureml.assets.deployment_config import AssetVersionUpdate
-from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, update_model_metadata, prepare_data
+from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, update_model_metadata, prepare_data, pluralize_asset_type
 from azureml.assets.util import logger
 from azureml.assets.util.util import resolve_from_file_for_asset
 from azure.ai.ml import MLClient
@@ -29,14 +29,6 @@ REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)
 REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/$asset_type/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 LATEST_LABEL = "latest"
-
-
-def pluralize_asset_type(asset_type: Union[AssetType, str]) -> str:
-    """Return pluralized asset type."""
-    # Convert to string if enum
-    if isinstance(asset_type, AssetType):
-        asset_type = asset_type.value
-    return f"{asset_type}s" if asset_type != "data" else asset_type
 
 
 def sanitize_output(input: str) -> str:

@@ -21,7 +21,6 @@ class RegistryUtils:
 
     RETRY_COUNT = 3
 
-    # Note: taken from publish_utils, but causes circular import if importing it
     def pluralize_asset_type(asset_type: Union[AssetType, str]) -> str:
         """Return pluralized asset type."""
         # Convert to string if enum
