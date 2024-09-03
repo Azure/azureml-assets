@@ -29,5 +29,5 @@ tags:
     - ds_mii
   license: apache-2.0
   task: chat-completion
-  author: mistralai
+  author: Mistral
 version: 10
