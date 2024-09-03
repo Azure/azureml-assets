@@ -40,7 +40,7 @@ jobs:
       
       - name: Check changed Python scripts count
         run: |
-          if ${{ steps.changed-files.outputs.all_modified_files_count == 0 }}; then
+          if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
             echo "No changed Python scripts"
             exit 0
           fi
