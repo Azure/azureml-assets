@@ -4,12 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    types:
-      - opened
-      - labeled
-      - unlabeled
-      - synchronize
-      - reopened
   workflow_dispatch:
 
 env:
@@ -25,18 +19,16 @@ defaults:
     shell: bash
 
 jobs:
-  check-syntax-files:
-    name: Check syntax files
+  check-syntax:
+    name: Check syntax
     runs-on: ubuntu-latest 
-    outputs:
-      my-changed-files: ${{ steps.check-changed-scripts.outputs.changed-files }}
 
     steps:
       - name: Clone branch
         uses: actions/checkout@v3
         with:
           fetch-depth: 2
-    
+      
       - name: Get changed Python scripts
         id: changed-scripts
         uses: tj-actions/changed-files@v35
@@ -45,44 +37,13 @@ jobs:
           separator: ','
           files: |
             **/*.py
-
+      
       - name: Check changed Python scripts count
-        id: check-changed-scripts
         run: |
           if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
             echo "No changed Python scripts"
+            exit 0
           fi
-          echo "changed-files=${{ steps.changed-scripts.outputs.all_modified_files }}" >> $GITHUB_OUTPUT
-
-
-  check-syntax:
-    name: Check syntax
-    runs-on: ubuntu-latest 
-    needs: check-syntax-files
-
-    steps:
-      - env:
-          CHANGED-FILES: ${{ needs.check-syntax-files.outputs.my-changed-files }}
-      - name: Clone branch
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      
-      # - name: Get changed Python scripts
-      #   id: changed-scripts
-      #   uses: tj-actions/changed-files@v35
-      #   with:
-      #     files_separator: ','
-      #     separator: ','
-      #     files: |
-      #       **/*.py
-      
-      # - name: Check changed Python scripts count
-      #   run: |
-      #     if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
-      #       echo "No changed Python scripts"
-      #       exit 0
-      #     fi
 
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
@@ -100,5 +61,5 @@ jobs:
       
       # TODO: Remove "if" property, -c argument, and changed-scripts step above
       - name: Check code documentation
-        if:  ${{ env.CHANGED-FILES }} != ''
-        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ env.CHANGED-FILES }}"
+        if: steps.changed-scripts.outputs.all_modified_files != ''
+        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_modified_files }}"
