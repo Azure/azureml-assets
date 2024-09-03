@@ -54,6 +54,7 @@ jobs:
     name: Check syntax
     runs-on: ubuntu-latest 
     needs: check-syntax-files
+    if: needs.check-syntax-files.outputs.status == 'success'
 
     steps:
       - env:
@@ -84,4 +85,6 @@ jobs:
       
       # TODO: Remove "if" property, -c argument, and changed-scripts step above
       - name: Check code documentation
-        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ env.OUTPUT1 }}"
+        run: |
+          echo "OUTPUT1 is ${{ env.OUTPUT1 }}"
+          python $scripts_validation_dir/doc_style.py -i . -c "${{ env.OUTPUT1 }}"
