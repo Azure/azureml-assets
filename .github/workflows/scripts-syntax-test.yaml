@@ -54,7 +54,7 @@ jobs:
     name: Check syntax
     runs-on: ubuntu-latest 
     needs: check-syntax-files
-    if: needs.check-syntax-files.outputs.status == 'success'
+    if: needs.check-syntax-files.outputs.changed-files != ''
 
     steps:
       - env:
