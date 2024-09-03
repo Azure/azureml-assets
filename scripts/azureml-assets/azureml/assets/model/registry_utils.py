@@ -52,6 +52,17 @@ class RegistryUtils:
 
     def publish_to_registry(ml_client: MLClient, extra_config: Config, asset_name: str, asset_version: str,
                             asset_type: assets.AssetType, temp_dir: Path, copy_updater: CopyUpdater = None):
+        """Copy artifacts to registry storage.
+
+        Args:
+            ml_client (MLClient): ML client.
+            extra_config (Config): ModelConfig or DataConfig object containing external storage info.
+            asset_name (str): Asset name.
+            asset_version (str): Asset version.
+            asset_type (assets.AssetType): Asset type.
+            temp_dir (Path): temp dir for asset operation.
+            copy_updater (CopyUpdater): CopyUpdater object to update files during azcopy.
+        """
         src_uri = extra_config.path.uri
         if extra_config.path.type == PathType.GIT:
             # download model locally (this is supported for models)
