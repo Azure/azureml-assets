@@ -107,7 +107,7 @@ tags:
     | Multilingual                | 62.2 | 67.8 | 69.8 | 62.0 | 67.0 | 73.4 | 78.2 |
     | Robustness                  | 70.2 | 57.9 | 65.5 | 78.7 | 69.3 | 69.7 | 84.6 |
   freePlayground: "true"
-  displayName: "Phi-3 medium instruct (128k)"
+  displayName: "Phi-3-medium instruct (128k)"
   summary: "Same Phi-3-medium model, but with a larger context size for RAG or few\
     \ shot prompting."
   textContextWindow: 131072

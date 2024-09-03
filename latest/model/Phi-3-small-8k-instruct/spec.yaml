@@ -108,7 +108,7 @@ tags:
     |Multilingual|62.5|63.2|63.4|65.0|69.1|76.5|82.0|
     |Robustness|72.9|38.4|51.0|64.5|69.3|69.7|84.6|
   freePlayground: "true"
-  displayName: "Phi-3 small instruct (8k)"
+  displayName: "Phi-3-small instruct (8k)"
   summary: "A 7B parameters model, proves better quality than Phi-3-mini, with a focus\
     \ on high-quality, reasoning-dense data."
   textContextWindow: 131072
