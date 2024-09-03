@@ -76,6 +76,9 @@ jobs:
       - name: Check for copyright notice
         run: python $scripts_validation_dir/copyright_validation.py -i . -e $test_resources_dir
       
+      - name: Test echo
+        run: echo "OUTPUT1 is ${{ env.OUTPUT1 }}"
+
       - name: Check code health
         run: python $scripts_validation_dir/code_health.py -i .
       
