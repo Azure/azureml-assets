@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: aoai_finetuning
-version: 0.0.10
+version: 0.0.11
 type: command
 
 is_deterministic: true
@@ -105,6 +105,10 @@ inputs:
     description: Weight Decay Multiplier for training. Not applicable for embedding
       finetuning
 
+  completion_override:
+    type: boolean
+    optional: true
+
 
 outputs:
   aoai_finetuning_output:
@@ -130,3 +134,4 @@ command: >-
   $[[--n_ctx ${{inputs.n_ctx}}]]
   $[[--weight_decay_multiplier ${{inputs.weight_decay_multiplier}}]]
   --aoai_finetuning_output ${{outputs.aoai_finetuning_output}}
+  $[[--completion_override ${{inputs.completion_override}}]]

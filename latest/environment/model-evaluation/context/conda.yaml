@@ -34,6 +34,6 @@ dependencies:
   - tiktoken
   - idna==3.7
   - pydantic==2.8.2
-  - mteb==1.14.12
+  - mteb==1.14.15
   - setuptools>=70.0.0
   - rouge>=1.0.0,<2.0.0
