@@ -4,8 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "**.py"
   workflow_dispatch:
 
 env:
@@ -40,6 +38,13 @@ jobs:
           files: |
             **/*.py
       
+      - name: Check changed Python scripts count
+        run: |
+          if ${{ steps.changed-files.outputs.all_modified_files_count > 0 }}; then
+            echo "No changed Python scripts"
+            exit 0
+          fi
+
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
         with:
