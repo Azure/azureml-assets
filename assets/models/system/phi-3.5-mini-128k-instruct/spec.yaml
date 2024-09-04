@@ -6,6 +6,9 @@ properties:
   languages: en
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: chat-completion
+  finetune-min-sku-spec: 24|1|220|64
+  finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   evaluation: "evalution.md"
   notes: "notes.md"
@@ -31,6 +34,9 @@ tags:
   author: microsoft
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
   _aml_system_vanity_registry: "azureml-phi"
   inference_compute_allow_list:
     [ 
@@ -38,6 +44,13 @@ tags:
       Standard_NC48ads_A100_v4, 
       Standard_ND96amsr_A100_v4,
       Standard_NC96ads_A100_v4
+    ]
+  finetune_compute_allow_list:
+    [
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4
     ]
   inference_supported_envs:
     - vllm
@@ -57,4 +70,4 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 2
+version: 3
