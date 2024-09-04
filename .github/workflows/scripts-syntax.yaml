@@ -44,5 +44,4 @@ jobs:
         run: python $scripts_validation_dir/code_health.py -i .
       
       - name: Check code documentation
-        if: steps.changed-scripts.outputs.all_modified_files != ''
         run: python $scripts_validation_dir/doc_style.py -i .
