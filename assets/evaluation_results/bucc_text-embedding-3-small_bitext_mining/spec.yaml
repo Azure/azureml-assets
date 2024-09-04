@@ -1,0 +1,24 @@
+type: evaluationresult
+name: bucc_text-embedding-3-small_bitext_mining
+version: 2.07.22
+display_name: BUCC_text-embedding-3-small_bitext_mining
+description: text-embedding-3-small run for BUCC dataset
+dataset_name: BUCC
+dataset_family: BUCC
+
+model_name: text-embedding-3-small
+model_version: "1"
+model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-small/versions/1
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azure-openai/models/text-embedding-3-small/versions/1
+
+tags:
+    evaluation_type: text_embeddings
+    task: bitext_mining
+    primary_metric: f1_score
+
+metrics:
+    f1_score: 0.9820643057041419
+
+properties: {}
