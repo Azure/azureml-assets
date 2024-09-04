@@ -7,8 +7,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/**
   workflow_dispatch:
     inputs:
       asset_dirs:
@@ -41,13 +39,6 @@ jobs:
       - name: Clone branch
         uses: actions/checkout@v3
       
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files_separator: ','
-          separator: ','
-      
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
         with:
@@ -70,7 +61,7 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir
 
       - name: Validate assets
-        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -n -I -C -b -t -e
+        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -n -I -C -b -t -e
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
