@@ -147,8 +147,7 @@ class DatasetPreprocessor(object):
         preprocessor_script = params_dict.pop("user_preprocessor")
         input_path = params_dict.pop("input_dataset")
         output_path = params_dict.pop("output_dataset")
-        additional_parameters = (json.dumps(params_dict).replace("'", "\\'")
-                                 .replace('"', '\\"'))
+        additional_parameters = json.dumps(params_dict)
         argss = [
             "--input_path",
             input_path,
@@ -166,7 +165,23 @@ class DatasetPreprocessor(object):
                 shell=True,
             )
         except subprocess.CalledProcessError as e:
-            error_message = e.output.strip()
-            raise BenchmarkUserException._with_error(
-                AzureMLError.create(BenchmarkUserError, error_details=error_message)
-            )
+            try:
+                argss = [
+                    "--input_path",
+                    input_path,
+                    "--output_path",
+                    output_path,
+                    "--additional_parameters",
+                    additional_parameters,
+                ]
+                _ = subprocess.check_output(
+                    [f"python {preprocessor_script}"] + argss,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True,
+                    shell=True,
+                )
+            except subprocess.CalledProcessError as e:
+                error_message = e.output.strip()
+                raise BenchmarkUserException._with_error(
+                    AzureMLError.create(BenchmarkUserError, error_details=error_message)
+                )
