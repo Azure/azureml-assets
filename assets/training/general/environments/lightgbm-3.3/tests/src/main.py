@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 
 # define functions
 def main(args):
-    """Setup, read, process, and train model."""
+    """Read, process, and train model."""
     # enable auto logging
     mlflow.autolog()
 
