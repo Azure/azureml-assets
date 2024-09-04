@@ -83,4 +83,7 @@ jobs:
       - name: Check code documentation
         run: |
           echo "changed files: ${{ needs.check-syntax-files.outputs.my-changed-files }}"
-          python $scripts_validation_dir/doc_style.py -i . -c " ${{ needs.check-syntax-files.outputs.my-changed-files }}"
+          # python $scripts_validation_dir/doc_style.py -i . -c "${{ needs.check-syntax-files.outputs.my-changed-files }}"
+
+          # run on all files
+          python $scripts_validation_dir/doc_style.py -i . -c ""
