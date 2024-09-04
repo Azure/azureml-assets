@@ -3,6 +3,7 @@
 
 """Test assets via pytest."""
 
+
 def test_failure():
     """Mocks a test."""
     assert False

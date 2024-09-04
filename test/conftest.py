@@ -3,6 +3,7 @@
 
 """Test various pytest cases with ."""
 
+
 def pytest_addoption(parser):
     """Add pytest options."""
     parser.addoption("--resource-group", action="store")

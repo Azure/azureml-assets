@@ -3,6 +3,7 @@
 
 """Test assets via pytest."""
 
+
 def test_success():
     """Mocks a test."""
     assert True
