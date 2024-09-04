@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Classes for ML tasks."""
+
+
 import argparse
 from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common import utils
-
-"""Classes for ML tasks."""
 
 
 class CommonSettings:

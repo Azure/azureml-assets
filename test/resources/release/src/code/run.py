@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-Creates random images.
-"""
+"""Creates random images."""
+
+
 import os
 
 import numpy as np
@@ -12,8 +12,8 @@ import argparse
 
 
 def generate(path, samples, classes, width, height):
-    os.makedirs(path, exist_ok=True)
     """Generate and save random images."""
+    os.makedirs(path, exist_ok=True)
 
     for i in range(samples):
         a = np.random.rand(width, height, 3) * 255

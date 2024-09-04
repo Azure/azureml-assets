@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     # Define helper method to read the bytes of a file from disk
     def read_file_bytes(image_path):
-        """Helper method to read the bytes of a file from disk.S"""
+        """Helper method to read the bytes of a file from disk."""
         with open(image_path, "rb") as f:
             return f.read()
 
