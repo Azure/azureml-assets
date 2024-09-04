@@ -10,6 +10,7 @@ class CommonSettings:
 
     def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str,
                  pytorch_model_output: str) -> None:
+        """Init function for CommonSettings class."""
         self.training_data = training_data
         self.validation_data = validation_data
         self.mlflow_model_output = mlflow_model_output
@@ -17,6 +18,7 @@ class CommonSettings:
 
     @classmethod
     def create_from_parsing_current_cmd_line_args(cls) -> "CommonSettings":
+        """Create object from parsing current cmd line args."""
         parser = argparse.ArgumentParser()
         parser.add_argument(utils._make_arg('training_data'), type=str)
         parser.add_argument(utils._make_arg('validation_data'), type=str)
@@ -32,6 +34,7 @@ class ClassificationSettings(CommonSettings):
 
     def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str,
                  pytorch_model_output: str, task_type: str) -> None:
+        """Init function for ClassificationSettings class."""
         super().__init__(training_data, validation_data, mlflow_model_output, pytorch_model_output)
         self.multilabel = False
         if task_type == Tasks.IMAGE_CLASSIFICATION_MULTILABEL:
@@ -39,6 +42,7 @@ class ClassificationSettings(CommonSettings):
 
     @classmethod
     def create_from_parsing_current_cmd_line_args(cls) -> "ClassificationSettings":
+        """Create object from parsing current cmd line args."""
         # Create common settings
         common_settings = CommonSettings.create_from_parsing_current_cmd_line_args()
 
@@ -52,8 +56,10 @@ class ClassificationSettings(CommonSettings):
 
 
 class ObjectDetectionSettings(CommonSettings):
+    """ObjectDetectionSettings class."""
     pass
 
 
 class InstanceSegmentationSettings(CommonSettings):
+    """InstanceSegmentationSettings class."""
     pass

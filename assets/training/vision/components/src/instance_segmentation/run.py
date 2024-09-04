@@ -12,6 +12,7 @@ from common.settings import InstanceSegmentationSettings
 
 @utils.create_component_telemetry_wrapper(Tasks.IMAGE_INSTANCE_SEGMENTATION)
 def run():
+    """Run the instance segmentation task."""
     component_settings = InstanceSegmentationSettings.create_from_parsing_current_cmd_line_args()
     mltable_data_json = utils.create_mltable_json(component_settings)
     runner.run(
@@ -22,6 +23,7 @@ def run():
 
 
 if __name__ == "__main__":
+    """Check GPU compute and run component."""
     utils.validate_running_on_gpu_compute()
 
     # Run the component.

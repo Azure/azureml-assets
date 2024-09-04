@@ -50,6 +50,7 @@ def create_component_telemetry_wrapper(task_type):
 
 
 def create_mltable_json(settings: CommonSettings) -> str:
+    """Create MLTable in JSON."""
     mltable_data_dict = {
         MLTableDataLabel.TrainData.value: {
             MLTableLiterals.MLTABLE_RESOLVEDURI: settings.training_data
@@ -65,16 +66,19 @@ def create_mltable_json(settings: CommonSettings) -> str:
 
 
 def get_local_rank() -> int:
+    """Get local rank."""
     return int(os.environ["LOCAL_RANK"])
 
 
 def validate_running_on_gpu_compute() -> None:
+    """Check if GPU compute is available."""
     if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
         raise AutoMLVisionValidationException(
             "This component requires compute that contains one or more GPU.")
 
 
 def download_models(run: Run, mlflow_output: str, pytorch_output: str):
+    """Download models."""
     TMP_OUTPUT = '/tmp/outputs'
     TMP_MLFLOW = TMP_OUTPUT + '/mlflow-model'
 
