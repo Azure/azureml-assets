@@ -1,0 +1,31 @@
+type: evaluationresult
+name: openbookqa__gpt-4-0125-preview__question_answering
+version: 2.12.08
+display_name: openbookqa__gpt-4-0125-Preview__chat_completion
+description: Benchmark__gpt40125__hf_openbookqa__chat_completion
+dataset_family: openbookqa
+dataset_name: openbookqa
+
+model_name: gpt-4-0125-Preview
+model_version: "4"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4-0125-Preview/versions/4
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4-0125-Preview/versions/4
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.934
+
+
+properties:
+  n_shot: 10
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"

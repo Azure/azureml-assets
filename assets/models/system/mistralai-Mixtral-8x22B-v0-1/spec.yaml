@@ -19,5 +19,5 @@ tags:
   - vllm
   license: apache-2.0
   task: text-generation
-  author: mistralai
+  author: Mistral
 version: 4

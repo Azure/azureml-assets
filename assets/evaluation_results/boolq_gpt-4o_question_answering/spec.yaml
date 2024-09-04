@@ -1,0 +1,31 @@
+type: evaluationresult
+name: boolq_gpt-4o_question_answering
+version: 2.12.08
+display_name: boolq_gpt-4o_question_answering
+description: gpt-4o run for boolq
+dataset_family: boolq
+dataset_name: boolq
+
+model_name: gpt-4o
+model_version: "5/13/2024"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/1
+
+relationships:
+  - relationshipType: Source
+    assetId: azureml://registries/azure-openai/models/gpt-4o/versions/1
+
+tags:
+  evaluation_type: text_generation
+  task: question-answering
+  accuracy_metric_name: exact_match
+
+metrics:
+  accuracy: 0.908562691
+
+
+properties:
+  n_shot: 5
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: 1.0
+  fewshot_split: "train"
