@@ -147,7 +147,8 @@ class DatasetPreprocessor(object):
         preprocessor_script = params_dict.pop("user_preprocessor")
         input_path = params_dict.pop("input_dataset")
         output_path = params_dict.pop("output_dataset")
-        additional_parameters = json.dumps(params_dict)
+        additional_parameters = (json.dumps(params_dict).replace("'", "\\'")
+                                 .replace('"', '\\"'))
         argss = [
             "--input_path",
             input_path,
