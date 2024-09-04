@@ -7,6 +7,7 @@ from azureml.automl.dnn.vision.common import utils
 
 """Classes for ML tasks."""
 
+
 class CommonSettings:
     """CommonSettings class."""
 
