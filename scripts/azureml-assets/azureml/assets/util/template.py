@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Functions for replacing template tags."""
+
+
 TAG_PREFIX = "{{"
 TAG_SUFFIX = "}}"
 TAG_SEPARATOR = "."

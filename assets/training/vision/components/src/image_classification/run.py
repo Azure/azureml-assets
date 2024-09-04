@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Run an image classification task with specified component settings."""
+
+
 from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common.constants import SettingsLiterals
 from azureml.automl.dnn.vision.classification import runner

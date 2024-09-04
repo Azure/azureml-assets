@@ -13,6 +13,7 @@ import argparse
 
 def generate(path, samples, classes, width, height):
     os.makedirs(path, exist_ok=True)
+    """Generate and save random images."""
 
     for i in range(samples):
         a = np.random.rand(width, height, 3) * 255
@@ -30,6 +31,7 @@ def generate(path, samples, classes, width, height):
 
 
 def main(cli_args: list = None) -> None:
+    """Parse args and generate random images for training and validation sets."""
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument(
         "--output_train",

@@ -5,8 +5,10 @@ import argparse
 from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common import utils
 
+"""Classes for ML tasks."""
 
 class CommonSettings:
+    """CommonSettings class."""
 
     def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str,
                  pytorch_model_output: str) -> None:
@@ -31,6 +33,7 @@ class CommonSettings:
 
 
 class ClassificationSettings(CommonSettings):
+    """ClassificationSettings class."""
 
     def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str,
                  pytorch_model_output: str, task_type: str) -> None:
@@ -57,9 +60,11 @@ class ClassificationSettings(CommonSettings):
 
 class ObjectDetectionSettings(CommonSettings):
     """ObjectDetectionSettings class."""
+
     pass
 
 
 class InstanceSegmentationSettings(CommonSettings):
     """InstanceSegmentationSettings class."""
+
     pass

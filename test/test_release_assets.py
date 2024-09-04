@@ -76,6 +76,7 @@ def test_release_paths(test_subdir: str, expected: List[Path]):
     ]
 )
 def test_find_common_directory(test_subdir: str, expected: Tuple[Path, List[Path]]):
+    """Test for finding common directory."""
     this_dir = Path(__file__).parent
     test_dir = this_dir / RESOURCES_DIR / test_subdir
 
