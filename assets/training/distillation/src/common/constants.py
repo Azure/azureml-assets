@@ -70,49 +70,6 @@ DEFAULT_MAX_NEW_TOKENS = 128
 DEFAULT_TOP_P = 0.1
 DEFAULT_TEMPERATURE = 0.2
 
-COD_SYSTEM_PROMPT = """\
-You will generate increasingly concise, entity-dense summaries of the given article.
-
-Repeat the following 2 steps 4 times.
-
-Step 1. Identify 1-3 informative entities (";" delimited) from the article \
-    which are missing from the previously generated summary.
-Step 2. Write a new, denser summary of identical length which covers every entity \
-    and detail from the previous summary plus the missing entities.
-
-A missing entity is:
-- relevant to the main story,
-- specific yet concise (5 words or fewer),
-- novel (not in the previous summary),
-- faithful (present in the article),
-- anywhere (can be located anywhere in the article).
-
-Guidelines:
-- The first summary should be long (4-5 sentences, ~80 words) yet highly non-specific, \
-    containing little information beyond the entities marked as missing. Use overly verbose language and fillers\
-          (e.g., "this article discusses") to reach ~80 words.
-- Make every word count: rewrite the previous summary to improve flow and make space for additional entities.
-- Make space with fusion, compression, and removal of uninformative phrases like "the article discusses".
-- The summaries should become highly dense and concise yet self-contained, i.e., easily understood without the article.
-- Missing entities can appear anywhere in the new summary.
-- Never drop entities from the previous summary. If space cannot be made, add fewer new entities.
-
-Answer only in JSON. The JSON should be a list (length 4) of dictionaries \
-      whose keys are "Missing_Entities" and "Denser_Summary". \
-Ensure the JSON starts with a square bracket [, ends with a square bracket ], \
-and each dictionary within the array is separated by a comma. \
-The JSON should be syntactically correct and properly formatted. For example: \
-
-[
-  {"Missing_Entities": "<value1>", "Denser_Summary": "<value2>"},
-  {"Missing_Entities": "<value3>", "Denser_Summary": "<value4>"},
-  {"Missing_Entities": "<value5>", "Denser_Summary": "<value6>"},
-  {"Missing_Entities": "<value7>", "Denser_Summary": "<value8>"}
-]
-
-Please ensure that each dense summary should be no more than 80 words.
-"""
-
 
 class InferenceMode:
     """Supported inference modes."""
@@ -187,6 +144,49 @@ class SystemPrompt:
         "Always generate a syntactically correct JSON without using markdown and any additional words. "
     )
 
+    SUMMARIZATION_COT_SYSTEM_PROMPT = """\
+    You will generate increasingly concise, entity-dense summaries of the given article.
+
+    Repeat the following 2 steps 4 times.
+
+    Step 1. Identify 1-3 informative entities (";" delimited) from the article \
+        which are missing from the previously generated summary.
+    Step 2. Write a new, denser summary of identical length which covers every entity \
+        and detail from the previous summary plus the missing entities.
+
+    A missing entity is:
+    - relevant to the main story,
+    - specific yet concise (5 words or fewer),
+    - novel (not in the previous summary),
+    - faithful (present in the article),
+    - anywhere (can be located anywhere in the article).
+
+    Guidelines:
+    - The first summary should be long (4-5 sentences, ~80 words) yet highly non-specific, \
+        containing little information beyond the entities marked as missing. Use overly verbose language and fillers\
+            (e.g., "this article discusses") to reach ~80 words.
+    - Make every word count: rewrite the previous summary to improve flow and make space for additional entities.
+    - Make space with fusion, compression, and removal of uninformative phrases like "the article discusses".
+    - The summaries should become highly dense and concise yet self-contained, i.e., easily understood without the article.
+    - Missing entities can appear anywhere in the new summary.
+    - Never drop entities from the previous summary. If space cannot be made, add fewer new entities.
+
+    Answer only in JSON. The JSON should be a list (length 4) of dictionaries \
+        whose keys are "Missing_Entities" and "Denser_Summary". \
+    Ensure the JSON starts with a square bracket [, ends with a square bracket ], \
+    and each dictionary within the array is separated by a comma. \
+    The JSON should be syntactically correct and properly formatted. For example: \
+
+    [
+    {"Missing_Entities": "<value1>", "Denser_Summary": "<value2>"},
+    {"Missing_Entities": "<value3>", "Denser_Summary": "<value4>"},
+    {"Missing_Entities": "<value5>", "Denser_Summary": "<value6>"},
+    {"Missing_Entities": "<value7>", "Denser_Summary": "<value8>"}
+    ]
+
+    Please ensure that each dense summary should be no more than 80 words.
+    """
+
     DEFAULT_KEYS = "'reason' and 'answer_choice'"
 
     MATH_NUMERICAL_KEYS = "'reason' and 'answer'"
@@ -197,25 +197,37 @@ class SystemPrompt:
     )
 
     @classmethod
-    def default_cot_prompt(cls):
+    def default_cot_prompt(cls) -> str:
         """Get the default chain of thought prompt."""
         return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.DEFAULT_KEYS, additional_instructions="")
 
     @classmethod
-    def math_cot_prompt(cls):
+    def math_cot_prompt(cls) -> str:
         """Get the math chain of thought prompt for datasets expecting numeric answers."""
         return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.MATH_NUMERICAL_KEYS,
                                                     additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS
                                                     )
 
     @classmethod
+    def summarization_cot_prompt(cls) -> str:
+        return cls.SUMMARIZATION_COT_SYSTEM_PROMPT
+
+    @classmethod
     def get_cot_prompt(cls, task_type: str):
         """Get the chain of thought prompt for the given task type."""
+        if task_type == DataGenerationTaskType.CONVERSATION:
+            return None
         if task_type == DataGenerationTaskType.MATH:
             return cls.math_cot_prompt()
+        if task_type == DataGenerationTaskType.SUMMARIZATION:
+            return cls.summarization_cot_prompt()
         return cls.default_cot_prompt()
 
     @classmethod
     def get_response_key(cls, task_type):
         """Get the key to index into the returned json based on the task type."""
-        return "answer" if task_type == DataGenerationTaskType.MATH else "answer_choice"
+        if task_type == DataGenerationTaskType.CONVERSATION:
+            return None
+        if task_type == DataGenerationTaskType.MATH:
+            return "answer"
+        return "answer_choice"
