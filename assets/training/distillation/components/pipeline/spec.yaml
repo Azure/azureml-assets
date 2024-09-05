@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.6
+version: 0.0.7
 type: pipeline
 
 
@@ -233,7 +233,7 @@ outputs:
 jobs:
   oss_distillation_validate_pipeline:
     type: command
-    component: azureml:oss_distillation_validate_pipeline:0.0.1
+    component: azureml:oss_distillation_validate_pipeline:0.0.2
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
