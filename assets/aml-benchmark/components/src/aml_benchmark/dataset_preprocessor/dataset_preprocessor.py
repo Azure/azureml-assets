@@ -58,8 +58,11 @@ class DatasetPreprocessor(object):
         self.input_dataset = input_dataset
         self.template = template
         self.user_preprocessor = user_preprocessor
-        self.encoder_config = encoder_config
         self.output_dataset = output_dataset
+        if encoder_config is not None:
+            self.encoder_config = json.loads(encoder_config)
+        else:
+            self.encoder_config = None
         self.__post_init__()
 
     def __post_init__(self) -> None:
@@ -154,34 +157,21 @@ class DatasetPreprocessor(object):
             "--output_path",
             output_path,
             "--additional_parameters",
-            f"'{additional_parameters}'",
+            # f"'{additional_parameters}'",
+            additional_parameters,
         ]
-        argss = " ".join(argss)
+        # argss = " ".join(argss)
         try:
             _ = subprocess.check_output(
-                f"python {preprocessor_script} {argss}",
+                # f"python {preprocessor_script} {argss}",
+                ["python", preprocessor_script] + argss,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
-                shell=True,
+                shell=False,
             )
+
         except subprocess.CalledProcessError as e:
-            try:
-                argss = [
-                    "--input_path",
-                    input_path,
-                    "--output_path",
-                    output_path,
-                    "--additional_parameters",
-                    additional_parameters,
-                ]
-                _ = subprocess.check_output(
-                    [f"python {preprocessor_script}"] + argss,
-                    stderr=subprocess.STDOUT,
-                    universal_newlines=True,
-                    shell=True,
-                )
-            except subprocess.CalledProcessError as e:
-                error_message = e.output.strip()
-                raise BenchmarkUserException._with_error(
-                    AzureMLError.create(BenchmarkUserError, error_details=error_message)
-                )
+            error_message = e.output.strip()
+            raise BenchmarkUserException._with_error(
+                AzureMLError.create(BenchmarkUserError, error_details=error_message)
+            )
