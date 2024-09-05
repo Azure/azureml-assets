@@ -114,6 +114,22 @@ Note that this model is optimized without system prompts.
 
 # **Inference samples**
 
+## System Prompt
+
+It is important to note that this model is optimized to function without a predefined system prompt. 
+While Allam does not come with a default system prompt, it does provide the flexibility to add a custom system prompt.
+
+For instance, a well-crafted system prompt could be:
+“You are ALLaM, a bilingual English and Arabic AI assistant.” 
+
+System prompts can also be in Arabic:
+"أنت علام، مساعد ذكاء اصطناعي مطور من الهيئة السعودية للبيانات والذكاء الاصطناعي، تجيب على الأسئلة بطريقة مفيدة مع مراعاة القيم الثقافية العربية." 
+
+Alternatively, users can get creative with their prompts, such as:
+“You are an AI assistant who responds to everything like a pirate.”
+
+The system prompt is integrated inside the tokenizer config (accessed via apply_chat_template() module).
+
 ## **Sample inputs and outputs (for real-time inference)**
 
 ## English
