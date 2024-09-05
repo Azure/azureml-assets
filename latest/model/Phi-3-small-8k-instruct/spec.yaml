@@ -164,7 +164,7 @@ tags:
     logging_steps: 10
     save_total_limit: 1
     max_seq_length: 4096
-version: 3
+version: 4
 description: |-
   The Phi-3-Small-8K-Instruct is a 7B parameters, lightweight, state-of-the-art open model trained with the Phi-3 datasets that includes both synthetic data and the filtered publicly available websites data with a focus on high-quality and reasoning dense properties. The model supports 8K context length (in tokens).
 
