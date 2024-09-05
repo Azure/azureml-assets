@@ -56,9 +56,12 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
 # end conda create
 
+# Conda installs from extra channels. Separate these to avoid solver OOMs.
+RUN conda install pytorch=1.13.1 pytorch-cuda=11.6 -c pytorch -c nvidia && conda clean -a -y
+# end conda create
+
 # begin pip install
 # Install pip dependencies
-RUN pip install torch==1.13.1+cu116 --extra-index-url https://download.pytorch.org/whl/cu116
 RUN pip install \
                 # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
