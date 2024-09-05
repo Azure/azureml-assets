@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Run an image classification task with specified component settings."""
+
+
 from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common.constants import SettingsLiterals
 from azureml.automl.dnn.vision.classification import runner
@@ -11,6 +14,7 @@ from common.settings import ClassificationSettings
 
 
 def run(task, component_settings):
+    """Run task with given component settings."""
     @utils.create_component_telemetry_wrapper(task)
     def run_component(task):
         mltable_data_json = utils.create_mltable_json(component_settings)
@@ -24,6 +28,7 @@ def run(task, component_settings):
 
 
 if __name__ == "__main__":
+    """Check GPU compute and run component."""
     utils.validate_running_on_gpu_compute()
 
     # Run the component.
