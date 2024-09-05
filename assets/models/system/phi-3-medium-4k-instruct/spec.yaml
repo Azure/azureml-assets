@@ -13,7 +13,7 @@ tags:
   notes: "notes.md"
   evaluation: "evaluation.md"
   freePlayground: "true"
-  displayName: "Phi-3 medium instruct (4k)"
+  displayName: "Phi-3-medium instruct (4k)"
   summary: "A 14B parameters model, proves better quality than Phi-3-mini, with a focus on high-quality, reasoning-dense data."
   keywords: "Reasoning,Understanding"
   inputModalities: "text"
