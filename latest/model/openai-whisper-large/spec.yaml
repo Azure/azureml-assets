@@ -17,8 +17,7 @@ properties:
     fi, vi, he, uk, el, ms, cs, ro, da, hu, ta, no, th, ur, hr, bg, lt, la, mi, ml,
     cy, sk, te, fa, lv, bn, sr, az, sl, kn, et, mk, br, eu, is, hy, ne, mn, bs, kk,
     sq, sw, gl, mr, pa, si, km, sn, yo, so, af, oc, ka, be, tg, sd, gu, am, yi, lo,
-    uz, fo, ht, ps, tk, nn, mt, sa, lb, my, bo, tl, mg, as, tt, haw, ln, ha, ba, jw,
-    su
+    uz, fo, ht, ps, tk, nn, mt, sa, lb, my, bo, tl, mg, as, tt, ln, ha, ba, su
 tags:
   huggingface_model_id: openai/whisper-large
   author: openai-oss
