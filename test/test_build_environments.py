@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test environment build scripts."""
+
 import tempfile
 from pathlib import Path
 from typing import Tuple
@@ -12,6 +14,7 @@ RESOURCES_DIR = Path("resources/environment/build")
 
 
 def test_build_assets(build_subdir_expected_pair: Tuple[str, bool], resource_group: str, registry: str):
+    """Test building images."""
     this_dir = Path(__file__).parent
     test_subdir, expected = build_subdir_expected_pair
 
