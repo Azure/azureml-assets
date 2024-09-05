@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:{{lates
 
 USER root:root
 
-RUN pip install {pin-to-extra-index}  'azureml-automl-dnn-nlp=={{latest-pypi-version}}'
-RUN pip install {pin-to-extra-index}  'azureml-defaults=={{latest-pypi-version}}'
+RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}'
+RUN pip install 'azureml-defaults=={{latest-pypi-version}}'
 
 RUN pip install torch==1.13.1
 RUN pip uninstall -y onnxruntime-training
