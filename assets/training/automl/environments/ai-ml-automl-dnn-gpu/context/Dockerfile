@@ -79,6 +79,7 @@ RUN pip install \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.16.1' \
                 'inference-schema' \
+                'horovod==0.28.1' \
                 'prophet==1.1.4' \
                 'pytorch-transformers==1.0.0' \
                 'spacy==3.7.4' \
@@ -90,7 +91,6 @@ RUN pip install \
                 'cryptography>=42.0.5'
                 # end pypi dependencies
 
-RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/thomas-bouvier/horovod.git@compile-cpp17
 # end pip install
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
