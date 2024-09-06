@@ -411,6 +411,17 @@ def wait_at_barrier(barrier_file, num_processes):
         logger.info(f"Process {os.getpid()} has passed barrier with name {process_name}")
 
 
+def _is_multi_node_enabled():
+    """
+    To enable multi-node or multi-process support on the component set the value of environment variable 
+    _AZUREML_FT_ENABLE_MULTI_NODE_SUPPORT to "true" in the component. If this is not defined by default it is False.
+    """
+    if os.environ.get("_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT", None) == "true":
+        return True
+    else:
+        return False
+
+
 def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str,
                         single_run=True, number_of_processes=1):
     """Run the subprocess command."""
@@ -421,11 +432,11 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
     if completion_file.exists():
         logger.info(f"Skipping {component_name} as completion file exists: {completion_file}")
         return
-    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-    if not barrier_file.exists():
-        Path(barrier_file).touch()
-        logger.info(f'Barrier file {barrier_file} is created by process name {process_name}')
-    if single_run:
+    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')   
+    if single_run and _is_multi_node_enabled():
+        if not barrier_file.exists():
+            Path(barrier_file).touch()
+            logger.info(f'Barrier file {barrier_file} is created by process name {process_name}')
         if is_main_process():
             logger.info(f"Executing command: {cmd} in single run mode. Process name is {process_name}")
             # Not setting stdout and stderr will stream all the logs directly to stdout
@@ -458,7 +469,7 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
         wait_at_barrier(barrier_file, number_of_processes)
         logger.info(f"Process name on subprocess exiting count barrier : {process_name}")
     else:
-        logger.info(f"Executing the command: {cmd}  in multi-process mode.")
+        logger.info(f"Executing the command: {cmd}.")
         # Not setting stdout and stderr will stream all the logs directly to stdout
         process = subprocess.Popen(cmd)
 
@@ -670,6 +681,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--convert_to_safetensors", "true",
     ]
     add_optional_param(cmd=cmd, component_param_name="registered_model_name", argparse_param_name="model_name")
+    add_optional_param(cmd=cmd, component_param_name="model_registration_tag", argparse_param_name="model_tag")
     _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder,
                         single_run=True, number_of_processes=gpus)
 
