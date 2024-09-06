@@ -43,10 +43,10 @@ jobs:
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-      - name: Use Python 3.10
+      - name: Use Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.9'
       - name: Install dependencies
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
       - name: Log in to Azure and create resources
@@ -89,10 +89,10 @@ jobs:
         with:
           name: ${{ env.pytest_component_version_folder }}
           path: ./
-      - name: Use Python 3.8
+      - name: Use Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
         with:
