@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.6-cudnn8-ubuntu20.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
 # Prepend path to AzureML conda environment
@@ -29,8 +29,8 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
     conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.2.2 \
-    pytorch-cuda=12.1 \
+    pytorch=1.13.1 \
+    pytorch-cuda=11.6 \
     -c pytorch -c nvidia -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -54,7 +54,7 @@ RUN pip install \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-train-automl=={{latest-pypi-version}} \
-                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
+                azureml-contrib-automl-dnn-forecasting==1.57.0 \
                 'azure-identity>=1.16.1' \
                 'inference-schema' \
                 'horovod==0.28.1' \
