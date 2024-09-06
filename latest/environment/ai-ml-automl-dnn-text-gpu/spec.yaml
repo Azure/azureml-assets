@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  An environment used by Azure ML AutoML for training models.
+
+name: "ai-ml-automl-dnn-text-gpu"
+version: "1"
+
+build:
+  path: "context"
+  dockerfile_path: "Dockerfile"
+
+os_type: linux
+
+tags:
+  OS: Ubuntu20.04
+  Training: ""
+  Preview: ""
+  OpenMpi: "4.1.0"
+  Python: "3.9"
