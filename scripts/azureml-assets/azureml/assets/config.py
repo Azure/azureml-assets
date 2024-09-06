@@ -14,6 +14,7 @@ from packaging import version
 from typing import Dict, List, Set, Tuple, Union
 import requests
 import sys
+import urllib.parse
 from azure.ai.ml._azure_environments import (
     AzureEnvironments,
     _get_default_cloud_name,
@@ -22,6 +23,7 @@ from azure.ai.ml._azure_environments import (
 from azure.identity import AzureCliCredential
 from azure.storage.blob import (
     BlobServiceClient,
+    ContainerClient,
     ContainerSasPermissions,
     generate_container_sas
 )
@@ -515,8 +517,9 @@ class AzureBlobstoreAssetPath(AssetPath):
         """
         self._storage_name = storage_name
         self._container_name = container_name
-        self._container_path = container_path
+        self._container_path = container_path.lstrip("/").rstrip("/")
         self._token = None
+        self._uri = None
 
         # AzureCloud, USGov, and China clouds should all pull from the same endpoint
         # associated with AzureCloud. If the cloud is not one of these, then the
@@ -631,10 +634,58 @@ class AzureBlobstoreAssetPath(AssetPath):
             self._token = ""
             return uri
 
+    def get_container_client(self) -> ContainerClient:
+        """Get container client.
+
+        Returns:
+            ContainerClient: Container client object for the asset.
+        """
+        # Get URL to container, while preserving any SAS token
+        model_uri = urllib.parse.urlparse(self.uri)
+        container_uri = urllib.parse.urlunparse(model_uri._replace(path="/" + self._container_name))
+        container_client: ContainerClient = ContainerClient.from_container_url(container_url=container_uri)
+        return container_client
+
+    def get_files(self, strip_container_prefix: bool = True) -> List[dict]:
+        """Get the list of files that belong to the asset.
+
+        Args:
+            strip_container_path (bool, optional): Whether to strip the container prefix from the file names.
+                                                   Defaults to True.
+
+        Returns:
+            List[dict]: List of files and their sizes. Dicts have keys `name` and `size`.
+        """
+        container_client = self.get_container_client()
+        container_prefix = self._container_path + "/"
+        blobs = container_client.list_blobs(name_starts_with=container_prefix)
+
+        # Remove prefix if desired
+        starting_pos = len(container_prefix) if strip_container_prefix else 0
+        blobs = [{'name': blob.name[starting_pos:], 'size': blob.size} for blob in blobs]
+        return blobs
+
+    def get_file_contents(self, name: str, encoding: str = "UTF-8") -> Union[str, bytes]:
+        """Retrieve contents of a file from the asset.
+
+        Args:
+            name (str): File name, relative to the container path.
+            encoding (str, optional): Encoding to use when reading the file. Defaults to "UTF-8".
+
+        Returns:
+            Union[str, bytes]: File contents, as str if encoding is provided, otherwise bytes.
+        """
+        container_client = self.get_container_client()
+        container_prefix = self._container_path + "/"
+        file_contents = container_client.download_blob(container_prefix + name, encoding=encoding).readall()
+        return file_contents
+
     @property
     def uri(self) -> str:
-        """Asset URI."""
-        return self.get_uri()
+        """Asset URI. Value is cached after first call."""
+        if self._uri is None:
+            self._uri = self.get_uri()
+        return self._uri
 
     @property
     def storage_name(self) -> str:
@@ -647,14 +698,20 @@ class AzureBlobstoreAssetPath(AssetPath):
         return self._container_name
 
     @property
+    def container_path(self) -> str:
+        """Container path."""
+        return self._container_path
+
+    @property
     def token(self) -> str:
-        """Sas token."""
+        """SAS token."""
         return self._token
 
     @token.setter
     def token(self, value: str):
-        """Set sas token."""
+        """Set SAS token. Resets cached `uri` value."""
         self._token = value
+        self._uri = None
 
 
 class GitAssetPath(AssetPath):
@@ -994,6 +1051,54 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visibility) if visibility else None
 
 
+class DataConfig(Config):
+    """Data Asset Config class.
+
+    Example:
+        # Remote storage path for asset data
+        path:
+            type: azureblob
+            storage_name: my_storage
+            container_name: my_container
+            container_path: foo/bar
+    """
+
+    def __init__(self, file_name: Path):
+        """Initialize object for the Data Asset Properties extracted from storage.yaml.
+
+        Args:
+            file_name (Path): Storage config file to load and validate.
+        """
+        super().__init__(file_name)
+        self._path = None
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        Config._validate_exists('data_asset.path', self.path)
+        Config._validate_enum('data_asset.path.type', self.path.type.value, PathType, True)
+
+    @property
+    def path(self) -> AssetPath:
+        """Remote Storage Path (Azure Blob is the only supported type)."""
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            else:
+                raise NotImplementedError("Unrecognized path type.")
+        else:
+            return None
+        return self._path
+
+
 class GenericAssetConfig(Config):
     """Generic Asset Config class.
 
@@ -1295,7 +1400,7 @@ class AssetConfig(Config):
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
 
-    def extra_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
+    def extra_config_as_object(self, force_reload: bool = False) -> Config:
         """Retrieve extra config file as an object.
 
         Args:
@@ -1305,7 +1410,7 @@ class AssetConfig(Config):
             Exception: If loading an extra_config for the asset type is unimplemented.
 
         Returns:
-            Spec: Extra config object.
+            Config: Extra config object.
         """
         if force_reload or self._extra_config is None:
             extra_config_with_path = self.extra_config_with_path
@@ -1314,6 +1419,8 @@ class AssetConfig(Config):
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
                 elif self.type == AssetType.MODEL:
                     self._extra_config = ModelConfig(extra_config_with_path)
+                elif self.type == AssetType.DATA:
+                    self._extra_config = DataConfig(extra_config_with_path)
                 elif self.type == AssetType.PROMPT:
                     self._extra_config = GenericAssetConfig(extra_config_with_path)
                 else:

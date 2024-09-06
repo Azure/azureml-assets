@@ -4,8 +4,14 @@
 """Evaluator."""
 
 import ast
+import os
+import re
+import shutil
+import tempfile
+
 import pandas as pd
 import numpy as np
+
 from abc import abstractmethod
 
 from exceptions import (
@@ -28,6 +34,9 @@ from constants import (
     ChatCompletionConstants
 )
 from image_constants import ImageDataFrameParams, ODISLiterals
+from azureml.core import Run
+from azureml.data.datapath import DataPath
+from azureml.data.dataset_factory import FileDatasetFactory
 from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
     ImageOdIsEvaluator,
 )
@@ -64,6 +73,7 @@ class EvaluatorFactory:
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
             TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
             TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator,
+            TASK.IMAGE_GENERATION: ImageGenerationEvaluator,
         }
 
     def get_evaluator(self, task_type, config=None):
@@ -610,16 +620,45 @@ class ChatCompletionEvaluator(Evaluator):
         """
         #  dataframe with 2 columns predictions and predictions appended to the conversation
         if len(y_pred.columns) > 1:
-            y_pred_formatted = [
-                list(item[ChatCompletionConstants.OUTPUT_FULL_CONVERSATION][0].values())[0]
-                for idx, item in y_pred.iterrows()
-            ]
+            logger.info("Found more than 1 col. Trying to fetch conversation.")
+
+            def check_item(row_item: pd.Series):
+                """Convert input data to correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
+                item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
+                if item is None:
+                    return row_item
+                if isinstance(item, list) and isinstance(item[0], dict):
+                    if item[0].get("role", False) and item[0].get("content", False):
+                        return item
+                    else:
+                        if item[0].get("0", False):
+                            return item["0"]
+                return item
+
+            y_pred_formatted = y_pred.apply(check_item, axis=1).tolist()
         # dataframe wih just predictions appended to conversations
         else:
-            y_pred_formatted = y_pred.values.tolist()[0]
-        #  if ground truth is passed
+            y_pred_formatted = y_pred.values.tolist()
+        # if ground truth is passed
         if y_test is not None and len(y_test) > 0:
-            y_test = y_test.iloc[:, 0].apply(lambda x: [x]).tolist()
+
+            def check_y_test(row_item: pd.Series):
+                """Convert ground truth into correct format for metrics package.
+
+                Args:
+                    row_item (pd.Series): Single row input from Dataframe
+                """
+                item = row_item.get(y_test.columns[0])
+                if isinstance(item, str) or isinstance(item, dict):
+                    return [item]
+                if isinstance(item, list):
+                    return item
+
+            y_test = y_test.apply(check_y_test, axis=1).tolist()
             metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
                                       y_test=y_test, **self.metrics_config)
         else:
@@ -776,3 +815,59 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
                                                      **self.metrics_config)
 
         return metrics
+
+
+class ImageGenerationEvaluator(Evaluator):
+    """Evaluator for image generation."""
+
+    DATASTORE_URL_TEMPLATE = "AmlDatastore://([^/]+)((/[^/]+)+)$"
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate generated images.
+
+        Compare feature space distribution of real images with that of generated images.
+
+        Args:
+            y_test (pd.DataFrame): pandas DataFrame with column "label", containing real images
+            y_pred (pd.DataFrame): pandas DataFrame with column "predictions", containing generated images
+        Returns:
+            Dict: Dict of metrics
+        """
+        with tempfile.TemporaryDirectory() as ground_truth_folder_name, \
+             tempfile.TemporaryDirectory() as predictions_folder_name:
+            self._download_images(y_test[ImageDataFrameParams.LABEL_COLUMN_NAME], ground_truth_folder_name)
+            self._download_images(y_pred[ImageDataFrameParams.PREDICTIONS], predictions_folder_name)
+
+            metrics = compute_metrics(
+                task_type=constants.Tasks.IMAGE_GENERATION,
+                y_test=ground_truth_folder_name, y_pred=predictions_folder_name,
+                **self.metrics_config
+            )
+        return metrics
+
+    def _download_images(self, image_urls, local_folder_name):
+        # Get the workspace of the run.
+        run = Run.get_context()
+        workspace = run.experiment.workspace
+
+        def maybe_make_data_path(image_url):
+            # Check if this url refers to datastore and if not, keep it as is.
+            match = re.search(self.DATASTORE_URL_TEMPLATE, image_url)
+            if match is None:
+                return image_url
+
+            # Make DataPath from datastore name and file path.
+            groups = match.groups()
+            return DataPath(workspace.datastores.get(groups[0]), groups[1])
+
+        # Convert URLs referring to datastore to DataPath format.
+        image_urls = [maybe_make_data_path(image_url) for image_url in image_urls]
+
+        # Download images to temporary folder.
+        remote_image_files = FileDatasetFactory.from_files(image_urls, is_file=True)
+        local_image_file_names = remote_image_files.download()
+
+        # Move images to specified folder.
+        for i, local_image_file_name in enumerate(local_image_file_names):
+            f = os.path.splitext(local_image_file_name)[1]
+            shutil.move(local_image_file_name, os.path.join(local_folder_name, f"image_{i:09d}{f}"))

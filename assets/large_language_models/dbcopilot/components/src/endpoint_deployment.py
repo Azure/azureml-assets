@@ -58,6 +58,7 @@ class EndpointDeployment(EndpointDeploymentBase):
         sku: str = "Standard_DS3_v2",
         include_views: bool = False,
         instruct_template: str = None,
+        egress_public_network_access: str = "enabled"
     ):
         """deploy_endpoint."""
         from utils.asset_utils import get_datastore_uri
@@ -104,12 +105,17 @@ class EndpointDeployment(EndpointDeploymentBase):
             logging.info("dumped secrets to secrets.json")
             with open(os.path.join(code_dir, "configs.json"), "w") as f:
                 json.dump([asdict(config)], f)
+            managed_identity_enabled = os.getenv("MANAGED_IDENTITY_ENABLED", None)
             self._deploy_endpoint(
                 mir_environment,
                 endpoint_name,
                 deployment_name,
                 code_dir,
                 score_script="score_zero.py",
-                extra_environment_variables={"INSTRUCT_TEMPLATE": instruct_template},
+                extra_environment_variables={
+                    "INSTRUCT_TEMPLATE": instruct_template,
+                    "MANAGED_IDENTITY_ENABLED": managed_identity_enabled,
+                },
                 sku=sku,
+                egress_public_network_access=egress_public_network_access,
             )

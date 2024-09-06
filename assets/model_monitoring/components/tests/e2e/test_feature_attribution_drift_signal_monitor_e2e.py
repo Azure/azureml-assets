@@ -20,7 +20,7 @@ from tests.e2e.utils.constants import (
 
 
 def _submit_feature_attribution_drift_model_monitor_job(
-    submit_pipeline_job, ml_client, get_component, experiment_name, baseline_data, target_data,
+    submit_pipeline_job, ml_client: MLClient, get_component, experiment_name, baseline_data, target_data,
     expect_failure: bool = False
 ):
     feature_attr_drift_signal_monitor = get_component(
@@ -139,7 +139,11 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
     )
 
     # Wait until the job completes
-    ml_client.jobs.stream(pipeline_job.name)
+    try:
+        ml_client.jobs.stream(pipeline_job.name)
+    except JobException:
+        # ignore JobException to return job final status
+        pass
 
     return ml_client.jobs.get(pipeline_job.name)
 

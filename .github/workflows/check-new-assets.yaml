@@ -1,0 +1,51 @@
+name: check-new-assets
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - labeled
+      - unlabeled
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  # Required to clone repo
+  contents: read
+
+jobs:
+  check-new-assets:
+    name: Check new assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+
+      - name: Check for new asset
+        run: |
+          echo "continue=false" >> $GITHUB_ENV
+
+          for file in ${{ steps.changed-files.outputs.added_files }}; do
+            if [[ "$file" =~ .*\/spec.yaml ]] || [[ "$file" =~ .*\/asset.yaml ]]; then
+              echo "continue=true" >> $GITHUB_ENV
+              break
+            fi
+          done
+
+      - name: Check PR labels for "safe to publish" label
+        if: fromJSON(env.continue) && !contains(github.event.pull_request.labels.*.name, 'safe to publish')
+        run: |
+          echo "::error::This PR contains a brand new asset and requires the 'safe to publish' label to run this check. Assets must be properly tested before being added Github and the public registry."
+          exit 1

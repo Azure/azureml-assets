@@ -1,0 +1,149 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: oss_distillation_generate_data
+version: 0.0.6
+type: command
+
+is_deterministic: True
+
+display_name: OSS Distillation Generate Data
+description: Component to generate data from teacher model enpoint
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/66
+
+inputs:
+  # Inputs
+  train_file_path:
+    type: uri_file
+    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  teacher_model_endpoint_name:
+    type: string
+    optional: true
+    description: Teacher model endpoint name
+
+  teacher_model_endpoint_url:
+    type: string
+    optional: true
+    description: Teacher model endpoint URL
+
+  teacher_model_endpoint_key: 
+    type: string
+    optional: true
+    description: Teacher model endpoint key
+
+  teacher_model_max_new_tokens:
+    type: integer
+    default: 128
+    description: Teacher model max_new_tokens inference parameter
+
+  teacher_model_temperature:
+    type: number
+    default: 0.2
+    description: Teacher model temperature inference parameter
+
+  teacher_model_top_p:
+    type: number
+    default: 0.1
+    description: Teacher model top_p inference parameter
+
+  teacher_model_frequency_penalty:
+    type: number
+    default: 0.0
+    description: Teacher model frequency penalty inference parameter
+
+  teacher_model_presence_penalty:
+    type: number
+    default: 0.0
+    description: Teacher model presence penalty inference parameter
+
+  teacher_model_stop:
+    type: string
+    optional: true
+    description: Teacher model stop inference parameter
+
+  request_batch_size:
+    type: integer
+    default: 10
+    description: No of data records to hit teacher model endpoint in one go
+
+  min_endpoint_success_ratio:
+    type: number
+    default: 0.7
+    description: >
+      The minimum value of (successful_requests / total_requests) required for classifying inference as successful.
+      If (successful_requests / total_requests) < min_endpoint_success_ratio, the experiment will be marked as failed. 
+      By default it is 0.7 (0 means all requests are allowed to fail while 1 means no request should fail.)
+
+  enable_chain_of_thought:
+    type: string
+    optional: true
+    default: "false"
+    description: Enable Chain of thought for data generation
+  
+  enable_chain_of_density:
+    type: string
+    optional: true
+    default: "false"
+    description: Enable Chain of density for text summarization
+
+  data_generation_task_type:
+    type: string
+    enum:
+      - NLI
+      - CONVERSATION
+      - NLU_QA
+      - MATH
+      - SUMMARIZATION
+    description: >
+      Data generation task type. Supported values are:
+      1. NLI: Generate Natural Language Inference data
+      2. CONVERSATION: Generate conversational data (multi/single turn)
+      3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
+      4. MATH: Generate Math data for numerical responses
+      5. SUMMARIZATION: Generate Key Summary for an Article
+
+  
+  # Output of validation component.
+  validation_output:
+    type: uri_file
+    description: Validation status.
+    mode: rw_mount
+    
+outputs:
+  generated_train_file_path:
+    type: uri_file
+    description: Generated train data
+    mode: rw_mount
+  generated_validation_file_path:
+    type: uri_file
+    description: Generated validation data
+    mode: rw_mount
+
+code: ../../src
+command: >-
+  python generate_data.py
+  --train_file_path  ${{inputs.train_file_path}}
+  $[[--validation_file_path  ${{inputs.validation_file_path}}]]
+  $[[--teacher_model_endpoint_name ${{inputs.teacher_model_endpoint_name}}]]
+  $[[--teacher_model_endpoint_url ${{inputs.teacher_model_endpoint_url}}]]
+  $[[--teacher_model_endpoint_key ${{inputs.teacher_model_endpoint_key}}]]
+  --teacher_model_max_new_tokens ${{inputs.teacher_model_max_new_tokens}}
+  --teacher_model_temperature ${{inputs.teacher_model_temperature}}
+  --teacher_model_top_p ${{inputs.teacher_model_top_p}}
+  --teacher_model_frequency_penalty ${{inputs.teacher_model_frequency_penalty}}
+  --teacher_model_presence_penalty ${{inputs.teacher_model_presence_penalty}}
+  $[[--teacher_model_stop ${{inputs.teacher_model_stop}}]]
+  --request_batch_size ${{inputs.request_batch_size}}
+  --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
+  $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
+  $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
+  --data_generation_task_type ${{inputs.data_generation_task_type}}
+  --generated_train_file_path ${{outputs.generated_train_file_path}}
+  --generated_validation_file_path ${{outputs.generated_validation_file_path}}

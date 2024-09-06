@@ -3,6 +3,37 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.57 (2024-08-12)
+### 🐛 Bugs Fixed
+- [#3253](https://github.com/Azure/azureml-assets/pull/3253) Also accept Path types for populating tags from files
+- [#3254](https://github.com/Azure/azureml-assets/pull/3254) Return string value instead of Path if string doesn't resolve to a path
+
+## 1.16.56 (2024-08-09)
+### 🚀 New Features
+- [#3232](https://github.com/Azure/azureml-assets/pull/3232) Add additional features to AzureBlobstoreAssetPath
+### 🐛 Bugs Fixed
+- [#3238](https://github.com/Azure/azureml-assets/pull/3238) Check if value is string before appending to asset filepath
+
+## 1.16.55 (2024-08-08)
+### 🚀 New Features
+- [#3230](https://github.com/Azure/azureml-assets/pull/3230) Add support for adding tags from filepaths
+
+## 1.16.54 (2024-07-08)
+### 🐛 Bugs Fixed
+- [#3127](https://github.com/Azure/azureml-assets/pull/3127) Test pipeline
+
+## 1.16.53 (2024-06-28)
+### 🐛 Bugs Fixed
+- [#3102](https://github.com/Azure/azureml-assets/pull/3102) Don't auth to Azure during import of validate_assets
+
+## 1.16.52 (2024-06-03)
+### 🚀 New Features
+- [#3000](https://github.com/Azure/azureml-assets/pull/3000) Allow use of azcopy's --overwrite flag
+
+## 1.16.51 (2024-05-30)
+### 🐛 Bugs Fixed
+- [#2991](https://github.com/Azure/azureml-assets/pull/2991) Generate SAS tokens for data assets
+
 ## 1.16.50 (2024-05-22)
 ### 🐛 Bugs Fixed
 - [#2956](https://github.com/Azure/azureml-assets/pull/2956) Update embeddings asset task type

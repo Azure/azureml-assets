@@ -41,56 +41,65 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                    training_import_path: Optional[str], validation_import_path: Optional[str], model: str,
                    hyperparameters: Dict[str, str], hyperparameters_1p: Dict[str, str], suffix=Optional[str]) -> str:
         """Upload data, finetune model and then delete data."""
-        logger.info("Step 1: Uploading data to AzureOpenAI resource")
-        if training_file_path is not None:
-            self.upload_files(training_file_path, validation_file_path)
-        else:
-            training_data_uri_key, training_data_uri = utils.get_key_or_uri_from_data_import_path(training_import_path)
-
-            if validation_import_path is not None:
-                validation_data_uri_key, validation_data_uri =\
-                    utils.get_key_or_uri_from_data_import_path(validation_import_path)
-
-            if training_data_uri_key is not None:
-                keyvault_client_manager = KeyVaultClientManager()
-                keyvault_client = keyvault_client_manager.get_keyvault_client()
-                logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
-                training_data_uri = keyvault_client.get_secret(training_data_uri_key).value
+        try:
+            logger.info("Step 1:Uploading data to AzureOpenAI resource")
+            if training_file_path is not None:
+                self.upload_files(training_file_path, validation_file_path)
             else:
-                logger.info("User has provided trainining data uri directly, sending it to Azure OpenAI resource")
+                training_data_uri_key, training_data_uri = utils.get_key_or_uri_from_data_import_path(
+                    training_import_path
+                )
+                if validation_import_path is not None:
+                    validation_data_uri_key, validation_data_uri =\
+                        utils.get_key_or_uri_from_data_import_path(validation_import_path)
 
-            self.training_file_id = self.upload_file_uri_from_rest(training_data_uri)
-            logger.info("uploaded training file uri to aoai resource")
-
-            if validation_import_path is not None:
-                if validation_data_uri_key is not None:
+                if training_data_uri_key is not None:
                     keyvault_client_manager = KeyVaultClientManager()
                     keyvault_client = keyvault_client_manager.get_keyvault_client()
-                    logger.info(f"fetching validation file uri from keyvault: {keyvault_client_manager.keyvault_name}")
-                    validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
+                    logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
+                    training_data_uri = keyvault_client.get_secret(training_data_uri_key).value
                 else:
-                    logger.info("User has provided validation data uri directly, sending it to Azure OpenAI resource")
+                    logger.info("User has provided trainining data uri directly, sending it to Azure OpenAI resource")
 
-                self.validation_file_id = self.upload_file_uri_from_rest(validation_data_uri)
-                logger.info("uploaded validation file uri to aoai resource")
+                self.training_file_id = self.upload_file_uri_from_rest(training_data_uri)
+                logger.info("uploaded training file uri to aoai resource")
 
-        logger.info("Step 2: Finetuning model")
-        self.finetuning_job_id = self.submit_finetune_job(model, hyperparameters, hyperparameters_1p, suffix)
-        finetuned_job = self.track_finetuning_job()
+                if validation_import_path is not None:
+                    if validation_data_uri_key is not None:
+                        keyvault_client_manager = KeyVaultClientManager()
+                        keyvault_client = keyvault_client_manager.get_keyvault_client()
+                        logger.info(
+                            f"fetching validation fileuri from keyvault: {keyvault_client_manager.keyvault_name}"
+                        )
+                        validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
+                    else:
+                        logger.info("User provided validation data uri directly, sending it to Azure OpenAI resource")
 
-        logger.debug(f"Finetuned model name: {finetuned_job.fine_tuned_model}, status: {finetuned_job.status}")
-        logger.info("Step 3: Deleting data from AzureOpenAI resource")
-        self.delete_files()
+                    self.validation_file_id = self.upload_file_uri_from_rest(validation_data_uri)
+                    logger.info("uploaded validation file uri to aoai resource")
 
-        if finetuned_job.status == "failed":
-            raise Exception(f"Fine tuning job: {self.finetuning_job_id} failed with error: {finetuned_job.error}")
-        elif finetuned_job.status == "cancelled":
-            logger.info(f"finetune job: {self.finetuning_job_id} got cancelled")
-            return None
-        else:
-            logger.info(f'Fine-tune job: {self.finetuning_job_id} finished successfully')
+            logger.info("Step 2: Finetuning model")
+            self.finetuning_job_id = self.submit_finetune_job(model, hyperparameters, hyperparameters_1p, suffix)
+            finetuned_job = self.track_finetuning_job()
 
-        return finetuned_job.fine_tuned_model
+            logger.debug(f"Finetuned model name: {finetuned_job.fine_tuned_model}, status: {finetuned_job.status}")
+            logger.info("Step 3: Deleting data from AzureOpenAI resource")
+            self.delete_files()
+
+            if finetuned_job.status == "failed":
+                raise Exception(f"Fine tuning job: {self.finetuning_job_id} failed with error: {finetuned_job.error}")
+            elif finetuned_job.status == "cancelled":
+                logger.info(f"finetune job: {self.finetuning_job_id} got cancelled")
+                return None
+            else:
+                logger.info(f'Fine-tune job: {self.finetuning_job_id} finished successfully')
+
+            return finetuned_job.fine_tuned_model, self.finetuning_job_id
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            logger.info("Deleting data from AzureOpenAI resource")
+            self.delete_files()
+            raise e
 
     def delete_files(self):
         """Delete training and validation files from azure openai resource."""
@@ -110,7 +119,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         if validation_file_path is None:
             logger.debug(f"validation file not provided, train data will be split in\
-                         {utils.train_dataset_split_ratio} ratio to create validation data")
+                         {utils.Constants.train_dataset_split_ratio} ratio to create validation data")
 
         logger.debug(f"uploading training file : {train_file_name}")
         train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'),
@@ -163,8 +172,8 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             hyperparameters=hyperparameters,
             extra_headers=hyperparameters_1p,
             suffix=suffix)
-
         logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {finetune_job.id}")
+        logger.debug(f"Response of finetune create call : {str(finetune_job)}")
 
         return finetune_job.id
 
@@ -275,6 +284,7 @@ def parse_args():
     parser.add_argument("--lora_dim", type=int)
     parser.add_argument("--n_ctx", type=int)
     parser.add_argument("--weight_decay_multiplier", type=float)
+    parser.add_argument("--completion_override", type=bool)
 
     args = parser.parse_args()
     return args
@@ -311,11 +321,11 @@ def main():
         logger.debug("hyperparameters: {}".format(hyperparameters))
 
         hyperparameters_1p = Hyperparameters_1P(**vars(args))
-        logger.debug("hyperparameters for 1P: {}".format(hyperparameters_1p))
+        logger.info("hyperparameters for 1P: {}".format(hyperparameters_1p))
 
         validate_train_data_upload_type(args)
 
-        finetuned_model_id = finetune_component.submit_job(
+        finetuned_model_id, finetune_job_id = finetune_component.submit_job(
             training_file_path=args.training_file_path,
             validation_file_path=args.validation_file_path,
             training_import_path=args.training_import_path,
@@ -326,7 +336,10 @@ def main():
             suffix=args.suffix
         )
 
-        utils.save_json({"finetuned_model_id": finetuned_model_id}, args.aoai_finetuning_output)
+        utils.save_json(
+            {"finetuned_model_id": finetuned_model_id, "finetune_job_id": finetune_job_id},
+            args.aoai_finetuning_output
+        )
         logger.info("Completed finetuning in Azure OpenAI resource")
 
     except SystemExit:

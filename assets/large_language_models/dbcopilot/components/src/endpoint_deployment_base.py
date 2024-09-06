@@ -62,6 +62,13 @@ class EndpointDeploymentBase(OBOComponentBase):
                         }
                     )
                     logging.info("Using workspace connection key for OpenAI")
+                else:
+                    logging.info("Using managed identity for OpenAI")
+                    secrets.update(
+                        {
+                            f"{connection_type}-aoai-api-base": connection.target,
+                        }
+                    )
         else:
             raise ValueError(
                 "Please specify the connection id (AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING & AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT) for embedding and chat"  # noqa: E501
@@ -79,6 +86,7 @@ class EndpointDeploymentBase(OBOComponentBase):
         extra_environment_variables: Dict[str, str] = None,
         model: Optional[Model] = None,
         sku: str = "Standard_DS3_v2",
+        egress_public_network_access: str = "enabled",
     ):
         from utils.asset_utils import get_full_env_path
 
@@ -126,6 +134,7 @@ class EndpointDeploymentBase(OBOComponentBase):
                 max_concurrent_requests_per_instance=1000,
                 max_queue_wait_ms=90000,
             ),
+            egress_public_network_access=egress_public_network_access,
         )
         logging.info("Deployment: %s", deployment)
         ml_client = self.ml_client
@@ -149,7 +158,7 @@ class EndpointDeploymentBase(OBOComponentBase):
         except Exception as e:
             logging.error(f"Deployment failed: {e}")
             logs = ml_client.online_deployments.get_logs(
-                name=deployment_name, endpoint_name=endpoint_name, lines=100
+                name=deployment_name, endpoint_name=endpoint_name, lines=300
             )
             logging.error(f"Endpoint deployment logs: {logs}")
             raise e

@@ -67,6 +67,7 @@ def _adapt_input_data_schema(df: DataFrame) -> DataFrame:
             f" The dataframe's columns are: {df.columns}."
             " This scenario is unsupported as of right now. Please clean up the production data logs"
             " so there are no duplicate fields in 'input' and 'output' columns."
+            " Also, Column names are not case-sensitive so make sure there are no duplicates if you ignore case."
         )
 
     # flatten unpacked json columns to json_string if necessary

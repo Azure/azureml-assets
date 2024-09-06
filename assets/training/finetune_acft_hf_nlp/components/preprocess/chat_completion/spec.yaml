@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: chat_completion_datapreprocess
-version: 0.0.49
+version: 0.0.57
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Chat Completion DataPreProcess
 description: Component to preprocess data for chat completion task. See [docs](https://aka.ms/azureml/components/chat_completion_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/57
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/67
 
 code: ../../../src/preprocess
 

@@ -12,6 +12,7 @@ import argparse
 import json
 import openai
 import glob
+import tempfile
 from typing import Union
 
 from constants import (
@@ -22,7 +23,7 @@ from workspace_utils import (get_connection_by_id_v2,
                              get_target_from_connection,
                              get_metadata_from_connection)
 from logging_utilities import get_logger, log_traceback
-from mltable import load
+from mltable import DataType, from_json_lines_files, load
 from task_factory.base import BasePredictor
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
@@ -37,6 +38,7 @@ from task_factory.text.text_generation import TextGenerator
 from task_factory.text.fill_mask import FillMask
 from task_factory.text.chat_completion import ChatCompletion
 from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
+from task_factory.image.generation import ImageGenerationPredictor
 from task_factory.image.od_is import ImageOdIsPredictor
 from evaluators.evaluators import EvaluatorFactory
 from logging_utilities import current_run, get_azureml_exception
@@ -381,7 +383,8 @@ def get_predictor(task):
         TASK.IMAGE_CLASSIFICATION: ImageMulticlassClassifier,
         TASK.IMAGE_CLASSIFICATION_MULTILABEL: ImageMultilabelClassifier,
         TASK.IMAGE_OBJECT_DETECTION: ImageOdIsPredictor,
-        TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor
+        TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor,
+        TASK.IMAGE_GENERATION: ImageGenerationPredictor,
     }
     return predictor_map.get(task)
 
@@ -629,11 +632,19 @@ def check_and_return_if_mltable(data):
     return is_mltable
 
 
-def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None):
+def _get_file_extension(file_path):
+    return os.path.splitext(file_path)[1].lower()
+
+
+def read_model_prediction_data(
+    file_path, input_column_names, label_column_name, task=None, batch_size=None, nrows=None
+):
     """Util function for reading test data for model prediction.
 
     Args:
         file_path (_type_): _description_
+        input_column_names (List[str])): Name of input columns.
+        label_column_name (str): Name of label column.
         task (_type_): _description_
         batch_size (_type_): _description_
         nrows (_type_): _description_
@@ -645,12 +656,44 @@ def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None
         _type_: _description_
     """
     if task in constants.IMAGE_TASKS:
+        try:
+            # If the input file is a JSONL, then generate an MLTable for it.
+            if _get_file_extension(file_path) == ".jsonl":
+                # Make the MLTable object, converting the image_url column.
+                generated_mltable = True
+                table = from_json_lines_files([{"file": file_path}])
+                table = table.convert_column_types({"image_url": DataType.to_stream()})
+
+                # Save the MLTable object to a temporary file.
+                temporary_directory = tempfile.TemporaryDirectory()
+                file_path = temporary_directory.name
+                table.save(file_path)
+            else:
+                # The input file is an MLTable and a new MLTable does not need to be generated.
+                generated_mltable = False
+
+        except Exception as e:
+            message = "Could not generate MLTable for JSONL file."
+            exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
+            log_traceback(exception, logger, message)
+            raise exception
+
+        # Read the dataset from the MLTable.
         from image_dataset import get_image_dataset
-        df = get_image_dataset(task_type=task, test_mltable=file_path)
+        df = get_image_dataset(
+            task_type=task, test_mltable=file_path,
+            input_column_names=input_column_names, label_column_name=label_column_name
+        )
         data = iter([df])
         file_ext = SupportedFileExtensions.IMAGE
+
+        # If a new MLTable was generated, delete it.
+        if generated_mltable:
+            temporary_directory.cleanup()
+
     else:
         data, file_ext = read_data(file_path, batch_size, nrows)
+
     return data, file_ext
 
 
@@ -712,7 +755,7 @@ def read_dataframe(file_path, batch_size=None, nrows=None):
     Returns:
         _type_: _description_
     """
-    file_extension = os.path.splitext(file_path)[1].lower()
+    file_extension = _get_file_extension(file_path)
     logger.info("Detected File Format: {}".format(file_extension))
     if batch_size:
         nrows = None
@@ -1063,16 +1106,41 @@ def parse_input_ground_truth_col(col_name):
     return col_name, extra_cols
 
 
-def get_column_names(args, data):
-    """Get Column names from test data."""
+def get_sample_data_and_column_names(args):
+    """Get sample data and column names based on the specified arguments."""
+    data_path = args[ArgumentLiterals.DATA]
     task = args[ArgumentLiterals.TASK]
     if task in constants.IMAGE_TASKS:
-        input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
-        label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+        if args[ArgumentLiterals.INPUT_COLUMN_NAMES]:
+            input_column_names = args[ArgumentLiterals.INPUT_COLUMN_NAMES]
+        else:
+            if task in [constants.TASK.IMAGE_GENERATION]:
+                input_column_names = [ImageDataFrameParams.GENERATION_PROMPT]
+            else:
+                input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
+                if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
+                    input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
+
+        if args[ArgumentLiterals.LABEL_COLUMN_NAME]:
+            if len(args[ArgumentLiterals.LABEL_COLUMN_NAME]) != 1:
+                message = "Must specify only one label column for vision tasks."
+                exception = get_azureml_exception(
+                    ArgumentValidationException, ArgumentParsingError, None, error=message
+                )
+                log_traceback(exception, logger)
+                raise exception
+
+            label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME][0]
+        else:
+            label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+
         extra_y_test_cols = None
-        if task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
-            input_column_names.extend([ImageDataFrameParams.IMAGE_META_INFO, ImageDataFrameParams.TEXT_PROMPT])
+
+        sample_data, _ = read_model_prediction_data(data_path, task, input_column_names, label_column_name)
+
     else:
+        sample_data, _ = read_model_prediction_data(data_path, task, [], "", nrows=1)
+
         # If input_column_names are not sent as argument we are retaining all columns
         label_column_name = args[ArgumentLiterals.LABEL_COLUMN_NAME]
         if label_column_name is None:
@@ -1086,14 +1154,16 @@ def get_column_names(args, data):
 
         input_column_names = args[ArgumentLiterals.INPUT_COLUMN_NAMES]
         if input_column_names is None or len(input_column_names) == 0:
-            input_column_names = list(data.columns)
+            input_column_names = list(sample_data.columns)
             if label_column_name is not None and label_column_name in input_column_names:
                 input_column_names.remove(label_column_name)
             if extra_y_test_cols is not None:
                 for col in extra_y_test_cols:
                     if col in input_column_names:
                         input_column_names.remove(col)
-    return input_column_names, label_column_name, extra_y_test_cols
+
+    sample_data = list(sample_data)[0]
+    return sample_data, input_column_names, label_column_name, extra_y_test_cols
 
 
 def openai_init(llm_config, **openai_params):

@@ -28,5 +28,5 @@ tags:
     - vllm
   license: apache-2.0
   task: chat-completion
-  author: mistralai
-version: 3
+  author: "Mistral AI"
+version: 5
