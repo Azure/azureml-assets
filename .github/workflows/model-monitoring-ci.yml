@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ${{ env.pytest_component_version_folder }}
+          name: ./
           path: ${{ env.pytest_component_version_folder }}
 
   run-momo-tests:
