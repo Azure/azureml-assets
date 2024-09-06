@@ -68,7 +68,7 @@ jobs:
         if: always()
         with:
           name: ${{ env.pytest_component_version_folder }}
-          path: ${{ env.pytest_component_version_file }}
+          path: ./${{ env.pytest_component_version_file }}
 
   run-momo-tests:
     name: Run Monitoring Component Tests
