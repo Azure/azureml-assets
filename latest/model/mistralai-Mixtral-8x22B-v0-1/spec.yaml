@@ -19,7 +19,7 @@ tags:
   - vllm
   license: apache-2.0
   task: text-generation
-  author: Mistral
+  author: "Mistral AI"
 version: 4
 description: |
   The Mixtral-8x22B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.
