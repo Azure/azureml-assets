@@ -413,7 +413,7 @@ def wait_at_barrier(barrier_file, num_processes):
 
 def _is_multi_node_enabled():
     """
-    To enable multi-node or multi-process support on the component set the value of environment variable 
+    To enable multi-node or multi-process support on the component set the value of environment variable,
     _AZUREML_FT_ENABLE_MULTI_NODE_SUPPORT to "true" in the component. If this is not defined by default it is False.
     """
     if os.environ.get("_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT", None) == "true":
@@ -432,7 +432,7 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
     if completion_file.exists():
         logger.info(f"Skipping {component_name} as completion file exists: {completion_file}")
         return
-    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')   
+    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
     if single_run and _is_multi_node_enabled():
         if not barrier_file.exists():
             Path(barrier_file).touch()
