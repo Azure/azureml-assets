@@ -80,7 +80,7 @@ def get_credential() -> TokenCredential:
     except Exception:
         logger.warning("ManagedIdentityCredential was not found in the compute. "
                        "Falling back to AzureMLOnBehalfOfCredential")
-        
+
     try:
         logger.info("Trying OBO credentials.")
         credential = AzureMLOnBehalfOfCredential()
