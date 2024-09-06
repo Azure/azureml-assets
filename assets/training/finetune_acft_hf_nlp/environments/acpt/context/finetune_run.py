@@ -413,7 +413,7 @@ def wait_at_barrier(barrier_file, num_processes):
 
 def _is_multi_node_enabled():
     """
-    To enable multi-node or multi-process support on the component set the value of environment variable,
+    To enable multi-node or multi-process support on the component set the value of environment variable
     _AZUREML_FT_ENABLE_MULTI_NODE_SUPPORT to "true" in the component. If this is not defined by default it is False.
     """
     if os.environ.get("_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT", None) == "true":
