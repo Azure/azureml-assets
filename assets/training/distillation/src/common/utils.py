@@ -71,16 +71,15 @@ def retry(times: int):
 
 def get_credential() -> TokenCredential:
     """Create and validate credentials."""
-    auth_failures = ""
     try:
         msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
         logger.info("Trying ManagedIdentityCredentials.")
         credential = ManagedIdentityCredential(client_id=msi_client_id)
         credential.get_token(AUTH_TOKEN_SCOPE)
         return credential
-    except Exception as e:
-        logger.info("Failed to get ManagedIdentityCredential. Falling back to OBO.")
-        auth_failures += f"ManagedIdentity: {str(e)}. \n"
+    except Exception:
+        logger.warning("ManagedIdentityCredential was not found in the compute. "
+                       "Falling back to AzureMLOnBehalfOfCredential")
 
     try:
         logger.info("Trying OBO credentials.")
@@ -88,21 +87,31 @@ def get_credential() -> TokenCredential:
         credential.get_token(AUTH_TOKEN_SCOPE)
         return credential
     except Exception as e:
-        logger.info("Failed to get OBO credentials. Falling back to AzureCLI.")
-        auth_failures += f"OBO: {str(e)}. \n"
+        logger.warning(f"Failed to get OBO credentials ({str(e)})")
+        logger.warning("Falling back to AzureCli.")
     
     try:
         logger.info("Trying AzureCliCredential.")
         credential = AzureCliCredential()
-        credential.get_token(AUTH_TOKEN_SCOPE)
+        credential.get_token(AUTH_TOKEN_SCOPE + "lol")
         return credential
     except Exception as e:
-        logger.info("Failed to get AzureCliCredential.")
-        auth_failures += f"AzureCli: {str(e)}. \n"
+        logger.warning(f"Failed to get AzureCliCredential ({str(e)})")
 
-    auth_failures = "One or more auth methods failed: \n" + auth_failures
-    logger.error(auth_failures)
-    raise ClientAuthenticationError(auth_failures)
+    logger.error("All authentication methods failed. Failed to select a credential method.")
+    raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Multiple authentication methods failed, please check logs for details.",
+                    " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
+                    " Please take reference from given links :\n"
+                    " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
+                    " sdk - https://aka.ms/azureml-import-model \n"
+                    " cli - https://aka.ms/obo-cli-sample"
+                )
+            )
+        )
 
 
 def get_workspace() -> Workspace:
