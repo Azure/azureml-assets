@@ -67,8 +67,8 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ${{ env.pytest_component_version_folder }}
-          path: ${{ env.pytest_component_version_file }}
+          name: ${{ env.pytest_component_version_file }}
+          path: ${{ env.pytest_component_version_folder }}
 
   run-momo-tests:
     name: Run Monitoring Component Tests
@@ -83,12 +83,12 @@ jobs:
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-      # - name: Download component version
-      #   id: download-version
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: ${{ env.pytest_component_version_folder }}
-      #     path: ./
+      - name: Download component version
+        id: download-version
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.pytest_component_version_folder }}
+          path: ./
       - name: Use Python 3.9
         uses: actions/setup-python@v4
         with:
