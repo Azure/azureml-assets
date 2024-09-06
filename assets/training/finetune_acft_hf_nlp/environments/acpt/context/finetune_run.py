@@ -413,9 +413,10 @@ def wait_at_barrier(barrier_file, num_processes):
 
 def _is_multi_node_enabled():
     """
+    To check if multi-node support is enabled.
+
     Multi-node support is enabled by setting the environment variable _AZUREML_FT_ENABLE_MULTI_NODE_SUPPORT to "true".
     If this environment variable is not defined, the function will return False by default.
-
     Returns:
         bool: True if multi-node support is enabled, False otherwise.
     """
