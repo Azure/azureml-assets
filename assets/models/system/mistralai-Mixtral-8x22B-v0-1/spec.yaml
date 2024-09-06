@@ -6,7 +6,7 @@ properties:
   SHA: 76fa59362cd95eb633a4e419c24364c90674966c
   inference-min-sku-spec: 96|8|1800|2900
   inference-recommended-sku: Standard_ND96amsr_A100_v4
-  languages: moe, fr, it, de, es, en
+  languages: fr, it, de, es, en
 tags:
   Featured: ''
   Preview: ''
@@ -19,5 +19,5 @@ tags:
   - vllm
   license: apache-2.0
   task: text-generation
-  author: Mistral
+  author: "Mistral AI"
 version: 4
