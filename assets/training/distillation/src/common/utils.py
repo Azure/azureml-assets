@@ -19,7 +19,6 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
-from azure.core.exceptions import ClientAuthenticationError
 from azure.core.credentials import TokenCredential
 
 
@@ -29,6 +28,7 @@ from common.constants import (
     SUPPORTED_STUDENT_MODEL_MAP,
     SUPPORTED_TEACHER_MODEL_MAP,
     AUTH_TOKEN_SCOPE,
+    USER_IDENTITY_MISSING_ERROR,
     BackoffConstants
 )
 
@@ -93,7 +93,7 @@ def get_credential() -> TokenCredential:
     try:
         logger.info("Trying AzureCliCredential.")
         credential = AzureCliCredential()
-        credential.get_token(AUTH_TOKEN_SCOPE + "lol")
+        credential.get_token(AUTH_TOKEN_SCOPE)
         return credential
     except Exception as e:
         logger.warning(f"Failed to get AzureCliCredential ({str(e)})")
@@ -104,11 +104,7 @@ def get_credential() -> TokenCredential:
                 ACFTUserError,
                 pii_safe_message=(
                     "Multiple authentication methods failed, please check logs for details.",
-                    " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
-                    " Please take reference from given links :\n"
-                    " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
-                    " sdk - https://aka.ms/azureml-import-model \n"
-                    " cli - https://aka.ms/obo-cli-sample"
+                    USER_IDENTITY_MISSING_ERROR
                 )
             )
         )
