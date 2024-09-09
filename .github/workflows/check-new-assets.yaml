@@ -35,6 +35,7 @@ jobs:
 
       - name: Check for new asset
         run: |
+          echo "Added files:  ${{ steps.changed-files.outputs.added_files }}"
           echo "continue=false" >> $GITHUB_ENV
 
           for file in ${{ steps.changed-files.outputs.added_files }}; do
