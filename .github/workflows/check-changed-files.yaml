@@ -1,0 +1,43 @@
+name: Check changed files
+
+on:
+  workflow_call:
+    outputs:
+      scripts-changed:
+        description: Whether script under given directory was changed
+        value: ${{ jobs.check-scripts-test-changes.outputs.scripts-changed }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-scripts-test-changes:
+    name: Check for changes under scripts/azureml-assets/ directory
+    runs-on: ubuntu-latest 
+
+    permissions:
+      # Required to clone repo
+      contents: read
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+
+      - name: Get changed files under scripts/azureml-assets/
+        id: changed-scripts
+        uses: tj-actions/changed-files@v35
+
+      - name: Check if changes were made to scripts/azureml-assets/
+        id: check-changed-scripts
+        run : |
+          if ${{ steps.changed-scripts.outputs.all_changed_and_modified_files == '' }}; then
+            echo "No changed files under scripts/azureml-assets/"
+            echo "files-changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Updated files: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
+            echo "files-changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+    outputs:
+      scripts-changed: ${{ steps.check-changed-scripts.outputs.files-changed }}
