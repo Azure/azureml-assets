@@ -63,6 +63,10 @@ jobs:
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           RESOURCE_GROUP: ${{ env.resource_group }}
           WORKSPACE_NAME: ${{ env.workspace }}
+      - name: check
+        run: |
+          ls
+          ls ${{ env.pytest_component_version_folder }}
       - name: Upload component Version artifact
         uses: actions/upload-artifact@v4
         if: always()
