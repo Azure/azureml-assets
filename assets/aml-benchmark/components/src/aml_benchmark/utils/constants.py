@@ -74,7 +74,7 @@ AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST = [
     "cognitiveservices.azure.com",
 ]
 MIR_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ml.azure.com"]
-SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ai.azure.com"]
+SERVERLESS_ENDPOINT_DOMAIN_SUFFIX_LIST = ["inference.ai.azure.com", "models.ai.azure.com"]
 
 _URL_TYPES_MAPPING = {
     "azure_openai": AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST,
