@@ -22,6 +22,8 @@ jobs:
   check-scripts-test-changes:
     name: Check for changes under scripts/azureml-assets/ directory
     runs-on: ubuntu-latest 
+    outputs:
+      scripts-changed: ${{ steps.check-changed-scripts.outputs.files-changed }}
 
     steps:
       - name: Clone branch
@@ -44,12 +46,10 @@ jobs:
             echo "Updated files: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
             echo "files-changed=true" >> "$GITHUB_OUTPUT"
           fi
-
-    outputs:
-      scripts-changed: ${{ env.files-changed }}
   
   check-execution-context:
-    if: fromJSON(needs.check-scripts-test-changes.outputs.scripts-changed)
+    needs: check-scripts-test-changes
+    if: needs.check-scripts-test-changes.outputs.scripts-changed == 'true'
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
   
   test:
