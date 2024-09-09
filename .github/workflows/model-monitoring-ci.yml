@@ -63,15 +63,13 @@ jobs:
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           RESOURCE_GROUP: ${{ env.resource_group }}
           WORKSPACE_NAME: ${{ env.workspace }}
-      - name: check
-        run: |
-          ls -a ${{ env.pytest_component_version_folder }}
       - name: Upload component Version artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ env.pytest_component_version_folder }}
           path: ${{ env.pytest_component_version_folder }}
+          include-hidden-files: true
 
   run-momo-tests:
     name: Run Monitoring Component Tests
