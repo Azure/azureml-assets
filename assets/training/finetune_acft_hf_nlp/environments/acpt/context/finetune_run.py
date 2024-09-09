@@ -34,6 +34,7 @@ _COMPONENTS_SCRIPTS_REL_PATH = Path("entry_point", "ftaas", "finetune")
 _ALLOWED_MAX_STRING_LENGTH = 128
 PEFT_ADAPTER_WEIGHTS_DIR = "peft_adapter_weights"
 CHAT_KEY = "messages"
+_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT = "_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT"
 
 TASK_SPECIFIC_PARAMS = {
     "preprocess": {
@@ -369,7 +370,7 @@ def add_task_specific_params(cmd: List[str], task_name: str, component_name: str
                     add_optional_input(cmd, param)
 
 
-def is_main_process():
+def is_main_process() -> bool:
     """
     To check if current process running this is master or rank_0 process.
 
@@ -378,7 +379,7 @@ def is_main_process():
     return os.environ.get('AZUREML_PROCESS_NAME', 'main') in {'main', 'rank_0'}
 
 
-def wait_at_barrier(barrier_file, num_processes):
+def wait_at_barrier(barrier_file: Path, num_processes: int) -> None:
     """
     Control will halt till number to process reaching the execution point is less than a given number.
 
@@ -411,7 +412,7 @@ def wait_at_barrier(barrier_file, num_processes):
         logger.info(f"Process {os.getpid()} has passed barrier with name {process_name}")
 
 
-def _is_multi_node_enabled():
+def _is_multi_node_enabled() -> bool:
     """
     To check if multi-node support is enabled.
 
@@ -420,7 +421,7 @@ def _is_multi_node_enabled():
     Returns:
         bool: True if multi-node support is enabled, False otherwise.
     """
-    if os.environ.get("_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT", None) == "true":
+    if os.environ.get(_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT, None) == "true":
         return True
     else:
         return False
