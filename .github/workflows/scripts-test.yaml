@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - scripts/azureml-assets/**
   pull_request_target:
     branches:
       - main
-    paths:
-      - scripts/azureml-assets/**
     types:
       - opened
       - labeled
