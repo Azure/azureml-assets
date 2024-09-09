@@ -34,7 +34,7 @@ dependencies:
   - tiktoken
   - idna==3.7
   - pydantic==2.9.1
-  - mteb==1.14.15
+  - mteb==1.14.16
   - setuptools>=70.0.0
   - rouge>=1.0.0,<2.0.0
   # batch score dependencies
