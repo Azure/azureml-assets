@@ -40,11 +40,11 @@ jobs:
       - name: Check if changes were made to scripts/azureml-assets/
         id: check-changed-scripts
         run : |
-          if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
+          if ${{ steps.changed-scripts.outputs.all_changed_and_modified_files_count == 0 }}; then
             echo "No changed files under scripts/azureml-assets/"
             echo "files-changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Modified files: ${{ steps.changed-scripts.outputs.all_modified_files_count }}"
+            echo "Modified files: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files_count }}"
             echo "files-changed=true" >> "$GITHUB_OUTPUT"
           fi
   
