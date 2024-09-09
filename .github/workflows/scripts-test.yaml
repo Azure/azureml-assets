@@ -20,12 +20,12 @@ defaults:
 
 jobs:
   check-scripts-test-changes:
-    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@update_more_gates  # Update this to @main later
 
   check-execution-context:
     needs: check-scripts-test-changes
     if: needs.check-scripts-test-changes.outputs.scripts-changed == 'true'
-    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@update_more_gates  # Update this to @main later
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
   
   test:
     name: Test scripts
