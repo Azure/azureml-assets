@@ -38,6 +38,19 @@ def get_parent_run_id() -> str:
     return cast(str, Run.get_context().parent.id)
 
 
+def get_child_runs(run_id: str, exp_name: str) -> List[MLFlowRun]:
+    """
+    Get all the child runs of the given run id in the given experiment.
+
+    :param run_id: The run id of the parent run.
+    :param exp_name: The name of the experiment.
+
+    :returns: The list of child runs.
+    """
+    return mlflow.search_runs(experiment_names=[exp_name], filter_string=f"tags.mlflow.parentRunId='{run_id}'",
+                              output_format='list')
+
+
 def get_all_runs_in_current_experiment() -> List[MLFlowRun]:
     """
     Get a list of all of the runs in the current experiment \
@@ -49,13 +62,15 @@ def get_all_runs_in_current_experiment() -> List[MLFlowRun]:
     parent_run_id = get_parent_run_id()
     runs = cast(List[MLFlowRun], mlflow.search_runs(
         experiment_names=[experiment_name],
-        filter_string=f"tags.mlflow.parentRunId='{parent_run_id}'",
+        filter_string=f"tags.mlflow.rootRunId='{parent_run_id}'",
         output_format='list'
     ))
-    return [
-        run for run in runs
-        if run.info.run_id != Run.get_context().id and run.info.run_id != parent_run_id
-    ]
+    all_runs = []
+    for run in runs:
+        child_runs = get_child_runs(run.info.run_id, experiment_name)
+        if run.info.run_id != Run.get_context().id and run.info.run_id != parent_run_id and len(child_runs) == 0:
+            all_runs.append(run)
+    return all_runs
 
 
 def get_compute_information(log_files: Optional[List[str]], run_v1: Run) -> Optional[str]:

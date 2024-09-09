@@ -9,6 +9,7 @@ import json
 from aml_benchmark.utils.logging import get_logger, log_params_and_metrics
 from aml_benchmark.utils.io import read_json_data, save_json_to_file
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
+from aml_benchmark.utils.constants import DATASET_CONFIG_2_NAME_MAP, REQUIRED_TELEMETRY_KEYS_MAP
 from aml_benchmark.utils.aml_run_utils import (
     get_all_runs_in_current_experiment,
     get_compute_information,
@@ -19,22 +20,6 @@ from aml_benchmark.utils.aml_run_utils import (
 
 
 logger = get_logger(__name__)
-
-dataset_config_map = {
-    ("formal_logic,high_school_european_history,high_school_us_history,"
-     "high_school_world_history,international_law,jurisprudence,logical_fallacies,"
-     "moral_disputes,moral_scenarios,philosophy,prehistory,professional_law,world_religions"): "mmlu_humanities",
-    ("business_ethics,clinical_knowledge,college_medicine,global_facts,human_aging,management,"
-     "marketing,medical_genetics,miscellaneous,nutrition,professional_accounting,"
-     "professional_medicine,virology"): "mmlu_other",
-    ("econometrics,high_school_geography,high_school_government_and_politics,high_school_macroeconomics,"
-     "high_school_microeconomics,high_school_psychology,human_sexuality,professional_psychology,public_relations,",
-     "security_studies,sociology,us_foreign_policy"): "mmlu_social_sciences",
-    ("abstract_algebra,anatomy,astronomy,college_biology,college_chemistry,college_computer_science,"
-     "college_mathematics,college_physics,computer_security,conceptual_physics,electrical_engineering,"
-     "elementary_mathematics,high_school_biology,high_school_chemistry,high_school_computer_science,"
-     "high_school_mathematics,high_school_physics,high_school_statistics,machine_learning"): "mmlu_stem",
-}
 
 
 def _parse_args() -> argparse.Namespace:
@@ -292,33 +277,27 @@ def main(
     if model_registry is not None:
         result["model_registry"] = model_registry
         loggable_pipeline_params["model_registry"] = model_registry
+    # Collect the telemetry parameters.
     telemetry_details = {"parameters": {}, "metrics": {}}
-    required_keys = {
-        "downloader.dataset_name": "dataset_name",
-        "endpoint.endpoint_url": "endpoint_url",
-        "endpoint.deployment_name": "deployment_name",
-        "endpoint.model_type": "model_type",
-    }
     mlflow_parameters = result.get("mlflow_parameters", {})
-    for key, telemetry_key in required_keys.items():
+    for key, telemetry_key in REQUIRED_TELEMETRY_KEYS_MAP.items():
         telemetry_details["parameters"][telemetry_key] = mlflow_parameters.get(key, None)
         if key == "downloader.dataset_name":
             dataset_name = telemetry_details["parameters"][telemetry_key]
             if dataset_name is None:
                 config_name = mlflow_parameters.get("downloader.configuration", None)
-                telemetry_details["parameters"][telemetry_key] = dataset_config_map.get(config_name, None)
-
-    for k, v in result.get("quality_metrics", {}).items():
-        # All those values which are float or int or string
-        if isinstance(v, (int, float, str)):
-            try:
-                key = k.split(".", 1)[1]
-            except Exception:
-                key = k
-            telemetry_details["metrics"][key] = v
-    telemetry_details["parameters"]["task_name"] = result.get(
-        "simplified_pipeline_params", {}
-    ).get("quality.param.task", None)
+                telemetry_details["parameters"][telemetry_key] = DATASET_CONFIG_2_NAME_MAP.get(config_name, None)
+    for metric_key in ["mlflow_metrics", "quality_metrics"]:
+        for k, v in result.get(metric_key, {}).items():
+            # All those values which are float or int or string
+            if isinstance(v, (int, float, str)):
+                try:
+                    key = k.split(".", 1)[1]
+                except Exception:
+                    key = k
+                telemetry_details["metrics"][key] = v
+    task_name = result.get("simplified_pipeline_params", {}).get("quality.param.task", None)
+    telemetry_details["parameters"]["task_name"] = task_name
     logger.info(f"Telemetry details: {json.dumps(telemetry_details)}")
     save_json_to_file(result, output_dataset_path)
     log_params_and_metrics(
