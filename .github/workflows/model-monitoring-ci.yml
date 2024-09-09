@@ -65,8 +65,7 @@ jobs:
           WORKSPACE_NAME: ${{ env.workspace }}
       - name: check
         run: |
-          ls
-          ls ${{ env.pytest_component_version_folder }}
+          ls -a ${{ env.pytest_component_version_folder }}
       - name: Upload component Version artifact
         uses: actions/upload-artifact@v4
         if: always()
