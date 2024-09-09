@@ -36,7 +36,9 @@ jobs:
       - name: Check if changes were made to scripts/azureml-assets/
         id: check-changed-scripts
         run : |
-          echo "${{ steps.changed-scripts.outputs.added_files }}"
+          echo "Added files: ${{ steps.changed-scripts.outputs.added_files }}"
+          echo "Changed files: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
+          echo "Changed files count: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files_count }}"
 
 
 
