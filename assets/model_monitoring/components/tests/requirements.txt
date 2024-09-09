@@ -17,3 +17,4 @@ pytest-xdist
 pytest-split
 pyspark-test~=0.2.0
 azureml-metrics[tabular]~=0.0.42
+setuptools[core]
