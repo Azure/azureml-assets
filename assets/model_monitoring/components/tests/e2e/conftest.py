@@ -635,6 +635,7 @@ def download_job_output(ml_client, unique_temporary_directory):
 def upload_component_version_file(worker_id, asset_version, uploaded_version_file_name):
     """Upload  upload all components and save .version file for github CI."""
     if _is_main_worker(worker_id):
+        os.makedirs(os.path.dirname(uploaded_version_file_name), exist_ok=True)
         with open(uploaded_version_file_name, "w") as fp:
             fp.write(asset_version)
         yield
@@ -644,7 +645,7 @@ def upload_component_version_file(worker_id, asset_version, uploaded_version_fil
 @pytest.fixture(scope="session")
 def uploaded_version_file_name():
     """Get uploaded version file name."""
-    yield ".version_upload"
+    yield "component_version/.version_upload"
 
 
 @pytest.fixture(scope="session")
