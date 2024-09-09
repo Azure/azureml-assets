@@ -153,7 +153,7 @@ class DataDriftSignal(Signal):
                 if not any('BaselineFeatureImportance' in d.values() for d in output[feature_name].metrics):
                     feature_importance_value = 0
                     if feature_name in featureimportance_dictionary:
-                        feature_importance_value = featureimportance_dictionary[feature_name] 
+                        feature_importance_value = featureimportance_dictionary[feature_name]
                     feature_importance_metric = {
                         "metricName": "BaselineFeatureImportance",
                         "metricValue": feature_importance_value,
