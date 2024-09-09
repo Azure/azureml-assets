@@ -34,9 +34,6 @@ jobs:
       - name: Get changed files under scripts/azureml-assets/
         id: changed-scripts
         uses: tj-actions/changed-files@v35
-        with:
-          files: |
-            scripts/azureml-assets/**
 
       - name: Check if changes were made to scripts/azureml-assets/
         id: check-changed-scripts
