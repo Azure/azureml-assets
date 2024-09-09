@@ -19,9 +19,39 @@ defaults:
     shell: bash
 
 jobs:
-  check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+  check-scripts-test-changes:
+    name: Check for changes under scripts/azureml-assets/ directory
+    runs-on: ubuntu-latest 
+    outputs:
+      scripts-changed: ${{ steps.check-changed-scripts.outputs.files-changed }}
 
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files under scripts/azureml-assets/
+        id: changed-scripts
+        uses: tj-actions/changed-files@v35
+        with:
+          files: scripts/azureml-assets/**
+
+      - name: Check if changes were made to scripts/azureml-assets/
+        id: check-changed-scripts
+        run : |
+          if ${{ steps.changed-scripts.outputs.all_modified_files_count == 0 }}; then
+            echo "No changed files under scripts/azureml-assets/"
+            echo "files-changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Modified files: ${{ steps.changed-scripts.outputs.all_modified_files_count }}"
+            echo "files-changed=true" >> "$GITHUB_OUTPUT"
+          fi
+  
+  check-execution-context:
+    if: needs.check-scripts-test-changes.outputs.scripts-changed == 'true'
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+  
   test:
     name: Test scripts
     if: fromJSON(needs.check-execution-context.outputs.continue)
