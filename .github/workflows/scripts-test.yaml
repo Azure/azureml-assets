@@ -39,11 +39,11 @@ jobs:
           echo "Changed files: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
           echo "Changed files count: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files_count }}"
 
-          if ${{ steps.changed-scripts.outputs.all_changed_and_modified_files_count == '' }}; then
+          if ${{ steps.changed-scripts.outputs.all_changed_and_modified_files == '' }}; then
             echo "No changed files under scripts/azureml-assets/"
             echo "files-changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Updated files: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files_count }}"
+            echo "Updated files: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
             echo "files-changed=true" >> "$GITHUB_OUTPUT"
           fi
   
