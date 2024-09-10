@@ -2,9 +2,14 @@ name: Check changed files
 
 on:
   workflow_call:
+    inputs:
+      folder_path:
+        required: true
+        type: string
+        default: "**"
     outputs:
       scripts-changed:
-        description: Whether script under given directory was changed
+        description: Check if scripts under given directory were changed
         value: ${{ jobs.check-scripts-test-changes.outputs.scripts-changed }}
 
 defaults:
@@ -27,6 +32,9 @@ jobs:
       - name: Get changed files under scripts/azureml-assets/
         id: changed-scripts
         uses: tj-actions/changed-files@v35
+        with:
+          files: |
+            ${{ inputs.folder_path }}
 
       - name: Check if changes were made to scripts/azureml-assets/
         id: check-changed-scripts
