@@ -35,6 +35,7 @@ from common.constants import (
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
+    DEFAULT_SUMMARY_MAX_NEW_TOKENS,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
     FREQUENCY_PENALTY,
@@ -638,7 +639,7 @@ def data_import(args: Namespace):
 
     inference_params = {
         MAX_NEW_TOKENS: (
-            1024
+            DEFAULT_SUMMARY_MAX_NEW_TOKENS
             if data_generation_task_type == "SUMMARIZATION"
             and teacher_model_max_new_tokens == DEFAULT_MAX_NEW_TOKENS
             else teacher_model_max_new_tokens
