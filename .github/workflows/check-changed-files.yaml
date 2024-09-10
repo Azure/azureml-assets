@@ -9,6 +9,8 @@ on:
       sha_input:
         type: string
         default: ''
+      forked_pr_input:
+        default: ''
     outputs:
       files-changed:
         description: Check if files under given directory were changed
@@ -28,8 +30,16 @@ jobs:
       contents: read
 
     steps:
+      # - name: Clone branch
+      #   uses: actions/checkout@v3
+      #   with:
+      #     forked-pr: ${{ inputs.forked_pr_input }}
+
       - name: Clone branch
-        uses: actions/checkout@v3
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ inputs.forked_pr_input }}
+          fetch-depth: 2
 
       - name: Get changed files under directory
         id: changed-scripts

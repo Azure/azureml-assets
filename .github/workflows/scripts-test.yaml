@@ -19,10 +19,7 @@ defaults:
     shell: bash
 
 jobs:
-
   check-execution-context:
-    # needs: check-directory-file-changes
-    # if: needs.check-directory-file-changes.outputs.files-changed == 'true'
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
   check-directory-file-changes:
@@ -31,6 +28,7 @@ jobs:
     uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@update_more_gates  # TODO: Update this to @main later
     with:
       folder_path: "scripts/azureml-assets/**"
+      forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
 
   test:
     name: Test scripts
