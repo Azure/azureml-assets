@@ -4,9 +4,11 @@ on:
   workflow_call:
     inputs:
       folder_path:
-        required: true
         type: string
         default: "**"
+      sha_input:
+        type: string
+        default: ''
     outputs:
       files-changed:
         description: Check if files under given directory were changed
@@ -33,8 +35,10 @@ jobs:
         id: changed-scripts
         uses: tj-actions/changed-files@v35
         with:
-          files: |
-            ${{ inputs.folder_path }}
+          files: ${{ inputs.folder_path }}
+          files_separator: ','
+          separator: ','
+          sha: ${{ inputs.sha_input }}
 
       - name: Check if changes were made to directory
         id: check-changed-files
