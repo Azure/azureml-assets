@@ -34,9 +34,9 @@ jobs:
 
   test:
     name: Test scripts
-    if: fromJSON(needs.check-execution-context.outputs.continue)
+    if: needs.check-directory-file-changes.outputs.files-changed == 'true'
     runs-on: ubuntu-latest
-    needs: check-execution-context
+    needs: check-directory-file-changes
     environment: Testing
 
     permissions:
