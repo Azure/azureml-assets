@@ -10,8 +10,8 @@ on:
         type: string
         default: ''
       forked_pr_input:
-        type: boolean
-        default: false
+        type: string
+        default: ''
     outputs:
       files-changed:
         description: Check if files under given directory were changed
