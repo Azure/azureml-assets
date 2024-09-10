@@ -39,7 +39,6 @@ conf:
     - defaults
     - anaconda
     dependencies:
-    - python=3.8
     - pip:
         - azure-storage-file-datalake~=12.8.0
         - azure-ai-ml~=1.13.0
