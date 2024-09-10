@@ -23,3 +23,4 @@ trl==0.8.1
 tiktoken==0.6.0
 scipy==1.14.0
 catalogue==2.0.10
+cryptography==43.0.1
