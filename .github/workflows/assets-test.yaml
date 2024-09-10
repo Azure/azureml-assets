@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/**
   pull_request_target:
     branches:
       - main
-    paths:
-      - assets/**
     types:
       - opened
       - labeled
@@ -39,9 +35,17 @@ jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
+  check-directory-file-changes:
+    needs: check-execution-context
+    if: fromJSON(needs.check-execution-context.outputs.continue)
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@update_more_gates  # TODO: Update this to @main later
+    with:
+      folder_path: "assets/**"
+      forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
+
   setup:
     name: Set up tests
-    if: fromJSON(needs.check-execution-context.outputs.continue)
+    if: fromJSON(needs.check-execution-context.outputs.continue)  # TODO: update this next and the "needs" next
     runs-on: ubuntu-latest
     needs: check-execution-context
     environment: Testing
@@ -56,19 +60,19 @@ jobs:
       default_asset_dirs: assets
 
     steps:
-      - name: Clone branch
-        uses: Azure/azureml-assets/.github/actions/clone-repo@main
-        with:
-          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-          fetch-depth: 2
+      # - name: Clone branch
+      #   uses: Azure/azureml-assets/.github/actions/clone-repo@main
+      #   with:
+      #     forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+      #     fetch-depth: 2
       
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files_separator: ','
-          separator: ','
-          sha: ${{ env.merge_commit_hash || github.sha }}
+      # - name: Get changed files
+      #   id: changed-files
+      #   uses: tj-actions/changed-files@v35
+      #   with:
+      #     files_separator: ','
+      #     separator: ','
+      #     sha: ${{ env.merge_commit_hash || github.sha }}
 
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
