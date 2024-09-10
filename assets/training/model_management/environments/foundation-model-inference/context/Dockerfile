@@ -47,7 +47,7 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.9 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.10 --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
