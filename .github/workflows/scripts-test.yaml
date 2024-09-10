@@ -21,9 +21,9 @@ defaults:
 jobs:
 
   check-execution-context:
-    needs: check-directory-file-changes
+    # needs: check-directory-file-changes
     # if: needs.check-directory-file-changes.outputs.files-changed == 'true'
-    # uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
   check-directory-file-changes:
     if: fromJSON(needs.check-execution-context.outputs.continue)
