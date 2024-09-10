@@ -37,6 +37,7 @@ dependencies:
   - mteb==1.14.17
   - setuptools>=70.0.0
   - rouge>=1.0.0,<2.0.0
+  - cryptography==43.0.1
   # batch score dependencies
   - opencensus-ext-azure==1.1.13
   - StrEnum==0.4.15
