@@ -6,9 +6,6 @@ on:
       folder_path:
         type: string
         default: "**"
-      sha_input:
-        type: string
-        default: ''
       forked_pr_input:
         type: string
         default: ''
