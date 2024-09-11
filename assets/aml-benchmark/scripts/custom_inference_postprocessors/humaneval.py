@@ -131,7 +131,7 @@ def _run(
 def merge_id(
     label_data: List[Dict[str, Any]],
     pred_data: List[Dict[str, Any]],
-    additional_args = None,
+    additional_args=None,
 ) -> Tuple[List[Dict[Any, Any]], str, str]:
     """
     Merge the task_id with the prediction data.

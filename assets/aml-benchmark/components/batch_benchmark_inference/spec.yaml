@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.11
+version: 0.0.6.2
 
 inputs:
   input_dataset:
@@ -156,10 +156,12 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
-  app_insights_connection_string:
+  target_compute_name:
     type: string
     optional: True
-    description: Application insights connection string where the batch score component will log metrics and logs.
+    default: "serverless"
+    description: The name of the compute target to run the batch inference on.
+
 outputs:
   predictions:
     type: uri_file
@@ -183,7 +185,8 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.12
+    component: azureml:batch_inference_preparer:0.0.6.2
+    compute: ${{parent.inputs.target_compute_name}}
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: ${{parent.inputs.model_type}}
@@ -198,10 +201,12 @@ jobs:
         type: mltable
       ground_truth_metadata:
         type: uri_folder
-  # Config generation
-  config_generation:
-    type: command
-    component: azureml:batch_benchmark_config_generator:0.0.6
+  # Inference
+  endpoint_batch_score:
+    type: parallel
+    component: azureml:batch_benchmark_score:0.0.6.3-debug
+    # component: "azureml:/subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/yuzhua-rg-eastasia/workspaces/yuzhua-ws-swedencentral/components/batch_benchmark_score:0.0.5.1"
+    compute: ${{parent.inputs.target_compute_name}}
     inputs:
       scoring_url: ${{parent.inputs.endpoint_url}}
       connection_name: ${{parent.inputs.connections_name}}
@@ -248,7 +253,8 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_output_formatter:0.0.12
+    component: azureml:batch_output_formatter:0.0.6.2
+    compute: ${{parent.inputs.target_compute_name}}
     inputs:
       model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_output_directory}}
@@ -271,12 +277,3 @@ jobs:
       ground_truth:
         type: uri_file
         path: ${{parent.outputs.ground_truth}}
-      successful_requests:
-        type: uri_file
-        path: ${{parent.outputs.successful_requests}}
-      failed_requests:
-        type: uri_file
-        path: ${{parent.outputs.failed_requests}}
-      unsafe_content_blocked_requests:
-        type: uri_file
-        path: ${{parent.outputs.unsafe_content_blocked_requests}}

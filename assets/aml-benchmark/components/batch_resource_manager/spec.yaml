@@ -4,7 +4,7 @@ is_deterministic: False
 name: batch_resource_manager
 display_name: Batch Inference Resource Manager
 description: Resource Manager for batch inference.
-version: 0.0.5
+version: 0.0.3.2
 
 inputs:
   wait_input:
@@ -135,6 +135,11 @@ inputs:
     type: string
     optional: True
     description: The finetuned step name.
+  finetuned_start_timeout_seconds:
+    type: integer
+    optional: True
+    default: 900
+    description: The timeout in seconds for the finetuned step to start.
 outputs:
   output_metadata:
     type: uri_file
@@ -172,4 +177,5 @@ command: >-
   $[[--deployment_retry_interval_seconds ${{inputs.deployment_retry_interval_seconds}}]]
   $[[--wait_finetuned_step ${{inputs.wait_finetuned_step}}]]
   $[[--finetuned_step_name ${{inputs.finetuned_step_name}}]]
-  $[[--finetuned_model_metadata ${{inputs.finetuned_model_metadata}}]]
+  $[[--finetuned_start_timeout_seconds ${{inputs.finetuned_start_timeout_seconds}}]]
+
