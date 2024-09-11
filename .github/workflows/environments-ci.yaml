@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/**
   pull_request_target:
     branches:
       - main
-    paths:
-      - assets/**
     types:
       - opened
       - labeled
