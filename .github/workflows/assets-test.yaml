@@ -45,9 +45,9 @@ jobs:
 
   setup:
     name: Set up tests
-    if: fromJSON(needs.check-execution-context.outputs.continue)  # TODO: update this next and the "needs" next
+    if: needs.check-directory-file-changes.outputs.files-changed != ''
     runs-on: ubuntu-latest
-    needs: check-execution-context
+    needs: [check-execution-context, check-directory-file-changes]
     environment: Testing
 
     permissions:
@@ -60,11 +60,11 @@ jobs:
       default_asset_dirs: assets
 
     steps:
-      # - name: Clone branch
-      #   uses: Azure/azureml-assets/.github/actions/clone-repo@main
-      #   with:
-      #     forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-      #     fetch-depth: 2
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
+        with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+          fetch-depth: 2
       
       # - name: Get changed files
       #   id: changed-files
@@ -84,7 +84,7 @@ jobs:
 
       - name: Create test matrix for changed assets
         id: create-test-matrix
-        run: python -u $scripts_test_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
+        run: python -u $scripts_test_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}"
 
       - name: Login to Azure and create resources
         if: steps.create-test-matrix.outputs.test_count > 0

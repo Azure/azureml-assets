@@ -1,4 +1,4 @@
-name: Check if files under given directory were changed
+name: Get changed files under given directory
 
 on:
   workflow_call:
@@ -14,7 +14,7 @@ on:
         default: ''
     outputs:
       files-changed:
-        description: Check if files under given directory were changed
+        description: List of changed files under given directory
         value: ${{ jobs.check-directory-file-changes.outputs.files-changed }}
 
 defaults:
@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   check-directory-file-changes:
-    name: Check for changes under given directory
+    name: Get changed files under given directory
     runs-on: ubuntu-latest 
 
     permissions:
@@ -51,11 +51,10 @@ jobs:
         run : |
           if ${{ steps.changed-scripts.outputs.all_changed_and_modified_files == '' }}; then
             echo "No changed files under ${{ inputs.folder_path }}"
-            echo "files-changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "Updated files under ${{ inputs.folder_path }}: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
-            echo "files-changed=true" >> "$GITHUB_OUTPUT"
           fi
+          echo "files-changed=${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}" >> "$GITHUB_OUTPUT"
 
     outputs:
       files-changed: ${{ steps.check-changed-files.outputs.files-changed }}
