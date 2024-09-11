@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_validate_pipeline
-version: 0.0.1
+version: 0.0.3
 type: command
 
 is_deterministic: true
@@ -95,6 +95,12 @@ inputs:
     default: "false"
     description: Enable Chain of density for text summarization
 
+  max_len_summary:
+    type: integer
+    optional: true
+    default: 80
+    description: Maximum Length Summary for text summarization 
+    
   data_generation_task_type:
     type: string
     enum:
@@ -152,6 +158,7 @@ command: >-
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--max_len_summary ${{inputs.max_len_summary}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
   $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]

@@ -37,3 +37,8 @@ dependencies:
   - mteb=={{latest-pypi-version}}
   - setuptools>=70.0.0
   - rouge>=1.0.0,<2.0.0
+  - cryptography==43.0.1
+  # batch score dependencies
+  - opencensus-ext-azure=={{latest-pypi-version}}
+  - StrEnum=={{latest-pypi-version}}
+  - pyDispatcher=={{latest-pypi-version}}
