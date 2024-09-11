@@ -44,7 +44,7 @@ jobs:
           files: ${{ inputs.folder_path }}
           files_separator: ','
           separator: ','
-          sha: ${{ inputs.sha_input }}
+          sha: ${{ env.merge_commit_hash || github.sha }}
 
       - name: Check if changes were made to directory
         id: check-changed-files

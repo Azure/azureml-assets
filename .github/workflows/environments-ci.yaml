@@ -31,11 +31,9 @@ jobs:
     needs: check-execution-context
     if: fromJSON(needs.check-execution-context.outputs.continue)
     uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@update_more_gates  # TODO: Update this to @main later
-    # environment: Testing
     with:
       folder_path: "assets/**"
       forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
-      # sha_input: ${{ env.merge_commit_hash || github.sha }}
 
   build-images:
     name: Build and test images
@@ -66,13 +64,13 @@ jobs:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
           fetch-depth: 2
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files_separator: ','
-          separator: ','
-          sha: ${{ env.merge_commit_hash || github.sha }}
+      # - name: Get changed files
+      #   id: changed-files
+      #   uses: tj-actions/changed-files@v35
+      #   with:
+      #     files_separator: ','
+      #     separator: ','
+      #     sha: ${{ env.merge_commit_hash || github.sha }}
       
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
