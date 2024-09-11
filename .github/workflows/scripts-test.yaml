@@ -29,6 +29,7 @@ jobs:
     with:
       folder_path: "scripts/azureml-assets/**"
       forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
+      sha_input: ${{ env.merge_commit_hash || github.sha }}
 
   test:
     name: Test scripts
