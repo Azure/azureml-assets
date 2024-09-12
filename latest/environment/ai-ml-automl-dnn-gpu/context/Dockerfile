@@ -64,7 +64,7 @@ RUN conda install pytorch=1.13.1 pytorch-cuda=11.6 -c pytorch -c nvidia && conda
 # Install pip dependencies
 RUN pip install \
                 # begin pypi dependencies
-                azureml-core==1.57.0 \
+                azureml-core==1.57.0.post1 \
                 azureml-pipeline-core==1.57.0 \
                 azureml-telemetry==1.57.0 \
                 azureml-defaults==1.57.0 \

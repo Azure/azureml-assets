@@ -42,7 +42,7 @@ RUN conda install pytorch=1.13.1 pytorch-cuda=11.6 -c pytorch -c nvidia && conda
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
 RUN pip install \
                 # begin pypi dependencies
-                azureml-core==1.57.0 \
+                azureml-core==1.57.0.post1 \
                 azureml-mlflow==1.57.0.post1 \
                 azureml-automl-core==1.57.0 \
                 azureml-automl-dnn-nlp==1.57.0 \

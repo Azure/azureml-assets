@@ -17,7 +17,7 @@ dependencies:
   - azure-search-documents>=11.4.0 # explicitly install for [cognitive_search]
     # Azure ML
   - azureml-contrib-services
-  - azureml-core==1.57.0
+  - azureml-core==1.57.0.post1
   - azureml-telemetry==1.57.0
   - azureml-dataset-runtime==1.57.0
   - azureml-fsspec
