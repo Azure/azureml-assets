@@ -1,5 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+
+"""Functions for lightgbm 3.3 environment."""
+
 import mlflow
 import argparse
 
@@ -12,6 +15,7 @@ from sklearn.model_selection import train_test_split
 
 # define functions
 def main(args):
+    """Read, process, and train model."""
     # enable auto logging
     mlflow.autolog()
 
@@ -41,6 +45,7 @@ def main(args):
 
 
 def process_data(df):
+    """Process data."""
     # split dataframe into X and y
     X = df.drop(["species"], axis=1)
     y = df["species"]
@@ -59,6 +64,7 @@ def process_data(df):
 
 
 def train_model(params, num_boost_round, X_train, X_test, y_train, y_test):
+    """Train model."""
     # create lightgbm datasets
     train_data = lgbm.Dataset(X_train, label=y_train)
     test_data = lgbm.Dataset(X_test, label=y_test)
@@ -77,6 +83,7 @@ def train_model(params, num_boost_round, X_train, X_test, y_train, y_test):
 
 
 def parse_args():
+    """Parse arguments."""
     # setup arg parser
     parser = argparse.ArgumentParser()
 
@@ -101,6 +108,7 @@ def parse_args():
 
 # run script
 if __name__ == "__main__":
+    """Parse arguments and run main function."""
     # parse args
     args = parse_args()
 

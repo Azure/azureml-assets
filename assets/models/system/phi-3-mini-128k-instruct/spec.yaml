@@ -13,7 +13,7 @@ tags:
   notes: "notes.md"
   evaluation: "evaluation.md"
   freePlayground: "true"
-  displayName: "Phi-3 mini instruct (128k)"
+  displayName: "Phi-3-mini instruct (128k)"
   summary: "Same Phi-3-mini model, but with a larger context size for RAG or few shot prompting."
   textContextWindow: 131072
   maxOutputTokens: 4096
@@ -70,4 +70,4 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 10
+version: 11
