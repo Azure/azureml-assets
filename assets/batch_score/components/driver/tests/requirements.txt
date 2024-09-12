@@ -1,3 +1,14 @@
+azure.ai.ml>=1.2.0
+azure.identity>=1.10.0
+mock>=5.0.1
+pydantic~=1.10  # pinned ~=1.10 due to errors in downloading 2.0.5
+pytest-asyncio>=0.20.3
+pytest-azurepipelines==1.0.5 
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-timeout>=2.1.0
+pytest-xdist
+pytest>=7.2.1
 aiohttp>=3.8.3
 requests>=2.28.1
 tiktoken>=0.3.3
