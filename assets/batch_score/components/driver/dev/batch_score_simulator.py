@@ -6,7 +6,7 @@
 import mltable
 import os
 
-import src.batch_score.main as main
+import src.root.main as main
 
 from pathlib import Path
 
