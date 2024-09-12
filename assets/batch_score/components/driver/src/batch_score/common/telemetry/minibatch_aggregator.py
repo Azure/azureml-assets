@@ -90,7 +90,6 @@ class MinibatchAggregator:
         return BatchScoreMinibatchCompletedEvent(
             minibatch_id=minibatch_id,
             scoring_url=self._start_event_per_minibatch[minibatch_id].scoring_url,
-            quota_audience=self._start_event_per_minibatch[minibatch_id].quota_audience,
             model_name=self._model_name,
             retry_count=self._start_event_per_minibatch[minibatch_id].retry_count,
 
@@ -146,7 +145,6 @@ class MinibatchAggregator:
             event = BatchScoreMinibatchEndpointHealthEvent(
                 minibatch_id=minibatch_id,
                 scoring_url=endpoint_uri,
-                quota_audience=self._start_event_per_minibatch[minibatch_id].quota_audience,
                 logging_metadata=logging_metadata,
 
                 http_request_count=len(http_request_completed_events),

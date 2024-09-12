@@ -43,7 +43,7 @@ class ScoringClientFactory:
         tally_handler = _setup_tally_handler(configuration)
         endpoint_type = configuration.get_endpoint_type()
 
-        if endpoint_type in [EndpointType.AOAI, EndpointType.Serverless]:
+        if endpoint_type in [EndpointType.Serverless]:
             get_logger().info("Using LLM scoring client.")
             return _setup_aoai_scoring_client(
                 configuration=configuration,

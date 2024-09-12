@@ -39,12 +39,11 @@ class HeaderProviderFactory:
                 ContentTypeHeaderProvider(),
                 UserAgentHeaderProvider(
                     component_version=metadata.component_version,
-                    quota_audience=configuration.quota_audience,
                     user_agent_segment=configuration.user_agent_segment),
                 XMsClientRequestIdHeaderProvider(),
             ]
 
-        if endpoint_type in [EndpointType.AOAI, EndpointType.Serverless]:
+        if endpoint_type in [EndpointType.Serverless]:
             header_providers.append(AuthHeaderProvider(auth_provider))
         else:
             header_providers.append(TrafficGroupHeaderProvider())
@@ -55,98 +54,3 @@ class HeaderProviderFactory:
         return MultiHeaderProvider(
             header_providers=header_providers,
             additional_headers=additional_headers)
-
-    def get_header_provider_for_model_endpoint_discovery(
-            self,
-            configuration: Configuration,
-            metadata: Metadata,
-            token_provider: TokenProvider,
-            additional_headers: dict = None) -> HeaderProvider:
-        """Get headers for MEDS requests."""
-        header_providers = [
-            UserAgentHeaderProvider(
-                component_version=metadata.component_version,
-                quota_audience=configuration.quota_audience,
-                user_agent_segment=configuration.user_agent_segment),
-            XMsClientRequestIdHeaderProvider(),
-            TokenAuthHeaderProvider(
-                token_provider=token_provider,
-                token_scope=TokenProvider.SCOPE_AML),
-        ]
-
-        return MultiHeaderProvider(
-            header_providers=header_providers,
-            additional_headers=additional_headers)
-
-    def get_header_provider_for_rate_limiter(
-            self,
-            configuration: Configuration,
-            metadata: Metadata,
-            token_provider: TokenProvider,
-            additional_headers: dict = None) -> HeaderProvider:
-        """Get header provider for rate limiter requests."""
-        header_providers = [
-            ContentTypeHeaderProvider(),
-            UserAgentHeaderProvider(
-                component_version=metadata.component_version,
-                quota_audience=configuration.quota_audience,
-                user_agent_segment=configuration.user_agent_segment),
-            XMsClientRequestIdHeaderProvider(),
-            TokenAuthHeaderProvider(
-                token_provider=token_provider,
-                token_scope=TokenProvider.SCOPE_ARM),
-        ]
-
-        return MultiHeaderProvider(
-            header_providers=header_providers,
-            additional_headers=additional_headers)
-
-    def set_defaults_for_openai_model_headers(self, headers: dict, configuration: Configuration) -> dict:
-        """Set default headers for OpenAI model requests."""
-        headers = headers.copy()
-
-        if configuration.is_chat_completion():
-            key = 'chat_completion'
-        elif configuration.is_completion():
-            key = 'completion'
-        elif configuration.is_embeddings():
-            key = 'embedding'
-        elif configuration.is_vesta():
-            key = 'vesta'
-        elif configuration.is_vesta_chat_completion():
-            key = 'vesta_chat_completion'
-        else:
-            return headers
-
-        for header_key, header_value in OPENAI_MODEL_HEADER_DEFAULTS[key].items():
-            headers.setdefault(header_key, header_value)
-
-        return headers
-
-
-OPENAI_MODEL_HEADER_DEFAULTS = {
-    "chat_completion": {
-        "Openai-Internal-AllowChatCompletion": "true",
-        "Openai-Internal-AllowedOutputSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-AllowedSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-HarmonyVersion": "harmony_v3",
-    },
-    "completion": {},
-    "embedding": {},
-    "sahara": {
-        "Openai-Internal-AllowedOutputSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-AllowedSpecialTokens": "<|im_start|>,<|im_sep|>,<|im_end|>",
-        "Openai-Internal-HarmonyVersion": "harmony_v3",
-    },
-    "vesta": {},
-    "vesta_chat_completion": {
-        "Openai-Internal-AllowedOutputSpecialTokens":
-            "<|im_start|>,<|im_sep|>,<|im_end|>,<|diff_marker|>,<|fim_suffix|>,"
-            "<|ghreview|>,<|ipynb_marker|>,<|fim_middle|>,<|meta_start|>",
-        "Openai-Internal-AllowedSpecialTokens":
-            "<|im_start|>,<|im_sep|>,<|im_end|>,<|diff_marker|>,<|fim_suffix|>,"
-            "<|ghreview|>,<|ipynb_marker|>,<|fim_middle|>,<|meta_start|>",
-        "Openai-Internal-HarmonyVersion": "harmony_v4.0.11_8k_turbo_mm",
-        "Openai-Internal-MegatokenSwitchAndParams": "true-true-1-4-2000",
-    },
-}

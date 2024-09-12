@@ -24,7 +24,6 @@ _events_client: EventsClient = None
 
 _ctx_worker_id = ContextVar("Async worker ID", default=None)
 _ctx_mini_batch_id = ContextVar("Async mini-batch ID", default=None)
-_ctx_quota_audience = ContextVar("Async quota audience", default=None)
 
 _pre_init_logger: logging.LoggerAdapter = logging.getLogger("PreInitLogger")
 _pre_init_logger.setLevel(logging.DEBUG)
@@ -104,7 +103,6 @@ def setup_logger(
             app_insights_connection_string,
             _ctx_worker_id,
             _ctx_mini_batch_id,
-            _ctx_quota_audience,
             component_version)
     else:
         _events_client = EventsClient()
@@ -138,7 +136,6 @@ def get_logger():
     custom_dimensions = _custom_dimensions.copy()
     custom_dimensions["WorkerId"] = _ctx_worker_id.get()
     custom_dimensions["MiniBatchId"] = _ctx_mini_batch_id.get()
-    custom_dimensions["QuotaAudience"] = _ctx_quota_audience.get()
 
     extra = {
         "custom_dimensions": custom_dimensions,
@@ -170,16 +167,6 @@ def get_mini_batch_id():
 def set_mini_batch_id(mini_batch_id: int):
     """Set mini batch id."""
     _ctx_mini_batch_id.set(mini_batch_id)
-
-
-def get_quota_audience():
-    """Get quota audience."""
-    return _ctx_quota_audience.get()
-
-
-def set_quota_audience(quota_audience: str):
-    """Set quota audience."""
-    _ctx_quota_audience.set(quota_audience)
 
 
 def __calculate_custom_dimensions():

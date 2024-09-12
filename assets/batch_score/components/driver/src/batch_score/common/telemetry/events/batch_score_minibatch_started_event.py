@@ -21,7 +21,6 @@ class BatchScoreMinibatchStartedEvent(BatchScoreEvent):
 
     minibatch_id: str = field(init=True, default_factory=lu.get_mini_batch_id)
     scoring_url: str = field(init=True, default=None)
-    quota_audience: str = field(init=True, default_factory=lu.get_quota_audience)
 
     """How many rows were in the minibatch?"""
     input_row_count: int = field(init=True, default=None)

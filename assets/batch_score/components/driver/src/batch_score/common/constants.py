@@ -25,26 +25,8 @@ BATCH_SCORE_POLL_DURING_NO_DEPLOYMENTS_ENV_VAR = "BATCH_SCORE_POLL_DURING_NO_DEP
 BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR = "BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS"
 BATCH_SCORE_TRACE_LOGGING_ENV_VAR = "BATCH_SCORE_TRACE_LOGGING"
 
-COMPLETION_API_TYPE = "completion"
-CHAT_COMPLETION_API_TYPE = "chat_completion"
-VESTA_API_TYPE = "vesta"
-VESTA_CHAT_COMPLETION_API_TYPE = "vesta_chat_completion"
-EMBEDDINGS_API_TYPE = "embeddings"
-
-DV_COMPLETION_API_PATH = "v1/engines/davinci/completions"
-DV_EMBEDDINGS_API_PATH = "v1/engines/davinci/embeddings"
-DV_CHAT_COMPLETIONS_API_PATH = "v1/engines/davinci/chat/completions"
-VESTA_RAINBOW_API_PATH = "v1/rainbow"
-VESTA_CHAT_COMPLETIONS_API_PATH = "v1/rainbow/chat/completions"
-
-DEFAULT_REQUEST_PATHS = (DV_COMPLETION_API_PATH,
-                         DV_EMBEDDINGS_API_PATH,
-                         DV_CHAT_COMPLETIONS_API_PATH,
-                         VESTA_RAINBOW_API_PATH,
-                         VESTA_CHAT_COMPLETIONS_API_PATH)
-
 AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST = ["openai.azure.com", "api.cognitive.microsoft.com", "cognitiveservices.azure.com"]
-SERVERLESS_ENDPOINT_DOMAIN_SUFFIX = "inference.ai.azure.com"
+SERVERLESS_ENDPOINT_DOMAIN_SUFFIX = ["inference.ai.azure.com", "models.ai.azure.com"]
 NULL_ENDPOINT_DOMAIN_SUFFIX = "null.inference.io"
 
 CONNECTION_AUTH_TYPE = "connection"
@@ -52,3 +34,5 @@ CONNECTION_AUTH_TYPE = "connection"
 IMAGE_URL_CONTENT_TYPE = "image_url"
 IMAGE_CONTENT_TYPE = "image"
 TEXT_CONTENT_TYPE = "text"
+
+BATCH_SCORE_USER_AGENT = "BatchScoreOss"

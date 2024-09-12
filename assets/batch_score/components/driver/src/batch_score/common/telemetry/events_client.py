@@ -62,17 +62,6 @@ class EventsClient:
         """Emit an event for row completed."""
         pass
 
-    def emit_quota_operation(
-        self,
-        operation: str,
-        status_code: int,
-        lease_id: str,
-        amount: int,
-        scoring_request_internal_id: str
-    ):
-        """Emit an event for quota operation."""
-        pass
-
     def emit_mini_batch_started(
         self,
         input_row_count: int
@@ -113,13 +102,11 @@ class AppInsightsEventsClient(EventsClient):
                  app_insights_connection_string: str,
                  worker_id: ContextVar,
                  mini_batch_id: ContextVar,
-                 quota_audience: ContextVar,
                  component_version: str):
         """Initialize AppInsightsEventsClient."""
         self.__custom_dimensions = custom_dimensions
         self.__worker_id = worker_id
         self.__mini_batch_id = mini_batch_id
-        self.__quota_audience = quota_audience
         self.__component_version = component_version
         self.__logger = logging.getLogger("BatchComponentMetricsLogger")
         self.__logger.propagate = False
@@ -131,7 +118,6 @@ class AppInsightsEventsClient(EventsClient):
     def _common_custom_dimensions(self, custom_dimensions):
         custom_dimensions["MiniBatchId"] = self.__mini_batch_id.get()
         custom_dimensions["WorkerId"] = self.__worker_id.get()
-        custom_dimensions["QuotaAudience"] = self.__quota_audience.get()
         custom_dimensions["ComponentVersion"] = self.__component_version
 
     def emit_request_completed(
@@ -233,28 +219,6 @@ class AppInsightsEventsClient(EventsClient):
         }
 
         self.__logger.info("rows_completed", extra=extra)
-
-    def emit_quota_operation(self,
-                             operation: str,
-                             status_code: int,
-                             lease_id: str,
-                             amount: int,
-                             scoring_request_internal_id: str):
-        """Emit an event for quota operation."""
-        custom_dimensions = self.__custom_dimensions.copy()
-        self._common_custom_dimensions(custom_dimensions=custom_dimensions)
-
-        custom_dimensions["LeaseId"] = lease_id
-        custom_dimensions["Operation"] = operation
-        custom_dimensions["QuotaAmount"] = amount
-        custom_dimensions["StatusCode"] = status_code
-        custom_dimensions["ScoringRequestInternalId"] = scoring_request_internal_id
-
-        extra = {
-            "custom_dimensions": custom_dimensions
-        }
-
-        self.__logger.info("quota_operation", extra=extra)
 
     def emit_mini_batch_started(
         self,

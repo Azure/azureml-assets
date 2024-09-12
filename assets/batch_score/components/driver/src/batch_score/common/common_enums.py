@@ -9,7 +9,6 @@ from strenum import StrEnum
 class EndpointType(StrEnum):
     """Endpoint Type."""
 
-    AOAI = 'AOAI'
     Serverless = 'Serverless'
     Null = "Null"
 

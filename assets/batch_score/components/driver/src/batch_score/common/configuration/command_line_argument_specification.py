@@ -179,12 +179,6 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
         'required': False,
         'type': str,
     },
-    '--quota_audience': {
-        'default': None,
-        'help': 'Quota audience.',
-        'required': False,
-        'type': str,
-    },
     '--request_path': {
         'help': 'Request path.',
         'required': False,

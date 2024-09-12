@@ -427,7 +427,6 @@ def _emit_minibatch_started_event(mini_batch_context, configuration, input_data)
         batch_score_event=BatchScoreMinibatchStartedEvent(
             minibatch_id=mini_batch_context.minibatch_index,
             scoring_url=configuration.scoring_url,
-            quota_audience=configuration.quota_audience,
             input_row_count=input_data.shape[0],
             retry_count=mini_batch_context.retry_count,
             logging_metadata=configuration.logging_metadata

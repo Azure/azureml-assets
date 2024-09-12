@@ -11,12 +11,12 @@
         },
         "app_insights_log_level": {
             "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/log_level.json",
-            "default": "debug",
+            "default": "info",
             "description": "Minimum log level to emit to Application Insights."
         },
         "stdout_log_level": {
             "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/log_level.json",
-            "default": "debug",
+            "default": "info",
             "description": "Minimum log level to emit to job stdout."
         },
         "logging_metadata": {

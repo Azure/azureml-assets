@@ -38,7 +38,7 @@ class AuthProvider:
 class IdentityAuthProvider(AuthProvider):
     """Identity auth provider."""
 
-    SCOPE_COGNITIVE = "https://cognitiveservices.azure.com/.default"
+    SCORE_MACHINE_LEARNING_WORKSPACE = "https://ml.azure.com/.default"
 
     def __init__(
             self,
@@ -77,7 +77,7 @@ class IdentityAuthProvider(AuthProvider):
 
         try:
             get_logger().info("Attempting to get token from MSI")
-            self.__access_token = self.__credential.get_token(IdentityAuthProvider.SCOPE_COGNITIVE)
+            self.__access_token = self.__credential.get_token(IdentityAuthProvider.SCORE_MACHINE_LEARNING_WORKSPACE)
         except CredentialUnavailableError:
             get_logger().info("Failed to get token from MSI")
 
@@ -150,7 +150,6 @@ class WorkspaceConnectionAuthProvider(AuthProvider):
         """Get the auth headers."""
         resp = self._get_workspace_connection_by_name()
         return {
-            EndpointType.AOAI: {'api-key': resp['properties']['credentials']['key']},
             EndpointType.Serverless: {'Authorization': resp['properties']['credentials']['key']},
         }[self._endpoint_type]
 

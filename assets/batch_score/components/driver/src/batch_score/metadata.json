@@ -1,7 +1,7 @@
 {
-    "component_version": "1.2.0",
-    "component_directory": "driver/batch_score_llm",
-    "component_name": "batch_score_llm",
+    "component_version": "0.0.1",
+    "component_directory": "assets/managed_batch_inference/components/src/batch_score_oss/root",
+    "component_name": "batch_score_oss",
     "virtual_environment_name": null,
     "registry_name": "azureml"
 }

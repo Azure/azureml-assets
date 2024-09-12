@@ -80,7 +80,6 @@ class FileConfigurationParser:
             mini_batch_results_out_directory=parsed_args.partitioned_scoring_results,
             online_endpoint_url=None,
             output_behavior=output_behavior,
-            quota_audience=None,
             request_path=None,
             save_mini_batch_results=save_mini_batch_results,
             scoring_url=config.get('inference_endpoint', {}).get('url'),

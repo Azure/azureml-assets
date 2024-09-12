@@ -37,7 +37,6 @@ class Configuration(Namespace):
     mini_batch_results_out_directory: str = field(init=True, default=None)
     online_endpoint_url: str = field(init=True, default=None)
     output_behavior: str = field(init=True, default=None)
-    quota_audience: str = field(init=True, default=None)
     request_path: str = field(init=True, default=None)
     save_mini_batch_results: str = field(init=True, default=None)
     scoring_url: str = field(init=True, default=None)
@@ -162,14 +161,10 @@ class Configuration(Namespace):
             )
         )
 
-    def is_aoai_endpoint(self) -> bool:
-        """Check if the target endpoint is for Azure OpenAI models."""
-        return self.scoring_url and \
-            any(suffix in self.scoring_url for suffix in constants.AOAI_ENDPOINT_DOMAIN_SUFFIX_LIST)
-
     def is_serverless_endpoint(self) -> bool:
         """Check if the target endpoint is MIR serverless."""
-        return self.scoring_url and constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX in self.scoring_url
+        return self.scoring_url and \
+            any(suffix in self.scoring_url for suffix in constants.SERVERLESS_ENDPOINT_DOMAIN_SUFFIX)
 
     def is_null_endpoint(self) -> bool:
         """Check if the target endpoint is a null endpoint for testing."""
@@ -177,9 +172,7 @@ class Configuration(Namespace):
 
     def get_endpoint_type(self) -> EndpointType:
         """Get endpoint type."""
-        if self.is_aoai_endpoint():
-            return EndpointType.AOAI
-        elif self.is_serverless_endpoint():
+        if self.is_serverless_endpoint():
             return EndpointType.Serverless
         elif self.is_null_endpoint():
             return EndpointType.Null
