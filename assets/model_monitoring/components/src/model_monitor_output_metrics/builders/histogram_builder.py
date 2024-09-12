@@ -53,9 +53,10 @@ class HistogramBuilder:
                             "targetCount"
                         ] = row["bucket_count"]
                 else:
-                    histograms[feature_name]["histogram"][row["lower_bound"]][
-                        "targetCount"
-                    ] = row["bucket_count"]
+                    if row["lower_bound"] in histograms[feature_name]["histogram"]:
+                        histograms[feature_name]["histogram"][row["lower_bound"]][
+                            "targetCount"
+                        ] = row["bucket_count"]
 
         self.histograms = {}
         for feature_name in histograms.keys():
