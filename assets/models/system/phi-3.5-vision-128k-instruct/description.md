@@ -38,14 +38,14 @@ BLINK: a benchmark with 14 visual tasks that humans can solve very quickly but a
 | IQ Test | 25.3 | 26.7 | 26.0 | 30.7 | 25.3 | 29.3 | 26.0 | 34.0 | 19.3 |
 | Jigsaw | 68.0 | 86.0 | 55.3 | 52.7 | 71.3 | 72.7 | 57.3 | 68.0 | 67.3 |
 | Multi-View Reasoning | 54.1 | 44.4 | 48.9 | 42.9 | 48.9 | 48.1 | 55.6 | 49.6 | 46.6 |
-| Object Localization | 49.2 | 54.9 | 53.3 | 54.1 | 57.3 | 57.4 | 62.3 | 65.6 | 68.0 |
-| Relative Depth | 69.4 | 77.4 | 63.7 | 67.7 | 32.8 | 58.1 | 71.8 | 76.6 | 71.0 |
+| Object Localization | 49.2 | 54.9 | 53.3 | 54.1 | 44.3 | 57.4 | 62.3 | 65.6 | 68.0 |
+| Relative Depth | 69.4 | 77.4 | 63.7 | 67.7 | 57.3 | 58.1 | 71.8 | 76.6 | 71.0 |
 | Relative Reflectance | 37.3 | 34.3 | 32.8 | 38.8 | 32.8 | 27.6 | 36.6 | 38.8 | 40.3 |
 | Semantic Correspondence | 36.7 | 31.7 | 31.7 | 22.3 | 32.4 | 31.7 | 45.3 | 48.9 | 54.0 |
 | Spatial Relation | 65.7 | 75.5 | 78.3 | 78.3 | 55.9 | 81.1 | 60.1 | 79.0 | 84.6 |
 | Visual Correspondence | 53.5 | 40.7 | 34.9 | 33.1 | 29.7 | 52.9 | 72.1 | 81.4 | 86.0 |
 | Visual Similarity | 83.0 | 91.9 | 48.1 | 45.2 | 47.4 | 77.8 | 84.4 | 81.5 | 88.1 |
-| **Overall** | **57.0** | **53.1** | **45.9** | **45.4** | **45.1** | **51.9** | **56.5** | **61.0** | **63.2** |
+| **Overall** | **57.0** | **53.1** | **45.9** | **45.4** | **45.8** | **51.9** | **56.5** | **61.0** | **63.2** |
 
 Video-MME: comprehensively assess the capabilities of MLLMs in processing video data, covering a wide range of visual domains, temporal durations, and data modalities.
 
