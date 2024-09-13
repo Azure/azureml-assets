@@ -15,8 +15,14 @@ from pathlib import Path
 from typing import List
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
-from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
-from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.contrib.hf.nlp.constants.constants import (
+    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+)
+from azureml.acft.common_components import (
+    get_logger_app,
+    set_logging_parameters,
+    LoggingLiterals,
+)
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
@@ -26,10 +32,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from common.constants import (
     COMPONENT_NAME,
-    COD_SYSTEM_PROMPT,
     DEFAULT_REQUEST_BATCH_SIZE,
     DEFAULT_SUCCESS_RATIO,
     DEFAULT_MAX_NEW_TOKENS,
+    DEFAULT_SUMMARY_MAX_NEW_TOKENS,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
     FREQUENCY_PENALTY,
@@ -43,6 +49,7 @@ from common.constants import (
     DataGenerationTaskType,
     TelemetryConstants,
     SystemPrompt,
+    DEFAULT_MAX_LEN_SUMMARY,
 )
 
 from common.utils import (
@@ -52,9 +59,7 @@ from common.utils import (
     retry,
 )
 
-from common.validation import (
-    validate_file_paths_with_supported_formats
-)
+from common.validation import validate_file_paths_with_supported_formats
 
 logger = get_logger_app(
     "azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import"
@@ -193,6 +198,14 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--max_len_summary",
+        type=int,
+        required=False,
+        default=DEFAULT_MAX_LEN_SUMMARY,
+        help="Maximum word count for text summarization ",
+    )
+
+    parser.add_argument(
         "--data_generation_task_type",
         type=str,
         required=True,
@@ -239,8 +252,12 @@ def _invoke_endpoint(
             f"{TelemetryConstants.INVOKE_MODEL_ENDPOINT}_idx({idx})_turn({turn})"
         )
         with log_activity(logger=logger, activity_name=custom_logger_activity_name):
-            return requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
-    return requests.post(url, headers=request_headers, data=json.dumps(data), timeout=180)
+            return requests.post(
+                url, headers=request_headers, data=json.dumps(data), timeout=180
+            )
+    return requests.post(
+        url, headers=request_headers, data=json.dumps(data), timeout=180
+    )
 
 
 def generate_synthetic_data(
@@ -251,6 +268,7 @@ def generate_synthetic_data(
     min_endpoint_success_ratio: float,
     enable_cot: bool,
     enable_cod: bool,
+    max_len_summary: int,
     generated_train_file_path: Path,
     generated_validation_file_path: Path,
     train_file_path: Path,
@@ -267,6 +285,7 @@ def generate_synthetic_data(
         min_endpoint_success_ratio (float): Minimum success ratio below which run will be considered a failure
         enable_cot (bool): Enable Chain of Thought processing
         enable_cod (bool): Enable Chain of Density processing for text summarization task
+        max_len_summary (int): Maximum word count for text summarization
         output_dataset (Path): Path to output directory
         train_file_path (Path): Train JSONL file path
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
@@ -283,17 +302,20 @@ def generate_synthetic_data(
         Returns:
             message (dict): System message with updated content
         """
-        if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
+        if (
+            enable_cot
+            and data_generation_task_type != DataGenerationTaskType.CONVERSATION
+        ):
             cot_prompt = SystemPrompt.get_cot_prompt(data_generation_task_type)
-            cot_system_message = {'role': 'system', 'content': cot_prompt}
+            cot_system_message = {"role": "system", "content": cot_prompt}
             return cot_system_message
         elif (
             enable_cod
             and data_generation_task_type == DataGenerationTaskType.SUMMARIZATION
         ):
-            cod_system_message = {"role": "system", "content": COD_SYSTEM_PROMPT}
+            cod_prompt = SystemPrompt.get_cod_prompt(max_len_summary)
+            cod_system_message = {"role": "system", "content": cod_prompt}
             return cod_system_message
-
         else:
             return message
 
@@ -392,16 +414,31 @@ def generate_synthetic_data(
                         break
                     response_data = response.json()
                     # response content should be structured as below for a successful vllm response
-                    prediction_result = response_data["choices"][0]["message"]["content"].strip()
+                    prediction_result = response_data["choices"][0]["message"][
+                        "content"
+                    ].strip()
 
                     # For CoT prompts, need to remove the reasoning and only use the answer
-                    if enable_cot and data_generation_task_type != DataGenerationTaskType.CONVERSATION:
+                    if (
+                        enable_cot
+                        and data_generation_task_type
+                        != DataGenerationTaskType.CONVERSATION
+                    ):
                         key = SystemPrompt.get_response_key(data_generation_task_type)
                         prediction_result = json.loads(prediction_result)[key]
+
+                    if (
+                        enable_cod
+                        and data_generation_task_type
+                        == DataGenerationTaskType.SUMMARIZATION
+                    ):
+                        result = json.loads(prediction_result)
+                        prediction_result = result[-1]["Denser_Summary"]
 
                     synthetic_responses.append(
                         {"role": "assistant", "content": str(prediction_result)}
                     )
+
             is_success = last_status_code == 200
             logger.info(f"Processing idx: {idx} - {is_success}")
             return {
@@ -551,10 +588,13 @@ def data_import(args: Namespace):
     min_endpoint_success_ratio = args.min_endpoint_success_ratio
     enable_cot_str = args.enable_chain_of_thought
     enable_cod_str = args.enable_chain_of_density
+    max_len_summary = args.max_len_summary
     data_generation_task_type = args.data_generation_task_type
 
     # validate file formats
-    validate_file_paths_with_supported_formats([args.train_file_path, args.validation_file_path])
+    validate_file_paths_with_supported_formats(
+        [args.train_file_path, args.validation_file_path]
+    )
     logger.info("File format validation successful.")
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
@@ -598,7 +638,12 @@ def data_import(args: Namespace):
         )
 
     inference_params = {
-        MAX_NEW_TOKENS: teacher_model_max_new_tokens,
+        MAX_NEW_TOKENS: (
+            DEFAULT_SUMMARY_MAX_NEW_TOKENS
+            if data_generation_task_type == "SUMMARIZATION"
+            and teacher_model_max_new_tokens == DEFAULT_MAX_NEW_TOKENS
+            else teacher_model_max_new_tokens
+        ),
         TEMPERATURE: teacher_model_temperature,
         TOP_P: teacher_model_top_p,
     }
@@ -626,6 +671,7 @@ def data_import(args: Namespace):
         min_endpoint_success_ratio=min_endpoint_success_ratio,
         enable_cot=enable_cot,
         enable_cod=enable_cod,
+        max_len_summary=max_len_summary,
         generated_train_file_path=generated_train_file_path,
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,
