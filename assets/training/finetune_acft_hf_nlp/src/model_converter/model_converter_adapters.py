@@ -96,7 +96,8 @@ class ModelConverter(ABC):
                 ml_configs_path,
                 dst_model_path
             )
-        logger.info(f"Copied ml_configs folder.")
+        logger.info("Copied ml_configs folder.")
+
 
 class PyTorch_to_MlFlow_ModelConverter:
     """Mixin class to convert pytorch to hftransformers/oss flavour mlflow model."""

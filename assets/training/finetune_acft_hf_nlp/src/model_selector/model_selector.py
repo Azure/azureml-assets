@@ -396,7 +396,7 @@ def main():
                 mlflow_ml_configs_dir,
                 ml_config_dir
             )
-            logger.info(f"Copied ml_configs folder to output dir.")
+            logger.info("Copied ml_configs folder to output dir.")
 
 
 if __name__ == "__main__":
