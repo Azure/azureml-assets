@@ -327,6 +327,7 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.download_license_file(self.model_name, self.ft_pytorch_model_path, self.mlflow_model_save_path)
         self.add_model_signature()
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
+        self.copy_ml_configs(self.ft_pytorch_model_path, self.mlflow_model_save_path)
 
         # Temp fix for t5 text-classification, translation, summarization
         if self.is_t5_finetune(model.config.model_type):
