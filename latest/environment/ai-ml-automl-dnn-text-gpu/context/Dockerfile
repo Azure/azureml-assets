@@ -49,7 +49,7 @@ RUN pip install \
                 azureml-automl-runtime==1.57.0 \
                 azureml-train-automl-client==1.57.0 \
                 azureml-train-automl-runtime==1.57.0 \
-                azureml-defaults==1.57.0 \
+                azureml-defaults==1.57.0.post1 \
                 'azure-identity>=1.16.1' \
                 'horovod==0.28.1' \
                 'sentencepiece==0.1.97' \

@@ -9,7 +9,7 @@ dependencies:
   - azureml-core==1.57.0.post1
   - azureml-contrib-dataset==1.57.0
   - azureml-dataset-runtime[fuse,pandas]
-  - azureml-defaults==1.57.0
+  - azureml-defaults==1.57.0.post1
   - azure-storage-blob==12.14.1
   - Pillow==10.4.0
   - pycairo==1.20.1

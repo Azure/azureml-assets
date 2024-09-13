@@ -44,7 +44,7 @@ RUN pip install \
                 # begin pypi dependencies
                 azureml-core==1.57.0.post1 \
                 azureml-mlflow==1.57.0.post1 \
-                azureml-defaults==1.57.0 \
+                azureml-defaults==1.57.0.post1 \
                 azureml-telemetry==1.57.0 \
                 azureml-interpret==1.57.0 \
                 azureml-responsibleai==1.57.0 \

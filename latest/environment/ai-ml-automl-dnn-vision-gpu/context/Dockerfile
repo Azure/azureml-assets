@@ -57,7 +57,7 @@ RUN pip install \
                 azureml-automl-core==1.57.0 \
                 azureml-automl-runtime==1.57.0 \
                 azureml-train-automl-client==1.57.0 \
-                azureml-defaults==1.57.0 \
+                azureml-defaults==1.57.0.post1 \
                 azureml-interpret==1.57.0 \
                 azureml-train-automl-runtime==1.57.0 \
                 azureml-automl-dnn-vision==1.57.0.post1 \

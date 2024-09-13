@@ -61,7 +61,7 @@ RUN pip install \
                 azureml-mlflow==1.57.0.post1 \
                 azureml-pipeline-core==1.57.0 \
                 azureml-telemetry==1.57.0 \
-                azureml-defaults==1.57.0 \
+                azureml-defaults==1.57.0.post1 \
                 azureml-interpret==1.57.0 \
                 azureml-responsibleai==1.57.0 \
                 azureml-automl-core==1.57.0 \
