@@ -25,7 +25,7 @@ jobs:
   check-directory-file-changes:
     needs: check-execution-context
     if: fromJSON(needs.check-execution-context.outputs.continue)
-    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@update_more_gates  # TODO: Update this to @main later
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
     with:
       folder_path: "scripts/azureml-assets/**"
       forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
