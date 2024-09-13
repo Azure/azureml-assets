@@ -4,6 +4,7 @@
 """File containing function for FTaaS data import component."""
 
 import json
+
 import logging
 import pandas as pd
 
