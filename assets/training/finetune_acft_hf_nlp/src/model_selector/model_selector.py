@@ -389,8 +389,8 @@ def main():
             logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
         # copy inference config files
-        mlflow_ml_configs_dir = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.ML_CONFIGS_DIR)
-        ml_config_dir = Path(args.output_dir, MLFlowHFFlavourConstants.ML_CONFIGS_DIR)
+        mlflow_ml_configs_dir = Path(args.mlflow_model_path, "ml_configs")
+        ml_config_dir = Path(args.output_dir, "ml_configs")
         if mlflow_ml_configs_dir.is_dir():
             shutil.copytree(
                 mlflow_ml_configs_dir,
