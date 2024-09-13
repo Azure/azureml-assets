@@ -36,7 +36,7 @@ tags:
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
-version: 2
+version: 3
 description: |
   Whisper is a model that can recognize and translate speech using deep learning. It was trained on a large amount of data from different sources and languages. Whisper models can handle various tasks and domains without needing to adjust the model.
 
