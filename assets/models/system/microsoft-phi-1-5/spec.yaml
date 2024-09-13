@@ -16,7 +16,7 @@ tags:
   license: other
   task: text-generation
   hiddenlayerscanned: ""
-  author: microsoft
+  author: Microsoft
   evaluation_compute_allow_list:
   - Standard_DS4_v2
   - Standard_DS5_v2

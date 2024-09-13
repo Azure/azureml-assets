@@ -28,6 +28,6 @@ tags:
   task: text-generation
   hiddenlayerscanned: ""
   license: apache-2.0
-  author: deci-ai
+  author: "Deci AI"
   huggingface_model_id: Deci/DeciLM-7B
 version: 3

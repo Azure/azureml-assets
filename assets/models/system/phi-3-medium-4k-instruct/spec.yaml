@@ -33,7 +33,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   maas-finetuning: true
   maas-finetuning-offer: true
   maas-finetuning-regions: eastus2
