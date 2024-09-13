@@ -87,6 +87,16 @@ class ModelConverter(ABC):
             )
             logger.info(f"Copied {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} file.")
 
+    def copy_ml_configs(self, src_model_path: str, dst_model_path: str):
+        """Copy ml_configs folder to mlflow model artifacts."""
+        ml_configs_path = Path(src_model_path, "ml_configs")
+        dst_model_path = Path(dst_model_path, "ml_configs")
+        if ml_configs_path.is_dir():
+            shutil.copytree(
+                ml_configs_path,
+                dst_model_path
+            )
+        logger.info(f"Copied ml_configs folder.")
 
 class PyTorch_to_MlFlow_ModelConverter:
     """Mixin class to convert pytorch to hftransformers/oss flavour mlflow model."""
@@ -224,6 +234,7 @@ class Pytorch_to_HFTransformers_MlFlow_ModelConverter(ModelConverter, PyTorch_to
         self.download_license_file(self.model_name, self.ft_pytorch_model_path, self.mlflow_model_save_path)
         self.add_model_signature()
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
+        self.copy_ml_configs(self.ft_pytorch_model_path, self.mlflow_model_save_path)
         copy_tokenizer_files_to_model_folder(self.mlflow_model_save_path, self.component_args.task_name)
 
         logger.info("Saved MLFlow model using HFTransformers flavour.")

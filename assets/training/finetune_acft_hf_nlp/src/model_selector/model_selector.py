@@ -388,6 +388,16 @@ def main():
             shutil.copy(str(conda_file_path), args.output_dir)
             logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
+        # copy inference config files
+        mlflow_ml_configs_dir = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.ML_CONFIGS_DIR)
+        ml_config_dir = Path(args.output_dir, MLFlowHFFlavourConstants.ML_CONFIGS_DIR)
+        if mlflow_ml_configs_dir.is_dir():
+            shutil.copytree(
+                mlflow_ml_configs_dir,
+                ml_config_dir
+            )
+            logger.info(f"Copied ml_configs folder to output dir.")
+
 
 if __name__ == "__main__":
     main()
