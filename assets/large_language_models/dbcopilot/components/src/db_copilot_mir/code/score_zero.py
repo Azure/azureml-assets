@@ -69,7 +69,6 @@ def init():
             )
         else:
             logging.info("using managed identity access Azure OpenAI")
-            try:
             embedding_aoai_connection = AzureOpenAIConnection(
                 api_base=secret_manager.get("embedding-aoai-api-base"),
                 api_type="azure",
