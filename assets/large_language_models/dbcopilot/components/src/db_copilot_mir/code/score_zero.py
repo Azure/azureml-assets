@@ -10,7 +10,6 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azureml.contrib.services.aml_request import AMLRequest, rawhttp
 from azureml.contrib.services.aml_response import AMLResponse
 from db_copilot.contract.memory_core import MemoryItem
