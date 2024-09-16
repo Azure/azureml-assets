@@ -94,7 +94,7 @@ class ApiType():
 
 COMPLETION_API_SUFFIX_LIST = ["v1/completions"]
 CHAT_COMPLETION_API_SUFFIX_LIST = ["v1/chat/completions"]
-DEFAULT_API_TYPE = ApiType.Unknown
+DEFAULT_API_TYPE = ApiType.Completion
 API_TYPE_MAPPING = {
     ApiType.Completion: COMPLETION_API_SUFFIX_LIST,
     ApiType.ChatCompletion: CHAT_COMPLETION_API_SUFFIX_LIST
