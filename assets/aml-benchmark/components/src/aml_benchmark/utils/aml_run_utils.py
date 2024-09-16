@@ -38,6 +38,18 @@ def get_parent_run_id() -> str:
     return cast(str, Run.get_context().parent.id)
 
 
+def get_root_run_id() -> str:
+    """Get the run id of the root run of the current run."""
+    try:
+        current_run_id = Run.get_context().id
+        current_run = mlflow.get_run(current_run_id)
+        tags = current_run.data.tags
+        return tags.get('mlflow.rootRunId')
+    except Exception as ex:
+        logger.warning(f"Failed to get root run id due to {ex}")
+        return None
+
+
 def get_child_runs(run_id: str, exp_name: str) -> List[MLFlowRun]:
     """
     Get all the child runs of the given run id in the given experiment.
@@ -49,6 +61,26 @@ def get_child_runs(run_id: str, exp_name: str) -> List[MLFlowRun]:
     """
     return mlflow.search_runs(experiment_names=[exp_name], filter_string=f"tags.mlflow.parentRunId='{run_id}'",
                               output_format='list')
+
+
+def is_model_prediction_component_present() -> bool:
+    """Check if the model prediction component is present in the pipeline."""
+
+    all_runs = get_all_runs_in_current_experiment()
+    for run in all_runs:
+        if run.info.run_name.startswith('prediction') or run.info.run_name.endswith('prediction'):
+            return True
+    return False
+
+
+def get_evaluation_type() -> str:
+    """Get the evaluation type of the current run."""
+    root_run_id = get_root_run_id()
+    if root_run_id is None:
+        return None
+    root_run = mlflow.get_run(root_run_id)
+    tags = root_run.data.tags
+    return tags.get('evaluation_type')
 
 
 def get_all_runs_in_current_experiment() -> List[MLFlowRun]:
@@ -67,8 +99,7 @@ def get_all_runs_in_current_experiment() -> List[MLFlowRun]:
     ))
     all_runs = []
     for run in runs:
-        child_runs = get_child_runs(run.info.run_id, experiment_name)
-        if run.info.run_id != Run.get_context().id and run.info.run_id != parent_run_id and len(child_runs) == 0:
+        if run.info.run_id != Run.get_context().id and run.info.run_id != parent_run_id:
             all_runs.append(run)
     return all_runs
 

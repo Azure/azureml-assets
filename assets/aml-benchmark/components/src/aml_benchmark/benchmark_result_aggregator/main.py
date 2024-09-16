@@ -16,6 +16,8 @@ from aml_benchmark.utils.aml_run_utils import (
     get_parent_run_id,
     get_step_name,
     get_mlflow_model_name_version,
+    is_model_prediction_component_present,
+    get_evaluation_type
 )
 
 
@@ -278,7 +280,9 @@ def main(
         result["model_registry"] = model_registry
         loggable_pipeline_params["model_registry"] = model_registry
     # Collect the telemetry parameters.
-    telemetry_details = {"parameters": {}, "metrics": {}}
+    telemetry_details = {"parameters": {"model_as_an_asset": is_model_prediction_component_present(),
+                                        "evaluation_type": get_evaluation_type()},
+                         "metrics": {}}
     mlflow_parameters = result.get("mlflow_parameters", {})
     for key, telemetry_key in REQUIRED_TELEMETRY_KEYS_MAP.items():
         telemetry_details["parameters"][telemetry_key] = mlflow_parameters.get(key, None)
@@ -300,11 +304,11 @@ def main(
     telemetry_details["parameters"]["task_name"] = task_name
     logger.info(f"Telemetry details: {json.dumps(telemetry_details)}")
     save_json_to_file(result, output_dataset_path)
-    log_params_and_metrics(
-        parameters={**parameters, **loggable_pipeline_params},
-        metrics={**quality_metrics, **performance_metrics},
-        log_to_parent=True,
-    )
+    # log_params_and_metrics(
+    #     parameters={**parameters, **loggable_pipeline_params},
+    #     metrics={**quality_metrics, **performance_metrics},
+    #     log_to_parent=True,
+    # )
 
 
 if __name__ == "__main__":
