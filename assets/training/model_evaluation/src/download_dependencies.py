@@ -48,7 +48,6 @@ def main():
             "azureml-evaluate-mlflow",
             "azureml_metrics",
             "azureml-metrics",
-            "transformers",
             "torchvision",
         ]
         install_deps = []
