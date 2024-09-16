@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference
 display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
-version: 0.0.11
+version: 0.0.12
 
 inputs:
   input_dataset:
@@ -223,7 +223,7 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml://registries/azureml/components/batch_score_llm/versions/1.2.0
+    component: azureml://registries/azureml-batch-score/components/batch_score_llm/versions/2.0.20240805.1
     inputs:
       async_mode: False
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
