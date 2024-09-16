@@ -65,7 +65,6 @@ def get_child_runs(run_id: str, exp_name: str) -> List[MLFlowRun]:
 
 def is_model_prediction_component_present() -> bool:
     """Check if the model prediction component is present in the pipeline."""
-
     all_runs = get_all_runs_in_current_experiment()
     for run in all_runs:
         if run.info.run_name.startswith('prediction') or run.info.run_name.endswith('prediction'):
