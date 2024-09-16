@@ -52,4 +52,4 @@ tags:
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
-version: 2
+version: 3
