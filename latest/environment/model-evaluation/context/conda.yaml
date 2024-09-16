@@ -28,15 +28,14 @@ dependencies:
   - lightgbm>=3.2.1,<4.2.0
   - msrest>=0.6.21,<0.7.1
   - mltable==1.6.1
-  - openai==1.45.0
+  - openai==1.45.1
   - azure-ai-ml==1.20.0
   - mldesigner==0.1.0b18
   - tiktoken
   - idna==3.7
-  - pydantic==2.9.1
+  - pydantic
   - mteb==1.14.19
   - setuptools>=70.0.0
-  - rouge>=1.0.0,<2.0.0
   - cryptography==43.0.1
   # batch score dependencies
   - opencensus-ext-azure==1.1.13
