@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Tuple, cast
 import argparse
 from azureml.core import Run
 import json
-from aml_benchmark.utils.logging import get_logger, log_params_and_metrics
+from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.io import read_json_data, save_json_to_file
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.constants import DATASET_CONFIG_2_NAME_MAP, REQUIRED_TELEMETRY_KEYS_MAP
@@ -304,11 +304,6 @@ def main(
     telemetry_details["parameters"]["task_name"] = task_name
     logger.info(f"Telemetry details: {json.dumps(telemetry_details)}")
     save_json_to_file(result, output_dataset_path)
-    # log_params_and_metrics(
-    #     parameters={**parameters, **loggable_pipeline_params},
-    #     metrics={**quality_metrics, **performance_metrics},
-    #     log_to_parent=True,
-    # )
 
 
 if __name__ == "__main__":
