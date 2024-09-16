@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.6
+version: 0.0.8
 type: pipeline
 
 
@@ -143,6 +143,12 @@ inputs:
     default: "false"
     description: Enable Chain of density for text summarization
 
+  max_len_summary:
+    type: integer
+    optional: true
+    default: 80
+    description: Maximum Length Summary for text summarization 
+
   data_generation_task_type:
     type: string
     enum:
@@ -227,7 +233,7 @@ outputs:
 jobs:
   oss_distillation_validate_pipeline:
     type: command
-    component: azureml:oss_distillation_validate_pipeline:0.0.1
+    component: azureml:oss_distillation_validate_pipeline:0.0.3
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -241,6 +247,7 @@ jobs:
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
+      max_len_summary: '${{parent.inputs.max_len_summary}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
@@ -259,7 +266,7 @@ jobs:
 
   oss_distillation_generate_data:
     type: command
-    component: azureml:oss_distillation_generate_data:0.0.6
+    component: azureml:oss_distillation_generate_data:0.0.7
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
@@ -273,6 +280,7 @@ jobs:
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
+      max_len_summary: '${{parent.inputs.max_len_summary}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
