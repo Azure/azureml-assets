@@ -33,7 +33,7 @@ dependencies:
   - mldesigner=={{latest-pypi-version:pre}}
   - tiktoken
   - idna==3.7
-  - pydantic=={{latest-pypi-version}}
+  - pydantic
   - mteb=={{latest-pypi-version}}
   - setuptools>=70.0.0
   - cryptography==43.0.1
