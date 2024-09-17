@@ -3,7 +3,7 @@
 
 """This file contains unit tests for client settings key."""
 
-from src.batch_score_oss.root.common.configuration.client_settings import ClientSettingsKey
+from src.batch_score_oss.common.configuration.client_settings import ClientSettingsKey
 
 
 def test_string_equality_as_dictionary_key():

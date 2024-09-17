@@ -5,9 +5,9 @@
 
 from unittest.mock import MagicMock
 
-from src.batch_score_oss.root.aoai.scoring.aoai_response_handler import AoaiHttpResponseHandler
-from src.batch_score_oss.root.aoai.scoring.aoai_scoring_client import AoaiScoringClient
-from src.batch_score_oss.root.common.configuration.configuration import Configuration
+from src.batch_score_oss.aoai.scoring.aoai_response_handler import AoaiHttpResponseHandler
+from src.batch_score_oss.aoai.scoring.aoai_scoring_client import AoaiScoringClient
+from src.batch_score_oss.common.configuration.configuration import Configuration
 
 
 def test_init():

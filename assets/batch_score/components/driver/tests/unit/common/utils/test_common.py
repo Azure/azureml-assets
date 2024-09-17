@@ -13,14 +13,14 @@ import mltable
 import pandas as pd
 import pytest
 
-from src.batch_score_oss.root.common.scoring.scoring_result import (
+from src.batch_score_oss.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )
-from src.batch_score_oss.root.utils.v1_output_formatter import V1OutputFormatter
-from src.batch_score_oss.root.utils.v2_output_formatter import V2OutputFormatter
-from src.batch_score_oss.root.utils.v1_input_schema_handler import V1InputSchemaHandler
-from src.batch_score_oss.root.utils.v2_input_schema_handler import V2InputSchemaHandler
+from src.batch_score_oss.utils.v1_output_formatter import V1OutputFormatter
+from src.batch_score_oss.utils.v2_output_formatter import V2OutputFormatter
+from src.batch_score_oss.utils.v1_input_schema_handler import V1InputSchemaHandler
+from src.batch_score_oss.utils.v2_input_schema_handler import V2InputSchemaHandler
 
 MLTable_yaml = """
 type: mltable

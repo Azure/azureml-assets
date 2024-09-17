@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score_oss.root.common.auth.token_provider import TokenProvider
+from src.batch_score_oss.common.auth.token_provider import TokenProvider
 
 
 @pytest.fixture

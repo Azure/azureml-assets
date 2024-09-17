@@ -5,9 +5,9 @@
 
 import pytest
 
-from src.batch_score_oss.root.aoai.scoring.aoai_scoring_client import AoaiScoringClient
-from src.batch_score_oss.root.common.configuration.configuration_parser import ConfigurationParser
-from src.batch_score_oss.root.common.scoring.scoring_client_factory import ScoringClientFactory
+from src.batch_score_oss.aoai.scoring.aoai_scoring_client import AoaiScoringClient
+from src.batch_score_oss.common.configuration.configuration_parser import ConfigurationParser
+from src.batch_score_oss.common.scoring.scoring_client_factory import ScoringClientFactory
 
 
 @pytest.mark.parametrize('scoring_url, expected_scoring_client_type', [

@@ -3,7 +3,7 @@
 
 """This file contains unit tests for batch score minibatch endpoint health event."""
 
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
     BatchScoreMinibatchEndpointHealthEvent
 )
 

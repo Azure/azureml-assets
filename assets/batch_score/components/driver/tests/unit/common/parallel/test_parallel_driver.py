@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from src.batch_score_oss.root.common.parallel.parallel_driver import Parallel
-from src.batch_score_oss.root.common.request_modification.modifiers.request_modifier import (
+from src.batch_score_oss.common.parallel.parallel_driver import Parallel
+from src.batch_score_oss.common.request_modification.modifiers.request_modifier import (
     RequestModificationException,
     RequestModifier,
 )
@@ -147,4 +147,4 @@ def mock_AIMD(monkeypatch):
             """Init function."""
             pass
 
-    monkeypatch.setattr("src.batch_score_oss.root.common.parallel.adjustment.AIMD.__init__", FakeAIMD.__init__)
+    monkeypatch.setattr("src.batch_score_oss.common.parallel.adjustment.AIMD.__init__", FakeAIMD.__init__)

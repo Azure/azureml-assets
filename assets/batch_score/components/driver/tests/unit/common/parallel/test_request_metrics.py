@@ -7,7 +7,7 @@ import time
 
 import pandas as pd
 
-from src.batch_score_oss.root.common.parallel.adjustment import RequestMetrics
+from src.batch_score_oss.common.parallel.adjustment import RequestMetrics
 
 
 class TestRequestMetrics:

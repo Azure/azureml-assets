@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score_oss.root.common.request_modification.modifiers.prompt_redaction_modifier import (
+from src.batch_score_oss.common.request_modification.modifiers.prompt_redaction_modifier import (
     PromptRedactionModifier,
 )
 

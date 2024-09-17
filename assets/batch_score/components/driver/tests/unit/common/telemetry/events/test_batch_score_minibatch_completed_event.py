@@ -3,7 +3,7 @@
 
 """This file contains unit tests for batch score minibatch completed event."""
 
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
 

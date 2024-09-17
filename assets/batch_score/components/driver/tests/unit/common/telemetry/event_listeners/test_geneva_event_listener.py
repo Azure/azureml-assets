@@ -7,10 +7,10 @@ from unittest.mock import call, MagicMock, patch
 
 from tests.fixtures.geneva_event_listener import mock_import
 with patch('importlib.import_module', side_effect=mock_import):
-    from src.batch_score_oss.root.common.telemetry.event_listeners import geneva_event_listener
+    from src.batch_score_oss.common.telemetry.event_listeners import geneva_event_listener
 
-from src.batch_score_oss.root.common.telemetry.events import event_utils
-from src.batch_score_oss.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score_oss.common.telemetry.events import event_utils
+from src.batch_score_oss.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
 
 
 def test_handle_batch_score_event(mock_run_context):

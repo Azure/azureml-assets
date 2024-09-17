@@ -3,8 +3,8 @@
 
 """This file contains unit tests for batch score worker decreased event."""
 
-from src.batch_score_oss.root.common.telemetry.events import event_utils
-from src.batch_score_oss.root.common.telemetry.events.batch_score_worker_decreased_event import (
+from src.batch_score_oss.common.telemetry.events import event_utils
+from src.batch_score_oss.common.telemetry.events.batch_score_worker_decreased_event import (
     BatchScoreWorkerDecreasedEvent
 )
 

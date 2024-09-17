@@ -7,14 +7,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.batch_score_oss.root.common.auth.auth_provider import WorkspaceConnectionAuthProvider
-from src.batch_score_oss.root.common.configuration.configuration import EndpointType
-from src.batch_score_oss.root.common.header_providers.auth_header_provider import AuthHeaderProvider
-from src.batch_score_oss.root.common.header_providers.content_type_header_provider import ContentTypeHeaderProvider
-from src.batch_score_oss.root.common.header_providers.header_provider_factory import HeaderProviderFactory
-from src.batch_score_oss.root.common.header_providers.multi_header_provider import MultiHeaderProvider
-from src.batch_score_oss.root.common.header_providers.user_agent_header_provider import UserAgentHeaderProvider
-from src.batch_score_oss.root.common.header_providers.x_ms_client_request_id_header_provider import (
+from src.batch_score_oss.common.auth.auth_provider import WorkspaceConnectionAuthProvider
+from src.batch_score_oss.common.configuration.configuration import EndpointType
+from src.batch_score_oss.common.header_providers.auth_header_provider import AuthHeaderProvider
+from src.batch_score_oss.common.header_providers.content_type_header_provider import ContentTypeHeaderProvider
+from src.batch_score_oss.common.header_providers.header_provider_factory import HeaderProviderFactory
+from src.batch_score_oss.common.header_providers.multi_header_provider import MultiHeaderProvider
+from src.batch_score_oss.common.header_providers.user_agent_header_provider import UserAgentHeaderProvider
+from src.batch_score_oss.common.header_providers.x_ms_client_request_id_header_provider import (
     XMsClientRequestIdHeaderProvider,
 )
 

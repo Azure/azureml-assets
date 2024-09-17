@@ -5,7 +5,7 @@
 
 from unittest.mock import MagicMock
 
-from src.batch_score_oss.root.common.header_providers.token_auth_header_provider import (
+from src.batch_score_oss.common.header_providers.token_auth_header_provider import (
     TokenAuthHeaderProvider,
 )
 

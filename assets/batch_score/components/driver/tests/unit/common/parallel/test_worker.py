@@ -12,14 +12,14 @@ from mock import MagicMock, patch
 from multidict import CIMultiDict, CIMultiDictProxy
 from unittest.mock import ANY, PropertyMock
 
-from src.batch_score_oss.root.common.parallel.request_metrics import RequestMetrics
-from src.batch_score_oss.root.common.parallel.worker import QueueItem, Worker
-from src.batch_score_oss.root.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.root.common.scoring.scoring_result import (
+from src.batch_score_oss.common.parallel.request_metrics import RequestMetrics
+from src.batch_score_oss.common.parallel.worker import QueueItem, Worker
+from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
+from src.batch_score_oss.common.scoring.scoring_result import (
     RetriableException,
     ScoringResultStatus,
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 
@@ -55,10 +55,10 @@ async def test_successful_scoring_appends_result_no_segmentation(
         return scoring_result
 
     monkeypatch.setattr(
-        "src.batch_score_oss.root.common.scoring.generic_scoring_client.GenericScoringClient.score",
+        "src.batch_score_oss.common.scoring.generic_scoring_client.GenericScoringClient.score",
         mock_score)
-    with patch("src.batch_score_oss.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
-        with patch("src.batch_score_oss.root.common.scoring.segmented_score_context.SegmentedScoreContext"
+    with patch("src.batch_score_oss.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+        with patch("src.batch_score_oss.common.scoring.segmented_score_context.SegmentedScoreContext"
                    ".processed_segments_count", new_callable=PropertyMock) as mock_processed_segments_count:
             mock_processed_segments_count.return_value = 0
             metrics = await _run_worker(make_worker, scoring_request=scoring_request)
@@ -110,13 +110,13 @@ async def test_successful_scoring_appends_result_with_segmentation(
     async def mock_score(*args, **kwargs):
         return scoring_result
 
-    monkeypatch.setattr("src.batch_score_oss.root.common.scoring.segmented_score_context"
+    monkeypatch.setattr("src.batch_score_oss.common.scoring.segmented_score_context"
                         ".SegmentedScoreContext.score_next_segment", mock_score)
-    with patch("src.batch_score_oss.root.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
-        with patch("src.batch_score_oss.root.common.scoring.segmented_score_context"
+    with patch("src.batch_score_oss.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+        with patch("src.batch_score_oss.common.scoring.segmented_score_context"
                    ".SegmentedScoreContext.processed_segments_count",
                    new_callable=PropertyMock) as mock_processed_segments_count:
-            with patch('src.batch_score_oss.root.common.scoring.segmented_score_context.SegmentedScoreContext.has_more',
+            with patch('src.batch_score_oss.common.scoring.segmented_score_context.SegmentedScoreContext.has_more',
                        side_effect=[True, True, True, False]):
                 mock_processed_segments_count.return_value = TEST_SEGMENT_COUNT
                 metrics = await _run_worker(make_worker, segment_large_requests='enabled',
@@ -219,7 +219,7 @@ async def test_request_indefinite_max_retry_time_interval(
     mock_score.counter = 0
 
     monkeypatch.setattr(
-        "src.batch_score_oss.root.common.scoring.generic_scoring_client.GenericScoringClient.score",
+        "src.batch_score_oss.common.scoring.generic_scoring_client.GenericScoringClient.score",
         mock_score)
     worker = make_worker(
         scoring_request_queue=queue,

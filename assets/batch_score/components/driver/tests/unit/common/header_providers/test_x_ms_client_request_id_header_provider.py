@@ -3,7 +3,7 @@
 
 """This file contains unit tests for 'x-ms-client-request-id' header provider."""
 
-from src.batch_score_oss.root.common.header_providers.x_ms_client_request_id_header_provider import (
+from src.batch_score_oss.common.header_providers.x_ms_client_request_id_header_provider import (
     XMsClientRequestIdHeaderProvider,
 )
 

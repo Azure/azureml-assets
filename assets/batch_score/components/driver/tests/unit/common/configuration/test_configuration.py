@@ -5,8 +5,8 @@
 
 import pytest
 
-from src.batch_score_oss.root.common.common_enums import ApiType
-from src.batch_score_oss.root.common.configuration.configuration_parser import (
+from src.batch_score_oss.common.common_enums import ApiType
+from src.batch_score_oss.common.configuration.configuration_parser import (
     ConfigurationParser,
 )
 

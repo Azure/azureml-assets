@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from src.batch_score_oss.root.common import constants
-from src.batch_score_oss.root.common.header_providers.user_agent_header_provider import (
+from src.batch_score_oss.common import constants
+from src.batch_score_oss.common.header_providers.user_agent_header_provider import (
     UserAgentHeaderProvider,
 )
 

@@ -3,8 +3,8 @@
 
 """This file contains unit tests for input type modifier."""
 
-from src.batch_score_oss.root.common.request_modification.modifiers.input_type_modifier import InputTypeModifier
-from src.batch_score_oss.root.common.common_enums import InputType
+from src.batch_score_oss.common.request_modification.modifiers.input_type_modifier import InputTypeModifier
+from src.batch_score_oss.common.common_enums import InputType
 
 
 def test_get_input_type():

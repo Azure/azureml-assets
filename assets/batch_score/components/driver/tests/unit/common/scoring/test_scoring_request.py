@@ -3,10 +3,10 @@
 
 """This file contains unit tests for scoring request."""
 
-from src.batch_score_oss.root.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.root.common.request_modification.modifiers.input_type_modifier import InputTypeModifier
-from src.batch_score_oss.root.common.request_modification.input_transformer import InputTransformer
-from src.batch_score_oss.root.common.common_enums import InputType
+from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
+from src.batch_score_oss.common.request_modification.modifiers.input_type_modifier import InputTypeModifier
+from src.batch_score_oss.common.request_modification.input_transformer import InputTransformer
+from src.batch_score_oss.common.common_enums import InputType
 
 
 def test_extract_input_type():

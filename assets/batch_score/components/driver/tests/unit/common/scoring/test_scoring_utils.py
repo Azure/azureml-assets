@@ -7,8 +7,8 @@ from enum import Enum
 
 import pytest
 
-import src.batch_score_oss.root.common.scoring.scoring_utils as scoring_utils
-from src.batch_score_oss.root.common.scoring.scoring_utils import RetriableType
+import src.batch_score_oss.common.scoring.scoring_utils as scoring_utils
+from src.batch_score_oss.common.scoring.scoring_utils import RetriableType
 
 CLASSIFICATION_TESTS = [
     [200, None, "", "", RetriableType.NOT_RETRIABLE],

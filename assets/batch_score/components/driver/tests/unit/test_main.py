@@ -11,16 +11,16 @@ from mock import MagicMock, patch
 
 from tests.fixtures.geneva_event_listener import mock_import
 with patch('importlib.import_module', side_effect=mock_import):
-    import src.batch_score_oss.root.main as main
+    import src.batch_score_oss.main as main
 
-from src.batch_score_oss.root.common.common_enums import EndpointType
-from src.batch_score_oss.root.common.configuration.configuration import Configuration
-from src.batch_score_oss.root.common.post_processing.output_handler import (
+from src.batch_score_oss.common.common_enums import EndpointType
+from src.batch_score_oss.common.configuration.configuration import Configuration
+from src.batch_score_oss.common.post_processing.output_handler import (
     SeparateFileOutputHandler,
     SingleFileOutputHandler
 )
-from src.batch_score_oss.root.common.telemetry.events import event_utils
-from src.batch_score_oss.root.common.telemetry.trace_configs import (
+from src.batch_score_oss.common.telemetry.events import event_utils
+from src.batch_score_oss.common.telemetry.trace_configs import (
     ConnectionCreateEndTrace,
     ConnectionCreateStartTrace,
     ConnectionReuseconnTrace,

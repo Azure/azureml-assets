@@ -7,10 +7,10 @@ import os
 import pandas as pd
 import pytest
 
-from src.batch_score_oss.root.common.configuration.client_settings import ClientSettingsKey, NullClientSettingsProvider
-from src.batch_score_oss.root.common.parallel.request_metrics import RequestMetrics
-from src.batch_score_oss.root.common.parallel.adjustment import AIMD
-from src.batch_score_oss.root.common.parallel.congestion import (
+from src.batch_score_oss.common.configuration.client_settings import ClientSettingsKey, NullClientSettingsProvider
+from src.batch_score_oss.common.parallel.request_metrics import RequestMetrics
+from src.batch_score_oss.common.parallel.adjustment import AIMD
+from src.batch_score_oss.common.parallel.congestion import (
     CongestionDetector,
     CongestionState,
 )

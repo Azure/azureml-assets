@@ -7,12 +7,12 @@ import pytest
 
 from unittest.mock import patch, MagicMock
 
-from src.batch_score_oss.root.common.configuration.configuration import Configuration
-from src.batch_score_oss.root.common.post_processing.callback_factory import CallbackFactory
-from src.batch_score_oss.root.common.post_processing.mini_batch_context import MiniBatchContext
-from src.batch_score_oss.root.common.scoring.scoring_result import ScoringResult
-from src.batch_score_oss.root.common.telemetry.events import event_utils
-from src.batch_score_oss.root.common.post_processing.output_handler import (
+from src.batch_score_oss.common.configuration.configuration import Configuration
+from src.batch_score_oss.common.post_processing.callback_factory import CallbackFactory
+from src.batch_score_oss.common.post_processing.mini_batch_context import MiniBatchContext
+from src.batch_score_oss.common.scoring.scoring_result import ScoringResult
+from src.batch_score_oss.common.telemetry.events import event_utils
+from src.batch_score_oss.common.post_processing.output_handler import (
     SingleFileOutputHandler,
     SeparateFileOutputHandler
 )

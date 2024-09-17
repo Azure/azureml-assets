@@ -8,11 +8,11 @@ import json
 
 import pytest
 
-from src.batch_score_oss.root.common import constants
-from src.batch_score_oss.root.common.configuration.configuration import Configuration
-from src.batch_score_oss.root.common.parallel.conductor import Conductor
-from src.batch_score_oss.root.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.root.common.scoring.scoring_result import (
+from src.batch_score_oss.common import constants
+from src.batch_score_oss.common.configuration.configuration import Configuration
+from src.batch_score_oss.common.parallel.conductor import Conductor
+from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
+from src.batch_score_oss.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )
@@ -83,5 +83,5 @@ def mock_run(monkeypatch):
                               response_headers=None,
                               num_retries=0) for scoring_request in requests]
 
-    monkeypatch.setattr("src.batch_score_oss.root.common.parallel.conductor.Conductor.run", _run)
+    monkeypatch.setattr("src.batch_score_oss.common.parallel.conductor.Conductor.run", _run)
     return passed_requests

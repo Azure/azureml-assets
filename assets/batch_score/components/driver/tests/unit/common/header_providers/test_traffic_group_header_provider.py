@@ -3,7 +3,7 @@
 
 """This file contains unit tests for traffic group header provider."""
 
-from src.batch_score_oss.root.common.header_providers.traffic_group_header_provider import (
+from src.batch_score_oss.common.header_providers.traffic_group_header_provider import (
     TrafficGroupHeaderProvider,
 )
 

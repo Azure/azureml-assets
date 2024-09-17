@@ -8,8 +8,8 @@
 import pytest
 import requests
 
-from src.batch_score_oss.root.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
-from src.batch_score_oss.root.common.telemetry.logging_utils import setup_logger
+from src.batch_score_oss.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
+from src.batch_score_oss.common.telemetry.logging_utils import setup_logger
 from tests.fixtures.adjustment import *
 from tests.fixtures.configuration import *
 from tests.fixtures.conductor import *

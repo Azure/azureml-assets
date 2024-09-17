@@ -3,7 +3,7 @@
 
 """This file contains the unit tests for HTTP scoring response."""
 
-from src.batch_score_oss.root.common.scoring.http_scoring_response import HttpScoringResponse
+from src.batch_score_oss.common.scoring.http_scoring_response import HttpScoringResponse
 
 
 def test_get_model_response_code():

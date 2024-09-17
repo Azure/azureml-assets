@@ -5,10 +5,10 @@
 
 import pytest
 
-from src.batch_score_oss.root.common import constants
-from src.batch_score_oss.root.common.common_enums import ApiType
-from src.batch_score_oss.root.common.auth.auth_provider import EndpointType
-from src.batch_score_oss.root.common.configuration.configuration_parser import (
+from src.batch_score_oss.common import constants
+from src.batch_score_oss.common.common_enums import ApiType
+from src.batch_score_oss.common.auth.auth_provider import EndpointType
+from src.batch_score_oss.common.configuration.configuration_parser import (
     ConfigurationParser,
 )
 

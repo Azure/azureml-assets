@@ -3,15 +3,15 @@
 
 """This file contains unit tests for geneva event client."""
 
-from src.batch_score_oss.root.common.telemetry.geneva_event_client import GenevaEventClient
-from src.batch_score_oss.root.common.telemetry.required_fields import RequiredFields
-from src.batch_score_oss.root.common.telemetry.standard_fields import StandardFields
-from src.batch_score_oss.root.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
-from src.batch_score_oss.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score_oss.common.telemetry.geneva_event_client import GenevaEventClient
+from src.batch_score_oss.common.telemetry.required_fields import RequiredFields
+from src.batch_score_oss.common.telemetry.standard_fields import StandardFields
+from src.batch_score_oss.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
+from src.batch_score_oss.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_started_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_started_event import (
     BatchScoreMinibatchStartedEvent
 )
 

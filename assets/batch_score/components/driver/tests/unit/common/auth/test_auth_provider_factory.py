@@ -5,13 +5,13 @@
 
 import pytest
 import azureml.core
-from src.batch_score_oss.root.common.auth.auth_provider import (
+from src.batch_score_oss.common.auth.auth_provider import (
     ApiKeyAuthProvider,
     IdentityAuthProvider,
     WorkspaceConnectionAuthProvider
 )
-from src.batch_score_oss.root.common.auth.auth_provider_factory import AuthProviderFactory
-from src.batch_score_oss.root.common.configuration.configuration_parser import ConfigurationParser
+from src.batch_score_oss.common.auth.auth_provider_factory import AuthProviderFactory
+from src.batch_score_oss.common.configuration.configuration_parser import ConfigurationParser
 
 
 @pytest.mark.parametrize('authentication_type, expected_auth_type', [

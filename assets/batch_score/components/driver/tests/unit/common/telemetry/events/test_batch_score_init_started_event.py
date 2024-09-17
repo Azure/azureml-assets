@@ -3,7 +3,7 @@
 
 """This file contains unit tests for batch score init started event."""
 
-from src.batch_score_oss.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score_oss.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
 
 from tests.fixtures.telemetry_events import (
     assert_common_fields,

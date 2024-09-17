@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from src.batch_score_oss.root.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.root.common.scoring.segmented_score_context import SegmentedScoreContext
+from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
+from src.batch_score_oss.common.scoring.segmented_score_context import SegmentedScoreContext
 
 
 @pytest.mark.parametrize("stop_reason, total_generated", [

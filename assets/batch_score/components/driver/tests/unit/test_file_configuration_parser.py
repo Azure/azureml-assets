@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from src.batch_score_oss.root.common.configuration.file_configuration_parser import (
+from src.batch_score_oss.common.configuration.file_configuration_parser import (
     FileConfigurationParser,
 )
-from src.batch_score_oss.root.common.configuration.file_configuration_validator import (
+from src.batch_score_oss.common.configuration.file_configuration_validator import (
     FileConfigurationValidator,
 )
 

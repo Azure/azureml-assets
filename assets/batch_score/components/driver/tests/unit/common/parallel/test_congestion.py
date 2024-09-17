@@ -7,13 +7,13 @@ import os
 import pandas as pd
 import pytest
 
-from src.batch_score_oss.root.common.configuration.client_settings import ClientSettingsKey, NullClientSettingsProvider
-from src.batch_score_oss.root.common.parallel.congestion import (
+from src.batch_score_oss.common.configuration.client_settings import ClientSettingsKey, NullClientSettingsProvider
+from src.batch_score_oss.common.parallel.congestion import (
     CongestionState,
     RequestMetrics,
     WaitTimeCongestionDetector,
 )
-from src.batch_score_oss.root.common.scoring.scoring_result import ScoringResultStatus
+from src.batch_score_oss.common.scoring.scoring_result import ScoringResultStatus
 
 fixture_names = [
     'mock_get_client_setting',

@@ -4,11 +4,11 @@
 """This file contains fixtures to mock scoring client."""
 
 import pytest
-from src.batch_score_oss.root.common.header_providers.user_agent_header_provider import UserAgentHeaderProvider
-from src.batch_score_oss.root.common.scoring.http_response_handler import HttpResponseHandler
-from src.batch_score_oss.root.common.scoring.generic_scoring_client import GenericScoringClient
-from src.batch_score_oss.root.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.root.common.scoring.scoring_result import ScoringResult
+from src.batch_score_oss.common.header_providers.user_agent_header_provider import UserAgentHeaderProvider
+from src.batch_score_oss.common.scoring.http_response_handler import HttpResponseHandler
+from src.batch_score_oss.common.scoring.generic_scoring_client import GenericScoringClient
+from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
+from src.batch_score_oss.common.scoring.scoring_result import ScoringResult
 
 
 @pytest.fixture()
@@ -43,5 +43,5 @@ def mock_score(monkeypatch, make_scoring_result):
 
         return given_scoring_result
 
-    monkeypatch.setattr("src.batch_score_oss.root.common.scoring.generic_scoring_client.GenericScoringClient.score", score)
+    monkeypatch.setattr("src.batch_score_oss.common.scoring.generic_scoring_client.GenericScoringClient.score", score)
     return state

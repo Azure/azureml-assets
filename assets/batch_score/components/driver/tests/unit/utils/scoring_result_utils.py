@@ -5,9 +5,9 @@
 
 import json
 
-from src.batch_score_oss.root.common.scoring.http_scoring_response import HttpScoringResponse
-from src.batch_score_oss.root.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.root.common.scoring.scoring_result import (
+from src.batch_score_oss.common.scoring.http_scoring_response import HttpScoringResponse
+from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
+from src.batch_score_oss.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus
 )

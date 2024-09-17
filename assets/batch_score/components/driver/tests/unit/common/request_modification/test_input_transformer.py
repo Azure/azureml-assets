@@ -3,7 +3,7 @@
 
 """This file contains unit tests for input transformer."""
 
-from src.batch_score_oss.root.common.request_modification.input_transformer import (
+from src.batch_score_oss.common.request_modification.input_transformer import (
     InputTransformer,
 )
 from tests.fixtures.input_transformer import FakeRequestModifier

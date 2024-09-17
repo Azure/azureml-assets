@@ -4,7 +4,7 @@
 """This file contains unit tests for auth provider."""
 
 import pytest
-from src.batch_score_oss.root.common.auth.auth_provider import EndpointType, WorkspaceConnectionAuthProvider
+from src.batch_score_oss.common.auth.auth_provider import EndpointType, WorkspaceConnectionAuthProvider
 
 
 @pytest.mark.skip('Need to fix the mock.')

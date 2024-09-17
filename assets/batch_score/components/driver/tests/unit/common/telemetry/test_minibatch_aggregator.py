@@ -5,21 +5,21 @@
 
 import datetime
 
-from src.batch_score_oss.root.common.common_enums import AuthenticationType, ApiType, EndpointType, InputType
-from src.batch_score_oss.root.common.telemetry.minibatch_aggregator import MinibatchAggregator
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score_oss.common.common_enums import AuthenticationType, ApiType, EndpointType, InputType
+from src.batch_score_oss.common.telemetry.minibatch_aggregator import MinibatchAggregator
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
     BatchScoreMinibatchEndpointHealthEvent
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_started_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_started_event import (
     BatchScoreMinibatchStartedEvent
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_request_completed_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_request_completed_event import (
     BatchScoreRequestCompletedEvent
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 

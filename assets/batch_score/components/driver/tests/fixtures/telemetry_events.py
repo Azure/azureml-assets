@@ -6,19 +6,19 @@
 import pytest
 from datetime import datetime, timezone
 
-from src.batch_score_oss.root.common.common_enums import ApiType, AuthenticationType, EndpointType
-from src.batch_score_oss.root.common.configuration.configuration import Configuration
-from src.batch_score_oss.root.common.telemetry.events.event_utils import setup_context_vars
-from src.batch_score_oss.root.common.telemetry.events.batch_score_event import BatchScoreEvent
-from src.batch_score_oss.root.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
-from src.batch_score_oss.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score_oss.common.common_enums import ApiType, AuthenticationType, EndpointType
+from src.batch_score_oss.common.configuration.configuration import Configuration
+from src.batch_score_oss.common.telemetry.events.event_utils import setup_context_vars
+from src.batch_score_oss.common.telemetry.events.batch_score_event import BatchScoreEvent
+from src.batch_score_oss.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
+from src.batch_score_oss.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
     BatchScoreMinibatchEndpointHealthEvent
 )
-from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_started_event import (
+from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_started_event import (
     BatchScoreMinibatchStartedEvent
 )
 

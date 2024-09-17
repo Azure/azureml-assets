@@ -8,11 +8,11 @@ from collections import deque
 import aiohttp
 import pytest
 
-from src.batch_score_oss.root.common import constants
-from src.batch_score_oss.root.common.configuration.client_settings import NullClientSettingsProvider
-from src.batch_score_oss.root.common.configuration.configuration import Configuration
-from src.batch_score_oss.root.common.parallel.request_metrics import RequestMetrics
-from src.batch_score_oss.root.common.parallel.worker import Worker
+from src.batch_score_oss.common import constants
+from src.batch_score_oss.common.configuration.client_settings import NullClientSettingsProvider
+from src.batch_score_oss.common.configuration.configuration import Configuration
+from src.batch_score_oss.common.parallel.request_metrics import RequestMetrics
+from src.batch_score_oss.common.parallel.worker import Worker
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def mock_get_client_setting(monkeypatch):
         return state.get(key)
 
     monkeypatch.setattr(
-        "src.batch_score_oss.root.common.configuration.client_settings.NullClientSettingsProvider.get_client_setting",
+        "src.batch_score_oss.common.configuration.client_settings.NullClientSettingsProvider.get_client_setting",
         _get_client_setting)
 
     return state

@@ -5,7 +5,7 @@
 
 from unittest.mock import MagicMock
 
-from src.batch_score_oss.root.common.header_providers.auth_header_provider import AuthHeaderProvider
+from src.batch_score_oss.common.header_providers.auth_header_provider import AuthHeaderProvider
 
 
 def test_get_headers():

@@ -8,7 +8,7 @@ import time
 import pytest
 from multidict import CIMultiDictProxy
 
-from src.batch_score_oss.root.common.scoring.scoring_result import (
+from src.batch_score_oss.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )

@@ -18,4 +18,4 @@ StrEnum>=0.4.15
 pyDispatcher>=2.0.7
 
 # batch_score requirements
--r ../src/root/requirements.txt
+-r ../src/batch_score_oss/requirements.txt

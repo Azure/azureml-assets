@@ -6,13 +6,13 @@
 from datetime import datetime
 from unittest.mock import call, MagicMock
 
-from src.batch_score_oss.root.common.telemetry.event_listeners import minibatch_aggregator_event_listener
-from src.batch_score_oss.root.common.telemetry.event_listeners.minibatch_aggregator_event_listener import (
+from src.batch_score_oss.common.telemetry.event_listeners import minibatch_aggregator_event_listener
+from src.batch_score_oss.common.telemetry.event_listeners.minibatch_aggregator_event_listener import (
     setup_minibatch_aggregator_event_handlers,
     teardown_minibatch_aggregator_event_handlers,
 )
-from src.batch_score_oss.root.common.telemetry.events import event_utils
-from src.batch_score_oss.root.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score_oss.common.telemetry.events import event_utils
+from src.batch_score_oss.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 

@@ -3,9 +3,9 @@
 
 """This file contains unit tests for batch score request completed event."""
 
-from src.batch_score_oss.root.common.configuration.configuration import Configuration
-from src.batch_score_oss.root.common.telemetry.events import event_utils
-from src.batch_score_oss.root.common.telemetry.events.batch_score_request_completed_event import (
+from src.batch_score_oss.common.configuration.configuration import Configuration
+from src.batch_score_oss.common.telemetry.events import event_utils
+from src.batch_score_oss.common.telemetry.events.batch_score_request_completed_event import (
     BatchScoreRequestCompletedEvent
 )
 
