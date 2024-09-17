@@ -11,13 +11,46 @@ def test_get_input_type():
     """Test input type detection."""
     assert InputTypeModifier.get_input_type(request_obj={"messages": []}) == InputType.Unknown
     assert InputTypeModifier.get_input_type(request_obj={"no_messages": []}) == InputType.Unknown
-    assert InputTypeModifier.get_input_type(request_obj={"messages": [{"content": "just text"}, {"content": [{"type": "text"}]}]}) == InputType.TextOnly
-    assert InputTypeModifier.get_input_type(request_obj={"messages": [{"content": [{"type": "image"}, "just text"]}, {"content": [{"type": "text"}]}]}) == InputType.ImageAndText
-    assert InputTypeModifier.get_input_type(request_obj={"messages": [{"content": "just text"}, {"content": [{"type": "text"}]}, {"content": [{"type": "image"}]}]}) == InputType.ImageAndText
-    assert InputTypeModifier.get_input_type(request_obj={"messages": [{"content": [{"type": "image_url"}, "just text"]}, {"content": [{"type": "text"}]}]}) == InputType.ImageAndText
-    assert InputTypeModifier.get_input_type(request_obj={"messages": [{"content": "just text"}, {"content": [{"type": "text"}]}, {"content": [{"type": "image_url"}]}]}) == InputType.ImageAndText
-    assert InputTypeModifier.get_input_type(request_obj={"messages": [{"content": [{"type": "image"}]}, {"content": [{"type": "image_url"}]}]}) == InputType.Image
-    assert InputTypeModifier.get_input_type(request_obj={"messages": [{"content": [{"type": "image"}, {"type": "image_url"}]}]}) == InputType.Image
+    assert InputTypeModifier.get_input_type(request_obj={
+        "messages": [{"content": "just text"}, {"content": [{"type": "text"}]}]
+    }) == InputType.TextOnly
+    assert InputTypeModifier.get_input_type(request_obj={
+        "messages": [
+            {"content": [{"type": "image"}, "just text"]},
+            {"content": [{"type": "text"}]}
+        ]
+    }) == InputType.ImageAndText
+    assert InputTypeModifier.get_input_type(request_obj={
+        "messages": [
+            {"content": "just text"}, 
+            {"content": [{"type": "text"}]}, 
+            {"content": [{"type": "image"}]}
+        ]
+    }) == InputType.ImageAndText
+    assert InputTypeModifier.get_input_type(request_obj={
+        "messages": [
+            {"content": [{"type": "image_url"}, "just text"]},
+            {"content": [{"type": "text"}]}
+        ]
+    }) == InputType.ImageAndText
+    assert InputTypeModifier.get_input_type(request_obj={
+        "messages": [
+            {"content": "just text"}, 
+            {"content": [{"type": "text"}]},
+            {"content": [{"type": "image_url"}]}
+        ]
+    }) == InputType.ImageAndText
+    assert InputTypeModifier.get_input_type(request_obj={
+        "messages": [
+            {"content": [{"type": "image"}]},
+            {"content": [{"type": "image_url"}]}
+        ]
+    }) == InputType.Image
+    assert InputTypeModifier.get_input_type(request_obj={
+        "messages": [
+            {"content": [{"type": "image"}, {"type": "image_url"}]}
+        ]
+    }) == InputType.Image
 
 
 def test_modify():

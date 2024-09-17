@@ -32,7 +32,8 @@ TEST_WORKSPACE_NAME = "test_ws"
      (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}"
       f"/Run:{TEST_RUN_ID}",
       None),
-     (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}/Run:{TEST_RUN_ID}/{TEST_UA_SEGMENT}", TEST_UA_SEGMENT),
+     (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}/Run:{TEST_RUN_ID}/{TEST_UA_SEGMENT}",
+      TEST_UA_SEGMENT),
      (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}/Run:{TEST_RUN_ID}", None),
 ])
 def test_get_headers(expected_user_agent_string, user_agent_segment):
