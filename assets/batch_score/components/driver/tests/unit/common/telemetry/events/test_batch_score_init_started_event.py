@@ -5,7 +5,7 @@
 
 from src.batch_score_oss.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
 
-from tests.batch_score.fixtures.telemetry_events import (
+from tests.fixtures.telemetry_events import (
     assert_common_fields,
     assert_run_context_fields,
     TEST_COMPONENT_NAME,

@@ -9,7 +9,7 @@ from src.batch_score_oss.root.common.telemetry.events.batch_score_request_comple
     BatchScoreRequestCompletedEvent
 )
 
-from tests.batch_score.fixtures.telemetry_events import (
+from tests.fixtures.telemetry_events import (
     assert_common_fields,
     assert_run_context_fields,
     update_common_fields,

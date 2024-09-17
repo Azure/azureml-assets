@@ -7,7 +7,7 @@ import pytest
 
 from src.batch_score_oss.root.common.configuration.metadata import Metadata
 
-from tests.batch_score.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
+from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
 
 
 def test_get_metadata_success_component_name_without_file_extension():

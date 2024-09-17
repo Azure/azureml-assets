@@ -15,7 +15,7 @@ from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_star
     BatchScoreMinibatchStartedEvent
 )
 
-from tests.batch_score.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION, TEST_SCORING_URI
+from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION, TEST_SCORING_URI
 
 
 def test_generate_required_fields(mock_import_module, make_batch_score_init_completed_event):

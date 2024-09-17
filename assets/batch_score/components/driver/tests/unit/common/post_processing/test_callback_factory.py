@@ -16,9 +16,9 @@ from src.batch_score_oss.root.common.post_processing.output_handler import (
     SingleFileOutputHandler,
     SeparateFileOutputHandler
 )
-from tests.batch_score.fixtures.input_transformer import FakeInputOutputModifier
-from tests.batch_score.fixtures.scoring_result import get_test_request_obj
-from tests.batch_score.fixtures.test_mini_batch_context import TestMiniBatchContext
+from tests.fixtures.input_transformer import FakeInputOutputModifier
+from tests.fixtures.scoring_result import get_test_request_obj
+from tests.fixtures.test_mini_batch_context import TestMiniBatchContext
 
 
 def test_generate_callback_success(mock_get_logger,
@@ -116,11 +116,11 @@ def test_output_handler(
     gathered_result: list[ScoringResult] = [scoring_result.copy(), scoring_result.copy()]
 
     with patch(
-        "tests.batch_score.unit.common.post_processing.test_callback_factory.SeparateFileOutputHandler",
+        "tests.unit.common.post_processing.test_callback_factory.SeparateFileOutputHandler",
         return_value=MagicMock()
       ) as mock_separate_file_output_handler, \
         patch(
-            "tests.batch_score.unit.common.post_processing.test_callback_factory.SingleFileOutputHandler",
+            "tests.unit.common.post_processing.test_callback_factory.SingleFileOutputHandler",
             return_value=MagicMock()
           ) as mock_single_file_output_handler:
 

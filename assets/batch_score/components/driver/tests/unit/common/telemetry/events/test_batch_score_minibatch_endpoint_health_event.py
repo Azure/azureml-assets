@@ -7,8 +7,8 @@ from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_endp
     BatchScoreMinibatchEndpointHealthEvent
 )
 
-from tests.batch_score.fixtures.configuration import TEST_SCORING_URI
-from tests.batch_score.fixtures.telemetry_events import (
+from tests.fixtures.configuration import TEST_SCORING_URI
+from tests.fixtures.telemetry_events import (
     assert_common_fields,
     assert_http_request_fields,
     assert_run_context_fields,

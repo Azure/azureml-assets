@@ -5,7 +5,7 @@
 
 from unittest.mock import call, MagicMock, patch
 
-from tests.batch_score.fixtures.geneva_event_listener import mock_import
+from tests.fixtures.geneva_event_listener import mock_import
 with patch('importlib.import_module', side_effect=mock_import):
     from src.batch_score_oss.root.common.telemetry.event_listeners import geneva_event_listener
 

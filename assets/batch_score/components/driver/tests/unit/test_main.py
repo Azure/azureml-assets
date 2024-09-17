@@ -9,7 +9,7 @@ import pandas as pd
 from aiohttp import TraceConfig
 from mock import MagicMock, patch
 
-from tests.batch_score.fixtures.geneva_event_listener import mock_import
+from tests.fixtures.geneva_event_listener import mock_import
 with patch('importlib.import_module', side_effect=mock_import):
     import src.batch_score_oss.root.main as main
 
@@ -107,10 +107,10 @@ def test_output_handler_interface(
         use_separate_file_output_handler: bool):
     """Test output handler interface."""
     with patch(
-        "tests.batch_score.unit.test_main.SeparateFileOutputHandler"
+        "tests.unit.test_main.SeparateFileOutputHandler"
       ) as mock_separate_file_output_handler, \
         patch(
-        "tests.batch_score.unit.test_main.SingleFileOutputHandler"
+        "tests.unit.test_main.SingleFileOutputHandler"
       ) as mock_single_file_output_handler:
 
         input_data, mini_batch_context = _setup_main()

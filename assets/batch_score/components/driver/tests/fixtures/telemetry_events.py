@@ -22,7 +22,7 @@ from src.batch_score_oss.root.common.telemetry.events.batch_score_minibatch_star
     BatchScoreMinibatchStartedEvent
 )
 
-from tests.batch_score.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
+from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
 
 TEST_EXPERIMENT_ID = "22222222-2222-2222-2222-222222222222"
 TEST_REGION = "eastus"

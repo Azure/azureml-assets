@@ -13,7 +13,7 @@ from src.batch_score_oss.root.common.header_providers.user_agent_header_provider
     UserAgentHeaderProvider,
 )
 
-from tests.batch_score.fixtures.configuration import TEST_COMPONENT_VERSION
+from tests.fixtures.configuration import TEST_COMPONENT_VERSION
 
 TEST_QUOTA_AUDIENCE = "test_audience"
 TEST_RUN_ID = "test_run_id"

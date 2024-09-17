@@ -22,7 +22,7 @@ from src.batch_score_oss.root.common.scoring.scoring_result import (
 from src.batch_score_oss.root.common.telemetry.events.batch_score_request_completed_event import (
     BatchScoreRequestCompletedEvent
 )
-from tests.batch_score.unit.utils.scoring_result_utils import assert_scoring_result
+from tests.unit.utils.scoring_result_utils import assert_scoring_result
 
 
 test_end_time = 20.1

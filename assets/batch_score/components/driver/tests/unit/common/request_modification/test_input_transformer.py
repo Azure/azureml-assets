@@ -6,7 +6,7 @@
 from src.batch_score_oss.root.common.request_modification.input_transformer import (
     InputTransformer,
 )
-from tests.batch_score.fixtures.input_transformer import FakeRequestModifier
+from tests.fixtures.input_transformer import FakeRequestModifier
 
 
 def test_input_transformer(mock_get_logger, make_input_transformer):

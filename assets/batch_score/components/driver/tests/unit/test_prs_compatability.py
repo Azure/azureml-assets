@@ -8,7 +8,7 @@ import mock
 import os
 import sys
 
-from tests.batch_score.fixtures.geneva_event_listener import mock_import
+from tests.fixtures.geneva_event_listener import mock_import
 
 
 def test_prs_code_importing():

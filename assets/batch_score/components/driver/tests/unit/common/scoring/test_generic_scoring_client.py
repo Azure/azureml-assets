@@ -13,7 +13,7 @@ from src.batch_score_oss.root.common.request_modification.modifiers.input_type_m
 from src.batch_score_oss.root.common.request_modification.input_transformer import InputTransformer
 from src.batch_score_oss.root.common.common_enums import InputType
 
-from tests.batch_score.fixtures.client_response import FakeResponse
+from tests.fixtures.client_response import FakeResponse
 
 
 class NullHeaderProvider:
