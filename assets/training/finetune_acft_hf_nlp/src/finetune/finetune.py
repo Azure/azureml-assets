@@ -1273,6 +1273,16 @@ def finetune(args: Namespace):
             shutil.copy(str(conda_file_path), args.output_dir)
             logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
+        # copy inference config files
+        mlflow_ml_configs_dir = Path(args.model_selector_output, "ml_configs")
+        ml_config_dir = Path(args.output_dir, "ml_configs")
+        if mlflow_ml_configs_dir.is_dir():
+            shutil.copytree(
+                mlflow_ml_configs_dir,
+                ml_config_dir
+            )
+            logger.info("Copied ml_configs folder to output dir.")
+
 
 def can_apply_ort(args: Namespace, logger):
     """Can ORT be enabled."""
