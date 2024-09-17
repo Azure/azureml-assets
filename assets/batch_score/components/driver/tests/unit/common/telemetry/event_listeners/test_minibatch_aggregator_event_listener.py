@@ -6,13 +6,13 @@
 from datetime import datetime
 from unittest.mock import call, MagicMock
 
-from src.batch_score.common.telemetry.event_listeners import minibatch_aggregator_event_listener
-from src.batch_score.common.telemetry.event_listeners.minibatch_aggregator_event_listener import (
+from src.batch_score_oss.root.common.telemetry.event_listeners import minibatch_aggregator_event_listener
+from src.batch_score_oss.root.common.telemetry.event_listeners.minibatch_aggregator_event_listener import (
     setup_minibatch_aggregator_event_handlers,
     teardown_minibatch_aggregator_event_handlers,
 )
-from src.batch_score.common.telemetry.events import event_utils
-from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score_oss.root.common.telemetry.events import event_utils
+from src.batch_score_oss.root.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 
@@ -29,9 +29,11 @@ def test_handle_batch_score_event(mock_run_context):
         "minibatch_id": my_minibatch_id,
         "timestamp": datetime.now(),
         "output_row_count": 100,
+        "logging_metadata": None
     }
     kwargs_summarize_endpoints = {
-        "minibatch_id": my_minibatch_id
+        "minibatch_id": my_minibatch_id,
+        "logging_metadata": None
     }
 
     kwargs_with_end_time = kwargs.copy()

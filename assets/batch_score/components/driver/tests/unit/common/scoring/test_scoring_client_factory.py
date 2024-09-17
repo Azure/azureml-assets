@@ -5,16 +5,13 @@
 
 import pytest
 
-from src.batch_score.aoai.scoring.aoai_scoring_client import AoaiScoringClient
-from src.batch_score.mir.scoring.mir_scoring_client import MirScoringClient
-from src.batch_score.common.configuration.configuration_parser import ConfigurationParser
-from src.batch_score.common.scoring.scoring_client_factory import ScoringClientFactory
+from src.batch_score_oss.root.aoai.scoring.aoai_scoring_client import AoaiScoringClient
+from src.batch_score_oss.root.common.configuration.configuration_parser import ConfigurationParser
+from src.batch_score_oss.root.common.scoring.scoring_client_factory import ScoringClientFactory
 
 
 @pytest.mark.parametrize('scoring_url, expected_scoring_client_type', [
-    ('hello.openai.azure.com', AoaiScoringClient),
-    ('servelessendpoint.inference.ai.azure.com', AoaiScoringClient),
-    ('hello.centralus.inference.ml.azure.com', MirScoringClient)
+    ('serverless.models.ai.azure.com', AoaiScoringClient),
 ])
 def test_create_success(mocker, make_metadata, scoring_url, expected_scoring_client_type):
     """Test create success."""
@@ -27,8 +24,7 @@ def test_create_success(mocker, make_metadata, scoring_url, expected_scoring_cli
     scoring_client = ScoringClientFactory().setup_scoring_client(
         configuration=configuration,
         metadata=make_metadata,
-        token_provider=mocker.MagicMock(),
-        routing_client=mocker.MagicMock())
+        token_provider=mocker.MagicMock())
 
     # Assert
     assert isinstance(scoring_client, expected_scoring_client_type)

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from src.batch_score.common.configuration.file_configuration_validator import (
+from src.batch_score_oss.root.common.configuration.file_configuration_validator import (
     FileConfigurationValidator,
     InvalidConfigurationError,
     list_files_recursively,

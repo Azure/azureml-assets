@@ -8,25 +8,21 @@
 import pytest
 import requests
 
-from src.batch_score.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
-from src.batch_score.common.telemetry.logging_utils import setup_logger
-from tests.fixtures.adjustment import *
-from tests.fixtures.configuration import *
-from tests.fixtures.conductor import *
-from tests.fixtures.geneva_event_listener import *
-from tests.fixtures.input_transformer import *
-from tests.fixtures.logging_utils import *
-from tests.fixtures.parallel_driver import *
-from tests.fixtures.quota_client import *
-from tests.fixtures.routing_client import *
-from tests.fixtures.scoring_client import *
-from tests.fixtures.scoring_result import *
-from tests.fixtures.tally_failed_request_handler import *
-from tests.fixtures.telemetry_events import *
-from tests.fixtures.token_provider import *
-from tests.fixtures.vesta_encoded_image_scrubber import *
-from tests.fixtures.vesta_image_modifier import *
-from tests.fixtures.worker import *
+from src.batch_score_oss.root.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
+from src.batch_score_oss.root.common.telemetry.logging_utils import setup_logger
+from tests.batch_score.fixtures.adjustment import *
+from tests.batch_score.fixtures.configuration import *
+from tests.batch_score.fixtures.conductor import *
+from tests.batch_score.fixtures.geneva_event_listener import *
+from tests.batch_score.fixtures.input_transformer import *
+from tests.batch_score.fixtures.logging_utils import *
+from tests.batch_score.fixtures.parallel_driver import *
+from tests.batch_score.fixtures.scoring_client import *
+from tests.batch_score.fixtures.scoring_result import *
+from tests.batch_score.fixtures.tally_failed_request_handler import *
+from tests.batch_score.fixtures.telemetry_events import *
+from tests.batch_score.fixtures.token_provider import *
+from tests.batch_score.fixtures.worker import *
 
 
 # Marks all tests in this directory as unit tests

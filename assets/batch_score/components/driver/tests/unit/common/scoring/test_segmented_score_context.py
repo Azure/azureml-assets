@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from src.batch_score.common.scoring.scoring_request import ScoringRequest
-from src.batch_score.common.scoring.segmented_score_context import SegmentedScoreContext
+from src.batch_score_oss.root.common.scoring.scoring_request import ScoringRequest
+from src.batch_score_oss.root.common.scoring.segmented_score_context import SegmentedScoreContext
 
 
 @pytest.mark.parametrize("stop_reason, total_generated", [
@@ -105,10 +105,9 @@ def test_has_more_when_predicted_text_is_empty(
 
 @pytest.mark.asyncio
 async def test_score_next(
-        make_pool_scoring_client,
+        make_generic_scoring_client,
         mock_get_logger,
-        mock_score,
-        mock_get_quota_scope):
+        mock_score):
     """Test score next."""
     response_body = {"id": "123",
                      "object": "text_completion",
@@ -130,7 +129,7 @@ async def test_score_next(
     scoring_result.request_obj = request_obj
 
     assert segmented_context.processed_segments_count == 0
-    result1 = await segmented_context.score_next_segment(make_pool_scoring_client(), None)
+    result1 = await segmented_context.score_next_segment(make_generic_scoring_client(), None)
 
     assert segmented_context.processed_segments_count == 1
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 1
@@ -142,7 +141,7 @@ async def test_score_next(
 
     assert request2.cleaned_payload_obj['prompt'] == 'Generate something.One day'
 
-    result2 = await segmented_context.score_next_segment(make_pool_scoring_client(), None)
+    result2 = await segmented_context.score_next_segment(make_generic_scoring_client(), None)
 
     assert segmented_context.processed_segments_count == 2
     assert len(segmented_context._SegmentedScoreContext__segmented_results) == 2

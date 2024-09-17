@@ -6,7 +6,7 @@
 from typing import Any, Optional
 import pytest
 
-from src.batch_score.common.scoring.scoring_result import (
+from src.batch_score_oss.root.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )

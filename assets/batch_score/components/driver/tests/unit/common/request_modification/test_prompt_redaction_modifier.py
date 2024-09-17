@@ -5,20 +5,10 @@
 
 import pytest
 
-from src.batch_score.common.request_modification.modifiers.prompt_redaction_modifier import (
+from src.batch_score_oss.root.common.request_modification.modifiers.prompt_redaction_modifier import (
     PromptRedactionModifier,
 )
 
-transcript = [
-    {
-        "type": "text",
-        "data": "Example1:"
-    },
-    {
-        "type": "image",
-        "data": "ImageFile!./01-01-1970/guideline_images/resized/1.Png"
-    },
-]
 messages = [
     {
         "role": "system",
@@ -35,43 +25,27 @@ test_cases = [
         {"prompt": "REDACTED"},
     ],
     [
-        {"input": "Hello world"},
-        {"input": "REDACTED"},
-    ],
-    [
-        {"transcript": transcript},
-        {"transcript": "REDACTED"},
-    ],
-    [
         {"messages": messages},
         {"messages": "REDACTED"},
     ],
     [
         {
             "prompt": "Hello world",
-            "input": "Hello world",
-            "transcript": transcript,
             "messages": messages,
         },
         {
             "prompt": "REDACTED",
-            "input": "REDACTED",
-            "transcript": "REDACTED",
             "messages": "REDACTED",
         },
     ],
     [
         {
             "prompt": "Hello world",
-            "input": "Hello world",
-            "transcript": transcript,
             "messages": messages,
             "max_tokens": 50,
         },
         {
             "prompt": "REDACTED",
-            "input": "REDACTED",
-            "transcript": "REDACTED",
             "messages": "REDACTED",
             "max_tokens": 50,
         },

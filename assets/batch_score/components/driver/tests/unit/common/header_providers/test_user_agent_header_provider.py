@@ -8,13 +8,13 @@ from unittest.mock import patch
 
 import pytest
 
-from src.batch_score.common.header_providers.user_agent_header_provider import (
+from src.batch_score_oss.root.common import constants
+from src.batch_score_oss.root.common.header_providers.user_agent_header_provider import (
     UserAgentHeaderProvider,
 )
 
-from tests.fixtures.configuration import TEST_COMPONENT_VERSION
+from tests.batch_score.fixtures.configuration import TEST_COMPONENT_VERSION
 
-TEST_BATCH_POOL = "test_pool"
 TEST_QUOTA_AUDIENCE = "test_audience"
 TEST_RUN_ID = "test_run_id"
 TEST_UA_SEGMENT = "test_ua_segment"
@@ -25,25 +25,19 @@ TEST_WORKSPACE_NAME = "test_ws"
     "AZUREML_RUN_ID": TEST_RUN_ID,
     "AZUREML_ARM_WORKSPACE_NAME": TEST_WORKSPACE_NAME
 }, clear=True)
-@pytest.mark.parametrize('expected_user_agent_string, user_agent_segment, batch_pool, quota_audience', [
-     (f"BatchScore:{TEST_COMPONENT_VERSION}/{TEST_BATCH_POOL}:{TEST_QUOTA_AUDIENCE}:{TEST_UA_SEGMENT}"
-      f"/Run:{TEST_WORKSPACE_NAME}:{TEST_RUN_ID}",
-      TEST_UA_SEGMENT,
-      TEST_BATCH_POOL,
-      TEST_QUOTA_AUDIENCE),
-     (f"BatchScore:{TEST_COMPONENT_VERSION}/{TEST_BATCH_POOL}:{TEST_QUOTA_AUDIENCE}"
-      f"/Run:{TEST_WORKSPACE_NAME}:{TEST_RUN_ID}",
-      None,
-      TEST_BATCH_POOL,
-      TEST_QUOTA_AUDIENCE),
-     (f"BatchScore:{TEST_COMPONENT_VERSION}/Run:{TEST_RUN_ID}/{TEST_UA_SEGMENT}", TEST_UA_SEGMENT, None, None),
-     (f"BatchScore:{TEST_COMPONENT_VERSION}/Run:{TEST_RUN_ID}", None, None, None),
+@pytest.mark.parametrize('expected_user_agent_string, user_agent_segment', [
+     (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}"
+      f"/Run:{TEST_RUN_ID}/{TEST_UA_SEGMENT}",
+      TEST_UA_SEGMENT),
+     (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}"
+      f"/Run:{TEST_RUN_ID}",
+      None),
+     (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}/Run:{TEST_RUN_ID}/{TEST_UA_SEGMENT}", TEST_UA_SEGMENT),
+     (f"{constants.BATCH_SCORE_USER_AGENT}:{TEST_COMPONENT_VERSION}/Run:{TEST_RUN_ID}", None),
 ])
-def test_get_headers(expected_user_agent_string, user_agent_segment, batch_pool, quota_audience):
+def test_get_headers(expected_user_agent_string, user_agent_segment):
     """Test get_headers method."""
     assert UserAgentHeaderProvider(
         component_version=TEST_COMPONENT_VERSION,
         user_agent_segment=user_agent_segment,
-        batch_pool=batch_pool,
-        quota_audience=quota_audience,
     ).get_headers() == {'User-Agent': expected_user_agent_string}

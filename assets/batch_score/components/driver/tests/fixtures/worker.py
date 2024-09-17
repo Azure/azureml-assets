@@ -8,18 +8,19 @@ from collections import deque
 import aiohttp
 import pytest
 
-from src.batch_score.common import constants
-from src.batch_score.common.configuration.configuration import Configuration
-from src.batch_score.common.parallel.request_metrics import RequestMetrics
-from src.batch_score.common.parallel.worker import Worker
+from src.batch_score_oss.root.common import constants
+from src.batch_score_oss.root.common.configuration.client_settings import NullClientSettingsProvider
+from src.batch_score_oss.root.common.configuration.configuration import Configuration
+from src.batch_score_oss.root.common.parallel.request_metrics import RequestMetrics
+from src.batch_score_oss.root.common.parallel.worker import Worker
 
 
 @pytest.fixture
-def make_worker(make_pool_scoring_client, make_routing_client):
+def make_worker(make_generic_scoring_client):
     """Mock worker."""
     def make(
             scoring_client=None,
-            client_session=aiohttp.ClientSession(),
+            client_session=None,
             client_settings_provider=None,
             scoring_request_queue=deque(),
             scoring_result_queue=deque(),
@@ -32,15 +33,15 @@ def make_worker(make_pool_scoring_client, make_routing_client):
         configuration = Configuration(
             async_mode=False,
             max_retry_time_interval=max_retry_time_interval,
-            request_path=constants.DV_COMPLETION_API_PATH,
+            request_path=constants.OSS_COMPLETIONS_API_PATH,
             segment_large_requests=segment_large_requests,
             segment_max_token_size=segment_max_token_size,
         )
         return Worker(
             configuration=configuration,
-            scoring_client=scoring_client or make_pool_scoring_client(),
-            client_session=client_session,
-            client_settings_provider=client_settings_provider or make_routing_client(),
+            scoring_client=scoring_client or make_generic_scoring_client(),
+            client_session=client_session or aiohttp.ClientSession(),
+            client_settings_provider=client_settings_provider or NullClientSettingsProvider(),
             scoring_request_queue=scoring_request_queue,
             scoring_result_queue=scoring_result_queue,
             request_metrics=request_metrics,
@@ -48,3 +49,18 @@ def make_worker(make_pool_scoring_client, make_routing_client):
         )
 
     return make
+
+
+@pytest.fixture
+def mock_get_client_setting(monkeypatch):
+    """Mock get client setting."""
+    state = {}
+
+    def _get_client_setting(self, key):
+        return state.get(key)
+
+    monkeypatch.setattr(
+        "src.batch_score_oss.root.common.configuration.client_settings.NullClientSettingsProvider.get_client_setting",
+        _get_client_setting)
+
+    return state

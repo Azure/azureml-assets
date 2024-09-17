@@ -5,9 +5,10 @@
 
 import pytest
 
-from src.batch_score.common.common_enums import ApiType
-from src.batch_score.common.auth.auth_provider import EndpointType
-from src.batch_score.common.configuration.configuration_parser import (
+from src.batch_score_oss.root.common import constants
+from src.batch_score_oss.root.common.common_enums import ApiType
+from src.batch_score_oss.root.common.auth.auth_provider import EndpointType
+from src.batch_score_oss.root.common.configuration.configuration_parser import (
     ConfigurationParser,
 )
 
@@ -37,9 +38,6 @@ def test_success_online_endpoint_url_copied_to_scoring_url():
     [
         (ApiType.ChatCompletion, 'disabled'),
         (ApiType.Completion, 'enabled'),
-        (ApiType.Embedding, 'disabled'),
-        (ApiType.Vesta, 'disabled'),
-        (ApiType.VestaChatCompletion, 'disabled'),
     ],
 )
 def test_success_set_default_for_segment_large_requests(api_type, segment_large_requests):
@@ -64,18 +62,6 @@ def test_success_batch_size_one():
     assert configuration.batch_size_per_request == 1
 
 
-def test_success_batch_size_greater_than_one_with_embeddings_api():
-    """Test success batch size greater than one with embeddings api case."""
-    # Act
-    configuration = ConfigurationParser().parse_configuration(["--request_path",
-                                                               "v1/engines/davinci/embeddings",
-                                                               "--batch_size_per_request",
-                                                               '20'])
-
-    # Assert
-    assert configuration.batch_size_per_request == 20
-
-
 def test_invalid_batch_size_zero():
     """Test invalid batch size zero case."""
     # Act
@@ -87,23 +73,12 @@ def test_invalid_batch_size_zero():
            " Valid range is 1-2000." in str(excinfo.value)
 
 
-def test_invalid_batch_size_greater_than_max_with_embeddings_api():
-    """Test invalid batch size greater than max with embeddings api case."""
-    # Act
-    with pytest.raises(ValueError) as excinfo:
-        _ = ConfigurationParser().parse_configuration(["--batch_size_per_request", '2001'])
-
-    # Assert
-    assert "The optional parameter 'batch_size_per_request' cannot be greater than 2000." \
-           " Valid range is 1-2000." in str(excinfo.value)
-
-
 def test_invalid_batch_size_greater_than_one_with_completions_api():
     """Test invalid batch size greater than one with completions api case."""
     # Act
     with pytest.raises(ValueError) as excinfo:
         _ = ConfigurationParser().parse_configuration(["--request_path",
-                                                       "v1/engines/davinci/chat/completions",
+                                                       constants.OSS_CHAT_COMPLETIONS_API_PATH,
                                                        "--batch_size_per_request", '2'])
 
     # Assert
@@ -112,9 +87,7 @@ def test_invalid_batch_size_greater_than_one_with_completions_api():
 
 
 @pytest.mark.parametrize('request_path', [
-    "v1/engines/davinci/chat/completions",
-    "v1/engines/davinci/embeddings",
-    "v1/rainbow",
+    "v1/chat/completions",
 ])
 def test_invalid_segment_large_requests_with_unsupported_api(request_path):
     """Test invalid segment large request with unsupported api case."""
@@ -131,50 +104,7 @@ def test_invalid_segment_large_requests_with_unsupported_api(request_path):
            in str(excinfo.value)
 
 
-def test_invalid_request_path_with_online_endpoint_url():
-    """Test invalid request path with online endpoint url case."""
-    # Act
-    with pytest.raises(ValueError) as excinfo:
-        _ = ConfigurationParser().parse_configuration(["--request_path",
-                                                       "v1/engines/ada/embeddings",
-                                                       "--online_endpoint_url",
-                                                       'test.azure'])
-
-    # Assert
-    assert "The optional parameter 'online_endpoint_url' is not allowed in combination with 'request_path'. " \
-           "Please put the entire scoring url in the `online_endpoint_url` parameter and remove 'request_path'." \
-           in str(excinfo.value)
-
-
-@pytest.mark.parametrize("scoring_url, expected_is_aoai_endpoint", [
-    ("https://batchscore.openai.azure.com/openai"
-     "/deployments/turbo/completions?api-version=2023-03-15-preview", True),
-    ("https://batchscore.api.cognitive.microsoft.com/openai"
-     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", True),
-    ("https://batchscore.cognitiveservices.azure.com/openai"
-     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", True),
-    ("https://batchscore.azure.com/openai"
-     "/deployments/turbo/completions?api-version=2023-03-15-preview", False),
-    ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", False)
-])
-def test_is_aoai_endpoint(scoring_url, expected_is_aoai_endpoint):
-    """Test is AOAI endpoint."""
-    # Act
-    configuration = ConfigurationParser().parse_configuration(["--scoring_url", scoring_url])
-
-    # Assert
-    assert configuration.is_aoai_endpoint() == expected_is_aoai_endpoint
-
-
 @pytest.mark.parametrize("scoring_url, expected_is_serverless_endpoint", [
-    ("https://batchscore.openai.azure.com/openai"
-     "/deployments/turbo/completions?api-version=2023-03-15-preview", False),
-    ("https://batchscore.api.cognitive.microsoft.com/openai"
-     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", False),
-    ("https://batchscore.cognitiveservices.azure.com/openai"
-     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", False),
-    ("https://batchscore.azure.com/openai"
-     "/deployments/turbo/completions?api-version=2023-03-15-preview", False),
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", True)
 ])
 def test_is_serverless_endpoint(scoring_url, expected_is_serverless_endpoint):
@@ -187,13 +117,6 @@ def test_is_serverless_endpoint(scoring_url, expected_is_serverless_endpoint):
 
 
 @pytest.mark.parametrize('scoring_url, expected_endpoint_type', [
-    ("https://batchscore.openai.azure.com/openai"
-     "/deployments/turbo/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
-    ("https://batchscore.api.cognitive.microsoft.com/openai"
-     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
-    ("https://batchscore.cognitiveservices.azure.com/openai"
-     "/deployments/turbo/chat/completions?api-version=2023-03-15-preview", EndpointType.AOAI),
-    ("https://batchscore.inference.ml.azure.com/v1/completions", EndpointType.MIR),
     ("https://llama-completion.eastus2.inference.ai.azure.com/v1/completions", EndpointType.Serverless)
 ])
 def test_get_endpoint_type(scoring_url, expected_endpoint_type):

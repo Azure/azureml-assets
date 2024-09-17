@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score.common.scoring.tally_failed_request_handler import (
+from src.batch_score_oss.root.common.scoring.tally_failed_request_handler import (
     TallyFailedRequestHandler,
 )
 

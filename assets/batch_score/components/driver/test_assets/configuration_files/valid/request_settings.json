@@ -18,6 +18,8 @@
             "custom_property_2": "property_value_2"
         },
         "timeout": 300,
-        "user_agent_identifier": "some identifier"
+        "user_agent_identifier": "some identifier",
+        "retry_interval": 1,
+        "retry_jitter": 0.1
     }
 }

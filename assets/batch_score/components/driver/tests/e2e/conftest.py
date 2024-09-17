@@ -105,11 +105,10 @@ def pytest_configure():
     )
 
     # Prepare to copy components in fixtures below to a temporary file to not muddle dev environments
-    pytest.source_dir = os.path.join(os.getcwd(), "assets", "batch_score", "components", "driver")
-    tmp_dir = os.path.join(pytest.source_dir, "batch_score_temp")
-    os.makedirs(tmp_dir, exist_ok=True)
-
-    pytest.copied_batch_score_component_filepath = os.path.join(tmp_dir, f"spec_copy_{str(uuid.uuid4())}.yml")
+    pytest.source_dir = os.getcwd()
+    pytest.copied_batch_score_component_filepath = os.path.join(
+        pytest.source_dir, "assets", "managed_batch_inference", "components", "batch_score", f"{str(uuid.uuid4())}_batch_score_devops_copy.yml"
+    )
 
 
 def pytest_unconfigure():
@@ -125,24 +124,33 @@ def pytest_unconfigure():
 
 @pytest.fixture(autouse=True, scope="session")
 def register_components(main_worker_lock, asset_version):
-    """Register components in the test workspace for e2e tests."""
+    """Register components for the tests."""
     if not _is_main_worker(main_worker_lock):
         return
 
-    _register_component("batch_score_llm", asset_version)
+    _register_component("batch_score", asset_version)
+
+
+@pytest.fixture(scope="session")
+def batch_score_yml_component(asset_version):
+    """Return the component name batch_score.yml."""
+    return _get_component_metadata("batch_score.yml", asset_version)
 
 
 @pytest.fixture(scope="session")
 def llm_batch_score_yml_component(asset_version):
-    """Get batch score llm component."""
-    return _get_component_metadata("batch_score_llm", asset_version)
+    """Return the component version for batch_score_llm.yml."""
+    return _get_component_metadata("batch_score", asset_version)
 
 
-def _register_component(component_name, asset_version):
-    """Register component."""
+def _register_component(component_yml_name, asset_version):
     # Copy component to a temporary file to not muddle dev environments
-    batch_score_component_filepath = _get_spec_filepath(component_name)
-    create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)
+    batch_score_component_filepath = os.path.join(
+        pytest.source_dir, "assets", "managed_batch_inference", "components", component_yml_name, "spec.yaml"
+    )
+    create_copy(
+        batch_score_component_filepath, pytest.copied_batch_score_component_filepath
+    )
 
     # pins batch_component version
     component_name, component_version = _set_and_get_component_name_ver(
@@ -160,10 +168,8 @@ def _register_component(component_name, asset_version):
     return component_name, component_version
 
 
-def _get_component_metadata(component_name, asset_version):
-    batch_score_component_filepath = _get_spec_filepath(component_name)
+def _get_component_metadata(component_yml_name, asset_version):
+    batch_score_component_filepath = os.path.join(
+        pytest.source_dir, "assets", "managed_batch_inference", "components", component_yml_name, "spec.yaml"
+    )
     return _get_component_name(batch_score_component_filepath), asset_version
-
-
-def _get_spec_filepath(component_name):
-    return os.path.join(pytest.source_dir, component_name, "spec.yaml")
