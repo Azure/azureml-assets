@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/**
   pull_request_target:
     branches:
       - main
-    paths:
-      - assets/**
     types:
       - opened
       - labeled
@@ -39,11 +35,19 @@ jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
+  check-directory-file-changes:
+    needs: check-execution-context
+    if: fromJSON(needs.check-execution-context.outputs.continue)
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    with:
+      folder_path: "assets/**"
+      forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
+
   setup:
     name: Set up tests
-    if: fromJSON(needs.check-execution-context.outputs.continue)
+    if: needs.check-directory-file-changes.outputs.files-changed != ''
     runs-on: ubuntu-latest
-    needs: check-execution-context
+    needs: [check-execution-context, check-directory-file-changes]
     environment: Testing
 
     permissions:
@@ -61,14 +65,6 @@ jobs:
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
           fetch-depth: 2
-      
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files_separator: ','
-          separator: ','
-          sha: ${{ env.merge_commit_hash || github.sha }}
 
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
@@ -80,7 +76,7 @@ jobs:
 
       - name: Create test matrix for changed assets
         id: create-test-matrix
-        run: python -u $scripts_test_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
+        run: python -u $scripts_test_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}"
 
       - name: Login to Azure and create resources
         if: steps.create-test-matrix.outputs.test_count > 0
