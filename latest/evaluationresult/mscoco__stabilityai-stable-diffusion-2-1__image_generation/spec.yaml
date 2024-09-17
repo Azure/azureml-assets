@@ -1,0 +1,30 @@
+type: evaluationresult
+name: mscoco__stabilityai-stable-diffusion-2-1__image_generation
+version: 24.09.12
+display_name: stabilityai-stable-diffusion-2-1__remote_mscoco__image_generation
+description: Benchmark__stabilityai-stable-diffusion-2-1__remote_mscoco__image_generation
+dataset_family: mscoco
+dataset_name: mscoco
+
+model_name: stabilityai-stable-diffusion-2-1
+model_version: "11"
+model_asset_id: azureml://registries/azureml/models/stabilityai-stable-diffusion-2-1/versions/11
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azureml/models/stabilityai-stable-diffusion-2-1/versions/11
+
+tags:
+  evaluation_type: vision
+  task: image-generation
+  accuracy_metric_name: nan
+metrics:
+  fid: 12.213546
+
+
+properties:
+  n_shot: None
+  evaluation_sampling_ratio: 1.0
+  evaluation_split: "validation"
+  fewshot_sampling_ratio: None
+  fewshot_split: "None"
