@@ -1,4 +1,4 @@
-name: Close repository
+name: Clone repository
 description: Clone repository
 inputs:
   forked-pr:
