@@ -5,3 +5,4 @@ evaluation_type:
   values:
     - text_generation
     - text_embeddings
+    - vision
