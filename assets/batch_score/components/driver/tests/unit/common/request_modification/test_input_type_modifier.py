@@ -22,8 +22,8 @@ def test_get_input_type():
     }) == InputType.ImageAndText
     assert InputTypeModifier.get_input_type(request_obj={
         "messages": [
-            {"content": "just text"}, 
-            {"content": [{"type": "text"}]}, 
+            {"content": "just text"},
+            {"content": [{"type": "text"}]},
             {"content": [{"type": "image"}]}
         ]
     }) == InputType.ImageAndText
@@ -35,7 +35,7 @@ def test_get_input_type():
     }) == InputType.ImageAndText
     assert InputTypeModifier.get_input_type(request_obj={
         "messages": [
-            {"content": "just text"}, 
+            {"content": "just text"},
             {"content": [{"type": "text"}]},
             {"content": [{"type": "image_url"}]}
         ]

@@ -104,7 +104,8 @@ class MinibatchAggregator:
             logging_metadata=logging_metadata,
             input_row_text_count=len([e for e in rows_completed_events if e.input_type == InputType.TextOnly]),
             input_row_image_count=len([e for e in rows_completed_events if e.input_type == InputType.Image]),
-            input_row_text_image_count=len([e for e in rows_completed_events if e.input_type == InputType.ImageAndText]),
+            input_row_text_image_count=len([
+                e for e in rows_completed_events if e.input_type == InputType.ImageAndText]),
 
             http_request_count=len(http_request_completed_events),
             http_request_succeeded_count=len(
