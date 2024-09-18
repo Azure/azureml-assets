@@ -15,6 +15,9 @@ from azure.identity import DefaultAzureCredential
 from .util import _get_component_name, _set_and_get_component_name_ver, create_copy
 
 
+BATCH_SCORE_COMPONENT_YAML_NAME = "batch_score_oss"
+
+
 # Marks all tests in this directory as e2e tests
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.e2e)])
 def mark_as_e2e_test():
@@ -129,25 +132,25 @@ def register_components(main_worker_lock, asset_version):
     if not _is_main_worker(main_worker_lock):
         return
 
-    _register_component("batch_score", asset_version)
+    _register_component(BATCH_SCORE_COMPONENT_YAML_NAME, asset_version)
 
 
 @pytest.fixture(scope="session")
 def batch_score_yml_component(asset_version):
     """Return the component name batch_score.yml."""
-    return _get_component_metadata("batch_score.yml", asset_version)
+    return _get_component_metadata(f"{BATCH_SCORE_COMPONENT_YAML_NAME}.yml", asset_version)
 
 
 @pytest.fixture(scope="session")
 def llm_batch_score_yml_component(asset_version):
     """Return the component version for batch_score_llm.yml."""
-    return _get_component_metadata("batch_score", asset_version)
+    return _get_component_metadata(BATCH_SCORE_COMPONENT_YAML_NAME, asset_version)
 
 
 def _register_component(component_yml_name, asset_version):
     # Copy component to a temporary file to not muddle dev environments
     batch_score_component_filepath = os.path.join(
-        pytest.source_dir, "assets", "managed_batch_inference", "components", component_yml_name, "spec.yaml"
+        pytest.source_dir, component_yml_name, "spec.yaml"
     )
     create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)
 
@@ -169,6 +172,6 @@ def _register_component(component_yml_name, asset_version):
 
 def _get_component_metadata(component_yml_name, asset_version):
     batch_score_component_filepath = os.path.join(
-        pytest.source_dir, "assets", "managed_batch_inference", "components", component_yml_name, "spec.yaml"
+        pytest.source_dir, component_yml_name, "spec.yaml"
     )
     return _get_component_name(batch_score_component_filepath), asset_version
