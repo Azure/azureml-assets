@@ -49,9 +49,9 @@ retry_settings:
 input_data: ${{inputs.data_input_table}}
 
 task:
-  code: ../src/batch_score_oss
+  code: ../src
   type: run_function
-  entry_script: main
+  entry_script: batch_score_oss.main
   # Enable PRS safe append row configuration that is needed when dealing with large outputs with Unicode characters.
   # Using --append_row_safe_output true
   program_arguments: >-
