@@ -52,15 +52,14 @@ class ScoringClientFactory:
         if endpoint_type is EndpointType.Null:
             get_logger().info("Using null endpoint scoring client.")
             return _setup_null_endpoint_scoring_client(
-            configuration=configuration,
-            tally_handler=tally_handler)
+                configuration=configuration,
+                tally_handler=tally_handler)
 
         get_logger().info("Using MIR scoring client.")
         return _setup_mir_scoring_client(
             configuration=configuration,
             header_provider=header_provider,
             tally_handler=tally_handler)
-
 
     def _get_additional_headers(self, configuration):
         if configuration.additional_headers is None:

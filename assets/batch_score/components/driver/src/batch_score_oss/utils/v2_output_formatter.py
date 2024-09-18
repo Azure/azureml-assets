@@ -75,7 +75,7 @@ class V2OutputFormatter(OutputFormatter):
 
     def __get_request_id(self, scoring_request: ScoringResult):
         return (
-            scoring_request.response_headers.get("x-request-id", None)
+            scoring_request.response_headers.get("x-request-id", "")
             if scoring_request.response_headers is not None
             else None
         )
