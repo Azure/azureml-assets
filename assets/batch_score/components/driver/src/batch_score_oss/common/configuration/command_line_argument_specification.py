@@ -55,7 +55,7 @@ COMMAND_LINE_ARGUMENT_SPECIFICATION = {
             ApiType.Completion,
             ApiType.ChatCompletion,
         ],
-        # 'default': ApiType.Completion,
+        'default': ApiType.Completion,
         'help': 'The API used for scoring.',
         'required': False,
         'type': str,
