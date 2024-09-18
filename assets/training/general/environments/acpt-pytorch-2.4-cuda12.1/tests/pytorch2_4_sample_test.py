@@ -28,7 +28,7 @@ def test_pytorch_2_4():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-2_4-cuda12_4"
+    env_name = "acpt-pytorch-2_4-cuda12_1"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
