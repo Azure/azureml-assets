@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/parallelComponent.schema.json
 type: parallel
-version: 0.0.5
+version: 0.0.6
 
 name: automl_hts_data_aggregation_step
 display_name: AutoML HTS - Training Data Aggregation
