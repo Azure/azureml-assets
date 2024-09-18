@@ -48,6 +48,8 @@ MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
         ("evaluationresult/text_embeddings_incorrect", False, True, None, False),
         ("evaluationresult/text_generation_correct", False, True, None, True),
         ("evaluationresult/text_generation_incorrect", False, True, None, False),
+        ("evaluationresult/vision_correct", False, True, None, True),
+        ("evaluationresult/vision_incorrect", False, True, None, False),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,
