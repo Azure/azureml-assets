@@ -13,5 +13,5 @@ build:
 os_type: linux
 
 tags:
-  Python: 3.9.20
+  Python: 3.12.6
   OS: Ubuntu20.04
