@@ -54,7 +54,6 @@ RUN pip install {pin-to-extra-index} \
                 # end pypi dependencies
 
 # Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
-RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/thomas-bouvier/horovod.git@compile-cpp17
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # Separate updates for fixing vulnerabilities.
