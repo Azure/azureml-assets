@@ -1,4 +1,4 @@
-FROM {pin-to-latest-mcr-version-tag:"mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{}"}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
@@ -35,16 +35,16 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # Install pip dependencies
 # Here, we pin sentencepiece since 0.1.98 breaks training. Earlier versions of horovod contain a sev2 vulnerability,
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
-RUN pip install {pin-to-extra-index} \
+RUN pip install \
                 # begin pypi dependencies
-                '{pin-to-latest-pypi-version:"azureml-core=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-mlflow=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-automl-core=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-automl-dnn-nlp=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-automl-runtime=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-train-automl-client=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-train-automl-runtime=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-defaults=={}"}' \
+                azureml-core=={{latest-pypi-version}} \
+                azureml-mlflow=={{latest-pypi-version}} \
+                azureml-automl-core=={{latest-pypi-version}} \
+                azureml-automl-dnn-nlp=={{latest-pypi-version}} \
+                azureml-automl-runtime=={{latest-pypi-version}} \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-defaults=={{latest-pypi-version}} \
                 'azure-identity>=1.16.1' \
                 'sentencepiece==0.1.97' \
                 'cryptography>=42.0.5'\
