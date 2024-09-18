@@ -24,6 +24,7 @@ tags:
   Featured: ""
   Preview: ""
   huggingface_model_id: ""
+  maas-inference: "true"
   license: mit
   disable-batch: "true"
   task: chat-completion
