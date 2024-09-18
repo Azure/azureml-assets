@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.6-cudnn8-ubuntu20.04:{{latest-image-tag}}
+FROM {pin-to-latest-mcr-version-tag:"mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{}"}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
@@ -31,33 +31,31 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # Ensure additional conda and pip install commands apply to our conda env of interest.
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
 
-# Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN conda install pytorch=1.13.1 pytorch-cuda=11.6 -c pytorch -c nvidia && conda clean -a -y
-# end conda create
-
-
 # begin pip install
 # Install pip dependencies
 # Here, we pin sentencepiece since 0.1.98 breaks training. Earlier versions of horovod contain a sev2 vulnerability,
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
-RUN pip install \
+RUN pip install {pin-to-extra-index} \
                 # begin pypi dependencies
-                azureml-core=={{latest-pypi-version}} \
-                azureml-mlflow=={{latest-pypi-version}} \
-                azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-dnn-nlp=={{latest-pypi-version}} \
-                azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-defaults=={{latest-pypi-version}} \
+                '{pin-to-latest-pypi-version:"azureml-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-mlflow=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-automl-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-automl-dnn-nlp=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-automl-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-train-automl-client=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-train-automl-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-defaults=={}"}' \
                 'azure-identity>=1.16.1' \
-                'horovod==0.28.1' \
                 'sentencepiece==0.1.97' \
                 'cryptography>=42.0.5'\
                 'urllib3>=1.26.18' \
                 'requests>=2.31.0' \
                 'certifi>=2023.07.22' 
                 # end pypi dependencies
+
+# Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
+RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/thomas-bouvier/horovod.git@compile-cpp17
+RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages
@@ -66,8 +64,8 @@ RUN pip install \
 RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.36.2' \
-                aiohttp==3.10.2
+                aiohttp==3.9.4
 
 # end pip install
 
-# Force new version - 1
+# Force new version
