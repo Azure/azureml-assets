@@ -123,7 +123,6 @@ class Predictor:
             conversation = datarow[0]
             conversation.append({"role":"assistant", "content":last_chats[ind]})
             appended_data[col_name].append(conversation)
-        logger.info(f"Final Conversations: {appended_data}")
         return pd.DataFrame(appended_data)
 
 
@@ -505,7 +504,8 @@ def main():
             mlmodel,
             model_path,
             config_path,
-            tokenizer_path
+            tokenizer_path,
+            None
         )
 
         config = {
