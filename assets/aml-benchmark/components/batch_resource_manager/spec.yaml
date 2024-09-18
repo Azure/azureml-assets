@@ -4,7 +4,7 @@ is_deterministic: False
 name: batch_resource_manager
 display_name: Batch Inference Resource Manager
 description: Resource Manager for batch inference.
-version: 0.0.5
+version: 0.0.6
 
 inputs:
   wait_input:
@@ -141,7 +141,7 @@ outputs:
     description: Path to the folder where the deployment metadata will be stored.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: azureml://registries/azureml/environments/model-evaluation/versions/35
 command: >-
   python -m aml_benchmark.batch_resource_manager.main
   --output_metadata ${{outputs.output_metadata}}
