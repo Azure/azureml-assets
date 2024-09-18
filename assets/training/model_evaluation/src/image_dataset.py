@@ -300,8 +300,7 @@ def get_generation_dataset(
     mltable = load(mltable_path)
     mltable_dataframe = mltable.to_pandas_dataframe()
 
-    # Initialize the output dataframe with the input and label columns.
-    df = pd.DataFrame(columns=input_column_names + [label_column_name])
+    frame = []
 
     # Go through all (image_url, captions) pairs and make a (prompt, image_url) from each pair. The model will generate
     # a synthetic image from the prompt and the set of synthetic images will be compared with the set of original ones.
@@ -310,15 +309,17 @@ def get_generation_dataset(
     ):
         # Go through all captions (split according to special separator).
         for caption in captions.split(GenerationLiterals.CAPTION_SEPARATOR):
-            df = df.append(
+            frame.append(
                 {
                     # The model input is a text prompt.
                     input_column_names[0]: caption,
                     # The original image is passed through via the label column.
                     label_column_name: image_url,
-                },
-                ignore_index=True
+                }
             )
+
+    # Initialize the output dataframe with the input and label columns.
+    df = pd.DataFrame(data=frame, columns=input_column_names + [label_column_name])
 
     return df
 
