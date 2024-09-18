@@ -13,8 +13,8 @@ RUN apt-get update \
     python3.10 \
     libpython3.10-minimal \
     libpython3.10-stdlib  \
-    curl=7.81.0-1ubuntu1.17 \
-    libcurl4=7.81.0-1ubuntu1.17 \
+    curl \
+    libcurl4 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
