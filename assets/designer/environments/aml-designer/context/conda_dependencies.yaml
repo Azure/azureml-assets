@@ -2,10 +2,9 @@ name: designer-base
 channels:
 - conda-forge
 dependencies:
-- python=3.11.10
-- pip=23.1
-- scikit-surprise=1.1.4
-- "numpy==1.23.5"
+- python=3.8.10
+- pip=20.2
+- scikit-surprise=1.1.0
 - pip:
   - "azureml-designer-classic-modules==0.0.182"
   - "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz"
@@ -13,10 +12,12 @@ dependencies:
   - "joblib==1.2.0"
   - "setuptools==65.5.1"
   - "wheel==0.38.1"
+  - "numpy==1.22"
   - "cryptography==42.0.4"
   - "azureml-dataprep==4.10.1"
   - "matplotlib==3.7.1"
   - "Werkzeug==3.0.3"
+  - "pip==21.1"
   - "requests==2.32.0"
   - "scipy==1.10.0"
   - "paramiko==3.4.0"
