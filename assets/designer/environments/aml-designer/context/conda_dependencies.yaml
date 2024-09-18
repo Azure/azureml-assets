@@ -2,8 +2,8 @@ name: designer-base
 channels:
 - conda-forge
 dependencies:
-- python=3.12.6
-- pip=24.2
+- python=3.12.5
+- pip=24.1
 - scikit-surprise=1.1.0
 - pip:
   - "azureml-designer-classic-modules==0.0.182"
