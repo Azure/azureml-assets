@@ -1,0 +1,42 @@
+image:
+  name: azureml/curated/aml-designer
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+      - Dockerfile
+      - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.8.10
+  - pip=21.1
+  - pip:
+    - azureml-designer-classic-modules==0.0.182
+    - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
+    - spacy==2.3.9
+    - joblib==1.2.0
+    - setuptools==65.5.1
+    - wheel==0.38.1
+    - numpy==1.22
+    - cryptography==42.0.4
+    - azureml-dataprep==4.10.1
+    - matplotlib==3.7.1
+    - Werkzeug==3.0.3
+    - requests==2.32.0
+    - scipy==1.10.0
+    - paramiko==3.4.0
+    - azure-storage-blob==12.13.0
+    - urllib3==1.26.19
+    - Pillow==10.3.0
+    - pyarrow==14.0.1
+    - pycryptodome==3.19.1
+    - pycryptodomex==3.19.1
+    - gunicorn==22.0.0
+    - tqdm==4.66.3
