@@ -69,7 +69,7 @@ outputs:
 
 
 code: ../../src_distributed
-environment: azureml://registries/azureml/environments/foundation-model-inference/versions/52
+environment: azureml://registries/azureml/environments/foundation-model-inference/labels/latest
 command: >-
   python download_extra_dependency.py
   --mlflow-model '${{inputs.mlflow_model}}' ;
