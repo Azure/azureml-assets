@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20240908.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20240918.v1
 
 RUN apt-get update
 RUN apt-get install docker.io -y
