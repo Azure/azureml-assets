@@ -4,7 +4,7 @@ display_name: Compute Metrics
 description: Calculate model performance metrics, given ground truth and prediction
   data.
 
-version: 0.0.31
+version: 0.0.32
 type: command
 tags:
   type: evaluation
@@ -66,7 +66,7 @@ outputs:
 
 is_deterministic: true
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/32
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 command: >-
   python compute_metrics.py
