@@ -20,7 +20,7 @@ from azureml.acft.common_components.utils.mlflow_utils import update_acft_metada
 
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import (
-    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants
+    MLFlowHFFlavourConstants, MLFlowHFFlavourTasks, SaveFileConstants, HfModelTypes, Tasks
 )
 
 import mlflow
@@ -86,6 +86,17 @@ class ModelConverter(ABC):
                 str(Path(dst_model_path, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)),
             )
             logger.info(f"Copied {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} file.")
+
+    def copy_ml_configs(self, src_model_path: str, dst_model_path: str):
+        """Copy ml_configs folder to mlflow model artifacts."""
+        ml_configs_path = Path(src_model_path, "ml_configs")
+        dst_model_path = Path(dst_model_path, "ml_configs")
+        if ml_configs_path.is_dir():
+            shutil.copytree(
+                ml_configs_path,
+                dst_model_path
+            )
+        logger.info("Copied ml_configs folder.")
 
 
 class PyTorch_to_MlFlow_ModelConverter:
@@ -224,6 +235,7 @@ class Pytorch_to_HFTransformers_MlFlow_ModelConverter(ModelConverter, PyTorch_to
         self.download_license_file(self.model_name, self.ft_pytorch_model_path, self.mlflow_model_save_path)
         self.add_model_signature()
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
+        self.copy_ml_configs(self.ft_pytorch_model_path, self.mlflow_model_save_path)
         copy_tokenizer_files_to_model_folder(self.mlflow_model_save_path, self.component_args.task_name)
 
         logger.info("Saved MLFlow model using HFTransformers flavour.")
@@ -269,11 +281,10 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
                         yaml.safe_dump(conda_dict, f)
                     logger.info("Updated conda.yaml file")
 
-    def is_env_64_finetune(self) -> bool:
-        """Check for env 64 tasks."""
-        return self.mlflow_task_type in [MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION,
-                                         MLFlowHFFlavourTasks.QUESTION_ANSWERING,
-                                         MLFlowHFFlavourTasks.CHAT_COMPLETION]
+    def is_t5_finetune(self, model_type) -> bool:
+        """Check for t5 text-classification, translation, summarization."""
+        return self.component_args.task_name in [Tasks.SINGLE_LABEL_CLASSIFICATION, Tasks.TRANSLATION,
+                                                 Tasks.SUMMARIZATION] and model_type == HfModelTypes.T5
 
     def convert_model(self) -> None:
         """Convert pytorch model to oss mlflow model."""
@@ -283,9 +294,9 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.set_mlflow_model_parameters(model)
 
         # Temp Fix:
-        # specific check for env 64 supported components so that base model dependencies doesn't get pass
-        # and use transformers version 4.43.2 from infer dependencies
-        if not self.is_env_64_finetune():
+        # specific check for t5 text-classification, translation, summarization so that base model
+        # dependencies doesn't get pass and use transformers version 4.44.0 from infer dependencies
+        if not self.is_t5_finetune(model.config.model_type):
             conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
             if conda_file_path.is_file():
                 self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
@@ -316,9 +327,10 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         self.download_license_file(self.model_name, self.ft_pytorch_model_path, self.mlflow_model_save_path)
         self.add_model_signature()
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
+        self.copy_ml_configs(self.ft_pytorch_model_path, self.mlflow_model_save_path)
 
-        # Temp fix for env 64 supported tasks
-        if self.is_env_64_finetune():
+        # Temp fix for t5 text-classification, translation, summarization
+        if self.is_t5_finetune(model.config.model_type):
             self.remove_unwanted_packages(self.mlflow_model_save_path)
 
         logger.info("Saved MLFlow model using OSS flavour.")

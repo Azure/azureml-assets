@@ -1,4 +1,5 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.6-cudnn8-ubuntu20.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{{latest-image-tag}}
+
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
@@ -9,6 +10,17 @@ COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:2023
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
 # ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
+
+# Inference requirements
+COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
+RUN /var/requirements/install_system_requirements.sh && \
+    cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
+    cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
+    ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
+    rm -f /etc/nginx/sites-enabled/default
+ENV SVDIR=/var/runit
+ENV WORKER_TIMEOUT=400
+EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
 

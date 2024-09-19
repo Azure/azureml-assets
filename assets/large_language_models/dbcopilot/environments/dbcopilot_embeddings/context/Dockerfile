@@ -13,7 +13,20 @@ RUN apt-get update && apt-get install -y \
     libc6=2.31-0ubuntu9.16 \
     libc-dev-bin=2.31-0ubuntu9.16 \
     git \
-    git-man &&\
+    git-man \
+    libpython3.8-minimal \
+    libpython3.8-stdlib \
+    python3.8-minimal \
+    python3.8 \
+    libssl1.1=1.1.1f-1ubuntu2.23 \
+    openssl=1.1.1f-1ubuntu2.23  \
+    curl=7.68.0-1ubuntu2.23 \
+    libcurl3-gnutls=7.68.0-1ubuntu2.23 \
+    libcurl4=7.68.0-1ubuntu2.23 \
+    libgssapi-krb5-2=1.17-6ubuntu4.6 \
+    libkrb5support0=1.17-6ubuntu4.6 \
+    libkrb5-3=1.17-6ubuntu4.6 \
+    libk5crypto3=1.17-6ubuntu4.6 &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
