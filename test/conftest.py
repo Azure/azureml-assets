@@ -1,12 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test various pytest cases with ."""
+
+
 def pytest_addoption(parser):
+    """Add pytest options."""
     parser.addoption("--resource-group", action="store")
     parser.addoption("--registry", action="store")
 
 
 def pytest_generate_tests(metafunc):
+    """Generate test cases based on options."""
     resource_group_value = metafunc.config.option.resource_group
     if 'resource_group' in metafunc.fixturenames and resource_group_value is not None:
         metafunc.parametrize('resource_group', [resource_group_value])

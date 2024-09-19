@@ -51,18 +51,33 @@ def init():
     # setting up db copilot
     with open(os.path.join(current_dir, "secrets.json")) as f:
         secret_manager: dict = json.load(f)
-        embedding_aoai_connection = AzureOpenAIConnection(
-            api_key=secret_manager.get("embedding-aoai-api-key"),
-            api_base=secret_manager.get("embedding-aoai-api-base"),
-            api_type="azure",
-            api_version="2023-03-15-preview",
-        )
-        chat_aoai_connection = AzureOpenAIConnection(
-            api_key=secret_manager.get("chat-aoai-api-key"),
-            api_base=secret_manager.get("chat-aoai-api-base"),
-            api_type="azure",
-            api_version="2023-03-15-preview",
-        )
+        api_key = secret_manager.get("embedding-aoai-api-key", None)
+        if api_key:
+            logging.info("Using api_key access Azure OpenAI")
+            embedding_aoai_connection = AzureOpenAIConnection(
+                api_key=secret_manager.get("embedding-aoai-api-key"),
+                api_base=secret_manager.get("embedding-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
+            chat_aoai_connection = AzureOpenAIConnection(
+                api_key=secret_manager.get("chat-aoai-api-key"),
+                api_base=secret_manager.get("chat-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
+        else:
+            logging.info("using managed identity access Azure OpenAI")
+            embedding_aoai_connection = AzureOpenAIConnection(
+                api_base=secret_manager.get("embedding-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
+            chat_aoai_connection = AzureOpenAIConnection(
+                api_base=secret_manager.get("chat-aoai-api-base"),
+                api_type="azure",
+                api_version="2023-03-15-preview",
+            )
         embedding_deploy_name = secret_manager.get("embedding-deploy-name")
         chat_deploy_name = secret_manager.get("chat-deploy-name")
     shared_config_file = os.path.join(current_dir, "shared_config.json")
@@ -277,7 +292,7 @@ def _get_db_provider(request_body: RequestBody, session_id: str):
         return db_copilot
     else:
         return AMLResponse(
-            "No db_copilot is available. Please specify Session id or datasotre_uri or db_name is required",
+            "No db_copilot is available. Please specify Session id or datastore_uri or db_name is required",
             400,
         )
 

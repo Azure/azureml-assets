@@ -9,6 +9,12 @@ RUN apt-get update \
     && curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
     && ACCEPT_EULA=Y apt-get install -y msodbcsql18=18.3.3.1-1 \
+    python3.10-minimal \
+    python3.10 \
+    libpython3.10-minimal \
+    libpython3.10-stdlib  \
+    curl \
+    libcurl4 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,7 +35,8 @@ RUN python -m pip install --upgrade pip && \
     pip install promptflow-python-bundle[azure]==0.3.0 && \
     pip install promptflow-vectordb==0.2.13 langchain-community==0.2.16 && \
     ## Install dbcopilot
-    pip install db-copilot-tool==0.0.8
+    pip install db-copilot-tool==0.0.8 &&\
+    pip install setuptools==70.0.0 grpcio==1.56.2
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \

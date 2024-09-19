@@ -1,5 +1,5 @@
 # PTCA Image (enabling Singularity Support)
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch201:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 RUN apt-get update && apt-get -y upgrade
 
@@ -13,18 +13,6 @@ RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
     rm conda.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
-
-# install transformers patch
-COPY ./transformers.patch ./transformers.patch
-RUN pip uninstall transformers -y && \
-    git clone https://github.com/huggingface/transformers.git && \
-    cd transformers && \
-    git checkout fc35907f95459d7a6c5281dfadd680b6f7b620e3 && \
-    # git apply ../transformers.patch && \
-    python3 setup.py bdist_wheel && \
-    pip install dist/*.whl
-
-COPY modeling_llama /opt/conda/envs/ptca/lib/python3.8/site-packages/transformers/models/llama/modeling_llama.py
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
