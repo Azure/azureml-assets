@@ -1,4 +1,4 @@
-name: designer-base
+name: aml-designer
 channels:
 - conda-forge
 dependencies:

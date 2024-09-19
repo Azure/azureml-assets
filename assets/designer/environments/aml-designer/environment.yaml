@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/designer-base
+  name: azureml/curated/aml-designer
   os: linux
   context:
     dir: context

@@ -1,4 +1,4 @@
-name: designer-base
+name: aml-designer
 version: auto
 type: environment
 spec: spec.yaml
