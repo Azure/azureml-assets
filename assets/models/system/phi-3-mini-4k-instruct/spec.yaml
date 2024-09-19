@@ -13,7 +13,7 @@ tags:
   notes: "notes.md"
   evaluation: "evaluation.md"
   freePlayground: "true"
-  displayName: "Phi-3 mini instruct (4k)"
+  displayName: "Phi-3-mini instruct (4k)"
   summary: "Tiniest member of the Phi-3 family. Optimized for both quality and low latency."
   textContextWindow: 4096
   maxOutputTokens: 4096
@@ -76,4 +76,4 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 10
+version: 11

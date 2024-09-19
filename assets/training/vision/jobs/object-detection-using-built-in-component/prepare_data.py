@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Prepare data."""
+
 import argparse
 import json
 import os
@@ -19,6 +21,7 @@ data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources'
 
 
 def create_jsonl_files(uri_folder_data_path):
+    """Create jsonl files."""
     print("Creating jsonl files")
     src_images = os.path.join(data_dir, "odFridgeObjects")
 
@@ -102,6 +105,7 @@ def create_jsonl_files(uri_folder_data_path):
 
 
 def upload_data_and_create_jsonl_files(ml_client):
+    """Upload data and create jsonl files."""
     # Download data from public url
 
     # download data
@@ -137,6 +141,7 @@ def upload_data_and_create_jsonl_files(ml_client):
 
 
 if __name__ == "__main__":
+    """Prepare data for image classification."""
     parser = argparse.ArgumentParser(
         description="Prepare data for image classification"
     )
