@@ -13,8 +13,8 @@ RUN apt-get update \
     python3.10 \
     libpython3.10-minimal \
     libpython3.10-stdlib  \
-    curl=7.81.0-1ubuntu1.17 \
-    libcurl4=7.81.0-1ubuntu1.17 \
+    curl \
+    libcurl4 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -41,7 +41,7 @@ RUN python -m pip install --upgrade pip && \
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate /opt/miniconda/envs/amlenv && \
-    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1 certifi==2024.07.04 setuptools==70.0.0&& \
+    pip install sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 azure-identity==1.16.1 certifi==2024.07.04 --upgrade protobuf&& \
     conda deactivate"
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout
