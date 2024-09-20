@@ -129,7 +129,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
 
         :param http_status: response status code of the request
         :param http_status: int
-        :param scoring_request: scoring request 
+        :param scoring_request: scoring request
         :param scoring_request: scoring request
         :return: if failed request is retriable
         :rtype: bool
