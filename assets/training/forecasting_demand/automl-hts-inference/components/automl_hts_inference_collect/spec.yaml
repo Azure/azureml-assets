@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_hts_inference_collect_step
-version: 0.0.4
+version: 0.0.6
 display_name: AutoML HTS - Inference Collect
 type: command
 

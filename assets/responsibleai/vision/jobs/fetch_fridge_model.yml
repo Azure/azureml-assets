@@ -16,7 +16,7 @@ outputs:
   model_output_path:
     type: path
 code: ./src_fridge/
-environment: azureml://registries/azureml/environments/responsibleai-vision/versions/1
+environment: azureml://registries/azureml/environments/responsibleai-vision/versions/6
 command: >-
   python ./fetch_image_model.py
   --model_base_name ${{inputs.model_base_name}}

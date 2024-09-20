@@ -39,6 +39,7 @@ from common.constants import (
     TOP_P,
     VLLM_CHAT_SCORE_PATH,
     MIN_RECORDS_FOR_FT,
+    MATH_MIN_RECORDS_FOR_FT
 )
 
 from common.utils import (
@@ -103,6 +104,13 @@ class PipelineInputsValidator:
     def _get_cot_status(self) -> bool:
         cot_enabled = self._args.enable_chain_of_thought
         return cot_enabled.lower() == "true"
+
+    def _get_cod_status(self) -> bool:
+        cod_enabled = self._args.enable_chain_of_density
+        return cod_enabled.lower() == "true"
+
+    def _get_max_len_summary(self) -> bool:
+        return self._args.max_len_summary != 80
 
     def _validate_model_endpoint_args(self):
         endpoint_name = self._args.teacher_model_endpoint_name
@@ -182,13 +190,15 @@ class PipelineInputsValidator:
 
     def _validate_number_of_records(self, size: int):
         """Validate number of records in the dataset."""
-        if size < MIN_RECORDS_FOR_FT:
+        task_type = self._args.data_generation_task_type
+        min_records = MIN_RECORDS_FOR_FT if task_type != DataGenerationTaskType.MATH else MATH_MIN_RECORDS_FOR_FT
+        if size < min_records:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
                     pii_safe_message=(
                         "Number of records in the dataset are less than the minimum required for fine-tuning."
-                        f" Minimum records required: {MIN_RECORDS_FOR_FT}, but got {size}."
+                        f" Minimum records required for task {task_type}: {min_records}, but got {size}."
                     ),
                 )
             )
@@ -200,6 +210,9 @@ class PipelineInputsValidator:
         if self._get_cot_status():
             return f"Chain of thought is not supported for task type {DataGenerationTaskType.CONVERSATION}"
 
+        if self._get_max_len_summary():
+            return f"Max length summary is not supported for task type {DataGenerationTaskType.CONVERSATION}"
+
         if len(record) < 3:
             return f"Dataset is not matching expected schema for task type {DataGenerationTaskType.CONVERSATION}. \
                 Expected format: [system, user, assistant]"
@@ -207,6 +220,12 @@ class PipelineInputsValidator:
     def _validate_record_for_type_NLI(self, record: list) -> str:
         if self._args.data_generation_task_type != DataGenerationTaskType.NLI:
             return
+
+        if self._get_cod_status():
+            return f"Chain of density is not supported for task type {DataGenerationTaskType.NLI}"
+
+        if self._get_max_len_summary():
+            return f"Max length summary is not supported for task type {DataGenerationTaskType.NLI}"
 
         if len(record) > 2:
             return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLI}. \
@@ -219,8 +238,39 @@ class PipelineInputsValidator:
         ):
             return
 
+        if self._get_cod_status():
+            return f"Chain of density is not supported for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING}"
+
+        if self._get_max_len_summary():
+            return f"Max length summary is not supported for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING}"
+
         if len(record) > 2:
             return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.NLU_QUESTION_ANSWERING} \
+                Expected format: [system, user]"
+
+    def _validate_record_for_type_MATH(self, record: list) -> str:
+        if self._args.data_generation_task_type != DataGenerationTaskType.MATH:
+            return
+
+        if self._get_max_len_summary():
+            return f"Max length summary is not supported for task type {DataGenerationTaskType.MATH}"
+
+        if len(record) > 2:
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.MATH} \
+                Expected format: [system, user]"
+
+    def _validate_record_for_type_summarization(self, record: list) -> str:
+        if (
+            self._args.data_generation_task_type
+            != DataGenerationTaskType.SUMMARIZATION
+        ):
+            return
+
+        if self._get_cot_status():
+            return f"Chain of thought is not supported for task type {DataGenerationTaskType.SUMMARIZATION}"
+
+        if len(record) > 2:
+            return f"Chat cannot be of type multi-turn for task type {DataGenerationTaskType.SUMMARIZATION} \
                 Expected format: [system, user]"
 
     def _validate_record_by_task(self, record: list) -> dict:
@@ -236,6 +286,8 @@ class PipelineInputsValidator:
             self._validate_record_for_type_NLI,
             self._validate_record_for_type_conversation,
             self._validate_record_for_type_NLU_QA,
+            self._validate_record_for_type_MATH,
+            self._validate_record_for_type_summarization,
         ]
 
         for method in validation_methods:
@@ -267,7 +319,7 @@ class PipelineInputsValidator:
         """
         Validate content of a record and ensures messages are in the expected format.
 
-        Currently functional only for task type `CONVERSATION`, `NLI` & `NLU`.
+        Currently functional only for task type `CONVERSATION`, `SUMMARIZATION`, `NLI` & `NLU`.
         Returns dictionary containing exception, if any validation error is found.
 
         Args:
