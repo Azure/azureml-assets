@@ -29,8 +29,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
     conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=1.13.1 \
-    pytorch-cuda=11.6 \
+    pytorch=2.2.2 \
     -c pytorch -c nvidia -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -54,10 +53,9 @@ RUN pip install \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-train-automl=={{latest-pypi-version}} \
-                azureml-contrib-automl-dnn-forecasting==1.57.0 \
+                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
                 'azure-identity>=1.16.1' \
                 'inference-schema' \
-                'horovod==0.28.1' \
                 'xgboost==1.5.2' \
                 'cryptography>=42.0.5' \
                 'requests>=2.31.0' \
@@ -67,4 +65,6 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0'
                 # end pypi dependencies
+
+RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
