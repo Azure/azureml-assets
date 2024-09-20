@@ -5,7 +5,7 @@
 
 import json
 
-import src.batch_score_oss.utils.json_encoder_extensions as json_encoder_extensions
+import src.batch_score.utils.json_encoder_extensions as json_encoder_extensions
 
 
 def test_unconfigured_get_default_encoder(mock_get_logger):

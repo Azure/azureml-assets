@@ -6,14 +6,14 @@
 import os
 
 import pytest
-from pathlib import Path
 from pydantic.utils import deep_update
 
 from .util import _submit_job_and_monitor_till_completion, set_component
 
 # Common configuration
-source_dir = Path(__file__).parent
-gated_llm_pipeline_filepath = os.path.join(source_dir, "prs_pipeline_templates", "base_llm.yml")
+source_dir = os.getcwd()
+gated_llm_pipeline_filepath = os.path.join(
+    pytest.source_dir, "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
 
 JOB_NAME = "gated_batch_score_llm"  # Should be equivalent to base_llm.yml's job name
 YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.

@@ -15,9 +15,6 @@ from azure.identity import DefaultAzureCredential
 from .util import _get_component_name, _set_and_get_component_name_ver, create_copy
 
 
-BATCH_SCORE_COMPONENT_YAML_NAME = "batch_score_oss"
-
-
 # Marks all tests in this directory as e2e tests
 @pytest.fixture(autouse=True, params=[pytest.param(None, marks=pytest.mark.e2e)])
 def mark_as_e2e_test():
@@ -58,7 +55,7 @@ def main_worker_lock(worker_id):
     """Lock until the main worker releases its lock."""
     if _is_main_worker(worker_id):
         return worker_id
-    _watch_file(file=lock_file, timeout_in_seconds=180)
+    _watch_file(file=lock_file, timeout_in_seconds=120)
     return worker_id
 
 
@@ -89,7 +86,7 @@ def asset_version(main_worker_lock):
         yield version
         os.remove(version_file)
     else:
-        _watch_file(file=version_file, timeout_in_seconds=180)
+        _watch_file(file=version_file, timeout_in_seconds=120)
         version = ""
         with open(version_file, "r") as fp:
             version = fp.read()
@@ -128,24 +125,23 @@ def pytest_unconfigure():
 
 @pytest.fixture(autouse=True, scope="session")
 def register_components(main_worker_lock, asset_version):
-    """Register components for the tests."""
+    """Register components in the test workspace for e2e tests."""
     if not _is_main_worker(main_worker_lock):
         return
 
-    _register_component(BATCH_SCORE_COMPONENT_YAML_NAME, asset_version)
+    _register_component("batch_score_llm", asset_version)
 
 
 @pytest.fixture(scope="session")
 def llm_batch_score_yml_component(asset_version):
-    """Return the component version for batch_score_llm.yml."""
-    return _get_component_metadata(BATCH_SCORE_COMPONENT_YAML_NAME, asset_version)
+    """Get batch score llm component."""
+    return _get_component_metadata("batch_score_llm", asset_version)
 
 
-def _register_component(component_yml_name, asset_version):
+def _register_component(component_name, asset_version):
+    """Register component."""
     # Copy component to a temporary file to not muddle dev environments
-    batch_score_component_filepath = os.path.join(
-        pytest.source_dir, component_yml_name, "spec.yaml"
-    )
+    batch_score_component_filepath = _get_spec_filepath(component_name)
     create_copy(batch_score_component_filepath, pytest.copied_batch_score_component_filepath)
 
     # pins batch_component version
@@ -164,8 +160,10 @@ def _register_component(component_yml_name, asset_version):
     return component_name, component_version
 
 
-def _get_component_metadata(component_yml_name, asset_version):
-    batch_score_component_filepath = os.path.join(
-        pytest.source_dir, component_yml_name, "spec.yaml"
-    )
+def _get_component_metadata(component_name, asset_version):
+    batch_score_component_filepath = _get_spec_filepath(component_name)
     return _get_component_name(batch_score_component_filepath), asset_version
+
+
+def _get_spec_filepath(component_name):
+    return os.path.join(pytest.source_dir, component_name, "spec.yaml")

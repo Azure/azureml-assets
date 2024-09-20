@@ -5,13 +5,13 @@
 
 import pytest
 
-from src.batch_score_oss.common.common_enums import ApiType, AuthenticationType
-from src.batch_score_oss.common.configuration.configuration import Configuration
-from src.batch_score_oss.common.configuration.metadata import Metadata
+from src.batch_score.common.common_enums import ApiType, AuthenticationType
+from src.batch_score.common.configuration.configuration import Configuration
+from src.batch_score.common.configuration.metadata import Metadata
 
 TEST_COMPONENT_NAME = "test_component_name"
 TEST_COMPONENT_VERSION = "test_component_version"
-TEST_SCORING_URI = "https://test.westus3.models.ai.azure.com/v1/chat/completions"
+TEST_SCORING_URI = "https://test.openai.azure.com/openai/deployments/"
 
 
 @pytest.fixture

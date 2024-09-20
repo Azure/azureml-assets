@@ -7,9 +7,9 @@ import asyncio
 from collections import deque
 
 import pytest
-from src.batch_score_oss.common.post_processing.gatherer import Gatherer
-from src.batch_score_oss.common.post_processing.mini_batch_context import MiniBatchContext
-from src.batch_score_oss.common.scoring.scoring_result import ScoringResultStatus
+from src.batch_score.common.post_processing.gatherer import Gatherer
+from src.batch_score.common.post_processing.mini_batch_context import MiniBatchContext
+from src.batch_score.common.scoring.scoring_result import ScoringResultStatus
 from tests.fixtures.scoring_result import get_test_request_obj
 from tests.fixtures.test_mini_batch_context import TestMiniBatchContext
 

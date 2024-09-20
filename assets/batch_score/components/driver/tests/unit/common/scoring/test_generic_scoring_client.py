@@ -7,11 +7,8 @@ import aiohttp
 import pytest
 from unittest.mock import MagicMock, patch
 
-from src.batch_score_oss.common.scoring.generic_scoring_client import GenericScoringClient
-from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.common.request_modification.modifiers.input_type_modifier import InputTypeModifier
-from src.batch_score_oss.common.request_modification.input_transformer import InputTransformer
-from src.batch_score_oss.common.common_enums import InputType
+from src.batch_score.common.scoring.generic_scoring_client import GenericScoringClient
+from src.batch_score.common.scoring.scoring_request import ScoringRequest
 
 from tests.fixtures.client_response import FakeResponse
 
@@ -21,7 +18,7 @@ class NullHeaderProvider:
 
     def get_headers(self):
         """Get headers."""
-        return {"static_header": "static_value"}
+        return {}
 
 
 @pytest.mark.asyncio
@@ -43,12 +40,7 @@ async def test_score(response_status, response_body, exception_to_raise):
         http_response_handler=http_response_handler,
         scoring_url=None)
 
-    input_type_modifier = InputTypeModifier()
-    input_transfomer = InputTransformer([input_type_modifier])
-    scoring_request = ScoringRequest(
-        original_payload='{"custom_id": "task_123", "messages": [{"content": "just text"}]}',
-        input_to_request_transformer=input_transfomer,
-    )
+    scoring_request = ScoringRequest(original_payload='{"custom_id": "task_123", "prompt":"Test model"}')
 
     async with aiohttp.ClientSession() as session:
         with patch.object(session, "post") as mock_post:
@@ -67,14 +59,10 @@ async def test_score(response_status, response_body, exception_to_raise):
                 worker_id="1")
 
     # Assert
-    assert scoring_request.input_type == InputType.TextOnly
     assert http_response_handler.handle_response.assert_called_once
     response_sent_to_handler = http_response_handler.handle_response.call_args.kwargs['http_response']
 
-    generated_request = scoring_client._create_http_request(scoring_request)
-    assert "custom_id" not in generated_request.payload
-    assert "input_type" not in generated_request.payload
-    assert generated_request.headers["static_header"] == "static_value"
+    assert "custom_id" not in scoring_client._create_http_request(scoring_request).payload
 
     if exception_to_raise:
         assert type(response_sent_to_handler.exception) is exception_to_raise

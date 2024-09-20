@@ -7,8 +7,8 @@ import asyncio
 
 import pytest
 
-from src.batch_score_oss.common.configuration.configuration import Configuration
-from src.batch_score_oss.common.parallel.parallel_driver import Parallel
+from src.batch_score.common.configuration.configuration import Configuration
+from src.batch_score.common.parallel.parallel_driver import Parallel
 
 
 @pytest.fixture()

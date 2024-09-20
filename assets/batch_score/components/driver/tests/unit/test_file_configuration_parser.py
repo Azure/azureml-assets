@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from src.batch_score_oss.common.configuration.file_configuration_parser import (
+from src.batch_score.common.configuration.file_configuration_parser import (
     FileConfigurationParser,
 )
-from src.batch_score_oss.common.configuration.file_configuration_validator import (
+from src.batch_score.common.configuration.file_configuration_validator import (
     FileConfigurationValidator,
 )
 
@@ -30,6 +30,33 @@ TEST_AOAI_DEPLOYMENT_URI = 'https://sunjoli-aoai.openai.azure.com/openai/deploym
 @pytest.mark.parametrize(
     "file_name, override_expected_config",
     [
+        (
+            "aoai_completion.json",
+            {
+                'api_type': 'completion',
+                'connection_name': 'batchscore-connection',
+                'scoring_url': f'{TEST_AOAI_DEPLOYMENT_URI}/turbo/completions?api-version=2023-03-15-preview',
+                'segment_large_requests': True,
+                'segment_max_token_size': 1000,
+            },
+        ),
+        (
+            "aoai_chat_completion.json",
+            {
+                'api_type': 'chat_completion',
+                'connection_name': 'batchscore-connection',
+                'scoring_url': f'{TEST_AOAI_DEPLOYMENT_URI}/turbo/chat/completions?api-version=2023-03-15-preview',
+            },
+        ),
+        (
+            "aoai_embedding.json",
+            {
+                'api_type': 'embedding',
+                'batch_size_per_request': 2,
+                'connection_name': 'batchscore-connection',
+                'scoring_url': f'{TEST_AOAI_DEPLOYMENT_URI}/text-embedding-ada-002/embeddings?api-version=2022-12-01',
+            },
+        ),
         (
             "serverless_completion.json",
             {
@@ -69,6 +96,7 @@ def _get_base_configuration():
         "app_insights_log_level": "debug",
         "async_mode": False,
         "authentication_type": "connection",
+        "batch_pool": None,
         "batch_size_per_request": 1,
         "configuration_file": None,
         "configuration_file": None,
@@ -78,18 +106,19 @@ def _get_base_configuration():
         "image_input_folder": None,
         "initial_worker_count": 100,
         "input_schema_version": 1,
-        "logging_metadata": {},
+        "logging_metadata": "{}",
         "max_retry_time_interval": 600,
         "max_worker_count": 200,
         "mini_batch_results_out_directory": '~/resources/mini_batch_results_output_directory',
         "online_endpoint_url": None,
         "output_behavior": "summary_only",
+        "quota_audience": None,
+        "quota_estimator": None,
         "request_path": None,
         "save_mini_batch_results": "enabled",
         "scoring_url": f'{TEST_AOAI_DEPLOYMENT_URI}/turbo/completions?api-version=2023-03-15-preview',
         "segment_large_requests": False,
         "segment_max_token_size": 0,
-        "server_error_retries": 10,
         "service_namespace": None,
         "split_output": False,
         "stdout_log_level": "debug",

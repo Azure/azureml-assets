@@ -3,7 +3,7 @@
 
 """This file contains unit tests for batch score init started event."""
 
-from src.batch_score_oss.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
 
 from tests.fixtures.telemetry_events import (
     assert_common_fields,
@@ -34,7 +34,7 @@ def test_str(mock_run_context, make_batch_score_init_started_event):
     # Assert
     expected_texts = [
         'event_time',
-        'endpoint_type: Serverless',
+        'endpoint_type: AOAI',
         'authentication_type: api_key',
         'api_type: chat_completion',
         f'component_name: {TEST_COMPONENT_NAME}',

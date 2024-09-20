@@ -5,13 +5,13 @@
 
 import pytest
 
-from src.batch_score_oss.common.configuration.configuration_parser import (
+from src.batch_score.common.configuration.configuration_parser import (
     ConfigurationParser,
 )
-from src.batch_score_oss.common.configuration.configuration_parser_factory import (
+from src.batch_score.common.configuration.configuration_parser_factory import (
     ConfigurationParserFactory,
 )
-from src.batch_score_oss.common.configuration.file_configuration_parser import (
+from src.batch_score.common.configuration.file_configuration_parser import (
     FileConfigurationParser,
 )
 

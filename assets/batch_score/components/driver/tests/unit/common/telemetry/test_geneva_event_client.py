@@ -3,17 +3,15 @@
 
 """This file contains unit tests for geneva event client."""
 
-from src.batch_score_oss.common.telemetry.geneva_event_client import GenevaEventClient
-from src.batch_score_oss.common.telemetry.required_fields import RequiredFields
-from src.batch_score_oss.common.telemetry.standard_fields import StandardFields
-from src.batch_score_oss.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
-from src.batch_score_oss.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score.common.telemetry.geneva_event_client import GenevaEventClient
+from src.batch_score.common.telemetry.required_fields import RequiredFields
+from src.batch_score.common.telemetry.standard_fields import StandardFields
+from src.batch_score.common.telemetry.events.batch_score_init_completed_event import BatchScoreInitCompletedEvent
+from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_started_event import (
-    BatchScoreMinibatchStartedEvent
-)
+from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
 
 from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION, TEST_SCORING_URI
 
@@ -64,7 +62,7 @@ def test_generate_extension_fields_init_completed(mock_import_module, make_batch
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
-        'endpoint_type': 'Serverless',
+        'endpoint_type': 'AOAI',
         'event_time': '2024-01-01T08:30:00.123456+00:00',
         'execution_mode': 'aml_pipeline',
         'resource_group': 'testrg',
@@ -91,7 +89,7 @@ def test_generate_extension_fields_init_started(mock_import_module, make_batch_s
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
-        'endpoint_type': 'Serverless',
+        'endpoint_type': 'AOAI',
         'event_time': '2024-01-01T08:30:00.123456+00:00',
         'execution_mode': 'aml_pipeline',
         'resource_group': 'testrg',
@@ -115,7 +113,7 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
-        'endpoint_type': 'Serverless',
+        'endpoint_type': 'AOAI',
         'event_time': '2024-01-01T08:30:00.123456+00:00',
         'execution_mode': 'aml_pipeline',
         'resource_group': 'testrg',
@@ -124,6 +122,8 @@ def test_generate_extension_fields_minibatch_completed(mock_import_module, make_
         # Event specific fields
         'minibatch_id': '2',
         'scoring_url': TEST_SCORING_URI,
+        'batch_pool': 'test_pool',
+        'quota_audience': 'test_audience',
         'model_name': 'test_model_name',
         'retry_count': '0',
 
@@ -171,7 +171,7 @@ def test_generate_extension_fields_minibatch_started(mock_import_module, make_ba
         'authentication_type': 'api_key',
         'component_name': f'{TEST_COMPONENT_NAME}',
         'component_version': f'{TEST_COMPONENT_VERSION}',
-        'endpoint_type': 'Serverless',
+        'endpoint_type': 'AOAI',
         'event_time': '2024-01-01T08:30:00.123456+00:00',
         'execution_mode': 'aml_pipeline',
         'resource_group': 'testrg',
@@ -180,6 +180,8 @@ def test_generate_extension_fields_minibatch_started(mock_import_module, make_ba
         # Event specific fields
         'minibatch_id': '2',
         'scoring_url': TEST_SCORING_URI,
+        'batch_pool': 'test_pool',
+        'quota_audience': 'test_audience',
         'input_row_count': '10',
         'retry_count': '0',
     }

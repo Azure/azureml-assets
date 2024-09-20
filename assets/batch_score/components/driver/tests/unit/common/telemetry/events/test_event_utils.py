@@ -7,8 +7,8 @@ import os
 import pytest
 
 from unittest.mock import patch
-from src.batch_score_oss.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
-from src.batch_score_oss.common.telemetry.events.event_utils import catch_and_log_all_exceptions
+from src.batch_score.common.constants import BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS_ENV_VAR
+from src.batch_score.common.telemetry.events.event_utils import catch_and_log_all_exceptions
 
 
 @catch_and_log_all_exceptions

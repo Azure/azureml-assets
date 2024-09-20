@@ -4,6 +4,7 @@
 """End-to-end test utilities."""
 
 import errno
+import json
 import os
 import shutil
 import tempfile
@@ -13,6 +14,8 @@ import yaml
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
 from pydantic.utils import deep_update
+
+from src.batch_score.common.constants import COMPONENT_NAME_KEY, COMPONENT_VERSION_KEY
 
 
 def _submit_job_and_monitor_till_completion(
@@ -144,3 +147,14 @@ def set_component(component_name: str, component_version: str, component_config:
     """Set the azureml asset name and version for the component being tested."""
     """This fills the placeholder defined at top of this file."""
     component_config["jobs"][job_name]["component"] = f"azureml:{component_name}:{component_version}"
+
+
+def create_metadata_json_file(metadata_json_filepath, component_name, component_version):
+    """Create metadata json file for e2e tests."""
+    metadata_json_data = {
+        COMPONENT_NAME_KEY: component_name,
+        COMPONENT_VERSION_KEY: component_version,
+    }
+
+    with open(metadata_json_filepath, 'w+') as json_file:
+        json.dump(metadata_json_data, json_file)

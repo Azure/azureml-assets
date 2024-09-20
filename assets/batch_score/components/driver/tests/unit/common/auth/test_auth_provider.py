@@ -4,7 +4,7 @@
 """This file contains unit tests for auth provider."""
 
 import pytest
-from src.batch_score_oss.common.auth.auth_provider import EndpointType, WorkspaceConnectionAuthProvider
+from src.batch_score.common.auth.auth_provider import EndpointType, WorkspaceConnectionAuthProvider
 
 
 @pytest.mark.skip('Need to fix the mock.')
@@ -15,7 +15,7 @@ def test_workspace_connection_auth_provider_get_auth_headers(mocker):
                         return_value='{"properties":{"credentials":{"key":"my_value"}}}')
 
     # Act
-    headers = WorkspaceConnectionAuthProvider('my_connection', EndpointType.Serverless).get_auth_headers()
+    headers = WorkspaceConnectionAuthProvider('my_connection', EndpointType.AOAI).get_auth_headers()
 
     # Assert
     assert len(headers) == 1

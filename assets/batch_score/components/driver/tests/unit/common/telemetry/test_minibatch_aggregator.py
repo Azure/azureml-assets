@@ -5,21 +5,17 @@
 
 import datetime
 
-from src.batch_score_oss.common.common_enums import AuthenticationType, ApiType, EndpointType, InputType
-from src.batch_score_oss.common.telemetry.minibatch_aggregator import MinibatchAggregator
-from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score.common.common_enums import AuthenticationType, ApiType, EndpointType
+from src.batch_score.common.telemetry.minibatch_aggregator import MinibatchAggregator
+from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
+from src.batch_score.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
     BatchScoreMinibatchEndpointHealthEvent
 )
-from src.batch_score_oss.common.telemetry.events.batch_score_minibatch_started_event import (
-    BatchScoreMinibatchStartedEvent
-)
-from src.batch_score_oss.common.telemetry.events.batch_score_request_completed_event import (
-    BatchScoreRequestCompletedEvent
-)
-from src.batch_score_oss.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
+from src.batch_score.common.telemetry.events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
+from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 
@@ -38,13 +34,14 @@ def test_minibatch_aggregator_summarize(mock_run_context):
         event_time=minibatch_started_datetime,
         minibatch_id='minibatch_id',
         scoring_url='scoring_url',
+        batch_pool='batch_pool',
+        quota_audience='quota_audience',
         input_row_count=minibatch_row_count,
         retry_count=0,
     ))
 
     # Some requests succeed.
     for i in range(1, 1 + minibatch_row_count - failed_row_count):
-        input_type = InputType.TextOnly if i % 2 == 0 else InputType.Image if i % 3 == 0 else InputType.ImageAndText
         # First request is throttled.
         minibatch_aggregator.add(event=BatchScoreRequestCompletedEvent(
             event_time=minibatch_started_datetime + datetime.timedelta(milliseconds=0.5*i),
@@ -54,7 +51,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
             response_code=429 if i % 2 == 0 else -408,
             prompt_tokens=1000,
             completion_tokens=0,
-            input_type=input_type,
         ))
 
         # Second request is successful.
@@ -66,7 +62,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
             response_code=200,
             prompt_tokens=1000,
             completion_tokens=500,
-            input_type=input_type,
         ))
 
         # Sucessful request produces a completed row.
@@ -78,12 +73,10 @@ def test_minibatch_aggregator_summarize(mock_run_context):
             completion_tokens=500,
             retry_count=1,
             duration_ms=1,
-            input_type=input_type,
         ))
 
     # Some requests fail.
     for i in range(1 + minibatch_row_count - failed_row_count, 1 + minibatch_row_count):
-        input_type = InputType.TextOnly if i % 2 == 0 else InputType.Image if i % 3 == 0 else InputType.ImageAndText
         # First request is throttled.
         minibatch_aggregator.add(event=BatchScoreRequestCompletedEvent(
             event_time=minibatch_started_datetime + datetime.timedelta(milliseconds=0.5*i),
@@ -93,7 +86,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
             response_code=429 if i % 2 == 0 else -408,
             prompt_tokens=1000,
             completion_tokens=0,
-            input_type=input_type,
         ))
 
         # Second request fails.
@@ -105,7 +97,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
             response_code=500 if i % 2 == 0 else -500,
             prompt_tokens=1000,
             completion_tokens=0,
-            input_type=input_type,
         ))
 
         # Failed request produces a completed row.
@@ -117,7 +108,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
             completion_tokens=0,
             retry_count=1,
             duration_ms=1,
-            input_type=input_type,
         ))
 
     summary = minibatch_aggregator.summarize(
@@ -132,6 +122,8 @@ def test_minibatch_aggregator_summarize(mock_run_context):
 
     assert summary.minibatch_id == 'minibatch_id'
     assert summary.scoring_url == 'scoring_url'
+    assert summary.batch_pool == 'batch_pool'
+    assert summary.quota_audience == 'quota_audience'
     assert summary.model_name == "model_name"  # Only the first model name should be used.
     assert summary.retry_count == 0
 
@@ -142,9 +134,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
     assert summary.succeeded_row_count == 95
     assert summary.failed_row_count == 5
     assert summary.output_row_count == 95
-    assert summary.input_row_text_count == 50
-    assert summary.input_row_image_count == 17
-    assert summary.input_row_text_image_count == 33
 
     assert summary.http_request_count == 200
     assert summary.http_request_succeeded_count == 95
@@ -182,6 +171,8 @@ def test_minibatch_aggregator_summarize(mock_run_context):
 
     assert summary2.minibatch_id == 'minibatch_id'
     assert summary2.scoring_url is None
+    assert summary2.batch_pool is None
+    assert summary2.quota_audience is None
     assert summary2.model_name is None
     assert summary2.retry_count == 0
 
@@ -233,6 +224,8 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
         event_time=minibatch_started_datetime,
         minibatch_id='minibatch_id',
         scoring_url='scoring_url',
+        batch_pool='batch_pool',
+        quota_audience='quota_audience',
         input_row_count=minibatch_row_count,
         retry_count=0,
     ))
@@ -351,6 +344,8 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
     event1 = result_events[0]
     assert event1.minibatch_id == 'minibatch_id'
     assert event1.scoring_url == scoring_url_endpoint1
+    assert event1.batch_pool == 'batch_pool'
+    assert event1.quota_audience == 'quota_audience'
 
     assert event1.http_request_count == 160
     assert event1.http_request_succeeded_count == 60
@@ -360,6 +355,8 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
     event2 = result_events[1]
     assert event2.minibatch_id == 'minibatch_id'
     assert event2.scoring_url == scoring_url_endpoint2
+    assert event2.batch_pool == 'batch_pool'
+    assert event2.quota_audience == 'quota_audience'
 
     assert event2.http_request_count == 40
     assert event2.http_request_succeeded_count == 35
@@ -373,6 +370,40 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
 
     # Assert
     assert not len(result_events2)
+
+
+def test_minibatch_aggregator_summarize_endpoints_non_batch_pool_endpoints(mock_run_context):
+    """Test summarize_endpoints function in minibatch aggregator for non-batch-pool endpoints."""
+    # Arrange
+    minibatch_aggregator = MinibatchAggregator()
+
+    minibatch_started_datetime = datetime.datetime(2024, 1, 1, 0, 0)
+
+    # Act
+    minibatch_aggregator.add(event=BatchScoreMinibatchStartedEvent(
+        event_time=minibatch_started_datetime,
+        minibatch_id='minibatch_id',
+        scoring_url='aoai_scoring_url',
+        batch_pool=None,
+        quota_audience=None,
+        input_row_count=100,
+        retry_count=0,
+    ))
+
+    minibatch_aggregator.add(event=BatchScoreRequestCompletedEvent(
+        event_time=minibatch_started_datetime,
+        minibatch_id='minibatch_id',
+        scoring_url="https://endpoint1.centralus.inference.ml.azure.com/",
+        duration_ms=0.5,
+        response_code=200,
+        prompt_tokens=2000,
+        completion_tokens=200,
+    ))
+
+    result_events = minibatch_aggregator.summarize_endpoints(minibatch_id='minibatch_id')
+
+    # Assert
+    assert not len(result_events)
 
 
 def _assert_no_numpy_types(summary):

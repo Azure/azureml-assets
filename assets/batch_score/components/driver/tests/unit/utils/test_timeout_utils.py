@@ -8,8 +8,8 @@ import pytest
 
 from unittest import mock
 
-from src.batch_score_oss.common import constants
-from src.batch_score_oss.utils import timeout_utils
+from src.batch_score.common import constants
+from src.batch_score.utils import timeout_utils
 
 
 @pytest.mark.parametrize(

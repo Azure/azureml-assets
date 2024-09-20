@@ -4,22 +4,22 @@
 """This file contains unit tests for worker."""
 
 from collections import deque
-import random
 
 import pandas as pd
 import pytest
-from mock import MagicMock, patch
+from mock import patch
 from multidict import CIMultiDict, CIMultiDictProxy
 from unittest.mock import ANY, PropertyMock
 
-from src.batch_score_oss.common.parallel.request_metrics import RequestMetrics
-from src.batch_score_oss.common.parallel.worker import QueueItem, Worker
-from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.common.scoring.scoring_result import (
+from src.batch_score.batch_pool.quota.quota_client import QuotaUnavailableException
+from src.batch_score.common.parallel.request_metrics import RequestMetrics
+from src.batch_score.common.parallel.worker import QueueItem, Worker
+from src.batch_score.common.scoring.scoring_request import ScoringRequest
+from src.batch_score.common.scoring.scoring_result import (
     RetriableException,
     ScoringResultStatus,
 )
-from src.batch_score_oss.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 
@@ -54,11 +54,9 @@ async def test_successful_scoring_appends_result_no_segmentation(
     async def mock_score(*args, **kwargs):
         return scoring_result
 
-    monkeypatch.setattr(
-        "src.batch_score_oss.common.scoring.generic_scoring_client.GenericScoringClient.score",
-        mock_score)
-    with patch("src.batch_score_oss.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
-        with patch("src.batch_score_oss.common.scoring.segmented_score_context.SegmentedScoreContext"
+    monkeypatch.setattr("src.batch_score.batch_pool.scoring.pool_scoring_client.PoolScoringClient.score", mock_score)
+    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+        with patch("src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext"
                    ".processed_segments_count", new_callable=PropertyMock) as mock_processed_segments_count:
             mock_processed_segments_count.return_value = 0
             metrics = await _run_worker(make_worker, scoring_request=scoring_request)
@@ -76,8 +74,7 @@ async def test_successful_scoring_appends_result_no_segmentation(
         completion_tokens=scoring_result.completion_tokens,
         retry_count=scoring_result.num_retries,
         duration_ms=scoring_result.duration * 1000,
-        segment_count=0,
-        input_type=scoring_request.input_type,
+        segment_count=0
     )
 
     # Validate that input row event was emitted.
@@ -110,13 +107,13 @@ async def test_successful_scoring_appends_result_with_segmentation(
     async def mock_score(*args, **kwargs):
         return scoring_result
 
-    monkeypatch.setattr("src.batch_score_oss.common.scoring.segmented_score_context"
+    monkeypatch.setattr("src.batch_score.common.scoring.segmented_score_context"
                         ".SegmentedScoreContext.score_next_segment", mock_score)
-    with patch("src.batch_score_oss.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
-        with patch("src.batch_score_oss.common.scoring.segmented_score_context"
+    with patch("src.batch_score.common.telemetry.events.event_utils.emit_event") as mock_emit_event:
+        with patch("src.batch_score.common.scoring.segmented_score_context"
                    ".SegmentedScoreContext.processed_segments_count",
                    new_callable=PropertyMock) as mock_processed_segments_count:
-            with patch('src.batch_score_oss.common.scoring.segmented_score_context.SegmentedScoreContext.has_more',
+            with patch('src.batch_score.common.scoring.segmented_score_context.SegmentedScoreContext.has_more',
                        side_effect=[True, True, True, False]):
                 mock_processed_segments_count.return_value = TEST_SEGMENT_COUNT
                 metrics = await _run_worker(make_worker, segment_large_requests='enabled',
@@ -135,8 +132,7 @@ async def test_successful_scoring_appends_result_with_segmentation(
         completion_tokens=scoring_result.completion_tokens,
         retry_count=scoring_result.num_retries,
         duration_ms=scoring_result.duration * 1000,
-        segment_count=TEST_SEGMENT_COUNT,
-        input_type=scoring_request.input_type,
+        segment_count=TEST_SEGMENT_COUNT
     )
 
     # Validate that input row event was emitted.
@@ -218,9 +214,7 @@ async def test_request_indefinite_max_retry_time_interval(
         raise Exception("Score Failed")
     mock_score.counter = 0
 
-    monkeypatch.setattr(
-        "src.batch_score_oss.common.scoring.generic_scoring_client.GenericScoringClient.score",
-        mock_score)
+    monkeypatch.setattr("src.batch_score.batch_pool.scoring.pool_scoring_client.PoolScoringClient.score", mock_score)
     worker = make_worker(
         scoring_request_queue=queue,
         max_retry_time_interval=max_retry_time_interval)
@@ -241,7 +235,6 @@ async def test_model_429_does_not_contribute_to_request_total_wait_time(
     mock_score['raise_exception'] = RetriableException(status_code=424,
                                                        model_response_code='429',
                                                        retry_after=0.01)
-
     mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
 
     metrics = await _run_worker(make_worker)
@@ -249,11 +242,30 @@ async def test_model_429_does_not_contribute_to_request_total_wait_time(
     assert not metrics.empty
     assert metrics.iloc[0]['request_total_wait_time'] == 0
 
+
+@pytest.mark.asyncio
+async def test_quota_429_contributes_to_request_total_wait_time(
+        mock_get_events_client,
+        make_worker,
+        mock_get_logger,
+        mock_score,
+        mock_get_client_setting,
+        mock_run_context):
+    """Test quota 429 contributes to request total wait time."""
+    mock_score['raise_exception'] = QuotaUnavailableException(retry_after=0.01)
+    mock_get_client_setting['COUNT_ONLY_QUOTA_429_TOWARD_TOTAL_REQUEST_WAIT_TIME'] = 'true'
+
+    metrics = await _run_worker(make_worker)
+
+    assert not metrics.empty
+    assert metrics.iloc[0]['request_total_wait_time'] > 0
+
 fixture_names = [
     'mock_get_events_client',
     'make_worker',
     'mock_get_logger',
     'mock_score',
+    'mock_get_client_setting',
     'monkeypatch',
 ]
 no_deployments_test_cases = [
@@ -294,12 +306,13 @@ no_deployments_test_cases = [
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "mock_get_events_client, make_worker, mock_get_logger, mock_score, "
-    "monkeypatch, env_vars, expected_wait_time",
+    "mock_get_client_setting, monkeypatch, env_vars, expected_wait_time",
     no_deployments_test_cases,
     indirect=['mock_get_events_client',
               'make_worker',
               'mock_get_logger',
               'mock_score',
+              'mock_get_client_setting',
               'monkeypatch'],
 )
 async def test_no_deployments_in_traffic_group(
@@ -307,6 +320,7 @@ async def test_no_deployments_in_traffic_group(
         make_worker,
         mock_get_logger,
         mock_score,
+        mock_get_client_setting,
         monkeypatch,
         env_vars,
         expected_wait_time,
@@ -317,8 +331,6 @@ async def test_no_deployments_in_traffic_group(
 
     if 'BATCH_SCORE_NO_DEPLOYMENTS_BACK_OFF' not in env_vars:
         monkeypatch.setattr(Worker, 'NO_DEPLOYMENTS_BACK_OFF', expected_wait_time)
-
-    random.random = MagicMock(return_value=0.5)
 
     mock_score['raise_exception'] = RetriableException(
         status_code=404,
@@ -350,6 +362,9 @@ async def _run_worker(make_worker, segment_large_requests='disabled', scoring_re
         id=TEST_WORKER_ID)
 
     worker._Worker__count_only_quota_429s_toward_total_request_time = True
+
+    # Disable quota client so we don't make quota requests during the unit test.
+    worker._Worker__scoring_client._PoolScoringClient__quota_client = None
 
     _ = await worker.start()
 

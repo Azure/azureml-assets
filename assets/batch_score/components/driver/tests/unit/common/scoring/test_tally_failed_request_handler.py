@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score_oss.common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
+from src.batch_score.common.scoring.tally_failed_request_handler import TallyFailedRequestHandler
 
 INVALID_SETUP_TESTS = [
     [True, "none|bad_request_in_model"],

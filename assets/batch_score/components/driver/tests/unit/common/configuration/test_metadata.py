@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score_oss.common.configuration.metadata import Metadata
+from src.batch_score.common.configuration.metadata import Metadata
 
 from tests.fixtures.configuration import TEST_COMPONENT_NAME, TEST_COMPONENT_VERSION
 

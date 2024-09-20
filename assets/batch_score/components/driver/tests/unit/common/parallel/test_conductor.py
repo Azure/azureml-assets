@@ -9,10 +9,10 @@ import os
 import pytest
 from mock import MagicMock, patch
 
-from src.batch_score_oss.common.parallel.conductor import Conductor
-from src.batch_score_oss.common.scoring.scoring_request import ScoringRequest
-from src.batch_score_oss.common.scoring.scoring_result import ScoringResult
-from src.batch_score_oss.common.telemetry.events import event_utils
+from src.batch_score.common.parallel.conductor import Conductor
+from src.batch_score.common.scoring.scoring_request import ScoringRequest
+from src.batch_score.common.scoring.scoring_result import ScoringResult
+from src.batch_score.common.telemetry.events import event_utils
 
 
 @pytest.mark.asyncio
@@ -41,7 +41,7 @@ async def test_run_returns_same_number_of_results_as_requests(
             queue_item = self._Worker__scoring_request_queue.pop()
             self._Worker__scoring_result_queue.append(ScoringResult.Failed(queue_item.scoring_request))
 
-    monkeypatch.setattr('src.batch_score_oss.common.parallel.worker.Worker.start', mock_worker_start)
+    monkeypatch.setattr('src.batch_score.common.parallel.worker.Worker.start', mock_worker_start)
 
     # Minibatch has one request.
     # There should be one result.
@@ -97,7 +97,6 @@ def test_enqueue_empty_minibatch_generate_minibatch_summary(
     mock_generate_minibatch_summary.assert_called_once_with(
         minibatch_id=1,
         output_row_count=0,
-        logging_metadata=None,
     )
 
 

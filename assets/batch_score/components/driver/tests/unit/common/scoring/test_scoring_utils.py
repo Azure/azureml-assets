@@ -7,25 +7,22 @@ from enum import Enum
 
 import pytest
 
-import src.batch_score_oss.common.scoring.scoring_utils as scoring_utils
-from src.batch_score_oss.common.scoring.scoring_utils import RetriableType
+import src.batch_score.common.scoring.scoring_utils as scoring_utils
+from src.batch_score.common.scoring.scoring_utils import RetriableType
 
 CLASSIFICATION_TESTS = [
-    [200, None, "", "", RetriableType.NOT_RETRIABLE],
+    [429, None, "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
     [400, None, "", "", RetriableType.NOT_RETRIABLE],
-    [403, None, "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
-    [404, "Specified traffic group could not be found", "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
+    [200, None, "", "", RetriableType.NOT_RETRIABLE],
     [424, "no healthy upstream", "", "model_not_ready", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
     [424, "no healthy upstream", "", "too_few_model_instance", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
     [424, "no healthy upstream", "None", "model_not_ready", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
-    [424, "no healthy upstream", None, "model_not_ready", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
     [424, "upstream connect error or disconnect/reset before headers", "None", "model_not_ready",
-        RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
-    [424, None, "408", "", RetriableType.RETRY_ON_SAME_ENDPOINT],
+     RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
+    [424, "no healthy upstream", None, "model_not_ready", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
     [424, None, "429", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
-    [424, None, "500", "", RetriableType.RETRY_UNTIL_MAX_RETRIES],
-    [424, None, "504", "", RetriableType.RETRY_UNTIL_MAX_RETRIES],
-    [429, None, "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
+    [404, "Specified traffic group could not be found", "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
+    [403, None, "", "", RetriableType.RETRY_ON_DIFFERENT_ENDPOINT],
 ]
 
 
