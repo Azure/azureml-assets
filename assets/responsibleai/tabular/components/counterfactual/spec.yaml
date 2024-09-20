@@ -38,7 +38,7 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/6
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/5
 
 command: >-
   python create_counterfactual.py
