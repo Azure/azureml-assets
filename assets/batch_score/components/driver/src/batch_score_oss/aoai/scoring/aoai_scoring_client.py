@@ -18,7 +18,15 @@ class AoaiScoringClient(GenericScoringClient):
             header_provider: HeaderProvider,
             configuration: Configuration,
             tally_handler: TallyFailedRequestHandler = None):
-        """Initialize AoaiScoringClient."""
+        """Initialize AoaiScoringClient.
+
+        :param header_provider: header provider for request creation
+        :param header_provider: HeaderProvider
+        :param configuration: Batch score configuration
+        :type configuration: Configuration
+        :param tally_handler: tallyHandler instance created on batch scoring configuration to tally failed requests
+        :type tally_handler:TallyFailedRequestHandler
+        """
         super().__init__(
             header_provider=header_provider,
             http_response_handler=AoaiHttpResponseHandler(tally_handler, configuration),

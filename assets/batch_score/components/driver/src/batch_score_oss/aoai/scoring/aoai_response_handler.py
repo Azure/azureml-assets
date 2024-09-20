@@ -30,8 +30,14 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
 
     RETRIABLE_STATUS_CODES = [408, 429]
 
-    def __init__(self, tally_handler: TallyFailedRequestHandler, configuration: Configuration) -> None:
-        """Initialize AoaiHttpResponseHandler."""
+    def __init__(self, tally_handler: TallyFailedRequestHandler, configuration: Configuration):
+        """Initialize AoaiHttpResponseHandler.
+
+        :param tally_handler: tallyHandler instance created on batch scoring configuration to tally failed requests
+        :type tally_handler:TallyFailedRequestHandler
+        :param configuration: Batch score configuration
+        :type configuration: Configuration
+        """
         self._configuration = configuration
         self.__tally_handler = tally_handler
 
@@ -43,7 +49,23 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
             start: float,
             end: float,
             worker_id: str) -> ScoringResult:
-        """Handle the response from the model for the provided scoring request."""
+        """Handle the response from the model for the provided scoring request.
+
+        :param http_response: scoring response
+        :type http_response: HttpScoringResponse
+        :param scoring_request: scoring request
+        :type scoring_request: ScoringRequest
+        :param x_ms_client_request_id: scoring request id
+        :type x_ms_client_request_id: str
+        :param start: start time of the request
+        :type start: float
+        :param end: end time of the request
+        :type end: float
+        :param worker_id: batch score worker id
+        :type worker_id: str
+        :return: return scoring result if request is non-retriable
+        :rtype: ScoringResult
+        """
         # Emit request completed event
         self._emit_request_completed_event(
             http_response=http_response,
@@ -103,7 +125,15 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
         http_status: int,
         scoring_request: ScoringRequest
     ) -> bool:
-        """Is the http status retriable."""
+        """Is the http status retriable.
+
+        :param http_status: response status code of the request
+        :param http_status: int
+        :param scoring_request: scoring request 
+        :param scoring_request: scoring request
+        :return: if failed request is retriable
+        :rtype: bool
+        """
         if (http_status in self.RETRIABLE_STATUS_CODES):
             return True
         elif http_status and http_status >= 500:
