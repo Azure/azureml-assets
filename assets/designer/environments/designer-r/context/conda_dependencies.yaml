@@ -33,8 +33,6 @@ dependencies:
   - pip:
       - azureml-designer-classic-modules==0.0.182
       - joblib==1.2.0
-      - setuptools==65.5.1
-      - wheel==0.38.1
       - numpy==1.22
       - cryptography==42.0.4
       - azureml-dataprep==4.10.1

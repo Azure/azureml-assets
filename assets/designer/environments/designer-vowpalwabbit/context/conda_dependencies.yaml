@@ -1,15 +1,12 @@
 name: project_environment
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - pip=20.2
   - python=3.8.10
   - vowpalwabbit=8.8.1
   - pip:
       - azureml-designer-vowpal-wabbit-modules==0.0.52
-      - setuptools==65.5.1
-      - wheel==0.38.1
       - numpy==1.22
       - cryptography==42.0.4
       - azureml-dataprep==4.10.1

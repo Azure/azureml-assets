@@ -1,6 +1,6 @@
 name: project_environment
 channels:
-  - defaults
+  - conda-forge
   - pytorch
 dependencies:
   - cpuonly
@@ -10,8 +10,6 @@ dependencies:
   - torchvision=0.18.1
   - pip:
       - azureml-designer-cv-modules==0.0.59
-      - setuptools==65.5.1
-      - wheel==0.38.1
       - future==0.18.3
       - numpy==1.22
       - cryptography==42.0.4

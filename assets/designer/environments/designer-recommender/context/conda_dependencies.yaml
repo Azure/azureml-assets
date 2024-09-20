@@ -1,14 +1,12 @@
 name: project_environment
 channels:
-  - defaults
+  - conda-forge
 dependencies:
   - pip=20.2
   - python=3.8.10
   - pip:
       - azureml-designer-recommender-modules==0.0.64
       - tensorflow==2.12.0
-      - wheel==0.38.1
-      - setuptools==65.5.1
       - numpy==1.22
       - cryptography==42.0.4
       - azureml-dataprep==4.10.1
