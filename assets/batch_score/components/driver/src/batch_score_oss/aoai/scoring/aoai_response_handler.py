@@ -30,7 +30,7 @@ class AoaiHttpResponseHandler(HttpResponseHandler):
 
     RETRIABLE_STATUS_CODES = [408, 429]
 
-    def __init__(self, tally_handler: TallyFailedRequestHandler, configuration: Configuration):
+    def __init__(self, tally_handler: TallyFailedRequestHandler, configuration: Configuration) -> None:
         """Initialize AoaiHttpResponseHandler."""
         self._configuration = configuration
         self.__tally_handler = tally_handler
