@@ -565,6 +565,10 @@ def generate_synthetic_data(
                 validation_file_path, generated_validation_file_path, request_batch_size
             )
             logger.info("Data generated and saved for validation file")
+    else:
+        Path(generated_validation_file_path.parent).mkdir(exist_ok=True, parents=True)
+        # create an empty file if validation file is not provided
+        open(generated_validation_file_path, "w").close()
 
 
 def data_import(args: Namespace):
