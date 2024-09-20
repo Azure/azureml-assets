@@ -55,6 +55,8 @@ RUN pip install 'Werkzeug>=3.0.3' \
 
 # To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
 RUN pip install 'torch>=2.2.2'
+# To resolve vulnerability issue
+RUN pip install 'opencv-python-headless==4.8.1.78'
 
 RUN pip freeze
 
