@@ -653,12 +653,13 @@ class ChatCompletionEvaluator(Evaluator):
                     row_item (pd.Series): Single row input from Dataframe
                 """
                 item = row_item.get(y_test.columns[0])
+                score_all_conversations = self.metrics_config.get("score_all_conversations", False)
                 if isinstance(item, dict):
                     all_assistant_responses = []
                     for message in item.get("messages", []):
                         if message.get("role", None) == "assistant":
                             all_assistant_responses.append(message.get("content", ""))
-                    if self.metrics_config.get("score_all_conversations", True) is True:
+                    if score_all_conversations is True:
                         # extract all assistant responses
                         return all_assistant_responses
                     else:
