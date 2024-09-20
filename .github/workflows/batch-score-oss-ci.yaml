@@ -1,4 +1,4 @@
-name: batch-score-ci
+name: batch-score-oss-ci
 
 on:
   pull_request:
@@ -31,7 +31,7 @@ defaults:
 jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
-  run-batch-score-tests:
+  run-batch-score-oss-tests:
     name: Run Batch Score Component Tests
     runs-on: ubuntu-latest
     needs: check-execution-context
