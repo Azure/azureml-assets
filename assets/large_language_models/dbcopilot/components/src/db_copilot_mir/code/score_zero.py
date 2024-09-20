@@ -10,7 +10,6 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azureml.contrib.services.aml_request import AMLRequest, rawhttp
 from azureml.contrib.services.aml_response import AMLResponse
 from db_copilot.contract.memory_core import MemoryItem
@@ -69,22 +68,12 @@ def init():
             )
         else:
             logging.info("using managed identity access Azure OpenAI")
-            try:
-                token_provider = get_bearer_token_provider(
-                    DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-                )
-                logging.info("Successfully obtained token")
-            except Exception as e:
-                logging.error(f"Failed to obtain token: {e}")
-                raise Exception(f"Failed to obtain token: {e}")
             embedding_aoai_connection = AzureOpenAIConnection(
-                token_provider=token_provider,
                 api_base=secret_manager.get("embedding-aoai-api-base"),
                 api_type="azure",
                 api_version="2023-03-15-preview",
             )
             chat_aoai_connection = AzureOpenAIConnection(
-                token_provider=token_provider,
                 api_base=secret_manager.get("chat-aoai-api-base"),
                 api_type="azure",
                 api_version="2023-03-15-preview",
@@ -303,7 +292,7 @@ def _get_db_provider(request_body: RequestBody, session_id: str):
         return db_copilot
     else:
         return AMLResponse(
-            "No db_copilot is available. Please specify Session id or datasotre_uri or db_name is required",
+            "No db_copilot is available. Please specify Session id or datastore_uri or db_name is required",
             400,
         )
 

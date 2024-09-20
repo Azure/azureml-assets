@@ -34,7 +34,7 @@ RUN cd /usr/local/src && mkdir lightgbm && cd lightgbm && \
 # Install GPU LightGBM and XgBoost
 ###############################
 RUN /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install --precompile && \
-    pip install --upgrade --force-reinstall xgboost==1.5.2 pystan==2.19.1.1 cmdstanpy==1.1.0 pandas==1.3.5"
+    pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.3.5"
 
 # begin conda create
 # Install conda packages
@@ -57,7 +57,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # end conda create
 
 # Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN conda install pytorch=1.13.1 pytorch-cuda=11.6 -c pytorch -c nvidia && conda clean -a -y
+RUN conda install pytorch=2.2.2 -c pytorch -c nvidia && conda clean -a -y
 # end conda create
 
 # begin pip install
@@ -79,7 +79,6 @@ RUN pip install \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.16.1' \
                 'inference-schema' \
-                'horovod==0.28.1' \
                 'prophet==1.1.4' \
                 'pytorch-transformers==1.0.0' \
                 'spacy==3.7.4' \
@@ -90,6 +89,8 @@ RUN pip install \
                 'certifi>=2023.07.22' \
                 'cryptography>=42.0.5'
                 # end pypi dependencies
+
+RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # end pip install
 
