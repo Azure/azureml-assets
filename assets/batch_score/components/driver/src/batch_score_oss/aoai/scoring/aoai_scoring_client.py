@@ -25,7 +25,7 @@ class AoaiScoringClient(GenericScoringClient):
         :param configuration: Batch score configuration
         :type configuration: Configuration
         :param tally_handler: tallyHandler instance created on batch scoring configuration to tally failed requests
-        :type tally_handler:TallyFailedRequestHandler
+        :type tally_handler: Optional|TallyFailedRequestHandler
         """
         super().__init__(
             header_provider=header_provider,
