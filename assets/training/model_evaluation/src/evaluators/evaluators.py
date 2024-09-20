@@ -653,10 +653,22 @@ class ChatCompletionEvaluator(Evaluator):
                     row_item (pd.Series): Single row input from Dataframe
                 """
                 item = row_item.get(y_test.columns[0])
-                if isinstance(item, str) or isinstance(item, dict):
-                    return [item]
-                if isinstance(item, list):
+                if isinstance(item, dict):
+                    all_assistant_responses = []
+                    for message in item.get("messages", []):
+                        if message.get("role", None) == "assistant":
+                            all_assistant_responses.append(message.get("content", ""))
+                    if self.metrics_config.get("score_all_conversations", True) is True:
+                        # extract all assistant responses
+                        return all_assistant_responses
+                    else:
+                        # extract only the last assistant response in a list or empty string
+                        processed_response = all_assistant_responses[-1] if len(all_assistant_responses) > 0 else ""
+                        return [processed_response]
+                elif isinstance(item, list):
                     return item
+                else:
+                    return [item]
 
             y_test = y_test.apply(check_y_test, axis=1).tolist()
             metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
