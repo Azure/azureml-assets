@@ -1,5 +1,5 @@
 name: designer-transform
-version: auto
+version: 90
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml

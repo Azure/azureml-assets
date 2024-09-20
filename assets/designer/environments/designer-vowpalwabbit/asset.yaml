@@ -1,5 +1,5 @@
 name: designer-vowpalwabbit
-version: auto
+version: 76
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
