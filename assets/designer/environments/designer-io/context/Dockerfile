@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/designer-cv
+ENV CONDA_PREFIX=/azureml-envs/designer-io
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
