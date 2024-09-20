@@ -12,7 +12,6 @@ properties:
   languages: EN
 tags:
   Featured: ''
-  Preview: ''
   SharedComputeCapacityEnabled: ''
   hiddenlayerscanned: ""
   disable-batch: 'true'
