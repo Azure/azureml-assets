@@ -17,7 +17,7 @@ class AoaiScoringClient(GenericScoringClient):
             self,
             header_provider: HeaderProvider,
             configuration: Configuration,
-            tally_handler: TallyFailedRequestHandler = None):
+            tally_handler: TallyFailedRequestHandler = None) -> None:
         """Initialize AoaiScoringClient."""
         super().__init__(
             header_provider=header_provider,
