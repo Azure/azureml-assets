@@ -58,7 +58,7 @@ def main_worker_lock(worker_id):
     """Lock until the main worker releases its lock."""
     if _is_main_worker(worker_id):
         return worker_id
-    _watch_file(file=lock_file, timeout_in_seconds=120)
+    _watch_file(file=lock_file, timeout_in_seconds=180)
     return worker_id
 
 
@@ -89,7 +89,7 @@ def asset_version(main_worker_lock):
         yield version
         os.remove(version_file)
     else:
-        _watch_file(file=version_file, timeout_in_seconds=120)
+        _watch_file(file=version_file, timeout_in_seconds=180)
         version = ""
         with open(version_file, "r") as fp:
             version = fp.read()
@@ -133,12 +133,6 @@ def register_components(main_worker_lock, asset_version):
         return
 
     _register_component(BATCH_SCORE_COMPONENT_YAML_NAME, asset_version)
-
-
-@pytest.fixture(scope="session")
-def batch_score_yml_component(asset_version):
-    """Return the component name batch_score.yml."""
-    return _get_component_metadata(f"{BATCH_SCORE_COMPONENT_YAML_NAME}.yml", asset_version)
 
 
 @pytest.fixture(scope="session")

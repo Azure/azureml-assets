@@ -53,7 +53,7 @@ YAML_COMPLETION_TEST_DATA_ASSET = {"inputs": {
 
 
 @pytest.mark.smoke
-# @pytest.mark.e2e
+@pytest.mark.e2e
 @pytest.mark.timeout(20 * 60)
 def test_gated_serverless_endpoint_batch_score_completion(llm_batch_score_yml_component):
     """Test gate for batch score serverless endpoints completion models."""
