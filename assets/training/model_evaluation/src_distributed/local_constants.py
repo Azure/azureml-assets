@@ -25,6 +25,7 @@ class ModelPath:
     DEFAULT_TOKENIZER_FILE = "tokenizer_config.json"
     DEFAULT_MLFLOW_MODEL_PATH = "model"
     DEFAULT_TOKENIZER_PATH = "components/tokenizer"
+    INFERENCE_CONFIG_PATH = "ml_configs/inference_config.json"
 
 
 class ArgumentLiterals:
