@@ -84,6 +84,36 @@ _URL_TYPES_MAPPING = {
 _DEFAULT_URL_TYPE = "azureml_online_endpoint"
 
 
+class ApiType():
+    """Api Type."""
+
+    Unknown = 'unknown'
+    Completion = 'completion'
+    ChatCompletion = 'chat_completion'
+
+
+COMPLETION_API_SUFFIX_LIST = ["v1/completions"]
+CHAT_COMPLETION_API_SUFFIX_LIST = ["v1/chat/completions"]
+DEFAULT_API_TYPE = ApiType.Completion
+API_TYPE_MAPPING = {
+    ApiType.Completion: COMPLETION_API_SUFFIX_LIST,
+    ApiType.ChatCompletion: CHAT_COMPLETION_API_SUFFIX_LIST
+}
+
+
+def get_api_type(url: str) -> str:
+    """Get the api type for a given endpoint URL.
+
+    :param url: The URL of the endpoint.
+    :return: API type of the endpoint.
+    """
+    return next((
+        api_type for api_type, suffixes in API_TYPE_MAPPING.items()
+        if any(suffix in url for suffix in suffixes)),
+        DEFAULT_API_TYPE
+    )
+
+
 def get_endpoint_type(url: str) -> str:
     """
     Get the endpoint type for a given endpoint URL.
