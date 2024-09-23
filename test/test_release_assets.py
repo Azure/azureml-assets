@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test release folder scripts."""
+
 import azureml.assets.util as util
 import pytest
 from pathlib import Path
@@ -36,6 +38,7 @@ RESOURCES_DIR = Path("resources/release")
     ]
 )
 def test_release_paths(test_subdir: str, expected: List[Path]):
+    """Test release paths."""
     this_dir = Path(__file__).parent
     test_dir = this_dir / RESOURCES_DIR / test_subdir
 
@@ -73,6 +76,7 @@ def test_release_paths(test_subdir: str, expected: List[Path]):
     ]
 )
 def test_find_common_directory(test_subdir: str, expected: Tuple[Path, List[Path]]):
+    """Test for finding common directory."""
     this_dir = Path(__file__).parent
     test_dir = this_dir / RESOURCES_DIR / test_subdir
 

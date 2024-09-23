@@ -3,7 +3,7 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.58 (2024-09-03)
+## 1.16.58 (2024-09-09)
 ### 🚀 New Features
 - [#3317](https://github.com/Azure/azureml-assets/pull/3317) Support for storage account access for data asset copy with SAS token
 
