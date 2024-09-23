@@ -201,12 +201,14 @@ if __name__ == "__main__":
         try:
             validate_downlaod(model_dir)
         except Exception as e:
+            log_debug(e)
+            log_debug(f"Error found for {os.path.join(model_dir, MODEL_FILE)}": e)
             errors.append(e)
 
     if len(errors) > 0:
         log_error(f"Found {len(errors)} errors when downloading models.")
-        for error in errors:
-            log_error(error)
+        # for error in errors:
+        #     log_error(error)
         exit(1)
 
     # Check run flows
