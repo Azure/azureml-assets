@@ -202,7 +202,7 @@ if __name__ == "__main__":
             validate_downlaod(model_dir)
         except Exception as e:
             log_debug(e)
-            log_debug(f"Error found for {os.path.join(model_dir, MODEL_FILE)}": e)
+            log_debug(f"Error found for {os.path.join(model_dir, MODEL_FILE)}: {e}")
             errors.append(e)
 
     if len(errors) > 0:
