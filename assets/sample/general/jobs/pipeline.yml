@@ -6,5 +6,5 @@ display_name: Hello-World-Test-Pipeline
 jobs:
   hello_python_world_job:
     type: command
-    component: file:../components/sample_component/spec.yaml
+    component: file:../components/my_sample/spec.yaml
     compute: azureml:cpu-cluster
