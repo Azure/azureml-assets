@@ -10,7 +10,7 @@ sys.path.append("/src/")
 from data_utils import read_model_prediction_data, parse_input_ground_truth_col, prepare_data
 from argparse import ArgumentParser
 from logging_utilities import get_logger
-from llm.optimized.inference.constants import ALL_TASKS
+from llm.optimized.inference.constants import ALL_TASKS, TaskType, SupportedTask
 from local_constants import ArgumentLiterals
 from itertools import repeat
 from typing import Union
@@ -79,7 +79,9 @@ def validate_and_get_columns(args):
     data = list(read_model_prediction_data(args["data"], nrows=1))[0]
     input_column_names, label_column_name, extra_y_test_cols = get_column_names(args, data)
 
-    validate_input_column_names(input_column_names, data)
+    task = args[ArgumentLiterals.TASK]
+    if task not in [SupportedTask.CHAT_COMPLETION, TaskType.CONVERSATIONAL]:
+        validate_input_column_names(input_column_names, data)
 
     
     cols = []

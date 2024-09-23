@@ -123,7 +123,6 @@ class Predictor:
             conversation = datarow[0]
             conversation.append({"role":"assistant", "content":last_chats[ind]})
             appended_data[col_name].append(conversation)
-        logger.info(f"Final Conversations: {appended_data}")
         return pd.DataFrame(appended_data)
 
 
@@ -501,11 +500,15 @@ def main():
             )
             if not os.path.exists(tokenizer_path):
                 tokenizer_path = model_path
+        inference_config = None
+        if os.path.exists(os.path.join(args.mlflow_model, ModelPath.INFERENCE_CONFIG_PATH)):
+            inference_config = os.path.join(args.mlflow_model, ModelPath.INFERENCE_CONFIG_PATH)
         engine_config, task_config, default_generator_configs, task_type, model_info = build_configs_from_model(
             mlmodel,
             model_path,
             config_path,
-            tokenizer_path
+            tokenizer_path,
+            inference_config
         )
 
         config = {

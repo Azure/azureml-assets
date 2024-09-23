@@ -2,7 +2,7 @@ name: mldesigner
 channels:
 - conda-forge
 dependencies:
-- python=3.8.13
+- python=3.9
 - pip=21.3.1
 - pip:
   - azure-ai-ml=={{latest-pypi-version}}

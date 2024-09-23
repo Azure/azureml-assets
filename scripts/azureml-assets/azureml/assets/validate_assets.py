@@ -1077,6 +1077,8 @@ def validate_assets(input_dirs: List[Path],
                     error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_generation.yaml')
                 elif evaluation_type == 'text_embeddings':
                     error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_embeddings.yaml')
+                elif evaluation_type == 'vision':
+                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_vision.yaml')
                 else:
                     _log_error(
                         asset_config.file_name_with_path,
