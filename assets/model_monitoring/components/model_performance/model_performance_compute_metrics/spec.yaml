@@ -65,7 +65,6 @@ conf:
     channels:
       - defaults
     dependencies:
-      - python=3.8
       - pip:
         - azure-storage-file-datalake~=12.8.0
         - azure-ai-ml~=1.13.0
@@ -73,6 +72,7 @@ conf:
         - azureml-fsspec~=1.0.0
         - fsspec~=2023.4.0
         - azureml-metrics[tabular]~=0.0.42
+        - setuptools[core]
     name: momo-base-spark
 args: >-
   --task ${{inputs.task}}
