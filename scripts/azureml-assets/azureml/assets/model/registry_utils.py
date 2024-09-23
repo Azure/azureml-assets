@@ -133,7 +133,8 @@ class RegistryUtils:
 class Asset:
     """Asset class."""
 
-    def __init__(self, spec_path, extra_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
+    def __init__(self, spec_path: Path, extra_config: Config, registry_name: str, temp_dir: Path,
+                 copy_updater: CopyUpdater = None):
         """Initialize asset."""
         self._spec_path = spec_path
         self._extra_config = extra_config
@@ -144,7 +145,8 @@ class Asset:
 class DataAsset(Asset):
     """Asset class for data."""
 
-    def __init__(self, spec_path, data_config: DataConfig, registry_name, temp_dir, copy_updater: CopyUpdater = None):
+    def __init__(self, spec_path: Path, data_config: DataConfig, registry_name: str, temp_dir: Path,
+                 copy_updater: CopyUpdater = None):
         """Initialize data asset."""
         super().__init__(spec_path, data_config, registry_name, temp_dir, copy_updater)
         self._data_config = data_config
@@ -167,7 +169,7 @@ class DataAsset(Asset):
 class ModelAsset(Asset):
     """Asset class for model."""
 
-    def __init__(self, spec_path, model_config: ModelConfig, registry_name, temp_dir,
+    def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
                  copy_updater: CopyUpdater = None):
         """Initialize model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
@@ -191,7 +193,8 @@ class MLFlowModelAsset(ModelAsset):
     MLMODEL_FILE_NAME = "MLmodel"
     MLFLOW_MODEL_PATH = "mlflow_model_folder"
 
-    def __init__(self, spec_path, model_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
+    def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
+                 copy_updater: CopyUpdater = None):
         """Initialize Mlflow model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
 
@@ -207,7 +210,8 @@ class MLFlowModelAsset(ModelAsset):
 class CustomModelAsset(ModelAsset):
     """Asset class for custom model."""
 
-    def __init__(self, spec_path, model_config, registry_name, temp_dir, copy_updater: CopyUpdater = None):
+    def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
+                 copy_updater: CopyUpdater = None):
         """Initialize custom model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
 
@@ -220,7 +224,8 @@ class CustomModelAsset(ModelAsset):
         return self._model
 
 
-def prepare_model(spec_path, model_config, temp_dir, ml_client: MLClient, copy_updater: CopyUpdater = None):
+def prepare_model(spec_path: Path, model_config: ModelConfig, temp_dir: Path, ml_client: MLClient,
+                 copy_updater: CopyUpdater = None):
     """Prepare model for publish."""
     try:
         logger.print(f"Model type: {model_config.type}")
@@ -239,7 +244,8 @@ def prepare_model(spec_path, model_config, temp_dir, ml_client: MLClient, copy_u
         return None, False
 
 
-def prepare_data(spec_path, data_config, temp_dir, ml_client: MLClient, copy_updater: CopyUpdater = None):
+def prepare_data(spec_path: Path, data_config: DataConfig, temp_dir: Path, ml_client: MLClient,
+                 copy_updater: CopyUpdater = None):
     """Prepare data for publish."""
     try:
         registry_name = ml_client.data._registry_name

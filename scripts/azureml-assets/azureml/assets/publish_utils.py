@@ -556,8 +556,8 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
         elif asset.type == AssetType.DATA:
             version = asset.version
             data_config: DataConfig = asset.extra_config_as_object()
-            if data_config is not None and not prepare_data_for_registration(data_config, asset.spec_with_path,
-                                                                             Path(temp_dir), ml_client, copy_updater):
+            if not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), ml_client,
+                                                 copy_updater):
                 logger.log_error("Failed to prepare data asset")
                 return False
 
