@@ -225,7 +225,7 @@ class CustomModelAsset(ModelAsset):
 
 
 def prepare_model(spec_path: Path, model_config: ModelConfig, temp_dir: Path, ml_client: MLClient,
-                 copy_updater: CopyUpdater = None):
+                  copy_updater: CopyUpdater = None):
     """Prepare model for publish."""
     try:
         logger.print(f"Model type: {model_config.type}")
