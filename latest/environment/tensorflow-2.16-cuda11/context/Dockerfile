@@ -6,6 +6,10 @@ ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.16-cuda11
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
+# Enable debug
+RUN apt-get update
+RUN apt-get install -y openssh-server openssh-client
+
 # Create conda environment
 COPY conda_dependencies.yaml .
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
