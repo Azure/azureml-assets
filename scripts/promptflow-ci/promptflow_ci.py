@@ -165,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument('--flow_submit_mode', type=str, default="sync")
     parser.add_argument('--run_time', type=str, default="default-mir")
     parser.add_argument('--skipped_flows', type=str,
-                        default="bring_your_own_data_qna,template_chat_flow,template_eval_flow")
+                        default="bring_your_own_data_qna,template_chat_flow,template_eval_flow, playground-ayod-rag, chat-quality-safety-eval, qna-non-rag-metrics-eval, qna-quality-safety-eval, qna-rag-metrics-eval, rai-eval-ui-dag-flow, rai-qna-quality-safety-eval, ")
     # Skip bring_your_own_data_qna test, the flow has a bug.
     # Bug 2773738: Add retry when ClientAuthenticationError
     # https://msdata.visualstudio.com/Vienna/_workitems/edit/2773738
