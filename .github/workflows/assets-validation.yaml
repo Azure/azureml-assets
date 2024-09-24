@@ -7,8 +7,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/**
   workflow_dispatch:
     inputs:
       asset_dirs:
@@ -30,23 +28,26 @@ defaults:
 permissions:
   # Required for OIDC login to Azure
   id-token: write
+  # Required to clone repo
+  contents: read
 
 jobs:
+  check-directory-file-changes:
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    with:
+      folder_path: "assets/**"
+      forked_pr_input: false
+
   validate:
     name: Validate
+    needs: check-directory-file-changes
+    if: needs.check-directory-file-changes.outputs.files-changed != ''
     runs-on: ubuntu-latest
     environment: Testing
 
     steps:
       - name: Clone branch
         uses: actions/checkout@v3
-      
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
-        with:
-          files_separator: ','
-          separator: ','
       
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
@@ -70,7 +71,7 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir
 
       - name: Validate assets
-        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -n -I -C -b -t -e
+        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" -n -I -C -b -t -e
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
