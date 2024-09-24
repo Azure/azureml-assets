@@ -27,6 +27,7 @@ def mark_as_e2e_test():
 
 lock_file = ".lock"
 LOCK_TIMEOUT_IN_SECONDS = 500
+COMPONENT_VERSION = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 
 
 # pytest-xdist provides the worker_id fixture.
@@ -78,23 +79,7 @@ def release_lock(main_worker_lock, register_components):
 @pytest.fixture(scope="session")
 def asset_version(main_worker_lock):
     """Return the asset version for this run."""
-    # Ensure all workers leverages the same asset versions
-    # Main worker is gw0 - everyone else will be reading the version the main worker has created.
-
-    version_file = ".version"
-    if _is_main_worker(main_worker_lock):
-        version = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
-        with open(version_file, "w") as fp:
-            fp.write(version)
-
-        yield version
-        os.remove(version_file)
-    else:
-        _watch_file(file=version_file, timeout_in_seconds=LOCK_TIMEOUT_IN_SECONDS)
-        version = ""
-        with open(version_file, "r") as fp:
-            version = fp.read()
-        yield version
+    return COMPONENT_VERSION
 
 
 def pytest_configure():
