@@ -26,6 +26,7 @@ def mark_as_e2e_test():
 
 
 lock_file = ".lock"
+LOCK_TIMEOUT_IN_SECONDS = 500
 
 
 # pytest-xdist provides the worker_id fixture.
@@ -58,7 +59,7 @@ def main_worker_lock(worker_id):
     """Lock until the main worker releases its lock."""
     if _is_main_worker(worker_id):
         return worker_id
-    _watch_file(file=lock_file, timeout_in_seconds=180)
+    _watch_file(file=lock_file, timeout_in_seconds=LOCK_TIMEOUT_IN_SECONDS)
     return worker_id
 
 
@@ -89,7 +90,7 @@ def asset_version(main_worker_lock):
         yield version
         os.remove(version_file)
     else:
-        _watch_file(file=version_file, timeout_in_seconds=180)
+        _watch_file(file=version_file, timeout_in_seconds=LOCK_TIMEOUT_IN_SECONDS)
         version = ""
         with open(version_file, "r") as fp:
             version = fp.read()
