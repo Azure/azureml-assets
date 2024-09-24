@@ -94,7 +94,7 @@ def pytest_configure():
     )
 
     # Prepare to copy components in fixtures below to a temporary file to not muddle dev environments
-    pytest.source_dir = os.path.join(os.getcwd(), "assets", "batch_score", "components", "driver")
+    pytest.source_dir = os.path.join(os.getcwd(), "assets", "batch_score_oss", "components", "driver")
     tmp_dir = os.path.join(pytest.source_dir, "batch_score_temp")
     os.makedirs(tmp_dir, exist_ok=True)
 
