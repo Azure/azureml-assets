@@ -4,7 +4,6 @@
 """This file contains fixtures for end-to-end tests."""
 
 from datetime import datetime
-import time
 import os
 import uuid
 
