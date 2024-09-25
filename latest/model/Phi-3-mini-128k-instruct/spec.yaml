@@ -182,6 +182,7 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
+  benchmark: "quality"
 version: 11
 description: |-
   The Phi-3-Mini-128K-Instruct is a 3.8 billion-parameter, lightweight, state-of-the-art open model trained using the Phi-3 datasets.

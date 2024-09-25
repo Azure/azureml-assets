@@ -64,7 +64,7 @@ tags:
   inference_supported_envs:
   - vllm
   - ds_mii
-
+  benchmark: "quality"
 version: 23
 description: |
   # **Model Details**
