@@ -1,20 +1,24 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:biweekly.202409.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:biweekly.202409.2
 
 USER root:root
 
 RUN pip install 'azureml-automl-dnn-nlp==1.57.0.post1'
 RUN pip install 'azureml-defaults==1.57.0.post1'
 
-RUN pip install torch==1.13.1
-RUN pip uninstall -y onnxruntime-training
-RUN pip install onnxruntime-training==1.15.1
-RUN pip install torch-ort && \
-    TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.5 8.0 8.6+PTX" python -m torch_ort.configure
+RUN pip uninstall -y onnxruntime
 
-RUN pip install transformers==4.36.2
-RUN pip install optimum==1.16.1
-RUN pip install accelerate==0.26.1
-RUN pip install deepspeed==0.13.1
+RUN pip install onnx==1.16.2
+RUN pip uninstall -y onnxruntime-training
+RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
+RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
+RUN pip install torch-ort==1.18.0 && TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m torch_ort.configure
+
+RUN pip uninstall -y onnxruntime
+
+RUN pip install transformers==4.38.2
+RUN pip install optimum==1.21.4
+RUN pip install accelerate==0.33.0
+RUN pip install deepspeed==0.15.0
 RUN pip install numpy==1.22.0
 
 # Address vulnerabilities
@@ -23,4 +27,4 @@ RUN pip install aiohttp==3.10.2
 RUN pip install idna==3.7
 RUN pip install requests==2.32.3
 
-# dummy number to change when needing to force rebuild without changing the definition: 14
+RUN pip list
