@@ -628,6 +628,15 @@ class ChatCompletionEvaluator(Evaluator):
                 Args:
                     row_item (pd.Series): Single row input from Dataframe
                 """
+                if ChatCompletionConstants.PREDICTIONS_COLUMN_NAME in row_item:
+                    prediction = row_item.get(ChatCompletionConstants.PREDICTIONS_COLUMN_NAME, "")
+                    item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
+                    if item is not None:
+                        formatted_prediction = {"role": "assistant", "content": prediction}
+                        if isinstance(item, list):
+                            item.append(formatted_prediction)
+                        if isinstance()
+
                 item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
                 if item is None:
                     return row_item
