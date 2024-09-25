@@ -165,7 +165,20 @@ class DatasetPreprocessor(object):
                 shell=True,
             )
         except subprocess.CalledProcessError as e:
-            error_message = e.output.strip()
-            raise BenchmarkUserException._with_error(
-                AzureMLError.create(BenchmarkUserError, error_details=error_message)
-            )
+            argss = [
+                "python", preprocessor_script,
+                "--input_path", input_path,
+                "--output_path", output_path,
+                "--additional_parameters", additional_parameters
+            ]
+            try:
+                _ = subprocess.check_output(
+                    argss,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
+            except subprocess.CalledProcessError as e:
+                error_message = e.output.strip()
+                raise BenchmarkUserException._with_error(
+                    AzureMLError.create(BenchmarkUserError, error_details=error_message)
+                )
