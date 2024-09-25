@@ -1,0 +1,8 @@
+{
+    "api": {
+        "type": "completion"
+    },
+    "authentication": {
+        "type": "managed_identity"
+    }
+}
