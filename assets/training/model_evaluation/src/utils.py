@@ -1022,7 +1022,6 @@ def prepare_data(data, task, all_cols, label_column_name=None,
             if len(ground_truth) == X_test.shape[0]:
                 y_test = pd.Series(ground_truth)
                 X_test[col_name] = X_test[col_name].apply(lambda x: x[:-1])
-                
 
     if y_test is not None:
         y_test = y_test.values
