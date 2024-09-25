@@ -45,7 +45,7 @@ RUN pip install \
                 azureml-core==1.57.0.post1 \
                 azureml-mlflow==1.57.0.post1 \
                 azureml-automl-core==1.57.0 \
-                azureml-automl-dnn-nlp==1.57.0 \
+                azureml-automl-dnn-nlp==1.57.0.post1 \
                 azureml-automl-runtime==1.57.0 \
                 azureml-train-automl-client==1.57.0 \
                 azureml-train-automl-runtime==1.57.0 \

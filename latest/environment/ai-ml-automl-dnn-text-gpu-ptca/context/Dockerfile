@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py310-torch1131:biweekl
 
 USER root:root
 
-RUN pip install 'azureml-automl-dnn-nlp==1.57.0'
+RUN pip install 'azureml-automl-dnn-nlp==1.57.0.post1'
 RUN pip install 'azureml-defaults==1.57.0.post1'
 
 RUN pip install torch==1.13.1
