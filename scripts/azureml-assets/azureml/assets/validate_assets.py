@@ -32,6 +32,7 @@ WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
 NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-naming-convention"
 INVALID_STRINGS = [["azureml", "azure"], "aml"]  # Disallow these in any asset name
 NON_MODEL_INVALID_STRINGS = ["microsoft"]  # Allow these in model names and other assets related to models
+MODEL_NAMES_VALIDAION_OVERRIDE_PREFIX = ["Azure-AI-"] # Exception for Azure-AI models
 MODEL_RELATED_ASSETS = [assets.AssetType.MODEL, assets.AssetType.EVALUATIONRESULT]
 NON_MODEL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
@@ -393,6 +394,9 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
 
         for invalid_string in string_group_list:
             if invalid_string in asset_name_lowercase:
+                if (asset_config.type == assets.AssetType.MODEL and
+                    any(asset_name.startswith(exception) for exception in MODEL_NAMES_VALIDAION_OVERRIDE_PREFIX)):
+                    continue
                 # Complain only about the first matching string
                 _log_error(asset_config.file_name_with_path,
                            f"Name '{asset_name}' contains invalid string '{invalid_string}'")
