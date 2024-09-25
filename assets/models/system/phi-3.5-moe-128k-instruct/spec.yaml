@@ -9,7 +9,7 @@ properties:
 tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
-  freePlayground: "true"
+  freePlayground: "false"
   displayName: "Phi-3.5 MoE instruct (128k)"
   summary: "A new mixture of experts model"
   textContextWindow: 131072
