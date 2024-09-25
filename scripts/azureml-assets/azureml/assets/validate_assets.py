@@ -389,8 +389,8 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
         for invalid_string in string_group_list:
             if invalid_string in asset_name_lowercase:
                 if (asset_config.type == assets.AssetType.MODEL and
-                    any(asset_name.startswith(exception) for exception in MODEL_NAMES_VALIDATION_OVERRIDE_PREFIX)):
-                        continue
+                        any(asset_name.startswith(exception) for exception in MODEL_NAMES_VALIDATION_OVERRIDE_PREFIX)):
+                    continue
                 # Complain only about the first matching string
                 _log_error(asset_config.file_name_with_path,
                            f"Name '{asset_name}' contains invalid string '{invalid_string}'")
