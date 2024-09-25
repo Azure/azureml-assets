@@ -15,7 +15,6 @@ from .util import _get_component_name, _set_and_get_component_name_ver, create_c
 
 
 BATCH_SCORE_COMPONENT_YAML_NAME = "batch_score_oss"
-COMPONENT_VERSION = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 
 
 # Marks all tests in this directory as e2e tests
@@ -67,9 +66,6 @@ def pytest_configure():
 
     pytest.copied_batch_score_component_filepath = os.path.join(tmp_dir, f"spec_copy_{str(uuid.uuid4())}.yml")
 
-    # register components
-    register_components()
-
 
 def pytest_unconfigure():
     """Tear down pytest configuration."""
@@ -82,9 +78,10 @@ def pytest_unconfigure():
         pass
 
 
-def register_components():
-    """Register components for the tests."""
-    _register_component(BATCH_SCORE_COMPONENT_YAML_NAME, COMPONENT_VERSION)
+@pytest.fixture(scope="session")
+def asset_version():
+    """Return the asset version for this run."""
+    return datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 
 
 def _register_component(component_yml_name, asset_version):
@@ -111,13 +108,13 @@ def _register_component(component_yml_name, asset_version):
 
 
 @pytest.fixture(scope="session")
-def llm_batch_score_yml_component():
+def llm_batch_score_yml_component(asset_version):
     """Return the component version for batch_score_llm.yml."""
-    return _get_component_metadata(BATCH_SCORE_COMPONENT_YAML_NAME, COMPONENT_VERSION)
-
-
-def _get_component_metadata(component_yml_name, asset_version):
-    batch_score_component_filepath = os.path.join(
-        pytest.source_dir, component_yml_name, "spec.yaml"
+    return _register_and_return_component_metadata(
+        BATCH_SCORE_COMPONENT_YAML_NAME,
+        asset_version,
     )
-    return _get_component_name(batch_score_component_filepath), asset_version
+
+
+def _register_and_return_component_metadata(component_yml_name, asset_version):
+    return _register_component(component_yml_name, asset_version)
