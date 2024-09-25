@@ -11,7 +11,7 @@ import pytest
 from azure.ai.ml import MLClient, load_component
 from azure.identity import DefaultAzureCredential
 
-from .util import _get_component_name, _set_and_get_component_name_ver, create_copy
+from .util import _set_and_get_component_name_ver, create_copy
 
 
 BATCH_SCORE_COMPONENT_YAML_NAME = "batch_score_oss"
