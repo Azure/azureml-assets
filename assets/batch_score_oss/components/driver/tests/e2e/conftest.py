@@ -16,6 +16,7 @@ from .util import _get_component_name, _set_and_get_component_name_ver, create_c
 
 
 BATCH_SCORE_COMPONENT_YAML_NAME = "batch_score_oss"
+COMPONENT_VERSION = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 
 
 # Marks all tests in this directory as e2e tests
@@ -23,11 +24,6 @@ BATCH_SCORE_COMPONENT_YAML_NAME = "batch_score_oss"
 def mark_as_e2e_test():
     """Mark as e2e tests."""
     pass
-
-
-lock_file = ".lock"
-LOCK_TIMEOUT_IN_SECONDS = 500
-COMPONENT_VERSION = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 
 
 # pytest-xdist provides the worker_id fixture.
@@ -46,40 +42,12 @@ def _is_main_worker(worker_id):
     return worker_id == "gw0" or worker_id == "master"
 
 
-def _watch_file(file: str, timeout_in_seconds):
-    seconds_elapsed = 0
-    while not os.path.exists(file):
-        time.sleep(1)
-        seconds_elapsed += 1
-        if seconds_elapsed >= timeout_in_seconds:
-            break
-
-
 @pytest.fixture(scope="session")
 def main_worker_lock(worker_id):
     """Lock until the main worker releases its lock."""
     if _is_main_worker(worker_id):
         return worker_id
-    _watch_file(file=lock_file, timeout_in_seconds=LOCK_TIMEOUT_IN_SECONDS)
     return worker_id
-
-
-@pytest.fixture(scope="session", autouse=True)
-def release_lock(main_worker_lock, register_components):
-    """Release the main worker lock."""
-    if _is_main_worker(main_worker_lock):
-        with open(lock_file, "w"):
-            pass
-        yield
-        os.remove(lock_file)
-    else:
-        yield
-
-
-@pytest.fixture(scope="session")
-def asset_version(main_worker_lock):
-    """Return the asset version for this run."""
-    return COMPONENT_VERSION
 
 
 def pytest_configure():
@@ -100,6 +68,9 @@ def pytest_configure():
 
     pytest.copied_batch_score_component_filepath = os.path.join(tmp_dir, f"spec_copy_{str(uuid.uuid4())}.yml")
 
+    # register components
+    register_components()
+
 
 def pytest_unconfigure():
     """Tear down pytest configuration."""
@@ -112,19 +83,9 @@ def pytest_unconfigure():
         pass
 
 
-@pytest.fixture(autouse=True, scope="session")
-def register_components(main_worker_lock, asset_version):
+def register_components():
     """Register components for the tests."""
-    if not _is_main_worker(main_worker_lock):
-        return
-
-    _register_component(BATCH_SCORE_COMPONENT_YAML_NAME, asset_version)
-
-
-@pytest.fixture(scope="session")
-def llm_batch_score_yml_component(asset_version):
-    """Return the component version for batch_score_llm.yml."""
-    return _get_component_metadata(BATCH_SCORE_COMPONENT_YAML_NAME, asset_version)
+    _register_component(BATCH_SCORE_COMPONENT_YAML_NAME, COMPONENT_VERSION)
 
 
 def _register_component(component_yml_name, asset_version):
@@ -148,6 +109,12 @@ def _register_component(component_yml_name, asset_version):
     batch_component = pytest.ml_client.create_or_update(batch_component)
     print(f"Component {component_name} with version {component_version} is registered")
     return component_name, component_version
+
+
+@pytest.fixture(scope="session")
+def llm_batch_score_yml_component():
+    """Return the component version for batch_score_llm.yml."""
+    return _get_component_metadata(BATCH_SCORE_COMPONENT_YAML_NAME, COMPONENT_VERSION)
 
 
 def _get_component_metadata(component_yml_name, asset_version):
