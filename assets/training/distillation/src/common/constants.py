@@ -74,6 +74,16 @@ DEFAULT_TEMPERATURE = 0.2
 # TEXT SUMMARIZATION DEFAULT OUTPUT WORD COUNT
 DEFAULT_MAX_LEN_SUMMARY = 80
 
+AUTH_TOKEN_SCOPE = "https://management.azure.com/.default"
+
+USER_IDENTITY_MISSING_ERROR = (
+        " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
+        " Please take reference from given links :\n"
+        " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
+        " sdk - https://aka.ms/azureml-import-model \n"
+        " cli - https://aka.ms/obo-cli-sample"
+    )
+
 
 class InferenceMode:
     """Supported inference modes."""

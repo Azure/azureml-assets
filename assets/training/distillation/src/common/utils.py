@@ -5,7 +5,7 @@
 
 import os
 import time
-from typing import List, Tuple, Union, Optional, Callable
+from typing import List, Tuple, Optional, Callable
 from urllib.parse import urlparse
 
 from abc import ABC, abstractmethod
@@ -19,6 +19,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
+from azure.core.credentials import TokenCredential
 
 
 from common.constants import (
@@ -26,6 +27,8 @@ from common.constants import (
     REGISTRY_MODEL_PATTERN,
     SUPPORTED_STUDENT_MODEL_MAP,
     SUPPORTED_TEACHER_MODEL_MAP,
+    AUTH_TOKEN_SCOPE,
+    USER_IDENTITY_MISSING_ERROR,
     BackoffConstants
 )
 
@@ -66,34 +69,45 @@ def retry(times: int):
     return decorator
 
 
-def get_credential() -> Union[ManagedIdentityCredential, AzureMLOnBehalfOfCredential]:
+def get_credential() -> TokenCredential:
     """Create and validate credentials."""
-    # try msi, followed by obo, followed by azure cli
-    credential = None
     try:
         msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        logger.info("Trying ManagedIdentityCredentials.")
         credential = ManagedIdentityCredential(client_id=msi_client_id)
-        credential.get_token("https://management.azure.com/.default")
-        logger.info("Using MSI creds")
+        credential.get_token(AUTH_TOKEN_SCOPE)
         return credential
     except Exception:
-        logger.warning("MSI auth failed")
-    try:
-        credential = AzureMLOnBehalfOfCredential()
-        credential.get_token("https://management.azure.com/.default")
-        logger.info("Using OBO creds")
-        return credential
-    except Exception:
-        logger.warning("OBO cred failed")
-    try:
-        credential = AzureCliCredential()
-        credential.get_token("https://management.azure.com/.default")
-        logger.info("Using OBO creds")
-        return credential
-    except Exception:
-        logger.error("Azure CLI cred failed")
+        logger.warning("ManagedIdentityCredential was not found in the compute. "
+                       "Falling back to AzureMLOnBehalfOfCredential")
 
-    raise Exception("Error creating credentials.")
+    try:
+        logger.info("Trying OBO credentials.")
+        credential = AzureMLOnBehalfOfCredential()
+        credential.get_token(AUTH_TOKEN_SCOPE)
+        return credential
+    except Exception as e:
+        logger.warning(f"Failed to get OBO credentials ({str(e)})")
+        logger.warning("Falling back to AzureCli.")
+
+    try:
+        logger.info("Trying AzureCliCredential.")
+        credential = AzureCliCredential()
+        credential.get_token(AUTH_TOKEN_SCOPE)
+        return credential
+    except Exception as e:
+        logger.warning(f"Failed to get AzureCliCredential ({str(e)})")
+
+    logger.error("All authentication methods failed. Failed to select a credential method.")
+    raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Multiple authentication methods failed, please check logs for details.",
+                    USER_IDENTITY_MISSING_ERROR
+                )
+            )
+        )
 
 
 def get_workspace() -> Workspace:
