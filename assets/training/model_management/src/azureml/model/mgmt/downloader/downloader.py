@@ -234,7 +234,7 @@ class HuggingfaceDownloader(GITDownloader):
         misc = []
         all_tags = self.model_info.tags
         props = {
-            "model_id": self.model_info.modelId,
+            "model_id": self.model_info.id,
             "task": self.model_info.pipeline_tag,
             "SHA": self.model_info.sha,
         }
