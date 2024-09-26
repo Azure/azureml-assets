@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.60 (2024-09-26)
+### 🚀 New Features
+- [#3317](https://github.com/Azure/azureml-assets/pull/3317) Skip name validation in model name starts with Azure-AI
+
 ## 1.16.59 (2024-09-24)
 ### 🚀 New Features
 - [#3317](https://github.com/Azure/azureml-assets/pull/3317) Support for storage account access for data asset copy with SAS token

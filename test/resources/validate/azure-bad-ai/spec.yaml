@@ -1,0 +1,11 @@
+# This isn't a proper model YAML, but we're not testing this here
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: azure-bad-ai
+path: ./
+
+tags:
+  author : "Microsoft"
+  disable-batch: true
+  disable-maap: true
+
+version: 1

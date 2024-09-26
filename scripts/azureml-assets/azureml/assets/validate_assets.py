@@ -370,6 +370,10 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     error_count = 0
     asset_name = asset_config.name
 
+    # Skip validation if asset name starts with 'azure-ai', it's a model-related asset
+    if (asset_name.lower().startswith("azure-ai") and asset_config.type in MODEL_RELATED_ASSETS):
+        return error_count
+
     # Check against generic naming pattern
     if not ((asset_config.type is assets.AssetType.MODEL and MODEL_NAME_PATTERN.match(asset_name))
             or NON_MODEL_NAME_PATTERN.match(asset_name)):
