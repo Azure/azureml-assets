@@ -1003,14 +1003,25 @@ def prepare_data(data, task, all_cols, label_column_name=None,
             log_traceback(exception, logger, message)
             raise exception
 
-    if task == constants.TASK.CHAT_COMPLETION and file_ext == SupportedFileExtensions.CSV:
-        try:
-            X_test = X_test.applymap(json.loads)
-        except Exception as e:
-            message = "Incorrectly formatted JSON in CSV file."
-            exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
-            log_traceback(exception, logger, message)
-            raise exception
+    if task == constants.TASK.CHAT_COMPLETION:
+        if file_ext == SupportedFileExtensions.CSV:
+            try:
+                X_test = X_test.applymap(json.loads)
+            except Exception as e:
+                message = "Incorrectly formatted JSON in CSV file."
+                exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=message)
+                log_traceback(exception, logger, message)
+                raise exception
+        if y_test is None:
+            col_name = all_cols[0]
+            ground_truth = []
+            for xt in X_test[col_name].tolist():
+                if isinstance(xt, list) and isinstance(xt[0], dict):
+                    if xt[-1].get("role", "assistant") == "user":
+                        ground_truth.append(xt[-1]["content"])
+            if len(ground_truth) == X_test.shape[0]:
+                y_test = pd.Series(ground_truth)
+                X_test[col_name] = X_test[col_name].apply(lambda x: x[:-1])
 
     if y_test is not None:
         y_test = y_test.values
