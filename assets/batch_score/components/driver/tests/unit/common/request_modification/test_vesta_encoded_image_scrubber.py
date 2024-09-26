@@ -5,7 +5,7 @@
 
 import pytest
 
-from src.batch_score.common.request_modification.modifiers.vesta_encoded_image_scrubber import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_encoded_image_scrubber import (
     VestaEncodedImageScrubber,
 )
 

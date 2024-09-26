@@ -8,25 +8,25 @@ import json
 
 import pytest
 
-from src.batch_score.common import constants
-from src.batch_score.common.configuration.configuration import Configuration
-from src.batch_score.common.parallel.conductor import Conductor
-from src.batch_score.common.scoring.scoring_request import ScoringRequest
-from src.batch_score.common.scoring.scoring_result import (
+from src.batch_score.root.common import constants
+from src.batch_score.root.common.configuration.configuration import Configuration
+from src.batch_score.root.common.parallel.conductor import Conductor
+from src.batch_score.root.common.scoring.scoring_request import ScoringRequest
+from src.batch_score.root.common.scoring.scoring_result import (
     ScoringResult,
     ScoringResultStatus,
 )
 
 
 @pytest.fixture
-def make_conductor(make_routing_client, make_pool_scoring_client):
+def make_conductor(make_generic_scoring_client):
     """Make a mock conductor."""
     async_mode_outer = False
     conductor = None
 
     def make(loop=asyncio.get_event_loop(),
              routing_client=None,
-             scoring_client=make_pool_scoring_client(),
+             scoring_client=make_generic_scoring_client(),
              segment_large_requests="disabled",
              segment_max_token_size=None,
              initial_worker_count=1,
@@ -51,7 +51,6 @@ def make_conductor(make_routing_client, make_pool_scoring_client):
         conductor = Conductor(
             configuration=configuration,
             loop=loop,
-            routing_client=routing_client or make_routing_client(),
             scoring_client=scoring_client,
             trace_configs=trace_configs,
         )
@@ -84,5 +83,5 @@ def mock_run(monkeypatch):
                               response_headers=None,
                               num_retries=0) for scoring_request in requests]
 
-    monkeypatch.setattr("src.batch_score.common.parallel.conductor.Conductor.run", _run)
+    monkeypatch.setattr("src.batch_score.root.common.parallel.conductor.Conductor.run", _run)
     return passed_requests

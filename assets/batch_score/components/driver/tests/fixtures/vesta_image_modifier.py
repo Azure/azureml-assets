@@ -5,20 +5,20 @@
 
 import pytest
 
-from src.batch_score.common.request_modification.modifiers.vesta_chat_completion_image_modifier import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_chat_completion_image_modifier import (
     VestaChatCompletionImageModifier,
 )
-from src.batch_score.common.request_modification.modifiers.vesta_image_encoder import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_image_encoder import (
     ImageEncoder,
 )
-from src.batch_score.common.request_modification.modifiers.vesta_image_modifier import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_image_modifier import (
     VestaImageModifier,
 )
 
 MOCKED_IMAGE_ENCODING = "MOCKED_ENCODING"
 MOCKED_BINARY_FROM_FILE = "MOCKED_BINARY_FROM_FILE"
 MOCKED_BINARY_FROM_URL = "MOCKED_BINARY_FROM_URL"
-IMAGE_ENCODER_NAMESPACE = "src.batch_score.common.request_modification.modifiers.vesta_image_encoder.ImageEncoder"
+IMAGE_ENCODER_NAMESPACE = "src.batch_score.root.common.request_modification.modifiers.vesta_image_encoder.ImageEncoder"
 
 
 @pytest.fixture

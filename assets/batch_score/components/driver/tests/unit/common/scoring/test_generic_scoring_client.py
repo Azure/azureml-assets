@@ -7,10 +7,10 @@ import aiohttp
 import pytest
 from unittest.mock import MagicMock, patch
 
-from src.batch_score.common.scoring.generic_scoring_client import GenericScoringClient
-from src.batch_score.common.scoring.scoring_request import ScoringRequest
+from src.batch_score.root.common.scoring.generic_scoring_client import GenericScoringClient
+from src.batch_score.root.common.scoring.scoring_request import ScoringRequest
 
-from tests.fixtures.client_response import FakeResponse
+from tests.batch_score.fixtures.client_response import FakeResponse
 
 
 class NullHeaderProvider:

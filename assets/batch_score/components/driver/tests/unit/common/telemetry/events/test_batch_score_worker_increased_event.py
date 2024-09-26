@@ -3,10 +3,12 @@
 
 """This file contains unit tests for batch score worker increased event."""
 
-from src.batch_score.common.telemetry.events import event_utils
-from src.batch_score.common.telemetry.events.batch_score_worker_increased_event import BatchScoreWorkerIncreasedEvent
+from src.batch_score.root.common.telemetry.events import event_utils
+from src.batch_score.root.common.telemetry.events.batch_score_worker_increased_event import (
+    BatchScoreWorkerIncreasedEvent
+)
 
-from tests.fixtures.telemetry_events import (
+from tests.batch_score.fixtures.telemetry_events import (
     assert_common_fields,
     assert_run_context_fields,
     update_common_fields,

@@ -5,17 +5,21 @@
 
 import datetime
 
-from src.batch_score.common.common_enums import AuthenticationType, ApiType, EndpointType
-from src.batch_score.common.telemetry.minibatch_aggregator import MinibatchAggregator
-from src.batch_score.common.telemetry.events.batch_score_minibatch_completed_event import (
+from src.batch_score.root.common.common_enums import AuthenticationType, ApiType, EndpointType
+from src.batch_score.root.common.telemetry.minibatch_aggregator import MinibatchAggregator
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_completed_event import (
     BatchScoreMinibatchCompletedEvent
 )
-from src.batch_score.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_endpoint_health_event import (
     BatchScoreMinibatchEndpointHealthEvent
 )
-from src.batch_score.common.telemetry.events.batch_score_minibatch_started_event import BatchScoreMinibatchStartedEvent
-from src.batch_score.common.telemetry.events.batch_score_request_completed_event import BatchScoreRequestCompletedEvent
-from src.batch_score.common.telemetry.events.batch_score_input_row_completed_event import (
+from src.batch_score.root.common.telemetry.events.batch_score_minibatch_started_event import (
+    BatchScoreMinibatchStartedEvent
+)
+from src.batch_score.root.common.telemetry.events.batch_score_request_completed_event import (
+    BatchScoreRequestCompletedEvent
+)
+from src.batch_score.root.common.telemetry.events.batch_score_input_row_completed_event import (
     BatchScoreInputRowCompletedEvent
 )
 
@@ -34,7 +38,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
         event_time=minibatch_started_datetime,
         minibatch_id='minibatch_id',
         scoring_url='scoring_url',
-        batch_pool='batch_pool',
         quota_audience='quota_audience',
         input_row_count=minibatch_row_count,
         retry_count=0,
@@ -122,7 +125,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
 
     assert summary.minibatch_id == 'minibatch_id'
     assert summary.scoring_url == 'scoring_url'
-    assert summary.batch_pool == 'batch_pool'
     assert summary.quota_audience == 'quota_audience'
     assert summary.model_name == "model_name"  # Only the first model name should be used.
     assert summary.retry_count == 0
@@ -171,7 +173,6 @@ def test_minibatch_aggregator_summarize(mock_run_context):
 
     assert summary2.minibatch_id == 'minibatch_id'
     assert summary2.scoring_url is None
-    assert summary2.batch_pool is None
     assert summary2.quota_audience is None
     assert summary2.model_name is None
     assert summary2.retry_count == 0
@@ -224,7 +225,6 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
         event_time=minibatch_started_datetime,
         minibatch_id='minibatch_id',
         scoring_url='scoring_url',
-        batch_pool='batch_pool',
         quota_audience='quota_audience',
         input_row_count=minibatch_row_count,
         retry_count=0,
@@ -344,7 +344,6 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
     event1 = result_events[0]
     assert event1.minibatch_id == 'minibatch_id'
     assert event1.scoring_url == scoring_url_endpoint1
-    assert event1.batch_pool == 'batch_pool'
     assert event1.quota_audience == 'quota_audience'
 
     assert event1.http_request_count == 160
@@ -355,7 +354,6 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
     event2 = result_events[1]
     assert event2.minibatch_id == 'minibatch_id'
     assert event2.scoring_url == scoring_url_endpoint2
-    assert event2.batch_pool == 'batch_pool'
     assert event2.quota_audience == 'quota_audience'
 
     assert event2.http_request_count == 40
@@ -370,40 +368,6 @@ def test_minibatch_aggregator_summarize_endpoints(mock_run_context):
 
     # Assert
     assert not len(result_events2)
-
-
-def test_minibatch_aggregator_summarize_endpoints_non_batch_pool_endpoints(mock_run_context):
-    """Test summarize_endpoints function in minibatch aggregator for non-batch-pool endpoints."""
-    # Arrange
-    minibatch_aggregator = MinibatchAggregator()
-
-    minibatch_started_datetime = datetime.datetime(2024, 1, 1, 0, 0)
-
-    # Act
-    minibatch_aggregator.add(event=BatchScoreMinibatchStartedEvent(
-        event_time=minibatch_started_datetime,
-        minibatch_id='minibatch_id',
-        scoring_url='aoai_scoring_url',
-        batch_pool=None,
-        quota_audience=None,
-        input_row_count=100,
-        retry_count=0,
-    ))
-
-    minibatch_aggregator.add(event=BatchScoreRequestCompletedEvent(
-        event_time=minibatch_started_datetime,
-        minibatch_id='minibatch_id',
-        scoring_url="https://endpoint1.centralus.inference.ml.azure.com/",
-        duration_ms=0.5,
-        response_code=200,
-        prompt_tokens=2000,
-        completion_tokens=200,
-    ))
-
-    result_events = minibatch_aggregator.summarize_endpoints(minibatch_id='minibatch_id')
-
-    # Assert
-    assert not len(result_events)
 
 
 def _assert_no_numpy_types(summary):
