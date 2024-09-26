@@ -15,7 +15,7 @@ tags:
   license: creativeml-openrail++-m
   task: text-to-image
   hiddenlayerscanned: ""
-  author: deci-ai
+  author: "Deci AI"
   huggingface_model_id: Deci/DeciDiffusion-v1-0
   inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC16as_T4_v3, Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3,

@@ -12,7 +12,7 @@ tags:
   disable-batch: "true"
   task: chat-completion
   SharedComputeCapacityEnabled: ""
-  author: snowflake
+  author: Snowflake
   hiddenlayerscanned: ""
   inference_compute_allow_list: [Standard_ND96isr_H100_v5]
   inference_supported_envs:

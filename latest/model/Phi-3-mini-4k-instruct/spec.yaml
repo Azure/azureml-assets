@@ -146,7 +146,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   hiddenlayerscanned: ""
   maas-finetuning: true
   maas-finetuning-offer: true

@@ -22,7 +22,7 @@ tags:
   Featured: ""
   Preview: ""
   license: custom
-  author: meta
+  author: Meta
   task: chat-completion
   hiddenlayerscanned: ""
   disable-batch: "true"

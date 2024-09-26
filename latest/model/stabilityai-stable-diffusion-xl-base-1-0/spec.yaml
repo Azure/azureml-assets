@@ -12,7 +12,7 @@ tags:
   task: text-to-image
   hiddenlayerscanned: ""
   huggingface_model_id: stabilityai/stable-diffusion-xl-base-1.0
-  author: stabilityai
+  author: "Stability AI"
   training_dataset: LAION-5B
   inference_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
 version: 5

@@ -17,7 +17,7 @@ properties:
 tags:
   Featured: ""
   Preview: ""
-  author: meta
+  author: Meta
   license: custom
   task: chat-completion
   hiddenlayerscanned: ""

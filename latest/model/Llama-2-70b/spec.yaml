@@ -22,7 +22,7 @@ properties:
 tags:
   Featured: ""
   Preview: ""
-  author: meta
+  author: Meta
   license: custom
   task: text-generation
   hiddenlayerscanned: ""

@@ -14,7 +14,7 @@ tags:
   disable-batch: "true"
   task: chat-completion
   hiddenlayerscanned: ""
-  author: microsoft
+  author: Microsoft
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list: [Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4,
     Standard_NC96ads_A100_v4]

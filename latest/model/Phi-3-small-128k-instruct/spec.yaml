@@ -140,7 +140,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   hiddenlayerscanned: ""
   inference_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
