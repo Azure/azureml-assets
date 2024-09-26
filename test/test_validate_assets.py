@@ -50,6 +50,9 @@ MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
         ("evaluationresult/text_generation_incorrect", False, True, None, False),
         ("evaluationresult/vision_correct", False, True, None, True),
         ("evaluationresult/vision_incorrect", False, True, None, False),
+        ("azure-ai-service", False, True, None, True),
+        ("bad-azure-ai", False, True, None, False),
+        ("azure-bad-ai", False, True, None, False),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,
