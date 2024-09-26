@@ -1,0 +1,50 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: oss_augment_data
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: OSS Augment Synthetic and Original Data
+description: Component to mix data from Synthetically generated data and original data
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/66
+
+inputs:
+  # Inputs
+  synthetic_data_file_path:
+    type: uri_file
+    optional: false
+    description: Path to the registered synthetic data asset. The supported data format is `jsonl`.
+    mode: rw_mount
+
+  raw_data_file_path:
+    type: uri_file
+    optional: false
+    description: Path to the registered original data asset. The supported data format is `jsonl`.
+    mode: rw_mount
+
+  proportion_percentage:
+    type: float
+    optional: true
+    description: A float value specifying the mix of original to synthetic data ranges between 0 to 1.0
+
+  seed:
+    type: int
+    optional: true
+    description: Seed Value for sampling the raw original data
+
+outputs:
+  generated_data_file_path:
+    type: uri_file
+    description: Generated Augmented data
+    mode: rw_mount
+
+code: ../../src
+command: >-
+  python data_augmentation.py
+  --synthetic_data_file_path  ${{inputs.synthetic_data_file_path}}
+  --raw_data_file_path  ${{inputs.raw_data_file_path}}
+  $[[--proportion_percentage  ${{inputs.proportion_percentage}}]]
+  $[[--seed  ${{inputs.seed}}]]
+  --generated_data_file_path ${{outputs.generated_data_file_path}}
