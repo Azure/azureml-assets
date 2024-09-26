@@ -628,6 +628,15 @@ class ChatCompletionEvaluator(Evaluator):
                 Args:
                     row_item (pd.Series): Single row input from Dataframe
                 """
+                if ChatCompletionConstants.PREDICTIONS_COLUMN_NAME in row_item:
+                    prediction = row_item.get(ChatCompletionConstants.PREDICTIONS_COLUMN_NAME, "")
+                    item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
+                    if item is not None:
+                        formatted_prediction = {"role": "assistant", "content": prediction}
+                        if isinstance(item, list):
+                            item.append(formatted_prediction)
+                        if isinstance()
+
                 item = row_item.get(ChatCompletionConstants.OUTPUT_FULL_CONVERSATION, None)
                 if item is None:
                     return row_item
@@ -653,10 +662,23 @@ class ChatCompletionEvaluator(Evaluator):
                     row_item (pd.Series): Single row input from Dataframe
                 """
                 item = row_item.get(y_test.columns[0])
-                if isinstance(item, str) or isinstance(item, dict):
-                    return [item]
-                if isinstance(item, list):
+                score_all_conversations = self.metrics_config.get("score_all_conversations", False)
+                if isinstance(item, dict):
+                    all_assistant_responses = []
+                    for message in item.get("messages", []):
+                        if message.get("role", None) == "assistant":
+                            all_assistant_responses.append(message.get("content", ""))
+                    if score_all_conversations is True:
+                        # extract all assistant responses
+                        return all_assistant_responses
+                    else:
+                        # extract only the last assistant response in a list or empty string
+                        processed_response = all_assistant_responses[-1] if len(all_assistant_responses) > 0 else ""
+                        return [processed_response]
+                elif isinstance(item, list):
                     return item
+                else:
+                    return [item]
 
             y_test = y_test.apply(check_y_test, axis=1).tolist()
             metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted,
