@@ -517,7 +517,7 @@ class InferencePostprocessor(object):
                 universal_newlines=True,
                 shell=True,
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             argss = [
                 "python", postprocessor_script,
                 "--prediction_dataset", prediction_dataset,
