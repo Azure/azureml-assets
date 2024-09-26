@@ -64,4 +64,5 @@ tags:
     logging_steps: 10
     save_total_limit: 1
     max_seq_length: 4096
+  benchmark: "quality"
 version: 4

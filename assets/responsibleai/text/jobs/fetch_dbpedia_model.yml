@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: fetch_dbpedia_for_rai
 display_name: Fetch model trained on DBPedia Dataset and register model for RAI
-version: 0.0.7
+version: 0.0.8
 type: command
 inputs:
   model_base_name:
@@ -16,7 +16,7 @@ outputs:
   model_output_path:
     type: path
 code: ./src_dbpedia/
-environment: azureml://registries/azureml/environments/responsibleai-text/versions/2
+environment: azureml://registries/azureml/environments/responsibleai-text/versions/6
 command: >-
   python fetch_text_model.py
   --model_base_name ${{inputs.model_base_name}}
