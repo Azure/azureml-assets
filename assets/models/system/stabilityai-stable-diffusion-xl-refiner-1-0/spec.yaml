@@ -13,7 +13,7 @@ tags:
   license: creativeml-openrail++-m
   task: image-to-image
   hiddenlayerscanned: ""
-  author: stabilityai
+  author: "Stability AI"
   training_dataset: LAION-5B
   huggingface_model_id: stabilityai/stable-diffusion-xl-refiner-1.0
   inference_compute_allow_list:
