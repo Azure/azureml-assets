@@ -14,7 +14,7 @@ tags:
   disable-batch: "true"
   task: chat-completion
   hiddenlayerscanned: ""
-  author: microsoft
+  author: Microsoft
   SharedComputeCapacityEnabled : ""
   inference_compute_allow_list:
     [

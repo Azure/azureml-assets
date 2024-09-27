@@ -17,7 +17,7 @@ tags:
   Preview: ""
   SharedComputeCapacityEnabled: ""
   license: mit
-  author: microsoft
+  author: Microsoft
   task: text-generation
   hiddenlayerscanned: ""
   evaluation_compute_allow_list:
