@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline_singularity_premium_high
-version: 0.0.60
+version: 0.0.61
 type: pipeline
 display_name: Text Generation Pipeline Singularity Premium High
 description: Pipeline component for text generation
