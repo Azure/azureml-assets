@@ -31,7 +31,7 @@ tags:
   huggingface_model_id: facebook/dinov2-base-imagenet1k-1-layer
   training_dataset: imagenet-1k
   SharedComputeCapacityEnabled: ''
-  author: facebook
+  author: Meta
   license: apache-2.0
   model_specific_defaults:
     apply_deepspeed: 'true'

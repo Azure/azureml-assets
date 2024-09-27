@@ -32,7 +32,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   hiddenlayerscanned : ""
   maas-finetuning: true
   maas-finetuning-offer: true
@@ -77,4 +77,4 @@ tags:
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 11
+version: 12

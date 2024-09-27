@@ -9,7 +9,7 @@ properties:
 tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
-  freePlayground: "false"
+  freePlayground: "true"
   displayName: "Phi-3.5 MoE instruct (128k)"
   summary: "A new mixture of experts model"
   textContextWindow: 131072
@@ -28,7 +28,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
   _aml_system_vanity_registry: "azureml-phi"

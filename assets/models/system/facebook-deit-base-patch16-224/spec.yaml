@@ -36,7 +36,7 @@ tags:
   hiddenlayerscanned: ""
   training_dataset: imagenet-1k
   SharedComputeCapacityEnabled: ''
-  author: facebook
+  author: Meta
   inference_compute_allow_list:
     [
       Standard_DS3_v2,
