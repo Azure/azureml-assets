@@ -19,7 +19,6 @@ tags:
   disable-batch: "true"
   task: chat-completion
   hiddenlayerscanned: ""
-  disable-batch: "true"
   training_datasets: Publicly available sources
   maas-inference: true
   SharedComputeCapacityEnabled: ""
