@@ -17,7 +17,7 @@ tags:
   inference_compute_allow_list: [Standard_ND96isr_H100_v5]
   inference_supported_envs:
   - vllm
-version: 2
+version: 1
 description: |
   # Model Overview
 
