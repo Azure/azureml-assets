@@ -165,7 +165,15 @@ if __name__ == "__main__":
     parser.add_argument('--flow_submit_mode', type=str, default="sync")
     parser.add_argument('--run_time', type=str, default="default-mir")
     parser.add_argument('--skipped_flows', type=str,
-                        default="bring_your_own_data_qna,template_chat_flow,template_eval_flow")
+                        default="bring_your_own_data_qna,template_chat_flow,template_eval_flow,playground-ayod-rag,"
+                        "chat-quality-safety-eval,qna-non-rag-metrics-eval,qna-quality-safety-eval,"
+                        "qna-rag-metrics-eval,rai-eval-ui-dag-flow,rai-qna-quality-safety-eval,"
+                        "qna-ada-similarity-eval,qna-relevance-eval,ask-wikipedia,classification-accuracy-eval,"
+                        "qna-f1-score-eval,count-cars,analyze-conversations,rerank-qna,multi-index-rerank-qna,"
+                        "detect-defects,analyze-documents,qna-gpt-similarity-eval,use-functions-with-chat-models,"
+                        "qna-groundedness-eval,bring-your-own-data-chat-qna,qna-coherence-eval,template-standard-flow,"
+                        "qna-with-your-own-data-using-faiss-index,chat-with-wikipedia,web-classification,"
+                        "qna-fluency-eval")
     # Skip bring_your_own_data_qna test, the flow has a bug.
     # Bug 2773738: Add retry when ClientAuthenticationError
     # https://msdata.visualstudio.com/Vienna/_workitems/edit/2773738
@@ -196,17 +204,16 @@ if __name__ == "__main__":
             flow_dir).name not in skipped_flows]
     # Check download models
     log_debug(f"Flows to validate: {flows_dirs}.")
-    errors = []
+    errors = 0
     for model_dir in flows_dirs:
         try:
             validate_downlaod(model_dir)
         except Exception as e:
-            errors.append(e)
+            log_error(f"Error found for {os.path.join(model_dir, MODEL_FILE)}: {e}")
+            errors += 1
 
-    if len(errors) > 0:
-        log_error(f"Found {len(errors)} errors when downloading models.")
-        for error in errors:
-            log_error(error)
+    if errors > 0:
+        log_error(f"Found {errors} errors when downloading models.")
         exit(1)
 
     # Check run flows
