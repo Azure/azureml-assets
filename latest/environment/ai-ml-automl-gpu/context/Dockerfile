@@ -79,3 +79,5 @@ RUN pip install \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
 # end pip install
+
+ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
