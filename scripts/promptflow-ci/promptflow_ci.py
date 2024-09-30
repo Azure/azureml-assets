@@ -210,7 +210,7 @@ if __name__ == "__main__":
             validate_downlaod(model_dir)
         except Exception as e:
             log_error(f"Error found for {os.path.join(model_dir, MODEL_FILE)}: {e}")
-            errors += 0
+            errors += 1
 
     if errors > 0:
         log_error(f"Found {errors} errors when downloading models.")
