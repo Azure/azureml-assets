@@ -30,7 +30,7 @@ tags:
   huggingface_model_id: microsoft/swinv2-base-patch4-window12-192-22k
   training_dataset: imagenet-1k
   SharedComputeCapacityEnabled: ''
-  author: microsoft
+  author: Microsoft
   license: apache-2.0
   model_specific_defaults:
     apply_deepspeed: 'true'
