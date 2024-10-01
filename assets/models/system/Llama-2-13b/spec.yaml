@@ -23,7 +23,6 @@ tags:
   license: custom
   task: text-generation
   hiddenlayerscanned: ""
-  disable-batch: "true"
   training_datasets: Publicly available sources
   maas-inference: true
   maas-finetuning: true
