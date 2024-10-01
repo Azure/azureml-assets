@@ -12,6 +12,7 @@ from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.keyvault_client_manager import KeyVaultClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
+from common.exception_handler import retry_on_exception
 from proxy_component import AzureOpenAIProxyComponent
 from hyperparameters import Hyperparameters, Hyperparameters_1P
 import mlflow
@@ -54,10 +55,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                         utils.get_key_or_uri_from_data_import_path(validation_import_path)
 
                 if training_data_uri_key is not None:
-                    keyvault_client_manager = KeyVaultClientManager()
-                    keyvault_client = keyvault_client_manager.get_keyvault_client()
-                    logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
-                    training_data_uri = keyvault_client.get_secret(training_data_uri_key).value
+                    training_data_uri = self.get_secret_from_keyvault(training_data_uri_key)
                 else:
                     logger.info("User has provided trainining data uri directly, sending it to Azure OpenAI resource")
 
@@ -66,12 +64,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
                 if validation_import_path is not None:
                     if validation_data_uri_key is not None:
-                        keyvault_client_manager = KeyVaultClientManager()
-                        keyvault_client = keyvault_client_manager.get_keyvault_client()
-                        logger.info(
-                            f"fetching validation fileuri from keyvault: {keyvault_client_manager.keyvault_name}"
-                        )
-                        validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
+                        validation_data_uri = self.get_secret_from_keyvault(validation_data_uri_key)
                     else:
                         logger.info("User provided validation data uri directly, sending it to Azure OpenAI resource")
 
@@ -101,6 +94,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             self.delete_files()
             raise e
 
+    @retry_on_exception
     def delete_files(self):
         """Delete training and validation files from azure openai resource."""
         if self.training_file_id is not None:
@@ -111,6 +105,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             self.aoai_client.files.delete(file_id=self.validation_file_id)
             logger.debug(f"file id: {self.validation_file_id} deleted")
 
+    @retry_on_exception
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
         """Upload training and validation files to azure openai resource."""
         train_file_name, validation_file_name = utils.get_train_validation_filename(train_file_path,
@@ -136,6 +131,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         self._wait_for_processing(validation_metadata.id)
         logger.info("validation file uploaded")
 
+    @retry_on_exception
     def upload_file_uri_from_rest(self, file_uri: str) -> str:
         """Upload file uri to azure openai resource via rest call."""
         file_uri_payload = utils.create_payload_for_data_upload_rest_call(file_uri)
@@ -147,6 +143,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         return file_id
 
+    @retry_on_exception
     def _wait_for_processing(self, file_id):
         upload_file_metadata = self.aoai_client.files.wait_for_processing(file_id)
         filename = upload_file_metadata.filename
@@ -159,6 +156,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.error(error_string)
             raise Exception(error_string)
 
+    @retry_on_exception
     def submit_finetune_job(self, model, hyperparameters: Dict[str, str],
                             hyperparameters_1p: Dict[str, str], suffix=None):
         """Submit fine-tune job to AOAI."""
@@ -177,6 +175,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         return finetune_job.id
 
+    @retry_on_exception
     def track_finetuning_job(self):
         """Fetch metrics for the job and log them."""
         finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.finetuning_job_id)
@@ -201,6 +200,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         return finetune_job
 
+    @retry_on_exception
     def cancel_job(self):
         """Cancel finetuning job in Azure OpenAI resource."""
         logger.debug("job cancellation has been triggered, cancelling job")
@@ -217,6 +217,13 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         self.delete_files()
         exit()
+    
+    @retry_on_exception
+    def get_secret_from_keyvault(self, key: str) -> str:
+        keyvault_client_manager = KeyVaultClientManager()
+        keyvault_client = keyvault_client_manager.get_keyvault_client()
+        logger.info(f"fetching key: {key} from keyvault: {keyvault_client_manager.keyvault_name}")
+        return keyvault_client.get_secret(key).value
 
     def _log_metrics(self, finetune_job, last_metric_logged):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
