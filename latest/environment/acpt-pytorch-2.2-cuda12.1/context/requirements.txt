@@ -1,4 +1,4 @@
-azureml-core==1.57.0.post2
+azureml-core==1.57.0.post3
 azureml-dataset-runtime==1.57.0
 azureml-defaults==1.57.0.post1
 azure-ml==0.0.1
