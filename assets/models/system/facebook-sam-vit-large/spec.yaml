@@ -20,7 +20,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   training_dataset: SA-1B
   huggingface_model_id: facebook/sam-vit-large
-  author: facebook
+  author: Meta
   license: apache-2.0
   task: image-segmentation
   hiddenlayerscanned: ''

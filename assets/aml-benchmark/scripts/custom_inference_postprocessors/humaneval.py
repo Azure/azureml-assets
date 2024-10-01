@@ -146,8 +146,13 @@ def merge_id(
     """
     additional_args = {} if additional_args is None else additional_args
 
-    label_key = additional_args.get("ground_truth_column_name", next(iter(label_data[0])))
-    prediction_key = additional_args.get("prediction_column_name", next(iter(pred_data[0])))
+    label_key = additional_args.get("ground_truth_column_name", None)
+    prediction_key = additional_args.get("prediction_column_name", None)
+
+    if label_key is None:
+        label_key = next(iter(label_data[0]))
+    if prediction_key is None:
+        prediction_key = next(iter(pred_data[0]))
 
     expected_op = [{**x, **y} for x, y in zip(label_data, pred_data)]
     return expected_op, label_key, prediction_key

@@ -1,0 +1,13 @@
+{
+    "api": {
+        "type": "completion",
+        "response_segment_size": 1000
+    },
+    "authentication": {
+        "type": "managed_identity"
+    },
+    "inference_endpoint": {
+        "type": "azureml_online_endpoint",
+        "url": "https://real-dv3-stable.centralus.inference.ml.azure.com/v1/engines/davinci/completions"
+    }
+}

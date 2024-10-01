@@ -34,7 +34,7 @@ RUN cd /usr/local/src && mkdir lightgbm && cd lightgbm && \
 # Install GPU LightGBM and XgBoost
 ###############################
 RUN /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install --precompile && \
-    pip install --upgrade --force-reinstall xgboost==1.5.2 pystan==2.19.1.1 cmdstanpy==1.1.0 pandas==1.3.5"
+    pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.3.5"
 
 # begin conda create
 # Create conda environment
@@ -79,3 +79,5 @@ RUN pip install \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
 # end pip install
+
+ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

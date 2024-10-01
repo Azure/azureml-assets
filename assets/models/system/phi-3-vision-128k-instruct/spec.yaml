@@ -14,7 +14,7 @@ tags:
   disable-batch: "true"
   task: chat-completion
   hiddenlayerscanned: ""
-  author: microsoft
+  author: Microsoft
   SharedComputeCapacityEnabled : ""
   inference_compute_allow_list:
     [
@@ -24,4 +24,4 @@ tags:
     ]
   inference_supported_envs:
     - vllm
-version: 3
+version: 2

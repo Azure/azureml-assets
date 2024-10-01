@@ -123,7 +123,6 @@ class Predictor:
             conversation = datarow[0]
             conversation.append({"role":"assistant", "content":last_chats[ind]})
             appended_data[col_name].append(conversation)
-        logger.info(f"Final Conversations: {appended_data}")
         return pd.DataFrame(appended_data)
 
 
@@ -153,6 +152,8 @@ class Predictor:
                     payload = MIRPayload(input_texts, self.extra_params, TaskType.CONVERSATIONAL, False)
                 else:
                     input_texts = [i[0] if len(i) == 1 else [j.strip() for j in i] for i in input_texts]
+                    if self.task_type == SupportedTask.TEXT_GENERATION:
+                        self.extra_params.update({"return_full_text": False})
                     data = {
                             "input_data": {
                                 "input_string": input_texts,
@@ -501,11 +502,15 @@ def main():
             )
             if not os.path.exists(tokenizer_path):
                 tokenizer_path = model_path
+        inference_config = None
+        if os.path.exists(os.path.join(args.mlflow_model, ModelPath.INFERENCE_CONFIG_PATH)):
+            inference_config = os.path.join(args.mlflow_model, ModelPath.INFERENCE_CONFIG_PATH)
         engine_config, task_config, default_generator_configs, task_type, model_info = build_configs_from_model(
             mlmodel,
             model_path,
             config_path,
-            tokenizer_path
+            tokenizer_path,
+            inference_config
         )
 
         config = {

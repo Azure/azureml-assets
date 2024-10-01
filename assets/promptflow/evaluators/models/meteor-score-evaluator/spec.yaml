@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Meteor-Score-Evaluator
+path: ./
+properties:
+  is-promptflow: true
+  is-evaluator: true
+  show-artifact: true
+  _default-display-file: ./evaluator/_meteor.py
+tags:
+  Preview: ""
+version: 1

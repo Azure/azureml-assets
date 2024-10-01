@@ -3,6 +3,14 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.60 (2024-09-24)
+### 🚀 New Features
+- [#3431](https://github.com/Azure/azureml-assets/pull/3431) Allow Azure-AI prefix for models
+
+## 1.16.59 (2024-09-24)
+### 🚀 New Features
+- [#3317](https://github.com/Azure/azureml-assets/pull/3317) Support for storage account access for data asset copy with SAS token
+
 ## 1.16.58 (2024-09-13)
 ### 🐛 Bugs Fixed
 - [#3377](https://github.com/Azure/azureml-assets/pull/3377) Validation for vision results

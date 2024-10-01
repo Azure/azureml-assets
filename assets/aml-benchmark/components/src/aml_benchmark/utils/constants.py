@@ -84,6 +84,36 @@ _URL_TYPES_MAPPING = {
 _DEFAULT_URL_TYPE = "azureml_online_endpoint"
 
 
+class ApiType():
+    """Api Type."""
+
+    Unknown = 'unknown'
+    Completion = 'completion'
+    ChatCompletion = 'chat_completion'
+
+
+COMPLETION_API_SUFFIX_LIST = ["v1/completions"]
+CHAT_COMPLETION_API_SUFFIX_LIST = ["v1/chat/completions"]
+DEFAULT_API_TYPE = ApiType.Completion
+API_TYPE_MAPPING = {
+    ApiType.Completion: COMPLETION_API_SUFFIX_LIST,
+    ApiType.ChatCompletion: CHAT_COMPLETION_API_SUFFIX_LIST
+}
+
+
+def get_api_type(url: str) -> str:
+    """Get the api type for a given endpoint URL.
+
+    :param url: The URL of the endpoint.
+    :return: API type of the endpoint.
+    """
+    return next((
+        api_type for api_type, suffixes in API_TYPE_MAPPING.items()
+        if any(suffix in url for suffix in suffixes)),
+        DEFAULT_API_TYPE
+    )
+
+
 def get_endpoint_type(url: str) -> str:
     """
     Get the endpoint type for a given endpoint URL.
@@ -96,3 +126,28 @@ def get_endpoint_type(url: str) -> str:
             if url_suffix in url:
                 return url_type
     return _DEFAULT_URL_TYPE
+
+
+DATASET_CONFIG_2_NAME_MAP = {
+    ("formal_logic,high_school_european_history,high_school_us_history,"
+     "high_school_world_history,international_law,jurisprudence,logical_fallacies,"
+     "moral_disputes,moral_scenarios,philosophy,prehistory,professional_law,world_religions"): "mmlu_humanities",
+    ("business_ethics,clinical_knowledge,college_medicine,global_facts,human_aging,management,"
+     "marketing,medical_genetics,miscellaneous,nutrition,professional_accounting,"
+     "professional_medicine,virology"): "mmlu_other",
+    ("econometrics,high_school_geography,high_school_government_and_politics,high_school_macroeconomics,"
+     "high_school_microeconomics,high_school_psychology,human_sexuality,professional_psychology,public_relations,",
+     "security_studies,sociology,us_foreign_policy"): "mmlu_social_sciences",
+    ("abstract_algebra,anatomy,astronomy,college_biology,college_chemistry,college_computer_science,"
+     "college_mathematics,college_physics,computer_security,conceptual_physics,electrical_engineering,"
+     "elementary_mathematics,high_school_biology,high_school_chemistry,high_school_computer_science,"
+     "high_school_mathematics,high_school_physics,high_school_statistics,machine_learning"): "mmlu_stem",
+}
+
+REQUIRED_TELEMETRY_KEYS_MAP = {
+        "downloader.dataset_name": "dataset_name",
+        "endpoint.endpoint_url": "endpoint_url",
+        "endpoint.deployment_name": "deployment_name",
+        "endpoint.model_type": "model_type",
+        "endpoint.authentication_type": "authentication_type"
+    }
