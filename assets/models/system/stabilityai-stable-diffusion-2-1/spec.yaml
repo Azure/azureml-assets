@@ -18,7 +18,7 @@ tags:
   task: text-to-image
   hiddenlayerscanned: ""
   huggingface_model_id: stabilityai/stable-diffusion-2-1
-  author: stabilityai
+  author: "Stability AI"
   training_dataset: LAION-5B
   inference_supported_envs:
   - ds-mii
@@ -40,4 +40,5 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND96asr_v4
     ]
+  benchmark: "quality"
 version: 12

@@ -14,7 +14,7 @@ properties:
 
 tags:
   Featured: ""
-  author: meta
+  author: Meta
   license: custom
   task: chat-completion
   hiddenlayerscanned: ""
@@ -34,5 +34,6 @@ tags:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     - Standard_NC96ads_A100_v4
+  benchmark: "quality"
 
 version: 20

@@ -27,7 +27,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
   _aml_system_vanity_registry: "azureml-phi"

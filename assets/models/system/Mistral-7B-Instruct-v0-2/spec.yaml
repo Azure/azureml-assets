@@ -28,4 +28,5 @@ tags:
   license: apache-2.0
   task: chat-completion
   author: "Mistral AI"
+  benchmark: "quality"
 version: 5

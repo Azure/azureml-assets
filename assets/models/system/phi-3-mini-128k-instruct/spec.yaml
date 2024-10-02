@@ -30,7 +30,7 @@ tags:
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
   maas-finetuning: true
@@ -69,4 +69,5 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
+  benchmark: "quality"
 version: 11
