@@ -217,7 +217,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         self.delete_files()
         exit()
-    
+
     @retry_on_exception
     def get_secret_from_keyvault(self, key: str) -> str:
         keyvault_client_manager = KeyVaultClientManager()

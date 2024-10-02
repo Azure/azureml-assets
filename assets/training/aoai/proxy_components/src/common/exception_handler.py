@@ -15,13 +15,14 @@ MAX_RETRY_FOR_NON_RETRIABLE_EXCEPTIONS = 3
 BASE_RETRY_DELAY_SEC = 10
 MAX_RETRY_DELAY_SEC = 5
 
+
 def is_retriable(exception: Exception) -> bool:
-    if isinstance(exception, (oai.APIConnectionError, 
+    if isinstance(exception, (oai.APIConnectionError,
                               oai.APITimeoutError,
                               oai.ConflictError,
                               oai.RateLimitError)):
         return True
-    if isinstance(exception, (oai.BadRequestError, 
+    if isinstance(exception, (oai.BadRequestError,
                               oai.AuthenticationError,
                               oai.PermissionDeniedError,
                               oai.UnprocessableEntityError,
@@ -31,24 +32,24 @@ def is_retriable(exception: Exception) -> bool:
                               oai.LengthFinishReasonError,
                               oai.ContentFilterFinishReasonError)):
         return False
-    
+
     if isinstance(exception, (TimeoutError, requests.Timeout, ConnectionError, requests.ConnectionError)):
         return True
-    
-    if isinstance(exception, (ValueError, TypeError,SyntaxError, AttributeError)):
+
+    if isinstance(exception, (ValueError, TypeError, SyntaxError, AttributeError)):
         return False
     if isinstance(exception, requests.HTTPError):
-    # Handle specific HTTP error status codes
+        # Handle specific HTTP error status codes
         if exception.response.status_code in [500, 502, 503, 504, 429]:
             return True
         elif exception.response.status_code in [400, 401, 403]:
             # Bad request (400), unauthorized (401), forbidden (403) are non-retriable
             return False
-    
+
     return False
 
-def get_retry_delay_seconds(attempt_count = 0) -> int:
-    delay = BASE_RETRY_DELAY_SEC*(2 ** (attempt_count-1)) 
+def get_retry_delay_seconds(attempt_count=0) -> int:
+    delay = BASE_RETRY_DELAY_SEC*(2 ** (attempt_count-1))
     return min(delay, MAX_RETRY_DELAY_SEC)
 
 
@@ -60,14 +61,16 @@ def retry_on_exception(func):
             try:
                 attempt += 1
                 return func(*args, **kwargs)
-            except Exception as e: 
+            except Exception as e:
                 if is_retriable(e):
-                    logger.error(f"Retriable exception occurred: {e}. type: {type(e)}, attempt: {attempt}", exc_info=True)
+                    logger.error(f"Retriable exception occurred: {e}. type: {type(e)},\
+                                 attempt: {attempt}", exc_info=True)
                     if attempt > MAX_RETRY_FOR_RETRIABLE_EXCEPTIONS:
                         logger.error("max retries exceeded, Raising the exception")
                         raise
                 else:
-                    logger.error(f"Non Retriable exception occurred: {e}. type: {type(e)}, attempt: {attempt}", exc_info=True)
+                    logger.error(f"Non Retriable exception occurred: {e}. type: {type(e)},\
+                                 attempt: {attempt}", exc_info=True)
                     if attempt > MAX_RETRY_FOR_NON_RETRIABLE_EXCEPTIONS:
                         logger.error("max retries exceeded, Raising the exception")
                         raise
@@ -75,6 +78,5 @@ def retry_on_exception(func):
                 delay_sec = get_retry_delay_seconds(attempt)
                 logger.error(f"Retrying after {delay_sec} second of delay.")
                 time.sleep(delay_sec)  # Delay between retries
-                
+    
     return wrapper
-
