@@ -48,6 +48,7 @@ def is_retriable(exception: Exception) -> bool:
 
     return False
 
+
 def get_retry_delay_seconds(attempt_count=0) -> int:
     delay = BASE_RETRY_DELAY_SEC*(2 ** (attempt_count-1))
     return min(delay, MAX_RETRY_DELAY_SEC)
@@ -78,5 +79,4 @@ def retry_on_exception(func):
                 delay_sec = get_retry_delay_seconds(attempt)
                 logger.error(f"Retrying after {delay_sec} second of delay.")
                 time.sleep(delay_sec)  # Delay between retries
-    
     return wrapper
