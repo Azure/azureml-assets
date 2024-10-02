@@ -49,7 +49,7 @@ jobs:
           if ${{ steps.changed-scripts.outputs.all_changed_and_modified_files == '' }}; then
             echo "No changed files under ${{ inputs.folder_path }}"
           else
-            echo "Updated files under ${{ inputs.folder_path }}: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
+            echo "Updated file(s) found under ${{ inputs.folder_path }}: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
           fi
           echo "files-changed=${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}" >> "$GITHUB_OUTPUT"
 
