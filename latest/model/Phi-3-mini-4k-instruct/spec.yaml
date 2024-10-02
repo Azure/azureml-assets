@@ -139,7 +139,6 @@ tags:
     \ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
   playgroundRateLimitTier: "low"
   Featured: ""
-  Preview: ""
   maas-inference: true
   huggingface_model_id: ""
   SharedComputeCapacityEnabled: ''

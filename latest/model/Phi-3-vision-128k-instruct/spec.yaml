@@ -8,7 +8,6 @@ properties:
   inference-recommended-sku: Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   Featured: ""
-  Preview: ""
   huggingface_model_id: ""
   license: mit
   disable-batch: "true"

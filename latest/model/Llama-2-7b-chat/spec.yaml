@@ -20,7 +20,6 @@ properties:
 
 tags:
   Featured: ""
-  Preview: ""
   license: custom
   author: Meta
   task: chat-completion
