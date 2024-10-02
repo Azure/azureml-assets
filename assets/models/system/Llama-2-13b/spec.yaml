@@ -19,7 +19,6 @@ properties:
 
 tags:
   Featured: ""
-  Preview: ""
   author: Meta
   license: custom
   task: text-generation
