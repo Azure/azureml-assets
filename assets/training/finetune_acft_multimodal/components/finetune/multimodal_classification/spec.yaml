@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.3
+version: 0.0.4
 name: multimodal_classification_finetune
 display_name: Multimodal Classification using MMEFT
 description: Component to finetune multimodal models for classification using MMEFT
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/20
+environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/37
 
 code: ../../../src/finetune
 
