@@ -12,8 +12,8 @@ logger = get_logger(__name__)
 
 MAX_RETRY_FOR_RETRIABLE_EXCEPTIONS = 5
 MAX_RETRY_FOR_NON_RETRIABLE_EXCEPTIONS = 3
-BASE_RETRY_DELAY_SEC = 10
-MAX_RETRY_DELAY_SEC = 5
+BASE_RETRY_DELAY_SEC = 15
+MAX_RETRY_DELAY_SEC = 120
 
 
 def is_retriable(exception: Exception) -> bool:
@@ -27,10 +27,7 @@ def is_retriable(exception: Exception) -> bool:
                               oai.PermissionDeniedError,
                               oai.UnprocessableEntityError,
                               oai.UnprocessableEntityError,
-                              oai.InternalServerError,
-                              oai.LengthFinishReasonError,
-                              oai.LengthFinishReasonError,
-                              oai.ContentFilterFinishReasonError)):
+                              oai.InternalServerError)):
         return False
 
     if isinstance(exception, (TimeoutError, requests.Timeout, ConnectionError, requests.ConnectionError)):
@@ -38,6 +35,7 @@ def is_retriable(exception: Exception) -> bool:
 
     if isinstance(exception, (ValueError, TypeError, SyntaxError, AttributeError)):
         return False
+
     if isinstance(exception, requests.HTTPError):
         # Handle specific HTTP error status codes
         if exception.response.status_code in [500, 502, 503, 504, 429]:
