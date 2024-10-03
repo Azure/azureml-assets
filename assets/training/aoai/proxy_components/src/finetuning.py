@@ -105,7 +105,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             self.aoai_client.files.delete(file_id=self.validation_file_id)
             logger.debug(f"file id: {self.validation_file_id} deleted")
 
-    @retry_on_exception
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
         """Upload training and validation files to azure openai resource."""
         train_file_name, validation_file_name = utils.get_train_validation_filename(train_file_path,
@@ -116,20 +115,19 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.debug(f"validation file not provided, train data will be split in\
                          {utils.Constants.train_dataset_split_ratio} ratio to create validation data")
 
-        logger.debug(f"uploading training file : {train_file_name}")
-        train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'),
-                                                       purpose='fine-tune')
-        self.training_file_id = train_metadata.id
-        self._wait_for_processing(train_metadata.id)
+        self.training_file_id  = self._upload_file_and_wait_for_processing(train_file_name, train_data)
         logger.info("training file uploaded")
 
-        logger.debug(f"uploading validation file : {validation_file_name}")
-        validation_metadata = self.aoai_client.files.create(file=(validation_file_name,
-                                                            validation_data, 'application/json'),
-                                                            purpose='fine-tune')
-        self.validation_file_id = validation_metadata.id
-        self._wait_for_processing(validation_metadata.id)
+        self.validation_file_id  = self._upload_file_and_wait_for_processing(validation_file_name, validation_data)
         logger.info("validation file uploaded")
+
+    @retry_on_exception
+    def _upload_file_and_wait_for_processing(self, file_name: str, file_data):
+        logger.debug(f"uploading file : {file_name}")
+        file_upload_metadata = self.aoai_client.files.create(file=(file_name, file_data, 'application/json'),
+                                                       purpose='fine-tune')
+        self._wait_for_processing(file_upload_metadata.id)
+        return file_upload_metadata.id
 
     @retry_on_exception
     def upload_file_uri_from_rest(self, file_uri: str) -> str:
@@ -172,7 +170,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             suffix=suffix)
         logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {finetune_job.id}")
         logger.debug(f"Response of finetune create call : {str(finetune_job)}")
-
         return finetune_job.id
 
     @retry_on_exception
@@ -225,6 +222,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         logger.info(f"fetching key: {key} from keyvault: {keyvault_client_manager.keyvault_name}")
         return keyvault_client.get_secret(key).value
 
+    @retry_on_exception
     def _log_metrics(self, finetune_job, last_metric_logged):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
         result_file = finetune_job.result_files[0]
@@ -253,6 +251,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         logger.info(f"logged training metrics for finetuning job till {last_metric_logged} steps")
         return last_metric_logged
 
+    @retry_on_exception
     def _log_events(self, last_event_message):
         """Log events like training started, running nth epoch etc."""
         job_events = self.aoai_client.fine_tuning.jobs.list_events(self.finetuning_job_id).data
