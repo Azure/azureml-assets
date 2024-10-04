@@ -10,8 +10,8 @@ tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
   freePlayground: "true"
-  displayName: "Phi-3.5 mini instruct (128k)"
-  summary: "Refresh of Phi-3 mini model."
+  displayName: "Phi-3.5-mini instruct (128k)"
+  summary: "Refresh of Phi-3-mini model."
   textContextWindow: 131072
   maxOutputTokens: 4096
   languages: "en,ar,zh,cs,da,nl,fi,fr,de,he,hu,it,ja,ko,no,pl,pt,ru,es,sv,th,tr,uk"
