@@ -13,7 +13,7 @@ from aml_benchmark.utils.logging import get_logger
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
 from aml_benchmark.utils.exceptions import BenchmarkUserException
-from aml_benchmark.utils.constants import AuthenticationType, get_api_type, get_endpoint_type
+from aml_benchmark.utils.constants import AuthenticationType, ApiType, get_api_type, get_endpoint_type
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
 
@@ -305,11 +305,13 @@ def main(
     )
     request_settings_dict = _get_request_settings(additional_headers_dict, max_retry_time_interval)
 
+    api_type = get_api_type(merged_scoring_url)
+    api_dict = {"type": api_type}
+    if api_type == ApiType.Completion:
+        api_dict["response_segment_size"] = response_segment_size
+
     config_dict = {
-        "api": {
-            "type": get_api_type(merged_scoring_url),
-            "response_segment_size": response_segment_size
-        },
+        "api": api_dict,
         "authentication": authentication_dict,
         "concurrency_settings": {
             "initial_worker_count": initial_worker_count,
