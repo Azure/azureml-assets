@@ -313,7 +313,8 @@ jobs:
 
   framework_selector:
     type: command
-    component: azureml:image_framework_selector:0.0.17
+    # component: azureml:image_framework_selector:0.0.17
+    component: azureml://registries/azureml/components/image_framework_selector/versions/0.0.17
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: ${{parent.inputs.task_type}}
@@ -322,7 +323,8 @@ jobs:
 
   image_instance_segmentation_runtime_component:
     type: command
-    component: azureml:train_instance_segmentation_model:0.0.12
+    # component: azureml:train_instance_segmentation_model:0.0.12
+    component: azureml://registries/azureml/components/train_instance_segmentation_model/versions/0.0.12
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
@@ -369,7 +371,8 @@ jobs:
 
   mm_detection_model_import:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.18
+    # component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.18
+    component: azureml://registries/azureml/components/mmdetection_image_objectdetection_instancesegmentation_model_import/versions/0.0.18
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'MmDetectionImage'
@@ -379,7 +382,8 @@ jobs:
 
   mm_detection_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.18
+    # component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.18
+    component: azureml://registries/azureml/components/mmdetection_image_objectdetection_instancesegmentation_finetune/versions/0.0.18
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -423,7 +427,8 @@ jobs:
 
   output_selector:
     type: command
-    component: azureml:image_model_output_selector:0.0.16
+    # component: azureml:image_model_output_selector:0.0.16
+    component: azureml://registries/azureml/components/image_model_output_selector/versions/0.0.16
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_instance_segmentation_runtime_component.outputs.mlflow_model_folder}}

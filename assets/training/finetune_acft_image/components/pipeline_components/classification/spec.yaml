@@ -268,7 +268,8 @@ jobs:
 
   framework_selector:
     type: command
-    component: azureml:image_framework_selector:0.0.17
+    # component: azureml:image_framework_selector:0.0.17
+    component: azureml://registries/azureml/components/image_framework_selector/versions/0.0.17
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: 'image-classification'
@@ -277,7 +278,8 @@ jobs:
 
   image_classification_runtime_component:
     type: command
-    component: azureml:train_image_classification_model:0.0.12
+    # component: azureml:train_image_classification_model:0.0.12
+    component: azureml://registries/azureml/components/train_image_classification_model/versions/0.0.12
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
@@ -319,7 +321,8 @@ jobs:
 
   hugging_face_model_import:
     type: command
-    component: azureml:transformers_image_classification_model_import:0.0.17
+    # component: azureml:transformers_image_classification_model_import:0.0.17
+    component: azureml://registries/azureml/components/transformers_image_classification_model_import/versions/0.0.17
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'HuggingFaceImage'
@@ -329,7 +332,8 @@ jobs:
 
   hugging_face_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.17
+    # component: azureml:transformers_image_classification_finetune:0.0.17
+    component: azureml://registries/azureml/components/transformers_image_classification_finetune/versions/0.0.17
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -371,7 +375,8 @@ jobs:
 
   output_selector:
     type: command
-    component: azureml:image_model_output_selector:0.0.16
+    # component: azureml:image_model_output_selector:0.0.16
+    component: azureml://registries/azureml/components/image_model_output_selector/versions/0.0.16
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_classification_runtime_component.outputs.mlflow_model_folder}}
