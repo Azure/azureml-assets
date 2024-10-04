@@ -556,10 +556,13 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
 
     _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder,
                         single_run=True, number_of_processes=num_gpus)
-
+    if not _is_multi_node_enabled():
+        cmd_base = ["python", "-m", "torch.distributed.launch", "--nproc_per_node", decode_param_from_env_var('number_of_gpu_to_use_finetuning'), "-m"]
+    else:
+        cmd_base = ["python", "-m"]
     # finetune
     cmd = [
-        "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.finetune",
+        "azureml.acft.contrib.hf.nlp.entry_point.finetune.finetune",
         "--apply_lora", decode_param_from_env_var('apply_lora'),
         "--merge_lora_weights", decode_param_from_env_var('merge_lora_weights'),
         "--lora_alpha", decode_param_from_env_var('lora_alpha'),
@@ -609,7 +612,8 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--mlflow_model_folder", mlflow_model_folder,
         "--output_model", decode_output_from_env_var('output_model')
     ]
-    _run_subprocess_cmd(cmd, component_name="finetune", completion_files_folder=completion_files_folder,
+    cmd_base.extend(cmd)
+    _run_subprocess_cmd(cmd_base, component_name="finetune", completion_files_folder=completion_files_folder,
                         single_run=False, number_of_processes=num_gpus)
 
     # validate lora weights
