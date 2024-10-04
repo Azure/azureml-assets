@@ -11,7 +11,7 @@ tags:
   notes: "notes.md"
   freePlayground: "true"
   displayName: "Phi-3.5 vision instruct (128k)"
-  summary: "Refresh of Phi-3-vision model."
+  summary: "Refresh of Phi-3 vision model."
   textContextWindow: 131072
   maxOutputTokens: 4096
   languages: "en"

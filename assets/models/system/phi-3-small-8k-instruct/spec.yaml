@@ -13,7 +13,7 @@ tags:
   notes: "notes.md"
   evaluation: "evaluation.md"
   freePlayground: "true"
-  displayName: "Phi-3-small instruct (8k)"
+  displayName: "Phi-3 small instruct (8k)"
   summary: "A 7B parameters model, proves better quality than Phi-3-mini, with a focus on high-quality, reasoning-dense data."
   textContextWindow: 131072
   maxOutputTokens: 4096
