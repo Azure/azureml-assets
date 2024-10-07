@@ -334,6 +334,10 @@ inputs:
     type: string
     optional: True
     description: Name of the registered model
+  model_registration_tag:
+    type: string
+    optional : True
+    description: Tag for the registered model
 outputs:
   output_model:
     type: uri_folder
