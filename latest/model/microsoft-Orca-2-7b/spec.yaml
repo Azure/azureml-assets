@@ -10,7 +10,6 @@ properties:
     Standard_ND40rs_v2
   languages: en
 tags:
-  Preview: ""
   license: other
   SharedComputeCapacityEnabled: ''
   task: text-generation

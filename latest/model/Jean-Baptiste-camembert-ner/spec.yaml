@@ -32,7 +32,6 @@ properties:
   finetuning-tasks: text-classification, token-classification
   languages: fr
 tags:
-  Preview: ""
   license: mit
   task: token-classification
   hiddenlayerscanned: ""

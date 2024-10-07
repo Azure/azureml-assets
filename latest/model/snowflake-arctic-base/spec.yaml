@@ -9,7 +9,6 @@ properties:
   languages: moe, fr, it, de, es, en
 tags:
   Featured: ''
-  Preview: ''
   huggingface_model_id: Snowflake/snowflake-arctic-base
   license: apache2.0
   disable-batch: 'true'

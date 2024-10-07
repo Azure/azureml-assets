@@ -26,7 +26,6 @@ properties:
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
     Standard_ND40rs_v2
 tags:
-  Preview: ''
   SharedComputeCapacityEnabled: ''
   openmmlab_model_id: mmd-3x-deformable-detr_refine_twostage_r50_16xb2-50e_coco
   training_dataset: COCO

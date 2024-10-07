@@ -26,7 +26,6 @@ properties:
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
     Standard_ND40rs_v2
 tags:
-  Preview: ''
   Deprecated: ''
   SharedComputeCapacityEnabled: ''
   openmmlab_model_id: vfnet_x101_64x4d_fpn_mdconv_c3-c5_mstrain_2x_coco

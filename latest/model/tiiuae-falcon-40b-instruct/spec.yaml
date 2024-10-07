@@ -13,7 +13,6 @@ properties:
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
   Featured: ""
-  Preview: ""
   license: apache-2.0
   SharedComputeCapacityEnabled: ""
   task: text-generation
