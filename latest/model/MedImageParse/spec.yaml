@@ -1,0 +1,161 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+name: MedImageParse
+path: ./
+
+properties:
+  inference-min-sku-spec: 6|1|112|64
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  languages: en
+  SharedComputeCapacityEnabled: true
+
+tags:
+  task: image-segmentation
+  industry: health-and-life-sciences
+  Preview: ""
+  inference_supported_envs:
+  - hf
+  license: mit
+  author: Microsoft
+  hiddenlayerscanned: ""
+  SharedComputeCapacityEnabled: ""
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+version: 1
+description: |
+  ### Overview
+  Biomedical image analysis is fundamental for biomedical discovery in cell biology, pathology, radiology, and many other biomedical domains. MedImageParse is a biomedical foundation model for imaging parsing that can jointly conduct segmentation, detection, and recognition for 82 object types across 9 imaging modalities. Through joint learning, we can improve accuracy for individual tasks and enable novel applications such as segmenting all relevant objects in an image through a text prompt, rather than requiring users to laboriously specify the bounding box for each object. 
+
+  On image segmentation, we showed that MedImageParse is broadly applicable, outperforming state-of-the-art methods on 102,855 test image-mask-label triples across 9 imaging modalities. 
+
+  MedImageParse is also able to identify invalid user inputs describing objects that do not exist in the image. On object detection, which aims to locate a specific object of interest, MedImageParse again attained state-of-the-art performance, especially on objects with irregular shapes. 
+
+  On object recognition, which aims to identify all objects in a given image along with their semantic types, we showed that MedImageParse can simultaneously segment and label all biomedical objects in an image. 
+
+  In summary, MedImageParse is an all-in-one tool for biomedical image analysis by jointly solving segmentation, detection, and recognition. 
+
+  It is broadly applicable to all major biomedical image modalities, paving the path for efficient and accurate image-based biomedical discovery.
+
+  ### Model Architecture
+  MedImageParse is built upon a transformer-based architecture, optimized for processing large biomedical corpora. Leveraging multi-head attention mechanisms, it excels at identifying and understanding biomedical terminology, as well as extracting contextually relevant information from dense scientific texts. The model is pre-trained on vast biomedical datasets, allowing it to generalize across various biomedical domains with high accuracy.
+
+  ### License and where to send questions or comments about the model
+  The license for MedImageParse is the MIT license.
+  For questions or comments, please contact: hlsfrontierteam@microsoft.com
+
+  ### Training information
+
+  MedImageParse was trained on a large dataset comprising over six million triples of image, segmentation mask, and textual description.
+
+  MedImageParse used 16 NVIDIA A100-SXM4-40GB GPUs for a duration of 58 hours.
+
+  ### Evaluation Results
+  Please see the paper for detailed information about methods and results. https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf
+
+  Bar plot comparing the Dice score between our method and competing methods on 102,855 test instances (image-mask-label
+  triples) across 9 modalities. MedSAM and SAM require bounding box as input. 
+
+  ![MedImageParse comparison results on segmentation](medimageparseresults.png)
+
+
+
+  ### Fairness evaluation
+  We conducted fairness evaluation for different sex and age groups. Two-sided independent t-test 
+  shows non-significant differences between female and male and between different age groups, with p-value > 5% for all imaging modalities and segmentation targets evaluated.
+
+  ### Ethical Considerations and Limitations 
+
+  Microsoft believes Responsible AI is a shared responsibility and we have identified six principles and practices help organizations address risks, innovate, and create value: fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability. When downloaded or used in accordance with our terms of service, developers should work with their supporting model team to ensure this model meets requirements for the relevant use case and addresses unforeseen product misuse.   
+
+  While testing the model with images and/or text, ensure the the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
+
+  The model is not designed for the following use cases:
+  * **Use as a diagnostic tool or as a medical device** - Although MedImageParse is highly accurate in parsing biomedical it is not intended to be consumed directly and using information extracted by our service in diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions, as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional.  
+
+  * **Scenarios without consent for data** - Any scenario that uses health data for a purpose for which consent was not obtained.   
+
+  * **Use outside of health scenarios** - Any scenario that uses non-medical related image and/or serving purposes outside of the healthcare domain.   
+
+  Please see Microsoft's Responsible AI Principles and approach available at [https://www.microsoft.com/en-us/ai/principles-and-approach/](https://www.microsoft.com/en-us/ai/principles-and-approach/)
+
+
+
+  ### Sample inputs and outputs (for real time inference)
+
+  Input:
+  ```bash
+  data = {
+    "input_data": {
+      "columns": [
+        "image",
+        "text"
+      ],
+      "index":[0, 1],
+      "data": [
+        [base64.encodebytes(read_image('./examples/Part_3_226_pathology_breast.png')).decode("utf-8"), "neoplastic cells in breast pathology & inflammatory cells."],
+        [base64.encodebytes(read_image('./examples/TCGA_HT_7856_19950831_8_MRI-FLAIR_brain.png')).decode("utf-8"), "brain tumor"]
+      ],
+    },
+    "params": {}
+  }
+  ```
+
+
+
+  ## Data and Resource Specification for Deployment
+  * **Supported Data Input Format** 
+  1. The model expect 2D 8-bit RGB or grayscale images by default, with pixel values ranging from 0 to 255 and resolution 1024*1024. 
+  2. We provided preprocessing notebooks 4, 5, 6 to illustrate how to convert raw formats including DICOM, NIFTI, PNG, and JPG to desired format, with preprocessing steps such as CT windowing.
+  3. The model outputs pixel probabilities in the same shape as the input image. We convert the floating point probabilities to 8-bit grayscale outputs. The probability threshold for segmentation mask is 0.5, which corresponds to 127.5 in 8-bit grayscale output.
+  4. The model takes in text prompts for segmentation and doesn't have a fixed number of targets to handle. However, to ensure quality performance, we recommend the following tasks based on evaluation results.
+    - CT: abdomen: adrenal gland, aorta, bladder, duodenum, esophagus, gallbladder, kidney, kidney cyst, 
+              kidney tumor, left adrenal gland, left kidney, liver, pancreas, postcava, 
+              right adrenal gland, right kidney, spleen, stomach, tumor
+          colon: tumor
+          liver: liver, tumor
+          lung: COVID-19 infection, nodule
+          pelvis: uterus 
+    - MRI-FLAIR: brain: edema, lower-grade glioma, tumor, tumor core, whole tumor
+    - MRI-T1-Gd: brain: enhancing tumor, tumor core
+    - MRI-T2: prostate: prostate peripheral zone, prostate transitional zone, 
+    - MRI: abdomen: aorta, esophagus, gallbladder, kidney, left kidney, liver, pancreas, postcava, 
+                  right kidney, spleen, stomach 
+          brain: anterior hippocampus, posterior hippocampus
+          heart: left heart atrium, left heart ventricle, myocardium, right heart ventricle
+          prostate: prostate 
+    - OCT: retinal: edema
+    - X-Ray: chest: COVID-19 infection, left lung, lung, lung opacity, right lung, viral pneumonia 
+    - dermoscopy: skin: lesion, melanoma
+    - endoscope: colon: neoplastic polyp, non-neoplastic polyp, polyp 
+    - fundus: retinal: optic cup, optic disc, 
+    - pathology: bladder: neoplastic cells
+              breast: epithelial cells, neoplastic cells
+              cervix: neoplastic cells
+              colon: glandular structure, neoplastic cells
+              esophagus: neoplastic cells
+              kidney: neoplastic cells
+              liver: epithelial cells, neoplastic cells
+              ovarian: epithelial cells, 'neoplastic cells
+              prostate: neoplastic cells
+              skin: neoplastic cells
+              stomach: neoplastic cells
+              testis: epithelial cells
+              thyroid: epithelial cells, neoplastic cells 
+              uterus: neoplastic cells
+  ultrasound: breast: benign tumor, malignant tumor, tumor
+              heart: left heart atrium, left heart ventricle
+              transperineal: fetal head, public symphysis
+
+  * **Hardware Requirement for Compute Instances** 
+  - Default: Single V100 GPU 
+  - Minimum: Single GPU instance with 8Gb Memory 
+
+
+  * **Hardware Requirement for Compute Instances** 
+  Please suggest the following hardware requirements for the compute instances, for example:
+  - Batch size: 4 (~6Gb Memory)
+  - Image Compression Ratio: 75 (Default)
+  - Image Size: 512 (Default for X-Y Dimension)
