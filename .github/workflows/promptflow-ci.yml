@@ -5,17 +5,9 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - assets/promptflow/models/**
-      - .github/workflows/promptflow-ci.yml
-      - scripts/promptflow-ci/**
   pull_request_target:
     branches:
       - main
-    paths:
-      - assets/promptflow/models/**
-      - .github/workflows/promptflow-ci.yml
-      - scripts/promptflow-ci/**
     types:
       - opened
       - labeled
@@ -35,10 +27,18 @@ jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
+  check-directory-file-changes:
+    needs: check-execution-context
+    if: fromJSON(needs.check-execution-context.outputs.continue)
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    with:
+      folder_path: "assets/promptflow/models/**,.github/workflows/promptflow-ci.yml,scripts/promptflow-ci/**"
+      forked_pr_input: ${{ needs.check-execution-context.outputs.forked_pr }}
+
   check_spec_yaml:
     runs-on: ubuntu-latest
-    if: fromJSON(needs.check-execution-context.outputs.continue)
-    needs: check-execution-context
+    if: needs.check-directory-file-changes.outputs.files-changed != ''
+    needs: [check-execution-context, check-directory-file-changes]
     name: Check spec.yaml fields
     timeout-minutes: 45
     steps:
@@ -60,8 +60,8 @@ jobs:
 
   run_promptflow_ci_job:
     runs-on: ubuntu-latest
-    if: fromJSON(needs.check-execution-context.outputs.continue)
-    needs: check-execution-context
+    if: needs.check-directory-file-changes.outputs.files-changed != ''
+    needs: [check-execution-context, check-directory-file-changes]
     name: Flow tests
     environment: Testing
     timeout-minutes: 60

@@ -13,7 +13,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   task: text-generation
   hiddenlayerscanned: ""
-  author: microsoft
+  author: Microsoft
   huggingface_model_id: microsoft/Orca-2-7b
   inference_compute_allow_list:
     [

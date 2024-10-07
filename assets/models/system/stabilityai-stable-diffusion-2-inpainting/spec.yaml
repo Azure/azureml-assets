@@ -14,7 +14,7 @@ tags:
   hiddenlayerscanned: ""
   huggingface_model_id: stabilityai/stable-diffusion-2-inpainting
   training_dataset: LAION-5B
-  author: stabilityai
+  author: "Stability AI"
   inference_compute_allow_list:
     [
       Standard_NC6s_v3,

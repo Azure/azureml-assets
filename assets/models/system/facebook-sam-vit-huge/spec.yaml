@@ -19,7 +19,7 @@ tags:
   Preview: ''
   training_dataset: SA-1B
   huggingface_model_id: facebook/sam-vit-huge
-  author: facebook
+  author: Meta
   license: apache-2.0
   task: image-segmentation
   SharedComputeCapacityEnabled: ''

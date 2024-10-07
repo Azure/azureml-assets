@@ -12,7 +12,7 @@ import sys
 from io import StringIO
 from jinja2 import Environment
 from datasets import load_dataset
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
 REGEX_EXPR = """((?:.*?def.*?FUNCNAME.*?))(?=(?:
@@ -118,7 +118,7 @@ def _run(
         pred_data = _read_input_file(prediction_dataset)
         if ground_truth_dataset:
             task_id = _read_input_file(ground_truth_dataset)
-            pred_with_task_id, label_key, prediction_key = merge_id(task_id, pred_data)
+            pred_with_task_id, label_key, prediction_key = merge_id(task_id, pred_data, additional_args)
 
     # Post processing the prediction and ground truth columns
     ground_truths, predictions = run_humaneval_postprocessor(pred_with_task_id,
@@ -130,8 +130,9 @@ def _run(
 
 def merge_id(
     label_data: List[Dict[str, Any]],
-    pred_data: List[Dict[str, Any]]
-) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+    pred_data: List[Dict[str, Any]],
+    additional_args=None,
+) -> Tuple[List[Dict[Any, Any]], str, str]:
     """
     Merge the task_id with the prediction data.
 
@@ -139,10 +140,20 @@ def merge_id(
     :type: List[Dict[str, Any]]
     :param pred_data: Prediction data loaded from _read_input_file function.
     :type: List[Dict[str, Any]]
+    :param additional_args: Additional arguments passed to the function.
+    :type: Optional[Dict[str, Any]]
     :return: pd.DataFrame or List[Dict[str, Any]]]
     """
-    label_key = next(iter(label_data[0]))
-    prediction_key = next(iter(pred_data[0]))
+    additional_args = {} if additional_args is None else additional_args
+
+    label_key = additional_args.get("ground_truth_column_name", None)
+    prediction_key = additional_args.get("prediction_column_name", None)
+
+    if label_key is None:
+        label_key = next(iter(label_data[0]))
+    if prediction_key is None:
+        prediction_key = next(iter(pred_data[0]))
+
     expected_op = [{**x, **y} for x, y in zip(label_data, pred_data)]
     return expected_op, label_key, prediction_key
 

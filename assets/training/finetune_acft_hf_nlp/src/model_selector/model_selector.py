@@ -93,13 +93,13 @@ def get_model_asset_id() -> str:
 
 def validate_huggingface_id(huggingface_id: str) -> None:
     """Validate the huggingface_id using Hfapi. Raise exception if the huggingface id is invalid."""
-    from huggingface_hub import HfApi, ModelFilter
+    from huggingface_hub import HfApi
     hf_api = HfApi()  # by default endpoint points to https://huggingface.co
 
     try:
         model_infos = [
             info
-            for info in hf_api.list_models(filter=ModelFilter(model_name=huggingface_id))
+            for info in hf_api.list_models(model_name=huggingface_id)
             if info.modelId == huggingface_id
         ]
     except ConnectionError:
@@ -387,6 +387,16 @@ def main():
         if conda_file_path.is_file():
             shutil.copy(str(conda_file_path), args.output_dir)
             logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
+
+        # copy inference config files
+        mlflow_ml_configs_dir = Path(args.mlflow_model_path, "ml_configs")
+        ml_config_dir = Path(args.output_dir, "ml_configs")
+        if mlflow_ml_configs_dir.is_dir():
+            shutil.copytree(
+                mlflow_ml_configs_dir,
+                ml_config_dir
+            )
+            logger.info("Copied ml_configs folder to output dir.")
 
 
 if __name__ == "__main__":

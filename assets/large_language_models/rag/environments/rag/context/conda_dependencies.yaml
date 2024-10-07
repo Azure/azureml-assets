@@ -25,17 +25,17 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
     # Other public packages
   - beautifulsoup4~=4.11.2
-  - cryptography>=41.0.7
+  - cryptography>=43.0.1
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
   - inference-schema>=1.8.0
-  - langchain<0.2
+  - langchain<0.3
   - lxml
   - markdown
   - mlflow-skinny==2.3.2
   - mlflow>=2.6.0
-  - msal~=1.24.0
-  - nltk==3.8.1
+  - msal~=1.31.0
+  - nltk==3.9.1
   - openai>=0.27.4
   - pandas>=1
   - polling2~=0.5.0

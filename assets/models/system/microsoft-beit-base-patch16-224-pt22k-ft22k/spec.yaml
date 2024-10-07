@@ -36,7 +36,7 @@ tags:
   hiddenlayerscanned: ""
   training_dataset: imagenet-1k, imagenet-21k
   SharedComputeCapacityEnabled: ''
-  author: microsoft
+  author: Microsoft
   inference_compute_allow_list:
     [
       Standard_DS3_v2,

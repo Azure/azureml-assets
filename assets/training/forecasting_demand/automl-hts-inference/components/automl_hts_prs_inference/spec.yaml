@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: parallel
-version: 0.0.4
+version: 0.0.6
 
 name: automl_hts_prs_inference_step
 display_name: AutoML HTS - Inference Step
