@@ -47,7 +47,6 @@ tags:
       Standard_ND40rs_v2,    
     ]
   Featured: ""
-  Preview: ""
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
