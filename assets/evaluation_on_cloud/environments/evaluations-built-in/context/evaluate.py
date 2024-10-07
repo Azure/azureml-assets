@@ -111,7 +111,8 @@ parser.add_argument("--evaluators", type=str)
 parser.add_argument("--evaluator_name_id_map", type=str)
 
 args = parser.parse_args()
-rai_evaluators = ['HateUnfairnessEvaluator', 'Sexual-Content-Evaluator', 'Hate-and-Unfairness-Evaluator', 'Violent-Content-Evaluator', 'Self-Harm-Related-Content-Evaluator']
+rai_evaluators = ['HateUnfairnessEvaluator', 'Sexual-Content-Evaluator', 'Hate-and-Unfairness-Evaluator',
+                  'Violent-Content-Evaluator', 'Self-Harm-Related-Content-Evaluator']
 
 if __name__ == '__main__':
     copy_evaluator_files(args)
