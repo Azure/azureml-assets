@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Evaluate for a built-in or custom evulator."""
 import argparse
 import json

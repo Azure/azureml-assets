@@ -4,5 +4,5 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy your Python file into the image
-COPY evaluate_on_data.py .
+COPY evaluate.py .
 COPY save_evaluation.py .

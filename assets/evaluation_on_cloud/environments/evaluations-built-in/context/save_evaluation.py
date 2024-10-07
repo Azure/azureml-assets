@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Load a built-in or custom evulator as flow."""
 import importlib
 import logging
