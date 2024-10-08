@@ -6,7 +6,6 @@
 import os
 import subprocess
 import logging
-import portalocker
 import json
 from pathlib import Path
 import shutil
@@ -17,6 +16,7 @@ from typing import Optional, List
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS, SaveFileConstants
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.accelerator.utils.run_utils import is_main_process, get_process_name, wait_at_barrier
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
@@ -34,6 +34,7 @@ _COMPONENTS_SCRIPTS_REL_PATH = Path("entry_point", "ftaas", "finetune")
 _ALLOWED_MAX_STRING_LENGTH = 128
 PEFT_ADAPTER_WEIGHTS_DIR = "peft_adapter_weights"
 CHAT_KEY = "messages"
+_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT = "_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT"
 
 TASK_SPECIFIC_PARAMS = {
     "preprocess": {
@@ -369,46 +370,19 @@ def add_task_specific_params(cmd: List[str], task_name: str, component_name: str
                     add_optional_input(cmd, param)
 
 
-def is_main_process():
+def _is_multi_node_enabled() -> bool:
     """
-    To check if current process running this is master or rank_0 process.
+    To check if multi-node support is enabled.
 
-    :return: Boolean for whether this process is master.
+    Multi-node support is enabled by setting the environment variable _AZUREML_FT_ENABLE_MULTI_NODE_SUPPORT to "true".
+    If this environment variable is not defined, the function will return False by default.
+
+    :return: True if multi-node support is enabled, False otherwise.
     """
-    return os.environ.get('AZUREML_PROCESS_NAME', 'main') in {'main', 'rank_0'}
-
-
-def wait_at_barrier(barrier_file, num_processes):
-    """
-    Control will halt till number to process reaching the execution point is less than a given number.
-
-    barrier_file: File used to create execution barrier.
-    num_processes: Number of process which need to reach barrier point.
-    """
-    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-    with open(barrier_file, 'a+') as f:
-        portalocker.lock(f, portalocker.LOCK_EX)
-        try:
-            f.seek(0)
-            lines = f.readlines()
-            process_count = len(lines)
-            if process_count < num_processes:
-                f.write(f"{os.getpid()} reached the barrier\n")
-                f.flush()
-                os.fsync(f.fileno())
-                portalocker.unlock(f)
-                logger.info(f'Process {process_name} at barrier, count is {process_count},')
-                logger.info(f'in barrier file {barrier_file}')
-        finally:
-            portalocker.unlock(f)
-        with open(barrier_file, 'r') as f:
-            while len(lines) < num_processes:
-                portalocker.lock(f, portalocker.LOCK_EX)
-                f.seek(0)
-                lines = f.readlines()
-                portalocker.unlock(f)
-                time.sleep(0.5)  # Polling interval
-        logger.info(f"Process {os.getpid()} has passed barrier with name {process_name}")
+    if os.environ.get(_AZUREML_FT_ENALBE_MULTI_NODE_SUPPORT, None) == "true":
+        return True
+    else:
+        return False
 
 
 def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_folder: str,
@@ -421,11 +395,11 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
     if completion_file.exists():
         logger.info(f"Skipping {component_name} as completion file exists: {completion_file}")
         return
-    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-    if not barrier_file.exists():
-        Path(barrier_file).touch()
-        logger.info(f'Barrier file {barrier_file} is created by process name {process_name}')
-    if single_run:
+    process_name = get_process_name()
+    if single_run and _is_multi_node_enabled():
+        if not barrier_file.exists():
+            Path(barrier_file).touch()
+            logger.info(f'Barrier file {barrier_file} is created by process name {process_name}')
         if is_main_process():
             logger.info(f"Executing command: {cmd} in single run mode. Process name is {process_name}")
             # Not setting stdout and stderr will stream all the logs directly to stdout
@@ -458,7 +432,7 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str, completion_files_fo
         wait_at_barrier(barrier_file, number_of_processes)
         logger.info(f"Process name on subprocess exiting count barrier : {process_name}")
     else:
-        logger.info(f"Executing the command: {cmd}  in multi-process mode.")
+        logger.info(f"Executing the command: {cmd}.")
         # Not setting stdout and stderr will stream all the logs directly to stdout
         process = subprocess.Popen(cmd)
 
@@ -546,9 +520,9 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     """Run the model selector, preprocess, finetune and registration script."""
     # get task name
     task_name = decode_param_from_env_var("task_name")
-    nodes = parse_to_int(decode_param_from_env_var("Node_Count"))
-    gpus = parse_to_int(decode_param_from_env_var("number_of_gpu_to_use_finetuning"))
-    logger.info(f'Nodes are {nodes} , gpus are : {gpus}')
+    num_nodes = parse_to_int(decode_param_from_env_var("Node_Count"))
+    num_gpus = parse_to_int(decode_param_from_env_var("number_of_gpu_to_use_finetuning"))
+    logger.info(f'Nodes are {num_nodes} , gpus are : {num_gpus}')
 
     # model selector
     cmd = [
@@ -559,7 +533,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     add_optional_input(cmd, "mlflow_model_path")
     add_optional_input(cmd, "pytorch_model_path")
     _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder,
-                        single_run=True, number_of_processes=gpus)
+                        single_run=True, number_of_processes=num_gpus)
     # preprocess
     cmd = [
         "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.preprocess",
@@ -581,11 +555,15 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         cmd += ["--validation_file_path", validation_file_path]
 
     _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder,
-                        single_run=True, number_of_processes=gpus)
-
+                        single_run=True, number_of_processes=num_gpus)
+    if not _is_multi_node_enabled():
+        cmd_base = ["python", "-m", "torch.distributed.launch", "--nproc_per_node",
+                    decode_param_from_env_var('number_of_gpu_to_use_finetuning'), "-m"]
+    else:
+        cmd_base = ["python", "-m"]
     # finetune
     cmd = [
-        "python", "-m", "azureml.acft.contrib.hf.nlp.entry_point.finetune.finetune",
+        "azureml.acft.contrib.hf.nlp.entry_point.finetune.finetune",
         "--apply_lora", decode_param_from_env_var('apply_lora'),
         "--merge_lora_weights", decode_param_from_env_var('merge_lora_weights'),
         "--lora_alpha", decode_param_from_env_var('lora_alpha'),
@@ -635,8 +613,9 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--mlflow_model_folder", mlflow_model_folder,
         "--output_model", decode_output_from_env_var('output_model')
     ]
-    _run_subprocess_cmd(cmd, component_name="finetune", completion_files_folder=completion_files_folder,
-                        single_run=False, number_of_processes=gpus)
+    cmd_base.extend(cmd)
+    _run_subprocess_cmd(cmd_base, component_name="finetune", completion_files_folder=completion_files_folder,
+                        single_run=False, number_of_processes=num_gpus)
 
     # validate lora weights
 
@@ -655,7 +634,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     ]
     add_task_specific_params(cmd, task_name, component_name="validate_lora_weights")
     _run_subprocess_cmd(cmd, component_name="validate_lora_weights", completion_files_folder=completion_files_folder,
-                        single_run=True, number_of_processes=gpus)
+                        single_run=True, number_of_processes=num_gpus)
 
     # model registration
     cmd = [
@@ -670,8 +649,9 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--convert_to_safetensors", "true",
     ]
     add_optional_param(cmd=cmd, component_param_name="registered_model_name", argparse_param_name="model_name")
+    add_optional_param(cmd=cmd, component_param_name="model_registration_tag", argparse_param_name="model_tag")
     _run_subprocess_cmd(cmd, component_name="register_model", completion_files_folder=completion_files_folder,
-                        single_run=True, number_of_processes=gpus)
+                        single_run=True, number_of_processes=num_gpus)
 
 
 @swallow_all_exceptions(time_delay=60)
