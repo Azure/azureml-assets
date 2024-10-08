@@ -1,4 +1,4 @@
-name: built-in-evaluator-env
+name: evaluator-built-in
 version: 0.0.1
 type: environment
 spec: spec.yaml
