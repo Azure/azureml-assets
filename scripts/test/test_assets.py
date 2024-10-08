@@ -116,7 +116,6 @@ def test_assets(input_dirs: List[Path],
         if not base_created:
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
-            run(['conda', 'config', '--add', 'channels', 'huggingface'])
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True)
             base_created = True
             logger.end_group()
