@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test image dataset implementations."""
+
 import json
 import os
 import pytest
@@ -83,6 +85,8 @@ MLTABLE_CONTENTS_PER_TASK = {
 
 
 class MockWorkspace:
+    """Mock workspace."""
+
     def __init__(self, subscription_id, resource_group, workspace_name, location, workspace_id):
         self.subscription_id = subscription_id
         self.resource_group = resource_group
@@ -93,17 +97,23 @@ class MockWorkspace:
 
 
 class MockExperiment:
+    """Mock experiment."""
+
     def __init__(self, workspace, id):
         self.workspace = workspace
         self.id = id
 
 
 class MockRun:
+    """Mock run."""
+
     def __init__(self, id):
         self.id = id
 
 
 class MockRunContext:
+    """Mock run context."""
+
     def __init__(self, experiment, run_id, parent_run_id):
         self.experiment = experiment
         self._run_id = run_id
@@ -112,6 +122,7 @@ class MockRunContext:
 
 
 def get_mock_run_context():
+    """Make mock run context."""
     TEST_EXPERIMENT_ID = "22222222-2222-2222-2222-222222222222"
     TEST_REGION = "eastus"
     TEST_PARENT_RUN_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
@@ -138,6 +149,7 @@ def get_mock_run_context():
     (TASK.IMAGE_GENERATION, ["prompt"], "label"),
 ])
 def test_image_dataset(task_type, input_column_names, label_column_name):
+    """Test image dataset on small example."""
     with tempfile.TemporaryDirectory() as directory_name:
         # Save the jsonl file.
         dataset = DATASET_PER_TASK[task_type]
