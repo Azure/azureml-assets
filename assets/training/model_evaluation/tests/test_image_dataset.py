@@ -88,6 +88,7 @@ class MockWorkspace:
     """Mock workspace."""
 
     def __init__(self, subscription_id, resource_group, workspace_name, location, workspace_id):
+        """Make mock workspace."""
         self.subscription_id = subscription_id
         self.resource_group = resource_group
         self._workspace_name = workspace_name
@@ -100,6 +101,7 @@ class MockExperiment:
     """Mock experiment."""
 
     def __init__(self, workspace, id):
+        """Make mock experiment."""
         self.workspace = workspace
         self.id = id
 
@@ -108,6 +110,7 @@ class MockRun:
     """Mock run."""
 
     def __init__(self, id):
+        """Make mock run."""
         self.id = id
 
 
@@ -115,6 +118,7 @@ class MockRunContext:
     """Mock run context."""
 
     def __init__(self, experiment, run_id, parent_run_id):
+        """Make mock run context."""
         self.experiment = experiment
         self._run_id = run_id
         self.id = run_id
