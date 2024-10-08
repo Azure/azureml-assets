@@ -173,7 +173,6 @@ def get_classification_dataset(
     ws = get_workspace()
 
     test_tabular_ds, valid_tabular_ds = utils.get_tabular_dataset(settings=settings, mltable_json=mltable)
-    print("y0", test_tabular_ds)
 
     utils.download_or_mount_image_files(
         settings=settings,
@@ -188,7 +187,6 @@ def get_classification_dataset(
         multilabel=multi_label,
         label_column_name=label_column_name,
     )
-    print("y1", test_dataset_wrapper._data_dir)
 
     logger.info(
         f"# test images: {len(test_dataset_wrapper)}, \

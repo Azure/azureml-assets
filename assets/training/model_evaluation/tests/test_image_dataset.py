@@ -13,8 +13,8 @@ from azureml.acft.common_components.image.runtime_common.common.dataset_helper i
 
 MODEL_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "./src"))
 sys.path.append(MODEL_DIR)
-from constants import TASK
-from image_dataset import get_image_dataset
+from constants import TASK  # noqa: E402
+from image_dataset import get_image_dataset  # noqa: E402
 
 
 DATASET_PER_TASK = {
@@ -91,14 +91,17 @@ class MockWorkspace:
         self._workspace_id_internal = workspace_id
         self.name = workspace_name
 
+
 class MockExperiment:
     def __init__(self, workspace, id):
         self.workspace = workspace
         self.id = id
 
+
 class MockRun:
     def __init__(self, id):
         self.id = id
+
 
 class MockRunContext:
     def __init__(self, experiment, run_id, parent_run_id):
@@ -106,6 +109,7 @@ class MockRunContext:
         self._run_id = run_id
         self.id = run_id
         self.parent = MockRun(parent_run_id)
+
 
 def get_mock_run_context():
     TEST_EXPERIMENT_ID = "22222222-2222-2222-2222-222222222222"
@@ -155,8 +159,10 @@ def test_image_dataset(task_type, input_column_names, label_column_name):
 
         # Load the MLTable.
         with patch("azureml.core.Run.get_context", get_mock_run_context), \
-            patch("azureml.acft.common_components.image.runtime_common.common.utils.download_or_mount_image_files"), \
-            patch.object(AmlDatasetHelper, "get_data_dir", return_value=directory_name):
+                patch(
+                    "azureml.acft.common_components.image.runtime_common.common.utils.download_or_mount_image_files"
+                ), \
+                patch.object(AmlDatasetHelper, "get_data_dir", return_value=directory_name):
             df = get_image_dataset(task_type, directory_name, input_column_names, label_column_name)
 
         # Compare the loaded dataset with the original.
