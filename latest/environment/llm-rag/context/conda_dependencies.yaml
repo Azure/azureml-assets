@@ -11,7 +11,7 @@ dependencies:
   - azureml-rag[azure,cognitive_search,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore,azure_cosmos_nosql]==0.2.36
     # Azure
   - azure-ai-formrecognizer==3.3.1
-  - azure-identity==1.18.0
+  - azure-identity==1.19.0
   - azure-keyvault-secrets==4.6.0
   - azure-mgmt-cognitiveservices~=13.4.0
   - azure-search-documents>=11.4.0 # explicitly install for [cognitive_search]
