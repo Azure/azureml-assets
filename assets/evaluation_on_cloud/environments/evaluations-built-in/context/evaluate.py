@@ -11,7 +11,7 @@ import pandas as pd
 import requests
 import shutil
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from promptflow.evals.evaluate import evaluate
+from azure.ai.evaluation import evaluate
 from save_eval import load_evaluator
 
 logger = logging.getLogger(__name__)
@@ -73,18 +73,15 @@ def run_evaluation(command_line_args, evaluators):
         metrics[metric_name] = metric_value
     mlflow.log_metrics(metrics)
 
-    file_path = args.eval_output+"/eval_output.json"
-    with open(file_path, 'w') as json_file:
-        json.dump(results, json_file, indent=4)
-    logger.info(results)
-
     if results and results.get("rows"):
         # Convert the results to a DataFrame
         df = pd.DataFrame(results["rows"])
 
         # Save the DataFrame as a JSONL file
         df.to_json("instance_results.jsonl", orient="records", lines=True)
+        df.to_json("eval_results.jsonl", orient="records", lines=True)
         mlflow.log_artifact("instance_results.jsonl")
+        mlflow.log_artifact("eval_results.jsonl")
 
 
 def get_promptflow_run_logs():
