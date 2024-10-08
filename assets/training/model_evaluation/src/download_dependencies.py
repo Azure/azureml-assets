@@ -48,9 +48,7 @@ def main():
             "azureml-evaluate-mlflow",
             "azureml_metrics",
             "azureml-metrics",
-            "torch",
             "torchvision",
-            "transformers",
         ]
         install_deps = []
         with open(reqs_file, "r") as f:
