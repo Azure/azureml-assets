@@ -1,5 +1,5 @@
-name: evaluator-built-in
-version: 0.0.1
+name: evaluations-built-in
+version: auto
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
