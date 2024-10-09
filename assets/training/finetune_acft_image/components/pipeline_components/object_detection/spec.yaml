@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.21
+version: 0.0.20
 name: image_object_detection_pipeline
 display_name: Image Object Detection Pipeline
 description: Pipeline component for image object detection.
@@ -450,7 +450,7 @@ jobs:
 
   output_selector:
     type: command
-    component: azureml:image_model_output_selector:0.0.17
+    component: azureml:image_model_output_selector:0.0.16
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_object_detection_runtime_component.outputs.mlflow_model_folder}}
