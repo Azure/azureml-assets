@@ -16,6 +16,7 @@ import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
+
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
@@ -117,6 +118,8 @@ def test_assets(input_dirs: List[Path],
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True)
+            run(['conda', 'update', '-c', 'conda-forge', 'huggingface_hub', '-y'])
+            run(['conda', 'install', '-c', 'conda-forge', 'accelerate', '-y'])
             base_created = True
             logger.end_group()
 
