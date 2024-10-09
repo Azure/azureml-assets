@@ -5,7 +5,7 @@ USER root
 
 # Install necessary tools
 RUN apt-get update && apt-get install -y \
-    curl \
+    curl=7.68.0-1ubuntu2.24 \
     gnupg \
     unixodbc-dev \
     libc-bin=2.31-0ubuntu9.16 \
@@ -21,12 +21,16 @@ RUN apt-get update && apt-get install -y \
     libssl1.1=1.1.1f-1ubuntu2.23 \
     openssl=1.1.1f-1ubuntu2.23  \
     curl=7.68.0-1ubuntu2.23 \
-    libcurl3-gnutls=7.68.0-1ubuntu2.23 \
-    libcurl4=7.68.0-1ubuntu2.23 \
+    libcurl3-gnutls=7.68.0-1ubuntu2.24 \
+    libcurl4=7.68.0-1ubuntu2.24 \
     libgssapi-krb5-2=1.17-6ubuntu4.6 \
     libkrb5support0=1.17-6ubuntu4.6 \
     libkrb5-3=1.17-6ubuntu4.6 \
-    libk5crypto3=1.17-6ubuntu4.6 &&\
+    libk5crypto3=1.17-6ubuntu4.6  \
+    libexpat1=2.2.9-1ubuntu0.7  \
+    nginx-common=1.18.0-0ubuntu1.6 \
+    libnginx-mod-http-echo=1.18.0-0ubuntu1.6 \
+    nginx-light=1.18.0-0ubuntu1.6 &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
@@ -53,7 +57,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  db-copilot-tool==0.0.8 &&\
-    pip install  cryptography==43.0.1 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1"
+    pip install  cryptography==43.0.1 langchain==0.2.10 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1"
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
