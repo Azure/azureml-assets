@@ -4,7 +4,7 @@ WORKDIR /
 USER root
 
 # Install necessary tools
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --allow-downgrades \
     curl=7.68.0-1ubuntu2.24 \
     gnupg \
     unixodbc-dev \
@@ -20,7 +20,6 @@ RUN apt-get update && apt-get install -y \
     python3.8 \
     libssl1.1=1.1.1f-1ubuntu2.23 \
     openssl=1.1.1f-1ubuntu2.23  \
-    curl=7.68.0-1ubuntu2.23 \
     libcurl3-gnutls=7.68.0-1ubuntu2.24 \
     libcurl4=7.68.0-1ubuntu2.24 \
     libgssapi-krb5-2=1.17-6ubuntu4.6 \
