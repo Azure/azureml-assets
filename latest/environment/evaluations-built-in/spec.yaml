@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+description: Python environment for running promptflow-evals based evaluators.
+
+name: "evaluations-built-in"
+version: "1"
+
+os_type: linux
+
+build:
+  path: "context"
+  dockerfile_path: "Dockerfile"
