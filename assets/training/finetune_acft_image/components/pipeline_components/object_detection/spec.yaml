@@ -325,7 +325,7 @@ jobs:
 
   finetune_common_validation:
     type: command
-    component: azureml:finetune_common_validation:0.0.6
+    component: azureml:finetune_common_validation:0.0.5
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       train_mltable_path: ${{parent.inputs.training_data}}
@@ -338,7 +338,7 @@ jobs:
 
   framework_selector:
     type: command
-    component: azureml:image_framework_selector:0.0.18
+    component: azureml:image_framework_selector:0.0.17
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: ${{parent.inputs.task_type}}
@@ -396,7 +396,7 @@ jobs:
 
   mm_detection_model_import:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.19
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.18
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'MmDetectionImage'
@@ -406,7 +406,7 @@ jobs:
 
   mm_detection_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.19
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.18
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
