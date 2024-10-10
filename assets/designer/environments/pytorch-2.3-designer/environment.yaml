@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/pytorch-2.3.1-designer
+  name: azureml/curated/pytorch-2.3-designer
   os: linux
   context:
     dir: context
