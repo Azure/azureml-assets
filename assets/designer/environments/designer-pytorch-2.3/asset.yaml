@@ -1,4 +1,4 @@
-name: pytorch-2.3-designer
+name: designer-pytorch-2.3
 version: auto
 type: environment
 spec: spec.yaml
