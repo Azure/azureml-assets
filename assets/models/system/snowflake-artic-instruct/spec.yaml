@@ -6,13 +6,12 @@ properties:
   inference-min-sku-spec: 96|12|1900|1024
   inference-recommended-sku: Standard_ND96isr_H100_v5
 tags:
-  Preview: ""
   huggingface_model_id: Snowflake/snowflake-arctic-instruct
   license: apache2.0
   disable-batch: "true"
   task: chat-completion
   SharedComputeCapacityEnabled: ""
-  author: snowflake
+  author: Snowflake
   hiddenlayerscanned: ""
   inference_compute_allow_list: 
     [
@@ -20,4 +19,4 @@ tags:
     ]
   inference_supported_envs:
     - vllm
-version: 1
+version: 2

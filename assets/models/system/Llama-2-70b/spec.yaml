@@ -19,8 +19,7 @@ properties:
 
 tags:
   Featured: ""
-  Preview: ""
-  author: meta
+  author: Meta
   license: custom
   task: text-generation
   hiddenlayerscanned: ""
@@ -49,5 +48,6 @@ tags:
     deepspeed_stage: "3"
     precision: "16"
     ignore_mismatched_sizes: "false"
+  benchmark: "quality"
 
 version: 24

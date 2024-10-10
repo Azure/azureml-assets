@@ -11,7 +11,6 @@ properties:
   languages: EN
 tags:
   Featured: ''
-  Preview: ''
   inference_compute_allow_list:
   - Standard_NC12s_v3
   - Standard_NC24s_v3
@@ -28,7 +27,7 @@ tags:
   task: text-generation
   hiddenlayerscanned: ""
   license: apache-2.0
-  author: deci-ai
+  author: "Deci AI"
   huggingface_model_id: Deci/DeciLM-7B-instruct
   datasets: Open-Orca/SlimOrca
-version: 3
+version: 4
