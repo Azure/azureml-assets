@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/designer-pytorch
+ENV CONDA_PREFIX=/azureml-envs/pytorch-2.3-designer
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
