@@ -1,4 +1,4 @@
-name: designer-pytorch-2.3.1-train
+name: pytorch-2.3.1-designer-train
 version: auto
 type: environment
 spec: spec.yaml
