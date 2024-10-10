@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/designer-pytorch-train
+  name: azureml/curated/designer-pytorch-2.3.1-train
   os: linux
   context:
     dir: context
@@ -9,4 +9,4 @@ image:
       - conda_dependencies.yaml
   publish:
     location: mcr
-    visibility: unlisted
+    visibility: public
