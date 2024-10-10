@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """File containing function for model selector component."""
+import os
 import shutil
 from pathlib import Path
 import argparse
@@ -37,7 +38,7 @@ from finetune_config import FinetuneConfig
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.model_selector.model_selector")
 
 COMPONENT_NAME = "ACFT-Model_import"
-
+MLMODEL_FILE = "MLmodel"
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
 MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
@@ -324,6 +325,19 @@ def main():
     model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
     logger.info(f"Model name - {model_name}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+
+    # Validate port for right model type 
+    if (args.pytorch_model_path):
+        if os.path.exists(os.path.join(args.pytorch_model_path, MLMODEL_FILE)):
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        "MLFLOW model is connected to pytorch_model_path,\
+                        it needs to be connected to mlflow_model_path "
+                    )
+                )
+            )
 
     # load ft config and update ACFT config
     # finetune_config_dict = load_finetune_config(args)
