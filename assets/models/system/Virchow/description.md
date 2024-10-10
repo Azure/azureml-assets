@@ -27,7 +27,7 @@ Virchow is a self-supervised vision transformer pretrained using 1.5M whole slid
 ### Sample Input
 
 ```json
-data =  {
+{
   "input_data": {
     "columns": [
       "image"

@@ -30,7 +30,7 @@ Virchow2 is a self-supervised vision transformer pretrained using 3.1M whole sli
 ### Sample Input
 
 ```json
-data =  {
+{
   "input_data": {
     "columns": [
       "image"

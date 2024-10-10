@@ -21,7 +21,7 @@ It can perform various vision-language processing (VLP) tasks such as cross-moda
 ### Sample Input
 
 ```json
-data =  {
+{
   "input_data": {
     "columns": [
       "image",
