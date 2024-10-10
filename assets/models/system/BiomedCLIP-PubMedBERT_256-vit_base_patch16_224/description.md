@@ -16,6 +16,8 @@ BiomedCLIP is a biomedical vision-language foundation model that is pretrained o
 
 ```
 
+<img src="https://automlcesdkdataresources.blob.core.windows.net/model-cards/model_card_images/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224/biomed-vlp-eval.svg" alt="Model Performance comparision chart">
+
 ## Model Use
 
 **Intended Use**
