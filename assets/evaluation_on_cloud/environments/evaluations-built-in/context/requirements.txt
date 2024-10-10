@@ -1,0 +1,5 @@
+azure-ai-evaluation
+openai
+azureml-mlflow
+azure-identity
+azure-ai-ml
