@@ -326,7 +326,7 @@ def main():
     logger.info(f"Model name - {model_name}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
 
-    # Validate port for right model type 
+    # Validate port for right model type
     if (args.pytorch_model_path):
         if os.path.exists(os.path.join(args.pytorch_model_path, MLMODEL_FILE)):
             raise ACFTValidationException._with_error(
