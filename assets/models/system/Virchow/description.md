@@ -41,7 +41,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 Additional Terms
 
-Please note that the primary email used to sign up for your Hugging Face account must match your institutional email to receive approval. By downloading the Virchow Model, you attest that all information (affiliation, research use) is correct and up-to-date. Downloading the Virchow Model requires prior registration on Hugging Face and agreeing to the terms of use.
+By downloading the Virchow Model, you attest that all account information (affiliation, research use) is correct and up-to-date. Downloading the Virchow Model requires prior registration on Azure AI Studio and agreeing to the terms of use.
 
 While the Apache 2.0 License grants broad permissions, we kindly request that users adhere to the following guidelines:
 
@@ -81,7 +81,6 @@ Vorontsov, E., Bozkurt, A., Casson, A. et al. A foundation model for clinical-gr
 ```
 
 ## Sample Input and Output (for real-time inference)
-
 ### Sample Input
 
 ```json
