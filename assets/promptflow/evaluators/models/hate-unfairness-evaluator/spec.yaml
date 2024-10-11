@@ -4,7 +4,9 @@ path: ./
 properties:
   is-promptflow: true
   is-evaluator: true
+  show-artifact: true
+  _default-display-file: ./evaluator/_hate_unfairness.py
 tags:
   Preview: ""
   hiddenlayerscanned: ""
-version: 1
+version: 2
