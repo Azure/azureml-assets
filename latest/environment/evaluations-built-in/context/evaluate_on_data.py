@@ -12,7 +12,7 @@ import requests
 import shutil
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
-from save_eval import load_evaluator
+from save_evaluation import load_evaluator
 
 logger = logging.getLogger(__name__)
 
