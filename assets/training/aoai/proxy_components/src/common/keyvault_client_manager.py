@@ -7,6 +7,7 @@ from azure.identity import ManagedIdentityCredential
 import os
 from azure.ai.ml import MLClient
 from azure.keyvault.secrets import SecretClient
+from exception_handler import retry_on_exception
 from common.logging import get_logger
 
 logger = get_logger(__name__)
@@ -72,3 +73,10 @@ class KeyVaultClientManager:
     def get_keyvault_client(self):
         """Client for the Keyvault associated with user workspace."""
         return SecretClient(credential=self._get_credential(), vault_url=self.keyvault_url)
+
+
+    @retry_on_exception
+    def get_secret_from_keyvault(self, key: str) -> str:
+        keyvault_client = self.get_keyvault_client()
+        logger.info(f"fetching key: {key} from keyvault: {self.keyvault_name}")
+        return keyvault_client.get_secret(key).value
