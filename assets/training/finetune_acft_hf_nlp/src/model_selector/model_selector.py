@@ -93,13 +93,13 @@ def get_model_asset_id() -> str:
 
 def validate_huggingface_id(huggingface_id: str) -> None:
     """Validate the huggingface_id using Hfapi. Raise exception if the huggingface id is invalid."""
-    from huggingface_hub import HfApi, ModelFilter
+    from huggingface_hub import HfApi
     hf_api = HfApi()  # by default endpoint points to https://huggingface.co
 
     try:
         model_infos = [
             info
-            for info in hf_api.list_models(filter=ModelFilter(model_name=huggingface_id))
+            for info in hf_api.list_models(model_name=huggingface_id)
             if info.modelId == huggingface_id
         ]
     except ConnectionError:

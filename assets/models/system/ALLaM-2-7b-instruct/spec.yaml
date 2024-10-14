@@ -17,7 +17,6 @@ tags:
   outputModalities: "text"
   SharedComputeCapacityEnabled : ""
   Featured: ""
-  Preview: ""
   license: apache-2.0
   task: chat-completion
   author: SDAIA
