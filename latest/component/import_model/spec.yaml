@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.37
+version: 0.0.38
 
 # Pipeline inputs
 inputs:
@@ -225,7 +225,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml:validation_trigger_import:0.0.12
+    component: azureml:validation_trigger_import:0.0.13
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -305,7 +305,7 @@ jobs:
         type: mlflow_model
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.15
+    component: azureml:mlflow_model_local_validation:0.0.16
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -318,7 +318,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.18
+    component: azureml:register_model:0.0.19
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
