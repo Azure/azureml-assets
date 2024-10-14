@@ -120,10 +120,10 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.debug(f"validation file not provided, train data will be split in\
                          {utils.Constants.train_dataset_split_ratio} ratio to create validation data")
 
-        self.training_file_id=self._upload_file_and_wait_for_processing(train_file_name, train_data)
+        self.training_file_id = self._upload_file_and_wait_for_processing(train_file_name, train_data)
         logger.info("training file uploaded")
 
-        self.validation_file_id=self._upload_file_and_wait_for_processing(validation_file_name, validation_data)
+        self.validation_file_id = self._upload_file_and_wait_for_processing(validation_file_name, validation_data)
         logger.info("validation file uploaded")
 
     def _upload_file_and_wait_for_processing(self, file_name: str, file_data):
