@@ -7,7 +7,7 @@ dependencies:
 - pip=24.0
 - pip:
     # RAG package
-  - azureml-rag[azure,faiss,cognitive_search,document_parsing,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore,azure_cosmos_nosql]==0.2.36
+  - azureml-rag[azure,faiss,langchain,cognitive_search,document_parsing,data_generation,pinecone,milvus,azure_cosmos_mongo_vcore,azure_cosmos_nosql]==0.2.36
     # Azure AI
   - azure-ai-formrecognizer==3.3.1
     # Azure
@@ -30,7 +30,6 @@ dependencies:
   - faiss-cpu~=1.7.3
   - GitPython>=3.1
   - inference-schema>=1.8.0
-  - langchain<0.3
   - lxml
   - markdown
   - mlflow>=2.6.0
