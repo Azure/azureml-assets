@@ -100,7 +100,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             self.delete_files()
             raise e
 
-
     def delete_files(self):
         """Delete training and validation files from azure openai resource."""
         if self.training_file_id is not None:
@@ -121,19 +120,17 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.debug(f"validation file not provided, train data will be split in\
                          {utils.Constants.train_dataset_split_ratio} ratio to create validation data")
 
-        self.training_file_id  = self._upload_file_and_wait_for_processing(train_file_name, train_data)
+        self.training_file_id=self._upload_file_and_wait_for_processing(train_file_name, train_data)
         logger.info("training file uploaded")
 
-        self.validation_file_id  = self._upload_file_and_wait_for_processing(validation_file_name, validation_data)
+        self.validation_file_id=self._upload_file_and_wait_for_processing(validation_file_name, validation_data)
         logger.info("validation file uploaded")
-
 
     def _upload_file_and_wait_for_processing(self, file_name: str, file_data):
         logger.debug(f"uploading file : {file_name}")
         file_upload_metadata = self.aoai_client_manager.upload_file(file_name, file_data)
         self._wait_for_processing(file_upload_metadata.id)
         return file_upload_metadata.id
-
 
     def upload_file_uri_from_rest(self, file_uri: str) -> str:
         """Upload file uri to azure openai resource via rest call."""
@@ -146,7 +143,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         return file_id
 
-
     def _wait_for_processing(self, file_id):
         upload_file_metadata = self.aoai_client_manager.wait_for_processing(file_id)
         filename = upload_file_metadata.filename
@@ -158,7 +154,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                            file id: {upload_file_metadata.id}, reason: {error_reason}"
             logger.error(error_string)
             raise Exception(error_string)
-
 
     def track_finetuning_job(self):
         """Fetch metrics for the job and log them."""
@@ -184,7 +179,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         return finetune_job
 
-
     def cancel_job(self):
         """Cancel finetuning job in Azure OpenAI resource."""
         logger.debug("job cancellation has been triggered, cancelling job")
@@ -201,7 +195,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         self.delete_files()
         exit()
-
 
     def _log_metrics(self, finetune_job, last_metric_logged):
         """Fetch training metrics from azure open ai resource after finetuning is done and log them."""
@@ -230,7 +223,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         last_metric_logged = len(df)
         logger.info(f"logged training metrics for finetuning job till {last_metric_logged} steps")
         return last_metric_logged
-
 
     def _log_events(self, last_event_message):
         """Log events like training started, running nth epoch etc."""

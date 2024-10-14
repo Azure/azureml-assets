@@ -109,10 +109,9 @@ class AzureOpenAIClientManager:
         except requests.exceptions.RequestException as e:
             logger.error(f"Got Exception : {e} while uploading data to AOAI resource")
 
-
     @retry_on_exception
-    def submit_finetune_job(self, 
-                            model, 
+    def submit_finetune_job(self,
+                            model,
                             hyperparameters: Dict[str, str],
                             hyperparameters_1p: Dict[str, str],
                             training_file_id: str,
@@ -132,12 +131,12 @@ class AzureOpenAIClientManager:
         logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {finetune_job.id}")
         logger.debug(f"Response of finetune create call : {str(finetune_job)}")
         return finetune_job.id
-    
+
     @retry_on_exception
     def retrieve_job(self, job_id: str):
         """Retrieve fine-tune job."""
         return self.aoai_client.fine_tuning.jobs.retrieve(job_id)
-    
+
     @retry_on_exception
     def get_file_content(self, file_id: str):
         return self.aoai_client.files.content(file_id=file_id)
@@ -145,11 +144,11 @@ class AzureOpenAIClientManager:
     @retry_on_exception
     def list_events(self, job_id: str):
         return self.aoai_client.fine_tuning.jobs.list_events(job_id).data
-    
+
     @retry_on_exception
     def upload_file(self, file_name, file_data):
         return self.aoai_client.files.create(file=(file_name, file_data, 'application/json'), purpose='fine-tune')
-    
+
     @retry_on_exception
     def wait_for_processing(self, file_id: str):
         return self.aoai_client.files.wait_for_processing(file_id)
@@ -157,6 +156,7 @@ class AzureOpenAIClientManager:
     @retry_on_exception
     def cancel_job(self, job_id: str):
         return self.aoai_client.fine_tuning.jobs.cancel(job_id)
+
     @retry_on_exception
     def delete_file(self, file_id: str):
         return self.aoai_client.files.delete(file_id)
