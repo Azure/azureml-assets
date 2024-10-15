@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_chat_completion_finetune
-version: 0.0.23
+version: 0.0.24
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: OSS Chat Completion Finetune
 description: FTaaS component to finetune model for Chat Completion task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/73
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/74
 
 inputs:
   task_name:
@@ -334,6 +334,10 @@ inputs:
     type: string
     optional: True
     description: Name of the registered model
+  model_registration_tag:
+    type: string
+    optional: True
+    description: Tags for registered model
 outputs:
   output_model:
     type: uri_folder
