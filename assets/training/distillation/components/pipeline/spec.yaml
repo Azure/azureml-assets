@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.8
+version: 0.0.9
 type: pipeline
 
 
@@ -318,7 +318,7 @@ jobs:
 
   oss_chat_completion_finetune:
     type: command
-    component: azureml:oss_chat_completion_finetune:0.0.21
+    component: azureml:oss_chat_completion_finetune:0.0.24
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -379,5 +379,6 @@ jobs:
       apply_ort: "false"
       system_properties: '${{parent.inputs.system_properties}}'
       registered_model_name: '${{parent.inputs.registered_model_name}}'
+      model_registration_tag: "isDistill:True"
     outputs:
       output_model: '${{parent.outputs.output_model}}'
