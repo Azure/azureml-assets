@@ -1,4 +1,4 @@
-transformers==4.34.0
+transformers==4.45.2
 datasets
 accelerate
 scikit-learn
