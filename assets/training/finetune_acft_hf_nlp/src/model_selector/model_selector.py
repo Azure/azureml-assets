@@ -324,6 +324,17 @@ def main():
     model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
     logger.info(f"Model name - {model_name}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    # Validate port for right model type
+    if args.pytorch_model_path and Path(args.pytorch_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE).is_file():
+        raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        "MLFLOW model is connected to pytorch_model_path, "
+                        "it needs to be connected to mlflow_model_path"
+                    )
+                )
+            )
 
     # load ft config and update ACFT config
     # finetune_config_dict = load_finetune_config(args)
