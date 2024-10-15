@@ -32,8 +32,5 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
-# Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
-RUN conda remove cryptography
-
 # To resolve vulnerability issue regarding crytography
 RUN pip install 'cryptography>=43.0.1'
