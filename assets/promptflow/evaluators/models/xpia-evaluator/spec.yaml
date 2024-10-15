@@ -4,8 +4,6 @@ path: ./
 properties:
   is-promptflow: true
   is-evaluator: true
-  show-artifact: true
-  _default-display-file: ./evaluator/_indirect_attack.py
 tags:
   Preview: ""
 version: 2
