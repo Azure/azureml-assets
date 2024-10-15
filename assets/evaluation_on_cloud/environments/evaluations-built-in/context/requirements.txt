@@ -3,3 +3,12 @@ openai
 azureml-mlflow
 azure-identity
 azure-ai-ml
+azureml-core
+azureml-telemetry
+azureml-automl-core
+opentelemetry-api
+opentelemetry-sdk
+azure-monitor-query
+croniter
+azure-monitor-opentelemetry
+promptflow-azure
