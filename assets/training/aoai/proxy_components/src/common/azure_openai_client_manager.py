@@ -139,24 +139,30 @@ class AzureOpenAIClientManager:
 
     @retry_on_exception
     def get_file_content(self, file_id: str):
+        """Get file content."""
         return self.aoai_client.files.content(file_id=file_id)
 
     @retry_on_exception
     def list_events(self, job_id: str):
+        """List events."""
         return self.aoai_client.fine_tuning.jobs.list_events(job_id).data
 
     @retry_on_exception
     def upload_file(self, file_name, file_data):
+        """Upload file."""
         return self.aoai_client.files.create(file=(file_name, file_data, 'application/json'), purpose='fine-tune')
 
     @retry_on_exception
     def wait_for_processing(self, file_id: str):
+        """Wait for processing."""
         return self.aoai_client.files.wait_for_processing(file_id)
 
     @retry_on_exception
     def cancel_job(self, job_id: str):
+        """Cancel job."""
         return self.aoai_client.fine_tuning.jobs.cancel(job_id)
 
     @retry_on_exception
     def delete_file(self, file_id: str):
+        """Delete file."""
         return self.aoai_client.files.delete(file_id)

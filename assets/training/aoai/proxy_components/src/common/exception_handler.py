@@ -16,7 +16,7 @@ BASE_RETRY_DELAY_SEC = 10
 MAX_RETRY_DELAY_SEC = 120
 
 
-def is_retriable(exception: Exception) -> bool:
+def _is_retriable(exception: Exception) -> bool:
     if isinstance(exception, (oai.APIConnectionError,
                               oai.APITimeoutError,
                               oai.ConflictError,
@@ -47,12 +47,13 @@ def is_retriable(exception: Exception) -> bool:
     return False
 
 
-def get_retry_delay_seconds(attempt_count=0) -> int:
+def _get_retry_delay_seconds(attempt_count=0) -> int:
     delay = BASE_RETRY_DELAY_SEC*(2 ** (attempt_count-1))
     return min(delay, MAX_RETRY_DELAY_SEC)
 
 
 def retry_on_exception(func):
+    """Retry on exception."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         attempt = 0
@@ -61,7 +62,7 @@ def retry_on_exception(func):
                 attempt += 1
                 return func(*args, **kwargs)
             except Exception as e:
-                if is_retriable(e):
+                if _is_retriable(e):
                     logger.error(f"Retriable exception occurred: {e}. type: {type(e)},\
                                  attempt: {attempt}", exc_info=True)
                     if attempt > MAX_RETRY_FOR_RETRIABLE_EXCEPTIONS:
@@ -74,7 +75,7 @@ def retry_on_exception(func):
                         logger.error("max retries exceeded, Raising the exception")
                         raise
 
-                delay_sec = get_retry_delay_seconds(attempt)
+                delay_sec = _get_retry_delay_seconds(attempt)
                 logger.error(f"Retrying after {delay_sec} second of delay.")
                 time.sleep(delay_sec)  # Delay between retries
     return wrapper

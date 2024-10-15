@@ -76,6 +76,7 @@ class KeyVaultClientManager:
 
     @retry_on_exception
     def get_secret_from_keyvault(self, key: str) -> str:
+        """Get secret from keyvault."""
         keyvault_client = self.get_keyvault_client()
         logger.info(f"fetching key: {key} from keyvault: {self.keyvault_name}")
         return keyvault_client.get_secret(key).value
