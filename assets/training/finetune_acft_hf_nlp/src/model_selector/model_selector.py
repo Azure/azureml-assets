@@ -316,6 +316,19 @@ def main():
         log_level=logging.INFO,
     )
 
+    # Validated custom model type
+    if args.mlflow_model_path and \
+       not Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE).is_file():
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "MLmodel file is not found, If this is a custom model "
+                            "it needs to be connected to pytorch_model_path"
+                        )
+                    )
+            )
+
     # Adding flavor map to args
     setattr(args, "flavor_map", FLAVOR_MAP)
 
