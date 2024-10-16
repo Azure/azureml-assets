@@ -34,7 +34,7 @@ RUN cd /usr/local/src && mkdir lightgbm && cd lightgbm && \
 # Install GPU LightGBM and XgBoost
 ###############################
 RUN /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install --precompile && \
-    pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.3.5"
+    pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3"
 
 # begin conda create
 # Install conda packages
