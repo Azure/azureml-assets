@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: DataPreProcessing for AutoMLNLPNER
 description: Component to preprocess data for automl nlp ner task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/16
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/63
 
 code: ../../../src/preprocess
 
