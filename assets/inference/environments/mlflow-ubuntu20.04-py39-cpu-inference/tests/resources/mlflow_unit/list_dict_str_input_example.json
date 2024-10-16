@@ -1,0 +1,12 @@
+{
+	"input_data": [
+		{
+			"this": "is",
+			"a": "list"
+		},
+		{
+			"of": "dictionaries",
+			"containing": "strings"
+		}
+	]
+}
