@@ -1,0 +1,32 @@
+artifact_path: english_to_german_translator
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.16
+  transformers:
+    code: null
+    components:
+    - tokenizer
+    framework: pt
+    instance_type: QuestionAnsweringPipeline
+    model_binary: model
+    pipeline_model_type: BertForQuestionAnswering
+    source_model_name: deepset/minilm-uncased-squad2
+    task: question-answering
+    tokenizer_type: BertTokenizerFast
+    transformers_version: 4.30.2
+mlflow_version: 2.4.1
+model_uuid: 47124f849c9e4669933d5add93148eb4
+run_id: c008c4f9fc9a4023947b432fde978292
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  type: dataframe
+signature:
+  inputs: '[{"type": "string", "name": "question"}, {"type": "string", "name": "context"}]'
+  outputs: '[{"type": "string"}]'
+utc_time_created: '2023-06-30 14:40:20.293158'
