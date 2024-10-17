@@ -15,6 +15,8 @@ RUN apt-get update \
     libpython3.10-stdlib  \
     curl \
     libcurl4 \
+    libexpat1=2.4.7-1ubuntu0.4 \
+    expat=2.4.7-1ubuntu0.4 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
