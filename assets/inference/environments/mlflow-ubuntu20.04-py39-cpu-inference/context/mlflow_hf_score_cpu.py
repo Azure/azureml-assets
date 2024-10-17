@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+# pydocstyle: ignore D100, D101, D102, D103
 
 import os
 import re
