@@ -63,11 +63,11 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-image-text-to-image-
         "data": [
             {
                 "prompt": "Face of a yellow cat, high resolution, sitting on a park bench",
-                "image": "image1",
+                "image": "image1"
             },
             {
                 "prompt": "Face of a green cat, high resolution, sitting on a park bench",
-                "image": "image2",
+                "image": "image2"
             }
         ],
         "index": [0, 1]
