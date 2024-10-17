@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: Supply-chain-trade-regulations-phi-3-mini-128K/mlflow_model_folder
+  container_path: industry-ai/Supply-chain-trade-regulations-phi-3-mini-128K/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
