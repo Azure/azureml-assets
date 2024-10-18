@@ -24,25 +24,28 @@ tags:
   inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 2
+version: 3
 description: |
   ### Overview
-  Most medical imaging AI today is narrowly built to detect a small set of individual findings on a single modality like Chest x-Rays. 
-  This training approach is data and computationally inefficient, requiring ~6-12 months per finding, and often fails to generalize in real world environments. 
-  By further training existing multimodal foundation models on medical images and associated text data, Microsoft and Nuance created a multimodal foundation model that shows evidence of generalizing across various medical imaging modalities, anatomies, locations, severities, and types of medical data. 
-  The training methods learn to map the medical text and images into a unified numerical vector representation space, which makes it easy for computers to understand the relationships between those modalities. 
+  Most medical imaging AI today is narrowly built to detect a small set of individual findings on a single modality like chest X-rays. This training approach is data- and computationally inefficient, requiring ~6-12 months per finding1, and often fails to generalize in real world environments. By further training existing multimodal foundation models on medical images and associated text data, Microsoft and Nuance created a multimodal foundation model that shows evidence of generalizing across various medical imaging modalities, anatomies, locations, severities, and types of medical data. The training methods learn to map the medical text and images into a unified numerical vector representation space, which makes it easy for computers to understand the relationships between those modalities.
 
-  Embeddings is an important building block in AI research and development for retrieval, search, comparison, classification, and tagging tasks, and developers and researchers can now use MedImageInsight embeddings in the medical domain. 
-  MedImageInsight embeddings is open source allowing developers to customize and adapt to their specific use cases.
+  Embeddings are an important building block in AI research and development for retrieval, search, comparison, classification, and tagging tasks, and developers and researchers can now use MedImageInsight embeddings in the medical domain. MedImageInsight embeddings is open source allowing developers to customize and adapt to their specific use cases.
+
+  Please see https://aka.ms/medimageinsightpaper for more details.
+
+  For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageInsightDocs.
+
+  [^1]: [2022.12.07.22283216v3.full.pdf (medrxiv.org)](https://www.medrxiv.org/content/10.1101/2022.12.07.22283216v3.full.pdf)
 
   ### Model Architecture
 
-  Microsoft MedImageInsight includes 360 million parameter image encoder and 252 million parameter language encoder and comes as pretrained model with fine-tuning capability. The language encoder is not run in inference for each image. It is only run once (offline) to generate classifier head. MedImageInsight is a vision language transformer and was derviced from the Florence computer vision foundation model. Florence is a two-tower architecture similar to CLIP, except the DaViT archictecture is used as the image encoder and the UniCL objective is used as the objective function for MedImageInsight. 
+  Microsoft MedImageInsight includes 360 million parameter image encoder and 252 million parameter language encoder and comes as pretrained model with fine-tuning capability. The language encoder is not run in inference for each image. It is only run once (offline) to generate classifier head. MedImageInsight is a vision language transformer and was derived from the Florence computer vision foundation model. Florence is a two-tower architecture similar to CLIP, except the DaViT architecture is used as the image encoder and the UniCL objective is used as the objective function for MedImageInsight.
 
-  Model input supports image and text input and generates vector embeddings as output. This is a static model trained on an offline dataset that is described below. 
+  Model input supports image and text input and generates vector embeddings as output. This is a static model trained on an offline dataset that is described below.
 
   ### License and where to send questions or comments about the model
-  A custom commercial license is available. Please contact the team for details. 
+  The license for MedImageParse is the MIT license.
+  For questions or comments, please contact: hlsfrontierteam@microsoft.com
 
   ### Training information
 
@@ -70,23 +73,30 @@ description: |
 
 
   ### Evaluation Results
-  In this section, we report the results for the models on standard academic benchmarks. For all the evaluations, we use our internal evaluations library. For these models, we always pick the best score between our evaluation framework and any publicly reported results. 
-  | **Modality**   | **Use Case**        | **Benchmark**                                                                                   | **Maturity relative to Human Expert** | **MSFT IP or Partner Models**   | **Google Models**                      |
+  In this section, we report the results for the models on standard academic benchmarks. For all the evaluations, we use our internal evaluations library. For these models, we always pick the best score between our evaluation framework and any publicly reported results. Full details at https://aka.ms/medimageinsightpaper  
+  | **Modality**   | **Use Case**        | **Benchmark (# Labels) **                                                                                   | **Maturity relative to Human Expert** | **MSFT IP or Partner Models**   | **Google Models**                      |
   |----------------|---------------------|-----------------------------------------------------------------------------------------------|--------------------------------------|---------------------------------|---------------------------------------|
-  | **Radiology**  | Classification      | X-Ray: RSNA Bone age                                                                           | 🟢                                 | 6.85 avg L1*                      | No test results                       |
-  |                | Classification      | X-Ray: IRMA2005 body-region/view categories                                                    | 🟢                                 | 0.99 mAUC*                       | No test results                       |
+  | **Radiology**  | Classification      | X-Ray: RSNA Bone age                                                                           | 🟢                                 | 6.19 Ab L1*                      | No test results                       |
+  |                | Classification      | X-Ray: MGB Bone age                                                    | 🟢                                 | 6.57 Ab. L1                       | No test results                       |
+  |                | Classification      | X-Ray: IRMA2005 body-region/view categories (137)                                                    | 🟢                                 | 0.99 mAUC*                       | No test results                       |
+  |                | Classification      | Chest X-Ray: LT-CXR (20)                                                                                       | 🟡                                 | 0.85 mAUC                  | No test results                              |
+  |                | Classification      | Chest X-Ray: MGB CXR (80)                                                                                       | 🟡                                 | 0.94 mAUC                  | No test results                              |
   |                | Classification      | ChestXray14: Consolidation (finetuning)                                                                | 🟡                                 | 0.74 mAUC*                |        0.74 mAUC (ELiXR)*                               |
   |                | Classification      | ChestXray14: Edema (finetuning)                                                                | 🟡                                 | 0.86 mAUC*                       | 0.85 mAUC* (ELiXR)                    |
   |                | Classification      | ChestXray14: Effusion (finetuning)                                                             | 🟡                                 | 0.83 mAUC*                       | 0.83 mAUC* (ELiXR)                    |
-  |                | Classification      | MR/CT: Exam categories                                                                         | 🟡                                 | 0.95 mAUC*                       | No test results                       |
-  |                | Classification      | Chest CT: LIDC-IDRI Lung Nodules                                                               | 🟡                                 | 0.81 mAUC*                       | No model                              |
-  |                | Classification      | Mammography: RSNA Mammography                                                                  | 🟡                                 | 0.81 mAUC*                       | No model                              |
-  | **Dermatology**| Classification      | ISIC2019                                                                                       | 🟡                                  | 0.84 mAUC*                       | No test results                       |
-  |                | Classification      | SD-198                                                                                         | 🟡                                  | 0.93 mAUC*                       | No test results                    |
-  |                | Classification      | PADUFES20                                                                                      | 🟡                                 | 0.96 mAUC                       | 0.97* (Med-PaLM-M 84B)                |
-  | **Pathology**  | Classification      | PCAM                                                                                           | 🟡                                  | 0.96 mAUC* (PaLM)                | No test results                       |
-  |                | Classification      | WILDS                                                                                          | 🟡                                 | 0.97 mAUC (PaLM)                 | No test results                              |
-
+  |                | Classification      | MR/CT: Exam categories (21)                                                                         | 🟡                                 | 0.95 mAUC*                       | No test results                       |
+  |                | Classification      | Chest CT: LIDC-IDRI Lung Nodules (4)                                                               | 🟡                                 | 0.81 mAUC*                       | No model                              |
+  |                | Classification      | Mammography: RSNA Mammography (4)                                                                 | 🟡                                 | 0.81 mAUC*                       | No model                              |
+  |                | Classification      | US: USI (3)                                                                 | 🟡                                 | 0.99 mAUC                       | No model                              |
+  |                | Classification      | US: HMC-QU View (2)                                                                 | 🟡                                 | 0.99 mAUC                       | No model                              |
+  |                | Classification      | US: Bing Echo View (7)                                                                 | 🟡                                 | 0.94 mAUC                       | No model                              |
+  | **Dermatology**| Classification      | ISIC2019 (8)                                                                                       | 🟡                                  | 0.97 mAUC*                       | No test results                       |
+  |                | Classification      | SD-198 (198)                                                                                        | 🟡                                  | 0.99 mAUC*                       | No test results                    |
+  |                | Classification      | PADUFES20 (6)                                                                                     | 🟡                                 | 0.95 mAUC                       | 0.97* (Med-PaLM-M 84B)                |
+  | **Pathology**  | Classification      | PCAM (2)                                                                                           | 🟡                                  | 0.96 mAUC*                 | No test results                       |
+  | **Ophthalmology**  | Classification      | OCT2017 (4)                                                                                           | 🟡                                  | 1.00 mAUC*                | No test results                       |
+  |                | Classification      | OCT2018 (4)                                                                                          | 🟡                                 | 1.00 mAUC*                  | No test results                              |
+  |                | Classification      | Fundus ODIR5K (79)                                                                                         | 🟡                                 | 0.95 mAUC                  | No test results                              |
 
   *SOTA for this task
 
@@ -128,7 +138,8 @@ description: |
   While testing the model with images and/or text, ensure the the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
 
   The model is not designed for the following use cases:
-  * **Use as a diagnostic tool or as a medical device** - Using information extracted by our service in diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions, as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional.  
+  * **Use by clinicians to inform clinical decision-making, as a diagnostic tool, or as a medical device** - MedImageInsight is not designed or intended to be deployed as-is in clinical settings nor is it for use in the diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions (including to support clinical decision-making), or as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional.     
+
 
   * **Scenarios without consent for data** - Any scenario that uses health data for a purpose for which consent was not obtained.   
 
@@ -139,7 +150,7 @@ description: |
 
   ### Sample inputs and outputs (for real time inference)
 
-  Input:
+  **Input:**
   ```bash
   data =  {
     "input_data": {
@@ -147,28 +158,37 @@ description: |
         "image",
         "text"
       ],
-      "index":[0, 1],
+      "index":[0],
       "data": [
-        [base64.encodebytes(read_image(sample_image_ct_8Bits_Mono)).decode("utf-8"), "This 3D volume depicts the pancreas with a single tumor, the largest of which measures 5.10 centimeters in length."],
-        [base64.encodebytes(read_image(sample_image_mri_8Bits_Mono)).decode("utf-8"), "This 3D volume depicts the brain with a single tumor."]
+        [base64.encodebytes(read_image(sample_image_1)).decode("utf-8"), "x-ray chest anteroposterior Cardiomegaly"]
       ]
     },
-    "params": {}
+    "params":{
+        "get_scaling_factor": True
+    }
   }
   ```
 
-  Output:
+  **Output:**
   ```bash
-  [{"image_features": [[-0.040428221225738525, 0.015632804483175278, -0.034625787287950516, -0.013094332069158554, 0.023215821012854576, -0.010303247720003128, -0.003998206462711096, -0.00022746287868358195]]
+  [
+    {
+      "image_features": [
+        [-0.040428221225738525, 0.015632804483175278, -0.034625787287950516, -0.013094332069158554, ... , 0.023215821012854576, -0.010303247720003128, -0.003998206462711096, -0.00022746287868358195]
+      ]
+    },
+    {
+      "text_features": [
+        [-0.04121647855639458, 0.014923677921295166, -0.033598374396562576, -0.012765488520264626, ... ,  0.02294582130014801, -0.009835227608680725, -0.004232016112744808, -0.00021812367581298325]
+      ]
+    },
+    {
+      "scaling_factor": 4.513362407684326
+    }
+  ]
   ```
 
-  ## Data and Resource Specification for Deployment
-  * **Supported Data Input Format** 
-  - Monochromatic 8-bit Images (i.e. PNG, TIFF)
-  - RGB Images (i.e. JPEG, PNG)
-  - Text (Maximum: 77 Tokens)
-
-  * **Hardware Requirement for Compute Instances** 
-  - Default: Single V100 GPU 
-  - Minimum: Single GPU instance with 8Gb Memory 
-  - Batch size: 4 (~6Gb Memory)
+  ## Hardware Requirement for Compute Instances
+  - Supports CPU and GPU
+  - Default: Single V100 GPU or Intel CPU
+  - Minimum: Single GPU instance with 8Gb Memory (Fastest) or CPU
