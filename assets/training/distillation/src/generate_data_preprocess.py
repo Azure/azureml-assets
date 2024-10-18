@@ -55,7 +55,6 @@ from common.utils import (
     get_endpoint_details,
     get_hash_value,
     validate_teacher_model_details,
-    retry,
 )
 
 from common.validation import validate_file_paths_with_supported_formats
