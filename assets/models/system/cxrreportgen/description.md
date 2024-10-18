@@ -2,6 +2,13 @@
 
 The CXRReportGen model utilizes a multimodal architecture, integrating a BiomedCLIP image encoder with a Phi-3-Mini text encoder to help an application interpret complex medical imaging studies of chest X-rays. CXRReportGen follows the same framework as **[MAIRA-2](https://www.microsoft.com/en-us/research/publication/maira-2-grounded-radiology-report-generation/)**. When built upon and integrated into an application, CXRReportGen may help developers generate comprehensive and structured radiology reports, with visual grounding represented by bounding boxes on the images.
 
+This repository contains the CXRReportGen model, which is packaged in MLflow format and deployed using Azure ML service. The estimated time to package and begin to build upon the model is approximately 1 hour. 
+
+This model is intended and provided as-is for research and model development exploration. CXRReportGen is not designed or intended to be deployed in clinical settings as-is nor is it intended for use in the diagnosis or treatment of any health or medical condition (including generating radiology reports for use in patient care), and the model’s performance for such purposes has not been established. 
+You bear sole responsibility and liability for any use of CXRReportGen, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals. 
+
+For documentation and example Jupyter Notebooks, visit: https://aka.ms/CXRReportGenDocs.
+
 ### Training information
 
 | **Training Dataset**   | **Details**        | 
