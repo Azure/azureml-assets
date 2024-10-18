@@ -5,8 +5,6 @@
 
 from azureml.acft.common_components import (
     get_logger_app,
-    set_logging_parameters,
-    LoggingLiterals,
 )
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
@@ -36,7 +34,7 @@ def validate(
         logger,
         TelemetryConstants.VERSION_SELECTION,
         {"data_generation_task_type": data_generation_task_type},
-    ) as activity:
+    ):
         logger.info("Validating arguments: " + repr(data_generation_task_type))
         if data_generation_task_type == DataGenerationTaskType.CONVERSATION:
             return False

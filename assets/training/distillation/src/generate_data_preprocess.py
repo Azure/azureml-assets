@@ -22,7 +22,7 @@ from azureml.acft.common_components import (
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
-from azureml.telemetry.activity import log_activity, monitor_with_activity
+from azureml.telemetry.activity import log_activity
 from azure.ai.ml.entities import ServerlessConnection
 
 from common.io import read_jsonl_files

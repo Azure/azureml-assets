@@ -9,8 +9,7 @@ import logging
 import argparse
 from argparse import Namespace
 from pathlib import Path
-from typing import List
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -24,13 +23,8 @@ from azureml.acft.common_components import (
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
-from azureml.telemetry.activity import log_activity, monitor_with_activity
-
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from azureml.telemetry.activity import log_activity
 from common.io import read_jsonl_files
-
-from mltable import from_json_lines_files
-
 from common.constants import (
     COMPONENT_NAME,
     DEFAULT_SUCCESS_RATIO,
@@ -45,10 +39,7 @@ from common.constants import (
 
 from common.utils import (
     get_hash_value,
-    retry,
 )
-
-from common.validation import validate_file_paths_with_supported_formats
 
 logger = get_logger_app(
     "azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import"
@@ -181,7 +172,7 @@ def postprocess_data(
     """Generate and save synthentic data under output_dataset.
 
     Args:
-        batch_score_res_path (str): Path to the directory containing jsonl file(s) that have the result for each payload.
+        batch_score_res_path (str): Path containing jsonl file(s) that have the result for each payload.
         input_file_path (str): Input JSONL file path.
         enable_cot (bool): Enable Chain of Thought
         enable_cod (bool): Enable Chain of Density
@@ -190,7 +181,6 @@ def postprocess_data(
         output_file_path (str): Output JSONL file path.
         hash_data (str): Path to the jsonl file containing the hash for each payload.
     """
-    input_system_message = {}
     error_count = 0
     output_data = []
     if input_file_path is None:
