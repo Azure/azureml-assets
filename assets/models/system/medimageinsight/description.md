@@ -1,11 +1,7 @@
 ### Overview
-Most medical imaging AI today is narrowly built to detect a small set of individual findings on a single modality like Chest x-Rays. 
-This training approach is data and computationally inefficient, requiring ~6-12 months per finding[^1], and often fails to generalize in real world environments. 
-By further training existing multimodal foundation models on medical images and associated text data, Microsoft and Nuance created a multimodal foundation model that shows evidence of generalizing across various medical imaging modalities, anatomies, locations, severities, and types of medical data. 
-The training methods learn to map the medical text and images into a unified numerical vector representation space, which makes it easy for computers to understand the relationships between those modalities. 
+Most medical imaging AI today is narrowly built to detect a small set of individual findings on a single modality like chest X-rays. This training approach is data- and computationally inefficient, requiring ~6-12 months per finding1, and often fails to generalize in real world environments. By further training existing multimodal foundation models on medical images and associated text data, Microsoft and Nuance created a multimodal foundation model that shows evidence of generalizing across various medical imaging modalities, anatomies, locations, severities, and types of medical data. The training methods learn to map the medical text and images into a unified numerical vector representation space, which makes it easy for computers to understand the relationships between those modalities.
 
-Embeddings is an important building block in AI research and development for retrieval, search, comparison, classification, and tagging tasks, and developers and researchers can now use MedImageInsight embeddings in the medical domain. 
-MedImageInsight embeddings is open source allowing developers to customize and adapt to their specific use cases.
+Embeddings are an important building block in AI research and development for retrieval, search, comparison, classification, and tagging tasks, and developers and researchers can now use MedImageInsight embeddings in the medical domain. MedImageInsight embeddings is open source allowing developers to customize and adapt to their specific use cases.
 
 Please see https://aka.ms/medimageinsightpaper for more details.
 
@@ -15,9 +11,9 @@ For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageI
 
 ### Model Architecture
 
-Microsoft MedImageInsight includes 360 million parameter image encoder and 252 million parameter language encoder and comes as pretrained model with fine-tuning capability. The language encoder is not run in inference for each image. It is only run once (offline) to generate classifier head. MedImageInsight is a vision language transformer and was derviced from the Florence computer vision foundation model. Florence is a two-tower architecture similar to CLIP, except the DaViT archictecture is used as the image encoder and the UniCL objective is used as the objective function for MedImageInsight. 
+Microsoft MedImageInsight includes 360 million parameter image encoder and 252 million parameter language encoder and comes as pretrained model with fine-tuning capability. The language encoder is not run in inference for each image. It is only run once (offline) to generate classifier head. MedImageInsight is a vision language transformer and was derived from the Florence computer vision foundation model. Florence is a two-tower architecture similar to CLIP, except the DaViT architecture is used as the image encoder and the UniCL objective is used as the objective function for MedImageInsight.
 
-Model input supports image and text input and generates vector embeddings as output. This is a static model trained on an offline dataset that is described below. 
+Model input supports image and text input and generates vector embeddings as output. This is a static model trained on an offline dataset that is described below.
 
 ### License and where to send questions or comments about the model
 The license for MedImageParse is the MIT license.
@@ -126,7 +122,7 @@ Please see Microsoft's Responsible AI Principles and approach available at [http
 
 ### Sample inputs and outputs (for real time inference)
 
-Input:
+**Input:**
 ```bash
 data =  {
   "input_data": {
@@ -145,7 +141,7 @@ data =  {
 }
 ```
 
-Output:
+**Output:**
 ```bash
 [
   {
