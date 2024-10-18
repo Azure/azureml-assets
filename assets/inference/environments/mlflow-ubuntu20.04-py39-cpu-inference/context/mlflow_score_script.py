@@ -47,12 +47,10 @@ class NoSampleParameterType(AbstractParameterType):
 
     def __init__(self):
         """Init."""
-
         super(NoSampleParameterType, self).__init__(None)
 
     def deserialize_input(self, input_data):
         """Passthrough, do nothing to the incoming data."""
-
         return input_data
 
     def input_to_swagger(self):
@@ -62,7 +60,6 @@ class NoSampleParameterType(AbstractParameterType):
 
 def create_tensor_spec_sample_io(model_signature_io):
     """Create tensor spec sample."""
-
     _logger.info("Creating tensor spec sample")
     # Create a sample numpy.ndarray based on shape/type of the tensor info of the model
     io = model_signature_io.inputs
@@ -94,7 +91,6 @@ def create_tensor_spec_sample_io(model_signature_io):
 
 def create_col_spec_sample_io(model_signature_io):
     """Create col spec sample."""
-
     _logger.info("Creating col spec sample")
     # Create a sample pandas.DataFrame based on shape/type of the tensor info of the model
     try:
@@ -111,7 +107,6 @@ def create_col_spec_sample_io(model_signature_io):
 
 def create_other_sample_io(model_signature_io):
     """Create other sample."""
-
     _logger.info("Creating 'other' (Python object) sample")
     inputs = model_signature_io.inputs
     sample_string = "sample string"
@@ -147,7 +142,6 @@ def create_other_sample_io(model_signature_io):
 
 def create_param_sample(model_signature_params):
     """Create param sample."""
-
     sample_params = {}
     if param_schema_supported and model_signature_params is not None and type(model_signature_params) is ParamSchema:
         for param in model_signature_params.params:
@@ -215,7 +209,6 @@ params_param = None
 
 def get_sample_input_from_loaded_example(input_example_info, loaded_input):
     """Get sample input from loaded example."""
-
     orient = "split" if "columns" in loaded_input else "values"
     if input_example_info['type'] == 'dataframe':
         _logger.info("Getting sample from loaded dataframe example")
@@ -270,7 +263,6 @@ def get_samples_from_signature(
         previous_sample_output=None,
         previous_sample_params=None):
     """Get samples from signature."""
-
     if model_signature_x is None:
         _logger.info("No model signature, returning previous sample input and output")
         return previous_sample_input, previous_sample_output, previous_sample_params
@@ -336,7 +328,6 @@ else:
 
 def get_parameter_type(sample_input_ex, sample_output_ex=None, sample_param_ex=None):
     """Get parameter type."""
-
     if sample_input_ex is None:
         _logger.info("sample input is none, returning NoSampleParameterType")
         input_param = NoSampleParameterType()
@@ -412,7 +403,6 @@ model = load_model(model_path)
 
 def init():
     """Init."""
-
     _logger.info("Initializing MLflow scoring script")
     global inputs_collector, outputs_collector
     try:
@@ -428,7 +418,6 @@ def init():
 @output_schema(output_param)
 def run(input_data, params=None):
     """Run."""
-
     _logger.info("Entering run function in MLflow scoring script")
     context = None
 
@@ -501,7 +490,6 @@ def run(input_data, params=None):
 
 def parse_model_input_from_input_data_traditional(input_data):
     """Parse model input from input data traditional."""
-
     # Format input
     if isinstance(input_data, str):
         input_data = json.loads(input_data)
@@ -523,7 +511,6 @@ def parse_model_input_from_input_data_traditional(input_data):
 
 def parse_model_input_from_input_data_transformers(input_data):
     """Parse model input from input data transformers."""
-
     # Format input
     if isinstance(input_data, str):
         _logger.info("input data is str")
