@@ -1,0 +1,4 @@
+pytest
+pyyaml
+azure-ai-ml
+ruamel.yaml
