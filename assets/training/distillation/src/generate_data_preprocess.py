@@ -319,8 +319,8 @@ def preprocess_data(
                 first_message = messages[0]
                 if first_message["role"] != PayloadField.SYSTEM:
                     logger.error(
-                        f"row {idx} failed with exception: 
-                        First message should be system, but got {first_message['role']}"
+                        f"row {idx} failed with exception: First message should be system, "
+                        f"but got {first_message['role']}"
                     )
                 for message in messages[1:]:
                     role = message["role"]
