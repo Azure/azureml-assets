@@ -1,3 +1,4 @@
+"""Mlflow hugging face gpu."""
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -30,8 +31,10 @@ _logger = logging.getLogger(__name__)
 
 
 class SupportedTasks:
+    """Supported Tasks."""
 
     def __init__(self):
+        """init."""
         self.supported_tasks = {
             "LARGE_LANGUAGE_TASKS": [
                 "question-answering",
@@ -52,30 +55,37 @@ class SupportedTasks:
         }
 
     def large_language(self):
+        """large language."""
         return self.supported_tasks['LARGE_LANGUAGE_TASKS']
 
     def audio(self):
+        """audio."""
         return self.supported_tasks["AUDIO_TASKS"]
 
     def vision(self):
+        """vision."""
         return self.supported_tasks["VISION_TASKS"]
 
     def all(self):
+        """all."""
         return self.audio() + self.vision() + self.large_language()
 
     # Audio and Vision models have loader modules for predict
     def media(self):
+        """Audio and Vision models have loader modules for predict."""
         return self.audio() + self.vision()
 
 
 # Function that converts pandas dataframe input to json
 def convert_pandas_to_dict(input_data):
+    """Function that converts pandas dataframe input to json."""
     return input_data.to_dict() if ("inputs" in input_data.columns and
                                     len(input_data.columns) == 1) else {"inputs": input_data.to_dict()}
 
 
 # Function that appends device parameter
 def append_device_parameter(inputs):
+    """Function that appends device parameter."""
     device_parameter = {"dev_args": {"device": 0}}
     if "parameters" in inputs:
         inputs["parameters"].update(device_parameter)
@@ -87,6 +97,7 @@ def append_device_parameter(inputs):
 
 # Function that validates translation types
 def validate_translation_type(translation_type):
+    """Function that validates translation types."""
     if translation_type == "translation":
         return True
     # Translation tasks should have one of the following formats: "translation_xx_to_yy"
@@ -103,6 +114,7 @@ def validate_translation_type(translation_type):
 
 
 def init():
+    """init."""
     global task_name, predict, signature, supported_tasks
 
     if torch.cuda.is_available():
@@ -151,6 +163,7 @@ def init():
 
 # Function that handles real-time inference requests
 def online_inference(input_data):
+    """Function that handles real-time inference requests."""
 
     if isinstance(input_data, pd.DataFrame):
         input_data = convert_pandas_to_dict(input_data)
@@ -179,6 +192,7 @@ def online_inference(input_data):
 
 
 def run(input_data):
+    """run for input data."""
     _logger.info("Inference request received")
 
     # Process String input

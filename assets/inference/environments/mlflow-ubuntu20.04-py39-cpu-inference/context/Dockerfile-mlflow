@@ -6,7 +6,8 @@ ARG RESOURCES_DIR
 ARG TEMP_ENV_YML="/tmp/env.yml"
 COPY --chown=dockeruser $RESOURCES_DIR/environment.yaml $TEMP_ENV_YML
 
-COPY --chown=dockeruser $RESOURCES_DIR/context/mlmonitoring /var/mlflow_resources/mlmonitoring
+# Commenting the copying mlmonitoring step, will add once testings are completed.
+# COPY --chown=dockeruser $RESOURCES_DIR/context/mlmonitoring /var/mlflow_resources/mlmonitoring
 
 # We'll copy the HF scripts as well to enable better handling for v2 packaging. This will not require changes to the
 # packages installed in the image, as the expectation is that these will all be brought along with the model.
