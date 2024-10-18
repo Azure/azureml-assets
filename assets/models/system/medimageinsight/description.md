@@ -1,3 +1,13 @@
+# Medical Embeddings (MedImageInsight) Model Deployment
+This repository contains the MedImageInsight model, which is packaged in MLflow format and deployed using Azure ML service. The estimated time to package and deploy the model is approximately 1 hour.
+
+This model is intended and provided as-is for research and model development exploration. MedImageInsight is not designed or intended to be deployed in clinical settings as-is nor is it for use in the diagnosis or treatment of any health or medical condition, and the model’s performance for such purposes has not been established. 
+
+You bear sole responsibility and liability for any use of MedImageInsight, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals. 
+
+
+## Model Card
+
 ### Overview
 Most medical imaging AI today is narrowly built to detect a small set of individual findings on a single modality like chest X-rays. This training approach is data- and computationally inefficient, requiring ~6-12 months per finding1, and often fails to generalize in real world environments. By further training existing multimodal foundation models on medical images and associated text data, Microsoft and Nuance created a multimodal foundation model that shows evidence of generalizing across various medical imaging modalities, anatomies, locations, severities, and types of medical data. The training methods learn to map the medical text and images into a unified numerical vector representation space, which makes it easy for computers to understand the relationships between those modalities.
 
