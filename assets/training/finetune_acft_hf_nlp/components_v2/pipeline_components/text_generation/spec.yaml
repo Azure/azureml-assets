@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-version: 0.0.23
+version: 0.0.24
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
@@ -157,7 +157,7 @@ jobs:
       user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
   oss_text_generation_finetune:
     type: command
-    component: azureml:oss_text_generation_finetune:0.0.23
+    component: azureml:oss_text_generation_finetune:0.0.24
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
