@@ -1,0 +1,13 @@
+name: component
+channels:
+- conda-forge
+dependencies:
+- python=3.9
+- pip=21.3.1
+- pip:
+  - azure-ml-component=={{latest-pypi-version}}
+  - azureml-defaults=={{latest-pypi-version}}
+  - requests=={{latest-pypi-version:pre}}
+  - cryptography=={{latest-pypi-version:pre}}
+  - urllib3=={{latest-pypi-version:pre}}
+  - pyarrow>=14.0.1
