@@ -5,10 +5,12 @@
 
 import re
 import os
+import sys
+import json
+import time
+import mlflow
 import psutil
 import shutil
-import sys
-import time
 from argparse import Namespace
 from azure.ai.ml import MLClient
 from azureml._common._error_definition import AzureMLError
@@ -348,6 +350,23 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
         return int(stdout)
     except Exception as e:
         raise AzureMLException._with_error(AzureMLError.create(GenericRunCMDError, error=e))
+
+
+def update_run_for_conditional_output(conditional_params):
+    """Update run for conditional params. Conditional nodel make use of parent run property to read boolean value.
+
+    :param conditional_params: dict mapping conditional_output_path to value
+        eg: {output/path/is_mlflow_model: True}
+    :type conditional_params: Dict
+    """
+    run = Run.get_context()
+    logger.info(conditional_params)
+    params_to_log = {str(file_path).split("/")[-1]: value for file_path, value in conditional_params.items()}
+    logger.info(params_to_log)
+    mlflow.log_params({"azureml.pipeline.control": json.dumps(params_to_log)})
+    run.add_properties({"azureml.pipeline.control": json.dumps(params_to_log)})
+    for output_path, output_value in conditional_params.items():
+        output_path.write_text(str(output_value))
 
 
 class MlflowMetaConstants:
