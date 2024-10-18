@@ -1,0 +1,3 @@
+azure-ai-ml
+azure.identity
+requests
