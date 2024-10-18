@@ -20,7 +20,6 @@ class SupportedTasks:
 
     def __init__(self):
         """For init ."""
-        
         self.supported_tasks = {
             "LARGE_LANGUAGE_TASKS": [
                 "question-answering",

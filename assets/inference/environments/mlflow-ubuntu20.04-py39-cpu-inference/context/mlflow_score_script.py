@@ -57,7 +57,6 @@ class NoSampleParameterType(AbstractParameterType):
 
     def input_to_swagger(self):
         """Return schema for an empty object."""
-        
         return {"type": "object", "example": {}}
 
 

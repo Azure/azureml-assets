@@ -203,7 +203,6 @@ def online_inference(input_data):
 
 def run(input_data):
     """Run for input data."""
-    
     _logger.info("Inference request received")
 
     # Process String input
