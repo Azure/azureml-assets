@@ -27,8 +27,8 @@ logger = get_logger_app(
 @command_component
 @swallow_all_exceptions(logger)
 def validate(
-    data_generation_task_type: Input(type="string", optional=False),
-) -> Output(type="boolean", is_control=True):
+    data_generation_task_type: Input(type="string", optional=False), # type: ignore
+) -> Output(type="boolean", is_control=True): # type: ignore
     """Entry function of model validation script."""
     with log_activity(
         logger,
