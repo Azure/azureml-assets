@@ -11,7 +11,7 @@ dependencies:
     - azureml-core==1.58.0
     # v1 package for logging and telemetry. Switch to using application-insights and implementing custom logging
     - azureml-telemetry==1.58.0
-    - cryptography==43.0.1
+    - cryptography==43.0.3
     - certifi==2024.8.30
     - urllib3==2.2.3
     - paramiko==3.5.0
