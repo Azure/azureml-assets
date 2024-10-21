@@ -3,9 +3,9 @@ image:
   os: linux
   context:
     dir: context
-    dockerfile: Dockerfile-mlflow
+    dockerfile: Dockerfile
     template_files:
-    - Dockerfile-mlflow
+    - Dockerfile
     - conda_dependencies.yaml
   publish:
     location: mcr
