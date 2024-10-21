@@ -3,15 +3,11 @@ import re
 
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+from azure.identity import ManagedIdentityCredential
 from azure.monitor.query import LogsQueryClient
-from azureml.core import Run
+import logging
 
-from logging_utilities import get_logger, log_traceback, get_azureml_exception
-from exceptions import AuthenticationException
-from error_definitions import OnlineEvalAuthError
-
-logger = get_logger()
+logger = logging.getLogger(__name__)
 
 
 def get_managed_identity_credentials():
@@ -33,12 +29,7 @@ def get_user_identity_credentials():
 def get_credentials(use_managed_identity=True):
     """Get the credentials."""
     try:
-        run = Run.get_context()
-        logger.info(run.id)
-        if "OfflineRun" in run.id:
-            logger.info("local run")
-            credential = DefaultAzureCredential()
-        elif use_managed_identity:
+        if use_managed_identity:
             logger.info("Initializing managed identity")
             credential = get_managed_identity_credentials()
         else:
@@ -47,8 +38,6 @@ def get_credentials(use_managed_identity=True):
 
     except Exception as e:
         logger.info("Error while loading credentials")
-        exception = get_azureml_exception(AuthenticationException, OnlineEvalAuthError, e, error=repr(e))
-        log_traceback(exception, logger)
         raise e
     return credential
 

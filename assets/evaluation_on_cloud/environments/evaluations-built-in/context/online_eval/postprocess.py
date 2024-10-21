@@ -15,22 +15,9 @@ from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, ConsoleLogExporter
 from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter
 
-from logging_utilities import swallow_all_exceptions, get_logger, log_traceback, custom_dimensions, \
-    current_run, get_azureml_exception
-from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
-from exceptions import ModelEvaluationException
-from error_definitions import OnlineEvalQueryError
-import os
-import constants
+import logging
 
-# Mark current path as allowed
-mark_path_as_loggable(os.path.dirname(__file__))
-custom_dimensions.app_name = constants.TelemetryConstants.COMPONENT_NAME
-logger = get_logger(name=__name__)
-test_run = current_run.run
-root_run = current_run.root_run
-ws = current_run.workspace
-custom_dims_dict = vars(custom_dimensions)
+logger = logging.getLogger(__name__)
 
 
 def get_args():
@@ -85,10 +72,7 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
 def log_evaluation_event(row) -> None:
     """" Log evaluation event."""
     if "trace_id" not in row or "span_id" not in row or "evaluation" not in row:
-        logger.info(f"Missing required fields in the row: trace_id, span_id, evaluation")
-        exception = get_azureml_exception(ModelEvaluationException, OnlineEvalQueryError,
-                                          "Missing required fields in the row: trace_id, span_id, evaluation")
-        log_traceback(exception, logger)
+        logger.warning(f"Missing required fields in the row: trace_id, span_id, evaluation")
 
     trace_id = int(row.get("trace_id", "0"), 16)
     span_id = int(row.get("span_id", "0"), 16)
@@ -114,7 +98,6 @@ def get_combined_data(preprocessed_data, evaluated_data):
     return preprocessed_df
 
 
-@swallow_all_exceptions(logger)
 def run(args):
     """Entry point of model prediction script."""
     logger.info(f"Sampling Rate: {args['sampling_rate']}, Connection String: {args['connection_string']}")

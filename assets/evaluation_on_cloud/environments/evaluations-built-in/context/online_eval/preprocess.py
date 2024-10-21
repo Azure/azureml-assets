@@ -5,30 +5,13 @@ import pandas as pd
 from croniter import croniter
 from datetime import datetime
 from argparse import ArgumentParser
-import os
 
 from azure.monitor.query import LogsQueryStatus
-from azure.core.exceptions import HttpResponseError
 
 from utils import get_app_insights_client
+import logging
 
-# The global vaiables will be removed
-from exceptions import DataSavingException
-from error_definitions import SavingOutputError, NoDataFoundError
-from azureml.telemetry.activity import log_activity
-from logging_utilities import swallow_all_exceptions, flush_logger, get_logger, log_traceback, custom_dimensions, \
-    current_run, get_azureml_exception
-from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
-import constants
-
-# Mark current path as allowed
-mark_path_as_loggable(os.path.dirname(__file__))
-custom_dimensions.app_name = constants.TelemetryConstants.COMPONENT_NAME
-logger = get_logger(name=__name__)
-test_run = current_run.run
-root_run = current_run.root_run
-ws = current_run.workspace
-custom_dims_dict = vars(custom_dimensions)
+logger = logging.getLogger(__name__)
 
 
 def get_args():
@@ -84,30 +67,22 @@ def get_logs(client, resource_id: str, query: str, start_time: datetime, end_tim
         table = data[0]
         df = pd.DataFrame(data=table.rows, columns=table.columns)
         return df
-    except HttpResponseError as err:
+    except Exception as e:
         logger.info("something fatal happened")
-        logger.info(err)
+        logger.info(e)
 
 
 def save_output(result, args):
     """Save output."""
-    with log_activity(logger, constants.LogActivityLiterals.LOG_AND_SAVE_OUTPUT,
-                      custom_dimensions=custom_dims_dict):
-        try:
-            logger.info("Saving output.")
-            flush_logger(logger)
-            # Todo: One conversation will be split across multiple rows. how to combine them?
-            result.to_json(args["preprocessed_data"], orient="records", lines=True)
-        except Exception as e:
-            exception_type = SavingOutputError
-            if result is not None and len(result) == 0:
-                exception_type = NoDataFoundError
-            exception = get_azureml_exception(DataSavingException, exception_type, e, error=repr(e))
-            log_traceback(exception, logger)
-            raise exception
+    try:
+        logger.info("Saving output.")
+        # Todo: One conversation will be split across multiple rows. how to combine them?
+        result.to_json(args["preprocessed_data"], orient="records", lines=True)
+    except Exception as e:
+        logger.info("Unable to save output.")
+        raise e
 
 
-@swallow_all_exceptions(logger)
 def run(args):
     """Entry point of model prediction script."""
 

@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 from collections import defaultdict
 import importlib
 import sys
@@ -10,20 +11,9 @@ from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 import pandas as pd
 from utils import get_mlclient, extract_model_info
 
-from logging_utilities import swallow_all_exceptions, get_logger, custom_dimensions, \
-    current_run
-from azureml.automl.core.shared.logging_utilities import mark_path_as_loggable
 import os
-import constants
 
-# Mark current path as allowed
-mark_path_as_loggable(os.path.dirname(__file__))
-custom_dimensions.app_name = constants.TelemetryConstants.COMPONENT_NAME
-logger = get_logger(name=__name__)
-test_run = current_run.run
-root_run = current_run.root_run
-ws = current_run.workspace
-custom_dims_dict = vars(custom_dimensions)
+logger = logging.getLogger(__name__)
 
 
 def get_args():
@@ -150,7 +140,6 @@ rai_evaluators = [
 ]
 
 
-@swallow_all_exceptions(logger)
 def run(args):
     evaluators = json.loads(args["evaluators"])
     evaluators = download_evaluators_and_update_local_path(evaluators)
