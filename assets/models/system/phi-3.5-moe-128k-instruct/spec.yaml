@@ -55,4 +55,4 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 2
+version: 3
