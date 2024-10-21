@@ -22,25 +22,27 @@ def get_managed_identity_credentials():
     return credential
 
 
-def get_user_identity_or_default_credentials():
+def get_user_identity_credentials():
     """Get the user identity or default credentials."""
-    run = Run.get_context()
-    logger.info(run.id)
-    if "OfflineRun" in run.id:
-        logger.info("local run")
-        credential = DefaultAzureCredential()
-    else:
-        logger.info("Trying to load AzureMLOnBehalfOfCredential")
-        credential = AzureMLOnBehalfOfCredential()
-        logger.info("AzureMLOnBehalfOfCredential successfully loaded.")
+    logger.info("Trying to load AzureMLOnBehalfOfCredential")
+    credential = AzureMLOnBehalfOfCredential()
+    logger.info("AzureMLOnBehalfOfCredential successfully loaded.")
     return credential
 
 
 def get_credentials(use_managed_identity=True):
     """Get the credentials."""
     try:
-        logger.info("Initializing managed identity")
-        credential = get_managed_identity_credentials()
+        run = Run.get_context()
+        logger.info(run.id)
+        if "OfflineRun" in run.id:
+            logger.info("local run")
+            credential = DefaultAzureCredential()
+        elif use_managed_identity:
+            logger.info("Initializing managed identity")
+            credential = get_managed_identity_credentials()
+        else:
+            credential = get_user_identity_credentials()
         logger.info("Trying to fetch token for credentials")
 
     except Exception as e:
@@ -107,7 +109,7 @@ def get_mlclient(
     :return: MLClient object for workspace or registry
     :rtype: MLClient
     """
-    credential = get_credentials(use_managed_identity=False)
+    credential = get_credentials(use_managed_identity=True)
     if registry_name is None:
         logger.info(f"Creating MLClient with sub: {subscription_id}, rg: {resource_group_name}, ws: {workspace_name}")
         return MLClient(

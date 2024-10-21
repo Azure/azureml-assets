@@ -83,12 +83,10 @@ def find_file_and_get_parent_dir(root_dir, file_name="flow.flex.yaml"):
 # Todo: We should not load evaluators every time the component runs
 def download_evaluators_and_update_local_path(evaluators):
     """Find the flex flow or any given file in a directory and return the parent directory."""
-    for evaluator in evaluators:
+    for evaluator_name, evaluator in evaluators.items():
         try:
-            if "path" not in evaluator:
-                raise ValueError("Path not provided in evaluator config.")
-            root_dir = evaluator["path"]
-            download_path = f"./{evaluator['name']}"
+            root_dir = evaluator["Id"]
+            download_path = f"./{evaluator_name}"
             if root_dir.startswith("azureml://"):
                 model_info = extract_model_info(root_dir)
                 if model_info is None:
@@ -100,26 +98,25 @@ def download_evaluators_and_update_local_path(evaluators):
                     mlclient = get_mlclient(registry_name=model_info['registry'])
                 mlclient.models.download(name=model_info["model_name"], version=model_info["version"],
                                          download_path=download_path)
-                evaluator["local_path"] = find_file_and_get_parent_dir(download_path)
+                evaluators[evaluator_name]["local_path"] = find_file_and_get_parent_dir(download_path)
             else:
                 raise ValueError(f"Invalid model asset id: {root_dir}")
         except Exception as e:
-            logger.info(f"Error downloading evaluator {evaluator['path']}: {e}")
+            logger.info(f"Error downloading evaluator {evaluator['Id']}: {e}")
     return evaluators
 
 
 def load_evaluators(input_evaluators):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     loaded_evaluators, loaded_evaluator_configs = {}, {}
-    for evaluator in input_evaluators:
-        evaluator_name = evaluator["name"]
+    for evaluator_name, evaluator in input_evaluators.items():
         init_params = evaluator.get("init_params", {})
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
         flow = load_evaluator(evaluator["local_path"])
-        if any(rai_eval in evaluator["path"] for rai_eval in rai_evaluators):
+        if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
             init_params["credential"] = AzureMLOnBehalfOfCredential()
         loaded_evaluators[evaluator_name] = flow(**init_params)
-        loaded_evaluator_configs[evaluator_name] = evaluator["evaluate_config"]
+        loaded_evaluator_configs[evaluator_name] = evaluator["InitParams"]
     return loaded_evaluators, loaded_evaluator_configs
 
 
