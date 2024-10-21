@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/azureml/inference-base-2004:{{latest-image-tag}}
 # ARG BASE_IMAGE
 # FROM $BASE_IMAGE
-
+WORKDIR /
 ARG IMAGE_INFORMATION=None
 ARG RESOURCES_DIR
 ARG TEMP_ENV_YML="/tmp/env.yml"
