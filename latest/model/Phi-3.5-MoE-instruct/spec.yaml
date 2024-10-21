@@ -197,7 +197,7 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 2
+version: 3
 description: |
   Phi-3.5-MoE is a lightweight, state-of-the-art open model built upon datasets used for Phi-3 - synthetic data and filtered publicly available documents - with a focus on very high-quality, reasoning dense data. The model supports multilingual and comes with 128K context length (in tokens). The model underwent a rigorous enhancement process, incorporating supervised fine-tuning, proximal policy optimization, and direct preference optimization to ensure precise instruction adherence and robust safety measures.
 
