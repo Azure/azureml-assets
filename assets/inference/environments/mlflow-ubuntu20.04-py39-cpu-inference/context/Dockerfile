@@ -5,6 +5,9 @@ WORKDIR /
 ARG IMAGE_INFORMATION=None
 ARG RESOURCES_DIR
 ARG TEMP_ENV_YML="/tmp/env.yml"
+
+RUN echo "RESOURCES_DIR is set to: $RESOURCES_DIR"
+
 COPY --chown=dockeruser $RESOURCES_DIR/environment.yaml $TEMP_ENV_YML
 
 # Commenting the copying mlmonitoring step, will add once testings are completed.
