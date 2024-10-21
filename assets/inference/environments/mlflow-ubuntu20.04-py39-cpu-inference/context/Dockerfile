@@ -1,5 +1,6 @@
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
+FROM mcr.microsoft.com/azureml/inference-base-2004:{{latest-image-tag}}
+# ARG BASE_IMAGE
+# FROM $BASE_IMAGE
 
 ARG IMAGE_INFORMATION=None
 ARG RESOURCES_DIR
