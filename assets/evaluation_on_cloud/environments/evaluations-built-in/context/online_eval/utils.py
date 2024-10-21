@@ -39,11 +39,8 @@ def get_user_identity_or_default_credentials():
 def get_credentials(use_managed_identity=True):
     """Get the credentials."""
     try:
-        if use_managed_identity:
-            logger.info("Initializing managed identity")
-            credential = get_managed_identity_credentials()
-        else:
-            credential = get_user_identity_or_default_credentials()
+        logger.info("Initializing managed identity")
+        credential = get_managed_identity_credentials()
         logger.info("Trying to fetch token for credentials")
 
     except Exception as e:
