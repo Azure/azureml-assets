@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/azureml/inference-base-2004:{{latest-image-tag}}
 # FROM $BASE_IMAGE
 WORKDIR /
 ARG IMAGE_INFORMATION=None
-ARG RESOURCES_DIR="/assets/inference/environments/mlflow-ubuntu20.04-py39-cpu-inference/"
+ARG RESOURCES_DIR="/assets/inference/environments/mlflow-ubuntu20.04-py39-cpu-inference"
 ARG TEMP_ENV_YML="/tmp/env.yml"
 
 COPY --chown=dockeruser $RESOURCES_DIR/environment.yaml $TEMP_ENV_YML
