@@ -1,13 +1,20 @@
 ## Overview
 
-The CxrReportGen model utilizes a multimodal architecture, integrating a BiomedCLIP image encoder with a Phi-3-Mini text encoder to accurately interpret complex medical imaging studies of chest X-rays. CxrReportGen follows the same framework as **[MAIRA-2](https://www.microsoft.com/en-us/research/publication/maira-2-grounded-radiology-report-generation/)**. Its primary function is to generate comprehensive and structured radiology reports, with visual grounding represented by bounding boxes on the images.
+The CXRReportGen model utilizes a multimodal architecture, integrating a BiomedCLIP image encoder with a Phi-3-Mini text encoder to help an application interpret complex medical imaging studies of chest X-rays. CXRReportGen follows the same framework as **[MAIRA-2](https://www.microsoft.com/en-us/research/publication/maira-2-grounded-radiology-report-generation/)**. When built upon and integrated into an application, CXRReportGen may help developers generate comprehensive and structured radiology reports, with visual grounding represented by bounding boxes on the images.
+
+This repository contains the CXRReportGen model, which is packaged in MLflow format and deployed using Azure ML service. The estimated time to package and begin to build upon the model is approximately 1 hour. 
+
+This model is intended and provided as-is for research and model development exploration. CXRReportGen is not designed or intended to be deployed in clinical settings as-is nor is it intended for use in the diagnosis or treatment of any health or medical condition (including generating radiology reports for use in patient care), and the model’s performance for such purposes has not been established. 
+You bear sole responsibility and liability for any use of CXRReportGen, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals. 
+
+For documentation and example Jupyter Notebooks, visit: https://aka.ms/CXRReportGenDocs.
 
 ### Training information
 
 | **Training Dataset**   | **Details**        | 
 |----------------|---------------------|
 | **[MIMIC-CXR](https://physionet.org/content/mimic-cxr/2.0.0/)**  | Frontal chest X-rays from the training partition of the MIMIC-CXR dataset and the associated text reports. Rule-based processing was carried out to extract findings and impressions separately, or to map non-labeled report sections to the relevant sections. During training, text is randomly sampled from either the findings or the impression section. In total 203,170 images from this dataset were used.|
-| **Propiertary datasets**  | Multiple other proprietary datasets, composed of procured data, were additionally leveraged for training. Caution was taken to ensure there was no leakage of test data samples in the data used for training. |  
+| **Proprietary datasets**  | Multiple other proprietary datasets, composed of procured data, were additionally leveraged for training. Caution was taken to ensure there was no leakage of test data samples in the data used for training. |  
 
 **Training Statistics:**
   - **Data Size:** ~400,000 samples
@@ -118,6 +125,15 @@ You can optionally apply the below code on the output to adjust the size:
 
 ## Ethical Considerations
 
-CxrReportGen should not be used as a diagnostic tool or as a substitute for professional medical advice. It is designed to assist radiologists by generating findings and reports, but final clinical decisions should always be made by human experts.
+CXRReportGen is not designed or intended to be deployed as-is in clinical settings: for use in the diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions; for use as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional; or to generate draft radiology reports for use in patient care.  
 
-For detailed guidelines on ethical use, refer to Microsoft's [Responsible AI Principles](https://www.microsoft.com/en-us/ai/responsible-ai).
+Microsoft believes Responsible AI is a shared responsibility and we have identified six principles and practices help organizations address risks, innovate, and create value: fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability. When downloaded or used in accordance with our terms of service, developers should work with their supporting model team to ensure this model meets requirements for the relevant use case and addresses unforeseen product misuse.   
+
+While testing the model with images and/or text, ensure the the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
+
+For detailed guidelines on ethical use, refer to Microsoft’s [Responsible AI Principles](https://www.microsoft.com/en-us/ai/responsible-ai)
+
+## Hardware Requirement for Compute Instances
+- Supports CPU and GPU
+- Default: Single A100 GPU or Intel CPU
+- Minimum: Single GPU instance with 24Gb Memory (Fastest) or CPU
