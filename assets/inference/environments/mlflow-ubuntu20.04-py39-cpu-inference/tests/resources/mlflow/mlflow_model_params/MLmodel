@@ -1,0 +1,23 @@
+artifact_path: C:\Users\wamartin\o16n-base-images\base_images\inference\tests\validation\scenarios\../resources/mlflow_unit/params_dummy
+flavors:
+  python_function:
+    cloudpickle_version: 2.2.1
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.16
+mlflow_version: 2.6.1.dev0
+model_uuid: 98aa58c3e0f4465bbf4b98a463cf75d8
+run_id: 5f67118ad81548a196a0936bfecb4b92
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  type: dataframe
+signature:
+  inputs: '[{"type": "string", "name": "sentence1"}]'
+  outputs: '[{"type": "string"}]'
+  params: '[{"name": "num_beams", "dtype": "integer", "default": 2, "shape": null},
+    {"name": "max_length", "dtype": "integer", "default": 512, "shape": null}]'
+utc_time_created: '2023-08-25 14:58:10.554179'

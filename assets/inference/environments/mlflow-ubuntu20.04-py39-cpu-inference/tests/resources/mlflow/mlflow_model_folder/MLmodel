@@ -1,0 +1,18 @@
+artifact_path: temporary
+flavors:
+  python_function:
+    cloudpickle_version: 2.2.1
+    env: conda.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.17
+model_uuid: 90bdcc07484745aaa5d0b5cf36d7b201
+run_id: 2864ee64-8314-4bdc-8c12-2c2001503ae3
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  type: dataframe
+signature:
+  inputs: '[{"name": "a", "type": "long"}, {"name": "b", "type": "long"}]'
+  outputs: '[{"name": 0, "type": "long"}]'
+utc_time_created: '2023-08-23 19:14:52.946270'

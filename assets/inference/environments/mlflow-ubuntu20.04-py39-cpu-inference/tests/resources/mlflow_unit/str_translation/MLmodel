@@ -1,0 +1,32 @@
+artifact_path: english_to_german_translator
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    model_binary: model
+    python_version: 3.8.16
+  transformers:
+    code: null
+    components:
+    - tokenizer
+    framework: pt
+    instance_type: TranslationPipeline
+    model_binary: model
+    pipeline_model_type: T5ForConditionalGeneration
+    source_model_name: t5-base
+    task: translation_en_to_de
+    tokenizer_type: T5TokenizerFast
+    transformers_version: 4.30.2
+mlflow_version: 2.4.1
+model_uuid: fee35400cdf648c4bb475785488588d4
+run_id: a4f2c06f0fc84c979c2c0c82b1d03a18
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  type: dataframe
+signature:
+  inputs: '[{"type": "string"}]'
+  outputs: '[{"type": "string"}]'
+utc_time_created: '2023-06-30 13:16:41.469295'
