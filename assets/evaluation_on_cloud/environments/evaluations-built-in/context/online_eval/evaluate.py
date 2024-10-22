@@ -100,13 +100,13 @@ def load_evaluators(input_evaluators):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     loaded_evaluators, loaded_evaluator_configs = {}, {}
     for evaluator_name, evaluator in input_evaluators.items():
-        init_params = evaluator.get("init_params", {})
+        init_params = evaluator.get("InitParams", {})
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
         flow = load_evaluator(evaluator["local_path"])
         if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
             init_params["credential"] = AzureMLOnBehalfOfCredential()
         loaded_evaluators[evaluator_name] = flow(**init_params)
-        loaded_evaluator_configs[evaluator_name] = evaluator["InitParams"]
+        loaded_evaluator_configs[evaluator_name] = {"column_mapping": evaluator.get("DataMapping", {})}
     return loaded_evaluators, loaded_evaluator_configs
 
 
