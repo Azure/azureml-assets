@@ -195,6 +195,7 @@ inputs:
   # Output of validation component.
   validation_output:
     type: uri_file
+    optional: true
     description: Validation status.
     mode: rw_mount
 
@@ -234,7 +235,7 @@ jobs:
       teacher_model_presence_penalty: '${{parent.inputs.teacher_model_presence_penalty}}'
       request_batch_size: '${{parent.inputs.request_batch_size}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
-      validation_output: '${{parent.inputs.validation_info}}'
+      validation_output: '${{parent.inputs.validation_output}}'
     outputs:
       generated_train_file_path: '${{parent.outputs.generated_train_file_path}}'
       generated_validation_file_path: '${{parent.outputs.generated_validation_file_path}}'

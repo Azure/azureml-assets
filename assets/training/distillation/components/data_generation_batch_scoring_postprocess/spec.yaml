@@ -77,7 +77,11 @@ inputs:
       3. NLU_QA: Generate Natural Language Understanding data for Question Answering data
       4. MATH: Generate Math data for numerical responses
       5. SUMMARIZATION: Generate Key Summary for an Article
-    
+
+  connection_config_file:
+    type: uri_file
+    description: Connection config file for batch scoring
+
 outputs:
   generated_batch_train_file_path:
     type: uri_file
@@ -101,5 +105,6 @@ command: >-
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
+  --connection_config_file ${{inputs.connection_config_file}}
   --generated_batch_train_file_path ${{outputs.generated_batch_train_file_path}}
   --generated_batch_validation_file_path ${{outputs.generated_batch_validation_file_path}}

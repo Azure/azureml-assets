@@ -291,7 +291,7 @@ outputs:
 jobs:
   oss_distillation_validate_pipeline:
     type: command
-    component: azureml://registries/azureml/components/oss_distillation_validate_pipeline/versions/0.0.3
+    component: azureml:oss_distillation_validate_pipeline:0.0.4.visa01
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -341,7 +341,7 @@ jobs:
     
   oss_distillation_batchscoring_datagen_pipeline:
     type: pipeline
-    component: azureml:oss_distillation_batchscoring_datagen_pipeline:0.0.1.visa10
+    component: azureml:oss_distillation_batchscoring_datagen_pipeline:0.0.1.visa15
     inputs:
       instance_type_pipeline_validation: '${{parent.inputs.instance_type_pipeline_validation}}'
       instance_type_data_generation: '${{parent.inputs.instance_type_data_generation}}'
@@ -392,7 +392,7 @@ jobs:
 
   oss_distillation_seq_scoring_pipeline:
     type: pipeline
-    component: azureml:oss_distillation_seq_scoring_pipeline:0.0.1.visa09
+    component: azureml:oss_distillation_seq_scoring_pipeline:0.0.1.visa12
     inputs:
       instance_type_pipeline_validation: '${{parent.inputs.instance_type_pipeline_validation}}'
       instance_type_data_generation: '${{parent.inputs.instance_type_data_generation}}'

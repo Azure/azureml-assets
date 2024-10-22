@@ -383,6 +383,14 @@ def preprocess_data(
                 hash_validation_data,
             )
             logger.info("Data generated and saved for validation file")
+    else:
+        Path(generated_validation_payload_path.parent).mkdir(
+            exist_ok=True, parents=True
+        )
+        # create an empty file if validation file is not provided
+        open(generated_validation_payload_path, "w").close()
+        Path(hash_validation_data.parent).mkdir(exist_ok=True, parents=True)
+        open(hash_validation_data, "w").close()
 
 
 def data_import(args: Namespace):

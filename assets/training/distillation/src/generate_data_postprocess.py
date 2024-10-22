@@ -39,6 +39,7 @@ from common.constants import (
 
 from common.utils import (
     get_hash_value,
+    get_workspace_mlclient,
 )
 
 logger = get_logger_app(
@@ -79,7 +80,7 @@ def get_parser():
     parser.add_argument(
         "--hash_validation_data",
         type=str,
-        required=True,
+        default=None,
         help="Path tho the jsonl file containing the hash for each payload.",
     )
 
@@ -156,7 +157,38 @@ def get_parser():
         ),
     )
 
+    parser.add_argument(
+        "--connection_config_file",
+        type=str,
+        required=False,
+        default=None,
+        help="A config file path that contains deployment configurations.",
+    )
+
     return parser
+
+
+def delete_connection(config_file: str):
+    """Delete the connection configuration file.
+
+    Args:
+        config_file (str): The path to the connection configuration file.
+    """
+    if config_file:
+        try:
+            config_from_file = {}
+            with open(config_file) as file:
+                config_from_file = json.load(file)
+            batch_connection_name = config_from_file.get("connection_name", None)
+            if batch_connection_name:
+                mlclient_ws = get_workspace_mlclient()
+                if not mlclient_ws:
+                    raise Exception("Could not create MLClient for current workspace")
+                mlclient_ws.connections.delete(batch_connection_name)
+        except Exception as e:
+            msg = f"Error deleting connection: {e}"
+            logger.error(msg)
+            raise Exception(msg)
 
 
 def postprocess_data(
@@ -274,6 +306,7 @@ def data_import(args: Namespace):
     data_generation_task_type = args.data_generation_task_type
     hash_train_data = args.hash_train_data
     hash_validation_data = args.hash_validation_data
+    connection_config_file = args.connection_config_file
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
     enable_cod = True if enable_cod_str.lower() == "true" else False
@@ -281,6 +314,10 @@ def data_import(args: Namespace):
     with log_activity(
         logger=logger, activity_name=TelemetryConstants.POST_PROCESS_TRAINING_DATA
     ):
+        logger.info(
+            "Deleting batch configuration connection used for teacher model invocation."
+        )
+        delete_connection(connection_config_file)
         logger.info(
             "Running data postprocessing for train file path: %s", train_file_path
         )
