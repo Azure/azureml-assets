@@ -1,5 +1,3 @@
-azure-ai-evaluation
-openai
-azureml-mlflow
-azure-identity
-azure-ai-ml
+azure-ai-evaluation~=1.0.0b4
+azureml-mlflow=={{latest-pypi-version}}
+azure-ai-ml=={{latest-pypi-version}}
