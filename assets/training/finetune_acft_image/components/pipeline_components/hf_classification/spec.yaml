@@ -363,7 +363,7 @@ inputs:
 
   input_column_names:
     type: string
-    default: image_url
+    default: image
     optional: true
     description: Input column names in provided test dataset, for example column1. Add comma delimited values in case of multiple input columns, for example column1,column2.
 
