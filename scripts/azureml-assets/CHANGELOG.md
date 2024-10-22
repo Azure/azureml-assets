@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.61 (2024-10-21)
+### 🚀 New Features
+- [#3514](https://github.com/Azure/azureml-assets/pull/3514) Support publishing Triton models
+
 ## 1.16.60 (2024-09-24)
 ### 🚀 New Features
 - [#3431](https://github.com/Azure/azureml-assets/pull/3431) Allow Azure-AI prefix for models
