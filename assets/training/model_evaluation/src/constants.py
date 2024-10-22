@@ -211,6 +211,7 @@ class ChatCompletionConstants:
 
     OUTPUT = "predictions"
     OUTPUT_FULL_CONVERSATION = "prediction_appended"
+    PREDICTIONS_COLUMN_NAME = "predictions"
 
 
 class TelemetryConstants:
