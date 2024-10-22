@@ -29,12 +29,12 @@ dependencies:
   - msrest>=0.6.21,<0.7.1
   - mltable==1.6.1
   - openai==1.52.0
-  - azure-ai-ml==1.21.0
+  - azure-ai-ml==1.21.1
   - mldesigner==0.1.0b18
   - tiktoken
   - idna==3.7
   - pydantic
-  - mteb==1.15.8
+  - mteb==1.16.0
   - setuptools>=70.0.0
   - cryptography==43.0.1
   # batch score dependencies
