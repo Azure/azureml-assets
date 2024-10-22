@@ -151,7 +151,13 @@
       "amlraipfmodels",
       "zhizho",
       "rerank",
-      "Rerank"
+      "Rerank",
+      "bleu",
+      "gleu",
+      "meteor",
+      "rouge",
+      "xpia",
+      "XPIA"
     ],
     "flagWords": [
       "Prompt Flow"

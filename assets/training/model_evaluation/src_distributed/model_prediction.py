@@ -152,6 +152,8 @@ class Predictor:
                     payload = MIRPayload(input_texts, self.extra_params, TaskType.CONVERSATIONAL, False)
                 else:
                     input_texts = [i[0] if len(i) == 1 else [j.strip() for j in i] for i in input_texts]
+                    if self.task_type == SupportedTask.TEXT_GENERATION:
+                        self.extra_params.update({"return_full_text": False})
                     data = {
                             "input_data": {
                                 "input_string": input_texts,

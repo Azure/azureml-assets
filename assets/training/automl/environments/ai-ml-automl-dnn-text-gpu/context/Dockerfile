@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.6-cudnn8-ubuntu20.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
@@ -20,7 +20,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     pip=22.1.2 \
     numpy~=1.23.5 \
     scikit-learn=1.5.1 \
-    pandas~=1.3.5 \
+    pandas~=1.5.3 \
     setuptools=72.1.0 \
     wheel=0.44.0 \
     scipy=1.10.1 \
@@ -30,11 +30,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 
 # Ensure additional conda and pip install commands apply to our conda env of interest.
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
-
-# Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN conda install pytorch=1.13.1 pytorch-cuda=11.6 -c pytorch -c nvidia && conda clean -a -y
-# end conda create
-
 
 # begin pip install
 # Install pip dependencies
@@ -51,13 +46,15 @@ RUN pip install \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 'azure-identity>=1.16.1' \
-                'horovod==0.28.1' \
                 'sentencepiece==0.1.97' \
                 'cryptography>=42.0.5'\
                 'urllib3>=1.26.18' \
                 'requests>=2.31.0' \
                 'certifi>=2023.07.22' 
                 # end pypi dependencies
+
+# Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
+RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages
@@ -70,4 +67,4 @@ RUN pip list && \
 
 # end pip install
 
-# Force new version - 1
+# Force new version

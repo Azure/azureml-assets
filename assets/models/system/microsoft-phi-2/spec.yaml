@@ -14,10 +14,9 @@ properties:
   finetune-min-sku-spec: 24|1|220|64
   finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
 tags:
-  Preview: ""
   SharedComputeCapacityEnabled: ""
   license: mit
-  author: microsoft
+  author: Microsoft
   task: text-generation
   hiddenlayerscanned: ""
   evaluation_compute_allow_list:
@@ -60,4 +59,5 @@ tags:
     apply_ort: "false"
     precision: 16
     max_seq_length: 2048
+  benchmark: "quality"
 version: 19

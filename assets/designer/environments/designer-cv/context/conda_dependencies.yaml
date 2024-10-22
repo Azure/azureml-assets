@@ -1,0 +1,22 @@
+name: project_environment
+channels:
+  - conda-forge
+dependencies:
+  - pip=20.2
+  - python=3.8.10
+  - pip:
+      - azureml-designer-cv-modules==0.0.59
+      - numpy==1.22
+      - cryptography==42.0.4
+      - azureml-dataprep==4.10.1
+      - Werkzeug==3.0.3
+      - pip==21.1
+      - requests==2.32.0
+      - urllib3==1.26.19
+      - paramiko==3.4.0
+      - Pillow==10.3.0
+      - pyarrow==14.0.1
+      - pycryptodome==3.19.1
+      - pycryptodomex==3.19.1
+      - gunicorn==22.0.0
+      - tqdm==4.66.3

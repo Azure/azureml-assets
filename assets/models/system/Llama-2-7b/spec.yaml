@@ -19,8 +19,7 @@ properties:
 
 tags:
   Featured: ""
-  Preview: ""
-  author: meta
+  author: Meta
   license: custom
   task: text-generation
   hiddenlayerscanned: ""
@@ -61,5 +60,6 @@ tags:
   inference_supported_envs:
     - vllm
     - ds_mii
+  benchmark: "quality"
 
 version: 22
