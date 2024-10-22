@@ -207,6 +207,23 @@ class MLFlowModelAsset(ModelAsset):
         return self._model
 
 
+class TritonModelAsset(ModelAsset):
+    """Asset class for Triton model."""
+
+    def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
+                 copy_updater: CopyUpdater = None):
+        """Initialize Triton model asset."""
+        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
+
+    def prepare_model(self, ml_client: MLClient):
+        """Prepare model for publish."""
+        model_registry_path = RegistryUtils.publish_to_registry(ml_client, self._model_config, self._model.name,
+                                                                self._model.version, AssetType.MODEL, self._temp_dir,
+                                                                self._copy_updater)
+        self._model.path = model_registry_path
+        return self._model
+
+
 class CustomModelAsset(ModelAsset):
     """Asset class for custom model."""
 
@@ -234,6 +251,8 @@ def prepare_model(spec_path: Path, model_config: ModelConfig, temp_dir: Path, ml
             model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
         elif model_config.type == assets.ModelType.MLFLOW:
             model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
+        elif model_config.type == assets.ModelType.TRITON:
+            model_asset = TritonModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
         else:
             logger.log_error(f"Model type {model_config.type.value} not supported")
             return False
