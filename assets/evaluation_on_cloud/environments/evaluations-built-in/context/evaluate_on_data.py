@@ -75,7 +75,7 @@ def get_evaluator_config(command_line_args):
     return evaluator_config
 
 
-def run_evaluation(command_line_args, evaluators):
+def run_evaluation(command_line_args, evaluators, evaluator_config):
     """Run evaluation using evaluators."""
     logger.info("evaluators", evaluators)
     logger.info("evaluator_config", evaluator_config)
