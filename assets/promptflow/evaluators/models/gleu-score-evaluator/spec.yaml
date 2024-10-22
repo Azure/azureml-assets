@@ -8,4 +8,4 @@ properties:
   _default-display-file: ./GleuScoreEvaluator/_gleu.py
 tags:
   Preview: ""
-version: 2
+version: 3
