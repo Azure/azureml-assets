@@ -5,10 +5,10 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./evaluator/_meteor.py
+  _default-display-file: ./MeteorScoreEvaluator/_meteor.py
 tags:
   Preview: ""
-version: 2
+version: 3
 description: |-
   | | |
   | -- | -- |
