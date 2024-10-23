@@ -10,6 +10,7 @@ from promptflow.client import load_flow
 
 
 def load_evaluator(evaluator):
+    """Load the evaluator from the given path."""
     print(f"Loading evaluator {evaluator}")
     loaded_evaluator = load_flow(evaluator)
     print(loaded_evaluator)

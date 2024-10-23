@@ -29,8 +29,7 @@ def get_args():
 
 
 def run():
-    """Entry point for the script.
-    """
+    """Entry point for the script."""
     args = get_args()
     preprocess.run(args)
     evaluate.run(args)

@@ -35,9 +35,7 @@ def get_args():
 
 
 def calculate_time_window(cron_expression: str):
-    """
-    Calculates the time window for a job instance based on the system's current time and its cron schedule.
-    """
+    """Calculate the time window for a job instance based on the system's current time and its cron schedule."""
     # Parse the current time
     logger.info(f"Calculating time window for cron expression: {cron_expression}")
     current_time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -54,6 +52,7 @@ def calculate_time_window(cron_expression: str):
 
 
 def get_logs(client, resource_id: str, query: str, start_time: datetime, end_time: datetime):
+    """Get logs from the resource."""
     try:
         logger.info(f"Querying resource: {resource_id}")
         response = client.query_resource(resource_id, query, timespan=(start_time, end_time))
@@ -87,7 +86,6 @@ def save_output(result, args):
 
 def run(args):
     """Entry point of model prediction script."""
-
     logger.info(
         f"Connection type: {args['preprocessor_connection_type']}, Resource ID: {args['resource_id']}, Cron "
         f"Expression: {args['cron_expression']}, Sampling Rate: {args['sampling_rate']}")

@@ -116,6 +116,7 @@ def load_evaluators(input_evaluators):
 
 
 def run_evaluation(command_line_args, evaluators, evaluator_configs):
+    """Run the evaluation."""
     # Todo: can we get only results back instead of the whole response?
     results = evaluate(data=command_line_args["preprocessed_data"], evaluators=evaluators,
                        evaluator_config=evaluator_configs)
@@ -146,6 +147,7 @@ rai_evaluators = [
 
 
 def run(args):
+    """Entry point of model prediction script."""
     evaluators = json.loads(args["evaluators"])
     evaluators = download_evaluators_and_update_local_path(evaluators)
     evaluators, evaluator_configs = load_evaluators(evaluators)
