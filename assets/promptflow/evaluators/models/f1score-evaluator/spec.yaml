@@ -5,8 +5,8 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./evaluator/_f1_score.py
+  _default-display-file: ./F1ScoreEvaluator/_f1_score.py
 tags:
   Preview: ""
   hiddenlayerscanned: ""
-version: 2
+version: 3
