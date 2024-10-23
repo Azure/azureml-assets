@@ -1,3 +1,11 @@
 azure-ai-evaluation~=1.0.0b4
+openai=={{latest-pypi-version}}
 azureml-mlflow=={{latest-pypi-version}}
+opentelemetry-api=={{latest-pypi-version}}
+opentelemetry-sdk=={{latest-pypi-version}}
+azure-monitor-query=={{latest-pypi-version}}
+croniter=={{latest-pypi-version}}
+azure-monitor-opentelemetry=={{latest-pypi-version}}
+promptflow-azure=={{latest-pypi-version}}
+azure-identity=={{latest-pypi-version}}
 azure-ai-ml=={{latest-pypi-version}}
