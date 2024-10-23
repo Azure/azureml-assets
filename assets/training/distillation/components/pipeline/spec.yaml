@@ -341,7 +341,7 @@ jobs:
     
   oss_distillation_batchscoring_datagen_pipeline:
     type: pipeline
-    component: azureml:oss_distillation_batchscoring_datagen_pipeline:0.0.1.visa15
+    component: azureml:oss_distillation_batchscoring_datagen_pipeline:0.0.1.visa23
     inputs:
       instance_type_pipeline_validation: '${{parent.inputs.instance_type_pipeline_validation}}'
       instance_type_data_generation: '${{parent.inputs.instance_type_data_generation}}'

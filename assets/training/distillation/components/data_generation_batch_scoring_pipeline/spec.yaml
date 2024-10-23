@@ -256,7 +256,7 @@ outputs:
 jobs:
   oss_distillation_generate_data_batch_preprocess:
     type: command
-    component: azureml:oss_distillation_generate_data_batch_preprocess:0.0.1.visa10
+    component: azureml:oss_distillation_generate_data_batch_preprocess:0.0.1.visa15
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
@@ -393,7 +393,7 @@ jobs:
 
   oss_distillation_generate_data_batch_postprocess:
     type: command
-    component: azureml:oss_distillation_generate_data_batch_postprocess:0.0.1.visa08
+    component: azureml:oss_distillation_generate_data_batch_postprocess:0.0.1.visa10
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'

@@ -66,6 +66,7 @@ def get_parser():
 
     parser.add_argument(
         "--batch_score_validation_result",
+        default=None,
         type=str,
         help="Path to the directory containing jsonl file(s) that have the result for each payload.",
     )

@@ -3,7 +3,7 @@ name: oss_distillation_generate_data_batch_postprocess
 version: 0.0.1
 type: command
 
-is_deterministic: True
+is_deterministic: False
 
 display_name: OSS Distillation Generate Data Postprocess Batch Scoring
 description: Component to prepare data returned from teacher model enpoint in batch 
