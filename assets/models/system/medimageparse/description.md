@@ -1,21 +1,26 @@
-### Overview
-Biomedical image analysis is fundamental for biomedical discovery in cell biology, pathology, radiology, and many other biomedical domains. MedImageParse is a biomedical foundation model for imaging parsing that can jointly conduct segmentation, detection, and recognition for 82 object types across 9 imaging modalities. Through joint learning, we can improve accuracy for individual tasks and enable novel applications such as segmenting all relevant objects in an image through a text prompt, rather than requiring users to laboriously specify the bounding box for each object. 
+Biomedical image analysis is fundamental for biomedical discovery in cell biology, pathology, radiology, and many other biomedical domains. MedImageParse is a biomedical foundation model for imaging parsing that can jointly conduct segmentation, detection, and recognition across 9 imaging modalities. Through joint learning, we can improve accuracy for individual tasks and enable novel applications such as segmenting all relevant objects in an image through a text prompt, rather than requiring users to laboriously specify the bounding box for each object. 
 
-On image segmentation, we showed that MedImageParse is broadly applicable, outperforming state-of-the-art methods on 102,855 test image-mask-label triples across 9 imaging modalities. 
+MedImageParse is broadly applicable, performing image segmentation across 9 imaging modalities. 
 
-MedImageParse is also able to identify invalid user inputs describing objects that do not exist in the image. On object detection, which aims to locate a specific object of interest, MedImageParse again attained state-of-the-art performance, especially on objects with irregular shapes. 
+MedImageParse is also able to identify invalid user inputs describing objects that do not exist in the image. MedImageParse can perform object detection, which aims to locate a specific object of interest, including on objects with irregular shapes. 
 
-On object recognition, which aims to identify all objects in a given image along with their semantic types, we showed that MedImageParse can simultaneously segment and label all biomedical objects in an image. 
+On object recognition, which aims to identify all objects in a given image along with their semantic types, MedImageParse can simultaneously segment and label all biomedical objects in an image. 
 
-In summary, MedImageParse is an all-in-one tool for biomedical image analysis by jointly solving segmentation, detection, and recognition. 
+In summary, MedImageParse shows potential to be a building block for an all-in-one tool for biomedical image analysis by jointly solving segmentation, detection, and recognition. 
 
-It is broadly applicable to all major biomedical image modalities, paving the path for efficient and accurate image-based biomedical discovery.
+It is broadly applicable to all major biomedical image modalities, which may pave a future path for efficient and accurate image-based biomedical discovery when built upon and integrated into an application.
+
+This repository contains the MedImageParse model, which is packaged in MLflow format and deployed using Azure ML service. The estimated time to package and begin to build upon the model is approximately 1 hour.
+
+This model is intended and provided as-is for research and model development exploration. MedImageParse is not designed or intended to be deployed in clinical settings as-is nor is it intended for use in the diagnosis or treatment of any health or medical condition, and the model’s performance for such purposes has not been established. You bear sole responsibility and liability for any use of MedImageParse, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals.
+
+For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageParseDocs.
 
 ### Model Architecture
 MedImageParse is built upon a transformer-based architecture, optimized for processing large biomedical corpora. Leveraging multi-head attention mechanisms, it excels at identifying and understanding biomedical terminology, as well as extracting contextually relevant information from dense scientific texts. The model is pre-trained on vast biomedical datasets, allowing it to generalize across various biomedical domains with high accuracy.
 
 ### License and where to send questions or comments about the model
-The license for MedImageParse is the MIT license.
+The license for MedImageParse is the MIT license. Please cite our paper if you use the model for your research https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf.
 For questions or comments, please contact: hlsfrontierteam@microsoft.com
 
 ### Training information
@@ -30,9 +35,7 @@ Please see the paper for detailed information about methods and results. https:/
 Bar plot comparing the Dice score between our method and competing methods on 102,855 test instances (image-mask-label
 triples) across 9 modalities. MedSAM and SAM require bounding box as input. 
 
-![MedImageParse comparison results on segmentation](medimageparseresults.png)
-
-
+<img src="https://automlcesdkdataresources.blob.core.windows.net/model-cards/model_card_images/MedImageParse/medimageparseresults.png" alt="MedImageParse comparison results on segmentation">
 
 ### Fairness evaluation
 We conducted fairness evaluation for different sex and age groups. Two-sided independent t-test 
@@ -40,12 +43,12 @@ shows non-significant differences between female and male and between different 
 
 ### Ethical Considerations and Limitations 
 
-Microsoft believes Responsible AI is a shared responsibility and we have identified six principles and practices help organizations address risks, innovate, and create value: fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability. When downloaded or used in accordance with our terms of service, developers should work with their supporting model team to ensure this model meets requirements for the relevant use case and addresses unforeseen product misuse.   
+Microsoft believes Responsible AI is a shared responsibility and we have identified six principles and practices to help organizations address risks, innovate, and create value: fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability. When downloaded or used in accordance with our terms of service, developers should work with their supporting model team to ensure this model meets requirements for the relevant use case and addresses unforeseen product misuse.   
 
-While testing the model with images and/or text, ensure the the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
+While testing the model with images and/or text, ensure that the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
 
 The model is not designed for the following use cases:
-* **Use as a diagnostic tool or as a medical device** - Although MedImageParse is highly accurate in parsing biomedical it is not intended to be consumed directly and using information extracted by our service in diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions, as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional.  
+* **Use by clinicians to inform clinical decision-making, as a diagnostic tool or as a medical device** - Although MedImageParse is highly accurate in parsing biomedical data, it is not desgined or intended to be deployed in clinical settings as-is not is it for use in the diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions (including to support clinical decision-making), or as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional.  
 
 * **Scenarios without consent for data** - Any scenario that uses health data for a purpose for which consent was not obtained.   
 
@@ -121,13 +124,6 @@ ultrasound: breast: benign tumor, malignant tumor, tumor
             heart: left heart atrium, left heart ventricle
             transperineal: fetal head, public symphysis
 
-* **Hardware Requirement for Compute Instances** 
+**Hardware Requirement for Compute Instances** 
 - Default: Single V100 GPU 
-- Minimum: Single GPU instance with 8Gb Memory 
-
-
-* **Hardware Requirement for Compute Instances** 
-Please suggest the following hardware requirements for the compute instances, for example:
-- Batch size: 4 (~6Gb Memory)
-- Image Compression Ratio: 75 (Default)
-- Image Size: 512 (Default for X-Y Dimension)
+- Minimum: Single GPU instance with 8Gb Memory

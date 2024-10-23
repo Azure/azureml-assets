@@ -23,7 +23,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     joblib=1.2.0 \
     cloudpickle=1.6.0 \
     scikit-learn=1.5.1 \
-    pandas~=1.3.5 \
+    pandas~=1.5.3 \
     holidays=0.29 \
     setuptools-git \
     setuptools=72.1.0 \

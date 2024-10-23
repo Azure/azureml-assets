@@ -47,5 +47,5 @@ jobs:
       - name: Check PR labels for "safe to publish" label
         if: fromJSON(env.continue) && !contains(github.event.pull_request.labels.*.name, 'safe to publish')
         run: |
-          echo "::error::This PR contains a brand new asset and requires the 'safe to publish' label to run this check. Assets must be properly tested before being added Github and the public registry."
+          echo "::error::This PR contains a brand new asset and requires the 'safe to publish' label to run this check. Assets must be properly evaluated before being added Github and the public registry. Please reach out to System Registry Content team to review this PR."
           exit 1
