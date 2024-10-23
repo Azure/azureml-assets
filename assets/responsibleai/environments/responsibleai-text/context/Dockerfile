@@ -42,6 +42,9 @@ RUN pip install git+https://github.com/huggingface/evaluate.git
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
 
+# To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
+RUN pip install 'torch>=2.2.2'
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
