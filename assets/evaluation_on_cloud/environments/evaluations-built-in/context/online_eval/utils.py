@@ -64,7 +64,8 @@ def extract_model_info(model_asset_id):
     """Extract model details from asset id."""
     # Define regular expressions for extracting information
     workspace_pattern = re.compile(
-        r"azureml://locations/(?P<location>\w+)/workspaces/(?P<workspace>[\w-]+)/models/(?P<model_name>[\w-]+)/versions/(?P<version>\d+)")
+        r"azureml://locations/(?P<location>\w+)/workspaces/(?P<workspace>[\w-]+)/models/(?P<model_name>[\w-]+)/"
+        r"versions/(?P<version>\d+)")
     registry_pattern = re.compile(
         r"azureml://registries/(?P<registry>[\w-]+)/models/(?P<model_name>[\w-]+)/versions/(?P<version>\d+)")
 

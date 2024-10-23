@@ -89,7 +89,8 @@ def run(args):
     """Entry point of model prediction script."""
 
     logger.info(
-        f"Connection type: {args['preprocessor_connection_type']}, Resource ID: {args['resource_id']}, Cron Expression: {args['cron_expression']}, Sampling Rate: {args['sampling_rate']}")
+        f"Connection type: {args['preprocessor_connection_type']}, Resource ID: {args['resource_id']}, Cron Expression:"
+        f" {args['cron_expression']}, Sampling Rate: {args['sampling_rate']}")
     client = get_app_insights_client(use_managed_identity=args["preprocessor_connection_type"] == "managed-identity")
     start_time, end_time = calculate_time_window(args["cron_expression"])
     logger.info(f"Start Time: {start_time}, End Time: {end_time}")

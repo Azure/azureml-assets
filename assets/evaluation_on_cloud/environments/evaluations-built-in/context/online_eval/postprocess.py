@@ -52,7 +52,7 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
     """Log evaluation event."""
 
     for name, value in evaluation.items():
-        attributes = {"event.name": f"gen_ai.evaluation.{name}", f"gen_ai.evaluation.score": json.dumps(value),
+        attributes = {"event.name": "gen_ai.evaluation.{name}", "gen_ai.evaluation.score": json.dumps(value),
                       "gen_ai.response_id": response_id}
         body = f"gen_ai.evaluation for response_id: {response_id}"
 
@@ -73,7 +73,7 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
 def log_evaluation_event(row) -> None:
     """" Log evaluation event."""
     if "trace_id" not in row or "span_id" not in row or "evaluation" not in row:
-        logger.warning(f"Missing required fields in the row: trace_id, span_id, evaluation")
+        logger.warning("Missing required fields in the row: trace_id, span_id, evaluation")
 
     trace_id = int(row.get("trace_id", "0"), 16)
     span_id = int(row.get("span_id", "0"), 16)
@@ -88,7 +88,7 @@ def log_evaluation_event(row) -> None:
 
 def get_combined_data(preprocessed_data, evaluated_data):
     """Combine preprocessed and evaluated data."""
-    logger.info(f"Combining preprocessed and evaluated data.")
+    logger.info("Combining preprocessed and evaluated data.")
     preprocessed_df = pd.read_json(preprocessed_data, lines=True)
     evaluation_data = []
     with open(evaluated_data, 'r') as file:

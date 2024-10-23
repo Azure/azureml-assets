@@ -3,7 +3,9 @@
 
 """Main script for the online evaluation context."""
 import argparse
-import preprocess, evaluate, postprocess
+import preprocess
+import evaluate
+import postprocess
 
 
 def get_args():
