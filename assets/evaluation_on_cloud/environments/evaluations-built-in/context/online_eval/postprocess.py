@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Client for AppInsights service."""
 
+"""Postprocess script for the online evaluation context."""
 from argparse import ArgumentParser
 
 import pandas as pd

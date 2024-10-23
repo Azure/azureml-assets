@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Utility functions for the online evaluation context."""
 import importlib
 import os
 import sys

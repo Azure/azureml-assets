@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Main script for the online evaluation context."""
 import argparse
 import preprocess, evaluate, postprocess
 

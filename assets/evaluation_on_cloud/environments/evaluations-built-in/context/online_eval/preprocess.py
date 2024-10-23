@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Client for AppInsights service."""
+
+"""Preprocess script for the online evaluation context."""
 import pandas as pd
 from croniter import croniter
 from datetime import datetime

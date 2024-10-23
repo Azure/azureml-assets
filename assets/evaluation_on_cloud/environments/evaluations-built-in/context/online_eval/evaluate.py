@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Main script for the evaluate context."""
 import argparse
 import json
 import logging
