@@ -70,7 +70,7 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
 
 
 def log_evaluation_event(row) -> None:
-    """"Log evaluation event."""
+    """Log evaluation event."""
     if "trace_id" not in row or "span_id" not in row or "evaluation" not in row:
         logger.warning("Missing required fields in the row: trace_id, span_id, evaluation")
 
