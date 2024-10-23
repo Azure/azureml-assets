@@ -12,6 +12,7 @@ from utils import get_app_insights_client
 import logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def get_args():

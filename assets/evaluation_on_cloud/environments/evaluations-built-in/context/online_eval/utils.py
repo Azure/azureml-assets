@@ -8,6 +8,7 @@ from azure.monitor.query import LogsQueryClient
 import logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def get_managed_identity_credentials():

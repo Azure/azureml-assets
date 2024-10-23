@@ -18,6 +18,7 @@ from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter
 import logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def get_args():

@@ -14,6 +14,7 @@ from utils import get_mlclient, extract_model_info
 import os
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def get_args():
