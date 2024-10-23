@@ -1,4 +1,4 @@
-azure-ai-evaluation=={{latest-pypi-version}}
+azure-ai-evaluation==1.0.0b4
 openai=={{latest-pypi-version}}
 azureml-mlflow=={{latest-pypi-version}}
 opentelemetry-api=={{latest-pypi-version}}
