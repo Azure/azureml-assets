@@ -5,7 +5,7 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./evaluator/_gleu.py
+  _default-display-file: ./GleuScoreEvaluator/_gleu.py
 tags:
   Preview: ""
-version: 1
+version: 3

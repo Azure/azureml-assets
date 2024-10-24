@@ -12,6 +12,7 @@ from common.cancel_handler import CancelHandler
 from common.azure_openai_client_manager import AzureOpenAIClientManager
 from common.keyvault_client_manager import KeyVaultClientManager
 from common.logging import get_logger, add_custom_dimenions_to_app_insights_handler
+
 from proxy_component import AzureOpenAIProxyComponent
 from hyperparameters import Hyperparameters, Hyperparameters_1P
 import mlflow
@@ -31,7 +32,6 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         super().__init__(aoai_client_manager.endpoint_name,
                          aoai_client_manager.endpoint_resource_group,
                          aoai_client_manager.endpoint_subscription)
-        self.aoai_client = aoai_client_manager.aoai_client
         self.aoai_client_manager = aoai_client_manager
         self.training_file_id = None
         self.validation_file_id = None
@@ -55,9 +55,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
                 if training_data_uri_key is not None:
                     keyvault_client_manager = KeyVaultClientManager()
-                    keyvault_client = keyvault_client_manager.get_keyvault_client()
-                    logger.info(f"fetching training file uri from keyvault : {keyvault_client_manager.keyvault_name}")
-                    training_data_uri = keyvault_client.get_secret(training_data_uri_key).value
+                    training_data_uri = keyvault_client_manager.get_secret_from_keyvault(training_data_uri_key)
                 else:
                     logger.info("User has provided trainining data uri directly, sending it to Azure OpenAI resource")
 
@@ -67,11 +65,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                 if validation_import_path is not None:
                     if validation_data_uri_key is not None:
                         keyvault_client_manager = KeyVaultClientManager()
-                        keyvault_client = keyvault_client_manager.get_keyvault_client()
-                        logger.info(
-                            f"fetching validation fileuri from keyvault: {keyvault_client_manager.keyvault_name}"
-                        )
-                        validation_data_uri = keyvault_client.get_secret(validation_data_uri_key).value
+                        validation_data_uri = keyvault_client_manager.get_secret_from_keyvault(validation_data_uri_key)
                     else:
                         logger.info("User provided validation data uri directly, sending it to Azure OpenAI resource")
 
@@ -79,7 +73,12 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                     logger.info("uploaded validation file uri to aoai resource")
 
             logger.info("Step 2: Finetuning model")
-            self.finetuning_job_id = self.submit_finetune_job(model, hyperparameters, hyperparameters_1p, suffix)
+            self.finetuning_job_id = self.aoai_client_manager.submit_finetune_job(model,
+                                                                                  hyperparameters,
+                                                                                  hyperparameters_1p,
+                                                                                  self.training_file_id,
+                                                                                  self.validation_file_id,
+                                                                                  suffix)
             finetuned_job = self.track_finetuning_job()
 
             logger.debug(f"Finetuned model name: {finetuned_job.fine_tuned_model}, status: {finetuned_job.status}")
@@ -104,11 +103,11 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
     def delete_files(self):
         """Delete training and validation files from azure openai resource."""
         if self.training_file_id is not None:
-            self.aoai_client.files.delete(file_id=self.training_file_id)
+            self.aoai_client_manager.delete_file(file_id=self.training_file_id)
             logger.debug(f"file id: {self.training_file_id} deleted")
 
         if self.validation_file_id is not None:
-            self.aoai_client.files.delete(file_id=self.validation_file_id)
+            self.aoai_client_manager.delete_file(file_id=self.training_file_id)
             logger.debug(f"file id: {self.validation_file_id} deleted")
 
     def upload_files(self, train_file_path: str, validation_file_path: str = None):
@@ -121,20 +120,17 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.debug(f"validation file not provided, train data will be split in\
                          {utils.Constants.train_dataset_split_ratio} ratio to create validation data")
 
-        logger.debug(f"uploading training file : {train_file_name}")
-        train_metadata = self.aoai_client.files.create(file=(train_file_name, train_data, 'application/json'),
-                                                       purpose='fine-tune')
-        self.training_file_id = train_metadata.id
-        self._wait_for_processing(train_metadata.id)
+        self.training_file_id = self._upload_file_and_wait_for_processing(train_file_name, train_data)
         logger.info("training file uploaded")
 
-        logger.debug(f"uploading validation file : {validation_file_name}")
-        validation_metadata = self.aoai_client.files.create(file=(validation_file_name,
-                                                            validation_data, 'application/json'),
-                                                            purpose='fine-tune')
-        self.validation_file_id = validation_metadata.id
-        self._wait_for_processing(validation_metadata.id)
+        self.validation_file_id = self._upload_file_and_wait_for_processing(validation_file_name, validation_data)
         logger.info("validation file uploaded")
+
+    def _upload_file_and_wait_for_processing(self, file_name: str, file_data):
+        logger.debug(f"uploading file : {file_name}")
+        file_upload_metadata = self.aoai_client_manager.upload_file(file_name, file_data)
+        self._wait_for_processing(file_upload_metadata.id)
+        return file_upload_metadata.id
 
     def upload_file_uri_from_rest(self, file_uri: str) -> str:
         """Upload file uri to azure openai resource via rest call."""
@@ -148,7 +144,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
         return file_id
 
     def _wait_for_processing(self, file_id):
-        upload_file_metadata = self.aoai_client.files.wait_for_processing(file_id)
+        upload_file_metadata = self.aoai_client_manager.wait_for_processing(file_id)
         filename = upload_file_metadata.filename
         logger.info(f"file status is : {upload_file_metadata.status} for file name : {filename}")
 
@@ -159,27 +155,9 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.error(error_string)
             raise Exception(error_string)
 
-    def submit_finetune_job(self, model, hyperparameters: Dict[str, str],
-                            hyperparameters_1p: Dict[str, str], suffix=None):
-        """Submit fine-tune job to AOAI."""
-        logger.debug(f"Starting fine-tune job, model: {model}, suffix: {suffix},\
-                     training_file_id: {self.training_file_id}, validation_file_id: {self.validation_file_id}")
-
-        finetune_job = self.aoai_client.fine_tuning.jobs.create(
-            model=model,
-            training_file=self.training_file_id,
-            validation_file=self.validation_file_id,
-            hyperparameters=hyperparameters,
-            extra_headers=hyperparameters_1p,
-            suffix=suffix)
-        logger.debug(f"started finetuning job in Azure OpenAI resource. Job id: {finetune_job.id}")
-        logger.debug(f"Response of finetune create call : {str(finetune_job)}")
-
-        return finetune_job.id
-
     def track_finetuning_job(self):
         """Fetch metrics for the job and log them."""
-        finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.finetuning_job_id)
+        finetune_job = self.aoai_client_manager.retrieve_job(self.finetuning_job_id)
         job_status = finetune_job.status
 
         last_metric_logged = 0
@@ -187,7 +165,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         while job_status not in terminal_statuses:
             time.sleep(60)
-            finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.finetuning_job_id)
+            finetune_job = self.aoai_client_manager.retrieve_job(self.finetuning_job_id)
             job_status = finetune_job.status
             logger.info(f"Finetuning job status : {job_status}")
             last_event_message = self._log_events(last_event_message)
@@ -196,7 +174,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
                 last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
 
         # emitting metrics after status becomes terminal, just to ensure we do not miss any metric
-        finetune_job = self.aoai_client.fine_tuning.jobs.retrieve(self.finetuning_job_id)
+        finetune_job = self.aoai_client_manager.retrieve_job(self.finetuning_job_id)
         last_metric_logged = self._log_metrics(finetune_job, last_metric_logged)
 
         return finetune_job
@@ -207,11 +185,11 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
         if self.finetuning_job_id is not None:
             logger.info("cancelling finetuning job in AzureOpenAI resource")
-            cancelled_job = self.aoai_client.fine_tuning.jobs.cancel(self.finetuning_job_id)
+            cancelled_job = self.aoai_client_manager.cancel_job(self.finetuning_job_id)
             while cancelled_job.status not in terminal_statuses:
                 time.sleep(10)
                 logger.debug(f"cancellation triggered, job not cancelled yet, current status: {cancelled_job.status}")
-                cancelled_job = self.aoai_client.fine_tuning.jobs.retrieve(cancelled_job.id)
+                cancelled_job = self.aoai_client_manager.retrieve_job(cancelled_job.id)
         else:
             logger.debug("finetuning job not created, not starting now as cancellation is triggered")
 
@@ -225,7 +203,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
             logger.warning("result file for the finetuning job not present, cannot log training metrics")
             return
 
-        response = self.aoai_client.files.content(file_id=result_file)
+        response = self.aoai_client_manager.get_file_content(file_id=result_file)
         if response is None or response.content is None:
             logger.warning("content not present in result file for the job, cannot log training metrics")
             return
@@ -248,7 +226,7 @@ class AzureOpenAIFinetuning(AzureOpenAIProxyComponent):
 
     def _log_events(self, last_event_message):
         """Log events like training started, running nth epoch etc."""
-        job_events = self.aoai_client.fine_tuning.jobs.list_events(self.finetuning_job_id).data
+        job_events = self.aoai_client_manager.list_events(self.finetuning_job_id)
         events_message_list = utils.list_event_messages_after_given_event(job_events, last_event_message)
 
         if len(events_message_list) > 0:
