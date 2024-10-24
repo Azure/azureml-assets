@@ -11,6 +11,8 @@ import tempfile
 
 from unittest.mock import patch
 
+from PIL import Image
+
 from azureml.acft.common_components.image.runtime_common.common.dataset_helper import AmlDatasetHelper
 
 MODEL_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "./src"))
@@ -149,7 +151,7 @@ def get_mock_run_context():
 
 @pytest.mark.parametrize("task_type,input_column_names,label_column_name", [
     (TASK.IMAGE_CLASSIFICATION, ["image_url"], "label"),
-    (TASK.IMAGE_OBJECT_DETECTION, ["image_url"], "label"),
+    (TASK.IMAGE_OBJECT_DETECTION, ["image", "image_meta_info", "text_prompt"], "label"),
     (TASK.IMAGE_GENERATION, ["prompt"], "label"),
 ])
 def test_image_dataset(task_type, input_column_names, label_column_name):
@@ -178,13 +180,44 @@ def test_image_dataset(task_type, input_column_names, label_column_name):
                 patch(
                     "azureml.acft.common_components.image.runtime_common.common.utils.download_or_mount_image_files"
                 ), \
-                patch.object(AmlDatasetHelper, "get_data_dir", return_value=directory_name):
+                patch(
+                    "azureml.acft.common_components.image.runtime_common.common.utils._read_image",
+                    return_value=Image.new("RGB", (640, 480))
+                ), \
+                patch.object(AmlDatasetHelper, "get_data_dir", return_value=directory_name), \
+                patch("image_dataset.is_valid_image", return_value=True), \
+                patch("image_dataset.read_image", return_value=b"123"):
             df = get_image_dataset(task_type, directory_name, input_column_names, label_column_name)
 
         # Compare the loaded dataset with the original.
-        if task_type == TASK.IMAGE_GENERATION:
+        if task_type == TASK.IMAGE_CLASSIFICATION:
+            loaded_dataset = [
+                {k: row[k] for k in ["image_url", "label"]} for _, row in df.iterrows()
+            ]
+
+            for r1, r2 in zip(dataset, loaded_dataset):
+                assert r2["label"] == r1["label"]
+
+        elif task_type == TASK.IMAGE_OBJECT_DETECTION:
+            loaded_dataset = [
+                {k: row[k] for k in ["image", "image_meta_info", "text_prompt", "label"]} for _, row in df.iterrows()
+            ]
+
+            classes = set([o["label"] for r in dataset for o in r["label"]])
+            class_list_str = ". ".join([str(c) for c in sorted(classes)])
+
+            for r1, r2 in zip(dataset, loaded_dataset):
+                assert set(["filename", "width", "height"]).issubset(set(r2["image_meta_info"].keys()))
+
+                assert r2["text_prompt"] == class_list_str
+
+                # Simple sanity check for image label. Component tests check correctness of label fields in detail.
+                assert len(r2["label"]["boxes"]) == len(r1["label"])
+                assert len(r2["label"]["labels"]) == len(r1["label"])
+                assert len(r2["label"]["classes"]) == len(r1["label"])
+
+        elif task_type == TASK.IMAGE_GENERATION:
             loaded_dataset = [{k: row[k] for k in ["prompt", "label"]} for _, row in df.iterrows()]
-            for r1, r2 in zip(
-                sorted(dataset, key=lambda x: x["label"]), sorted(loaded_dataset, key=lambda x: x["prompt"])
-            ):
+
+            for r1, r2 in zip(dataset, loaded_dataset):
                 assert r2 == {"prompt": r1["label"], "label": r1["image_url"]}
