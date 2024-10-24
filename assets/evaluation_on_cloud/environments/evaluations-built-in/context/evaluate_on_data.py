@@ -70,8 +70,9 @@ def get_evaluator_config(command_line_args):
     data_mapping = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
-        data_mapping["column_mapping"] = evaluator["DataMapping"]
-        evaluator_config[evaluator_name] = data_mapping
+        if evaluator["DataMapping"]:
+            data_mapping["column_mapping"] = evaluator["DataMapping"]
+            evaluator_config[evaluator_name] = data_mapping
     return evaluator_config
 
 
@@ -82,7 +83,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_config):
     results = evaluate(
         data=command_line_args.eval_data,
         evaluators=evaluators,
-        evaluator_config=evaluator_config
+        evaluator_config=evaluator_config if evaluator_config else None,
     )
     metrics = {}
     for metric_name, metric_value in results["metrics"].items():
