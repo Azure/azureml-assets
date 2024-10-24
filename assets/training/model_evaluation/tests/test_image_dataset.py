@@ -150,7 +150,7 @@ def get_mock_run_context():
 
 
 @pytest.mark.parametrize("task_type,input_column_names,label_column_name", [
-    (TASK.IMAGE_CLASSIFICATION, ["image"], "label"),
+    (TASK.IMAGE_CLASSIFICATION, ["image_url"], "label"),
     (TASK.IMAGE_OBJECT_DETECTION, ["image", "image_meta_info", "text_prompt"], "label"),
     (TASK.IMAGE_GENERATION, ["prompt"], "label"),
 ])
@@ -192,7 +192,7 @@ def test_image_dataset(task_type, input_column_names, label_column_name):
         # Compare the loaded dataset with the original.
         if task_type == TASK.IMAGE_CLASSIFICATION:
             loaded_dataset = [
-                {k: row[k] for k in ["image", "label"]} for _, row in df.iterrows()
+                {k: row[k] for k in ["image_url", "label"]} for _, row in df.iterrows()
             ]
 
             for r1, r2 in zip(dataset, loaded_dataset):
