@@ -119,7 +119,7 @@ inputs:
   # Output of validation component.
   validation_output:
     type: uri_file
-    description: Validation status.
+    description: Validation status. 
     mode: rw_mount
     
 outputs:

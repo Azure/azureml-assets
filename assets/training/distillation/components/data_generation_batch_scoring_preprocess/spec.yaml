@@ -1,16 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: oss_distillation_validate_pipeline
-version: 0.0.3
+name: oss_distillation_generate_data_batch_preprocess
+version: 0.0.1
 type: command
 
-is_deterministic: true
+is_deterministic: False
 
-display_name: OSS Distillation Validate Pipeline
-description: Component to validate inputs to the distillation pipeline
+display_name: OSS Distillation Generate Data Batch Scoring Preprocess
+description: Component to prepare data to invoke teacher model enpoint in batch 
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/labels/latest
-
-code: ../../src
 
 inputs:
   # Inputs
@@ -30,12 +28,12 @@ inputs:
     optional: true
     description: Teacher model endpoint name
 
-  teacher_model_endpoint_url:
+  teacher_model_endpoint_url: 
     type: string
     optional: true
-    description: Teacher model endpoint URL
+    description: Teacher model endpoint url
 
-  teacher_model_endpoint_key: 
+  teacher_model_endpoint_key:
     type: string
     optional: true
     description: Teacher model endpoint key
@@ -70,19 +68,6 @@ inputs:
     optional: true
     description: Teacher model stop inference parameter
 
-  request_batch_size:
-    type: integer
-    default: 10
-    description: No of data records to hit teacher model endpoint in one go
-
-  min_endpoint_success_ratio:
-    type: number
-    default: 0.7
-    description: >
-      The minimum value of (successful_requests / total_requests) required for classifying inference as successful.
-      If (successful_requests / total_requests) < min_endpoint_success_ratio, the experiment will be marked as failed. 
-      By default it is 0.7 (0 means all requests are allowed to fail while 1 means no request should fail.)
-
   enable_chain_of_thought:
     type: string
     optional: true
@@ -99,8 +84,8 @@ inputs:
     type: integer
     optional: true
     default: 80
-    description: Maximum Length Summary for text summarization 
-    
+    description: Maximum Length Summary for text summarization
+
   data_generation_task_type:
     type: string
     enum:
@@ -117,32 +102,34 @@ inputs:
       4. MATH: Generate Math data for numerical responses
       5. SUMMARIZATION: Generate Key Summary for an Article
 
-  num_train_epochs:
-    type: integer
-    default: 1
-    optional: true
-    description: training epochs
-
-  per_device_train_batch_size:
-    type: integer
-    default: 1
-    optional: true
-    description: Train batch size
-
-  learning_rate:
-    type: number
-    default: 3e-04
-    optional: true
-    description: Start learning rate.
-
-outputs:
+  
+  # Output of validation component.
   validation_info:
     type: uri_file
+    optional: true
     description: Validation status.
     mode: rw_mount
+    
+outputs:
+  generated_train_payload_path:
+    type: mltable
+    description: directory containing the payload to be sent to the model.
+  generated_validation_payload_path:
+    type: mltable
+    description: directory containing the payload to be sent to the model.
+  hash_train_data:
+    type: uri_file
+    description: jsonl file containing the hash for each payload.
+  hash_validation_data:
+    type: uri_file
+    description: jsonl file containing the hash for each payload.
+  batch_config_connection:
+    type: uri_file
+    description: Config file path that contains deployment configurations
 
+code: ../../src
 command: >-
-  python validate_pipeline.py
+  python generate_data_preprocess.py
   --train_file_path  ${{inputs.train_file_path}}
   $[[--validation_file_path  ${{inputs.validation_file_path}}]]
   $[[--teacher_model_endpoint_name ${{inputs.teacher_model_endpoint_name}}]]
@@ -154,13 +141,12 @@ command: >-
   --teacher_model_frequency_penalty ${{inputs.teacher_model_frequency_penalty}}
   --teacher_model_presence_penalty ${{inputs.teacher_model_presence_penalty}}
   $[[--teacher_model_stop ${{inputs.teacher_model_stop}}]]
-  --request_batch_size ${{inputs.request_batch_size}}
-  --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   $[[--max_len_summary ${{inputs.max_len_summary}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
-  $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
-  $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
-  $[[--learning_rate ${{inputs.learning_rate}}]]
-  --validation_info ${{outputs.validation_info}}
+  --generated_train_payload_path ${{outputs.generated_train_payload_path}}
+  --generated_validation_payload_path ${{outputs.generated_validation_payload_path}}
+  --hash_train_data ${{outputs.hash_train_data}}
+  --hash_validation_data ${{outputs.hash_validation_data}}
+  --batch_config_connection ${{outputs.batch_config_connection}}

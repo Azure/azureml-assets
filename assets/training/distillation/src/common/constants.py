@@ -74,6 +74,9 @@ DEFAULT_TEMPERATURE = 0.2
 # TEXT SUMMARIZATION DEFAULT OUTPUT WORD COUNT
 DEFAULT_MAX_LEN_SUMMARY = 80
 
+STATUS_SUCCESS = "SUCCESS"
+FINISH_REASON_STOP = "stop"
+
 
 class InferenceMode:
     """Supported inference modes."""
@@ -112,6 +115,10 @@ class TelemetryConstants:
     INVOKE_MODEL_ENDPOINT = "invoke_model_endpoint"
     BATCH_PROCESS_TRAINING_DATA = "batch_process_training_data"
     BATCH_PROCESS_VALIDATION_DATA = "batch_process_validation_data"
+    PRE_PROCESS_TRAINING_DATA = "pre_process_training_data"
+    PRE_PROCESS_VALIDATION_DATA = "pre_process_validation_data"
+    POST_PROCESS_TRAINING_DATA = "post_process_training_data"
+    POST_PROCESS_VALIDATION_DATA = "post_process_validation_data"
     PROCESS_DATASET_RECORD = "process_dataset_record"
 
     VALIDATOR = "validator"
@@ -123,6 +130,28 @@ class TelemetryConstants:
     VALIDATE_TRAINING_DATA = "validate_training_data"
     VALIDATE_VALIDATION_DATA = "validate_validation_data"
     VALIDATE_MODEL_INFERENCE = "validate_model_inference"
+    VERSION_SELECTION = "version_selection"
+
+
+class PayloadField:
+    """Payload fields."""
+
+    # Payload fields that will be sent to the model.
+    MESSAGES = "messages"
+    ROLE = "role"
+    CONTENT = "content"
+    SYSTEM = "system"
+    USER = "user"
+
+    # Payload fields that will be received from the model.
+    RESPONSE = "response"
+    REQUEST = "request"
+
+
+class HashField:
+    """Hash fields."""
+
+    HASH = "hash"
 
 
 class BackoffConstants:
@@ -160,14 +189,17 @@ class SystemPrompt:
     @classmethod
     def default_cot_prompt(cls):
         """Get the default chain of thought prompt."""
-        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.DEFAULT_KEYS, additional_instructions="")
+        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(
+            keys=cls.DEFAULT_KEYS, additional_instructions=""
+        )
 
     @classmethod
     def math_cot_prompt(cls):
         """Get the math chain of thought prompt for datasets expecting numeric answers."""
-        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(keys=cls.MATH_NUMERICAL_KEYS,
-                                                    additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS
-                                                    )
+        return cls.DEFAULT_COT_SYSTEM_PROMPT.format(
+            keys=cls.MATH_NUMERICAL_KEYS,
+            additional_instructions=cls.MATH_ADDITIONAL_INSTRUCTIONS,
+        )
 
     @classmethod
     def get_cot_prompt(cls, task_type: str):
