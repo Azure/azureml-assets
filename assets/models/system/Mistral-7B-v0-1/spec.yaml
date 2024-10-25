@@ -14,7 +14,6 @@ properties:
   languages: EN
 tags:
   Featured: ""
-  Preview: ""
   SharedComputeCapacityEnabled: ""
   hiddenlayerscanned: ""
   huggingface_model_id: mistralai/Mistral-7B-v0.1
@@ -70,5 +69,6 @@ tags:
     - ds_mii
   license: apache-2.0
   task: text-generation
-  author: Mistral
+  author: "Mistral AI"
+  benchmark: "quality"
 version: 17

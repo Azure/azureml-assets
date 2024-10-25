@@ -9,7 +9,6 @@ properties:
   languages: EN
 tags:
   Featured: ""
-  Preview: ""
   SharedComputeCapacityEnabled: ""
   hiddenlayerscanned: ""
   disable-batch: "true"
@@ -28,5 +27,5 @@ tags:
     - vllm
   license: apache-2.0
   task: chat-completion
-  author: Mistral
+  author: "Mistral AI"
 version: 2

@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Rouge-Score-Evaluator
+path: ./
+properties:
+  is-promptflow: true
+  is-evaluator: true
+  show-artifact: true
+  _default-display-file: ./RougeScoreEvaluator/_rouge.py
+tags:
+  Preview: ""
+version: 3

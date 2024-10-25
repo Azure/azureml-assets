@@ -1,10 +1,14 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.6-cudnn8-ubuntu20.04:{{latest-image-tag}}
 
 WORKDIR /
 
 ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.16-cuda11
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
+
+# Enable debug
+RUN apt-get update
+RUN apt-get install -y openssh-server openssh-client
 
 # Create conda environment
 COPY conda_dependencies.yaml .

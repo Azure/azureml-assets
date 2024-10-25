@@ -34,7 +34,7 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 WORKDIR /
 
 # Needed for megablocks
-RUN pip install torch~=2.3.0 --index-url https://download.pytorch.org/whl/cu121
+RUN pip install torch~=2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
 # mixtral specific
 ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
@@ -47,11 +47,7 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.8 --no-cache-dir
-
-RUN pip uninstall -y vllm
-RUN pip uninstall transformers -y
-RUN pip install https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.4.1-cp310-cp310-linux_x86_64.whl
+RUN pip install llm-optimized-inference==0.2.15 --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

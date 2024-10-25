@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name="aml-benchmark",
-    version="0.7",
+    version="0.8",
     description="AzureML Benchmarking SDK",
     author="Microsoft Corp",
     entry_points={},

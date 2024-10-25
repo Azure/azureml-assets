@@ -48,7 +48,6 @@ def main():
             "azureml-evaluate-mlflow",
             "azureml_metrics",
             "azureml-metrics",
-            "transformers",
             "torchvision",
         ]
         install_deps = []
@@ -58,7 +57,7 @@ def main():
                     continue
                 install_deps += [line.strip()]
 
-        install_deps += ["transformers==4.41.2", "torchvision==0.17.2"]
+        install_deps += ["torchvision==0.17.2"]
         no_install = []
         if len(install_deps) > 0:
             try:

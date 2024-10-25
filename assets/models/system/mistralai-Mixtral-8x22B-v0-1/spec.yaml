@@ -9,7 +9,6 @@ properties:
   languages: moe, fr, it, de, es, en
 tags:
   Featured: ''
-  Preview: ''
   SharedComputeCapacityEnabled: ''
   hiddenlayerscanned: ""
   disable-batch: 'true'
@@ -19,5 +18,6 @@ tags:
   - vllm
   license: apache-2.0
   task: text-generation
-  author: Mistral
+  author: "Mistral AI"
+  benchmark: "quality"
 version: 4
