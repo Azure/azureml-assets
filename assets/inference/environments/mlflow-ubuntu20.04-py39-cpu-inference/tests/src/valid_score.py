@@ -29,6 +29,7 @@ def run(input_data):
 
         return AMLResponse(r, 200, json_str=True)
     except Exception as e:
-        error = str(e)
-
-        return AMLResponse({'error': error}, 500, json_str=True)
+        # Log the error message
+        print(f"Error occurred: {str(e)}")
+        # Return a generic error message to the client
+        return AMLResponse({'error': 'An internal error has occurred.'}, 500, json_str=True)
