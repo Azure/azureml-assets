@@ -56,6 +56,7 @@ tags:
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
+    max_seq_length: 16384
     ignore_mismatched_sizes: "false"
     num_train_epochs: 1
     per_device_train_batch_size: 1
