@@ -6,10 +6,12 @@ import argparse
 import json
 import logging
 import mlflow
-import os
 import pandas as pd
+import os
 import requests
 import shutil
+import sys
+
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
@@ -43,6 +45,7 @@ def copy_evaluator_files(command_line_args):
             shutil.copytree(dir_path, f"./{evaluator_name}")
             logger.info(f"Copying {dir_path} to ./{evaluator_name}")
             logger.info(evaluator_name, os.listdir(f"./{evaluator_name}"))
+            sys.path.append(os.path.abspath(f"./{evaluator_name}"))
         else:
             logger.info(f"Directory for evaluator {evaluator_name} not found.")
 
@@ -54,21 +57,36 @@ def initialize_evaluators(command_line_args):
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
-        flow = load_evaluator('./' + evaluator_name)
+        flow = load_evaluator("./" + evaluator_name)
         if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
             init_params["credential"] = AzureMLOnBehalfOfCredential()
         evaluators[evaluator_name] = flow(**init_params)
     return evaluators
 
 
-def run_evaluation(command_line_args, evaluators):
+def get_evaluator_config(command_line_args):
+    """Get evaluator configuration from user input."""
+    evaluator_config = {}
+    data_mapping = {}
+    evaluators_o = json.loads(command_line_args.evaluators)
+    for evaluator_name, evaluator in evaluators_o.items():
+        if evaluator["DataMapping"]:
+            data_mapping["column_mapping"] = evaluator["DataMapping"]
+            evaluator_config[evaluator_name] = data_mapping
+    return evaluator_config
+
+
+def run_evaluation(command_line_args, evaluators, evaluator_config):
     """Run evaluation using evaluators."""
+    logger.info("evaluators", evaluators)
+    logger.info("evaluator_config", evaluator_config)
     results = evaluate(
         data=command_line_args.eval_data,
-        evaluators=evaluators
+        evaluators=evaluators,
+        evaluator_config=evaluator_config if evaluator_config else None,
     )
     metrics = {}
-    for metric_name, metric_value in results['metrics'].items():
+    for metric_name, metric_value in results["metrics"].items():
         logger.info("Logging metric:", metric_name, metric_value)
         metrics[metric_name] = metric_value
     mlflow.log_metrics(metrics)
@@ -79,9 +97,7 @@ def run_evaluation(command_line_args, evaluators):
 
         # Save the DataFrame as a JSONL file
         df.to_json("instance_results.jsonl", orient="records", lines=True)
-        df.to_json("eval_results.jsonl", orient="records", lines=True)
         mlflow.log_artifact("instance_results.jsonl")
-        mlflow.log_artifact("eval_results.jsonl")
 
 
 def get_promptflow_run_logs():
@@ -114,11 +130,12 @@ rai_evaluators = ['HateUnfairnessEvaluator', 'Sexual-Content-Evaluator', 'Hate-a
 if __name__ == '__main__':
     copy_evaluator_files(args)
     evaluators = initialize_evaluators(args)
+    evaluator_config = get_evaluator_config(args)
     logger.info("*************** Collecting Result of Evaluators ******************")
     # Run the evaluation
     with mlflow.start_run() as run:
         try:
-            run_evaluation(args, evaluators)
+            run_evaluation(args, evaluators, evaluator_config)
         except Exception as e:
             logger.error("EXCEPT", e)
             get_promptflow_run_logs()
