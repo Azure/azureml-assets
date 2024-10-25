@@ -1,2 +1,2 @@
-azure-ai-ml==0.1.0b4
-azure.identity==1.10.0
+azure-ai-ml==1.21.0
+azure.identity==1.17.1
