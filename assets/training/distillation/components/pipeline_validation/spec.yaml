@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_validate_pipeline
-version: 0.0.3
+version: 0.0.4
 type: command
 
 is_deterministic: true

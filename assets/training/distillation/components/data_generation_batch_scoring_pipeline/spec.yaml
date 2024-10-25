@@ -5,7 +5,7 @@ type: pipeline
 
 
 display_name: OSS Distillation Batch Score Data Generation Pipeline
-description: Component to generate data from teacher model enpoint by invoking it in batch
+description: Component to generate data from teacher model endpoint by invoking it in batch.
 
 inputs:
   # Compute parameters
@@ -256,7 +256,7 @@ outputs:
 jobs:
   oss_distillation_generate_data_batch_preprocess:
     type: command
-    component: azureml:oss_distillation_generate_data_batch_preprocess:0.0.1.visa15
+    component: azureml:oss_distillation_generate_data_batch_preprocess:0.0.1
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
@@ -296,7 +296,7 @@ jobs:
   # Config generator job
   oss_distillation_generate_data_config_generator:
     type: command
-    component: azureml:batch_benchmark_config_generator:0.0.8.visa01
+    component: azureml:batch_benchmark_config_generator:0.0.8
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -322,7 +322,7 @@ jobs:
   # Batch score job
   oss_distillation_train_data_batch_score:
     type: parallel
-    component: azureml://registries/azureml/components/batch_score_oss/versions/0.0.1
+    component: azureml:batch_score_oss:0.0.1
     compute: '${{parent.inputs.compute_data_generation}}'
     identity:
       type: user_identity
@@ -349,7 +349,7 @@ jobs:
 
   validation_file_path_exists:
     type: command
-    component: azureml:oss_distillation_data_generation_validation_file_checker:0.0.1.visa02
+    component: azureml:oss_distillation_data_generation_validation_file_checker:0.0.1
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -366,7 +366,7 @@ jobs:
   # Batch score job
   oss_distillation_validation_data_batch_score:
     type: parallel
-    component: azureml://registries/azureml/components/batch_score_oss/versions/0.0.1
+    component: azureml:batch_score_oss:0.0.1
     compute: '${{parent.inputs.compute_data_generation}}'
     identity:
       type: user_identity
@@ -393,7 +393,7 @@ jobs:
 
   oss_distillation_generate_data_batch_postprocess:
     type: command
-    component: azureml:oss_distillation_generate_data_batch_postprocess:0.0.1.visa10
+    component: azureml:oss_distillation_generate_data_batch_postprocess:0.0.1
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'

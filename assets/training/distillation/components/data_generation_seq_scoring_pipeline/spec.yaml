@@ -212,7 +212,7 @@ outputs:
 jobs:
   oss_distillation_generate_data:
     type: command
-    component: azureml://registries/azureml/components/oss_distillation_generate_data/versions/0.0.7
+    component: azureml:oss_distillation_generate_data:0.0.8
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
