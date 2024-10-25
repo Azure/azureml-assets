@@ -4,7 +4,7 @@ type: command
 name: batch_benchmark_config_generator
 display_name: Batch Benchmark Config Generator
 description: Generates the config for the batch score component.
-version: 0.0.7
+version: 0.0.8
 is_deterministic: true
 
 inputs:
