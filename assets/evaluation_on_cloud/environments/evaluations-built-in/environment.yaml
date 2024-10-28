@@ -6,6 +6,7 @@ image:
     dockerfile: Dockerfile
     template_files:
     - Dockerfile
+    - requirements.txt
   publish:               
     location: mcr          
     visibility: public
