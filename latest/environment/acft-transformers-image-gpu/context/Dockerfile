@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch222:biweekly.202410.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch222:biweekly.202410.2
 
 USER root
 RUN apt-get -y update
@@ -12,4 +12,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install gunicorn==22.0.0
 RUN pip install certifi==2024.07.04
 
-# dummy number to change when needing to force rebuild without changing the definition: 1
+# dummy number to change when needing to force rebuild without changing the definition: 2
