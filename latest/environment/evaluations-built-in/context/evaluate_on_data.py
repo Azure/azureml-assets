@@ -17,6 +17,7 @@ from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def update_value_in_dict(d, key_substring, new_func):
