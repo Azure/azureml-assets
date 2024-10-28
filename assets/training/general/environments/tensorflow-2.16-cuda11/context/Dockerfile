@@ -253,3 +253,5 @@ RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+ENV TF_USE_LEGACY_KERAS=1
