@@ -6,6 +6,9 @@ properties:
   languages: en
   inference-min-sku-spec: 48|2|440|128
   inference-recommended-sku: Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: chat-completion
+  finetune-min-sku-spec:  96|4|880|256
+  finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
@@ -37,14 +40,20 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_NC96ads_A100_v4
     ]
+  finetune_compute_allow_list:
+    [
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4
+    ]
   inference_supported_envs:
     - vllm
   model_specific_defaults:
     apply_deepspeed: "true"
-    deepspeed_stage: 2
+    deepspeed_stage: 3
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
+    max_seq_length: 16384
     ignore_mismatched_sizes: "false"
     num_train_epochs: 1
     per_device_train_batch_size: 1
@@ -55,4 +64,4 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 3
+version: 4
