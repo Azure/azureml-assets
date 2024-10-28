@@ -20,9 +20,8 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - tensorboard~=2.16.0
-  - tensorflow[and-cuda]==2.16.1
+  - tensorflow[and-cuda]==2.16.2
   - tensorflow-datasets~=4.9.0
-  - tensorrt==10.4.0
   - keras==3.3.2
   - tf-keras==2.16.0
   - debugpy~=1.6.3
