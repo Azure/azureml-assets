@@ -1,5 +1,6 @@
-transformers==4.45.2
-datasets==2.20.0
+transformers
+datasets
+evaluate
 accelerate
 scikit-learn
 apache_beam

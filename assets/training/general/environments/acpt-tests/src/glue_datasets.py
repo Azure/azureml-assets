@@ -29,6 +29,7 @@ import os
 import logging as logger
 from typing import Any, Union, Dict, Callable
 from datasets import load_dataset, load_metric
+from evaluate import load
 from datasets import DatasetDict, Metric  # used for typing
 from torch.utils.data.dataset import Dataset
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
@@ -70,7 +71,7 @@ def num_labels_from_task(task: str) -> int:
 
 def load_metric_from_task(task: str) -> Metric:
     """Load the metric for the corresponding GLUE task."""
-    metric = load_metric("glue", actual_task(task))
+    metric = evaluate.load("glue", actual_task(task))
     return metric
 
 
