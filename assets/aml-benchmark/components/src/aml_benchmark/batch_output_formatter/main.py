@@ -128,8 +128,9 @@ def main(
     :return: None
     """
     logger.info("Read batch output data now.")
-    data_files = [
-        os.path.join(batch_inference_output, f) for f in os.listdir(batch_inference_output) if f.endswith("json") or f.endswith("jsonl")
+    data_files = [os.path.join(
+        batch_inference_output, f
+    ) for f in os.listdir(batch_inference_output) if f.endswith("json") or f.endswith("jsonl")
     ]
     logger.info(f"Receiving {len(data_files)} files.")
     batch_score_result: List[Dict[str, Any]] = read_jsonl_files(data_files)
@@ -171,13 +172,13 @@ def main(
             # check for safety failure before result success.
             # blocked requests can be fail or success responses.
             safety_blocked_requests += 1
-            logger.warning("Met request blocked due to safety at index {} of file {}".format(index, f))
+            logger.warning("Met request blocked due to safety at index {}".format(index))
             blocked_response_list.append(row)
             if handle_response_failure == 'neglect':
                 continue
         elif not rc.is_result_success(row):
             failed_requests += 1
-            logger.warning("Met failed response at index {} of file {}".format(index, f))
+            logger.warning("Met failed response at index {}".format(index))
             failed_response_list.append(row)
             if handle_response_failure == 'neglect':
                 continue
