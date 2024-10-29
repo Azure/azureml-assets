@@ -10,6 +10,7 @@ import sys
 from promptflow.client import load_flow
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def load_evaluator(evaluator):
