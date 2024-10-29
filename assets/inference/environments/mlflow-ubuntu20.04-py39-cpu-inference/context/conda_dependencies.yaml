@@ -8,3 +8,4 @@ dependencies:
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
+  - pyarrow=={{latest-pypi-version}}
