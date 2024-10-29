@@ -71,7 +71,7 @@ outputs:
   unsafe_content_blocked_requests:
     type: uri_file
 code: ../src
-environment: azureml://registries/azureml/environments/aoai-evaluation/labels/latest
+environment: azureml://registries/azureml/environments/evaluation/labels/latest
 
 resources:
   instance_count: 1
