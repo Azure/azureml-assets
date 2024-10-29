@@ -136,12 +136,18 @@ inputs:
     optional: true
     default: "false"
     description: Enable Chain of thought for data generation
+    enum:
+    - "true"
+    - "false"
 
   enable_chain_of_density:
     type: string
     optional: true
     default: "false"
     description: Enable Chain of density for text summarization
+    enum:
+    - "true"
+    - "false"
 
   max_len_summary:
     type: integer
@@ -233,7 +239,7 @@ outputs:
 jobs:
   oss_distillation_validate_pipeline:
     type: command
-    component: azureml:oss_distillation_validate_pipeline:0.0.3
+    component: azureml:oss_distillation_validate_pipeline:0.0.4
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -266,7 +272,7 @@ jobs:
 
   oss_distillation_generate_data:
     type: command
-    component: azureml:oss_distillation_generate_data:0.0.7
+    component: azureml:oss_distillation_generate_data:0.0.8
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
@@ -300,7 +306,7 @@ jobs:
 
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.21
+    component: azureml:oss_text_generation_data_import:0.0.24
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
