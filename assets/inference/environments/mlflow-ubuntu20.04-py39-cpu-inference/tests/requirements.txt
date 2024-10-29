@@ -3,4 +3,4 @@ azure.identity==1.10.0
 requests==2.31.0
 mlflow
 azureml-mlflow
-pyarrow
+pyarrow==14.0.2
