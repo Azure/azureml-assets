@@ -1,4 +1,4 @@
-name: mlflow-py39-inference
+name: mlflow-py312-inference
 
 version: auto
 type: environment
