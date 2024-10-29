@@ -1,0 +1,8 @@
+name: test-designer-io
+version: 87
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["Designer", "Python"]
+
+
