@@ -1,0 +1,8 @@
+{
+	"input_data": {
+		"this": "is",
+		"a": ["dictionary", "which", "contains", "only"],
+		"strings": "and",
+		"lists": ["of", "strings"]
+	}
+}
