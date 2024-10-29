@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""For getting formatted example."""
 # using mlflow==1.29.0, mlflow-skinny==1.29.0, azureml-mlflow==1.45.0
 from mlflow.models.signature import infer_signature
 from sklearn import datasets, linear_model

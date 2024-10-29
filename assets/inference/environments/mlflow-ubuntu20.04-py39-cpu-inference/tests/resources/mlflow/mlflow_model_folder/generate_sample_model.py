@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""For generating the sample model."""
 import mlflow   # using mlflow==1.24.0, also needs protobuf==3.20.3, numpy==1.22.2
 # from mlflow.models import infer_signature
 import pandas as pd
@@ -8,10 +9,13 @@ import pandas as pd
 
 # define a custom model
 class MyModel(mlflow.pyfunc.PythonModel):
+    """For MyModel class."""
     def predict(self, context, model_input):
+        """Predict."""
         return self.my_custom_function(model_input)
 
     def my_custom_function(self, model_input):
+        """My custom function."""
         # do something with the model input
         return pd.DataFrame([0])
 

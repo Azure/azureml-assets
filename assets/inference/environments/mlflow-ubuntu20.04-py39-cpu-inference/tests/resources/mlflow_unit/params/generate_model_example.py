@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""For generating model example."""
 import mlflow
 import os
 import json
@@ -9,10 +10,13 @@ import pandas as pd
 
 # define a custom model
 class MyModel(mlflow.pyfunc.PythonModel):
+    """For MyModel class."""
     def predict(self, context, model_input, params):
+        """Predict."""
         return self.my_custom_function(model_input, params)
 
     def my_custom_function(self, model_input, parameters):
+        """My custom function."""
         # do something with the model input
         return str(model_input['sentence1'].values[0]) + str(parameters["max_length"])
 
