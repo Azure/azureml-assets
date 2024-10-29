@@ -29,8 +29,8 @@ import os
 import logging as logger
 from typing import Any, Union, Dict, Callable
 from datasets import load_dataset
-from evaluate import load
-from datasets import DatasetDict, Metric  # used for typing
+from evaluate import load, Metric
+from datasets import DatasetDict  # used for typing
 from torch.utils.data.dataset import Dataset
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
