@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.8
+version: 0.0.9
 name: diffusers_text_to_image_model_import
 display_name: Text to Image Diffusers Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: true
 
-environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/44
+environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/46
 
 code: ../../../src/model_selector
 
