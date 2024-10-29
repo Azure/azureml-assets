@@ -6,6 +6,11 @@
 from enum import Enum
 
 
+MLFLOW_MODEL = "mlflow_model"
+MLMODEL = "MLmodel"
+MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
+
+
 class _CustomEnum(Enum):
     @classmethod
     def has_value(cls, value):
