@@ -4,7 +4,7 @@ type: pipeline
 name: batch_benchmark_inference_with_inference_compute
 display_name: Batch Benchmark Inference (With Inference compute Support)
 description: Components for batch endpoint inference with inference compute support.
-version: 0.0.7
+version: 0.0.6.2
 
 inputs:
   input_dataset:
@@ -187,7 +187,8 @@ jobs:
   # Preparer
   batch_inference_preparer: 
     type: command
-    component: azureml:batch_inference_preparer:0.0.13
+#    component: azureml:batch_inference_preparer:0.0.13
+    component: azureml://registries/azureml-preview-test1/components/batch_inference_preparer/versions/0.0.12.1
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: ${{parent.inputs.model_type}}
@@ -205,7 +206,8 @@ jobs:
   # Config generation
   config_generation:
     type: command
-    component: azureml:batch_benchmark_config_generator:0.0.7
+#    component: azureml:batch_benchmark_config_generator:0.0.7
+    component: azureml://registries/azureml-preview-test1/components/batch_benchmark_config_generator/versions/0.0.7.1
     inputs:
       scoring_url: ${{parent.inputs.endpoint_url}}
       connection_name: ${{parent.inputs.connections_name}}
@@ -227,7 +229,8 @@ jobs:
   # Inference
   endpoint_batch_score:
     type: parallel
-    component: azureml://registries/azureml/components/batch_score_llm/versions/1.1.9
+#    component: azureml://registries/azureml/components/batch_score_llm/versions/1.1.9
+    component: azureml://registries/azureml-preview-test1/components/batch_score_llm/versions/2.20241025.1.test
     inputs:
       async_mode: False
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
@@ -253,7 +256,8 @@ jobs:
   # Reformat
   batch_output_formatter: 
     type: command
-    component: azureml:batch_output_formatter:0.0.13
+#    component: azureml:batch_output_formatter:0.0.13
+    component: azureml://registries/azureml-preview-test1/components/batch_output_formatter/versions/0.0.12.1
     inputs:
       model_type: ${{parent.inputs.model_type}}
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_output_directory}}

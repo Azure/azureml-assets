@@ -12,7 +12,7 @@
         },
         "url": {
             "$ref": "file:///driver/src/batch_score/common/configuration/file/schemas/public/inference_endpoint_url.json",
-            "pattern": "inference\\.ai\\.azure\\.com"
+            "pattern": "inference\\.ai\\.azure\\.com|models\\.ai\\.azure\\.com"
         }
     }
 }
