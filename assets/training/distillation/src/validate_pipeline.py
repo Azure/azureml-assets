@@ -143,7 +143,7 @@ class PipelineInputsValidator:
         request_headers = self._get_inference_request_headers()
 
         # https://learn.microsoft.com/en-us/azure/machine-learning/reference-model-inference-info
-        response = requests.get(url=f"{base_url}/info", headers=request_headers)
+        response = requests.get(url=f"{base_url}/info", headers=request_headers, timeout=180)
         response.raise_for_status()
         response_data = response.json()
         model_name = response_data.get("model_name")
@@ -174,7 +174,7 @@ class PipelineInputsValidator:
         url = url if VLLM_CHAT_SCORE_PATH in url else f"{url}{VLLM_CHAT_SCORE_PATH}"
         logger.info(f"Model endpoint: {url}")
         response = requests.post(
-            url=url, headers=headers, data=json.dumps(inference_params)
+            url=url, headers=headers, data=json.dumps(inference_params), timeout=180
         )
         response.raise_for_status()
 
