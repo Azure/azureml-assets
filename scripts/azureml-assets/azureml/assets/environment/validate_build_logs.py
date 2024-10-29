@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from azureml.assets.util import logger
 
+
 def validate_py_version(build_log_file_name, build_log_content):
     """Validate Python version.
 
@@ -23,7 +24,8 @@ def validate_py_version(build_log_file_name, build_log_content):
     py38_match = re.search("python=3.8", build_log_content)
 
     if py38_match:
-        logger.log_error(f"{build_log_file_name}: python=3.8 found in build log. Python 3.8 is now deprecated. Please use a newer Python version.")
+        logger.log_error(f"{build_log_file_name}: python=3.8 found in build log."
+                         f"Python 3.8 is now deprecated. Please use a newer Python version.")
         return 1
 
     return 0
@@ -64,6 +66,6 @@ if __name__ == '__main__':
     success = validate_build_logs(build_logs_dir=args.build_logs_dir)
 
     if success:
-        print(f"No additional vulnerabilities found in build logs")
+        print("No additional vulnerabilities found in build logs")
     else:
         sys.exit(1)
