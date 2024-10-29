@@ -1,4 +1,4 @@
-name: aoai-evaluation
+name: evaluation
 version: auto
 type: environment
 spec: spec.yaml

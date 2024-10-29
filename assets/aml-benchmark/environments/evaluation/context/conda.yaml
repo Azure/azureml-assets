@@ -1,4 +1,4 @@
-name: aoai-evaluation
+name: evaluation
 channels:
 - conda-forge
 - anaconda
