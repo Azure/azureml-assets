@@ -12,8 +12,8 @@ dependencies:
   - azureml-telemetry=={{latest-pypi-version}}
   - mltable=={{latest-pypi-version}}
   - azureml-automl-core=={{latest-pypi-version}}
-  - rouge-score
-  - nltk
-  - pandas
-  - tiktoken
-  - openai
+  - rouge-score>=0.1.2
+  - nltk>=3.9.1
+  - pandas>=2.2.3
+  - tiktoken>=0.8.0
+  - openai>=1.52.2
