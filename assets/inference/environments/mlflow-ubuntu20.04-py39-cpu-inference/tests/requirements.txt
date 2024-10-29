@@ -1,6 +1,6 @@
 azure-ai-ml==0.1.0b4
 azure.identity==1.10.0
 requests==2.31.0
-mlflow
+mlflow==2.10.1
 azureml-mlflow
 pyarrow==14.0.2
