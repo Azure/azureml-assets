@@ -40,7 +40,6 @@ def validate_build_logs(build_logs_dir):
     Returns:
         bool: True if build logs were successfully validated, otherwise False.
     """
-
     error_count = 0
 
     for build_log_file_name in os.listdir(build_logs_dir):
