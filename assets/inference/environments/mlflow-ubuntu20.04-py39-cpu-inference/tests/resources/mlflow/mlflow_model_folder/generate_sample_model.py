@@ -10,6 +10,7 @@ import pandas as pd
 # define a custom model
 class MyModel(mlflow.pyfunc.PythonModel):
     """For MyModel class."""
+    
     def predict(self, context, model_input):
         """Predict."""
         return self.my_custom_function(model_input)

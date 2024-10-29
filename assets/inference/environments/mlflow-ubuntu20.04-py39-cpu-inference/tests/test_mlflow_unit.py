@@ -28,7 +28,7 @@ def teardown():
 
 
 def setup_traditional():
-    """The Setup traditional."""
+    """For Setup traditional."""
     import mlflow
 
     # define a custom model
@@ -69,7 +69,7 @@ def setup_traditional():
 
 
 def setup_transformers():
-    """The Setup transformers."""
+    """For Setup transformers."""
     os.environ["AZUREML_MODEL_DIR"] = "./resources/mlflow_unit"
     os.environ["MLFLOW_MODEL_FOLDER"] = "distilbert-base-uncased"
     try:
