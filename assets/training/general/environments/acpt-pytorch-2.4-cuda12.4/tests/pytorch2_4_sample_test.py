@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_pytorch_2_3():
-    """Tests a sample job using pytorch 2.0 as the environment."""
+def test_pytorch_2_4():
+    """Tests a sample job using pytorch 2.4 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,12 +28,12 @@ def test_pytorch_2_3():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-2_3-cuda12_1"
+    env_name = "acpt-pytorch-2_4-cuda12_4"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 2.3 environment created from a Docker context.",
+        description="Pytorch 2.4 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
