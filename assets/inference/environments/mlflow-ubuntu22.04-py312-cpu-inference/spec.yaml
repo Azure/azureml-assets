@@ -1,0 +1,18 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  AzureML MLflow/Ubuntu 22.04/Python 3.12 cpu environment.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  OS: Ubuntu22.04
+  Inferencing: ""
+  Preview: ""
