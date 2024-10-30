@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.63 (2024-10-29)
+### 🚀 New Features
+- [#3541](https://github.com/Azure/azureml-assets/pull/3541) Support for new evaluationresult asset tags
+
 ## 1.16.62 (2024-10-29)
 ### 🚀 New Features
 - [#3536](https://github.com/Azure/azureml-assets/pull/3536) Validate build logs for deprecated dependencies (Python 3.8)
