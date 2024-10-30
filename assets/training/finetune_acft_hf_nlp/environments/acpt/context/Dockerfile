@@ -13,12 +13,15 @@ COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-# clean conda and pip caches
-RUN rm -rf ~/.cache/pip
+# need to be removed when updating transformers>4.44.0
+COPY deepspeed /opt/conda/envs/ptca/lib/python3.10/site-packages/transformers/integrations/deepspeed.py
 
 RUN pip install mlflow==2.14.3
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
 
-# dummy number to change when needing to force rebuild without changing the definition: 2
+# clean conda and pip caches
+RUN rm -rf ~/.cache/pip
+
+# dummy number to change when needing to force rebuild without changing the definition: 1
