@@ -84,6 +84,10 @@ jobs:
         id: build-changed-images
         run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V' -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" -U 'https://github.com/aquasecurity/trivy/releases/download/v0.42.1/trivy_0.42.1_Linux-64bit.deb'
 
+      - name: Validate build logs for additional deprecated dependencies
+        id: validate-build-logs
+        run: python -u $scripts_environment_dir/validate_build_logs.py -l '${{ runner.temp }}'/$build_logs_artifact_name
+
       - name: Upload build logs
         uses: actions/upload-artifact@v3
         if: always()
