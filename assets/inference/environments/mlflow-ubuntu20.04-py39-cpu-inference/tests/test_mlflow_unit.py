@@ -11,9 +11,9 @@ import yaml
 import pandas as pd
 import numpy as np
 from mlflow.models.signature import ModelSignature
-from inference_schema.parameter_types.pandas_parameter_type import PandasParameterType
-from inference_schema.parameter_types.numpy_parameter_type import NumpyParameterType
-from inference_schema.parameter_types.standard_py_parameter_type import StandardPythonParameterType
+# from inference_schema.parameter_types.pandas_parameter_type import PandasParameterType
+# from inference_schema.parameter_types.numpy_parameter_type import NumpyParameterType
+# from inference_schema.parameter_types.standard_py_parameter_type import StandardPythonParameterType
 sys.path.append(os.path.abspath("../context"))
 
 
@@ -85,6 +85,7 @@ def setup_transformers():
     import mlflow_score_script
     mlflow_score_script.init()
 
+
 def test_parse_model_input_from_input_data_dict_to_pandas(teardown):
     """Test parse model input from input data dict to pandas."""
     setup_traditional()
@@ -97,6 +98,7 @@ def test_parse_model_input_from_input_data_dict_to_pandas(teardown):
         assert len(result1) == 1
         assert result1.loc[0].at["a"] == 3.0
         assert result1.loc[0].at["c"] == "foo"
+
 
 def test_get_sample_input_from_loaded_example_pandas_2_0(teardown):
     """Test get sample input from loaded example pandas 2 0."""
@@ -114,6 +116,7 @@ def test_get_sample_input_from_loaded_example_pandas_2_0(teardown):
         assert isinstance(result1, pd.DataFrame)
         assert result1.loc[0].at["a"] == 3.0
         assert result1.loc[0].at["c"] == "foo"
+
 
 def test_get_sample_input_from_loaded_example_str_pandas(teardown):
     """Test get sample input from loaded example str pandas."""
