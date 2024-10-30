@@ -38,7 +38,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 RUN pip install \
                 # begin pypi dependencies
                 azureml-core==1.58.0 \
-                azureml-mlflow==1.58.0 \
+                azureml-mlflow==1.58.0.post1 \
                 azureml-automl-core==1.58.0 \
                 azureml-automl-dnn-nlp==1.58.0 \
                 azureml-automl-runtime==1.58.0 \
