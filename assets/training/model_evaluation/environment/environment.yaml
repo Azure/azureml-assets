@@ -7,7 +7,6 @@ image:
     template_files:
     - Dockerfile
     - conda.yaml
-    - transformers.patch
   publish:
     location: mcr
     visibility: public
