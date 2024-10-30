@@ -86,7 +86,7 @@ jobs:
 
       - name: Validate build logs for additional deprecated dependencies
         id: validate-build-logs
-        run: python -u $scripts_environment_dir/validate_build_logs.py -i '${{ runner.temp }}'/$build_logs_artifact_name
+        run: python -u $scripts_environment_dir/validate_build_logs.py -l '${{ runner.temp }}'/$build_logs_artifact_name
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
