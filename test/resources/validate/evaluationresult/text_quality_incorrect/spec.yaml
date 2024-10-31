@@ -1,0 +1,37 @@
+type: evaluationresult
+name: gpt-4-0613_quality_index
+version: 10.30.24
+display_name: gpt-4-0613_quality_index
+description: aggregated quality benchmark results for gpt-4-0613
+
+model_name: gpt-4-0613
+model_version: '0613'
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/0613
+
+dataset_family: aggregate
+dataset_name: aggregate
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai/models/gpt-4/versions/0613
+
+tags:
+  evaluation_type: text_quality
+  index_metric_key: randome_key
+  azure_registry_name: azure-openai
+  azure_model_name: gpt-4
+  azure_latest_model_version: turbo-2024-04-09
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/turbo-2024-04-09
+
+metrics:
+  accuracy: 0.873692
+  coherence: 4.882209
+  fluency: 4.924
+  GPTSimilarity: 3.916613
+  groundedness: 4.296203
+  relevance: 4.333895
+  index_metric: 0.85442
+
+properties:
+  total_datasets: 15
+

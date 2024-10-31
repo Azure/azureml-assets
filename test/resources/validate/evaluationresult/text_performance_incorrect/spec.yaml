@@ -1,0 +1,55 @@
+type: evaluationresult
+name: synthetic_gpt-4-0314_azure_openai
+version: 10.30.24
+display_name: synthetic_gpt-4-0314
+description: Performance benchmark results for gpt-4-0314 on synthetic data
+
+dataset_family: synthetic
+dataset_name: synthetic
+
+model_name: gpt-4-0314
+model_version: '0314'
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/0314
+
+relationships:
+- relationshipType: Source
+  assetId: azureml://registries/azure-openai/models/gpt-4/versions/0314
+
+tags:
+  evaluation_type: text_performance
+  index_metric_value: generated_tokens_per_sec
+  index_metric_key: random_key
+  azure_registry_name: azure-openai
+  azure_model_name: gpt-4
+  azure_latest_model_version: turbo-2024-04-09
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/turbo-2024-04-09
+
+metrics:
+  throughput_gtps_token_count: 25.3
+  throughput_ttps_token_count: 145.43
+  throughput_rps_request_count: 0.14
+  latency_p50_secs: 7.13
+  latency_p90_secs: 7.4
+  latency_p95_secs: 7.52
+  latency_p99_secs: 8.2
+  latency_mean_secs: 7.17
+  latency_ttft_secs: 1.37
+  time_between_tokens_secs: 0.29
+  index_metric: 25.3
+
+properties:
+  deployment_category: azure_openai
+  deployment_type: standard
+  tokens_rate_limit: 30k
+  total_token_length_per_request: 1000
+  prompt_token_generated_token_ratio: '80:20'
+  input_prompt_tokens: 800
+  output_generated_tokens: 200
+  num_of_inference_requests: 2
+  num_of_inference_aggregations: 336
+  payload_task_type: chat_completion
+  num_parallel_inference_requests: '1'
+  stream: true
+  tokenizer: gpt-4-0314
+  region: uksouth
+
