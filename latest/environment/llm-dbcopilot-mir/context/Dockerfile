@@ -14,7 +14,10 @@ RUN apt-get update \
     libpython3.10-minimal \
     libpython3.10-stdlib  \
     curl \
-    libcurl4 \
+    libcurl4  \
+    libexpat1  \
+    expat  \
+    libapparmor1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
