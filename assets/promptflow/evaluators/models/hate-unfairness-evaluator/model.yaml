@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/HateUnfairnessEvaluator/v2/evaluator
+  container_path: models/evaluators/HateUnfairnessEvaluator/v4
   storage_name: amlraipfmodels
   type: azureblob
 publish:
