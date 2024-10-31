@@ -17,7 +17,7 @@ relationships:
 
 tags:
   evaluation_type: text_performance
-  index_metric_value: generated_tokens_per_sec
+  index_metric_value: throughput_gtps_token_count
   index_metric_key: random_key
   azure_registry_name: azure-openai
   azure_model_name: gpt-4

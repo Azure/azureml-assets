@@ -1,19 +1,18 @@
 type: evaluationresult
-name: synthetic_gpt-4-0314_azure_openai
+name: synthetic_model_azure_openai
 version: 10.30.24
-display_name: synthetic_gpt-4-0314
-description: Performance benchmark results for gpt-4-0314 on synthetic data
+display_name: synthetic_model
+description: Performance benchmark results for model on synthetic data
 
 dataset_family: synthetic
 dataset_name: synthetic
 
-model_name: gpt-4-0314
-model_version: '0314'
-model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/0314
-
+model_name: model1
+model_version: '1'
+model_asset_id: azureml://registries/azureml/models/model1/versions/1
 relationships:
-- relationshipType: Source
-  assetId: azureml://registries/azure-openai/models/gpt-4/versions/0314
+    - relationshipType: Source
+      assetId: azureml://registries/azureml/models/model1/versions/1
 
 tags:
   evaluation_type: text_performance

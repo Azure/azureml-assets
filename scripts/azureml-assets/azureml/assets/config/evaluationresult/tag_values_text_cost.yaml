@@ -4,3 +4,4 @@ index_metric_key:
   allow_multiple: False
   values:
   - index_metric
+  - total_cost_per_1M_tokens
