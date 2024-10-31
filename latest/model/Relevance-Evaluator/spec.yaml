@@ -5,11 +5,11 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./RelevanceEvaluator/relevance.prompty
+  _default-display-file: ./relevance.prompty
 tags:
   Preview: ""
   hiddenlayerscanned: ""
-version: 3
+version: 4
 description: |
   | 	| |
   | -- | -- |
