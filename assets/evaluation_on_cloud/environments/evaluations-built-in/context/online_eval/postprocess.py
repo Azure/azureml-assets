@@ -104,7 +104,8 @@ def get_combined_data(preprocessed_data, evaluated_data, service_name):
 
 def run(args):
     """Entry point of model prediction script."""
-    logger.info(f"Sampling Rate: {args['sampling_rate']}, Connection String: {args['connection_string']}, Service Name: {args['service_name']}")
+    logger.info(f"Sampling Rate: {args['sampling_rate']}, Connection String: {args['connection_string']}, 
+                Service Name: {args['service_name']}")
     provider = configure_logging(args)
     data = get_combined_data(args["preprocessed_data"], args["evaluated_data"],
                              args["service_name"])
