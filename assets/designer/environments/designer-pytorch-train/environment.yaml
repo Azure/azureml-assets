@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/designer-pytorch-2.3-train
+  name: azureml/curated/designer-pytorch-train
   os: linux
   context:
     dir: context
