@@ -51,7 +51,6 @@ def configure_logging(args) -> LoggerProvider:
 
 def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, evaluation, service_name):
     """Log evaluation event."""
-
     for name, value in evaluation.items():
         attributes = {"event.name": f"gen_ai.evaluation.{name}", "gen_ai.evaluation.score": json.dumps(value),
                       "gen_ai.response_id": response_id, "service.name": service_name}
