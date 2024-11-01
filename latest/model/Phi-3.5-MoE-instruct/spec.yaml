@@ -173,6 +173,9 @@ tags:
   Featured: ""
   huggingface_model_id: ""
   maas-inference: "true"
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
   license: mit
   disable-batch: "true"
   task: chat-completion
