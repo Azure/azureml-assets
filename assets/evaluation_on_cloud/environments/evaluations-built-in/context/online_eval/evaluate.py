@@ -138,11 +138,13 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
 
 
 rai_evaluators = [
-    "HateUnfairnessEvaluator",
     "Sexual-Content-Evaluator",
     "Hate-and-Unfairness-Evaluator",
     "Violent-Content-Evaluator",
     "Self-Harm-Related-Content-Evaluator",
+    "Groundedness-Pro-Evaluator",
+    "Protected-Material-Evaluator",
+    "Indirect-Attack-Evaluator",
 ]
 
 
