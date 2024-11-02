@@ -168,7 +168,7 @@ tags:
     save_total_limit: 1
     max_seq_length: 4096
   benchmark: "quality"
-version: 5
+version: 6
 description: |-
   The Phi-3-Medium-128K-Instruct is a 14B parameters, lightweight, state-of-the-art open model trained with the Phi-3 datasets that includes both synthetic data and the filtered publicly available websites data with a focus on high-quality and reasoning dense properties.
   The model belongs to the Phi-3 family with the Medium version in two variants 4K and 128K which is the context length (in tokens) that it can support.
