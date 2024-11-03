@@ -3,14 +3,13 @@
 
 
 ## 1.16.65 (2024-11-04)
-### 🚀 Bugs Fixed
+### 🐛 Bugs Fixed
 - [#3544](https://github.com/Azure/azureml-assets/pull/3544) Fix validate assets for new evaluationresult asset tags
 
 
 ## 1.16.64 (2024-10-31)
 ### 🐛 Bugs Fixed
 - [#3549](https://github.com/Azure/azureml-assets/pull/3549) Validate build logs for deprecated dependencies only if logs directory exists
-
 
 ## 1.16.63 (2024-10-29)
 ### 🚀 New Features
