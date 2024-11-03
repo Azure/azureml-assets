@@ -7,4 +7,4 @@ dependencies:
 - pip=24.0
 - pip:
   - azureml-inference-server-http==1.3.4
-  - numpy==2.1.2
+  - numpy==2.1.3
