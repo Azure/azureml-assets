@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_gpt-35-turbo-0301_question_answering
-version: 2.10.05
+version: 2.31.10
 display_name: truthfulqa_generation_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for truthfulqa generation dataset
 dataset_family: truthfulqa
@@ -8,16 +8,20 @@ dataset_name: truthfulqa_generation
 
 model_name: gpt-35-turbo-0301
 model_version: "0301"
-model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
+model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0301
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
+    assetId: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0301
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
+  azure_registry_name: azureml
+  azure_model_name: gpt-35-turbo-0301
+  azure_latest_model_version: 0301
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0301
 
 metrics:
   coherence: 4.880835

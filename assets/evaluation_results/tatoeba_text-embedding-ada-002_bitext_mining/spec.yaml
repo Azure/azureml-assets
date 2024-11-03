@@ -1,6 +1,6 @@
 type: evaluationresult
 name: tatoeba_text-embedding-ada-002_bitext_mining
-version: 2.22.05
+version: 2.31.10
 display_name: Tatoeba_text-embedding-ada-002_bitext_mining
 description: text-embedding-ada-002 run for Tatoeba dataset
 dataset_name: Tatoeba
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: bitext_mining
     primary_metric: f1_score
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-ada-002
+    azure_latest_model_version: 2
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
 
 metrics:
     f1_score: 0.5178156023458084

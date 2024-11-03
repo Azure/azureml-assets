@@ -1,6 +1,6 @@
 type: evaluationresult
 name: piqa_gpt_4_0613_question_answering
-version: 2.03.05
+version: 2.31.10
 display_name: piqa_gpt_4_0613_question_answering
 description: gpt-4-0613 run for piqa dataset
 dataset_family: piqa
@@ -8,16 +8,20 @@ dataset_name: piqa
 
 model_name: gpt-4-0613
 model_version: "0613"
-model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/4
+model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/0613
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai/models/gpt-4/versions/4
+    assetId: azureml://registries/azure-openai/models/gpt-4/versions/0613
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: gpt-4-0613
+  azure_latest_model_version: 0613
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/0613
 
 metrics:
   accuracy: 0.928

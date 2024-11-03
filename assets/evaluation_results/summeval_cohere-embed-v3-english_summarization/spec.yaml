@@ -1,6 +1,6 @@
 type: evaluationresult
 name: summeval_cohere-embed-v3-english_summarization
-version: 2.22.05
+version: 2.31.10
 display_name: SummEval_cohere-embed-v3-english_summarization
 description: cohere-embed-v3-english run for SummEval dataset
 dataset_name: SummEval
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: summarization
     primary_metric: spearman_correlation
+    azure_registry_name: azureml-cohere
+    azure_model_name: Cohere-embed-v3-english
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-english/versions/1
 
 metrics:
     spearman_correlation: 0.3109032487005159

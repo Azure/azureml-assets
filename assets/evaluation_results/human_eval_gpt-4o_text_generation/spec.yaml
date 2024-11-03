@@ -1,23 +1,27 @@
 type: evaluationresult
 name: human_eval_gpt-4o_text_generation
-version: 2.12.08
+version: 2.31.10
 display_name: human_eval_gpt-4o_text_generation
 description: gpt-4o run for human_eval
 dataset_family: human_eval
 dataset_name: human_eval
 
-model_name: gpt-4o
-model_version: "5/13/2024"
-model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/1
+model_name: gpt-4o-2024-05-13
+model_version: "2024-05-13"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/2024-05-13
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai/models/gpt-4o/versions/1
+    assetId: azureml://registries/azure-openai/models/gpt-4o/versions/2024-05-13
 
 tags:
   evaluation_type: text_generation
   task: text-generation
   accuracy_metric_name: pass@1
+  azure_registry_name: azureml
+  azure_model_name: gpt-4o-2024-05-13
+  azure_latest_model_version: 2024-05-13
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/2024-05-13
 
 metrics:
   accuracy: 0.920731707

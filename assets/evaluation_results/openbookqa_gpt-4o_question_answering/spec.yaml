@@ -1,23 +1,27 @@
 type: evaluationresult
 name: openbookqa_gpt-4o_question_answering
-version: 2.12.08
+version: 2.31.10
 display_name: openbookqa_gpt-4o_question_answering
 description: gpt-4o run for openbookqa
 dataset_family: openbookqa
 dataset_name: openbookqa
 
-model_name: gpt-4o
-model_version: "5/13/2024"
-model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/1
+model_name: gpt-4o-2024-05-13
+model_version: "2024-05-13"
+model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/2024-05-13
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai/models/gpt-4o/versions/1
+    assetId: azureml://registries/azure-openai/models/gpt-4o/versions/2024-05-13
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: gpt-4o-2024-05-13
+  azure_latest_model_version: 2024-05-13
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4o/versions/2024-05-13
 
 metrics:
   accuracy: 0.954

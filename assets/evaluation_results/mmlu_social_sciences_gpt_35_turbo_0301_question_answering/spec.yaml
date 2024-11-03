@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_social_sciences_gpt_35_turbo_0301_question_answering
-version: 2.03.05
+version: 2.31.10
 display_name: mmlu_social_sciences_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for mmlu_social_sciences dataset
 dataset_family: mmlu
@@ -8,16 +8,20 @@ dataset_name: mmlu_social_sciences
 
 model_name: gpt-35-turbo-0301
 model_version: "0301"
-model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
+model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0301
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
+    assetId: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0301
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: gpt-35-turbo-0301
+  azure_latest_model_version: 0301
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0301
 
 metrics:
   accuracy: 0.7920052

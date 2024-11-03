@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_social_sciences_phi-3-mini-4k-instruct_chat_completion
-version: 2.06.21
+version: 2.31.10
 display_name: mmlu_social_sciences_phi-3-mini-4k-instruct_chat_completion
 description: mmlu_social_sciences_phi-3-mini-4k-instruct_chat_completion
 dataset_family: mmlu
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: phi-3-mini-4k-instruct
+  azure_latest_model_version: 4
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/4
 
 metrics:
   accuracy: 0.7799805

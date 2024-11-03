@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_phi-3-small-8k-instruct_question_answering
-version: 2.06.18
+version: 2.31.10
 display_name: hellaswag_Phi-3-small-8k-instruct_question_answering
 description: hellaswag_Phi-3-small-8k-instruct_question_answering
 dataset_family: hellaswag
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: Phi-3-small-8k-instruct
+  azure_latest_model_version: 6
+  azure_latest_model_asset_id: azureml://registries/models-staging/models/Phi-3-small-8k-instruct/versions/6
 
 metrics:
   accuracy: 0.8404700258912567

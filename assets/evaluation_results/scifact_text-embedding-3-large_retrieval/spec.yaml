@@ -1,6 +1,6 @@
 type: evaluationresult
 name: scifact_text-embedding-3-large_retrieval
-version: 2.07.22
+version: 2.31.10
 display_name: SciFact_text-embedding-3-large_retrieval
 description: text-embedding-3-large run for SciFact dataset
 dataset_name: SciFact
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: retrieval
     primary_metric: ndcg_at_10
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-3-large
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-large/versions/1
 
 metrics:
     ndcg_at_10: 0.77674

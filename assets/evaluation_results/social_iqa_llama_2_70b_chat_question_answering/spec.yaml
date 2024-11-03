@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_llama_2_70b_chat_question_answering
-version: 2.19.040
+version: 2.31.10
 display_name: social_iqa_llama_2_70b_chat_question_answering
 description: llama-2-70b-chat run for social_iqa dataset
 dataset_family: social_iqa
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: llama-2-70b-chat
+  azure_latest_model_version: 12
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Llama-2-70b-chat/versions/12
 
 metrics:
   accuracy: 0.737

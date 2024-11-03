@@ -1,6 +1,6 @@
 type: evaluationresult
 name: squad_v2_llama-2-70b_question_answering
-version: 2.10.05
+version: 2.31.10
 display_name: squad_v2_llama-2-70b_question_answering
 description: llama-2-70b run for squad_v2 dataset
 dataset_family: squad_v2
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
+  azure_registry_name: azureml
+  azure_model_name: llama-2-70b
+  azure_latest_model_version: 15
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Llama-2-70b/versions/15
 
 metrics:
   groundedness: 2.7183811129848228

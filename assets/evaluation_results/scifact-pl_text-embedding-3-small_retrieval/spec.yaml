@@ -1,6 +1,6 @@
 type: evaluationresult
 name: scifact-pl_text-embedding-3-small_retrieval
-version: 2.07.22
+version: 2.31.10
 display_name: SciFact-PL_text-embedding-3-small_retrieval
 description: text-embedding-3-small run for SciFact-PL dataset
 dataset_name: SciFact-PL
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: retrieval
     primary_metric: ndcg_at_10
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-3-small
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-small/versions/1
 
 metrics:
     ndcg_at_10: 0.5938

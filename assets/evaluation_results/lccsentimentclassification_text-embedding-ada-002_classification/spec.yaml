@@ -1,6 +1,6 @@
 type: evaluationresult
 name: lccsentimentclassification_text-embedding-ada-002_classification
-version: 2.22.05
+version: 2.31.10
 display_name: LccSentimentClassification_text-embedding-ada-002_classification
 description: text-embedding-ada-002 run for LccSentimentClassification dataset
 dataset_name: LccSentimentClassification
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: classification
     primary_metric: accuracy
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-ada-002
+    azure_latest_model_version: 2
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
 
 metrics:
     accuracy: 0.6179999999999999

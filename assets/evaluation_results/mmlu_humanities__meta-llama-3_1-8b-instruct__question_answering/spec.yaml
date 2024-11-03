@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_humanities__meta-llama-3_1-8b-instruct__question_answering
-version: 2.12.08
+version: 2.31.10
 display_name: mmlu_humanities__Meta-Llama-3_1-8B-Instruct__chat_completion
 description: Benchmark__meta-llama-3-1-8b-instruct-1__remote_mmlu__chat_completion
 dataset_family: mmlu
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: Meta-Llama-3.1-8B-Instruct
+  azure_latest_model_version: 1
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3.1-8B-Instruct/versions/1
 
 metrics:
   accuracy: 0.636556854

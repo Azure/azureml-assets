@@ -1,23 +1,27 @@
 type: evaluationresult
 name: mmlu_humanities_cohere_command_r_question_answering
-version: 2.30.04
+version: 2.31.10
 display_name: mmlu_humanities_Cohere_command_r_question_answering
 description: Cohere-command-r run for mmlu_humanities dataset
 dataset_family: mmlu_humanities
 dataset_name: mmlu_humanities
 
 model_name: Cohere-command-r
-model_version: "3"
-model_asset_id: azureml://registries/azureml-cohere/models/Cohere-command-r/versions/3
+model_version: "1"
+model_asset_id: azureml://registries/azureml-cohere/models/Cohere-command-r/versions/1
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml-cohere/models/Cohere-command-r/versions/3
+    assetId: azureml://registries/azureml-cohere/models/Cohere-command-r/versions/1
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: Cohere-command-r
+  azure_latest_model_version: 1
+  azure_latest_model_asset_id: azureml://registries/azureml-cohere/models/Cohere-command-r/versions/1
 
 metrics:
   accuracy: 0.5989373007438895

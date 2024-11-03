@@ -1,6 +1,6 @@
 type: evaluationresult
 name: twentynewsgroupsclustering.v2_text-embedding-3-large_clustering
-version: 2.07.22
+version: 2.31.10
 display_name: TwentyNewsgroupsClustering.v2_text-embedding-3-large_clustering
 description: text-embedding-3-large run for TwentyNewsgroupsClustering.v2 dataset
 dataset_name: TwentyNewsgroupsClustering.v2
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: clustering
     primary_metric: v_measure
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-3-large
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-large/versions/1
 
 metrics:
     v_measure: 0.5660340504555165
