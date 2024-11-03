@@ -1,5 +1,5 @@
 type: evaluationresult
-name: synthetic_model_azure_openai
+name: synthetic_model_perf
 version: 10.30.24
 display_name: synthetic_model
 description: Performance benchmark results for model on synthetic data

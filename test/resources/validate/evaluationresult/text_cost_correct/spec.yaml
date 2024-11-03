@@ -1,5 +1,5 @@
 type: evaluationresult
-name: model1-16k_azure_openai
+name: model1-16k_cost
 version: 21.10.24
 display_name: model1
 description: Cost benchmark results for model1
