@@ -1,18 +1,17 @@
 type: evaluationresult
-name: gpt-35-turbo-16k_azure_openai
+name: model1-16k_azure_openai
 version: 21.10.24
-display_name: gpt-35-turbo-16k
-description: Cost benchmark results for gpt-35-turbo-16k
-model_name: gpt-35-turbo-16k
-model_version: '0613'
-model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo-16k/versions/0613
+display_name: model1
+description: Cost benchmark results for model1
+model_name: model1
+model_version: '1'
+model_asset_id: azureml://registries/azureml/models/model1/versions/1
 
 dataset_family: synthetic
 dataset_name: synthetic
 relationships:
-- relationshipType: Source
-  assetId: azureml://registries/azure-openai/models/gpt-35-turbo-16k/versions/0613
-
+    - relationshipType: Source
+      assetId: azureml://registries/azureml/models/model1/versions/1
 tags:
   evaluation_type: text_cost
   index_metric_key: total_cost_per_1M_tokens
@@ -23,7 +22,7 @@ metrics:
   total_cost_per_1M_tokens: 3.25
 
 properties:
-  deployment_category: azure_openai
+  deployment_category: azureml
   disclaimer: Cost Calculation is indicative and may vary based on the actual usage
     and configuration.
   additional_info: https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/
@@ -33,6 +32,6 @@ properties:
   output_token_weightage_per_million: 250000
   deployment_type: global
   region: eastus
-  input_meter_id: c5122ed8-6fc0-5f38-b10d-cccd850b8241
-  output_meter_id: e1db760d-35c8-580b-b4fa-a67b5081e6fa
+  input_meter_id: input_meter_id
+  output_meter_id: output_meter_id
 

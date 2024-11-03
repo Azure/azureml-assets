@@ -3,5 +3,4 @@ index_metric_key:
   required: True
   allow_multiple: False
   values:
-  - index_metric
   - throughput_gtps_token_count

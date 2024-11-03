@@ -17,11 +17,11 @@ relationships:
 tags:
   evaluation_type: text_performance
   index_metric_value: generated_tokens_per_sec
-  index_metric_key: index_metric
-  azure_registry_name: azure-openai
-  azure_model_name: gpt-4
-  azure_latest_model_version: turbo-2024-04-09
-  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/turbo-2024-04-09
+  index_metric_key: throughput_gtps_token_count
+  azure_registry_name: azureml
+  azure_model_name: model1
+  azure_latest_model_version: 1
+  azure_latest_model_asset_id: azureml://registries/azureml/models/model1/versions/1
 
 metrics:
   throughput_gtps_token_count: 25.3
