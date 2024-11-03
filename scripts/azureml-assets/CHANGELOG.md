@@ -3,6 +3,19 @@
 
 ### 🐛 Bugs Fixed
 
+
+## 1.16.64 (2024-10-31)
+### 🐛 Bugs Fixed
+- [#3549](https://github.com/Azure/azureml-assets/pull/3549) Validate build logs for deprecated dependencies only if logs directory exists
+
+## 1.16.63 (2024-10-29)
+### 🚀 New Features
+- [#3541](https://github.com/Azure/azureml-assets/pull/3541) Support for new evaluationresult asset tags
+
+## 1.16.62 (2024-10-29)
+### 🚀 New Features
+- [#3536](https://github.com/Azure/azureml-assets/pull/3536) Validate build logs for deprecated dependencies (Python 3.8)
+
 ## 1.16.61 (2024-10-21)
 ### 🚀 New Features
 - [#3514](https://github.com/Azure/azureml-assets/pull/3514) Support publishing Triton models
