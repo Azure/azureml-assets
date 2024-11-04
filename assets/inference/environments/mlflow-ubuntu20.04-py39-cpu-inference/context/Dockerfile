@@ -22,14 +22,16 @@ COPY mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 COPY mlflow_hf_score_cpu.py /var/mlflow_resources/mlflow_hf_score_cpu.py
 COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
 
+RUN conda install -c conda-forge arrow
+
+RUN apt-get update && apt-get install -y cmake
+
 # Create conda environment
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
-
-RUN pip install 'pyarrow>=14.0.2'
 
 USER dockeruser
 
