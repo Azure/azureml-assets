@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.9
+version: 0.0.10
 name: diffusers_text_to_image_dreambooth_pipeline
 display_name: Text to Image Dreambooth Finetuning Diffusers Pipeline
 description: Pipeline component for text to image dreambooth training using diffusers library and transformers models.
