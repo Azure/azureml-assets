@@ -1077,12 +1077,17 @@ def validate_assets(input_dirs: List[Path],
                 asset_spec = asset_config._spec._yaml
                 evaluation_type = asset_spec.get('tags', {}).get('evaluation_type', None)
 
-                if evaluation_type == 'text_generation':
-                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_generation.yaml')
-                elif evaluation_type == 'text_embeddings':
-                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_text_embeddings.yaml')
-                elif evaluation_type == 'vision':
-                    error_count += validate_tags(asset_config, 'evaluationresult/tag_values_vision.yaml')
+                evaluation_tag_files = {
+                    'text_generation': 'evaluationresult/tag_values_text_generation.yaml',
+                    'text_embeddings': 'evaluationresult/tag_values_text_embeddings.yaml',
+                    'vision': 'evaluationresult/tag_values_vision.yaml',
+                    'text_quality': 'evaluationresult/tag_values_text_quality.yaml',
+                    'text_performance': 'evaluationresult/tag_values_text_performance.yaml',
+                    'text_cost': 'evaluationresult/tag_values_text_cost.yaml'
+                }
+
+                if evaluation_type in evaluation_tag_files:
+                    error_count += validate_tags(asset_config, evaluation_tag_files[evaluation_type])
                 else:
                     _log_error(
                         asset_config.file_name_with_path,

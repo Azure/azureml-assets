@@ -4,7 +4,7 @@ type: command
 name: benchmark_embedding_model
 display_name: Benchmark Embedding Model
 description: Component for benchmarking an embedding model via MTEB.
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   endpoint_url:
@@ -57,7 +57,7 @@ outputs:
     description: Directory where the benchmark metrics will be saved.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/34
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
   python -m aml_benchmark.benchmark_embedding_model.main
   $[[--endpoint_url ${{inputs.endpoint_url}}]]

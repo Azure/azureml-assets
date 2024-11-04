@@ -5,8 +5,8 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./evaluator/prompt.jinja2
+  _default-display-file: ./groundedness_without_query.prompty
 tags:
   Preview: ""
   hiddenlayerscanned: ""
-version: 2
+version: 4
