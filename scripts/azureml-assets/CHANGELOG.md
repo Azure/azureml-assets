@@ -1,7 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+
+## 1.16.65 (2024-11-04)
 ### 🐛 Bugs Fixed
+- [#3544](https://github.com/Azure/azureml-assets/pull/3544) Fix validate assets for new evaluationresult asset tags
 
 
 ## 1.16.64 (2024-10-31)
