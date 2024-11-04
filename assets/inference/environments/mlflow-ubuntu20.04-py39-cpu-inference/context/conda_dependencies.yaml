@@ -4,6 +4,7 @@ channels:
 - anaconda
 dependencies:
 - python=3.9.13
+- arrow
 - pip
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}

@@ -12,6 +12,8 @@ ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 ENV AML_APP_ROOT="/var/mlflow_resources"
 ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
+ENV CMAKE_PREFIX_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib/cmake
+
 USER root
 # Copying of mlmonitoring will add once testing is completed.
 # COPY mlmonitoring /var/mlflow_resources/mlmonitoring
