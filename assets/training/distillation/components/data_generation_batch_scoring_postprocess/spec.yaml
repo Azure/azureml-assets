@@ -8,7 +8,7 @@ is_deterministic: False
 display_name: OSS Distillation Generate Data Postprocess Batch Scoring
 description: Component to prepare data returned from teacher model enpoint in batch 
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/labels/latest
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
 
 inputs:
   # Inputs
