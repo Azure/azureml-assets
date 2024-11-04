@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.10
+version: 0.0.9
 type: pipeline
 
 
@@ -171,58 +171,6 @@ inputs:
       4. MATH: Generate Math data for numerical responses
       5. SUMMARIZATION: Generate Key Summary for an Article
 
-
-  # ########################### Batch Score Component ########################### #
-  authentication_type:
-    type: string
-    optional: False
-    description: Authentication type for endpoint. Either `azureml_workspace_connection` or `managed_identity`.
-    default: azureml_workspace_connection
-    enum:
-      - azureml_workspace_connection
-      - managed_identity
-  additional_headers:
-    type: string
-    optional: True
-    description: JSON serialized string expressing additional headers to be added to each request.
-  debug_mode:
-    type: boolean
-    optional: False
-    default: False
-    description: Enable debug mode to print all the debug logs in the score step.
-  ensure_ascii:
-    type: boolean
-    optional: False
-    default: False
-    description: If set to true, the output is guaranteed to have all incoming non-ASCII characters escaped. If set to false, these characters will be output as-is. More detailed information can be found at https://docs.python.org/3/library/json.html
-  max_retry_time_interval:
-    type: integer
-    optional: True
-    description: The maximum time (in seconds) spent retrying a payload. If unspecified, payloads are retried for unlimited time.
-  initial_worker_count:
-    type: integer
-    optional: False
-    default: 5
-    description: The initial number of workers to use for scoring.
-  max_worker_count:
-    type: integer
-    optional: False
-    default: 200
-    description: Overrides `initial_worker_count` if necessary.
-  instance_count:
-    type: integer
-    default: 1
-    description: Number of nodes in a compute cluster we will run the batch score step on.
-  max_concurrency_per_instance:
-    type: integer
-    default: 1
-    description: Number of processes that will be run concurrently on any given node. This number should not be larger than 1/2 of the number of cores in an individual node in the specified cluster.
-  mini_batch_size:
-    type: string
-    optional: true
-    default: 100KB
-    description: The mini batch size for parallel run.
-
   # ########################### Finetuning Component ########################### #
 
   number_of_gpu_to_use_finetuning:
@@ -282,12 +230,6 @@ inputs:
     optional: true
     description: Name of the registered model
 
-  validation_info:
-    type: uri_file
-    optional: true
-    description: Validation status.
-    mode: rw_mount
-
 outputs:
   output_model:
     type: uri_folder
@@ -327,136 +269,40 @@ jobs:
       validation_info:
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
-        
-  data_generation_batch_scoring_selector:
+
+  oss_distillation_generate_data:
     type: command
-    component: azureml:oss_distillation_data_generation_batch_scoring_selector:0.0.1
-    compute: '${{parent.inputs.compute_pipeline_validation}}'
+    component: azureml:oss_distillation_generate_data:0.0.8
+    compute: '${{parent.inputs.compute_data_generation}}'
     resources:
-      instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
+      instance_type: '${{parent.inputs.instance_type_data_generation}}'
     identity:
       type: user_identity
-    inputs:
-      data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
-
-  validation_succeeded: 
-    type: if_else
-    condition: ${{parent.jobs.data_generation_batch_scoring_selector.outputs.output}}
-    true_block: ${{parent.jobs.oss_distillation_batchscoring_datagen_pipeline}}
-    false_block: ${{parent.jobs.oss_distillation_seq_scoring_pipeline}}
-    
-  oss_distillation_batchscoring_datagen_pipeline:
-    type: pipeline
-    component: azureml:oss_distillation_batchscoring_datagen_pipeline:0.0.1
-    inputs:
-      instance_type_pipeline_validation: '${{parent.inputs.instance_type_pipeline_validation}}'
-      instance_type_data_generation: '${{parent.inputs.instance_type_data_generation}}'
-      instance_type_data_import: '${{parent.inputs.instance_type_data_import}}'
-      instance_type_finetune: '${{parent.inputs.instance_type_finetune}}'
-      compute_pipeline_validation: '${{parent.inputs.compute_pipeline_validation}}'
-      compute_data_generation: '${{parent.inputs.compute_data_generation}}'
-      compute_data_import: '${{parent.inputs.compute_data_import}}'
-      compute_finetune: '${{parent.inputs.compute_finetune}}'
+    inputs:  
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
-      teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_name: '${{parent.inputs.teacher_model_endpoint_name}}'
+      teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
-      teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
-      teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
-      teacher_model_top_p: '${{parent.inputs.teacher_model_top_p}}'
-      teacher_model_frequency_penalty: '${{parent.inputs.teacher_model_frequency_penalty}}'
-      teacher_model_presence_penalty: '${{parent.inputs.teacher_model_presence_penalty}}'
-      teacher_model_stop: '${{parent.inputs.teacher_model_stop}}'
-      min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       max_len_summary: '${{parent.inputs.max_len_summary}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
-      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
-      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
-      learning_rate: '${{parent.inputs.learning_rate}}'
-      authentication_type: '${{parent.inputs.authentication_type}}'
-      additional_headers: '${{parent.inputs.additional_headers}}'
-      debug_mode: '${{parent.inputs.debug_mode}}'
-      ensure_ascii: '${{parent.inputs.ensure_ascii}}'
-      max_retry_time_interval: '${{parent.inputs.max_retry_time_interval}}'
-      initial_worker_count: '${{parent.inputs.initial_worker_count}}'
-      max_worker_count: '${{parent.inputs.max_worker_count}}' 
-      instance_count: '${{parent.inputs.instance_count}}'
-      max_concurrency_per_instance: '${{parent.inputs.max_concurrency_per_instance}}'
-      mini_batch_size: '${{parent.inputs.mini_batch_size}}'
-      validation_info: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
-
-    outputs:
-      generated_batch_train_file_path: 
-        type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
-      generated_batch_validation_file_path: 
-        type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
-
-  oss_distillation_seq_scoring_pipeline:
-    type: pipeline
-    component: azureml:oss_distillation_seq_scoring_pipeline:0.0.1
-    inputs:
-      instance_type_pipeline_validation: '${{parent.inputs.instance_type_pipeline_validation}}'
-      instance_type_data_generation: '${{parent.inputs.instance_type_data_generation}}'
-      instance_type_data_import: '${{parent.inputs.instance_type_data_import}}'
-      instance_type_finetune: '${{parent.inputs.instance_type_finetune}}'
-      compute_pipeline_validation: '${{parent.inputs.compute_pipeline_validation}}'
-      compute_data_generation: '${{parent.inputs.compute_data_generation}}'
-      compute_data_import: '${{parent.inputs.compute_data_import}}'
-      compute_finetune: '${{parent.inputs.compute_finetune}}'
-      train_file_path: '${{parent.inputs.train_file_path}}'
-      validation_file_path: '${{parent.inputs.validation_file_path}}'
-      teacher_model_endpoint_name: '${{parent.inputs.teacher_model_endpoint_name}}'
-      teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
-      teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
       teacher_model_top_p: '${{parent.inputs.teacher_model_top_p}}'
       teacher_model_frequency_penalty: '${{parent.inputs.teacher_model_frequency_penalty}}'
       teacher_model_presence_penalty: '${{parent.inputs.teacher_model_presence_penalty}}'
-      teacher_model_stop: '${{parent.inputs.teacher_model_stop}}'
       request_batch_size: '${{parent.inputs.request_batch_size}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
-      enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
-      enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
-      max_len_summary: '${{parent.inputs.max_len_summary}}'
-      data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       validation_output: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
-    outputs:  
+    outputs:
       generated_train_file_path: 
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
       generated_validation_file_path: 
         type: uri_file
         path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
-
-  
-  oss_distillation_train_data_generation_file_selector:
-    type: command
-    component: azureml:oss_distillation_data_generation_file_selector:0.0.1
-    compute: '${{parent.inputs.compute_pipeline_validation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
-    identity:
-      type: user_identity
-    inputs:
-      generated_batch_train_file_path: '${{parent.jobs.oss_distillation_batchscoring_datagen_pipeline.outputs.generated_batch_train_file_path}}'
-      generated_batch_validation_file_path: '${{parent.jobs.oss_distillation_batchscoring_datagen_pipeline.outputs.generated_batch_validation_file_path}}'
-      generated_train_file_path: '${{parent.jobs.oss_distillation_seq_scoring_pipeline.outputs.generated_train_file_path}}'
-      generated_validation_file_path: '${{parent.jobs.oss_distillation_seq_scoring_pipeline.outputs.generated_validation_file_path}}'
-      condition: '${{parent.jobs.data_generation_batch_scoring_selector.outputs.output}}'
-    outputs:
-      ft_input_train_file_path: 
-        type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
-      ft_input_validation_file_path: 
-        type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
-
 
   oss_text_generation_data_import:
     type: command
@@ -472,9 +318,9 @@ jobs:
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"
     inputs:
-      train_file_path: '${{parent.jobs.oss_distillation_train_data_generation_file_selector.outputs.ft_input_train_file_path}}'
-      validation_file_path: '${{parent.jobs.oss_distillation_train_data_generation_file_selector.outputs.ft_input_validation_file_path}}'
-      system_properties: '${{parent.inputs.system_properties}}' 
+      train_file_path: '${{parent.jobs.oss_distillation_generate_data.outputs.generated_train_file_path}}'
+      validation_file_path: '${{parent.jobs.oss_distillation_generate_data.outputs.generated_validation_file_path}}'
+      system_properties: '${{parent.inputs.system_properties}}'
 
   oss_chat_completion_finetune:
     type: command
