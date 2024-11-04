@@ -70,7 +70,7 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
         _logs.get_logger(__name__).emit(event)
 
 
-def log_evaluation_event(row) -> None:
+def log_evaluation_event(row, service_name) -> None:
     """Log evaluation event."""
     if "trace_id" not in row or "span_id" not in row or "evaluation" not in row:
         logger.warning("Missing required fields in the row: trace_id, span_id, evaluation")
@@ -80,14 +80,13 @@ def log_evaluation_event(row) -> None:
     trace_flags = TraceFlags(TraceFlags.SAMPLED)
     response_id = row.get("gen_ai_response_id", "")
     evaluation_results = row.get("evaluation", {})
-    service_name = row.get("service_name", "evaluation.app")
     if isinstance(evaluation_results, dict):
         evaluation_results = [evaluation_results]
     for evaluation in evaluation_results:
         log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, evaluation, service_name)
 
 
-def get_combined_data(preprocessed_data, evaluated_data, service_name):
+def get_combined_data(preprocessed_data, evaluated_data):
     """Combine preprocessed and evaluated data."""
     logger.info("Combining preprocessed and evaluated data.")
     preprocessed_df = pd.read_json(preprocessed_data, lines=True)
@@ -97,7 +96,6 @@ def get_combined_data(preprocessed_data, evaluated_data, service_name):
             evaluation_data.append(json.loads(line))
 
     preprocessed_df["evaluation"] = evaluation_data
-    preprocessed_df["service_name"] = service_name
     return preprocessed_df
 
 
@@ -108,10 +106,9 @@ def run(args):
         f"Service Name: {args['service_name']}"
     )
     provider = configure_logging(args)
-    data = get_combined_data(args["preprocessed_data"], args["evaluated_data"],
-                             args["service_name"])
+    data = get_combined_data(args["preprocessed_data"], args["evaluated_data"])
     for _, row in data.iterrows():
-        log_evaluation_event(row)
+        log_evaluation_event(row, args["service_name"])
     provider.force_flush()
 
 
