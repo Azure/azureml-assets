@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_humanities_cohere_command_r_plus_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: mmlu_humanities_Cohere_command_r_plus_question_answering
 description: Cohere-command-r-plus run for mmlu_humanities dataset
 dataset_family: mmlu_humanities
@@ -18,7 +18,7 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-  azure_registry_name: azureml
+  azure_registry_name: azureml-cohere
   azure_model_name: Cohere-command-r-plus
   azure_latest_model_version: 1
   azure_latest_model_asset_id: azureml://registries/azureml-cohere/models/Cohere-command-r-plus/versions/1

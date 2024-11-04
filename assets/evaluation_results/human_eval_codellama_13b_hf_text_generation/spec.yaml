@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_codellama_13b_hf_text_generation
-version: 2.31.10
+version: 2.04.11
 display_name: human_eval_codellama_13b_hf_text_generation
 description: codellama-13b-hf run for human_eval dataset
 dataset_family: human_eval
@@ -18,10 +18,10 @@ tags:
   evaluation_type: text_generation
   task: text-generation
   accuracy_metric_name: pass@1
-  azure_registry_name: azureml
-  azure_model_name: codellama-13b-hf
-  azure_latest_model_version: 4
-  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/CodeLlama-13b-hf/versions/4
+  azure_registry_name: azureml-meta
+  azure_model_name: CodeLlama-13b-hf
+  azure_latest_model_version: 10
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/CodeLlama-13b-hf/versions/10
 
 metrics:
   accuracy: 0.335

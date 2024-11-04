@@ -1,6 +1,6 @@
 type: evaluationresult
 name: legalbenchpc_text-embedding-3-large_pair_classification
-version: 2.31.10
+version: 2.04.11
 display_name: LegalBenchPC_text-embedding-3-large_pair_classification
 description: text-embedding-3-large run for LegalBenchPC dataset
 dataset_name: LegalBenchPC

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_mc1_databricks-dbrx-base_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: truthfulqa_mc1_databricks-dbrx-base_question_answering
 description: databricks-dbrx-base run for truthfulqa_mc1 dataset
 dataset_family: truthfulqa
@@ -18,10 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-  azure_registry_name: azureml
+  azure_registry_name: azureml-restricted
   azure_model_name: databricks-dbrx-base
-  azure_latest_model_version: 1
-  azure_latest_model_asset_id: azureml://registries/azureml-restricted/models/databricks-dbrx-base/versions/1
+  azure_latest_model_version: 3
+  azure_latest_model_asset_id: azureml://registries/azureml-restricted/models/databricks-dbrx-base/versions/3
 
 metrics:
   accuracy: 0.7135863

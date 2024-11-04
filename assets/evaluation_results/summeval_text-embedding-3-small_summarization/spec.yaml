@@ -1,6 +1,6 @@
 type: evaluationresult
 name: summeval_text-embedding-3-small_summarization
-version: 2.31.10
+version: 2.04.11
 display_name: SummEval_text-embedding-3-small_summarization
 description: text-embedding-3-small run for SummEval dataset
 dataset_name: SummEval

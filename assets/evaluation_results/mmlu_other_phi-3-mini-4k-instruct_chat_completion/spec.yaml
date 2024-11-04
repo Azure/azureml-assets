@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_other_phi-3-mini-4k-instruct_chat_completion
-version: 2.31.10
+version: 2.04.11
 display_name: mmlu_other_phi-3-mini-4k-instruct_chat_completion
 description: mmlu_other_phi-3-mini-4k-instruct_chat_completion
 dataset_family: mmlu
@@ -19,9 +19,9 @@ tags:
   task: question-answering
   accuracy_metric_name: exact_match
   azure_registry_name: azureml
-  azure_model_name: phi-3-mini-4k-instruct
-  azure_latest_model_version: 4
-  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/4
+  azure_model_name: Phi-3-mini-4k-instruct
+  azure_latest_model_version: 13
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/13
 
 metrics:
   accuracy: 0.729642742

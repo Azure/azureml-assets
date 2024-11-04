@@ -1,6 +1,6 @@
 type: evaluationresult
 name: arxivclusteringp2p.v2_text-embedding-3-large_clustering
-version: 2.31.10
+version: 2.04.11
 display_name: ArxivClusteringP2P.v2_text-embedding-3-large_clustering
 description: text-embedding-3-large run for ArxivClusteringP2P.v2 dataset
 dataset_name: ArxivClusteringP2P.v2

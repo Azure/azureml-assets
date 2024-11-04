@@ -1,6 +1,6 @@
 type: evaluationresult
 name: squad_v2_phi3-mini-128k-instruct_chat_completion
-version: 2.31.10
+version: 2.04.11
 display_name: squad_v2_phi3-mini-128k-instruct_chat_completion
 description: squad_v2_phi3-mini-128k-instruct_chat_completion
 dataset_family: squad
@@ -19,9 +19,9 @@ tags:
   task: question-answering
   accuracy_metric_name: nan
   azure_registry_name: azureml
-  azure_model_name: phi3-mini-128k-instruct
-  azure_latest_model_version: 6
-  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/6
+  azure_model_name: Phi-3-mini-128k-instruct
+  azure_latest_model_version: 11
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/11
 
 metrics:
   groundedness: 4.0181511186154495

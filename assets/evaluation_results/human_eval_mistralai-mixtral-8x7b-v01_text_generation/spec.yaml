@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_mistralai-mixtral-8x7b-v01_text_generation
-version: 2.31.10
+version: 2.04.11
 display_name: human_eval_mistralai-Mixtral-8x7B-v01_text_generation
 description: mistralai-Mixtral-8x7B-v01 run for human_eval dataset
 dataset_family: human_eval
@@ -20,8 +20,8 @@ tags:
   accuracy_metric_name: pass@1
   azure_registry_name: azureml
   azure_model_name: mistralai-Mixtral-8x7B-v01
-  azure_latest_model_version: 4
-  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/4
+  azure_latest_model_version: 14
+  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-v01/versions/14
 
 metrics:
   accuracy: 0.2926829

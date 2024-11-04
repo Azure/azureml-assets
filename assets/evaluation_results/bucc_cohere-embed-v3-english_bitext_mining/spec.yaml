@@ -1,6 +1,6 @@
 type: evaluationresult
 name: bucc_cohere-embed-v3-english_bitext_mining
-version: 2.31.10
+version: 2.04.11
 display_name: BUCC_cohere-embed-v3-english_bitext_mining
 description: cohere-embed-v3-english run for BUCC dataset
 dataset_name: BUCC

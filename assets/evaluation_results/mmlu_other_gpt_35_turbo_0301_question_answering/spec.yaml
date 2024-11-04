@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_other_gpt_35_turbo_0301_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: mmlu_other_gpt_35_turbo_0301_question_answering
 description: gpt-35-turbo-0301 run for mmlu_other dataset
 dataset_family: mmlu
@@ -18,10 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-  azure_registry_name: azureml
-  azure_model_name: gpt-35-turbo-0301
-  azure_latest_model_version: 0301
-  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0301
+  azure_registry_name: azure-openai
+  azure_model_name: gpt-35-turbo
+  azure_latest_model_version: 0125
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0125
 
 metrics:
   accuracy: 0.7721275

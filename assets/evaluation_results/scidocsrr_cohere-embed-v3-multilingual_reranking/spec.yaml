@@ -1,6 +1,6 @@
 type: evaluationresult
 name: scidocsrr_cohere-embed-v3-multilingual_reranking
-version: 2.31.10
+version: 2.04.11
 display_name: SciDocsRR_cohere-embed-v3-multilingual_reranking
 description: cohere-embed-v3-multilingual run for SciDocsRR dataset
 dataset_name: SciDocsRR

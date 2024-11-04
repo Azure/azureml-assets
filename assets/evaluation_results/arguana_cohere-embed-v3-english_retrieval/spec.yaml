@@ -1,6 +1,6 @@
 type: evaluationresult
 name: arguana_cohere-embed-v3-english_retrieval
-version: 2.31.10
+version: 2.04.11
 display_name: ArguAna_cohere-embed-v3-english_retrieval
 description: cohere-embed-v3-english run for ArguAna dataset
 dataset_name: ArguAna

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mscoco__stabilityai-stable-diffusion-2-1__image_generation
-version: 2.31.10
+version: 2.04.11
 display_name: stabilityai-stable-diffusion-2-1__remote_mscoco__image_generation
 description: Benchmark__stabilityai-stable-diffusion-2-1__remote_mscoco__image_generation
 dataset_family: mscoco
@@ -20,8 +20,8 @@ tags:
   accuracy_metric_name: nan
   azure_registry_name: azureml
   azure_model_name: stabilityai-stable-diffusion-2-1
-  azure_latest_model_version: 11
-  azure_latest_model_asset_id: azureml://registries/azureml/models/stabilityai-stable-diffusion-2-1/versions/11
+  azure_latest_model_version: 12
+  azure_latest_model_asset_id: azureml://registries/azureml/models/stabilityai-stable-diffusion-2-1/versions/12
 
 metrics:
   fid: 12.213546

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_phi-3-medium-4k-instruct_text_generation
-version: 2.31.10
+version: 2.04.11
 display_name: human_eval_Phi-3-medium-4k-instruct_text_generation
 description: human_eval_Phi-3-medium-4k-instruct_text_generation
 dataset_family: human_eval
@@ -20,8 +20,8 @@ tags:
   accuracy_metric_name: pass@1
   azure_registry_name: azureml
   azure_model_name: Phi-3-medium-4k-instruct
-  azure_latest_model_version: 6
-  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/6
+  azure_latest_model_version: 4
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/4
 
 metrics:
   accuracy: 0.7378048780487805

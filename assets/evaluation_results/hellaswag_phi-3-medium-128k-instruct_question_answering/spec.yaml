@@ -1,6 +1,6 @@
 type: evaluationresult
 name: hellaswag_phi-3-medium-128k-instruct_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: hellaswag_Phi-3-medium-128k-instruct_question_answering
 description: hellaswag_Phi-3-medium-128k-instruct_question_answering
 dataset_family: hellaswag
@@ -20,8 +20,8 @@ tags:
   accuracy_metric_name: exact_match
   azure_registry_name: azureml
   azure_model_name: Phi-3-medium-128k-instruct
-  azure_latest_model_version: 9
-  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-medium-128k-instruct/versions/9
+  azure_latest_model_version: 5
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-medium-128k-instruct/versions/5
 
 metrics:
   accuracy: 0.8487353116908982

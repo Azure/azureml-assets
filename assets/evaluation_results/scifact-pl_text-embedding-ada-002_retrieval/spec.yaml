@@ -1,6 +1,6 @@
 type: evaluationresult
 name: scifact-pl_text-embedding-ada-002_retrieval
-version: 2.31.10
+version: 2.04.11
 display_name: SciFact-PL_text-embedding-ada-002_retrieval
 description: text-embedding-ada-002 run for SciFact-PL dataset
 dataset_name: SciFact-PL

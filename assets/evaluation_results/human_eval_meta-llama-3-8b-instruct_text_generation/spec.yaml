@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_meta-llama-3-8b-instruct_text_generation
-version: 2.31.10
+version: 2.04.11
 display_name: human_eval_Meta-Llama-3-8B-Instruct_text_generation
 description: Meta-Llama-3-8B-Instruct run for human_eval dataset
 dataset_family: human_eval
@@ -18,10 +18,10 @@ tags:
   evaluation_type: text_generation
   task: text-generation
   accuracy_metric_name: pass@1
-  azure_registry_name: azureml
+  azure_registry_name: azureml-meta
   azure_model_name: Meta-Llama-3-8B-Instruct
-  azure_latest_model_version: 2
-  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-8B-Instruct/versions/2
+  azure_latest_model_version: 8
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-8B-Instruct/versions/8
 
 metrics:
   accuracy: 0.5792682926829268

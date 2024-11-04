@@ -1,6 +1,6 @@
 type: evaluationresult
 name: gsm8k_gpt_4_32k_0613_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: gsm8k_gpt_4_32k_0613_question_answering
 description: gpt-4-32k-0613 run for gsm8k dataset
 dataset_family: gsm8k
@@ -18,8 +18,8 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-  azure_registry_name: azureml
-  azure_model_name: gpt-4-32k-0613
+  azure_registry_name: azure-openai
+  azure_model_name: gpt-4-32k
   azure_latest_model_version: 0613
   azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4-32k/versions/0613
 

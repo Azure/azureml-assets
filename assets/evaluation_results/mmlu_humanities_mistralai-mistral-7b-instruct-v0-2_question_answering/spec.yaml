@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_humanities_mistralai-mistral-7b-instruct-v0-2_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: mmlu_humanities_mistralai-Mistral-7B-Instruct-v0-2_question_answering
 description: mistralai-Mistral-7B-Instruct-v0-2 run for mmlu_humanities dataset
 dataset_family: mmlu
@@ -20,8 +20,8 @@ tags:
   accuracy_metric_name: exact_match
   azure_registry_name: azureml
   azure_model_name: mistralai-Mistral-7B-Instruct-v0-2
-  azure_latest_model_version: 1
-  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/1
+  azure_latest_model_version: 5
+  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/5
 
 metrics:
   accuracy: 0.5207226

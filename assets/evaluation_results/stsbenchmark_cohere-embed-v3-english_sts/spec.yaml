@@ -1,6 +1,6 @@
 type: evaluationresult
 name: stsbenchmark_cohere-embed-v3-english_sts
-version: 2.31.10
+version: 2.04.11
 display_name: STSBenchmark_cohere-embed-v3-english_sts
 description: cohere-embed-v3-english run for STSBenchmark dataset
 dataset_name: STSBenchmark

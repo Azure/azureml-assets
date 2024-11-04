@@ -1,6 +1,6 @@
 type: evaluationresult
 name: lccsentimentclassification_text-embedding-3-large_classification
-version: 2.31.10
+version: 2.04.11
 display_name: LccSentimentClassification_text-embedding-3-large_classification
 description: text-embedding-3-large run for LccSentimentClassification dataset
 dataset_name: LccSentimentClassification

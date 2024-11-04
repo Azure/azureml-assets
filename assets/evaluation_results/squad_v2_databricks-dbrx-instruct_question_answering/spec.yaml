@@ -1,6 +1,6 @@
 type: evaluationresult
 name: squad_v2_databricks-dbrx-instruct_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: squad_v2_databricks-dbrx-instruct_question_answering
 description: databricks-dbrx-instruct run for squad_v2 dataset
 dataset_family: squad_v2
@@ -18,7 +18,7 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
-  azure_registry_name: azureml
+  azure_registry_name: azureml-restricted
   azure_model_name: databricks-dbrx-instruct
   azure_latest_model_version: 3
   azure_latest_model_asset_id: azureml://registries/azureml-restricted/models/databricks-dbrx-instruct/versions/3

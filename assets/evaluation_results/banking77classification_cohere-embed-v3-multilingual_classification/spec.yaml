@@ -1,6 +1,6 @@
 type: evaluationresult
 name: banking77classification_cohere-embed-v3-multilingual_classification
-version: 2.31.10
+version: 2.04.11
 display_name: Banking77Classification_cohere-embed-v3-multilingual_classification
 description: cohere-embed-v3-multilingual run for Banking77Classification dataset
 dataset_name: Banking77Classification

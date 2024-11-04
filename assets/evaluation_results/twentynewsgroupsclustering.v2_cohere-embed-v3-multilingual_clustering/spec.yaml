@@ -1,6 +1,6 @@
 type: evaluationresult
 name: twentynewsgroupsclustering.v2_cohere-embed-v3-multilingual_clustering
-version: 2.31.10
+version: 2.04.11
 display_name: TwentyNewsgroupsClustering.v2_cohere-embed-v3-multilingual_clustering
 description: cohere-embed-v3-multilingual run for TwentyNewsgroupsClustering.v2 dataset
 dataset_name: TwentyNewsgroupsClustering.v2

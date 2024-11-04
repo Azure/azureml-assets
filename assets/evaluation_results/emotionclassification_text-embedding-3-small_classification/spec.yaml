@@ -1,6 +1,6 @@
 type: evaluationresult
 name: emotionclassification_text-embedding-3-small_classification
-version: 2.31.10
+version: 2.04.11
 display_name: EmotionClassification_text-embedding-3-small_classification
 description: text-embedding-3-small run for EmotionClassification dataset
 dataset_name: EmotionClassification

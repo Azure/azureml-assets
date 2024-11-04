@@ -1,6 +1,6 @@
 type: evaluationresult
 name: squad_v2_gpt-4-32k-0613_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: squad_v2_gpt-4-32k-0613_question_answering
 description: gpt-4-32k-0613 run for squad_v2 dataset
 dataset_family: squad_v2
@@ -18,8 +18,8 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
-  azure_registry_name: azureml
-  azure_model_name: gpt-4-32k-0613
+  azure_registry_name: azure-openai
+  azure_model_name: gpt-4-32k
   azure_latest_model_version: 0613
   azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4-32k/versions/0613
 

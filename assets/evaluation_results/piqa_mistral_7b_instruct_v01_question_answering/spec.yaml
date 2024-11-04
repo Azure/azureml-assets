@@ -1,6 +1,6 @@
 type: evaluationresult
 name: piqa_mistral_7b_instruct_v01_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: piqa_mistral_7b_instruct_v01_question_answering
 description: mistralai-mistral-7b-instruct-v01 run for piqa dataset
 dataset_family: piqa
@@ -19,9 +19,9 @@ tags:
   task: question-answering
   accuracy_metric_name: exact_match
   azure_registry_name: azureml
-  azure_model_name: mistralai-mistral-7b-instruct-v01
-  azure_latest_model_version: 1
-  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v01/versions/1
+  azure_model_name: mistralai-Mistral-7B-Instruct-v01
+  azure_latest_model_version: 10
+  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v01/versions/10
 
 metrics:
   accuracy: 0.716

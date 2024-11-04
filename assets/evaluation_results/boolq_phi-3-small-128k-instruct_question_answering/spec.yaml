@@ -1,6 +1,6 @@
 type: evaluationresult
 name: boolq_phi-3-small-128k-instruct_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: boolq_Phi-3-small-128k-instruct_question_answering
 description: Phi-3-small-128k-instruct run for boolq dataset
 dataset_family: boolq
@@ -18,7 +18,7 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-  azure_registry_name: azureml
+  azure_registry_name: models-staging
   azure_model_name: Phi-3-small-128k-instruct
   azure_latest_model_version: 7
   azure_latest_model_asset_id: azureml://registries/models-staging/models/Phi-3-small-128k-instruct/versions/7

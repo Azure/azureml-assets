@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_social_sciences_mistralai-mixtral-8x22b-instruct-v0-1_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: mmlu_social_sciences_mistralai-Mixtral-8x22B-Instruct-v0-1_question_answering
 description: mistralai-Mixtral-8x22B-Instruct-v0-1 run for mmlu_social_sciences dataset
 dataset_family: mmlu
@@ -20,8 +20,8 @@ tags:
   accuracy_metric_name: exact_match
   azure_registry_name: azureml
   azure_model_name: mistralai-Mixtral-8x22B-Instruct-v0-1
-  azure_latest_model_version: 1
-  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x22B-Instruct-v0-1/versions/1
+  azure_latest_model_version: 4
+  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x22B-Instruct-v0-1/versions/4
 
 metrics:
   accuracy: 0.8443288917777055

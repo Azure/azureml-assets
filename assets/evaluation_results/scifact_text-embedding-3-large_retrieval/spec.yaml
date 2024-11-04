@@ -1,6 +1,6 @@
 type: evaluationresult
 name: scifact_text-embedding-3-large_retrieval
-version: 2.31.10
+version: 2.04.11
 display_name: SciFact_text-embedding-3-large_retrieval
 description: text-embedding-3-large run for SciFact dataset
 dataset_name: SciFact

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: openbookqa_meta-llama-3-70b_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: openbookqa_Meta-Llama-3-70B_question_answering
 description: Meta-Llama-3-70B run for openbookqa dataset
 dataset_family: openbookqa
@@ -18,10 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-  azure_registry_name: azureml
+  azure_registry_name: azureml-meta
   azure_model_name: Meta-Llama-3-70B
-  azure_latest_model_version: 1
-  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-70B/versions/1
+  azure_latest_model_version: 6
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-70B/versions/6
 
 metrics:
   accuracy: 0.928

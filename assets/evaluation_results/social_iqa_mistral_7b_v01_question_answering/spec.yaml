@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_mistral_7b_v01_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: social_iqa_mistral_7b_v01_question_answering
 description: mistralai-mistral-7b-v01 run for social_iqa dataset
 dataset_family: social_iqa
@@ -19,9 +19,9 @@ tags:
   task: question-answering
   accuracy_metric_name: exact_match
   azure_registry_name: azureml
-  azure_model_name: mistralai-mistral-7b-v01
-  azure_latest_model_version: 1
-  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/1
+  azure_model_name: mistralai-Mistral-7B-v01
+  azure_latest_model_version: 17
+  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/17
 
 metrics:
   accuracy: 0.553

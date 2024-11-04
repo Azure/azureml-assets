@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_social_sciences_meta-llama-3-70b-instruct_question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: mmlu_social_sciences_Meta-Llama-3-70B-Instruct_question_answering
 description: Meta-Llama-3-70B-Instruct run for mmlu_social_sciences dataset
 dataset_family: mmlu
@@ -18,10 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
-  azure_registry_name: azureml
+  azure_registry_name: azureml-meta
   azure_model_name: Meta-Llama-3-70B-Instruct
-  azure_latest_model_version: 2
-  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-70B-Instruct/versions/2
+  azure_latest_model_version: 8
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-70B-Instruct/versions/8
 
 metrics:
   accuracy: 0.8761780955476113

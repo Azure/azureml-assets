@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation__meta-llama-3_1-8b-instruct__question_answering
-version: 2.31.10
+version: 2.04.11
 display_name: truthfulqa_generation__Meta-Llama-3_1-8B-Instruct__chat_completion
 description: Benchmark__meta-llama-3-1-8b-instruct-1__hf_truthful_qa__chat_completion
 dataset_family: truthfulqa_generation
@@ -18,10 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
-  azure_registry_name: azureml
+  azure_registry_name: azureml-meta
   azure_model_name: Meta-Llama-3.1-8B-Instruct
-  azure_latest_model_version: 1
-  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3.1-8B-Instruct/versions/1
+  azure_latest_model_version: 3
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3.1-8B-Instruct/versions/3
 
 metrics:
   coherence: 4.849449204406365
