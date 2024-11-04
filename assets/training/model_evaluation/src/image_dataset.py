@@ -272,7 +272,7 @@ def get_object_detection_dataset(
             frame_rows.append({
                 input_column_names[0]: base64.encodebytes(read_image(image_path)).decode("utf-8"),
                 input_column_names[1]: image_meta_info,
-                input_column_names[2]: ". ".join(test_dataset.classes),
+                input_column_names[2]: ". ".join([str(c) for c in test_dataset.classes]),
                 label_column_name: label,
             })
 

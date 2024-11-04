@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.20
+version: 0.0.22
 name: image_instance_segmentation_pipeline
 display_name: Image Instance Segmentation Pipeline
 description: Pipeline component for image instance segmentation.
