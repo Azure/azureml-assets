@@ -8,6 +8,7 @@ import logging
 from collections import defaultdict
 import importlib
 import sys
+import shutil
 
 from promptflow.client import load_flow
 from azure.ai.evaluation import evaluate
@@ -101,6 +102,24 @@ def download_evaluators_and_update_local_path(evaluators):
     return evaluators
 
 
+def copy_evaluator_files(command_line_args):
+    """Copy the mounted evaluator files to the relative paths to enable read/write."""
+    evaluators = json.loads(args["evaluators"])
+    evaluator_name_id_map = json.loads(command_line_args.evaluator_name_id_map)
+    for evaluator_name, evaluator_id in evaluator_name_id_map.items():
+        dir_path = find_file_and_get_parent_dir(evaluator_id)
+        if dir_path:
+            shutil.copytree(dir_path, f"./{evaluator_name}")
+            logger.info(f"Copying {dir_path} to ./{evaluator_name}")
+            copied_dir = os.listdir(f"./{evaluator_name}")
+            logger.info(f"Directory ./{evaluator_name} now contains: {copied_dir}")
+            sys.path.append(os.path.abspath(f"./{evaluator_name}"))
+            evaluators[evaluator_name]["local_path"] = os.path.abspath(f"./{evaluator_name}")
+        else:
+            logger.info(f"Directory for evaluator {evaluator_name} not found.")
+    return evaluators
+
+
 def load_evaluators(input_evaluators):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     loaded_evaluators, loaded_evaluator_configs = {}, {}
@@ -151,7 +170,8 @@ rai_evaluators = [
 def run(args):
     """Entry point of model prediction script."""
     evaluators = json.loads(args["evaluators"])
-    evaluators = download_evaluators_and_update_local_path(evaluators)
+    evaluators = copy_evaluator_files(args)
+
     evaluators, evaluator_configs = load_evaluators(evaluators)
     run_evaluation(args, evaluators, evaluator_configs)
 
