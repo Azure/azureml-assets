@@ -5,43 +5,32 @@
 
 import os
 import time
-from typing import List, Tuple, Union, Optional, Callable, Any, Dict
+from typing import List, Tuple, Union, Optional, Callable
 from urllib.parse import urlparse
 
 from abc import ABC, abstractmethod
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azure.ai.ml.entities import (
-    ManagedOnlineEndpoint,
-    ManagedOnlineDeployment,
-    ServerlessEndpoint,
-)
+from azure.ai.ml.entities import ManagedOnlineEndpoint, ManagedOnlineDeployment, ServerlessEndpoint
 from azure.identity import AzureCliCredential, ManagedIdentityCredential
-from azureml.acft.common_components.utils.error_handling.exceptions import (
-    ACFTValidationException,
-)
-from azureml.acft.common_components.utils.error_handling.error_definitions import (
-    ACFTUserError,
-)
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.common_components import get_logger_app
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
-import hashlib
-import json
+
 
 from common.constants import (
     REQUESTS_RETRY_DELAY,
     REGISTRY_MODEL_PATTERN,
     SUPPORTED_STUDENT_MODEL_MAP,
     SUPPORTED_TEACHER_MODEL_MAP,
-    BackoffConstants,
+    BackoffConstants
 )
 
 
-logger = get_logger_app(
-    "azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import"
-)
+logger = get_logger_app("azureml.acft.contrib.hf.nlp.entry_point.data_import.data_import")
 current_run: Run = Run.get_context()
 
 
@@ -68,9 +57,7 @@ def retry(times: int):
                         time.sleep(REQUESTS_RETRY_DELAY)
                     else:
                         logger.warning(
-                            "Retried {} times when calling {}, now giving up!".format(
-                                times, func.__name__
-                            )
+                            "Retried {} times when calling {}, now giving up!".format(times, func.__name__)
                         )
                         raise
 
@@ -127,7 +114,7 @@ def get_workspace_mlclient(workspace: Workspace = None) -> MLClient:
             credential,
             subscription_id=workspace.subscription_id,
             resource_group_name=workspace.resource_group,
-            workspace_name=workspace.name,
+            workspace_name=workspace.name
         )
     raise Exception("Error creating MLClient. No credentials or workspace found")
 
@@ -166,13 +153,9 @@ class ServerlessEndpointDetails(EndpointDetails):
         """
         self._mlclient: MLClient = mlclient_ws
         try:
-            self._endpoint: ServerlessEndpoint = (
-                self._mlclient.serverless_endpoints.get(endpoint_name)
-            )
+            self._endpoint: ServerlessEndpoint = self._mlclient.serverless_endpoints.get(endpoint_name)
         except Exception as e:
-            raise Exception(
-                f"Serverless endpoint fetch details failed with exception: {e}"
-            )
+            raise Exception(f"Serverless endpoint fetch details failed with exception: {e}")
 
         # ensure endpoint is healthy
         logger.info(f"Endpoint provisioning state: {self._endpoint.provisioning_state}")
@@ -189,13 +172,9 @@ class ServerlessEndpointDetails(EndpointDetails):
             str: endpoint primary key for serverless deployment.
         """
         try:
-            return self._mlclient.serverless_endpoints.get_keys(
-                self._endpoint.name
-            ).primary_key
+            return self._mlclient.serverless_endpoints.get_keys(self._endpoint.name).primary_key
         except Exception as e:
-            raise Exception(
-                f"Failed to get endpoint keys for endpoint: {self._endpoint.name}. Exception: {e}"
-            )
+            raise Exception(f"Failed to get endpoint keys for endpoint: {self._endpoint.name}. Exception: {e}")
 
     def get_endpoint_url(self) -> str:
         """Get URL for managed online endpoint."""
@@ -223,9 +202,7 @@ class OnlineEndpointDetails(EndpointDetails):
         """
         self._mlclient: MLClient = mlclient_ws
         try:
-            self._endpoint: ManagedOnlineEndpoint = self._mlclient.online_endpoints.get(
-                endpoint_name
-            )
+            self._endpoint: ManagedOnlineEndpoint = self._mlclient.online_endpoints.get(endpoint_name)
         except Exception as e:
             raise Exception(f"Online endpoint fetch details failed with exception: {e}")
 
@@ -233,12 +210,9 @@ class OnlineEndpointDetails(EndpointDetails):
         # fetch deployment with 100% traffic
         deployments = [
             deployment
-            for deployment in all_deployments
-            if deployment.name
-            in [
+            for deployment in all_deployments if deployment.name in [
                 deployment_name
-                for deployment_name, traffic_percent in self._endpoint.traffic.items()
-                if traffic_percent == 100
+                for deployment_name, traffic_percent in self._endpoint.traffic.items() if traffic_percent == 100
             ]
         ]
 
@@ -252,16 +226,10 @@ class OnlineEndpointDetails(EndpointDetails):
         self._deployment = deployments[0]
         # ensure endpoint and deployment is healthy
         logger.info(f"Endpoint provisioning state: {self._endpoint.provisioning_state}")
-        logger.info(
-            f"Deployment provisioning state: {self._deployment.provisioning_state}"
-        )
-        if not (
-            self._endpoint.provisioning_state.lower() == "succeeded"
-            and self._deployment.provisioning_state.lower() == "succeeded"
-        ):
-            raise Exception(
-                f"Endpoint {self._endpoint.name} or deployment {self._deployment.name} is unhealthy."
-            )
+        logger.info(f"Deployment provisioning state: {self._deployment.provisioning_state}")
+        if not (self._endpoint.provisioning_state.lower() == "succeeded"
+                and self._deployment.provisioning_state.lower() == "succeeded"):
+            raise Exception(f"Endpoint {self._endpoint.name} or deployment {self._deployment.name} is unhealthy.")
 
     def get_endpoint_key(self):
         """Get endpoint primary key for managed online deployment.
@@ -273,13 +241,9 @@ class OnlineEndpointDetails(EndpointDetails):
             str: endpoint primary key for managed online deployment.
         """
         try:
-            return self._mlclient.online_endpoints.get_keys(
-                self._endpoint.name
-            ).primary_key
+            return self._mlclient.online_endpoints.get_keys(self._endpoint.name).primary_key
         except Exception as e:
-            raise Exception(
-                f"Failed to get endpoint keys for endpoint: {self._endpoint.name}. Exception: {e}"
-            )
+            raise Exception(f"Failed to get endpoint keys for endpoint: {self._endpoint.name}. Exception: {e}")
 
     def get_endpoint_url(self) -> str:
         """Get URL for managed online endpoint."""
@@ -296,14 +260,11 @@ class OnlineEndpointDetails(EndpointDetails):
             List[ManagedOnlineDeployment]: List of deployments
         """
         try:
-            self._deployments: List[ManagedOnlineDeployment] = (
-                self._mlclient.online_deployments.list(self._endpoint.name)
-            )
+            self._deployments: List[ManagedOnlineDeployment] = self._mlclient.online_deployments.list(
+                self._endpoint.name)
             return self._deployments
         except Exception as e:
-            logger.error(
-                f"Could not fetch deployments for endpoint: {self._endpoint.name}. Exception => {e}"
-            )
+            logger.error(f"Could not fetch deployments for endpoint: {self._endpoint.name}. Exception => {e}")
             return None
 
 
@@ -344,11 +305,7 @@ def _get_model_id_from_run_details():
 def _get_model_details(model_asset_id, supported_model_map) -> Tuple[str, str, str]:
     # try matching registry model pattern
     if match := REGISTRY_MODEL_PATTERN.match(model_asset_id):
-        registry, model_name, model_version = (
-            match.group("registry"),
-            match.group("model"),
-            match.group("version"),
-        )
+        registry, model_name, model_version = match.group("registry"), match.group("model"), match.group("version")
         # check if model_name exists in supported list
         if model_name not in supported_model_map:
             raise Exception(
@@ -455,7 +412,7 @@ def exponential_backoff(
                                 ACFTUserError,
                                 pii_safe_message=(
                                     f"Encountered unknown status code: {status_code}. ",
-                                ),
+                                )
                             )
                         )
 
@@ -478,25 +435,10 @@ def exponential_backoff(
                                 ACFTUserError,
                                 pii_safe_message=(
                                     f"Request failed after multiple tries with status code: {status_code}. ",
-                                ),
+                                )
                             )
                         )
 
         return wrapper
 
     return decorator
-
-
-def get_hash_value(data: Union[Dict[str, Any], str]) -> str:
-    """
-    Get hash value for the data.
-
-    Args:
-        data (Dict[str, Any]): Data for which hash value needs to be computed.
-
-    Returns:
-        hash_value (str): Hash value.
-    """
-    if isinstance(data, str):
-        return hashlib.sha256(data.encode()).hexdigest()
-    return hashlib.sha256(json.dumps(data).encode()).hexdigest()

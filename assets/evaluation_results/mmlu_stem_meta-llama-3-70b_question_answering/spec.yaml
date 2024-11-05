@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_meta-llama-3-70b_question_answering
-version: 2.22.04
+version: 2.04.11
 display_name: mmlu_stem_Meta-Llama-3-70B_question_answering
 description: Meta-Llama-3-70B run for mmlu_stem dataset
 dataset_family: mmlu
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml-meta
+  azure_model_name: Meta-Llama-3-70B
+  azure_latest_model_version: 6
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-70B/versions/6
 
 metrics:
   accuracy: 0.6964795432921027

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: emotionclassification_cohere-embed-v3-english_classification
-version: 2.07.22
+version: 2.04.11
 display_name: EmotionClassification_cohere-embed-v3-english_classification
 description: cohere-embed-v3-english run for EmotionClassification dataset
 dataset_name: EmotionClassification
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: classification
     primary_metric: accuracy
+    azure_registry_name: azureml-cohere
+    azure_model_name: Cohere-embed-v3-english
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-english/versions/1
 
 metrics:
     accuracy: 0.5219999999999999
