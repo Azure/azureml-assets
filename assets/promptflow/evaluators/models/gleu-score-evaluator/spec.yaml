@@ -7,5 +7,4 @@ properties:
   show-artifact: true
   _default-display-file: ./GleuScoreEvaluator/_gleu.py
 tags:
-  Preview: ""
 version: 3

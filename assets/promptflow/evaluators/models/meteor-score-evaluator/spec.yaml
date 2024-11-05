@@ -7,5 +7,4 @@ properties:
   show-artifact: true
   _default-display-file: ./MeteorScoreEvaluator/_meteor.py
 tags:
-  Preview: ""
 version: 3
