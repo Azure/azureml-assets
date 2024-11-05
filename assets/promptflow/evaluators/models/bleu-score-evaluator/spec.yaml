@@ -6,5 +6,4 @@ properties:
   is-evaluator: true
   show-artifact: true
   _default-display-file: ./BleuScoreEvaluator/_bleu.py
-tags:
 version: 3
