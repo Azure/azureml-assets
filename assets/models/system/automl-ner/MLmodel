@@ -1,0 +1,23 @@
+artifact_path: outputs/mlflow-model
+flavors:
+  python_function:
+    data: data/_model_impl_ce60ki2j.pkl
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: azureml.automl.dnn.nlp
+    python_version: 3.8.16
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/azureml-automl-dnn-text-gpu:74
+  azureml.engine: automl
+mlflow_version: 2.4.2
+model_uuid: ac4f60aca36d4491b82f96fccfc36074
+run_id: sleepy_tiger_fx9qgzr9n2_HD_0
+saved_input_example_info:
+  artifact_path: input_example.json
+  format: tf-serving
+  type: ndarray
+signature:
+  inputs: '[{"type": "tensor", "tensor-spec": {"dtype": "object", "shape": [-1]}}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "object", "shape": [-1]}}]'
+utc_time_created: '2023-12-01 01:25:39.502410'
