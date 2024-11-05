@@ -7,7 +7,6 @@ properties:
   show-artifact: true
   _default-display-file: ./SimilarityEvaluator/similarity.prompty
 tags:
-  Preview: ""
   hiddenlayerscanned: ""
 version: 3
 description: |

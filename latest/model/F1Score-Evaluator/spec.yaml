@@ -7,7 +7,6 @@ properties:
   show-artifact: true
   _default-display-file: ./F1ScoreEvaluator/_f1_score.py
 tags:
-  Preview: ""
   hiddenlayerscanned: ""
 version: 3
 description: |

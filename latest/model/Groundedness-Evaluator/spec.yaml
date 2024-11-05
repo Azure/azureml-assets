@@ -7,7 +7,6 @@ properties:
   show-artifact: true
   _default-display-file: ./groundedness_without_query.prompty
 tags:
-  Preview: ""
   hiddenlayerscanned: ""
 version: 4
 description: |

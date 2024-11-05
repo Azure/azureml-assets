@@ -6,8 +6,6 @@ properties:
   is-evaluator: true
   show-artifact: true
   _default-display-file: ./RougeScoreEvaluator/_rouge.py
-tags:
-  Preview: ""
 version: 3
 description: |-
   | | |

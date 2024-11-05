@@ -7,7 +7,6 @@ properties:
   show-artifact: true
   _default-display-file: ./retrieval.prompty
 tags:
-  Preview: ""
   hiddenlayerscanned: ""
 version: 1
 description: |-
