@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime-stable:latest
 WORKDIR /
 
 USER root
@@ -7,26 +7,9 @@ USER root
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
-    unixodbc-dev \
-    libc-bin=2.31-0ubuntu9.16 \
-    libc6-dev=2.31-0ubuntu9.16 \
-    libc6=2.31-0ubuntu9.16 \
-    libc-dev-bin=2.31-0ubuntu9.16 \
-    git \
-    git-man \
-    libpython3.8-minimal \
-    libpython3.8-stdlib \
-    python3.8-minimal \
-    python3.8 \
-    libssl1.1=1.1.1f-1ubuntu2.23 \
-    openssl=1.1.1f-1ubuntu2.23  \
-    curl=7.68.0-1ubuntu2.23 \
-    libcurl3-gnutls=7.68.0-1ubuntu2.23 \
-    libcurl4=7.68.0-1ubuntu2.23 \
-    libgssapi-krb5-2=1.17-6ubuntu4.6 \
-    libkrb5support0=1.17-6ubuntu4.6 \
-    libkrb5-3=1.17-6ubuntu4.6 \
-    libk5crypto3=1.17-6ubuntu4.6 &&\
+    unixodbc-dev  \
+    git  \
+    git-man && \
     rm -rf /var/lib/apt/lists/*
 
 # Install MS SQL ODBC Driver
@@ -53,7 +36,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  db-copilot-tool==0.0.8 &&\
-    pip install  cryptography==43.0.1 langchain==0.1.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1"
+    pip install  cryptography==43.0.1 langchain==0.2.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1 langchain-community==0.2.9"
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
