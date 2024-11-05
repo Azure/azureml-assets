@@ -1,6 +1,6 @@
 type: evaluationresult
 name: stsbenchmark_text-embedding-ada-002_sts
-version: 2.22.05
+version: 2.04.11
 display_name: STSBenchmark_text-embedding-ada-002_sts
 description: text-embedding-ada-002 run for STSBenchmark dataset
 dataset_name: STSBenchmark
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: sts
     primary_metric: spearman_correlation
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-ada-002
+    azure_latest_model_version: 2
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-ada-002/versions/2
 
 metrics:
     spearman_correlation: 0.8316129661614965
