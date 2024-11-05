@@ -7,6 +7,5 @@ properties:
   show-artifact: true
   _default-display-file: ./relevance.prompty
 tags:
-  Preview: ""
   hiddenlayerscanned: ""
 version: 4
