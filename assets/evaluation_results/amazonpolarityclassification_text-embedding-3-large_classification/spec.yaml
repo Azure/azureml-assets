@@ -1,6 +1,6 @@
 type: evaluationresult
 name: amazonpolarityclassification_text-embedding-3-large_classification
-version: 2.07.22
+version: 2.04.11
 display_name: AmazonPolarityClassification_text-embedding-3-large_classification
 description: text-embedding-3-large run for AmazonPolarityClassification dataset
 dataset_name: AmazonPolarityClassification
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: classification
     primary_metric: accuracy
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-3-large
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-large/versions/1
 
 metrics:
     accuracy: 0.92868975
