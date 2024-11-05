@@ -1,6 +1,6 @@
 type: evaluationresult
 name: winogrande_gpt_35_turbo_0613_question_answering
-version: 2.03.05
+version: 2.04.11
 display_name: winogrande_gpt_35_turbo_0613_question_answering
 description: gpt-35-turbo-0613 run for winogrande dataset
 dataset_family: winogrande
@@ -8,16 +8,20 @@ dataset_name: winogrande
 
 model_name: gpt-35-turbo-0613
 model_version: "0613"
-model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
+model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0613
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azure-openai/models/gpt-35-turbo/versions/2
+    assetId: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0613
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azure-openai
+  azure_model_name: gpt-35-turbo
+  azure_latest_model_version: 0125
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-35-turbo/versions/0125
 
 metrics:
   accuracy: 0.674

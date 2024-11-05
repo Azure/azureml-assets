@@ -1,6 +1,6 @@
 type: evaluationresult
 name: banking77classification_cohere-embed-v3-multilingual_classification
-version: 2.22.05
+version: 2.04.11
 display_name: Banking77Classification_cohere-embed-v3-multilingual_classification
 description: cohere-embed-v3-multilingual run for Banking77Classification dataset
 dataset_name: Banking77Classification
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: classification
     primary_metric: accuracy
+    azure_registry_name: azureml-cohere
+    azure_model_name: Cohere-embed-v3-multilingual
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-multilingual/versions/1
 
 metrics:
     accuracy: 0.7934415584415585
