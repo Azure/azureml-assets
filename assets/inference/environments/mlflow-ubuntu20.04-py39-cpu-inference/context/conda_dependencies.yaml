@@ -7,6 +7,9 @@ dependencies:
 - arrow
 - pandas
 - pip
+- inference-schema
+- pytest
+- other-dependencies
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}

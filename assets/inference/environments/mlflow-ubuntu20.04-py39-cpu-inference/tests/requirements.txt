@@ -2,4 +2,7 @@ azure-ai-ml==1.2.0
 azure.identity
 requests
 azureml-mlflow
+inference-schema
 pandas
+pytest
+other-dependencies

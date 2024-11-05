@@ -11,7 +11,7 @@ import yaml
 import pandas as pd
 import numpy as np
 from mlflow.models.signature import ModelSignature
-from inference_schema.parameter_types.pandas_parameter_type import PandasParameterType
+# from inference_schema.parameter_types.pandas_parameter_type import PandasParameterType
 # from inference_schema.parameter_types.numpy_parameter_type import NumpyParameterType
 # from inference_schema.parameter_types.standard_py_parameter_type import StandardPythonParameterType
 sys.path.append(os.path.abspath("../context"))
