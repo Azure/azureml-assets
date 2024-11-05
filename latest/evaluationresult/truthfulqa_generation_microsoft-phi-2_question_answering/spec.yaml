@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_microsoft-phi-2_question_answering
-version: 2.27.05
+version: 2.04.11
 display_name: truthfulqa_generation_microsoft-phi-2_question_answering
 description: microsoft-phi-2  for truthfulqa_generation dataset
 dataset_family: truthfulqa
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
+  azure_registry_name: azureml-msr
+  azure_model_name: microsoft-phi-2
+  azure_latest_model_version: 19
+  azure_latest_model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/19
 metrics:
   coherence: 3.922889
   fluency: 4.138311

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_mistralai-mixtral-8x7b-instruct-v01_question_answering
-version: 2.19.040
+version: 2.04.11
 display_name: social_iqa_mistralai-Mixtral-8x7B-Instruct-v01_question_answering
 description: mistralai-Mixtral-8x7B-Instruct-v01 run for social_iqa dataset
 dataset_family: social_iqa
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: mistralai-Mixtral-8x7B-Instruct-v01
+  azure_latest_model_version: 9
+  azure_latest_model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/9
 metrics:
   accuracy: 0.7456499
 

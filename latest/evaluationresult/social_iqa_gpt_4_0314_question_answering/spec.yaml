@@ -1,6 +1,6 @@
 type: evaluationresult
 name: social_iqa_gpt_4_0314_question_answering
-version: 2.03.05
+version: 2.04.11
 display_name: social_iqa_gpt_4_0314_question_answering
 description: gpt-4-0314 run for social_iqa dataset
 dataset_family: social_iqa
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azure-openai
+  azure_model_name: gpt-4
+  azure_latest_model_version: turbo-2024-04-09
+  azure_latest_model_asset_id: azureml://registries/azure-openai/models/gpt-4/versions/turbo-2024-04-09
 metrics:
   accuracy: 0.822
 

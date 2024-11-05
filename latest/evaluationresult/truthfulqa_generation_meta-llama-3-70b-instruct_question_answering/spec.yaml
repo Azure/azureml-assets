@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_meta-llama-3-70b-instruct_question_answering
-version: 2.10.05
+version: 2.04.11
 display_name: truthfulqa_generation_meta-llama-3-70b-instruct_question_answering
 description: meta-llama-3-70b-instruct for truthfulqa_generation dataset
 dataset_family: truthfulqa
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
+  azure_registry_name: azureml-meta
+  azure_model_name: Meta-Llama-3-70B-Instruct
+  azure_latest_model_version: 8
+  azure_latest_model_asset_id: azureml://registries/azureml-meta/models/Meta-Llama-3-70B-Instruct/versions/8
 metrics:
   coherence: 4.785276073619632
   fluency: 4.818404908

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_microsoft_phi_2_question_answering
-version: 2.19.040
+version: 2.04.11
 display_name: mmlu_stem_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for mmlu_stem dataset
 dataset_family: mmlu
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml-msr
+  azure_model_name: microsoft-phi-2
+  azure_latest_model_version: 19
+  azure_latest_model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/19
 metrics:
   accuracy: 0.48
 

@@ -1,6 +1,6 @@
 type: evaluationresult
 name: scifact-pl_cohere-embed-v3-english_retrieval
-version: 2.07.22
+version: 2.04.11
 display_name: SciFact-PL_cohere-embed-v3-english_retrieval
 description: cohere-embed-v3-english run for SciFact-PL dataset
 dataset_name: SciFact-PL
@@ -17,6 +17,10 @@ tags:
   evaluation_type: text_embeddings
   task: retrieval
   primary_metric: ndcg_at_10
+  azure_registry_name: azureml-cohere
+  azure_model_name: Cohere-embed-v3-english
+  azure_latest_model_version: 1
+  azure_latest_model_asset_id: azureml://registries/azureml-cohere/models/Cohere-embed-v3-english/versions/1
 metrics:
   ndcg_at_10: 0.34246
 

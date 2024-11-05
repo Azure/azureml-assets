@@ -1,6 +1,6 @@
 type: evaluationresult
 name: human_eval_phi-3-medium-128k-instruct_text_generation
-version: 2.06.18
+version: 2.04.11
 display_name: human_eval_Phi-3-medium-128k-instruct_text_generation
 description: human_eval_Phi-3-medium-128k-instruct_text_generation
 dataset_family: human_eval
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: text-generation
   accuracy_metric_name: pass@1
+  azure_registry_name: azureml
+  azure_model_name: Phi-3-medium-128k-instruct
+  azure_latest_model_version: 5
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-medium-128k-instruct/versions/5
 metrics:
   accuracy: 0.7195121951219512
 

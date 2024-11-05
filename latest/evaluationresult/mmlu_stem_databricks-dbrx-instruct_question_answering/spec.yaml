@@ -1,6 +1,6 @@
 type: evaluationresult
 name: mmlu_stem_databricks-dbrx-instruct_question_answering
-version: 2.19.040
+version: 2.04.11
 display_name: mmlu_stem_databricks-dbrx-instruct_question_answering
 description: databricks-dbrx-instruct run for mmlu_stem dataset
 dataset_family: mmlu
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml-restricted
+  azure_model_name: databricks-dbrx-instruct
+  azure_latest_model_version: 3
+  azure_latest_model_asset_id: azureml://registries/azureml-restricted/models/databricks-dbrx-instruct/versions/3
 metrics:
   accuracy: 0.5987948
 

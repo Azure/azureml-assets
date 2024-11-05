@@ -1,6 +1,6 @@
 type: evaluationresult
 name: squad_v2_phi-3-medium-128k-instruct_question_answering
-version: 2.06.18
+version: 2.04.11
 display_name: squad_v2_Phi-3-medium-128k-instruct_question_answering
 description: Phi-3-medium-128k-instruct run for squad_v2 dataset
 dataset_family: squad_v2
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
+  azure_registry_name: models-staging
+  azure_model_name: Phi-3-medium-128k-instruct
+  azure_latest_model_version: 11
+  azure_latest_model_asset_id: azureml://registries/models-staging/models/Phi-3-medium-128k-instruct/versions/11
 metrics:
   groundedness: 4.175536
   relevance: 4.341237
