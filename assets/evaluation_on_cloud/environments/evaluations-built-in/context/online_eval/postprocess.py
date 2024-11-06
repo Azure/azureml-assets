@@ -12,7 +12,7 @@ import opentelemetry
 from opentelemetry import _logs
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, ConsoleLogExporter
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter
 
 import logging
@@ -102,10 +102,7 @@ def get_combined_data(preprocessed_data, evaluated_data, service_name):
 
 def run(args):
     """Entry point of model prediction script."""
-    logger.info(
-        f"Sampling Rate: {args['sampling_rate']}, Connection String: {args['connection_string']}, "
-        f"Service Name: {args['service_name']}"
-    )
+    logger.info(f"Commandline args:> Service Name: {args['service_name']}")
     provider = configure_logging(args)
     data = get_combined_data(args["preprocessed_data"], args["evaluated_data"],
                              args["service_name"])

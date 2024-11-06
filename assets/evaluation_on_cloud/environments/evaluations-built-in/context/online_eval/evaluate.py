@@ -122,7 +122,6 @@ def copy_evaluator_files(command_line_args):
     return evaluators
 
 
-
 def load_evaluators(input_evaluators):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     loaded_evaluators, loaded_evaluator_configs = {}, {}
@@ -143,6 +142,8 @@ def load_evaluators(input_evaluators):
 def run_evaluation(command_line_args, evaluators, evaluator_configs):
     """Run the evaluation."""
     # Todo: can we get only results back instead of the whole response?
+    logger.info(f"Running the evaluators: {list(evaluators.keys())}")
+    logger.info(f"With the evaluator config {evaluator_configs}")
     results = evaluate(data=command_line_args["preprocessed_data"], evaluators=evaluators,
                        evaluator_config=evaluator_configs)
     metrics = {}
@@ -150,7 +151,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
         logger.info(f"Logging metric added with name {metric_name}, and value {metric_value}")
         metrics[metric_name] = metric_value
     mlflow.log_metrics(metrics)
-    logger.info("Evaluation Completed")
+    logger.info("Evaluation Completed Successfully")
     final_results = defaultdict(list)
     for result in results["rows"]:
         for evaluator_name in evaluators:
