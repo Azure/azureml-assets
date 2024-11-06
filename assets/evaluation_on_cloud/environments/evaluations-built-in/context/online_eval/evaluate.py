@@ -31,6 +31,7 @@ def get_args():
                         default="./preprocessed_data_output.jsonl")
     parser.add_argument("--evaluated_data", type=str, dest="evaluated_data", default="./evaluated_data_output.jsonl")
     parser.add_argument("--evaluators", type=str, dest="evaluators")
+    parser.add_argument("--evaluator_name_id_map", type=str, dest="evaluator_name_id_map")
     parser.add_argument("--sampling_rate", type=str, dest="sampling_rate", default="1")
 
     args, _ = parser.parse_known_args()
@@ -105,7 +106,7 @@ def download_evaluators_and_update_local_path(evaluators):
 def copy_evaluator_files(command_line_args):
     """Copy the mounted evaluator files to the relative paths to enable read/write."""
     evaluators = json.loads(command_line_args["evaluators"])
-    evaluator_name_id_map = json.loads(command_line_args.evaluator_name_id_map)
+    evaluator_name_id_map = json.loads(command_line_args["evaluator_name_id_map"])
     for evaluator_name, evaluator_id in evaluator_name_id_map.items():
         dir_path = find_file_and_get_parent_dir(evaluator_id)
         if dir_path:
@@ -152,7 +153,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
                 logger.info(f"Found multiple results for {evaluator_name}. Adding as json string.")
                 final_results[evaluator_name].append(json.dumps(filtered_result))
     final_results = pd.DataFrame(final_results)
-    logger.info(final_results)
+    # logger.info(final_results)
     final_results.to_json(command_line_args["evaluated_data"], orient="records", lines=True)
 
 
@@ -169,6 +170,8 @@ rai_evaluators = [
 
 def run(args):
     """Entry point of model prediction script."""
+    evaluators = json.loads(args["evaluators"])
+    # evaluators = download_evaluators_and_update_local_path(evaluators)
     evaluators = copy_evaluator_files(args)
     evaluators, evaluator_configs = load_evaluators(evaluators)
     run_evaluation(args, evaluators, evaluator_configs)
