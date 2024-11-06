@@ -76,7 +76,6 @@ def get_logs(client, resource_id: str, query: str, start_time: datetime, end_tim
 def save_output(result, args):
     """Save output."""
     try:
-        logger.info("Saving output.")
         # Todo: One conversation will be split across multiple rows. how to combine them?
         logger.info(f"Saving output to {args['preprocessed_data']}")
         logger.info(f"First few rows of output: {result.head()}")

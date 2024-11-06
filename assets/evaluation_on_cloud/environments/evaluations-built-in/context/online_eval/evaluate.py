@@ -151,7 +151,6 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
         metrics[metric_name] = metric_value
     mlflow.log_metrics(metrics)
     logger.info("Evaluation Completed")
-    logger.info(f"results here: {results}")
     final_results = defaultdict(list)
     for result in results["rows"]:
         for evaluator_name in evaluators:
