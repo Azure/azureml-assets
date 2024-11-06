@@ -67,6 +67,7 @@ def get_logs(client, resource_id: str, query: str, start_time: datetime, end_tim
             raise Exception(f"Unable to parse query results. Unexpected number of tables: {len(data)}.")
         table = data[0]
         df = pd.DataFrame(data=table.rows, columns=table.columns)
+        logger.info(f"Query returned {len(df)} rows, {len(df.columns)} columns, and df.columns: {df.columns}")
         return df
     except Exception as e:
         logger.info("something fatal happened")
