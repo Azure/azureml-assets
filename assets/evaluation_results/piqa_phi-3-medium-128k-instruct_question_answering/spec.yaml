@@ -1,18 +1,18 @@
 type: evaluationresult
 name: piqa_phi-3-medium-128k-instruct_question_answering
-version: 2.04.11
+version: 2.06.11
 display_name: piqa_Phi-3-medium-128k-instruct_question_answering
 description: piqa_Phi-3-medium-128k-instruct_question_answering
 dataset_family: piqa
 dataset_name: piqa
 
 model_name: Phi-3-medium-128k-instruct
-model_version: "9"
-model_asset_id: azureml://registries/azureml/models/Phi-3-medium-128k-instruct/versions/9
+model_version: "5"
+model_asset_id: azureml://registries/azureml/models/Phi-3-medium-128k-instruct/versions/5
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml/models/Phi-3-medium-128k-instruct/versions/9
+    assetId: azureml://registries/azureml/models/Phi-3-medium-128k-instruct/versions/5
 
 tags:
   evaluation_type: text_generation
