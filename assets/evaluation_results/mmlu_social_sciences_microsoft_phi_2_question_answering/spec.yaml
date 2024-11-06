@@ -1,18 +1,18 @@
 type: evaluationresult
 name: mmlu_social_sciences_microsoft_phi_2_question_answering
-version: 2.04.11
+version: 2.06.11
 display_name: mmlu_social_sciences_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for mmlu_social_sciences dataset
 dataset_family: mmlu
 dataset_name: mmlu_social_sciences
 
 model_name: microsoft-phi-2
-model_version: "5"
-model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+model_version: "19"
+model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/19
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/19
 
 tags:
   evaluation_type: text_generation
