@@ -1,10 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  CPU based environment for pipelines (ML Designer).
+  An environment for built-in component that can dynamically evaluate python expression
+  for 1P request feature.
 
-name: "mldesigner"
-version: "30"
+name: "component"
+version: "1"
 
 build:
   path: "context"
@@ -13,5 +14,5 @@ build:
 os_type: linux
 
 tags:
-  OS: Ubuntu20.04
+  OS: Ubuntu22.04
   Python: 3.9
