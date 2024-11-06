@@ -9,6 +9,7 @@ from collections import defaultdict
 import importlib
 import sys
 import shutil
+import mlflow
 
 from promptflow.client import load_flow
 from azure.ai.evaluation import evaluate
@@ -121,6 +122,7 @@ def copy_evaluator_files(command_line_args):
     return evaluators
 
 
+
 def load_evaluators(input_evaluators):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     loaded_evaluators, loaded_evaluator_configs = {}, {}
@@ -132,6 +134,9 @@ def load_evaluators(input_evaluators):
             init_params["credential"] = AzureMLOnBehalfOfCredential()
         loaded_evaluators[evaluator_name] = flow(**init_params)
         loaded_evaluator_configs[evaluator_name] = {"column_mapping": evaluator.get("DataMapping", {})}
+        logger.info(f"Loaded Evaluator: {flow}")
+        logger.info(f"Using Evaluator: {loaded_evaluators[evaluator_name]}")
+        logger.info(f"Loaded evaluator config: {loaded_evaluator_configs[evaluator_name]}")
     return loaded_evaluators, loaded_evaluator_configs
 
 
@@ -140,8 +145,13 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
     # Todo: can we get only results back instead of the whole response?
     results = evaluate(data=command_line_args["preprocessed_data"], evaluators=evaluators,
                        evaluator_config=evaluator_configs)
+    metrics = {}
+    for metric_name, metric_value in results["metrics"].items():
+        logger.info(f"Logging metric added with name {metric_name}, and value {metric_value}")
+        metrics[metric_name] = metric_value
+    mlflow.log_metrics(metrics)
     logger.info("Evaluation Completed")
-    logger.info("results here", results)
+    logger.info(f"results here: {results}")
     final_results = defaultdict(list)
     for result in results["rows"]:
         for evaluator_name in evaluators:
@@ -150,11 +160,20 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
             if len(filtered_result) == 1:
                 final_results[evaluator_name].append(filtered_result[list(filtered_result.keys())[0]])
             else:
+                if len(filtered_result) == 0:
+                    logger.warning(f"No output score generated for current evaluator {evaluator_name}")
                 logger.info(f"Found multiple results for {evaluator_name}. Adding as json string.")
                 final_results[evaluator_name].append(json.dumps(filtered_result))
     final_results = pd.DataFrame(final_results)
-    # logger.info(final_results)
+    logger.info(final_results)
     final_results.to_json(command_line_args["evaluated_data"], orient="records", lines=True)
+    if results and results.get("rows"):
+        # Convert the results to a DataFrame
+        df = pd.DataFrame(results["rows"])
+
+        # Save the DataFrame as a JSONL file
+        df.to_json("instance_results.jsonl", orient="records", lines=True)
+        mlflow.log_artifact("instance_results.jsonl")
 
 
 rai_evaluators = [

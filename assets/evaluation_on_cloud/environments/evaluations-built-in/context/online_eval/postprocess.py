@@ -41,7 +41,6 @@ def configure_logging(args) -> LoggerProvider:
     logger.info("Configuring logging")
     provider = LoggerProvider()
     _logs.set_logger_provider(provider)
-    provider.add_log_record_processor(BatchLogRecordProcessor(ConsoleLogExporter()))
     args["connection_string"] = None if args["connection_string"] == "" else args["connection_string"]
     provider.add_log_record_processor(
         BatchLogRecordProcessor(AzureMonitorLogExporter(connection_string=args["connection_string"])))

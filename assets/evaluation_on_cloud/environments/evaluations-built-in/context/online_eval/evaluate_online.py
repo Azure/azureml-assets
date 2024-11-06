@@ -6,6 +6,7 @@ import argparse
 import preprocess
 import evaluate
 import postprocess
+import mlflow
 
 
 def get_args():
@@ -41,4 +42,5 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    with mlflow.start_run() as _run:
+        run()
