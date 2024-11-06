@@ -15,8 +15,8 @@ os_type: linux
 
 tags:
   PyTorch: "2.4"
-  GPU: Cuda124
-  OS: Ubuntu22.04
+  GPU: Cuda121
+  OS: Ubuntu20.04
   Training: ""
   Preview: ""
   Python: "3.10"

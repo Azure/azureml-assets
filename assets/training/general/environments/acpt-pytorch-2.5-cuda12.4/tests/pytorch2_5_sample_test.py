@@ -59,7 +59,7 @@ def test_pytorch_2_5():
         compute=os.environ.get("gpu_v100_cluster"),
         display_name="bert-pretrain-GLUE",
         description="Pretrain the BERT model on the GLUE dataset.",
-        experiment_name="pytorch22_Cuda121_py310_Experiment",
+        experiment_name="pytorch25_Cuda124_py310_Experiment",
         distribution=PyTorchDistribution(process_count_per_instance=1),
         resources=JobResourceConfiguration(instance_count=2, shm_size='3100m'),
     )
