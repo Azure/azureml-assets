@@ -1,18 +1,18 @@
 type: evaluationresult
 name: truthfulqa_generation_phi3-mini-4k-instruct_chat_completion
-version: 2.04.11
+version: 2.06.11
 display_name: truthfulqa_generation_phi3-mini-4k-instruct_chat_completion
 description: truthfulqa_generation_phi3-mini-4k-instruct_chat_completion
 dataset_family: truthfulqa
 dataset_name: truthfulqa_generation
 
-model_name: phi3-mini-4k-instruct
-model_version: "6"
-model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/6
+model_name: Phi-3-mini-4k-instruct
+model_version: "13"
+model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/13
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/6
+    assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/13
 
 tags:
   evaluation_type: text_generation
