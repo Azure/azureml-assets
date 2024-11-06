@@ -1,17 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-
 description: >-
-  CPU based environment for pipelines (ML Designer).
+  Environment for evaluating models.
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"
 
 build:
-  path: "{{image.context.path}}"
-  dockerfile_path: "{{image.dockerfile.path}}"
+  path: context/
 
 os_type: linux
 
 tags:
-  OS: Ubuntu20.04
-  Python: 3.9
+  OS: Ubuntu22.04
+  Evaluation: ""
