@@ -146,7 +146,7 @@ tags:
   languages: "en"
   inputModalities: "text,image"
   trainingDataDate: "Aug 2024"
-  keywords: "Reasoning,Understanding,Low latency"
+  keywords: "Multimodal,Reasoning,Low latency"
   licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
     \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
     of this software and associated documentation files (the \"Software\"), to deal\n\
