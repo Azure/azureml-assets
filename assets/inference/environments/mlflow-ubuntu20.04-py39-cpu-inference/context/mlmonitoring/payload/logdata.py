@@ -4,6 +4,7 @@
 
 def get_type_fullname(o):
     """For get type fullname."""
+    
     c = o.__class__
     module = c.__module__
     if module == 'builtins':
