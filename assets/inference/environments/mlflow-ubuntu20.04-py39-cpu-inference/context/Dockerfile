@@ -12,8 +12,6 @@ ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 ENV AML_APP_ROOT="/var/mlflow_resources"
 ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
-ENV CMAKE_PREFIX_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib/cmake
-
 USER root
 # Copying of mlmonitoring will add once testing is completed.
 # COPY mlmonitoring /var/mlflow_resources/mlmonitoring
@@ -23,10 +21,6 @@ USER root
 COPY mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 COPY mlflow_hf_score_cpu.py /var/mlflow_resources/mlflow_hf_score_cpu.py
 COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
-
-RUN conda install -c conda-forge arrow
-
-RUN apt-get update && apt-get install -y cmake
 
 # Create conda environment
 COPY conda_dependencies.yaml .

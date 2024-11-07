@@ -5,4 +5,3 @@ azureml-mlflow
 inference-schema
 pandas
 pytest
-mlflow_score_script
