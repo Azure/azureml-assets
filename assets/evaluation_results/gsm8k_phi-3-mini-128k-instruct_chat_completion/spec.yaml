@@ -1,18 +1,18 @@
 type: evaluationresult
 name: gsm8k_phi-3-mini-128k-instruct_chat_completion
-version: 2.04.11
+version: 2.06.11
 display_name: gsm8k_phi-3-mini-128k-instruct_chat_completion
 description: gsm8k_phi-3-mini-128k-instruct_chat_completion
 dataset_family: gsm8k
 dataset_name: gsm8k
 
-model_name: phi-3-mini-128k-instruct
-model_version: "4"
-model_asset_id: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/4
+model_name: Phi-3-mini-128k-instruct
+model_version: "11"
+model_asset_id: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/11
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/4
+    assetId: azureml://registries/azureml/models/Phi-3-mini-128k-instruct/versions/11
 
 tags:
   evaluation_type: text_generation
