@@ -1,6 +1,6 @@
 type: evaluationresult
 name: tweetsentimentextractionclassification_text-embedding-3-small_classification
-version: 2.07.22
+version: 2.04.11
 display_name: TweetSentimentExtractionClassification_text-embedding-3-small_classification
 description: text-embedding-3-small run for TweetSentimentExtractionClassification dataset
 dataset_name: TweetSentimentExtractionClassification
@@ -17,6 +17,10 @@ tags:
     evaluation_type: text_embeddings
     task: classification
     primary_metric: accuracy
+    azure_registry_name: azure-openai
+    azure_model_name: text-embedding-3-small
+    azure_latest_model_version: 1
+    azure_latest_model_asset_id: azureml://registries/azure-openai/models/text-embedding-3-small/versions/1
 
 metrics:
     accuracy: 0.6165534804753819

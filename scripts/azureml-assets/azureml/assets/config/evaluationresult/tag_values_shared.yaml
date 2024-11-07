@@ -5,7 +5,7 @@ evaluation_type:
   values:
     - text_generation
     - text_embeddings
-    - vision
     - text_cost
     - text_performance
     - text_quality
+    - vision

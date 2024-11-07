@@ -1,0 +1,31 @@
+flavors:
+  hftransformersv2:
+    code: null
+    config_hf_load_kwargs:
+      trust_remote_code: true
+    hf_config_class: AutoConfig
+    hf_pretrained_class: AutoModelForCausalLM
+    hf_tokenizer_class: AutoTokenizer
+    huggingface_id: tiiuae/falcon-7b-instruct
+    model_data: data
+    model_hf_load_args:
+      trust_remote_code: true
+    pytorch_version: 1.13.1
+    task_type: text-generation
+    tokenizer_hf_load_kwargs:
+      trust_remote_code: true
+    transformers_version: 4.33.1
+  python_function:
+    data: data
+    env: conda.yaml
+    loader_module: azureml.evaluate.mlflow.hftransformers
+    python_version: 3.8.17
+metadata:
+  base_model_name: tiiuae/falcon-7b-instruct
+  base_model_task: text-generation
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:31
+mlflow_version: 2.6.0
+model_uuid: 3a326f91867b431893d4afb0681bd7cf
+utc_time_created: '2023-10-10 17:16:21.244188'

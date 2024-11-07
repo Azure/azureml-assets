@@ -1,23 +1,27 @@
 type: evaluationresult
 name: piqa_phi-3-small-8k-instruct_question_answering
-version: 2.06.18
+version: 2.06.11
 display_name: piqa_Phi-3-small-8k-instruct_question_answering
 description: piqa_Phi-3-small-8k-instruct_question_answering
 dataset_family: piqa
 dataset_name: piqa
 
 model_name: Phi-3-small-8k-instruct
-model_version: "6"
-model_asset_id: azureml://registries/models-staging/models/Phi-3-small-8k-instruct/versions/6
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/Phi-3-small-8k-instruct/versions/4
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/models-staging/models/Phi-3-small-8k-instruct/versions/6
+    assetId: azureml://registries/azureml/models/Phi-3-small-8k-instruct/versions/4
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: Phi-3-small-8k-instruct
+  azure_latest_model_version: 4
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-small-8k-instruct/versions/4
 
 metrics:
   accuracy: 0.8171926006528836

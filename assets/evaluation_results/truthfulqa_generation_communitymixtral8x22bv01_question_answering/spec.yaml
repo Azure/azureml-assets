@@ -1,6 +1,6 @@
 type: evaluationresult
 name: truthfulqa_generation_communitymixtral8x22bv01_question_answering
-version: 2.27.05
+version: 2.04.11
 display_name: truthfulqa_generation_communityMixtral8x22Bv01_question_answering
 description: mistral-community-mixtral-8x22b-v0-1  for truthfulqa_generation dataset
 dataset_family: truthfulqa
@@ -18,6 +18,10 @@ tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: nan
+  azure_registry_name: azureml
+  azure_model_name: mistral-community-Mixtral-8x22B-v0-1
+  azure_latest_model_version: 5
+  azure_latest_model_asset_id: azureml://registries/azureml/models/mistral-community-Mixtral-8x22B-v0-1/versions/5
 
 metrics:
   coherence: 3.604651

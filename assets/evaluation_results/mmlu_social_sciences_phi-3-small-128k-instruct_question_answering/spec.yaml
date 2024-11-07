@@ -1,23 +1,27 @@
 type: evaluationresult
 name: mmlu_social_sciences_phi-3-small-128k-instruct_question_answering
-version: 2.06.18
+version: 2.06.11
 display_name: mmlu_social_sciences_Phi-3-small-128k-instruct_question_answering
 description: Phi-3-small-128k-instruct run for mmlu_social_sciences dataset
 dataset_family: mmlu
 dataset_name: mmlu_social_sciences
 
 model_name: Phi-3-small-128k-instruct
-model_version: "7"
-model_asset_id: azureml://registries/models-staging/models/Phi-3-small-128k-instruct/versions/7
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/Phi-3-small-128k-instruct/versions/4
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/models-staging/models/Phi-3-small-128k-instruct/versions/7
+    assetId: azureml://registries/azureml/models/Phi-3-small-128k-instruct/versions/4
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: Phi-3-small-128k-instruct
+  azure_latest_model_version: 4
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-small-128k-instruct/versions/4
 
 metrics:
   accuracy: 0.8287292817679558
