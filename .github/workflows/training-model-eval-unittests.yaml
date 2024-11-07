@@ -43,6 +43,9 @@ jobs:
           echo $conda_env_prefix
           sed -i 's/=={{latest-pypi-version}}//g' $model_eval_conda_yaml
           sed -i 's/=={{latest-pypi-version:pre}}//g' $model_eval_conda_yaml
+          sed -i 's/- pip:/- pip:\n  - --extra-index-url https://download.pytorch.org/whl/cpu/' $model_eval_conda_yaml
+          echo "  - pytest\n  - pytest-xdist\n" >> $model_eval_conda_yaml
+          cat $model_eval_conda_yaml
           conda env create -p $conda_env_prefix -f $model_eval_conda_yaml
           echo "conda env successfully created at $conda_env_prefix"
           conda list -p $conda_env_prefix

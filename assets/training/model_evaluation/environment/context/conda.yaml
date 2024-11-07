@@ -10,7 +10,6 @@ dependencies:
 - pytorch=2.2.2
 - pytorch-cuda=11.8
 - pip:
-  - --extra-index-url https://download.pytorch.org/whl/cpu
   - aiohttp>=3.10.2
   - matplotlib>=3.7,<3.8
   - protobuf<4.0.0
@@ -42,5 +41,3 @@ dependencies:
   - opencensus-ext-azure=={{latest-pypi-version}}
   - StrEnum=={{latest-pypi-version}}
   - pyDispatcher=={{latest-pypi-version}}
-  - pytest
-  - pytest-xdist
