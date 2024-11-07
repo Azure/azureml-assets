@@ -1,3 +1,4 @@
+"""For init."""
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -11,11 +12,13 @@ sdk_ready = False
 
 
 def is_sdk_ready():
+    """For is sdk ready."""
     global sdk_ready
     return sdk_ready
 
 
 def init(model_version=None):
+    """For init."""
     global sdk_ready
     if sdk_ready:
         return
@@ -53,6 +56,7 @@ def init(model_version=None):
 
 
 def teardown(wait_for_flush=False):
+    """For teardown."""
     global sdk_ready
     if not sdk_ready:
         return

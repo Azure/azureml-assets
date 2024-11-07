@@ -1,3 +1,4 @@
+"""For config."""
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -13,6 +14,7 @@ default_sample_rate_percentage = 100
 
 
 class MdcConfig:
+    """For MdcConfig."""
 
     # pylint: disable=too-many-instance-attributes
     def __init__(
@@ -29,6 +31,7 @@ class MdcConfig:
             local_capture=False,
             compact_format=False,
     ):
+        """For init."""
         self._debug = debug
         self._enabled = enabled
         self._sample_rate_percentage = sample_rate_percentage
@@ -46,51 +49,66 @@ class MdcConfig:
         self._collections = {}
 
     def is_debug(self):
+        """For is debug."""
         return self._debug
 
     def enabled(self):
+        """For enabled."""
         return self._enabled
 
     def set_enabled(self, enabled):
+        """For set enabled."""
         self._enabled = enabled
 
     def compact_format(self):
+        """For compact format."""
         return self._compact_format
 
     def sample_rate_percentage(self):
+        """For sample rate percentage."""
         return self._sample_rate_percentage
 
     def host(self):
+        """For host."""
         return self._host
 
     def port(self):
+        """For port."""
         return self._port
 
     def model_version(self):
+        """For model version."""
         return self._model_version
 
     def queue_capacity(self):
+        """For queue capacity."""
         return self._queue_capacity
 
     def worker_disabled(self):
+        """For worker disabled."""
         return self._worker_disabled
 
     def worker_count(self):
+        """For worker count."""
         return self._worker_count
 
     def local_capture(self):
+        """For local capture."""
         return self._local_capture
 
     def add_collection(self, col_name, enabled=False, sample_rate_percentage=100):
+        """For add collection."""
         self._collections[col_name] = {
             "enabled": enabled,
             "sampleRatePercentage": sample_rate_percentage,
         }
 
     def collections(self):
+        """For collections."""
         return self._collections
 
     def collection_enabled(self, collection_name):
+        """For collection enabled."""
         path = os.getenv("AZUREML_MDC_CONFIG_PATH")
         if not path:
             # for legacy settings, we depend on a global switch to see whether collections are enabled or not.
@@ -103,6 +121,7 @@ class MdcConfig:
         return False
 
     def collection_sample_rate_percentage(self, collection_name):
+        """For collection sample rate percentage."""
         path = os.getenv("AZUREML_MDC_CONFIG_PATH")
         if not path:
             # for legacy settings, we take the global sample_rate_percentage.
@@ -116,6 +135,7 @@ class MdcConfig:
 
 
 def loadConfig(model_version=None):
+    """For loadConfig."""
     debug = is_debug()
     path = os.getenv("AZUREML_MDC_CONFIG_PATH")
 
@@ -166,6 +186,7 @@ mdc_config = None
 
 
 def init_config(model_version=None):
+    """For init config."""
     global mdc_config
     mdc_config = loadConfig(model_version)
 
@@ -183,10 +204,12 @@ def init_config(model_version=None):
 
 
 def teardown_config():
+    """For teardown config."""
     global mdc_config
     mdc_config = None
 
 
 def get_config():
+    """For get config."""
     global mdc_config
     return mdc_config

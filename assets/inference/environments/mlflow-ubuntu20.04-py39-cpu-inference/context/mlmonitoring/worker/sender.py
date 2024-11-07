@@ -1,3 +1,4 @@
+"""For sender."""
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -9,6 +10,7 @@ import requests
 
 
 def create_sender(config):
+    """For create sender."""
     if config.local_capture():
         return LocalCapture()
 
@@ -16,17 +18,22 @@ def create_sender(config):
 
 
 def _is_success(status_code):
+    """For is success."""
     return 200 <= status_code < 300
 
 
 class MdcSender:
+    """For MdcSender."""
+
     def __init__(self, host, port):
+        """For init."""
         self.logger = logging.getLogger("mdc.sender")
         self.host = host
         self.port = port
         self.path = "/modeldata/log"
 
     def send(self, payload):
+        """For send."""
         designation = payload.designation()
         self.logger.debug("sending payload to mdc: %s@%s", designation, payload.id())
 
@@ -64,6 +71,7 @@ class MdcSender:
         return self._send_binary(merged_headers, content)
 
     def _send_json(self, headers, json_data):
+        """For send json."""
         if not isinstance(json_data, str):
             raise TypeError("json_data: str type expected")
 
@@ -79,6 +87,7 @@ class MdcSender:
             return False, str(ex)
 
     def _send_binary(self, headers, binary_data):
+        """For send binary."""
         if not isinstance(binary_data, bytes):
             raise TypeError("binary_data: bytes type expected, actual - %s" % type(binary_data).__name__)
 
@@ -95,9 +104,11 @@ class MdcSender:
             return False, str(ex)
 
     def _build_url(self):
+        """For build url."""
         return "http://%s:%d%s" % (self.host, self.port, self.path)
 
     def _post_request(self, url, payload, headers=None):
+        """For post request."""
         self.logger.debug("posting request to %s", url)
         self.logger.debug("request headers: %s", headers)
         self.logger.debug("request payload(%s): %s", type(payload), payload)
@@ -108,10 +119,14 @@ class MdcSender:
 
 
 class LocalCapture:
+    """For LocalCaptures."""
+
     def __init__(self):
+        """For init."""
         self.logger = logging.getLogger("local.capture")
 
     def send(self, payload):
+        """For send."""
         self.logger.info("%s | %s | %s | %s",
                          time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(payload.time())),
                          payload.designation(),

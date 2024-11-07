@@ -1,3 +1,4 @@
+"""For logger."""
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -135,10 +136,12 @@ DEBUG_SDK_LOGGING_CONFIG: Dict[str, Any] = dict(
 
 
 def is_debug():
+    """For is debug."""
     return os.getenv("AZUREML_MDC_DEBUG", "false").lower() == "true"
 
 
 def init_logging():
+    """For init logging."""
     if is_debug():
         log_config = DEBUG_SDK_LOGGING_CONFIG
     else:

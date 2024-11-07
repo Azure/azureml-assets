@@ -1,3 +1,4 @@
+"""For worker."""
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -10,7 +11,10 @@ from .sender import create_sender
 
 
 class MdcWorker:
+    """For MdcWorker."""
+
     def __init__(self, queue, config):
+        """For init."""
         self.logger = logging.getLogger("mdc.worker")
         self._queue = queue
         self._config = config
@@ -19,6 +23,7 @@ class MdcWorker:
         self._sender = create_sender(config)
 
     def start(self):
+        """For start."""
         self._stopped = False
         # create worker threads
         for index in range(self._config.worker_count()):
@@ -29,9 +34,11 @@ class MdcWorker:
             thread.start()
 
     def enqueue(self, payload):
+        """For enqueue."""
         return self._queue.enqueue(payload)
 
     def stop(self, wait_for_flush=False):
+        """For stop."""
         if not wait_for_flush:
             self._stopped = True
 
@@ -45,6 +52,7 @@ class MdcWorker:
         self.logger.debug("data collector worker stopped")
 
     def _thread_run(self, index):
+        """For thread run."""
         self.logger.debug("worker thread %d: start", index)
         while not self._stopped:
             payload, queue_len = self._queue.dequeue()
@@ -74,6 +82,7 @@ mdc_worker = None
 
 
 def init_worker(queue, config):
+    """For init worker."""
     global mdc_worker
     mdc_worker = MdcWorker(queue, config)
     # start worker thread
@@ -81,11 +90,13 @@ def init_worker(queue, config):
 
 
 def get_worker():
+    """For get worker."""
     global mdc_worker
     return mdc_worker
 
 
 def teardown_worker(wait_for_flush=False):
+    """For teardown worker."""
     global mdc_worker
     if mdc_worker is not None:
         mdc_worker.stop(wait_for_flush)
