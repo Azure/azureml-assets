@@ -42,3 +42,4 @@ dependencies:
   - opencensus-ext-azure=={{latest-pypi-version}}
   - StrEnum=={{latest-pypi-version}}
   - pyDispatcher=={{latest-pypi-version}}
+  - pytest
