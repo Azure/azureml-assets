@@ -29,6 +29,7 @@ class CorrelationContext:
 
 class BasicCorrelationContext(CorrelationContext):
     """For BasicCorrelationContext."""
+
     # pylint: disable=redefined-builtin
     def __init__(self, id: str = None, timestamp: int = None, headers=None):
         """For init."""
