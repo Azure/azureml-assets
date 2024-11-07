@@ -3,7 +3,7 @@ azureml-dataset-runtime==1.58.0
 azureml-defaults==1.58.0
 azure-ml==0.0.1
 azure-ml-component==0.9.18.post2
-azureml-mlflow==1.58.0.post2
+azureml-mlflow==1.58.0.post3
 azureml-contrib-services==1.58.0
 azureml-contrib-services==1.58.0
 torch-tb-profiler~=0.4.0

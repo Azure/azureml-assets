@@ -67,6 +67,7 @@ def get_logs(client, resource_id: str, query: str, start_time: datetime, end_tim
             raise Exception(f"Unable to parse query results. Unexpected number of tables: {len(data)}.")
         table = data[0]
         df = pd.DataFrame(data=table.rows, columns=table.columns)
+        logger.info(f"Query returned {len(df)} rows, {len(df.columns)} columns, and df.columns: {df.columns}")
         return df
     except Exception as e:
         logger.info("something fatal happened")
@@ -76,8 +77,9 @@ def get_logs(client, resource_id: str, query: str, start_time: datetime, end_tim
 def save_output(result, args):
     """Save output."""
     try:
-        logger.info("Saving output.")
         # Todo: One conversation will be split across multiple rows. how to combine them?
+        logger.info(f"Saving output to {args['preprocessed_data']}")
+        logger.info(f"First few rows of output: {result.head()}")
         result.to_json(args["preprocessed_data"], orient="records", lines=True)
     except Exception as e:
         logger.info("Unable to save output.")
