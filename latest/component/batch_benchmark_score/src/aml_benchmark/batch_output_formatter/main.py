@@ -5,7 +5,7 @@
 
 import argparse
 import os
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import pandas as pd
 
 from aml_benchmark.utils.io import resolve_io_path, read_jsonl_files, save_list_to_jsonl_if_path_provided
@@ -13,6 +13,7 @@ from aml_benchmark.utils.logging import get_logger, log_params_and_metrics
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool
 from aml_benchmark.utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
 from aml_benchmark.utils.exceptions import BenchmarkUserException
 from aml_benchmark.utils.error_definitions import BenchmarkUserError
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -56,6 +57,25 @@ def parse_args() -> argparse.Namespace:
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
+
+
+def _reorder_batch_score_result(
+    batch_score_result: List[Dict[str, Any]],
+    ground_truth: List[Dict[str, Any]],
+    model_type: str,
+) -> List[Dict[str, Any]]:
+    """Reorder the batch score result based on the ground truth."""
+    model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
+    batch_score_dict = {
+        EndpointUtilities.hash_payload_prompt(row["request"], model): row for row in batch_score_result
+    }
+
+    batch_score_result = []
+    for ground_truth_dict in ground_truth:
+        hash_val = ground_truth_dict["payload_id"]
+        batch_score_result.append(batch_score_dict[hash_val])
+
+    return batch_score_result
 
 
 @swallow_all_exceptions(logger)
@@ -108,10 +128,12 @@ def main(
     :return: None
     """
     logger.info("Read batch output data now.")
-    data_files = [
-        f for f in os.listdir(batch_inference_output) if f.endswith("json") or f.endswith("jsonl")
+    data_files = [os.path.join(
+        batch_inference_output, f
+    ) for f in os.listdir(batch_inference_output) if f.endswith("json") or f.endswith("jsonl")
     ]
-    logger.info(f"Receiving {data_files}")
+    logger.info(f"Receiving {len(data_files)} files.")
+    batch_score_result: List[Dict[str, Any]] = read_jsonl_files(data_files)
 
     prediction_list = []
     perf_list = []
@@ -121,7 +143,17 @@ def main(
     successful_response_list = []
     if ground_truth_input:
         input_file_paths = resolve_io_path(ground_truth_input)
-        ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
+        _ground_truth_data = read_jsonl_files(input_file_paths)
+        try:
+            batch_score_result = _reorder_batch_score_result(batch_score_result, _ground_truth_data, model_type)
+            logger.info("Reordered batch score result successfully.")
+        except Exception as e:
+            logger.warning(
+                "Failed to reorder batch score result, falling back to original order. "
+                f"This excpetion does not lead to run failure. Exception details:\n{e}"
+            )
+        ground_truth_df = pd.DataFrame(_ground_truth_data)
+        _ground_truth_data = []
     else:
         ground_truth_df = None
     online_model = OnlineEndpointModel(None, None, model_type, endpoint_url=endpoint_url)
@@ -135,36 +167,33 @@ def main(
     failed_requests = 0
     successful_requests = 0
     safety_blocked_requests = 0
-    for f in data_files:
-        logger.info(f"Processing file {f}")
-        df = pd.read_json(os.path.join(batch_inference_output, f), lines=True)
-        for index, row in df.iterrows():
-            if rc.is_result_content_safety_failure(row):
-                # check for safety failure before result success.
-                # blocked requests can be fail or success responses.
-                safety_blocked_requests += 1
-                logger.warning("Met request blocked due to safety at index {} of file {}".format(index, f))
-                blocked_response_list.append(row)
-                if handle_response_failure == 'neglect':
-                    continue
-            elif not rc.is_result_success(row):
-                failed_requests += 1
-                logger.warning("Met failed response at index {} of file {}".format(index, f))
-                failed_response_list.append(row)
-                if handle_response_failure == 'neglect':
-                    continue
-            else:
-                successful_requests += 1
-                successful_response_list.append(row)
-            prediction_list.append(rc.convert_result(row))
-            if rc.is_result_success(row):
-                # Don't calculate perf for failed requests.
-                perf_list.append(rc.convert_result_perf(row, use_tiktoken))
-            if not is_performance_test:
-                ground_truth_list.append(rc.convert_result_ground_truth(row))
-            else:
-                logger.info("is performance test")
-                ground_truth_list.append({"ground_truth": ''})
+    for index, row in enumerate(batch_score_result):
+        if rc.is_result_content_safety_failure(row):
+            # check for safety failure before result success.
+            # blocked requests can be fail or success responses.
+            safety_blocked_requests += 1
+            logger.warning("Met request blocked due to safety at index {}".format(index))
+            blocked_response_list.append(row)
+            if handle_response_failure == 'neglect':
+                continue
+        elif not rc.is_result_success(row):
+            failed_requests += 1
+            logger.warning("Met failed response at index {}".format(index))
+            failed_response_list.append(row)
+            if handle_response_failure == 'neglect':
+                continue
+        else:
+            successful_requests += 1
+            successful_response_list.append(row)
+        prediction_list.append(rc.convert_result(row))
+        if rc.is_result_success(row):
+            # Don't calculate perf for failed requests.
+            perf_list.append(rc.convert_result_perf(row, use_tiktoken))
+        if not is_performance_test:
+            ground_truth_list.append(rc.convert_result_ground_truth(row))
+        else:
+            logger.info("is performance test")
+            ground_truth_list.append({"ground_truth": ''})
     logger.info("Output data now.")
 
     save_list_to_jsonl_if_path_provided(prediction_list, prediction_path)
