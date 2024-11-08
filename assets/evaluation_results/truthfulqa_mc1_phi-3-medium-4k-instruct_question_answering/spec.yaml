@@ -1,23 +1,27 @@
 type: evaluationresult
 name: truthfulqa_mc1_phi-3-medium-4k-instruct_question_answering
-version: 2.06.18
+version: 2.06.11
 display_name: truthfulqa_mc1_Phi-3-medium-4k-instruct_question_answering
 description: truthfulqa_mc1_Phi-3-medium-4k-instruct_question_answering
 dataset_family: truthfulqa
 dataset_name: truthfulqa_mc1
 
 model_name: Phi-3-medium-4k-instruct
-model_version: "6"
-model_asset_id: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/6
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/4
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/6
+    assetId: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/4
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: Phi-3-medium-4k-instruct
+  azure_latest_model_version: 4
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-medium-4k-instruct/versions/4
 
 metrics:
   accuracy: 0.7723378212974297

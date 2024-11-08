@@ -1,23 +1,27 @@
 type: evaluationresult
 name: winogrande_phi-3-mini-4k-instruct_chat_completion
-version: 2.06.21
+version: 2.06.11
 display_name: winogrande_phi-3-mini-4k-instruct_chat_completion
 description: winogrande_phi-3-mini-4k-instruct_chat_completion
 dataset_family: winogrande
 dataset_name: winogrande
 
-model_name: phi-3-mini-4k-instruct
-model_version: "4"
-model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/4
+model_name: Phi-3-mini-4k-instruct
+model_version: "13"
+model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/13
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/4
+    assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/13
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml
+  azure_model_name: Phi-3-mini-4k-instruct
+  azure_latest_model_version: 13
+  azure_latest_model_asset_id: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/13
 
 metrics:
   accuracy: 0.730071034

@@ -5,8 +5,7 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./FluencyEvaluator/fluency.prompty
+  _default-display-file: ./fluency.prompty
 tags:
-  Preview: ""
   hiddenlayerscanned: ""
-version: 3
+version: 4

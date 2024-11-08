@@ -1,23 +1,27 @@
 type: evaluationresult
 name: winogrande_microsoft_phi_2_question_answering
-version: 2.19.040
+version: 2.06.11
 display_name: winogrande_microsoft_phi_2_question_answering
 description: microsoft-phi-2 run for winogrande dataset
 dataset_family: winogrande
 dataset_name: winogrande
 
 model_name: microsoft-phi-2
-model_version: "5"
-model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+model_version: "19"
+model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/19
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/5
+    assetId: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/19
 
 tags:
   evaluation_type: text_generation
   task: question-answering
   accuracy_metric_name: exact_match
+  azure_registry_name: azureml-msr
+  azure_model_name: microsoft-phi-2
+  azure_latest_model_version: 19
+  azure_latest_model_asset_id: azureml://registries/azureml-msr/models/microsoft-phi-2/versions/19
 
 metrics:
   accuracy: 0.547

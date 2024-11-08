@@ -27,6 +27,9 @@ tags:
   Featured: ""
   huggingface_model_id: ""
   maas-inference: "true"
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
   license: mit
   disable-batch: "true"
   task: chat-completion
@@ -64,4 +67,5 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
+  benchmark: "quality"
 version: 4
