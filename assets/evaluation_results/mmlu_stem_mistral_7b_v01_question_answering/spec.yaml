@@ -1,18 +1,18 @@
 type: evaluationresult
 name: mmlu_stem_mistral_7b_v01_question_answering
-version: 2.04.11
+version: 2.08.11
 display_name: mmlu_stem_mistral_7b_v01_question_answering
 description: mistralai-mistral-7b-v01 run for mmlu_stem dataset
 dataset_family: mmlu
 dataset_name: mmlu_stem
 
-model_name: mistralai-mistral-7b-v01
-model_version: "1"
-model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/1
+model_name: mistralai-Mistral-7B-v01
+model_version: "17"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/17
 
 relationships:
   - relationshipType: Source
-    assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/1
+    assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-v01/versions/17
 
 tags:
   evaluation_type: text_generation
