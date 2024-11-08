@@ -9,7 +9,7 @@
 /assets/common/ @azure/aml-training
 /assets/model_monitoring/ @Azure/aml-model-monitoring
 /assets/large_language_models/ @azure/aml-training @azure/aml-llm @azure/azureml-rag
-/assets/evaluation_results/ @azure/azureml-training-nlp-ds-idc
+/assets/evaluation_results/ @Azure/aml-3p-benchmarking
 /assets/batch_score/ @Azure/aml-batch-inferencing
 /assets/promptflow/ @Azure/promptflow-builtin @azure/aml-assets
 /assets/training/model_management/environments/foundation-model-inference @Azure/aml-ossmodels
