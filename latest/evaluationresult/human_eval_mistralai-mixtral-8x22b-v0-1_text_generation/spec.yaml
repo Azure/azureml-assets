@@ -1,18 +1,18 @@
 type: evaluationresult
 name: human_eval_mistralai-mixtral-8x22b-v0-1_text_generation
-version: 2.04.11
+version: 2.08.11
 display_name: human_eval_mistralai-Mixtral-8x22B-v0-1_text_generation
 description: mistralai-Mixtral-8x22B-v0-1 run for human_eval dataset
 dataset_family: human_eval
 dataset_name: human_eval
 
 model_name: mistralai-Mixtral-8x22B-v0-1
-model_version: "1"
-model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x22B-v0-1/versions/1
+model_version: "4"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x22B-v0-1/versions/4
 
 relationships:
 - relationshipType: Source
-  assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x22B-v0-1/versions/1
+  assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x22B-v0-1/versions/4
 
 tags:
   evaluation_type: text_generation

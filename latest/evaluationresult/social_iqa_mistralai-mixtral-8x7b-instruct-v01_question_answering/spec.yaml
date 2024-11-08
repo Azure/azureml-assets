@@ -1,18 +1,18 @@
 type: evaluationresult
 name: social_iqa_mistralai-mixtral-8x7b-instruct-v01_question_answering
-version: 2.04.11
+version: 2.08.11
 display_name: social_iqa_mistralai-Mixtral-8x7B-Instruct-v01_question_answering
 description: mistralai-Mixtral-8x7B-Instruct-v01 run for social_iqa dataset
 dataset_family: social_iqa
 dataset_name: social_iqa
 
 model_name: mistralai-Mixtral-8x7B-Instruct-v01
-model_version: "2"
-model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/2
+model_version: "9"
+model_asset_id: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/9
 
 relationships:
 - relationshipType: Source
-  assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/2
+  assetId: azureml://registries/azureml/models/mistralai-Mixtral-8x7B-Instruct-v01/versions/9
 
 tags:
   evaluation_type: text_generation
