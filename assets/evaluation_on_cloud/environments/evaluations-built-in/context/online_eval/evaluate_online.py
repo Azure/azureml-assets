@@ -6,6 +6,7 @@ import argparse
 import preprocess
 import evaluate
 import postprocess
+import mlflow
 
 
 def get_args():
@@ -23,6 +24,7 @@ def get_args():
                         default="./preprocessed_data_output.jsonl")
     parser.add_argument("--evaluated_data", type=str, dest="evaluated_data", default="./evaluated_data_output.jsonl")
     parser.add_argument("--evaluators", type=str, dest="evaluators")
+    parser.add_argument("--evaluator_name_id_map", type=str, dest="evaluator_name_id_map")
     parser.add_argument("--service_name", type=str, dest="service_name", default="evaluation.app")
 
     args, _ = parser.parse_known_args()
@@ -40,4 +42,5 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    with mlflow.start_run() as _run:
+        run()
