@@ -11,7 +11,6 @@ on:
 
 env:
   conda_env_prefix: /opt/conda/envs/model_eval
-  model_eval_src_dir: assets/training/model_evaluation/src/azureml
   model_eval_unittests_dir: assets/training/model_evaluation/tests
   model_eval_conda_yaml: assets/training/model_evaluation/environment/context/conda.yaml
   pytest_reports: pytest-reports
@@ -41,9 +40,9 @@ jobs:
           set -ex
           apt-get update && apt-get upgrade && apt-get install -y build-essential
           echo $conda_env_prefix
+          sed -i 's/- pip:/- pip:\n  - --extra-index-url https:\/\/download.pytorch.org\/whl\/cpu/' $model_eval_conda_yaml
           sed -i 's/=={{latest-pypi-version}}//g' $model_eval_conda_yaml
           sed -i 's/=={{latest-pypi-version:pre}}//g' $model_eval_conda_yaml
-          sed -i 's/- pip:/- pip:\n  - --extra-index-url https:\/\/download.pytorch.org\/whl\/cpu/' $model_eval_conda_yaml
           echo "  - pytest" >> $model_eval_conda_yaml
           echo "  - pytest-xdist" >> $model_eval_conda_yaml
           cat $model_eval_conda_yaml
