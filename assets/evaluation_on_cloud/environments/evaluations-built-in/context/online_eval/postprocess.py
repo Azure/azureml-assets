@@ -23,6 +23,7 @@ logging.basicConfig(level=logging.INFO)
 DEFAULT_TRACE_ID_COLUMN = "operation_Id"
 DEFAULT_SPAN_ID_COLUMN = "operation_ParentId"
 
+
 def get_args():
     """Get arguments from the command line."""
     parser = ArgumentParser()
