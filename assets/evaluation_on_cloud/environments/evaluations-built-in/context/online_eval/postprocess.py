@@ -20,6 +20,8 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+DEFAULT_TRACE_ID_COLUMN = "operation_Id"
+DEFAULT_SPAN_ID_COLUMN = "operation_ParentId"
 
 def get_args():
     """Get arguments from the command line."""
@@ -74,8 +76,8 @@ def log_evaluation_event(row) -> None:
     if "trace_id" not in row or "span_id" not in row or "evaluation" not in row:
         logger.warning("Missing required fields in the row: trace_id, span_id, evaluation")
 
-    trace_id = int(row.get("trace_id", "0"), 16)
-    span_id = int(row.get("span_id", "0"), 16)
+    trace_id = int(row.get("trace_id", row.get(DEFAULT_TRACE_ID_COLUMN, "0")), 16)
+    span_id = int(row.get("span_id", row.get(DEFAULT_SPAN_ID_COLUMN, "0")), 16)
     trace_flags = TraceFlags(TraceFlags.SAMPLED)
     response_id = row.get("gen_ai_response_id", "")
     evaluation_results = row.get("evaluation", {})
