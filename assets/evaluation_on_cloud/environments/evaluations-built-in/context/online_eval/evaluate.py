@@ -177,34 +177,34 @@ def extract_score(data: Dict[str, Any]) -> Tuple[List[str], float]:
     # Step 1: If the count of keys is 1, return that value
     if len(data) == 1:
         return list(data.keys()), float(list(data.values())[0])
-    
+
     # Step 2: Filter out non-numeric valued keys
     numeric_keys = {k: v for k, v in data.items() if isinstance(v, (int, float))}
-    
+
     if len(numeric_keys) == 0:
         return [], 0.0
-    
+
     if len(numeric_keys) == 1:
         return list(numeric_keys.keys()), float(list(numeric_keys.values())[0])
-    
+
     # Step 3: Try for keys with '_score' suffix
     score_keys = {k: v for k, v in numeric_keys.items() if k.endswith('_score')}
-    
+
     if len(score_keys) == 1:
         return list(score_keys.keys()), float(list(score_keys.values())[0])
-    
+
     # Step 4: Deal with no '_score' suffix
     if len(score_keys) == 0:
         non_gpt_keys = {k: v for k, v in numeric_keys.items() if not k.startswith('gpt_')}
-        
+
         if len(non_gpt_keys) == 1:
             return list(non_gpt_keys.keys()), float(list(non_gpt_keys.values())[0])
-        
+
         if len(non_gpt_keys) == 0:
             return list(numeric_keys.keys()), sum(numeric_keys.values()) / len(numeric_keys)
-        
+
         return list(non_gpt_keys.keys()), sum(non_gpt_keys.values()) / len(non_gpt_keys)
-    
+
     # Step 5: If multiple '_score' keys, return average of values
     return list(score_keys.keys()), sum(score_keys.values()) / len(score_keys)
 
