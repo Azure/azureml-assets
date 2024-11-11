@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.38
+version: 0.0.39
 
 # Pipeline inputs
 inputs:
@@ -46,6 +46,17 @@ inputs:
     default: HFTransformersV2
     optional: false
     description: Flavor of MLFlow to which model the model is converted to.
+
+  model_framework:
+    type: string
+    enum:
+      - Huggingface
+      - MMLab
+      - llava
+      - AutoML
+    default: Huggingface
+    optional: false
+    description: Framework from which model is imported from.
 
   vllm_enabled:
     type: boolean
@@ -260,7 +271,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.32
+    component: azureml:convert_model_to_mlflow:0.0.33
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -271,6 +282,7 @@ jobs:
       model_flavor: ${{parent.inputs.model_flavor}}
       vllm_enabled: ${{parent.inputs.vllm_enabled}}
       license_file_path: ${{parent.inputs.license_file_path}}
+      model_framework: ${{parent.inputs.model_framework}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
       hf_config_args: ${{parent.inputs.hf_config_args}}

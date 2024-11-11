@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      config_path:
+        path: artifacts/deformable_detr_twostage_refine_r50_16x2_50e_coco.py
+        uri: /mnt/azureml/cr/j/34a96aa62ea14d3da5bdd7c2473a3f25/cap/data-capability/wd/INPUT_model_path/model/deformable_detr_twostage_refine_r50_16x2_50e_coco.py
+      model_metadata:
+        path: artifacts/model_metadata.json
+        uri: /mnt/azureml/cr/j/34a96aa62ea14d3da5bdd7c2473a3f25/cap/data-capability/wd/INPUT_model_path/model/model_metadata.json
+      weights_path:
+        path: artifacts/deformable_detr_twostage_refine_r50_16x2_50e_coco_weights.pth
+        uri: /mnt/azureml/cr/j/34a96aa62ea14d3da5bdd7c2473a3f25/cap/data-capability/wd/INPUT_model_path/model/deformable_detr_twostage_refine_r50_16x2_50e_coco_weights.pth
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.16
+metadata:
+  base_model_name: deformable_detr_twostage_refine_r50_16x2_50e_coco
+  is_acft_model: true
+  is_finetuned_model: false
+  base_model_task: object-detection
+mlflow_version: 2.3.1
+model_uuid: 347d7583985d4739a01cb24a5870d3e5
+signature:
+  inputs: '[{"name": "image", "type": "binary"}]'
+  outputs: '[{"name": "boxes", "type": "string"}]'
+utc_time_created: '2023-07-27 15:40:33.852681'
