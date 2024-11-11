@@ -175,12 +175,17 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
 
 def extract_score(data: Dict[str, Any]) -> Tuple[List[str], float]:
     """Extract the float score value from the evaluation result."""
-    # Step 1: If the count of keys is 1, return that value
-    if len(data) == 1:
-        return list(data.keys()), list(data.values())[0]
-
+    # Step 1: If data is None/Empty, return empty list and 0.0
+    if not data:
+        return [], 0.0
+    
     # Step 2: Filter out non-numeric valued keys
-    numeric_keys = {k: v for k, v in data.items() if isinstance(v, (int, float))}
+    numeric_keys = {}
+    for k, v in data.items():
+        try:
+            numeric_keys[k] = float(v)
+        except Exception:
+            continue
 
     if len(numeric_keys) == 0:
         return [], 0.0
