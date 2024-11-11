@@ -6,9 +6,9 @@ dependencies:
   - python=3.8.10
   - pip:
       - azureml-designer-recommender-modules==0.0.64
-      - tensorflow==2.12.0
+      - tensorflow==2.12.1
       - numpy==1.22
-      - cryptography==42.0.4
+      - cryptography==43.0.1
       - azureml-dataprep==4.10.1
       - pip==21.1
       - paramiko==3.4.0
@@ -20,3 +20,4 @@ dependencies:
       - gunicorn==22.0.0
       - Werkzeug==3.0.3
       - tqdm==4.66.3
+      - Flask-Cors==4.0.2

@@ -7,7 +7,7 @@ dependencies:
   - pip:
       - azureml-designer-datatransform-modules==0.0.97
       - numpy==1.22
-      - cryptography==42.0.4
+      - cryptography==43.0.1
       - sqlparse==0.5.0
       - azureml-dataprep==4.10.1
       - Werkzeug==3.0.3
