@@ -5,7 +5,6 @@
 import os
 import time
 from pathlib import Path
-import pytest
 from azure.ai.ml import command, MLClient
 from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
