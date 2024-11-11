@@ -17,6 +17,7 @@ from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def update_value_in_dict(d, key_substring, new_func):
@@ -44,7 +45,8 @@ def copy_evaluator_files(command_line_args):
         if dir_path:
             shutil.copytree(dir_path, f"./{evaluator_name}")
             logger.info(f"Copying {dir_path} to ./{evaluator_name}")
-            logger.info(evaluator_name, os.listdir(f"./{evaluator_name}"))
+            copied_dir = os.listdir(f"./{evaluator_name}")
+            logger.info(f"Directory ./{evaluator_name} now contains: {copied_dir}")
             sys.path.append(os.path.abspath(f"./{evaluator_name}"))
         else:
             logger.info(f"Directory for evaluator {evaluator_name} not found.")
@@ -78,8 +80,8 @@ def get_evaluator_config(command_line_args):
 
 def run_evaluation(command_line_args, evaluators, evaluator_config):
     """Run evaluation using evaluators."""
-    logger.info("evaluators", evaluators)
-    logger.info("evaluator_config", evaluator_config)
+    logger.info(f"Running the evaluators: {list(evaluators.keys())}")
+    logger.info(f"With the evaluator config {evaluator_config}")
     results = evaluate(
         data=command_line_args.eval_data,
         evaluators=evaluators,
@@ -87,7 +89,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_config):
     )
     metrics = {}
     for metric_name, metric_value in results["metrics"].items():
-        logger.info("Logging metric:", metric_name, metric_value)
+        logger.info(f"Logging metric added with name {metric_name}, and value {metric_value}")
         metrics[metric_name] = metric_value
     mlflow.log_metrics(metrics)
 
