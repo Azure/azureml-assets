@@ -1,5 +1,5 @@
+numpy>=1.21.6,<1.26
 pyarrow==6.0.1
-numpy==1.21.6
 cython>=0.29
 cmake==3.24.0
 azure-ai-ml==0.1.0b4
