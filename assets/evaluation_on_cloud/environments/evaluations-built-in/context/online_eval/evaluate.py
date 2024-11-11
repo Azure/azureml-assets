@@ -178,7 +178,7 @@ def extract_score(data: Dict[str, Any]) -> Tuple[List[str], float]:
     # Step 1: If data is None/Empty, return empty list and 0.0
     if not data:
         return [], 0.0
-    
+
     # Step 2: Filter out non-numeric valued keys
     numeric_keys = {}
     for k, v in data.items():
