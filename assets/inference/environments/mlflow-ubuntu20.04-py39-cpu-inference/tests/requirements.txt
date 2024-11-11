@@ -1,7 +1,6 @@
 azure-ai-ml==1.2.0
 azure.identity
 requests
+mlflow
 azureml-mlflow
-inference-schema
-pandas
 pytest
