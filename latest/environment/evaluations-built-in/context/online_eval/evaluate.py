@@ -5,19 +5,20 @@
 import argparse
 import json
 import logging
-from collections import defaultdict
 import importlib
 import sys
 import shutil
 import mlflow
+import os
+import pandas as pd
 
+from typing import Any, Dict, List, Tuple
 from promptflow.client import load_flow
 from azure.ai.evaluation import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-import pandas as pd
-from utils import get_mlclient, extract_model_info
+from collections import defaultdict
 
-import os
+from utils import get_mlclient, extract_model_info
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -157,13 +158,9 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
         for evaluator_name in evaluators:
             result_key = f"outputs.{evaluator_name}"
             filtered_result = {k: v for k, v in result.items() if k.startswith(result_key)}
-            if len(filtered_result) == 1:
-                final_results[evaluator_name].append(filtered_result[list(filtered_result.keys())[0]])
-            else:
-                if len(filtered_result) == 0:
-                    logger.warning(f"No output score generated for current evaluator {evaluator_name}")
-                logger.info(f"Found multiple results for {evaluator_name}. Adding as json string.")
-                final_results[evaluator_name].append(json.dumps(filtered_result))
+            _, score_value = extract_score(filtered_result)
+            final_results[evaluator_name].append(score_value)
+
     final_results = pd.DataFrame(final_results)
     logger.info(final_results)
     final_results.to_json(command_line_args["evaluated_data"], orient="records", lines=True)
@@ -174,6 +171,48 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
         # Save the DataFrame as a JSONL file
         df.to_json("instance_results.jsonl", orient="records", lines=True)
         mlflow.log_artifact("instance_results.jsonl")
+
+
+def extract_score(data: Dict[str, Any]) -> Tuple[List[str], float]:
+    """Extract the float score value from the evaluation result."""
+    # Step 1: If data is None/Empty, return empty list and 0.0
+    if not data:
+        return [], 0.0
+
+    # Step 2: Filter out non-numeric valued keys
+    numeric_keys = {}
+    for k, v in data.items():
+        try:
+            numeric_keys[k] = float(v)
+        except Exception:
+            continue
+
+    if len(numeric_keys) == 0:
+        return [], 0.0
+
+    if len(numeric_keys) == 1:
+        return list(numeric_keys.keys()), float(list(numeric_keys.values())[0])
+
+    # Step 3: Try for keys with '_score' suffix
+    score_keys = {k: v for k, v in numeric_keys.items() if k.endswith('_score')}
+
+    if len(score_keys) == 1:
+        return list(score_keys.keys()), float(list(score_keys.values())[0])
+
+    # Step 4: Deal with no '_score' suffix
+    if len(score_keys) == 0:
+        non_gpt_keys = {k: v for k, v in numeric_keys.items() if not k.startswith('gpt_')}
+
+        if len(non_gpt_keys) == 1:
+            return list(non_gpt_keys.keys()), float(list(non_gpt_keys.values())[0])
+
+        if len(non_gpt_keys) == 0:
+            return list(numeric_keys.keys()), sum(numeric_keys.values()) / len(numeric_keys)
+
+        return list(non_gpt_keys.keys()), sum(non_gpt_keys.values()) / len(non_gpt_keys)
+
+    # Step 5: If multiple '_score' keys, return average of values
+    return list(score_keys.keys()), sum(score_keys.values()) / len(score_keys)
 
 
 rai_evaluators = [
