@@ -34,7 +34,7 @@ dependencies:
       - azureml-designer-classic-modules==0.0.182
       - joblib==1.2.0
       - numpy==1.22
-      - cryptography==42.0.4
+      - cryptography==43.0.1
       - azureml-dataprep==4.10.1
       - matplotlib==3.7.1
       - Werkzeug==3.0.3
@@ -50,3 +50,4 @@ dependencies:
       - pycryptodomex==3.19.1
       - gunicorn==22.0.0
       - tqdm==4.66.3
+      - Flask-Cors==4.0.2
