@@ -1,4 +1,4 @@
-pyarrow==6.0.1
+pyarrow
 azure-ai-ml==0.1.0b4
 azure.identity==1.10.0
 requests==2.31.0
