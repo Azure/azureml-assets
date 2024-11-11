@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:20241003.v1
+FROM mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:20241111.v1
 WORKDIR /
 
 USER root
