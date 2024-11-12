@@ -1,0 +1,42 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: oss_distillation_data_generation_batch_scoring_selector
+version: 0.0.1
+type: command
+
+is_deterministic: true
+
+display_name: OSS Distillation Batch Scoring Selector Component
+description: Component to select the Batch Scoring Selector based on the task type
+
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+
+inputs:
+  # Inputs
+
+  data_generation_task_type:
+    type: string
+    enum:
+    - NLI
+    - CONVERSATION
+    - NLU_QA
+    - MATH
+    - SUMMARIZATION
+    description: >
+      Data generation task type. Supported values are:
+      1. NLI: Generate Natural Language Inference data
+      2. CONVERSATION: Generate conversational data (multi/single turn)
+      3. NLU_QA: Generate Natural Language Understanding data for Question Answering
+      data
+      4. MATH: Generate Math data for numerical responses
+      5. SUMMARIZATION: Generate Key Summary for an Article
+outputs:
+  output:
+    type: boolean
+    is_control: true
+
+
+code: ../../src
+command: >-
+  mldesigner execute --source generate_data_batch_scoring_selection.py --name validate
+  --inputs data_generation_task_type=${{inputs.data_generation_task_type}}
+  --outputs output='${{outputs.output}}'
