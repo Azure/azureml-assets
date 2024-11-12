@@ -5,7 +5,7 @@ channels:
 dependencies:
 - python=3.9.13
 - pytest
-- pip=21.3.1
+- pip
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
