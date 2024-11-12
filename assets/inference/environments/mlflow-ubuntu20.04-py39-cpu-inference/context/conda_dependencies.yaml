@@ -2,6 +2,7 @@ name: mlflow
 channels:
 - conda-forge
 - anaconda
+- defaults
 dependencies:
 - python=3.9.13
 - numpy  # NumPy for pyarrow
@@ -10,7 +11,7 @@ dependencies:
 - boost  # Boost libraries needed by Arrow C++
 - protobuf  # Protocol Buffers (for Arrow's serialization)
 - libcurl  # Curl libraries (for Arrow)
-- libssl  # OpenSSL libraries (for Arrow)
+- openssl  # OpenSSL libraries (for Arrow)
 - zlib  # Compression libraries (for Arrow)
 - pip
 - pip:
