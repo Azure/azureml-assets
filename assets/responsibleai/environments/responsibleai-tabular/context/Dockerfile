@@ -49,7 +49,7 @@ RUN pip install 'rai-core-flask==0.7.6'
 
 # To resolve vulnerability issue
 RUN pip install 'gunicorn>=22.0.0'
-RUN pip install 'Werkzeug>=3.0.3'
+RUN pip install 'Werkzeug>=3.0.6'
 RUN pip install 'tqdm>=4.66.3'
 
 RUN pip freeze
