@@ -1,5 +1,5 @@
 cython
-pyarrow
+pyarrow==14.0.0
 numpy
 setuptools
 azure-ai-ml==0.1.0b4
