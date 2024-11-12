@@ -49,7 +49,7 @@ RUN pip install 'pyarrow>=14.0.1'
 RUN pip install 'cryptography>=43.0.1'
 
 # To resolve vulnerability issue
-RUN pip install 'Werkzeug>=3.0.3' \
+RUN pip install 'Werkzeug>=3.0.6' \
                 'tqdm>=4.66.3' \
                 'onnx>=1.16.0'
 
