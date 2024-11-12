@@ -1,7 +1,6 @@
+cython
 pyarrow
 numpy
-cython
-cmake
 setuptools
 azure-ai-ml==0.1.0b4
 azure.identity==1.10.0

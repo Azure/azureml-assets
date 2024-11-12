@@ -4,8 +4,17 @@ channels:
 - anaconda
 dependencies:
 - python=3.9.13
-- pytest
+- numpy  # NumPy for pyarrow
+- pyarrow  # PyArrow for Apache Arrow Python bindings
+- cmake  # System dependency for building C++ libraries
+- boost  # Boost libraries needed by Arrow C++
+- protobuf  # Protocol Buffers (for Arrow's serialization)
+- libcurl  # Curl libraries (for Arrow)
+- libssl  # OpenSSL libraries (for Arrow)
+- zlib  # Compression libraries (for Arrow)
 - pip
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
+  - pyarrow
+  - numpy
