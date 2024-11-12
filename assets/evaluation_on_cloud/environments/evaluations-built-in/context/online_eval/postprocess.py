@@ -79,10 +79,10 @@ def log_evaluation_event(row) -> None:
         logger.warning("Missing required fields in the row: evaluation")
     if "trace_id" not in row:
         logger.debug(f"Missing trace_id from user query result, taking default of column {DEFAULT_TRACE_ID_COLUMN}")
-        trace_id = int(row.get("trace_id", row.get(DEFAULT_TRACE_ID_COLUMN, "0")), 16)
     if "span_id" not in row:
         logger.debug(f"Missing span_id from user query result, taking default of column {DEFAULT_SPAN_ID_COLUMN}")
-        span_id = int(row.get("span_id", row.get(DEFAULT_SPAN_ID_COLUMN, "0")), 16)
+    trace_id = int(row.get("trace_id", row.get(DEFAULT_TRACE_ID_COLUMN, "0")), 16)
+    span_id = int(row.get("span_id", row.get(DEFAULT_SPAN_ID_COLUMN, "0")), 16)
     trace_flags = TraceFlags(TraceFlags.SAMPLED)
     response_id = row.get("gen_ai_response_id", "")
     evaluation_results = row.get("evaluation", {})
