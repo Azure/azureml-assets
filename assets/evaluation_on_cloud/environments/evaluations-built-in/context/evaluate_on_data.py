@@ -69,12 +69,10 @@ def initialize_evaluators(command_line_args):
 def get_evaluator_config(command_line_args):
     """Get evaluator configuration from user input."""
     evaluator_config = {}
-    data_mapping = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
         if evaluator["DataMapping"]:
-            data_mapping["column_mapping"] = evaluator["DataMapping"]
-            evaluator_config[evaluator_name] = data_mapping
+            evaluator_config[evaluator_name] = {"column_mapping": evaluator["DataMapping"]}
     return evaluator_config
 
 
