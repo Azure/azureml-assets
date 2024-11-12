@@ -61,6 +61,10 @@ if __name__ == '__main__':
                         help="Directory of build logs")
     args = parser.parse_args()
 
+    if not os.path.isdir(args.build_logs_dir):
+        print(f"No build logs found since {args.build_logs_dir} does not exist")
+        sys.exit(0)
+
     # Validate build logs
     success = validate_build_logs(build_logs_dir=args.build_logs_dir)
 

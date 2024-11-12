@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Retrieval-Evaluator
+path: ./
+properties:
+  is-promptflow: true
+  is-evaluator: true
+  show-artifact: true
+  _default-display-file: ./retrieval.prompty
+tags:
+  hiddenlayerscanned: ""
+version: 1

@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Groundedness-Pro-Evaluator
+path: ./
+properties:
+  is-promptflow: true
+  is-evaluator: true
+tags:
+  Preview: ""
+version: 1
