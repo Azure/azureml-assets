@@ -51,7 +51,7 @@ RUN pip install 'cryptography>=43.0.1'
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug>=3.0.6' \
                 'tqdm>=4.66.3' \
-                'onnx>=1.16.0'
+                'onnx>=1.17.0'
 
 # To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
 RUN pip install 'torch>=2.2.2'
