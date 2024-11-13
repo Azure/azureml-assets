@@ -40,6 +40,7 @@ RUN pip install git+https://github.com/huggingface/evaluate.git
 
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug>=3.0.6'
+RUN pip install 'legacy-cgi'
 RUN pip install 'tqdm>=4.66.3'
 
 RUN pip freeze
