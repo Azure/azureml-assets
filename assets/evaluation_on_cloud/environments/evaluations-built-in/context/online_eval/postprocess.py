@@ -14,11 +14,15 @@ from opentelemetry.trace.span import TraceFlags
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter
+from utils import is_input_data_empty
 
 import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+DEFAULT_TRACE_ID_COLUMN = "operation_Id"
+DEFAULT_SPAN_ID_COLUMN = "operation_ParentId"
 
 
 def get_args():
@@ -51,7 +55,7 @@ def configure_logging(args) -> LoggerProvider:
 def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, evaluation, service_name):
     """Log evaluation event."""
     for name, value in evaluation.items():
-        attributes = {"event.name": f"gen_ai.evaluation.{name}", "gen_ai.evaluation.score": json.dumps(value),
+        attributes = {"event.name": f"gen_ai.evaluation.{name}", "gen_ai.evaluation.score": value,
                       "gen_ai.response_id": response_id, "service.name": service_name}
         body = f"gen_ai.evaluation for response_id: {response_id}"
 
@@ -71,11 +75,14 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
 
 def log_evaluation_event(row) -> None:
     """Log evaluation event."""
-    if "trace_id" not in row or "span_id" not in row or "evaluation" not in row:
-        logger.warning("Missing required fields in the row: trace_id, span_id, evaluation")
-
-    trace_id = int(row.get("trace_id", "0"), 16)
-    span_id = int(row.get("span_id", "0"), 16)
+    if "evaluation" not in row:
+        logger.warning("Missing required fields in the row: evaluation")
+    if "trace_id" not in row:
+        logger.debug(f"Missing trace_id from user query result, taking default of column {DEFAULT_TRACE_ID_COLUMN}")
+    if "span_id" not in row:
+        logger.debug(f"Missing span_id from user query result, taking default of column {DEFAULT_SPAN_ID_COLUMN}")
+    trace_id = int(row.get("trace_id", row.get(DEFAULT_TRACE_ID_COLUMN, "0")), 16)
+    span_id = int(row.get("span_id", row.get(DEFAULT_SPAN_ID_COLUMN, "0")), 16)
     trace_flags = TraceFlags(TraceFlags.SAMPLED)
     response_id = row.get("gen_ai_response_id", "")
     evaluation_results = row.get("evaluation", {})
@@ -103,6 +110,8 @@ def get_combined_data(preprocessed_data, evaluated_data, service_name):
 def run(args):
     """Entry point of model prediction script."""
     logger.info(f"Commandline args:> Service Name: {args['service_name']}")
+    if is_input_data_empty(args["preprocessed_data"]):
+        return
     provider = configure_logging(args)
     data = get_combined_data(args["preprocessed_data"], args["evaluated_data"],
                              args["service_name"])
