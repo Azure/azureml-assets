@@ -9,11 +9,11 @@ properties:
 tags:
   hiddenlayerscanned: ""
 version: 1
-description: |-
+description: |
   | 	| |
   | -- | -- |
-  | Score range |	Integer [1-5]: where 1 is bad and 5 is good |
-  | What is this metric? | Measures the extent to which retrieved information is relevant to the user's queries and contexts |
-  | How does it work? | The retrieval measure assesses the relevance and effectiveness of the retrieved context chunks with respect to the query. High retrieval scores indicate that the AI system has successfully extracted and ranked the most relevant information at the top, without introducing bias from external knowledge and ignoring factual correctness. Conversely, low retrieval scores suggest that the AI system has failed to surface the most relevant context chunks at the top of the list and/or introduced bias and ignored factual correctness. |
-  | When to use it? |	Use the retrieval metric when evaluating the AI system's performance in retrieving information for additional context (e.g. a RAG scenario). |
+  | Score range |	Integer [1-5]: 1 is the lowest quality and 5 is the highest quality. |
+  | What is this metric? | Retrieval measures the quality of search without ground truth. It focuses on how relevant the context chunks (encoded as a string) are to address a query and how the most relevant context chunks are surfaced at the top of the list. |
+  | How does it work? | The retrieval metric is calculated by instructing a language model to follow the definition (in the description) and a set of grading rubrics, evaluate the user inputs, and output a score on a 5-point scale (higher means better quality). Learn more about our [definition and grading rubrics](https://learn.microsoft.com/azure/ai-studio/concepts/evaluation-metrics-built-in?tabs=warning#ai-assisted-retrieval). |
+  | When to use it? |	The recommended scenario is the quality of search in information retrieval and retrieval augmented generation, when you don't have ground truth for chunk retrieval rankings. Use the retrieval score when you want to assess to what extent the context chunks retrieved are highly relevant and ranked at the top for answering your users' queries. |
   | What does it need as input? |	Query, Context |
