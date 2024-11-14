@@ -73,8 +73,8 @@ def _get_parser():
         required=False,
         help="Model download details",
     )
-    parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
-    parser.add_argument("--model-path-mmd", type=Path, required=True, help="MMD Model input path")
+    parser.add_argument("--model-path", type=Path, required=False, help="Model input path")
+    parser.add_argument("--model-path-mmd", type=Path, required=False, help="MMD Model input path")
     parser.add_argument("--license-file-path", type=Path, required=False, help="License file path")
     parser.add_argument(
         "--mlflow-model-output-dir",
