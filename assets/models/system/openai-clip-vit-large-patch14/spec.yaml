@@ -22,7 +22,6 @@ tags:
    task: zero-shot-image-classification
    huggingface_model_id: openai/clip-vit-large-patch14
    SharedComputeCapacityEnabled: ''
-   author: OpenAI
    hiddenlayerscanned: ''
    inference_compute_allow_list:
         [
