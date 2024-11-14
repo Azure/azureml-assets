@@ -36,4 +36,4 @@ tags:
     - Standard_NC96ads_A100_v4
   benchmark: "quality"
 
-version: 20
+version: 21

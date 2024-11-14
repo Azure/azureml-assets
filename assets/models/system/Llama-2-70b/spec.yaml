@@ -50,4 +50,4 @@ tags:
     ignore_mismatched_sizes: "false"
   benchmark: "quality"
 
-version: 24
+version: 25
