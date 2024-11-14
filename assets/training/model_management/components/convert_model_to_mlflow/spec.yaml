@@ -19,7 +19,7 @@ command: |
   pip_pkg_str="${pip_pkgs[*]}"
   if [[ -n "$pip_pkg_str" ]]; then echo "Installing $pip_pkg_str"; pip install $pip_pkg_str; echo "pip installation completed. For any installation error please check above logs"; fi;
   echo "Running model conversion ... "
-  python -u run_model_preprocess.py $[[--model-id ${{inputs.model_id}}]] $[[--task-name ${{inputs.task_name}}]] $[[--model-download-metadata ${{inputs.model_download_metadata}}]] $[[--license-file-path ${{inputs.license_file_path}}]] $[[--hf-config-args "${{inputs.hf_config_args}}"]] $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]] $[[--hf-model-args "${{inputs.hf_model_args}}"]] $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]] $[[--hf-config-class ${{inputs.hf_config_class}}]] $[[--hf-model-class ${{inputs.hf_model_class}}]] $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]] $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]] $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]] $[[--inference-base-image "${{inputs.inference_base_image}}"]] --vllm-enabled ${{inputs.vllm_enabled}} --model-framework ${{inputs.model_framework}} --model-path ${{inputs.model_path}} --mlflow-model-output-dir ${{outputs.mlflow_model_folder}} --model-flavor ${{inputs.model_flavor}}
+  python -u run_model_preprocess.py $[[--model-id ${{inputs.model_id}}]] $[[--task-name ${{inputs.task_name}}]] $[[--model-download-metadata ${{inputs.model_download_metadata}}]] $[[--license-file-path ${{inputs.license_file_path}}]] $[[--hf-config-args "${{inputs.hf_config_args}}"]] $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]] $[[--hf-model-args "${{inputs.hf_model_args}}"]] $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]] $[[--hf-config-class ${{inputs.hf_config_class}}]] $[[--hf-model-class ${{inputs.hf_model_class}}]] $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]] $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]] $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]] $[[--inference-base-image "${{inputs.inference_base_image}}"]] --vllm-enabled ${{inputs.vllm_enabled}} --model-framework ${{inputs.model_framework}} $[[--model-path ${{inputs.model_path}}]] $[[--model-path-mmd ${{inputs.model_path_mmd}}]] --mlflow-model-output-dir ${{outputs.mlflow_model_folder}} --model-flavor ${{inputs.model_flavor}}
   echo "Completed model conversion ... "
 
 inputs:
@@ -156,13 +156,13 @@ inputs:
     type: uri_folder
     description: Path to the model.
     mode: ro_mount
-    optional: false
+    optional: true
 
   model_path_mmd:
     type: uri_folder
     description: Path to the MMD model.
     mode: ro_mount
-    optional: false
+    optional: true
 
   license_file_path:
     type: uri_file
