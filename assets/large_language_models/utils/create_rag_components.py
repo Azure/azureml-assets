@@ -28,7 +28,7 @@ from azure.identity import (
 )
 
 # Default values
-SUBSCRIPTION_ID = "f375b912-331c-4fc5-8e9f-2d7205e3e036"
+SUBSCRIPTION_ID = "921496dc-987f-410f-bd57-426eb2611356"
 RESOURCE_GROUP = "rag-release-validation-rg"
 WORKSPACE_NAME = "rag-release-validation-ws"
 
