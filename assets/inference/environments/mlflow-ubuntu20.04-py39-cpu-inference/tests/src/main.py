@@ -30,6 +30,9 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
     stdout_file = open(os.path.join(log_directory, "stdout.txt"), "w")
 
     env = os.environ.copy()
+    env["AZUREML_MODEL_DIR"] = "mlflow_model_folder"
+    env["MLFLOW_MODEL_FOLDER"] = "mlflow_model_folder"
+    env["AZUREML_EXTRA_CONDA_YAML_ABS_PATH"] = "/var/model_dir/mlflow_model_folder/conda.yaml"
     server_process = subprocess.Popen(["azmlinfsrv"] + args, stdout=stdout_file, stderr=stderr_file, env=env)
 
     max_time = datetime.now() + timeout
