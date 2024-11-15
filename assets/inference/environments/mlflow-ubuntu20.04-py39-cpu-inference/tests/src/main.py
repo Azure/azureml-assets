@@ -38,8 +38,9 @@ def start_server(log_directory, args, model_dir, port=8081, timeout=timedelta(se
     stdout_file = open(os.path.join(log_directory, "stdout.txt"), "w")
 
     env = os.environ.copy()
-    env["AZUREML_MODEL_DIR"] = model_dir
+    env["AZUREML_MODEL_DIR"] = os.path.dirname(os.path.abspath(__file__))
     env["MLFLOW_MODEL_FOLDER"] = model_dir
+    print(os.path.abspath(__file__))
     server_process = subprocess.Popen(["azmlinfsrv"] + args, stdout=stdout_file, stderr=stderr_file, env=env)
 
     max_time = datetime.now() + timeout

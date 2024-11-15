@@ -40,13 +40,11 @@ def test_mlflow_cpu_inference():
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="conda env update -n $AZUREML_CONDA_DEFAULT_ENVIRONMENT --file ${{inputs.conda_file}} && "
-        "python main.py --port ${{inputs.port}} --model_dir ${{inputs.model_dir}} "
+        command="python main.py --port ${{inputs.port}} --model_dir ${{inputs.model_dir}} "
         "--score ${{inputs.score}} --score_input ${{inputs.score_input}}",
         inputs=dict(
             score="/var/mlflow_resources/mlflow_score_script.py",
             score_input="sample_2_0_input.txt",
-            conda_file="mlflow_2_0_model_folder/conda.yaml",
             model_dir="mlflow_2_0_model_folder",
             port="8081"
         ),
