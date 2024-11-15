@@ -40,7 +40,7 @@ def test_mlflow_cpu_inference():
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="conda env update --file ${{inputs.conda_file}} && "
+        command="conda env update -n $AZUREML_CONDA_DEFAULT_ENVIRONMENT --file ${{inputs.conda_file}} && "
         "python main.py --port ${{inputs.port}} --model_dir ${{inputs.model_dir}} "
         "--score ${{inputs.score}} --score_input ${{inputs.score_input}}",
         inputs=dict(
