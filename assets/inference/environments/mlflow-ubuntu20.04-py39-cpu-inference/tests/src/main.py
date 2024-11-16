@@ -28,6 +28,8 @@ def main(args):
     res = score_with_post(headers=headers, data=payload_data)
     server_process.kill()
 
+    print_file_contents("/var/tmp", "stderr.txt")
+    print_file_contents("/var/tmp", "stdout.txt")
     print(res)
 
 
@@ -60,11 +62,6 @@ def start_server(log_directory, args, model_dir, timeout=timedelta(seconds=60)):
         if status is not None:
             break
 
-    print(log_directory, "stderr.txt")
-    print(stderr_file.read())
-    print(log_directory, "stdout.txt")
-    print(stdout_file.read())
-
     return server_process
 
 
@@ -73,6 +70,15 @@ def score_with_post(headers=None, data=None):
     url = "http://127.0.0.1:8081/score"
     return requests.post(url=url, headers=headers, data=data)
 
+def print_file_contents(log_directory, file_name):
+    print(log_directory, file_name)
+    file_path = os.path.join(log_directory, file_name)
+    try:
+        with open(file_path, 'r') as file:
+            contents = file.read()
+            print(contents)
+    except FileNotFoundError:
+        print("file path is not valid.")
 
 def parse_args():
     """Parse input arguments."""
