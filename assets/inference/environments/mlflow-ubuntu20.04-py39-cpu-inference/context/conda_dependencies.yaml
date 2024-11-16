@@ -2,8 +2,20 @@ name: mlflow
 channels:
 - conda-forge
 - anaconda
+- defaults
 dependencies:
 - python=3.9.13
+- numpy  # NumPy for pyarrow
+- pyarrow=14.0.0  # PyArrow for Apache Arrow Python bindings
+- cmake  # System dependency for building C++ libraries
+- boost  # Boost libraries needed by Arrow C++
+- protobuf  # Protocol Buffers (for Arrow's serialization)
+- libcurl  # Curl libraries (for Arrow)
+- openssl  # OpenSSL libraries (for Arrow)
+- zlib  # Compression libraries (for Arrow)
 - pip
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
+  - azureml-mlflow=={{latest-pypi-version}}
+  - pyarrow
+  - numpy

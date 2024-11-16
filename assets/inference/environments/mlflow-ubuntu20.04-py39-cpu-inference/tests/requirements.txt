@@ -1,3 +1,10 @@
-azure-ai-ml==1.2.0
-azure.identity
-requests
+cython
+pyarrow==14.0.0
+numpy
+setuptools
+azure-ai-ml==0.1.0b4
+azure.identity==1.10.0
+requests==2.31.0
+azureml-mlflow
+mlflow
+pytest
