@@ -70,6 +70,7 @@ def score_with_post(headers=None, data=None):
     url = "http://127.0.0.1:8081/score"
     return requests.post(url=url, headers=headers, data=data)
 
+
 def print_file_contents(log_directory, file_name):
     print(log_directory, file_name)
     file_path = os.path.join(log_directory, file_name)
@@ -79,6 +80,7 @@ def print_file_contents(log_directory, file_name):
             print(contents)
     except FileNotFoundError:
         print("file path is not valid.")
+
 
 def parse_args():
     """Parse input arguments."""
