@@ -80,6 +80,9 @@ def parse_args():
 
     # add arguments
     parser.add_argument("--score", type=str)
+    parser.add_argument("--model_dir", type=str)
+    parser.add_argument("--score_input", type=str)
+    parser.add_argument("--port", type=str)
 
     # parse args
     args = parser.parse_args()
