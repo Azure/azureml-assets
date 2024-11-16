@@ -40,13 +40,12 @@ def test_mlflow_cpu_inference():
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="python main.py --port ${{inputs.port}} --model_dir ${{inputs.model_dir}} "
+        command="python main.py --model_dir ${{inputs.model_dir}} "
         "--score ${{inputs.score}} --score_input ${{inputs.score_input}}",
         inputs=dict(
             score="/var/mlflow_resources/mlflow_score_script.py",
             score_input="sample_2_0_input.txt",
-            model_dir="mlflow_2_0_model_folder",
-            port="8081"
+            model_dir="mlflow_2_0_model_folder"
         ),
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),

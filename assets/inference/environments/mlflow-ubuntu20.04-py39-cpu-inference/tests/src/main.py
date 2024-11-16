@@ -17,9 +17,8 @@ def main(args):
     """Start inference server and post scoring request."""
     # start the server
     server_process = start_server("/var/tmp",
-                                  ["--entry_script", args.score, "--port", args.port],
-                                  args.model_dir,
-                                  args.port)
+                                  ["--entry_script", args.score, "--port", "8081"],
+                                  args.model_dir)
 
     # score a request
     with open(args.score_input) as f:
@@ -32,7 +31,7 @@ def main(args):
     print(res)
 
 
-def start_server(log_directory, args, model_dir, port=8081, timeout=timedelta(seconds=60)):
+def start_server(log_directory, args, model_dir, timeout=timedelta(seconds=60)):
     """Start inference server with options."""
     stderr_file = open(os.path.join(log_directory, "stderr.txt"), "w")
     stdout_file = open(os.path.join(log_directory, "stdout.txt"), "w")
@@ -49,7 +48,7 @@ def start_server(log_directory, args, model_dir, port=8081, timeout=timedelta(se
         time.sleep(0.25)
         req = None
         try:
-            req = requests.get("http://127.0.0.1:{port}", timeout=10)
+            req = requests.get("http://127.0.0.1:8081", timeout=10)
         except Exception as e:
             print(e)
 
@@ -62,14 +61,16 @@ def start_server(log_directory, args, model_dir, port=8081, timeout=timedelta(se
             break
 
     print(log_directory, "stderr.txt")
+    print(stderr_file.read())
     print(log_directory, "stdout.txt")
+    print(stdout_file.read())
 
     return server_process
 
 
-def score_with_post(headers=None, data=None, port=8081):
+def score_with_post(headers=None, data=None):
     """Post scoring request to the server."""
-    url = "http://127.0.0.1:{port}/score"
+    url = "http://127.0.0.1:8081/score"
     return requests.post(url=url, headers=headers, data=data)
 
 
@@ -82,7 +83,6 @@ def parse_args():
     parser.add_argument("--score", type=str)
     parser.add_argument("--model_dir", type=str)
     parser.add_argument("--score_input", type=str)
-    parser.add_argument("--port", type=str)
 
     # parse args
     args = parser.parse_args()
