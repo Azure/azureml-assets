@@ -72,6 +72,7 @@ def score_with_post(headers=None, data=None):
 
 
 def print_file_contents(log_directory, file_name):
+    """Print out file contents."""
     print(log_directory, file_name)
     file_path = os.path.join(log_directory, file_name)
     try:
