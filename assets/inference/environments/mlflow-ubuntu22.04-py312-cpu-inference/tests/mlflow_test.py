@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the minimal 22.04 py312 cpu environment."""
+"""Tests running a sample job in the mlflow 22.04 py312 cpu environment."""
 import os
 import time
 from pathlib import Path
@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_minimal_cpu_inference():
-    """Tests a sample job using minimal 22.04 py312 cpu as the environment."""
+def test_mlflow_cpu_inference():
+    """Tests a sample job using mlflow 22.04 py312 cpu as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,27 +28,30 @@ def test_minimal_cpu_inference():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "minimal_cpu_inference"
+    env_name = "mlflow_py312_inference"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="minimal_cpu_inference",
-        description="minimal 22.04 py312 cpu inference environment created from a Docker context.",
+        name="mlflow_py312_inference",
+        description="mlflow 22.04 py312 cpu inference environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="python main.py --score ${{inputs.score}}",
+        command="python main.py --model_dir ${{inputs.model_dir}} "
+        "--score ${{inputs.score}} --score_input ${{inputs.score_input}}",
         inputs=dict(
-            score="valid_score.py",
+            score="/var/mlflow_resources/mlflow_score_script.py",
+            score_input="sample_2_0_input.txt",
+            model_dir="mlflow_2_0_model_folder"
         ),
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
-        display_name="minimal-cpu-inference-example",
-        description="A test run of the minimal 22.04 py312 cpu inference curated environment",
-        experiment_name="minimalCPUInferenceExperiment"
+        display_name="mlflow-py312-inference-example",
+        description="A test run of the mlflow 22.04 py312 cpu inference curated environment",
+        experiment_name="mlflow312InferenceExperiment"
     )
 
     returned_job = ml_client.create_or_update(job)
