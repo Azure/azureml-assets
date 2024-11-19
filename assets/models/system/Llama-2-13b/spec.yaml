@@ -61,5 +61,7 @@ tags:
     - vllm
     - ds_mii
   benchmark: "quality"
+  notes: "notes.md"
+  evaluation: "evaluation.md"
 
 version: 24

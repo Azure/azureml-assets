@@ -49,5 +49,7 @@ tags:
     precision: "16"
     ignore_mismatched_sizes: "false"
   benchmark: "quality"
+  notes: "notes.md"
+  evaluation: "evaluation.md"
 
 version: 25
