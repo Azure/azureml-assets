@@ -1,0 +1,50 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: evaluation_trigger
+display_name: Evaluation for Trigger
+description: Evaluation job from trigger service
+
+version: 0.0.3
+type: command
+
+inputs:
+  connection_string:
+    type: string
+    optional: false
+    description: "Connection String"
+  resource_id:
+    type: string
+    optional: false
+    description: "Resource ID"
+  query:
+    type: string
+    description: "DB Query"
+  sampling_rate:
+    type: string
+    description: "Sampling Rate"
+  cron_expression:
+    type: string
+    description: "Cron Expression"
+  evaluators:
+    type: string
+    description: "Json Serialized Evaluators info."
+
+outputs:
+  preprocessed_data:
+    type: uri_file
+  evaluated_data:
+    type: uri_file
+
+is_deterministic: True
+environment: azureml://registries/azureml/environments/evaluations-built-in/versions/4
+
+command: >-
+  python /app/online_eval/evaluate_online.py compute_metrics.py
+  --connection_string '${{inputs.connection_string}}'
+  --resource_id '${{inputs.resource_id}}'
+  --query '${{inputs.query}}'
+  --sampling_rate '${{inputs.sampling_rate}}'
+  --preprocessor_connection_type managed-identity
+  --cron_expression '${{inputs.cron_expression}}'
+  --preprocessed_data '${{outputs.preprocessed_data}}'
+  --evaluators '${{inputs.evaluators}}'
+  --evaluated_data '${{outputs.evaluated_data}}'
