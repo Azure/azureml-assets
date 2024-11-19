@@ -115,13 +115,7 @@ description: |-
 
   ```json
   {
-    "input_data": {
-      "columns": [
-        "image"
-      ],
-      "index": [0, 1],
-      "data": ["image1", "image2"]
-    }
+    "input_data": ["image1", "image2"]
   }
   ```
 

@@ -3,7 +3,7 @@ azure-ai-ml==1.22.2
 azure-identity==1.19.0
 azureml-evaluate-mlflow==0.0.63
 ffmpeg-python==0.2.0
-langcodes==3.4.1
+langcodes==3.5.0
 sentencepiece==0.2.0
 accelerate==1.1.1
 wget==3.2
