@@ -36,7 +36,7 @@ RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
     pip install --upgrade pip && \
     pip install  -r requirements.txt && \
     pip install  db-copilot-tool==0.0.8 &&\
-    pip install  cryptography==43.0.1 langchain==0.2.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1 langchain-community==0.3.0 waitress==3.0.6
+    pip install  cryptography==43.0.1 langchain==0.2.11 idna==3.7 sqlparse==0.5.0 gunicorn==22.0.0 Werkzeug==3.0.3 requests==2.32.0 azure-identity==1.16.1 langchain-community==0.3.0 waitress==3.0.6"
 
 # Fix vunerabilities
 RUN /bin/bash -c "source /opt/miniconda/etc/profile.d/conda.sh && \
