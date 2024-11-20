@@ -67,6 +67,7 @@ inputs:
     - image-classification
     - text-to-image
     - chat-completion
+    - image-feature-extraction
     optional: true
     type: string
 
