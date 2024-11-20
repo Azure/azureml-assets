@@ -219,7 +219,6 @@ outputs:
 jobs:
   validation_trigger_import:
     component: azureml:validation_trigger_import:0.0.13
-    # component: azureml://registries/azureml/components/validation_trigger_import/versions/0.0.11
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -254,7 +253,6 @@ jobs:
 
   download_model:
     component: azureml:download_model:0.0.29
-    # component: azureml://registries/azureml/components/download_model/versions/0.0.28
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -289,7 +287,6 @@ jobs:
 
   convert_model_to_mlflow:
     component: azureml:convert_model_to_mlflow:0.0.34
-    # component: azureml://registries/azureml-preview-test1/components/convert_model_to_mlflow/versions/0.0.33-groopa-test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -319,7 +316,6 @@ jobs:
 
   mlflow_model_local_validation:
     component: azureml:mlflow_model_local_validation:0.0.16
-    # component: azureml://registries/azureml/components/mlflow_model_local_validation/versions/0.0.14
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -333,7 +329,6 @@ jobs:
 
   register_model:
     component: azureml:register_model:0.0.19
-    # component: azureml://registries/azureml/components/register_model/versions/0.0.17
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
