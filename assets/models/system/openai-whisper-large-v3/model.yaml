@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/openai-whisper-large-v3/20240913/mlflow_model_folder
+  container_path: huggingface/openai-whisper-large-v3/1731298862/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

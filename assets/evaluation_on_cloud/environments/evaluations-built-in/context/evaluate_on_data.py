@@ -56,6 +56,7 @@ def initialize_evaluators(command_line_args):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     evaluators = {}
     evaluators_o = json.loads(command_line_args.evaluators)
+    rai_evaluators = json.loads(command_line_args.rai_evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
@@ -69,12 +70,10 @@ def initialize_evaluators(command_line_args):
 def get_evaluator_config(command_line_args):
     """Get evaluator configuration from user input."""
     evaluator_config = {}
-    data_mapping = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
         if evaluator["DataMapping"]:
-            data_mapping["column_mapping"] = evaluator["DataMapping"]
-            evaluator_config[evaluator_name] = data_mapping
+            evaluator_config[evaluator_name] = {"column_mapping": evaluator["DataMapping"]}
     return evaluator_config
 
 
@@ -124,11 +123,9 @@ parser.add_argument("--eval_data", type=str)
 parser.add_argument("--eval_output", type=str)
 parser.add_argument("--evaluators", type=str)
 parser.add_argument("--evaluator_name_id_map", type=str)
+parser.add_argument("--rai_evaluators", type=str, help="Comma-separated list of RAI evaluators", required=False)
 
 args = parser.parse_args()
-rai_evaluators = ['Sexual-Content-Evaluator', 'Hate-and-Unfairness-Evaluator',
-                  'Violent-Content-Evaluator', 'Self-Harm-Related-Content-Evaluator',
-                  'Groundedness-Pro-Evaluator', 'Protected-Material-Evaluator', 'Indirect-Attack-Evaluator']
 
 if __name__ == '__main__':
     copy_evaluator_files(args)
