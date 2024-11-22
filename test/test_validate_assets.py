@@ -39,7 +39,8 @@ MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
         ("dockerfile-from-ce-image-windows", False, False, None, False),
         ("bad-build-context", False, True, None, False),
         ("model-with-azure", False, True, None, False),
-        ("model-with-azure", False, True, None, False),
+        ("azure-ai-model", False, True, None, True),
+        ("azure-ai-model-bad", False, True, None, False),
         ("model-microsoft-good", False, True, None, True),
         ("model-microsoft-bad-asset-name", False, True, None, False),
         ("model-microsoft-bad-spec", False, True, None, False),
@@ -50,6 +51,12 @@ MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
         ("evaluationresult/text_generation_incorrect", False, True, None, False),
         ("evaluationresult/vision_correct", False, True, None, True),
         ("evaluationresult/vision_incorrect", False, True, None, False),
+        ("evaluationresult/text_cost_correct", False, True, None, True),
+        ("evaluationresult/text_cost_incorrect", False, True, None, False),
+        ("evaluationresult/text_quality_correct", False, True, None, True),
+        ("evaluationresult/text_quality_incorrect", False, True, None, False),
+        ("evaluationresult/text_performance_correct", False, True, None, True),
+        ("evaluationresult/text_performance_incorrect", False, True, None, False),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,

@@ -6,26 +6,34 @@ properties:
   languages: en
   inference-min-sku-spec: 48|2|440|128
   inference-recommended-sku: Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: chat-completion
+  finetune-min-sku-spec:  96|4|880|256
+  finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
-  freePlayground: "false"
-  displayName: "Phi-3.5 MoE instruct (128k)"
+  evaluation: "evaluation.md"
+  notes: "notes.md"
+  freePlayground: "true"
+  displayName: "Phi-3.5-MoE instruct (128k)"
   summary: "A new mixture of experts model"
   textContextWindow: 131072
   maxOutputTokens: 4096
-  languages: "en"
+  languages: "en,ar,zh,cs,da,nl,fi,fr,de,he,hu,it,ja,ko,no,pl,pt,ru,es,sv,th,tr,uk"
   inputModalities: "text"
+  outputModalities: "text"
   trainingDataDate: "Aug 2024"
   keywords: "Reasoning,Understanding,Low latency"
   licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
   playgroundRateLimitTier:  "low"
   Featured: ""
-  Preview: ""
   huggingface_model_id: ""
   maas-inference: "true"
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
   license: mit
   disable-batch: "true"
   task: chat-completion
-  author: microsoft
+  author: Microsoft
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
   _aml_system_vanity_registry: "azureml-phi"
@@ -35,14 +43,20 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_NC96ads_A100_v4
     ]
+  finetune_compute_allow_list:
+    [
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4
+    ]
   inference_supported_envs:
     - vllm
   model_specific_defaults:
     apply_deepspeed: "true"
-    deepspeed_stage: 2
+    deepspeed_stage: 3
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
+    max_seq_length: 16384
     ignore_mismatched_sizes: "false"
     num_train_epochs: 1
     per_device_train_batch_size: 1
@@ -53,4 +67,5 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 2
+  benchmark: "quality"
+version: 4

@@ -193,15 +193,20 @@ def get_classification_dataset(
         # labels: {test_dataset_wrapper.num_classes}"
     )
 
-    df = pd.DataFrame(columns=input_column_names + [label_column_name])
+    # Initialize the rows of the output dataframe to the empty list.
+    frame_rows = []
+
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
             # sending image_paths instead of base64 encoded string as oss flavor doesnt take bytes as input.
-            df = df.append({
+            frame_rows.append({
                 input_column_names[0]: image_path,
                 label_column_name: test_dataset_wrapper.label_at_index(index)
-            }, ignore_index=True)
+            })
+
+    # Make the output dataframe.
+    df = pd.DataFrame(data=frame_rows, columns=input_column_names + [label_column_name])
 
     return df
 
@@ -253,7 +258,9 @@ def get_object_detection_dataset(
         f"# test images: {len(test_dataset)}, # labels: {test_dataset.num_classes}"
     )
     test_dataset_wrapper = RuntimeDetectionDatasetAdapter(test_dataset)
-    df = pd.DataFrame(columns=input_column_names + [label_column_name])
+
+    # Initialize the rows of the output dataframe to the empty list.
+    frame_rows = []
 
     counter = 0
     for index in range(len(test_dataset_wrapper)):
@@ -262,12 +269,15 @@ def get_object_detection_dataset(
 
         if is_valid_image(image_path):
             counter += 1
-            df = df.append({
+            frame_rows.append({
                 input_column_names[0]: base64.encodebytes(read_image(image_path)).decode("utf-8"),
                 input_column_names[1]: image_meta_info,
-                input_column_names[2]: ". ".join(test_dataset.classes),
+                input_column_names[2]: ". ".join([str(c) for c in test_dataset.classes]),
                 label_column_name: label,
-            }, ignore_index=True)
+            })
+
+    # Make the output dataframe.
+    df = pd.DataFrame(data=frame_rows, columns=input_column_names + [label_column_name])
 
     logger.info(f"Total number of valid images: {counter}")
     return df
@@ -300,8 +310,8 @@ def get_generation_dataset(
     mltable = load(mltable_path)
     mltable_dataframe = mltable.to_pandas_dataframe()
 
-    # Initialize the output dataframe with the input and label columns.
-    df = pd.DataFrame(columns=input_column_names + [label_column_name])
+    # Initialize the rows of the output dataframe to the empty list.
+    frame_rows = []
 
     # Go through all (image_url, captions) pairs and make a (prompt, image_url) from each pair. The model will generate
     # a synthetic image from the prompt and the set of synthetic images will be compared with the set of original ones.
@@ -310,15 +320,17 @@ def get_generation_dataset(
     ):
         # Go through all captions (split according to special separator).
         for caption in captions.split(GenerationLiterals.CAPTION_SEPARATOR):
-            df = df.append(
+            frame_rows.append(
                 {
                     # The model input is a text prompt.
                     input_column_names[0]: caption,
                     # The original image is passed through via the label column.
                     label_column_name: image_url,
-                },
-                ignore_index=True
+                }
             )
+
+    # Make the output dataframe.
+    df = pd.DataFrame(data=frame_rows, columns=input_column_names + [label_column_name])
 
     return df
 

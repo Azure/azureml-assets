@@ -1,7 +1,7 @@
 | 	| |
 | -- | -- |
-| Score range |	Integer [1-5]: where 1 is bad and 5 is good |
-| What is this metric? | Measures the extent to which the model's generated responses are pertinent and directly related to the given questions. |
-| How does it work? | The relevance measure assesses the ability of answers to capture the key points of the context. High relevance scores signify the AI system's understanding of the input and its capability to produce coherent and contextually appropriate outputs. Conversely, low relevance scores indicate that generated responses might be off-topic, lacking in context, or insufficient in addressing the user's intended queries. |
-| When to use it? |	Use the relevance metric when evaluating the AI system's performance in understanding the input and generating contextually appropriate responses. |
-| What does it need as input? |	Question, Context, Generated Answer |
+| Score range |	Integer [1-5]: 1 is the lowest quality and 5 is the highest quality. |
+| What is this metric? | Coherence measures the logical and orderly presentation of ideas in a response, allowing the reader to easily follow and understand the writer's train of thought. A coherent response directly addresses the question with clear connections between sentences and paragraphs, using appropriate transitions and a logical sequence of ideas. |
+| How does it work? | The coherence metric is calculated by instructing a language model to follow the definition (in the description) and a set of grading rubrics, evaluate the user inputs, and output a score on a 5-point scale (higher means better quality). Learn more about our [definition and grading rubrics](https://learn.microsoft.com/azure/ai-studio/concepts/evaluation-metrics-built-in?tabs=warning#ai-assisted-relevance). |
+| When to use it? |	The recommended scenario is generative business writing such as summarizing meeting notes, creating marketing materials, and drafting email. |
+| What does it need as input? |	Query, Response |

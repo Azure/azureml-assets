@@ -17,9 +17,8 @@ properties:
 
 tags:
   Featured: ""
-  Preview: ""
   license: custom
-  author: meta
+  author: Meta
   task: chat-completion
   hiddenlayerscanned: ""
   disable-batch: "true"
@@ -58,5 +57,8 @@ tags:
   inference_supported_envs:
     - vllm
     - ds_mii
+  benchmark: "quality"
+  notes: "notes.md"
+  evaluation: "evaluation.md"
 
-version: 24
+version: 25

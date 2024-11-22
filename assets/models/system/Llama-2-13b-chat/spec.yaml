@@ -14,8 +14,7 @@ properties:
 
 tags:
   Featured: ""
-  Preview: ""
-  author: meta
+  author: Meta
   license: custom
   disable-batch: "true"
   task: chat-completion
@@ -43,5 +42,8 @@ tags:
   inference_supported_envs:
     - vllm
     - ds_mii
+  benchmark: "quality"
+  notes: "notes.md"
+  evaluation: "evaluation.md"
 
-version: 20
+version: 21

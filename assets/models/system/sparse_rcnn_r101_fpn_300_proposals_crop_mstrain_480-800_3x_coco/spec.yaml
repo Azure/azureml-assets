@@ -26,7 +26,6 @@ properties:
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
     Standard_ND40rs_v2
 tags:
-  Preview: ''
   Deprecated: ''
   SharedComputeCapacityEnabled: ''
   openmmlab_model_id: sparse_rcnn_r101_fpn_300_proposals_crop_mstrain_480-800_3x_coco

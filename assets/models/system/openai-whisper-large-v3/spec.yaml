@@ -10,7 +10,7 @@ properties:
 tags:
   huggingface_model_id: openai/whisper-large-v3
   hiddenlayerscanned: ""
-  author: openai-oss
+  author: OpenAI
   inference_compute_allow_list:
     [
       Standard_DS5_v2,
@@ -47,8 +47,7 @@ tags:
       Standard_ND40rs_v2,    
     ]
   Featured: ""
-  Preview: ""
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
-version: 4
+version: 5
