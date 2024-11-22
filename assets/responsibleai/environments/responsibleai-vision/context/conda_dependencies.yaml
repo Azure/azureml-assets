@@ -12,6 +12,7 @@ dependencies:
   - captum
   - cpuonly
   - pip:
+    - numpy==1.23.0
     - ml-wrappers~=0.5.5
     - responsibleai~=0.36.0
     - raiwidgets~=0.36.0
