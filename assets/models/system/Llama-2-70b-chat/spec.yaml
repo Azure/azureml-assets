@@ -35,5 +35,7 @@ tags:
     - Standard_ND96amsr_A100_v4
     - Standard_NC96ads_A100_v4
   benchmark: "quality"
+  notes: "notes.md"
+  evaluation: "evaluation.md"
 
-version: 20
+version: 21
