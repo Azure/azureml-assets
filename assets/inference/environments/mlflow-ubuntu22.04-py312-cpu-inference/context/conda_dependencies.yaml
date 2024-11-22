@@ -8,6 +8,6 @@ dependencies:
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
   - azureml-ai-monitoring=={{latest-pypi-version}}
+  - pandas
   - numpy
   - mlflow
-  - azureml-contrib-services
