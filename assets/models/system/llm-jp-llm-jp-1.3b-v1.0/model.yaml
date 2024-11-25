@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/llm-jp-1-3b-v1-0/1704416671/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
