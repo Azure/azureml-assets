@@ -12,7 +12,7 @@ Used in two user scenarios:
     i.e.
     python create_custom_env.py -p "C:/temp/private-embedding-env/wheels" -n private-embedding-env
 
- 2. Using your own Dockerfile
+2. Using your own Dockerfile
     python create_custom_env.py [-d DOCKER_DIR] [-n CUSTOM_ENVIRONMENT_NAME] \
         [-s SUBSCRIPTION_ID] [-r RESOURCE_GROUP] [-w WORKSPACE_NAME]
 
@@ -36,12 +36,11 @@ from azure.identity import (
 )
 
 # Default values
-SUBSCRIPTION_ID = "f375b912-331c-4fc5-8e9f-2d7205e3e036"
+SUBSCRIPTION_ID = "921496dc-987f-410f-bd57-426eb2611356"
 RESOURCE_GROUP = "rag-release-validation-rg"
 WORKSPACE_NAME = "rag-release-validation-ws"
 
 CUSTOM_ENVIRONMENT_NAME = "custom-llm-embedding-env"
-
 BASE_ENVIRONMENT = "mcr.microsoft.com/azureml/curated/llm-rag-embeddings"
 
 
@@ -85,14 +84,16 @@ def main(
 
         if package_dir is not None:
             package_dir = Path(package_dir)
-            for wheel in package_dir.glob("*.whl"):
-                shutil.copy(wheel, wheel_dir / wheel.name)
+            wheel_files = list(package_dir.glob("*.whl"))
+            if wheel_files:  # Check for any .whl files in the package_dir
+                for wheel in wheel_files:
+                    shutil.copy(wheel, wheel_dir / wheel.name)
 
-        # Adding wheel packages to Dockerfile
-        with open(f"{staging_dir}/Dockerfile", "a") as f:
-            for wheel in wheel_dir.glob("*.whl"):
-                f.write(f"\nCOPY ./wheels/{wheel.name} /wheels/\n")
-            f.write("\nRUN pip install --force-reinstall /wheels/*.whl\n")
+                # Adding wheel packages to Dockerfile
+                with open(f"{staging_dir}/Dockerfile", "a") as f:
+                    for wheel in wheel_files:
+                        f.write(f"\nCOPY ./wheels/{wheel.name} /wheels/\n")
+                    f.write("\nRUN pip install --force-reinstall /wheels/*.whl\n")
 
         env = Environment(
             name=environment_name,
@@ -102,9 +103,12 @@ def main(
         )
 
         # get latest environment version by name
-        latest_env = ml_client.environments.get(environment_name, label="latest")
-        if latest_env is not None:
-            env.version = f"{int(latest_env.version) + 1}"
+        try:
+            latest_env = ml_client.environments.get(environment_name, label="latest")
+            if latest_env is not None:
+                env.version = f"{int(latest_env.version) + 1}"
+        except Exception:
+            env.version = "1"
 
         result = ml_client.environments.create_or_update(env)
         wsid = ml_client.workspaces.get(workspace_name).id

@@ -57,13 +57,7 @@ Image Multi-label classification|Image Multi-label classification|[multilabel fr
 
 ```json
 {
-  "input_data": {
-    "columns": [
-      "image"
-    ],
-    "index": [0, 1],
-    "data": ["image1", "image2"]
-  }
+  "input_data": ["image1", "image2"]
 }
 ```
 
