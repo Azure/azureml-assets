@@ -1,7 +1,11 @@
+# Print which version of timm is getting installed
+import timm
+from importlib.metadata import version
+print(version('timm'))
+
 import json
 
 import mlflow.pyfunc
-import timm
 import torch
 import pandas as pd
 import io
