@@ -30,6 +30,7 @@ dependencies:
   - faiss-cpu~=1.7.3
   - GitPython>=3.1
   - inference-schema>=1.8.0
+  - langchain-community>=0.3.0
   - lxml
   - markdown
   - mlflow>=2.6.0

@@ -29,6 +29,7 @@ dependencies:
   - datasets~=2.10.1
   - faiss-cpu~=1.7.3
   - inference-schema>=1.8.0
+  - langchain-community>=0.3.0
   - lxml
   - markdown
   - mlflow-skinny==2.3.2
