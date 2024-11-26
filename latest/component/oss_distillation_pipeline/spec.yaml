@@ -490,7 +490,7 @@ jobs:
 
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.24
+    component: azureml:oss_text_generation_data_import:0.0.25
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -508,7 +508,7 @@ jobs:
 
   oss_chat_completion_finetune:
     type: command
-    component: azureml:oss_chat_completion_finetune:0.0.24
+    component: azureml:oss_chat_completion_finetune:0.0.25
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'

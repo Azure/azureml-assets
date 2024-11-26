@@ -324,7 +324,7 @@ jobs:
   # Config generator job
   oss_distillation_generate_data_config_generator:
     type: command
-    component: azureml:batch_benchmark_config_generator:0.0.8
+    component: azureml:batch_benchmark_config_generator:0.0.9
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
