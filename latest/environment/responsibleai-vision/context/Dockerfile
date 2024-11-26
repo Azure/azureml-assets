@@ -23,6 +23,13 @@ RUN conda remove cryptography
 
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0'
 
+# Separating RAI install due to very old statsmodels dependency
+# which conflicts with econml and numpy
+RUN pip install 'responsibleai~=0.36.0' \
+                'raiwidgets~=0.36.0' \
+                'vision_explanation_methods' \
+                'responsibleai-vision==0.3.8'
+
 # Install azureml packages
 RUN pip install 'azureml-core==1.58.0.post1' \
                 'azureml-mlflow==1.58.0.post3' \
@@ -36,7 +43,7 @@ RUN pip install 'shap==0.41.0' \
                 'interpret-community==0.31.0' \
                 'Pillow>=10.3.0' \
                 'setuptools>=65.5.1' \
-                'numpy==1.22.0' \
+                'numpy==1.26.2' \
                 'scipy==1.10.0' \
                 'statsmodels==0.14.0' \
                 'gunicorn>=22.0.0'

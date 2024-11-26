@@ -16,7 +16,13 @@ RUN conda list
 # Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
 RUN conda remove cryptography
 
-RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
+RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy==1.26.2'
+
+# Separating RAI install due to very old statsmodels dependency
+# which conflicts with econml and numpy
+RUN pip install 'responsibleai~=0.36.0' \
+                'raiwidgets~=0.36.0' \
+                'responsibleai-text[qa]==0.2.7'
 
 # Install main azureml packages
 RUN pip install 'azureml-core==1.58.0.post1' \
