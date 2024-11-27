@@ -32,10 +32,10 @@ def test_mlflow_cpu_inference():
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="mlflow_py312_inference",
+        name=env_name,
         description="mlflow 22.04 py312 cpu inference environment created from a Docker context.",
     )
-    ml_client.environments.create_or_update(env_docker_context)
+    returned_env = ml_client.environments.create_or_update(env_docker_context)
 
     # create the command
     job = command(
@@ -47,7 +47,7 @@ def test_mlflow_cpu_inference():
             score_input="sample_2_0_input.txt",
             model_dir="mlflow_2_0_model_folder"
         ),
-        environment=f"{env_name}@latest",
+        environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
         display_name="mlflow-py312-inference-example",
         description="A test run of the mlflow 22.04 py312 cpu inference curated environment",
