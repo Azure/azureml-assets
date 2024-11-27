@@ -3,7 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - pip=20.2
-  - python=3.8.10
+  - python=3.9.18
+  - setuptools=59
+  - cython=0.29.24
   - r-caret=6.0
   - r-catools=1.17.1
   - r-cluster=2.1.0
@@ -31,10 +33,9 @@ dependencies:
   - r=3.5.1
   - libxcrypt=4.4
   - pip:
-      - azureml-designer-classic-modules==0.0.182
+      - azureml-designer-classic-modules==0.0.186
       - joblib==1.2.0
       - numpy==1.22
-      - cryptography==42.0.4
       - azureml-dataprep==4.10.1
       - matplotlib==3.7.1
       - Werkzeug==3.0.3

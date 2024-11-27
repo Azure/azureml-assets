@@ -3,6 +3,8 @@ channels:
   - conda-forge
 dependencies:
   - python=3.9.18
+  - setuptools=59
+  - cython=0.29.24
   - scikit-surprise=1.1.4
   - pip=20.2
   - pip:
