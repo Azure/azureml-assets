@@ -18,7 +18,7 @@ from azure.ai.evaluation import evaluate
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from collections import defaultdict
 
-from utils import get_mlclient, extract_model_info
+from utils import get_mlclient, extract_model_info, is_input_data_empty
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -228,6 +228,8 @@ rai_evaluators = [
 
 def run(args):
     """Entry point of model prediction script."""
+    if is_input_data_empty(args["preprocessed_data"]):
+        return
     evaluators = json.loads(args["evaluators"])
     # evaluators = download_evaluators_and_update_local_path(evaluators)
     evaluators = copy_evaluator_files(args)

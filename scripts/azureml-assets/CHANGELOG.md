@@ -2,6 +2,10 @@
 ### 🚀 New Features
 
 
+## 1.16.67 (2024-11-18)
+### 🚀 New Features
+- [#3605](https://github.com/Azure/azureml-assets/pull/3605) Improve logging for environment release tag already found in copy_assets
+
 ## 1.16.66 (2024-11-11)
 ### 🚀 New Features
 - [#3585](https://github.com/Azure/azureml-assets/pull/3585) Migrate evaluationresult assets to internal repo
