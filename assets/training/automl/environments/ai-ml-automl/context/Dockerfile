@@ -47,6 +47,8 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
+                'onnx==1.17.0' \
+                'Werkzeug==3.0.6' \
                 'mlflow-skinny==2.9.2' \
                 'xgboost==1.5.2' \
                 'prophet==1.1.4' \

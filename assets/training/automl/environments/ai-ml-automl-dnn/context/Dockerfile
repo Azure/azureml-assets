@@ -55,6 +55,8 @@ RUN pip install \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
+                'onnx==1.17.0' \
+                'Werkzeug==3.0.6' \
                 'inference-schema' \
                 'prophet==1.1.4' \
                 'xgboost==1.5.2' \
