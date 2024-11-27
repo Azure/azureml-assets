@@ -7,15 +7,18 @@ import pytest
 
 from unittest.mock import patch, MagicMock
 
-from src.batch_score.common.configuration.configuration import Configuration
-from src.batch_score.common.post_processing.callback_factory import CallbackFactory
-from src.batch_score.common.post_processing.mini_batch_context import MiniBatchContext
-from src.batch_score.common.scoring.scoring_result import ScoringResult
-from src.batch_score.common.telemetry.events import event_utils
-from src.batch_score.common.post_processing.output_handler import SingleFileOutputHandler, SeparateFileOutputHandler
-from tests.fixtures.input_transformer import FakeInputOutputModifier
-from tests.fixtures.scoring_result import get_test_request_obj
-from tests.fixtures.test_mini_batch_context import TestMiniBatchContext
+from src.batch_score.root.common.configuration.configuration import Configuration
+from src.batch_score.root.common.post_processing.callback_factory import CallbackFactory
+from src.batch_score.root.common.post_processing.mini_batch_context import MiniBatchContext
+from src.batch_score.root.common.scoring.scoring_result import ScoringResult
+from src.batch_score.root.common.telemetry.events import event_utils
+from src.batch_score.root.common.post_processing.output_handler import (
+    SingleFileOutputHandler,
+    SeparateFileOutputHandler
+)
+from tests.batch_score.fixtures.input_transformer import FakeInputOutputModifier
+from tests.batch_score.fixtures.scoring_result import get_test_request_obj
+from tests.batch_score.fixtures.test_mini_batch_context import TestMiniBatchContext
 
 
 def test_generate_callback_success(mock_get_logger,
@@ -113,11 +116,11 @@ def test_output_handler(
     gathered_result: list[ScoringResult] = [scoring_result.copy(), scoring_result.copy()]
 
     with patch(
-        "tests.unit.common.post_processing.test_callback_factory.SeparateFileOutputHandler",
+        "tests.batch_score.unit.common.post_processing.test_callback_factory.SeparateFileOutputHandler",
         return_value=MagicMock()
       ) as mock_separate_file_output_handler, \
         patch(
-            "tests.unit.common.post_processing.test_callback_factory.SingleFileOutputHandler",
+            "tests.batch_score.unit.common.post_processing.test_callback_factory.SingleFileOutputHandler",
             return_value=MagicMock()
           ) as mock_single_file_output_handler:
 

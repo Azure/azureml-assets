@@ -5,9 +5,9 @@
 
 import pytest
 
-from src.batch_score.common import constants
-from src.batch_score.common.common_enums import ApiType
-from src.batch_score.common.configuration.configuration_parser import (
+from src.batch_score.root.common import constants
+from src.batch_score.root.common.common_enums import ApiType
+from src.batch_score.root.common.configuration.configuration_parser import (
     ConfigurationParser,
 )
 
@@ -79,21 +79,6 @@ def test_is_completion(api_type, request_path, scoring_url, expected_result):
 
     # Act & assert
     assert configuration.is_completion() == expected_result
-
-
-@pytest.mark.parametrize('target_batch_pool, expected_result', [
-    ('SaHarA-glObal', True),
-    ('sahara-global', True),
-    (None, False),
-    ('random_pool', False),
-])
-def test_is_sahara(target_batch_pool, expected_result):
-    # Arrange
-    """Test is sahara."""
-    configuration = ConfigurationParser().parse_configuration(["--batch_pool", target_batch_pool])
-
-    # Act & assert
-    assert configuration.is_sahara() == expected_result
 
 
 @pytest.mark.parametrize('api_type, request_path, scoring_url, expected_result', [

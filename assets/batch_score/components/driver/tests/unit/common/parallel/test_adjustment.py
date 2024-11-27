@@ -4,14 +4,13 @@
 """This file contains unit tests for adjustment."""
 
 import os
-
 import pandas as pd
 import pytest
 
-from src.batch_score.common.configuration.client_settings import ClientSettingsKey
-from src.batch_score.common.parallel.request_metrics import RequestMetrics
-from src.batch_score.common.parallel.adjustment import AIMD
-from src.batch_score.common.parallel.congestion import (
+from src.batch_score.root.common.configuration.client_settings import ClientSettingsKey, NullClientSettingsProvider
+from src.batch_score.root.common.parallel.request_metrics import RequestMetrics
+from src.batch_score.root.common.parallel.adjustment import AIMD
+from src.batch_score.root.common.parallel.congestion import (
     CongestionDetector,
     CongestionState,
 )
@@ -110,20 +109,18 @@ adjustment_tests = [
 ]
 
 
-adjustment_tests = [['make_routing_client', *test] for test in adjustment_tests]
+adjustment_tests = [[*test] for test in adjustment_tests]
 
 
 @pytest.mark.parametrize(
-    "make_routing_client, initial_concurrency, congestion_states_to_return, expected_new_concurrency_values",
+    "initial_concurrency, congestion_states_to_return, expected_new_concurrency_values",
     adjustment_tests,
-    indirect=['make_routing_client'],
 )
-def test_calculate_next_concurrency(make_routing_client,
-                                    initial_concurrency,
+def test_calculate_next_concurrency(initial_concurrency,
                                     congestion_states_to_return,
                                     expected_new_concurrency_values):
     """Test calculate next concurrency."""
-    aimd = AIMD(request_metrics=RequestMetrics(), client_settings_provider=make_routing_client())
+    aimd = AIMD(request_metrics=RequestMetrics(), client_settings_provider=NullClientSettingsProvider())
 
     # TODO: introduce DI to accept congestion detector in constructor
     aimd._AIMD__congestion_detector = MockCongestionDetector(congestion_states_to_return)
@@ -139,7 +136,6 @@ def test_calculate_next_concurrency(make_routing_client,
 
 
 fixture_names = [
-    'make_routing_client',
     'mock_get_client_setting',
 ]
 
@@ -151,7 +147,7 @@ env_vars = {
 
 
 @pytest.mark.parametrize(
-    "make_routing_client, mock_get_client_setting, client_settings, expected_adjustment_interval,"
+    "mock_get_client_setting, client_settings, expected_adjustment_interval,"
     "expected_additive_increase, expected_multiplicative_decrease",
     [
         (
@@ -185,7 +181,6 @@ env_vars = {
     indirect=fixture_names,
 )
 def test_init_env_var_overrides_client_setting_overrides_class_default(
-        make_routing_client,
         mock_get_client_setting,
         client_settings,
         expected_adjustment_interval,
@@ -195,7 +190,7 @@ def test_init_env_var_overrides_client_setting_overrides_class_default(
     # Class defaults are used when there are no client settings or environment variables.
     clear_env_vars()
 
-    aimd_class_default = AIMD(request_metrics=RequestMetrics(), client_settings_provider=make_routing_client())
+    aimd_class_default = AIMD(request_metrics=RequestMetrics(), client_settings_provider=NullClientSettingsProvider())
 
     assert 180 == aimd_class_default._AIMD__adjustment_interval
     assert 1 == aimd_class_default._AIMD__additive_increase
@@ -205,7 +200,7 @@ def test_init_env_var_overrides_client_setting_overrides_class_default(
     for key, value in client_settings.items():
         mock_get_client_setting[key] = value
 
-    aimd_client_setting = AIMD(request_metrics=RequestMetrics(), client_settings_provider=make_routing_client())
+    aimd_client_setting = AIMD(request_metrics=RequestMetrics(), client_settings_provider=NullClientSettingsProvider())
 
     assert expected_adjustment_interval == aimd_client_setting._AIMD__adjustment_interval
     assert expected_additive_increase == aimd_client_setting._AIMD__additive_increase
@@ -214,7 +209,7 @@ def test_init_env_var_overrides_client_setting_overrides_class_default(
     # Environment variables override client settings.
     os.environ.update(env_vars)
 
-    aimd_env_var = AIMD(request_metrics=RequestMetrics(), client_settings_provider=make_routing_client())
+    aimd_env_var = AIMD(request_metrics=RequestMetrics(), client_settings_provider=NullClientSettingsProvider())
 
     assert 1000 == aimd_env_var._AIMD__adjustment_interval
     assert 50 == aimd_env_var._AIMD__additive_increase

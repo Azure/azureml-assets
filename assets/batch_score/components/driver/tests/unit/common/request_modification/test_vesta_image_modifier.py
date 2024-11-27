@@ -10,16 +10,16 @@ from urllib.parse import urlparse
 import pytest
 from mock import MagicMock
 
-from src.batch_score.common.request_modification.modifiers.vesta_image_encoder import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_image_encoder import (
     FolderNotMounted,
     ImageEncoder,
     UnsuccessfulUrlResponse,
     VestaImageModificationException,
 )
-from src.batch_score.common.request_modification.modifiers.vesta_image_modifier import (
+from src.batch_score.root.common.request_modification.modifiers.vesta_image_modifier import (
     VestaImageModifier,
 )
-from tests.fixtures.vesta_image_modifier import (
+from tests.batch_score.fixtures.vesta_image_modifier import (
     MOCKED_BINARY_FROM_FILE,
     MOCKED_BINARY_FROM_URL,
 )

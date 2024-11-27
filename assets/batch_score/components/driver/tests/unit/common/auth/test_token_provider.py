@@ -3,7 +3,7 @@
 
 """This file contains unit tests for token provider."""
 
-import src.batch_score.common.auth.token_provider as tp
+import src.batch_score.root.common.auth.token_provider as tp
 
 
 def test_get_token(mock_get_logger, make_token_provider, mock__credentials_get_tokens):

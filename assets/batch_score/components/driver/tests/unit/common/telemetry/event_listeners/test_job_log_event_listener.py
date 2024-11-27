@@ -8,9 +8,9 @@ from unittest.mock import patch
 
 from pydispatch import dispatcher
 
-from src.batch_score.common.telemetry.event_listeners.job_log_event_listener import setup_job_log_event_handlers
-from src.batch_score.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
-from src.batch_score.common.telemetry.events.event_utils import Signal
+from src.batch_score.root.common.telemetry.event_listeners.job_log_event_listener import setup_job_log_event_handlers
+from src.batch_score.root.common.telemetry.events.batch_score_init_started_event import BatchScoreInitStartedEvent
+from src.batch_score.root.common.telemetry.events.event_utils import Signal
 
 
 def test_handle_batch_score_event(mock_run_context):

@@ -6,8 +6,8 @@
 import pytest
 from mock import patch
 
-from src.batch_score.common.parallel import adjustment
-from src.batch_score.common.parallel.adjustment import AIMD
+from src.batch_score.root.common.parallel import adjustment
+from src.batch_score.root.common.parallel.adjustment import AIMD
 
 
 @pytest.fixture()

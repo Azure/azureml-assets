@@ -13,21 +13,17 @@ from .util import _submit_job_and_monitor_till_completion, set_component
 # Common configuration
 cpu_compute_target = "cpu-cluster"
 source_dir = os.getcwd()
-gated_llm_pipeline_filepath = os.path.join(
-    pytest.source_dir, "tests", "e2e", "prs_pipeline_templates", "base_llm.yml")
+gated_llm_pipeline_filepath = os.path.join(source_dir,
+                                           "assets", "managed_batch_inference", "components", "tests", "batch_score",
+                                           "e2e", "prs_pipeline_templates", "base_llm.yml")
 
 JOB_NAME = "gated_batch_score_llm"  # Should be equivalent to base_llm.yml's job name
 YAML_COMPONENT = {"jobs": {JOB_NAME: {"component": None}}}  # Placeholder for component name set below.
 YAML_ENV_VARS = {"jobs": {JOB_NAME: {
-    "environment_variables": {
-        "BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG": "false",
-        "BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS": "True"
-    }
-}}}
-YAML_ENV_VARS_INITIAL_REQUEST_TIMEOUT = {"jobs": {JOB_NAME: {
-    "environment_variables": {
-        "BATCH_SCORE_INITIAL_REQUEST_TIMEOUT": "20"
-    }
+        "environment_variables": {
+            "BATCH_SCORE_EMIT_PROMPTS_TO_JOB_LOG": "false",
+            "BATCH_SCORE_SURFACE_TELEMETRY_EXCEPTIONS": "True"
+        }
 }}}
 YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     "inputs": {
@@ -36,6 +32,12 @@ YAML_DISALLOW_FAILED_REQUESTS = {"jobs": {JOB_NAME: {
     },
     "error_threshold": 0,
     "mini_batch_error_threshold": 0
+}}}
+
+YAML_ENV_VARS_INITIAL_REQUEST_TIMEOUT = {"jobs": {JOB_NAME: {
+    "environment_variables": {
+        "BATCH_SCORE_INITIAL_REQUEST_TIMEOUT": "20",
+    }
 }}}
 
 
@@ -47,7 +49,7 @@ def _get_file_config_yaml(data_asset_path: str):
                 "inputs": {
                     "configuration_file": {
                         "path": data_asset_path,
-                        "type": "uri_file"
+                        "type": "uri_file",
                     }
                 }
             }
@@ -56,8 +58,9 @@ def _get_file_config_yaml(data_asset_path: str):
 
 
 YAML_AOAI_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_completion_configuration:5")
-YAML_AOAI_SPLIT_OUTPUT_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:test_split_output_configuration:3")
+YAML_AOAI_API_FIELDS_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:test_api_fields_aoai_completion_configuration:2")
 YAML_AOAI_CHAT_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_chat_completion_configuration:5")
+YAML_AOAI_API_FIELDS_CHAT_COMPLETION_FILE_CONFIG = _get_file_config_yaml("azureml:test_api_fields_aoai_chat_completion_configuration:2")
 YAML_AOAI_EMBEDDING_FILE_CONFIG = _get_file_config_yaml("azureml:aoai_embedding_configuration:5")
 
 # Input data assets
@@ -74,6 +77,16 @@ YAML_AOAI_CHAT_COMPLETION_TEST_DATA_ASSET = {"inputs": {
 YAML_AOAI_EMBEDDING_TEST_DATA_ASSET = {"inputs": {
     "pipeline_job_data_path": {
         "path": "azureml:e2e_aoai_embedding_test_data:1"
+    }
+}}
+YAML_AOAI_INPUT_SCHEMA_VERSION_COMPLETION_TEST_DATA_ASSET = {"inputs": {
+    "pipeline_job_data_path": {
+        "path": "azureml:e2e_v2_input_schema_test_data:2"
+    }
+}}
+YAML_AOAI_INPUT_SCHEMA_VERSION_CHAT_COMPLETION_TEST_DATA_ASSET = {"inputs": {
+    "pipeline_job_data_path": {
+        "path": "azureml:e2e_v2_input_schema_chat_completion_test_data:2"
     }
 }}
 
@@ -101,14 +114,14 @@ def test_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
 @pytest.mark.smoke
 @pytest.mark.e2e
 @pytest.mark.timeout(20 * 60)
-def test_split_output_gated_aoai_batch_score_completion(llm_batch_score_yml_component):
+def test_api_fields_aoai_batch_score_completion(llm_batch_score_yml_component):
     """Test gate for AOAI batch score completion model."""
     set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
-    display_name = {"display_name": "llm_aoai_completion_smoke"}
+    display_name = {"display_name": "llm_aoai_api_fields_completion_smoke"}
     yaml_update = deep_update(
         YAML_COMPONENT,
-        YAML_AOAI_COMPLETION_TEST_DATA_ASSET,
-        YAML_AOAI_SPLIT_OUTPUT_COMPLETION_FILE_CONFIG,
+        YAML_AOAI_INPUT_SCHEMA_VERSION_COMPLETION_TEST_DATA_ASSET,
+        YAML_AOAI_API_FIELDS_COMPLETION_FILE_CONFIG,
         YAML_ENV_VARS,
         display_name)
     _submit_job_and_monitor_till_completion(
@@ -128,6 +141,26 @@ def test_gated_aoai_batch_score_chat_completion(llm_batch_score_yml_component):
         YAML_COMPONENT,
         YAML_AOAI_CHAT_COMPLETION_TEST_DATA_ASSET,
         YAML_AOAI_CHAT_COMPLETION_FILE_CONFIG,
+        YAML_ENV_VARS,
+        YAML_DISALLOW_FAILED_REQUESTS,
+        display_name)
+    _submit_job_and_monitor_till_completion(
+        ml_client=pytest.ml_client,
+        pipeline_filepath=gated_llm_pipeline_filepath,
+        yaml_overrides=[yaml_update])
+
+
+@pytest.mark.smoke
+@pytest.mark.e2e
+@pytest.mark.timeout(20 * 60)
+def test_api_fields_aoai_batch_score_chat_completion(llm_batch_score_yml_component):
+    """Test gate for AOAI batch score chat completion model."""
+    set_component(*llm_batch_score_yml_component, component_config=YAML_COMPONENT, job_name=JOB_NAME)
+    display_name = {"display_name": "llm_aoai_api_fields_chat_completion_smoke"}
+    yaml_update = deep_update(
+        YAML_COMPONENT,
+        YAML_AOAI_INPUT_SCHEMA_VERSION_CHAT_COMPLETION_TEST_DATA_ASSET,
+        YAML_AOAI_API_FIELDS_CHAT_COMPLETION_FILE_CONFIG,
         YAML_ENV_VARS,
         YAML_DISALLOW_FAILED_REQUESTS,
         display_name)

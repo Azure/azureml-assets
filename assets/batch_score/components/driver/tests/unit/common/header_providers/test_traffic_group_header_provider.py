@@ -3,7 +3,7 @@
 
 """This file contains unit tests for traffic group header provider."""
 
-from src.batch_score.common.header_providers.traffic_group_header_provider import (
+from src.batch_score.root.common.header_providers.traffic_group_header_provider import (
     TrafficGroupHeaderProvider,
 )
 

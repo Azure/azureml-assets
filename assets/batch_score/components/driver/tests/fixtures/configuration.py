@@ -5,9 +5,9 @@
 
 import pytest
 
-from src.batch_score.common.common_enums import ApiType, AuthenticationType
-from src.batch_score.common.configuration.configuration import Configuration
-from src.batch_score.common.configuration.metadata import Metadata
+from src.batch_score.root.common.common_enums import ApiType, AuthenticationType
+from src.batch_score.root.common.configuration.configuration import Configuration
+from src.batch_score.root.common.configuration.metadata import Metadata
 
 TEST_COMPONENT_NAME = "test_component_name"
 TEST_COMPONENT_VERSION = "test_component_version"
