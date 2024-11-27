@@ -26,7 +26,7 @@ def test_azure_ai_ml_automl():
     subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
-
+    # test
     ml_client = MLClient(
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
