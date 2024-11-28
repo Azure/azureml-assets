@@ -24,3 +24,4 @@ dependencies:
       - pycryptodomex==3.19.1
       - gunicorn==22.0.0
       - idna==3.7
+      - azureml-defaults==1.58.0
