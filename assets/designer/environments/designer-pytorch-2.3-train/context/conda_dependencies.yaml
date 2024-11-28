@@ -13,7 +13,7 @@ dependencies:
       - future==0.18.3
       - numpy==1.22
       - azureml-dataprep==4.10.1
-      - Werkzeug==3.0.3
+      - Werkzeug==3.0.6
       - pip==23.3
       - requests==2.32.0
       - paramiko==3.4.0
