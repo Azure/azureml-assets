@@ -35,7 +35,7 @@ dependencies:
       - scikit-learn==1.5.0
       - joblib==1.2.0
       - numpy==1.22
-      - azureml-dataprep==4.10.1
+      - azureml-dataprep==5.3.0
       - matplotlib==3.7.1
       - Werkzeug==3.0.6
       - pip==23.3
