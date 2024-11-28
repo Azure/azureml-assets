@@ -124,7 +124,7 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
             y_pred = predict_fn(X_test)
         except RuntimeError as e:
             logger.warning(f"RuntimeError exception raised. Reason: {e}")
-            y_pred, kwargs = self.handle_device_failure(X_test, **kwargs)
+            y_pred = self.handle_device_failure(X_test, **kwargs)
         if y_transformer is not None:
             y_pred = y_transformer.transform(y_pred).toarray()
 
