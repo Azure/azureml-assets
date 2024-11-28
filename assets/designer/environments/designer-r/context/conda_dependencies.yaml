@@ -4,9 +4,6 @@ channels:
 dependencies:
   - pip=20.2
   - python=3.9.18
-  - setuptools=59
-  - cython=0.29.24
-  - scikit-learn=1.5.0
   - r-caret=6.0
   - r-catools=1.17.1
   - r-cluster=2.1.0
@@ -35,6 +32,7 @@ dependencies:
   - libxcrypt=4.4
   - pip:
       - azureml-designer-classic-modules==0.0.186
+      - scikit-learn==1.5.0
       - joblib==1.2.0
       - numpy==1.22
       - azureml-dataprep==4.10.1

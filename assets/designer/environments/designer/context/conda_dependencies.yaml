@@ -3,14 +3,12 @@ channels:
   - conda-forge
 dependencies:
   - python=3.9.18
-  - setuptools=59
-  - cython=0.29.24
-  - scikit-learn=1.5.0
   - scikit-surprise=1.1.4
   - pip=20.2
   - pip:
     - azureml-designer-classic-modules==0.0.186
     - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
+    - scikit-learn==1.5.0
     - spacy==2.3.9
     - joblib==1.2.0
     - numpy==1.22
