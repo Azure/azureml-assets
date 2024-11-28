@@ -8,7 +8,6 @@ dependencies:
       - azureml-designer-recommender-modules==0.0.66
       - tensorflow==2.12.1
       - numpy==1.22
-      - azureml-dataprep==5.3.0
       - pip==23.3
       - paramiko==3.4.0
       - requests==2.32.0
@@ -19,5 +18,5 @@ dependencies:
       - gunicorn==22.0.0
       - Werkzeug==3.0.6
       - tqdm==4.66.3
-      - azureml-defaults==1.58.0
+      - azureml-defaults=={{latest-pypi-version}}
       - keras==2.13.1
