@@ -196,7 +196,7 @@ def prepare_chat_data_from_ft_pipeline(data: pd.DataFrame):
     X_test, y_test = {local_constants.LLM_FT_CHAT_COMPLETION_KEY:[]}, []
     for message in messages_col.to_list():
         X_test[local_constants.LLM_FT_CHAT_COMPLETION_KEY].append(message[:-1])
-        y_test.append(message[-1]["content"])
+        y_test.append([message[-1]["content"]])
     X_test = pd.DataFrame(X_test)
     y_test = pd.Series(y_test)
     return X_test, y_test.values
