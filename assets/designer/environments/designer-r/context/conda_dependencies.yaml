@@ -51,4 +51,3 @@ dependencies:
       - gunicorn==22.0.0
       - tqdm==4.66.3
       - azureml-defaults==1.58.0
-      - setuptools==70.0.0
