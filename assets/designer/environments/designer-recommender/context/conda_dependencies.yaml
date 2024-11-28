@@ -8,7 +8,6 @@ dependencies:
       - azureml-designer-recommender-modules==0.0.66
       - tensorflow==2.12.1
       - numpy==1.22
-      - cryptography==42.0.4
       - azureml-dataprep==4.10.1
       - pip==23.3
       - paramiko==3.4.0
@@ -18,7 +17,7 @@ dependencies:
       - pycryptodome==3.19.1
       - pycryptodomex==3.19.1
       - gunicorn==22.0.0
-      - Werkzeug==3.0.3
+      - Werkzeug==3.0.6
       - tqdm==4.66.3
       - azureml-defaults==1.58.0
       - keras==2.13.1

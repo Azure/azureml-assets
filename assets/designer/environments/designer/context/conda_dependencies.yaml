@@ -5,8 +5,29 @@ dependencies:
   - python=3.9.18
   - setuptools=59
   - cython=0.29.24
+  - scikit-learn=1.5.0
   - scikit-surprise=1.1.4
   - pip=20.2
   - pip:
     - azureml-designer-classic-modules==0.0.186
-    - "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz"
+    - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
+    - spacy==2.3.9
+    - joblib==1.2.0
+    - numpy==1.22
+    - azureml-dataprep==4.10.1
+    - matplotlib==3.7.1
+    - Werkzeug==3.0.6
+    - pip==23.3
+    - requests==2.32.0
+    - scipy==1.10.0
+    - paramiko==3.4.0
+    - azure-storage-blob==12.13.0
+    - urllib3==1.26.19
+    - Pillow==10.3.0
+    - pyarrow==14.0.1
+    - pycryptodome==3.19.1
+    - pycryptodomex==3.19.1
+    - gunicorn==22.0.0
+    - tqdm==4.66.3
+    - azureml-defaults==1.58.0
+    - setuptools==70.0.0

@@ -6,6 +6,7 @@ dependencies:
   - python=3.9.18
   - setuptools=59
   - cython=0.29.24
+  - scikit-learn=1.5.0
   - r-caret=6.0
   - r-catools=1.17.1
   - r-cluster=2.1.0
@@ -38,7 +39,7 @@ dependencies:
       - numpy==1.22
       - azureml-dataprep==4.10.1
       - matplotlib==3.7.1
-      - Werkzeug==3.0.3
+      - Werkzeug==3.0.6
       - pip==23.3
       - requests==2.32.0
       - paramiko==3.4.0
