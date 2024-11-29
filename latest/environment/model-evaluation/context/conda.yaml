@@ -28,7 +28,7 @@ dependencies:
   - lightgbm>=3.2.1,<4.2.0
   - msrest>=0.6.21,<0.7.1
   - mltable==1.6.1
-  - openai==1.55.2
+  - openai==1.55.3
   - azure-ai-ml==1.22.4
   - mldesigner==0.1.0b18
   - tiktoken
