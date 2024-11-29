@@ -20,7 +20,7 @@ tags:
   task: text-generation
   author: "Mistral AI"
   benchmark: "quality"
-version: 4
+version: 5
 description: |
   The Mixtral-8x22B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.
 

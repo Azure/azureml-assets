@@ -26,7 +26,7 @@ metadata:
   model_provider_name: mistral
   is_acft_model: true
   is_finetuned_model: false
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:45
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:58
 mlflow_version: 2.10.2
 model_uuid: 34f520fef38a454295423f8260e5e306
 utc_time_created: '2024-04-12 09:50:13.545434'
