@@ -2,21 +2,7 @@ name: project_environment
 channels:
   - conda-forge
 dependencies:
-  - pip=20.2
+  - pip=23.3
   - python=3.9.18
   - pip:
-      - azureml-designer-recommender-modules==0.0.66
-      - tensorflow==2.12.1
-      - numpy==1.22
-      - pip==23.3
-      - paramiko==3.4.0
-      - requests==2.32.0
-      - urllib3==1.26.19
-      - pyarrow==14.0.1
-      - pycryptodome==3.19.1
-      - pycryptodomex==3.19.1
-      - gunicorn==22.0.0
-      - Werkzeug==3.0.6
-      - tqdm==4.66.3
-      - azureml-defaults=={{latest-pypi-version}}
-      - keras==2.13.1
+      - azureml-designer-recommender-modules==0.0.67
