@@ -1,8 +1,8 @@
-name: designer-pytorch-2.3
+name: designer-pytorch-train
 version: auto
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
-categories: ["Designer", "Python"]
+categories: ["Designer", "Python", "PyTorch"]
 
 
