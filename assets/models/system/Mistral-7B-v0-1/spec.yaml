@@ -71,4 +71,4 @@ tags:
   task: text-generation
   author: "Mistral AI"
   benchmark: "quality"
-version: 17
+version: 18
