@@ -30,4 +30,7 @@ class MLflowSchemaLiterals:
 class MLflowLiterals:
     """MLflow export related literals."""
 
-    MODEL_DIR = "model_dir"
+    CHECKPOINT_PATH = "checkpoint_path"
+    CONFIG_PATH = "config_path"
+    DEVICE_TYPE = "device_type"
+    TO_HALF_PRECISION = "to_half_precision"

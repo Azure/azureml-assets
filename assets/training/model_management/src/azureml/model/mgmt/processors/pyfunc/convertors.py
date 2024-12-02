@@ -1167,7 +1167,14 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
                         VirchowMLFlowSchemaLiterals.INPUT_COLUMN_TEXT),
             ]
         )
-
+        params = ParamSchema(
+                [
+                    ParamSpec(VirchowMLflowLiterals.DEVICE_TYPE,
+                              DataType.string, "cuda"),
+                    ParamSpec(VirchowMLflowLiterals.TO_HALF_PRECISION,
+                              DataType.boolean, False),
+                ]
+            )
         if self._task == SupportedTasks.IMAGE_FEATURE_EXTRACTION.value:
             output_schema = Schema(
                 [
@@ -1184,7 +1191,7 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
         else:
             raise Exception("Unsupported task")
 
-        return ModelSignature(inputs=input_schema, outputs=output_schema)
+        return ModelSignature(inputs=input_schema, outputs=output_schema, params=params)
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
@@ -1225,7 +1232,8 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
         :rtype: Dict
         """
         artifacts_dict = {
-            VirchowMLflowLiterals.MODEL_DIR: self._model_dir
+            VirchowMLflowLiterals.CHECKPOINT_PATH: self._model_dir+"/pytorch_model.bin",
+            VirchowMLflowLiterals.CONFIG_PATH: self._config_path+"/config.json"
         }
         return artifacts_dict
 
