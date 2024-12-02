@@ -2,7 +2,7 @@ name: project_environment
 channels:
   - conda-forge
 dependencies:
-  - pip=20.2
+  - pip=23.3
   - python=3.9.18
   - r-caret=6.0
   - r-catools=1.17.1
@@ -31,22 +31,4 @@ dependencies:
   - r=3.5.1
   - libxcrypt=4.4
   - pip:
-      - azureml-designer-classic-modules==0.0.186
-      - scikit-learn==1.5.0
-      - joblib==1.2.0
-      - numpy==1.22
-      - matplotlib==3.7.1
-      - Werkzeug==3.0.6
-      - pip==23.3
-      - requests==2.32.0
-      - paramiko==3.4.0
-      - azure-storage-blob==12.13.0
-      - scipy==1.10.0
-      - urllib3==1.26.19
-      - Pillow==10.3.0
-      - pyarrow==14.0.1
-      - pycryptodome==3.19.1
-      - pycryptodomex==3.19.1
-      - gunicorn==22.0.0
-      - tqdm==4.66.3
-      - azureml-defaults=={{latest-pypi-version}}
+      - azureml-designer-classic-modules==0.0.188

@@ -4,26 +4,7 @@ channels:
 dependencies:
   - python=3.9.18
   - scikit-surprise=1.1.4
-  - pip=20.2
+  - pip=23.3
   - pip:
-    - azureml-designer-classic-modules==0.0.186
+    - azureml-designer-classic-modules==0.0.188
     - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
-    - scikit-learn==1.5.0
-    - spacy==2.3.9
-    - joblib==1.2.0
-    - numpy==1.22
-    - matplotlib==3.7.1
-    - Werkzeug==3.0.6
-    - pip==23.3
-    - requests==2.32.0
-    - scipy==1.10.0
-    - paramiko==3.4.0
-    - azure-storage-blob==12.13.0
-    - urllib3==1.26.19
-    - Pillow==10.3.0
-    - pyarrow==14.0.1
-    - pycryptodome==3.19.1
-    - pycryptodomex==3.19.1
-    - gunicorn==22.0.0
-    - tqdm==4.66.3
-    - azureml-defaults=={{latest-pypi-version}}
