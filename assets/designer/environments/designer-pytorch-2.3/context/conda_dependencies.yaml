@@ -10,3 +10,5 @@ dependencies:
   - torchvision=0.18.1
   - pip:
       - azureml-designer-pytorch-modules==0.0.72
+      - Pillow==10.2.0
+      - pycryptodomex==3.19.1
