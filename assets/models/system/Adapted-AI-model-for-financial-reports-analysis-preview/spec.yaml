@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: supply-chain-trade-regulations-preview
+name: Adapted-AI-model-for-financial-reports-analysis-preview
 path: ./
 
 properties:
@@ -10,8 +10,8 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  industry: 
-  author: 
+  industry: financial-services
+  author: microsoft
   Preview: ""
   Featured: ""
   languages: "en"

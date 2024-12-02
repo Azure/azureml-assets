@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/supply-chain-trade-regulations-preview/mlflow_model_folder
+  container_path: huggingface/Adapted-AI-model-for-financial-reports-analysis-preview/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

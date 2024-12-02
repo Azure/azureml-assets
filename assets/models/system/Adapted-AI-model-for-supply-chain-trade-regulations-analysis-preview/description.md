@@ -1,7 +1,3 @@
-**Name**
-
-Adapted\-AI\-model\-for\-supply\-chain\-trade\-regulations\-analysis\-preview
-
 **Description**
 
 The adapted AI model for supply chain trade regulations analysis (preview) is a 3\.8B parameter, lightweight, state\-of\-the\-art open model, trained using synthetic supply chain domain\-specific datasets, focused on trade regulations. 

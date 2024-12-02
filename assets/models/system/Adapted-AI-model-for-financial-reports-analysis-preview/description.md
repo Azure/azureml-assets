@@ -1,9 +1,3 @@
-[Model catalog \- Azure AI Studio](https://ai.azure.com/explore/models/Phi-3-small-128k-instruct/version/3/registry/azureml?tid=72f988bf-86f1-41af-91ab-2d7cd011db47)
-
-**Name**
-
-Adapted\-AI\-model\-for\-financial\-reports\-analysis\-preview
-
 **Description**
 
 The adapted AI model for financial reports analysis (preview) is a state\-of\-the\-art small language model (SLM) based on the Phi\-3\-small\-128k architecture, designed specifically for analyzing financial reports. It has been fine\-tuned on a few hundred million tokens derived from instruction data over financial documents, including SEC filings (10\-K, 10\-Q, 8\-K reports) and mathematical reasoning tasks. 
