@@ -10,6 +10,7 @@
 /assets/model_monitoring/ @Azure/aml-model-monitoring
 /assets/large_language_models/ @azure/aml-training @azure/aml-llm @azure/azureml-rag
 /assets/evaluation_results/ @azure/aml-benchmarking @azure/aml-llm
+/assets/evaluation_on_cloud @Azure/aml-evals
 /assets/batch_score/ @Azure/aml-batch-inferencing
 /assets/promptflow/ @Azure/promptflow-builtin @azure/aml-assets
 /assets/training/model_management/environments/foundation-model-inference @Azure/aml-ossmodels
