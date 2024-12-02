@@ -9,18 +9,4 @@ dependencies:
   - pytorch=2.3.1
   - torchvision=0.18.1
   - pip:
-      - azureml-designer-pytorch-modules==0.0.71
-      - future==0.18.3
-      - numpy==1.22
-      - Werkzeug==3.0.6
-      - pip==23.3
-      - requests==2.32.0
-      - paramiko==3.4.0
-      - urllib3==1.26.19
-      - Pillow==10.3.0
-      - pyarrow==14.0.1
-      - pycryptodome==3.19.1
-      - pycryptodomex==3.19.1
-      - gunicorn==22.0.0
-      - idna==3.7
-      - azureml-defaults=={{latest-pypi-version}}
+      - azureml-designer-pytorch-modules==0.0.72
