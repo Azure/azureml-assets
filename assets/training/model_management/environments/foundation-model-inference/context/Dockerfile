@@ -25,7 +25,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
 # Create conda environment with py310
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
-    -c conda-forge 
+    -c conda-forge --solver=classic
 
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
