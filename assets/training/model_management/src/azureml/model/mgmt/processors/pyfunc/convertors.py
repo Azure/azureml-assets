@@ -1233,7 +1233,7 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         artifacts_dict = {
             VirchowMLflowLiterals.CHECKPOINT_PATH: self._model_dir+"/pytorch_model.bin",
-            VirchowMLflowLiterals.CONFIG_PATH: self._config_path+"/config.json"
+            VirchowMLflowLiterals.CONFIG_PATH: self._model_dir+"/config.json"
         }
         return artifacts_dict
 
