@@ -10,7 +10,6 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  industry: 
   author: microsoft
   Preview: ""
   Featured: ""

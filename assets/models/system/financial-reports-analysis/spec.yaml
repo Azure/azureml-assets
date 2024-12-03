@@ -10,7 +10,6 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  industry: financial-services
   author: microsoft
   Preview: ""
   Featured: ""
