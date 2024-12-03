@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.40
+version: mmd.test.41
 
 # Pipeline inputs
 inputs:
@@ -218,10 +218,13 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml:validation_trigger_import:0.0.13
+    type: command
+    component: azureml:validation_trigger_import:0.0.1.19.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
     inputs:
       compute: ${{parent.inputs.compute}}
       task_name: ${{parent.inputs.task_name}}
@@ -231,6 +234,7 @@ jobs:
       model_id: ${{parent.inputs.model_id}}
       model_version: ${{parent.inputs.model_version}}
       model_flavor: ${{parent.inputs.model_flavor}}
+      model_framework: ${{parent.inputs.model_framework}}
       model_description: ${{parent.inputs.model_description}}
       model_metadata: ${{parent.inputs.model_metadata}}
       registry_name: ${{parent.inputs.registry_name}}
@@ -247,12 +251,54 @@ jobs:
       hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
       hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
-    outputs:
-      validation_info:
-        type: uri_file
+    # outputs:
+    #   # validation_info:
+    #   #   type: uri_file
+    #   output:
+    #     type: boolean
+
+  # is_vision_model:
+  #   component: azureml:condition_block:0.0.1.12.test
+  #   compute: ${{parent.inputs.compute}}
+  #   resources:
+  #     instance_type: '${{parent.inputs.instance_type}}'
+  #   identity:
+  #     type: user_identity
+  #   inputs:
+  #     condition: "model_framework == 'MMLab'"
+  #     input_args: '{\"model_framework\": \"${{parent.inputs.model_framework}}\"}'
+  #   outputs:
+  #     result:
+  #       type: uri_file
+
+  # model_download_selector:
+  #   component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1
+  #   inputs:
+  #     condition: ${{parent.jobs.is_vision_model.outputs.result}}
+  #     input_a: ${{parent.inputs.model_framework}}
+  #     input_b: 'MMLab'
+  #   outputs:
+  #     output: ${{parent.outputs.is_mmd_model_framework}}
+
+  # read_result:
+  #   type: command
+  #   command: |
+  #     python -c "import json; print(open('${{inputs.result_file}}').read().strip().lower())" 
+  #   environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu:1
+  #   inputs:
+  #     result_file: ${{parent.jobs.is_vision_model.outputs.result}}
+  #   outputs:
+  #     result:
+        # type: uri_file
+
+  is_mlflow_model:
+    type: if_else
+    condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
+    true_block: ${{parent.jobs.mmdetection_image_objectdetection_instancesegmentation_model_import}}
+    false_block: ${{parent.jobs.download_model}}
 
   download_model:
-    component: azureml:download_model:0.0.29
+    component: azureml:download_model:0.0.30.0
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -261,7 +307,7 @@ jobs:
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
-      validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
+      # validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
       token: ${{parent.inputs.token}}
     outputs:
@@ -271,7 +317,7 @@ jobs:
         type: uri_folder
 
   mmdetection_image_objectdetection_instancesegmentation_model_import:
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import/versions/0.0.19
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.19
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -286,7 +332,7 @@ jobs:
         type: uri_file
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.34
+    component: azureml:convert_model_to_mlflow:0.0.33.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -315,7 +361,7 @@ jobs:
         type: mlflow_model
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.16
+    component: azureml:mlflow_model_local_validation:0.0.16.0
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -328,7 +374,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.19
+    component: azureml:register_model:0.0.19.0
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: condition_block
-version: 0.0.1
+version: 0.0.1.8.test
 type: command
 
 is_deterministic: True
@@ -12,23 +12,24 @@ description: Component takes a condition and executes the command based on the c
 environment: azureml://registries/azureml/environments/model-management/versions/34
 
 code: ../../src/
-command: |
-  set -ex
-  IFS=',' read -ra input_args <<< "${{inputs.args}}"
-  echo "Running condition block ..."
-  python -u run_condition_block.py --condition ${{inputs.condition}} --input-args "${{inputs.args}}"
-  echo "Completed condition block ... "
+command: >
+  python run_condition_block.py
+  --condition ${{inputs.condition}}
+  --input-args ${{inputs.input_args}}
+  --result ${{outputs.result}}
 
 inputs:
   condition:
     type: string
     description: Input condition.
-    optional: false
-
-  extra_pip_requirements:
+  input_args:
     type: string
     description: |
       Input arguments.
       Arguments expressed as below. Do not use quotes for passing.
       eg: a==1.0, b==1
-    optional: false
+outputs:
+  result:
+    type: uri_file
+    description: Result of the condition evaluation.
+    mode: rw_mount

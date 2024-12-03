@@ -1,41 +1,19 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-"""Run Model preprocessor module."""
-
 import argparse
-import os
 import json
-import shutil
-from azureml.model.mgmt.config import AppName, ModelFramework
-from azureml.model.mgmt.processors.transformers.config import HF_CONF
-from azureml.model.mgmt.processors.preprocess import run_preprocess, check_for_py_files
-from azureml.model.mgmt.processors.transformers.config import SupportedTasks as TransformersSupportedTasks
-from azureml.model.mgmt.processors.pyfunc.config import SupportedTasks as PyFuncSupportedTasks
-from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
-from azureml._common.exceptions import AzureMLException
-from azureml._common._error_definition.azureml_error import AzureMLError
-from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
-from pathlib import Path
-from tempfile import TemporaryDirectory
-import json
+import logging
 
+# Assuming swallow_all_exceptions and get_logger are defined elsewhere
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
+from azureml.model.mgmt.utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
-custom_dimensions.app_name = AppName.CONVERT_MODEL_TO_MLFLOW
-
 
 def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--condition", type=str, required=True, help="Condition")
-    parser.add_argument(
-        "--input-args",
-        type=str,
-        required=True,
-        help="Input args",
-    )
+    parser.add_argument("--input-args", type=str, required=True, help="Input args")
+    parser.add_argument("--result", type=str, required=True, help="Output result file path")
     return parser
-
 
 @swallow_all_exceptions(logger)
 def run():
@@ -43,16 +21,24 @@ def run():
     parser = _get_parser()
     args, _ = parser.parse_known_args()
 
-    input_args = args.input_args
     condition = args.condition
+    input_args = args.input_args
+    result_path = args.result
     input_args = json.loads(input_args)
-    result = None
+    logger.info(f"Run preprocess with input args: {input_args}, and condition: {condition}")
+
     try:
+        # Use eval to evaluate the condition with a context dictionary
         result = eval(condition, input_args)
     except Exception as e:
         logger.error(f"Error evaluating condition: {e}")
         result = False
-    
+
+    logger.info(f"Condition result: {result}")
+
+    # Write the result to the output file
+    with open(result_path, 'w') as f:
+        f.write(str(result))
 
 if __name__ == "__main__":
     run()
