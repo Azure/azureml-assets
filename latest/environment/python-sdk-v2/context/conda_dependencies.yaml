@@ -2,7 +2,7 @@ name: python-sdk-v2
 channels:
   - conda-forge
 dependencies:
-  - python=3.8
+  - python=3.10
   - pip=23.3
   - pip:
     - azure-ai-ml==1.22.4
