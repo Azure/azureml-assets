@@ -7,24 +7,21 @@ channels:
 dependencies:
   - python=3.9
   - pip
+  - numpy==1.26.2
   - pytorch>=2.2.2
   - torchvision
   - captum
   - cpuonly
   - pip:
+    - numpy==1.26.2
     - ml-wrappers~=0.5.5
-    - responsibleai~=0.36.0
-    - raiwidgets~=0.36.0
     - mlflow
     - markupsafe<=2.1.2
     - itsdangerous<=2.1.2
-    - vision_explanation_methods
-    - responsibleai-vision==0.3.8
     - opencv-python==4.8.1.78
     - mltable==1.5.0
     - fastai
     - ipython<8.13
     - typing-extensions>=4.8.0
     - gevent-websocket
-    - torch>=2.2.2
     - opencv-python-headless==4.8.1.78
