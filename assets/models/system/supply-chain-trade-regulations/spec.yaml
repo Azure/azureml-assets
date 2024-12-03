@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: Adapted-AI-model-for-supply-chain-trade-regulations-analysis-preview
+name: supply-chain-trade-regulations
 path: ./
 
 properties:

@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: Adapted-AI-model-for-financial-reports-analysis-preview
+name: financial-reports-analysis
 path: ./
 
 properties:
