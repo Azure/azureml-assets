@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20241201.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20241202.v1
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
