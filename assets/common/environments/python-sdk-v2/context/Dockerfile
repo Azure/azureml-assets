@@ -4,6 +4,8 @@ RUN apt-get update -y && apt-get install wget nscd git cpio less libglib2.0-0 li
 
 WORKDIR /
 
+RUN dpkg -l
+
 ENV CONDA_PREFIX=/azureml-envs/python-sdk-v2
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
