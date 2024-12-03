@@ -30,5 +30,9 @@ dependencies:
   - r-tseries=0.10
   - r=3.5.1
   - libxcrypt=4.4
+  - setuptools=59
+  - cython=0.29.24
+  - numpy==1.23.5
+  - scipy==1.10.0
   - pip:
       - azureml-designer-classic-modules==0.0.188
