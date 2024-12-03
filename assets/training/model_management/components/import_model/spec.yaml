@@ -257,40 +257,6 @@ jobs:
     #   output:
     #     type: boolean
 
-  # is_vision_model:
-  #   component: azureml:condition_block:0.0.1.12.test
-  #   compute: ${{parent.inputs.compute}}
-  #   resources:
-  #     instance_type: '${{parent.inputs.instance_type}}'
-  #   identity:
-  #     type: user_identity
-  #   inputs:
-  #     condition: "model_framework == 'MMLab'"
-  #     input_args: '{\"model_framework\": \"${{parent.inputs.model_framework}}\"}'
-  #   outputs:
-  #     result:
-  #       type: uri_file
-
-  # model_download_selector:
-  #   component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1
-  #   inputs:
-  #     condition: ${{parent.jobs.is_vision_model.outputs.result}}
-  #     input_a: ${{parent.inputs.model_framework}}
-  #     input_b: 'MMLab'
-  #   outputs:
-  #     output: ${{parent.outputs.is_mmd_model_framework}}
-
-  # read_result:
-  #   type: command
-  #   command: |
-  #     python -c "import json; print(open('${{inputs.result_file}}').read().strip().lower())" 
-  #   environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu:1
-  #   inputs:
-  #     result_file: ${{parent.jobs.is_vision_model.outputs.result}}
-  #   outputs:
-  #     result:
-        # type: uri_file
-
   is_mlflow_model:
     type: if_else
     condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
