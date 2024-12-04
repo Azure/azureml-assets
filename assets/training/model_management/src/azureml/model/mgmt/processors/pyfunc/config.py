@@ -59,6 +59,7 @@ class SupportedTasks(_CustomEnum):
     # Virchow
     IMAGE_FEATURE_EXTRACTION = "image-feature-extraction"
 
+
 class ModelFamilyPrefixes(_CustomEnum):
     """Prefixes for some of the models converted to PyFunc MLflow."""
 

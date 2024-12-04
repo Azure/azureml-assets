@@ -16,8 +16,9 @@ from timm.data.transforms_factory import create_transform
 from timm.layers import SwiGLUPacked
 from config import MLflowSchemaLiterals
 import logging
-logger = logging.getLogger("mlflow") # Set log level to debugging
+logger = logging.getLogger("mlflow")  # Set log level to debugging
 logger.setLevel(logging.DEBUG)
+
 
 class VirchowModelWrapper(mlflow.pyfunc.PythonModel):
     """MLFlow pyfunc wrapper for Virchow models."""
@@ -47,7 +48,11 @@ class VirchowModelWrapper(mlflow.pyfunc.PythonModel):
         )
 
     # def predict(self, image_input_path: str, params: dict = None):
-    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params: pd.DataFrame) -> pd.DataFrame:
+    def predict(
+            self,
+            context: mlflow.pyfunc.PythonModelContext,
+            input_data: pd.DataFrame,
+            params: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
 
         :param context: MLflow context containing artifacts that the model can use for inference
@@ -76,7 +81,7 @@ class VirchowModelWrapper(mlflow.pyfunc.PythonModel):
             output = self.model(pil_image)  # size: 1 x 257 x 1280
 
         class_token = output[:, 0]  # size: 1 x 1280
-        patch_tokens = output[:, 1:]  # size: 1 x 256 x 1280
+        # patch_tokens = output[:, 1:]  # size: 1 x 256 x 1280
 
         # use the class token only as the embedding
         # size: 1 x 1280

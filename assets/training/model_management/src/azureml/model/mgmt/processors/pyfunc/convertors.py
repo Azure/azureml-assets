@@ -1187,7 +1187,7 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
                     ColSpec(VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
                             VirchowMLFlowSchemaLiterals.OUTPUT_COLUMN_TEXT_FEATURES),
                 ]
-            ) 
+            )
         else:
             raise Exception("Unsupported task")
 
@@ -1199,7 +1199,7 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
 
         from virchow_mlflow_model_wrapper import VirchowModelWrapper
         mlflow_model_wrapper = VirchowModelWrapper()
-        
+
         artifacts_dict = self._prepare_artifacts_dict()
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = self._get_code_path()
@@ -1236,5 +1236,3 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
             VirchowMLflowLiterals.CONFIG_PATH: self._model_dir+"/config.json"
         }
         return artifacts_dict
-
-

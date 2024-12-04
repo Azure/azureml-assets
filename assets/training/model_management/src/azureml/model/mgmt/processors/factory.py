@@ -302,7 +302,8 @@ class SegmentAnythingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             temp_dir=temp_dir,
             translate_params=translate_params,
         )
-    
+
+
 class VirchowMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for segment anything Virchow model."""
 
@@ -314,6 +315,7 @@ class VirchowMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             temp_dir=temp_dir,
             translate_params=translate_params,
         )
+
 
 class MMLabTrackingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for MMTrack video model family."""

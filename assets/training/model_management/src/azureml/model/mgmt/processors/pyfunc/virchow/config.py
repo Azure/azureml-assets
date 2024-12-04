@@ -13,6 +13,7 @@ class _CustomEnum(Enum):
     def has_value(cls, value):
         return value in cls._value2member_map_
 
+
 class MLflowSchemaLiterals:
     """MLflow model signature related schema."""
 
