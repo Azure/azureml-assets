@@ -1,35 +1,62 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: condition_block
-version: 0.0.1.8.test
+display_name: Condition Block
+description: Component takes a condition and executes the command based on the condition.
+version: 0.0.1.16.test
 type: command
 
 is_deterministic: True
 
-display_name: Condition Block
-description: Component takes a condition and executes the command based on the condition.
-
-environment: azureml://registries/azureml/environments/model-management/versions/34
-
-code: ../../src/
-command: >
-  python run_condition_block.py
-  --condition ${{inputs.condition}}
-  --input-args ${{inputs.input_args}}
-  --result ${{outputs.result}}
-
 inputs:
-  condition:
+  # pipeline specific compute
+  compute:
     type: string
-    description: Input condition.
-  input_args:
+    optional: true
+    default: serverless
+    description: Common compute for model download, MLflow conversion and registration. eg. provide 'FT-Cluster' if
+      your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute name is provided, instance_type field will be ignored and the respective cluster will be used
+
+  instance_type:
     type: string
-    description: |
-      Input arguments.
-      Arguments expressed as below. Do not use quotes for passing.
-      eg: a==1.0, b==1
-outputs:
-  result:
+    optional: true
+    default: Standard_DS12_v2
+    description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3. 
+      The parameter compute must be set to 'serverless' for instance_type to be used
+
+  model_framework:
+    type: string
+    enum:
+      - Huggingface
+      - MMLab
+      - llava
+      - AutoML
+    default: Huggingface
+    optional: false
+    description: Framework from which model is imported from.
+
+  validation_info:
     type: uri_file
-    description: Result of the condition evaluation.
-    mode: rw_mount
+    description: Path to the validation info file
+    optional: true
+
+# Pipeline outputs
+outputs:
+  # validation_result:
+  #   type: uri_file
+  #   description: Validation result of the model
+  result:
+    type: boolean
+    is_control: true
+
+environment: azureml:model-management-mmd-1:1
+
+code: ../../src
+command: >  
+  mldesigner execute --source run_condition_block.py --name validate --inputs model_framework="${{inputs.model_framework}}" --outputs result='${{outputs.result}}'
+
+
+tags:
+    Preview: ""
+    Internal: ""

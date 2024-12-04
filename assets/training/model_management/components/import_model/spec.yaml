@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: mmd.test.48
+version: mmd.test.50
 
 # Pipeline inputs
 inputs:
@@ -222,13 +222,10 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    type: command
-    component: azureml:validation_trigger_import:0.0.1.25.test
+    component: azureml:validation_trigger_import:0.0.13.5.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
-    identity:
-      type: user_identity
     inputs:
       compute: ${{parent.inputs.compute}}
       task_name: ${{parent.inputs.task_name}}
@@ -238,7 +235,6 @@ jobs:
       model_id: ${{parent.inputs.model_id}}
       model_version: ${{parent.inputs.model_version}}
       model_flavor: ${{parent.inputs.model_flavor}}
-      model_framework: ${{parent.inputs.model_framework}}
       model_description: ${{parent.inputs.model_description}}
       model_metadata: ${{parent.inputs.model_metadata}}
       registry_name: ${{parent.inputs.registry_name}}
@@ -256,12 +252,27 @@ jobs:
       hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
-      # validation_result: ${{parent.outputs.validation_result}}
-      result: ${{parent.outputs.result}}
+      validation_info:
+        type: uri_file
+
+  is_vision_model:
+    type: command
+    component: azureml:condition_block:0.0.1.16.test
+    compute: ${{parent.inputs.compute}}
+    resources:
+      instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
+    inputs:
+      validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
+      model_framework: ${{parent.inputs.model_framework}}
+    # outputs:
+    #   result:
+    #     type: boolean
 
   is_mlflow_model:
     type: if_else
-    condition: ${{parent.jobs.validation_trigger_import.outputs.result}}
+    condition: ${{parent.jobs.is_vision_model.outputs.result}}
     true_block: ${{parent.jobs.mmdetection_image_objectdetection_instancesegmentation_model_import}}
     false_block: ${{parent.jobs.download_model}}
 

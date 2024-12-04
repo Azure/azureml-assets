@@ -4,7 +4,7 @@ type: command
 name: validation_trigger_import
 display_name: Validation Trigger Import model
 description: Component for enabling validation of import pipeline.
-version: 0.0.1.25.test
+version: 0.0.13.5.test
 
 # Pipeline inputs
 inputs:
@@ -46,17 +46,6 @@ inputs:
     default: HFTransformersV2
     optional: false
     description: Flavor of MLFlow to which model the model is converted to.
-
-  model_framework:
-    type: string
-    enum:
-      - Huggingface
-      - MMLab
-      - llava
-      - AutoML
-    default: Huggingface
-    optional: false
-    description: Framework from which model is imported from.
 
   ## Inputs for the MlFLow conversion
   license_file_path:
@@ -184,23 +173,16 @@ inputs:
     description: If set to true, will update the already existing model in the registry. If set to false, will create a new model in the provided registry.
     optional: true
 
-# Pipeline outputs
 outputs:
-  # validation_result:
-  #   type: uri_file
-  #   description: Validation result of the model
-  result:
-    type: boolean
-    is_control: true
+    validation_info:
+        type: uri_file
+        description: Validation status of the import pipeline inputs.
 
 is_deterministic: True
 
-# environment: azureml:python-sdk-v2-mmd-8:1
-environment: azureml://registries/azureml/environments/model-management/versions/34
-
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/23
 code: ../../src
-command: >  
-  mldesigner execute --source run_model_validate.py --name validate --inputs model_framework="${{inputs.model_framework}}" --outputs result='${{outputs.result}}'
+command: python run_model_validate.py --validation-info ${{outputs.validation_info}}
 
 tags:
     Preview: ""
