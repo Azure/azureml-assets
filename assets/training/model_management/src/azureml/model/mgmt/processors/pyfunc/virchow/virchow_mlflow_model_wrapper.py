@@ -1,8 +1,9 @@
-# Print which version of timm is getting installed
-import timm
-from importlib.metadata import version
-print(version('timm'))
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
+"""MLFlow pyfunc wrapper for Virchow models."""
+
+import timm
 import json
 
 import mlflow.pyfunc
@@ -19,7 +20,14 @@ logger = logging.getLogger("mlflow") # Set log level to debugging
 logger.setLevel(logging.DEBUG)
 
 class VirchowModelWrapper(mlflow.pyfunc.PythonModel):
+    """MLFlow pyfunc wrapper for Virchow models."""
+
     def load_context(self, context):
+        """Load a MLflow model with pyfunc.load_model().
+
+        :param context: MLflow context containing artifacts that the model can use for inference
+        :type context: mlflow.pyfunc.PythonModelContext
+        """
         config_path = context.artifacts["config_path"]
         checkpoint_path = context.artifacts["checkpoint_path"]
         # config = json.loads(config_path.read_text())
@@ -40,7 +48,16 @@ class VirchowModelWrapper(mlflow.pyfunc.PythonModel):
 
     # def predict(self, image_input_path: str, params: dict = None):
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params: pd.DataFrame) -> pd.DataFrame:
-        
+        """Perform inference on the input data.
+
+        :param context: MLflow context containing artifacts that the model can use for inference
+        :type context: mlflow.pyfunc.PythonModelContext
+        :param input_data: Pandas DataFrame with columns ["image"], ["prompt"] and ["direct_question"], where
+                           the image is either a url or a base64 string, the prompt is the dialog so far between the
+                           user and the model and the direct question is a prompt with a single question from the user.
+        :type input_data: pd.DataFrame
+        :return: Pandas dataframe with column ["response"] containing the model's response to the dialog so far.
+        """
         from vision_utils import process_image
         pil_images = [
             Image.open(io.BytesIO(process_image(image)))
