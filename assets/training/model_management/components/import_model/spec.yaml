@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: mmd.test.41
+version: mmd.test.48
 
 # Pipeline inputs
 inputs:
@@ -212,6 +212,10 @@ outputs:
     description: Output path for the converted MLflow model
     type: mlflow_model
 
+  result:
+    description: Vision model registration details
+    type: boolean
+
   model_registration_details:
     description: Output folder with a file which captures transformations applied above and registration details in JSON file
     type: uri_folder
@@ -219,7 +223,7 @@ outputs:
 jobs:
   validation_trigger_import:
     type: command
-    component: azureml:validation_trigger_import:0.0.1.19.test
+    component: azureml:validation_trigger_import:0.0.1.25.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -251,15 +255,13 @@ jobs:
       hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
       hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
-    # outputs:
-    #   # validation_info:
-    #   #   type: uri_file
-    #   output:
-    #     type: boolean
+    outputs:
+      # validation_result: ${{parent.outputs.validation_result}}
+      result: ${{parent.outputs.result}}
 
   is_mlflow_model:
     type: if_else
-    condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
+    condition: ${{parent.jobs.validation_trigger_import.outputs.result}}
     true_block: ${{parent.jobs.mmdetection_image_objectdetection_instancesegmentation_model_import}}
     false_block: ${{parent.jobs.download_model}}
 

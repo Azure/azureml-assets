@@ -13,15 +13,15 @@ logger = get_logger(name=__name__)
 @command_component
 @swallow_all_exceptions(logger)
 def validate(
-        model_framework: Input(type="string", optional=True, default=None)
+        model_framework: Input(type="string", optional=False, default='HuggingFace')
         ) -> Output(type="boolean", is_control=True):
     """Entry function of model validation script."""
-    
-    print(f"Model framework: {model_framework}")
 
-    model_framework = model_framework
+    print(f"Model framework: {model_framework}")
     result = model_framework == "MMLab"
     
     print(f"Model framework: {model_framework}, result: {result}")
     logger.info(f"Model framework: {model_framework}, result: {result}")
+    
+    # Return the result as a boolean control output
     return result
