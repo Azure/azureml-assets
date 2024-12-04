@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the minimal 20.04 py39 cpu environment."""
+"""Tests running a sample job in the mlflow 20.04 py39 cpu environment."""
 import os
 import time
 from pathlib import Path
