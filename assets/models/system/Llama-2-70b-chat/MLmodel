@@ -20,7 +20,7 @@ flavors:
     loader_module: azureml.evaluate.mlflow.hftransformers
     python_version: 3.8.5
 metadata:
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:45
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:59
   base_model_name: Llama-2-70b-chat
   base_model_task: chat-completion
   model_provider_name: meta

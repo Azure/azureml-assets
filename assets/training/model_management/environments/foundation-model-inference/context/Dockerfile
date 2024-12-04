@@ -5,6 +5,7 @@ ENV PYTHONUNBUFFERED=1 \
     TZ=Etc/UTC \
     DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
+
 RUN apt install git -y
 
 ENV MINICONDA_VERSION py310_23.10.0-1
@@ -24,11 +25,12 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
 # Create conda environment with py310
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
-    -c conda-forge 
+    -c conda-forge --solver=classic
 
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
+
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
