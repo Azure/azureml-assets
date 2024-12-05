@@ -17,7 +17,7 @@ STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
 def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_model_folder", mdc_debug="false"):
-    """Running a generic job for testing MLFlow with customizable inputs."""
+    """Run a generic job for testing MLFlow with customizable inputs."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -41,7 +41,7 @@ def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_mo
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="python main.py --model_dir ${{inputs.model_dir}} "
-        "--score ${{inputs.score}} --score_input ${{inputs.score_input}}",
+        "--score ${{inputs.score}} --score_input ${{inputs.score_input}} --monitoring_config ${{inputs.monitoring_config}} --mdc_debug ${{inputs.mdc_debug}}",
         inputs=dict(
             score="/var/mlflow_resources/mlflow_score_script.py",
             score_input=score_input,
@@ -52,7 +52,7 @@ def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_mo
         environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
         display_name=f"{test_name}-example",
-        description=description,  # Dynamic description based on the test
+        description=description,
         experiment_name="mlflow312InferenceExperiment"
     )
 
