@@ -18,7 +18,7 @@ def main(args):
     # start the server
     server_process = start_server("/var/tmp",
                                   ["--entry_script", args.score, "--port", "8081"],
-                                  args.model_dir)
+                                  args.model_dir, args.monitoring_config, args.mdc_debug)
 
     # score a request
     with open(args.score_input) as f:
@@ -33,7 +33,7 @@ def main(args):
     print(res)
 
 
-def start_server(log_directory, args, model_dir, timeout=timedelta(seconds=60)):
+def start_server(log_directory, args, model_dir, monitoring_config, mdc_debug, timeout=timedelta(seconds=60)):
     """Start inference server with options."""
     stderr_file = open(os.path.join(log_directory, "stderr.txt"), "w")
     stdout_file = open(os.path.join(log_directory, "stdout.txt"), "w")
@@ -41,6 +41,8 @@ def start_server(log_directory, args, model_dir, timeout=timedelta(seconds=60)):
     env = os.environ.copy()
     env["AZUREML_MODEL_DIR"] = os.path.dirname(os.path.abspath(__file__))
     env["MLFLOW_MODEL_FOLDER"] = model_dir
+    env["AZUREML_MDC_CONFIG_PATH"] = monitoring_config
+    env["AZUREML_MDC_DEBUG"] = mdc_debug
     print(os.path.abspath(__file__))
     server_process = subprocess.Popen(["azmlinfsrv"] + args, stdout=stdout_file, stderr=stderr_file, env=env)
 
@@ -92,6 +94,8 @@ def parse_args():
     parser.add_argument("--score", type=str)
     parser.add_argument("--model_dir", type=str)
     parser.add_argument("--score_input", type=str)
+    parser.add_argument("--monitoring_config", type=str)
+    parser.add_argument("--mdc_debug", type=str)
 
     # parse args
     args = parser.parse_args()

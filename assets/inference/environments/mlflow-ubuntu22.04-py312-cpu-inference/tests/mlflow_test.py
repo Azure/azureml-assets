@@ -16,7 +16,7 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_model_folder"):
+def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_model_folder", mdc_debug="false"):
     """Runs a generic job for testing MLFlow with customizable inputs."""
     this_dir = Path(__file__).parent
 
@@ -32,10 +32,10 @@ def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_mo
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="mlflow_py312_inference",
+        name=env_name,
         description="mlflow 22.04 py312 cpu inference environment created from a Docker context.",
     )
-    ml_client.environments.create_or_update(env_docker_context)
+    returned_env = ml_client.environments.create_or_update(env_docker_context)
 
     # Create the command
     job = command(
@@ -45,9 +45,11 @@ def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_mo
         inputs=dict(
             score="/var/mlflow_resources/mlflow_score_script.py",
             score_input=score_input,
-            model_dir=model_dir
+            model_dir=model_dir,
+            monitoring_config="monitoring_config.json",
+            mdc_debug=mdc_debug
         ),
-        environment=f"{env_name}@latest",
+        environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
         display_name=f"{test_name}-example",
         description=description,  # Dynamic description based on the test
@@ -98,5 +100,6 @@ def test_monitoring():
     run_mlflow_job(
         test_name="mlflow-py312-monitoring",
         score_input="sample_input_file.txt",
-        description="A test run of the mlflow 22.04 py312 cpu monitoring curated environment"
+        description="A test run of the mlflow 22.04 py312 cpu monitoring curated environment",
+        mdc_debug="true"
     )
