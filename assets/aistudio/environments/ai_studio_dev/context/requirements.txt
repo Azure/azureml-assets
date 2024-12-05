@@ -11,3 +11,5 @@ langchain-openai
 semantic-kernel
 pytest
 keyring
+# Temporary fix version for security patch
+tornado>=6.4.2
