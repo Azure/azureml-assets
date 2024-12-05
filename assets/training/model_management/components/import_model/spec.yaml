@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: mmd.test.50
+version: mmd.test.53
 
 # Pipeline inputs
 inputs:
@@ -255,9 +255,9 @@ jobs:
       validation_info:
         type: uri_file
 
-  is_vision_model:
+  framework_selector:
     type: command
-    component: azureml:condition_block:0.0.1.16.test
+    component: azureml:model_framework_selector:0.0.1.20.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -272,7 +272,7 @@ jobs:
 
   is_mlflow_model:
     type: if_else
-    condition: ${{parent.jobs.is_vision_model.outputs.result}}
+    condition: ${{parent.jobs.framework_selector.outputs.output}}
     true_block: ${{parent.jobs.mmdetection_image_objectdetection_instancesegmentation_model_import}}
     false_block: ${{parent.jobs.download_model}}
 

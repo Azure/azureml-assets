@@ -14,8 +14,8 @@ logger = get_logger(name=__name__)
 @swallow_all_exceptions(logger)
 def validate(
         model_framework: Input(type="string", optional=False, default='HuggingFace')
-        ) -> Output(type="boolean", is_control=True):
-    """Entry function of model validation script."""
+        ) -> Output(type="boolean", is_control=True): # noqa: F821
+    """Return true if model_framework is MMLab, False otherwise."""
 
     print(f"Model framework: {model_framework}")
     result = model_framework == "MMLab"

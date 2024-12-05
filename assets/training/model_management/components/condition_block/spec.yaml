@@ -1,9 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
-name: condition_block
-display_name: Condition Block
+name: model_framework_selector
+display_name: Model Framework Selector
 description: Component takes a condition and executes the command based on the condition.
-version: 0.0.1.16.test
+version: 0.0.1.20.test
 type: command
 
 is_deterministic: True
@@ -43,10 +43,7 @@ inputs:
 
 # Pipeline outputs
 outputs:
-  # validation_result:
-  #   type: uri_file
-  #   description: Validation result of the model
-  result:
+  output:
     type: boolean
     is_control: true
 
@@ -54,7 +51,7 @@ environment: azureml:model-management-mmd-1:1
 
 code: ../../src
 command: >  
-  mldesigner execute --source run_condition_block.py --name validate --inputs model_framework="${{inputs.model_framework}}" --outputs result='${{outputs.result}}'
+  mldesigner execute --source run_model_framework_selector.py --name validate --inputs model_framework="${{inputs.model_framework}}" --outputs output="${{outputs.output}}"
 
 
 tags:
