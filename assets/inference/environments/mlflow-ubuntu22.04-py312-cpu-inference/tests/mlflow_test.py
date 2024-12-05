@@ -17,7 +17,7 @@ STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
 def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_model_folder", mdc_debug="false"):
-    """Runs a generic job for testing MLFlow with customizable inputs."""
+    """Running a generic job for testing MLFlow with customizable inputs."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
