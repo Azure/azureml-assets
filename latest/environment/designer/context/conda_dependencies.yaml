@@ -1,29 +1,13 @@
 name: project_environment
 channels:
-- conda-forge
+  - conda-forge
 dependencies:
-- python=3.8.10
-- pip=20.2
-- scikit-surprise=1.1.0
-- pip:
-  - "azureml-designer-classic-modules==0.0.182"
-  - "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz"
-  - "spacy==2.3.9"
-  - "joblib==1.2.0"
-  - "numpy==1.22"
-  - "cryptography==42.0.4"
-  - "azureml-dataprep==4.10.1"
-  - "matplotlib==3.7.1"
-  - "Werkzeug==3.0.3"
-  - "pip==21.1"
-  - "requests==2.32.0"
-  - "scipy==1.10.0"
-  - "paramiko==3.4.0"
-  - "azure-storage-blob==12.13.0"
-  - "urllib3==1.26.19"
-  - "Pillow==10.3.0"
-  - "pyarrow==14.0.1"
-  - "pycryptodome==3.19.1"
-  - "pycryptodomex==3.19.1"
-  - "gunicorn==22.0.0"
-  - "tqdm==4.66.3"
+  - python=3.9.18
+  - setuptools=70
+  - cython=0.29.24
+  - numpy==1.23.5
+  - scipy==1.10.0
+  - pip:
+    - azureml-designer-classic-modules==0.0.189
+    - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
+
