@@ -11,7 +11,7 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  author: microsoft
+  author: Microsoft
   Preview: ""
   Featured: ""
   languages: "en"
