@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the pytorch 2.0 environment."""
+"""Test running a sample job in the pytorch 2.2 environment."""
 import os
 import time
 from pathlib import Path

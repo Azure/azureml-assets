@@ -24,11 +24,12 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
 # Create conda environment with py310
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
-    -c conda-forge 
+    -c conda-forge --solver=classic
 
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
+
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
@@ -47,7 +48,12 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.15 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.16 --no-cache-dir
+
+RUN pip uninstall transformers -y
+RUN pip uninstall -y vllm
+RUN pip install vllm==0.6.1.post2
+RUN pip install transformers==4.44.2
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

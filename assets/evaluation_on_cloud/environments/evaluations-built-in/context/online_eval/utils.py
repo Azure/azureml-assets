@@ -4,6 +4,7 @@
 """Utility functions for the online evaluation context."""
 import os
 import re
+import pandas as pd
 
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
@@ -116,3 +117,16 @@ def get_mlclient(
 
     logger.info(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
+
+
+def is_input_data_empty(data_file_path):
+    """Check if the input data is empty."""
+    if not data_file_path:
+        logger.info("Data file path is empty. Exiting.")
+        return True
+
+    df = pd.read_json(data_file_path, lines=True)
+    if len(df) == 0:
+        logger.info("Empty data in preprocessed file. Exiting.")
+        return True
+    return False

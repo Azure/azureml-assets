@@ -6,6 +6,9 @@ properties:
   languages: en
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: chat-completion
+  finetune-min-sku-spec: 24|1|220|64
+  finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
@@ -24,6 +27,9 @@ tags:
   Featured: ""
   huggingface_model_id: ""
   maas-inference: "true"
+  maas-finetuning: true
+  maas-finetuning-offer: true
+  maas-finetuning-regions: eastus2
   license: mit
   disable-batch: "true"
   task: chat-completion
@@ -38,6 +44,13 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_NC96ads_A100_v4
     ]
+  finetune_compute_allow_list:
+    [
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96amsr_A100_v4
+    ]
   inference_supported_envs:
     - vllm
   model_specific_defaults:
@@ -46,6 +59,7 @@ tags:
     apply_lora: "true"
     apply_ort: "false"
     precision: 16
+    max_seq_length: 16384
     ignore_mismatched_sizes: "false"
     num_train_epochs: 1
     per_device_train_batch_size: 1
@@ -56,4 +70,4 @@ tags:
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
-version: 3
+version: 6

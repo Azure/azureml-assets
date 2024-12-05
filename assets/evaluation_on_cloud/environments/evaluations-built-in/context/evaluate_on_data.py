@@ -17,6 +17,7 @@ from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def update_value_in_dict(d, key_substring, new_func):
@@ -44,7 +45,8 @@ def copy_evaluator_files(command_line_args):
         if dir_path:
             shutil.copytree(dir_path, f"./{evaluator_name}")
             logger.info(f"Copying {dir_path} to ./{evaluator_name}")
-            logger.info(evaluator_name, os.listdir(f"./{evaluator_name}"))
+            copied_dir = os.listdir(f"./{evaluator_name}")
+            logger.info(f"Directory ./{evaluator_name} now contains: {copied_dir}")
             sys.path.append(os.path.abspath(f"./{evaluator_name}"))
         else:
             logger.info(f"Directory for evaluator {evaluator_name} not found.")
@@ -54,6 +56,7 @@ def initialize_evaluators(command_line_args):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     evaluators = {}
     evaluators_o = json.loads(command_line_args.evaluators)
+    rai_evaluators = json.loads(command_line_args.rai_evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
@@ -67,19 +70,17 @@ def initialize_evaluators(command_line_args):
 def get_evaluator_config(command_line_args):
     """Get evaluator configuration from user input."""
     evaluator_config = {}
-    data_mapping = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
         if evaluator["DataMapping"]:
-            data_mapping["column_mapping"] = evaluator["DataMapping"]
-            evaluator_config[evaluator_name] = data_mapping
+            evaluator_config[evaluator_name] = {"column_mapping": evaluator["DataMapping"]}
     return evaluator_config
 
 
 def run_evaluation(command_line_args, evaluators, evaluator_config):
     """Run evaluation using evaluators."""
-    logger.info("evaluators", evaluators)
-    logger.info("evaluator_config", evaluator_config)
+    logger.info(f"Running the evaluators: {list(evaluators.keys())}")
+    logger.info(f"With the evaluator config {evaluator_config}")
     results = evaluate(
         data=command_line_args.eval_data,
         evaluators=evaluators,
@@ -87,7 +88,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_config):
     )
     metrics = {}
     for metric_name, metric_value in results["metrics"].items():
-        logger.info("Logging metric:", metric_name, metric_value)
+        logger.info(f"Logging metric added with name {metric_name}, and value {metric_value}")
         metrics[metric_name] = metric_value
     mlflow.log_metrics(metrics)
 
@@ -122,10 +123,9 @@ parser.add_argument("--eval_data", type=str)
 parser.add_argument("--eval_output", type=str)
 parser.add_argument("--evaluators", type=str)
 parser.add_argument("--evaluator_name_id_map", type=str)
+parser.add_argument("--rai_evaluators", type=str, help="Comma-separated list of RAI evaluators", required=False)
 
 args = parser.parse_args()
-rai_evaluators = ['HateUnfairnessEvaluator', 'Sexual-Content-Evaluator', 'Hate-and-Unfairness-Evaluator',
-                  'Violent-Content-Evaluator', 'Self-Harm-Related-Content-Evaluator']
 
 if __name__ == '__main__':
     copy_evaluator_files(args)

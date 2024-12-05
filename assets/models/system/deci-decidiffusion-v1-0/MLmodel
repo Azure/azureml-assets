@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/INPUT_model_path
+        uri: /mnt/azureml/cr/j/130d2372e4dd404eb4eae71fa00fffa1/cap/data-capability/wd/INPUT_model_path
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.18
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:40
+  base_model_name: Deci/DeciDiffusion-v1-0
+  base_model_task: text-to-image
+  is_acft_model: true
+  is_finetuned_model: false
+  model_type: stable-diffusion
+mlflow_version: 2.10.2
+model_size_bytes: 4371854212
+model_uuid: 59ac1531a7aa44dea8671bab03ee0c62
+signature:
+  inputs: '[{"type": "string", "name": "prompt", "required": true}]'
+  outputs: '[{"type": "string", "name": "prompt", "required": true}, {"type": "binary",
+    "name": "generated_image", "required": true}, {"type": "boolean", "name": "nsfw_content_detected",
+    "required": true}]'
+  params: null
+utc_time_created: '2024-04-29 09:42:57.030237'

@@ -1,0 +1,28 @@
+flavors:
+  hftransformersv2:
+    code: code
+    hf_config_class: LlamaConfig
+    hf_predict_module: llama_predict_meta
+    hf_pretrained_class: LlamaForCausalLM
+    hf_tokenizer_class: LlamaTokenizer
+    model_data: data
+    pytorch_version: 2.0.1+cu117
+    task_type: chat-completion
+    transformers_version: 4.31.0
+    model_hf_load_kwargs:
+      torch_dtype: torch.float16
+      device_map: auto
+  python_function:
+    code: code
+    data: data
+    env: conda.yaml
+    loader_module: azureml.evaluate.mlflow.hftransformers
+    python_version: 3.8.16
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:59
+  base_model_name: Llama-2-7b-chat
+  base_model_task: chat-completion
+  model_provider_name: meta
+mlflow_version: 2.3.1
+model_uuid: 2ecad009eb3d468eb33aadccb6846ce7
+utc_time_created: '2023-07-24 06:22:15.253950'

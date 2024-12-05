@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command
-from azure.ai.ml._restclient.models import JobStatus
+from azure.ai.ml.operations._run_history_constants import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
