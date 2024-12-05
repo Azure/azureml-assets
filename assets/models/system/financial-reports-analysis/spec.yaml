@@ -1,0 +1,33 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+name: financial-reports-analysis
+path: ./
+
+properties:
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  languages: en
+  SharedComputeCapacityEnabled: true
+
+tags:
+  author: microsoft
+  Preview: ""
+  Featured: ""
+  languages: "en"
+  keywords: ""
+  inference_supported_envs:
+    - vllm
+  license: mit
+  task: chat-completion
+  hiddenlayerscanned: ""
+  SharedComputeCapacityEnabled: ""
+  inference_compute_allow_list:
+    [
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4
+    ]
+
+version: 1
