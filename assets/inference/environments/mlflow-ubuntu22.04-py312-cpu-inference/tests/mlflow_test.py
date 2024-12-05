@@ -41,7 +41,8 @@ def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_mo
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="python main.py --model_dir ${{inputs.model_dir}} "
-        "--score ${{inputs.score}} --score_input ${{inputs.score_input}} --monitoring_config ${{inputs.monitoring_config}} --mdc_debug ${{inputs.mdc_debug}}",
+        "--score ${{inputs.score}} --score_input ${{inputs.score_input}} "
+        "--monitoring_config ${{inputs.monitoring_config}} --mdc_debug ${{inputs.mdc_debug}}",
         inputs=dict(
             score="/var/mlflow_resources/mlflow_score_script.py",
             score_input=score_input,
@@ -99,7 +100,7 @@ def test_monitoring():
     """Tests a sample job using mlflow 22.04 py312 cpu as the environment."""
     run_mlflow_job(
         test_name="mlflow-py312-monitoring",
-        score_input="sample_input_file.txt",
+        score_input="sample_input.txt",
         description="A test run of the mlflow 22.04 py312 cpu monitoring curated environment",
         mdc_debug="true"
     )
