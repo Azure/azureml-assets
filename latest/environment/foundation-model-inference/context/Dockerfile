@@ -7,6 +7,7 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
 
+
 ENV MINICONDA_VERSION py310_23.10.0-1
 ENV PATH /opt/miniconda/bin:$PATH
 RUN apt-get update && \
