@@ -314,7 +314,7 @@ jobs:
 
   framework_selector:
     type: command
-    component: azureml:image_framework_selector:0.0.18
+    component: azureml:image_framework_selector:0.0.19
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: ${{parent.inputs.task_type}}
