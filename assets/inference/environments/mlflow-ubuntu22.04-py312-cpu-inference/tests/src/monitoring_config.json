@@ -1,0 +1,66 @@
+{
+    "captureRequest": false,
+    "captureResponse": false,
+    "collections": {
+        "model_inputs": {
+            "blobSink": {
+                "binaryToBlob": true,
+                "container": "azureml-blobstore-8e28afa1-34aa-4646-8b50-9ee05d043758",
+                "identity": "3a7df89a-1c1d-450d-8b42-9a8021cc533f",
+                "identityType": "XDS",
+                "name": "amlncaitest1282520098",
+                "oversizeToBlob": 0,
+                "pathPerCollection": "modelDataCollector/taxi-online-oe-monitoring-ncai-1/taxi-online-dp/model_inputs/",
+                "rollingRate": "Hour"
+            },
+            "enabled": true,
+            "sampleRatePercentage": 100
+        },
+        "model_inputs_outputs": {
+            "blobSink": {
+                "binaryToBlob": true,
+                "container": "azureml-blobstore-8e28afa1-34aa-4646-8b50-9ee05d043758",
+                "identity": "3a7df89a-1c1d-450d-8b42-9a8021cc533f",
+                "identityType": "XDS",
+                "name": "amlncaitest1282520098",
+                "oversizeToBlob": 0,
+                "pathPerCollection": "modelDataCollector/taxi-online-oe-monitoring-ncai-1/taxi-online-dp/model_inputs_outputs/",
+                "rollingRate": "Hour"
+            },
+            "enabled": true,
+            "sampleRatePercentage": 100
+        },
+        "model_outputs": {
+            "blobSink": {
+                "binaryToBlob": true,
+                "container": "azureml-blobstore-8e28afa1-34aa-4646-8b50-9ee05d043758",
+                "identity": "3a7df89a-1c1d-450d-8b42-9a8021cc533f",
+                "identityType": "XDS",
+                "name": "amlncaitest1282520098",
+                "oversizeToBlob": 0,
+                "pathPerCollection": "modelDataCollector/taxi-online-oe-monitoring-ncai-1/taxi-online-dp/model_outputs/",
+                "rollingRate": "Hour"
+            },
+            "enabled": true,
+            "sampleRatePercentage": 100
+        }
+    },
+    "enabled": true,
+    "enableWal": false,
+    "immediateWriteToWal": false,
+    "maxPayloadSize": 0.0,
+    "requireLoggingHeader": false,
+    "sampleRatePercentage": 0,
+    "sources": {
+        "custom": {
+            "enabled": true
+        },
+        "request": {
+            "enabled": false
+        },
+        "response": {
+            "enabled": false
+        }
+    },
+    "walReplayInterval": 0
+}
