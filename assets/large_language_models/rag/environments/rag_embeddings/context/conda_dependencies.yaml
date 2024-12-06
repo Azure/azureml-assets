@@ -36,7 +36,6 @@ dependencies:
   - mlflow-skinny==2.3.2
   - msal~=1.31.0
   - msrest>=0.6.18
-  - nltk==3.9.1
   - openai>=0.27.4
   - pandas>=1
   - polling2~=0.5.0
