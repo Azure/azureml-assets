@@ -372,7 +372,7 @@ jobs:
 
   output_selector:
     type: command
-    component: azureml:image_model_output_selector:0.0.17
+    component: azureml:image_model_output_selector:0.0.18
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_classification_runtime_component.outputs.mlflow_model_folder}}
