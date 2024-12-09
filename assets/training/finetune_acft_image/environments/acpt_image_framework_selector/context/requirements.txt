@@ -6,3 +6,4 @@ azureml-mlflow
 azureml-core
 requests
 setuptools>=71.1.0
+Werkzeug==3.1.3
