@@ -65,3 +65,5 @@ class ModelFamilyPrefixes(_CustomEnum):
 
     # DinoV2 model family.
     DINOV2 = "facebook/dinov2"
+
+    RADDINO = "microsoft/rad-dino"

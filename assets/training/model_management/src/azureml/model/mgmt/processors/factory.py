@@ -72,7 +72,7 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif (task == PyFuncSupportedTasks.EMBEDDINGS.value) and model_id.startswith(ModelFamilyPrefixes.DINOV2.value):
+        elif (task == PyFuncSupportedTasks.EMBEDDINGS.value) and (model_id.startswith(ModelFamilyPrefixes.DINOV2.value) or model_id.startswith(ModelFamilyPrefixes.RADDINO.value)):
             return DinoV2MLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
