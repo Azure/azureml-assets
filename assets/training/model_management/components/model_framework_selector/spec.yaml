@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 name: model_framework_selector
 display_name: Model Framework Selector
 description: Component takes a condition and executes the command based on the condition.
-version: 0.0.1.32.test
+version: 0.0.1.33.test
 type: command
 
 is_deterministic: True

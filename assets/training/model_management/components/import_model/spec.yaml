@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: mmd.test.67
+version: mmd.test.69
 
 # Pipeline inputs
 inputs:
@@ -257,7 +257,7 @@ jobs:
 
   model_framework_selector:
     type: command
-    component: azureml:model_framework_selector:0.0.1.32.test
+    component: azureml:model_framework_selector:0.0.1.33.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -266,6 +266,10 @@ jobs:
     inputs:
       validation_info: '${{parent.jobs.validation_trigger_import.outputs.validation_info}}'
       model_framework: '${{parent.inputs.model_framework}}'
+    outputs:
+      decision:
+        type: uri_file
+        path: azureml://datastores/singularityblobstore/paths/azureml/${{name}}/${{output_name}}.jsonl
 
   is_mlflow_model:
     type: if_else
