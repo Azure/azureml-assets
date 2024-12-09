@@ -1,0 +1,44 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: model_framework_selector
+display_name: Model Framework Selector
+description: Component takes a condition and executes the command based on the condition.
+version: 0.0.1.30.test
+type: command
+
+is_deterministic: True
+
+inputs:
+
+  model_framework:
+    type: string
+    enum:
+      - Huggingface
+      - MMLab
+      - llava
+      - AutoML
+    default: Huggingface
+    optional: false
+    description: Framework from which model is imported from.
+
+  validation_info:
+    type: uri_file
+    description: Path to the validation info file
+    optional: true
+
+# Pipeline outputs
+outputs:
+  decision:
+    type: boolean
+    is_control: true
+
+# environment: azureml:model-management-mmd-1:1
+environment: azureml://registries/azureml/environments/model-evaluation/versions/37
+
+code: ../../src
+command: mldesigner execute --source run_model_framework_selector.py --name validate --inputs model_framework='${{inputs.model_framework}}' --outputs output='${{outputs.decision}}'
+
+
+tags:
+    Preview: ""
+    Internal: ""

@@ -4,7 +4,7 @@ type: command
 name: validation_trigger_import
 display_name: Validation Trigger Import model
 description: Component for enabling validation of import pipeline.
-version: 0.0.13.5.test
+version: 0.0.13.6.test
 
 # Pipeline inputs
 inputs:
@@ -180,7 +180,7 @@ outputs:
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/23
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/24
 code: ../../src
 command: python run_model_validate.py --validation-info ${{outputs.validation_info}}
 
