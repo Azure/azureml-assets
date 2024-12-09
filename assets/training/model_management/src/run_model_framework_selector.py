@@ -12,9 +12,7 @@ logger = get_logger(__name__)
 
 @command_component
 @swallow_all_exceptions(logger)
-def validate(
-        model_framework: Input(type="string", optional=False)  # noqa: F821
-) -> Output(type="boolean", is_control=True):  # noqa: F821
+def validate(model_framework: Input(type="string", optional=False))  -> bool:
     """Entry function of model validation script."""
 
     if model_framework == "MMLab":
@@ -23,6 +21,5 @@ def validate(
         result = False
 
     logger.info(f"Model framework: {model_framework}, result: {result}")
-    print(f"Model framework: {model_framework}, result: {result}")
 
     return result

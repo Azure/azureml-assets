@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: mmd.test.64
+version: mmd.test.67
 
 # Pipeline inputs
 inputs:
@@ -212,9 +212,9 @@ outputs:
     description: Output path for the converted MLflow model
     type: mlflow_model
 
-  result:
-    description: Vision model registration details
-    type: boolean
+  # result:
+  #   description: Vision model registration details
+  #   type: boolean
 
   model_registration_details:
     description: Output folder with a file which captures transformations applied above and registration details in JSON file
@@ -257,7 +257,7 @@ jobs:
 
   model_framework_selector:
     type: command
-    component: azureml:model_framework_selector:0.0.1.30.test
+    component: azureml:model_framework_selector:0.0.1.32.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
