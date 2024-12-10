@@ -6,12 +6,12 @@ dependencies:
 - python=3.10
 - pip=23.1
 - pip:
-  - azureml-mlflow==1.58.0.post3
+  - azureml-mlflow==1.59.0
   - azure-ai-ml==1.22.4
-  - azureml-core==1.58.0.post1
-  - azureml-telemetry==1.58.0
+  - azureml-core==1.59.0
+  - azureml-telemetry==1.59.0
   - mltable==1.6.1
-  - azureml-automl-core==1.58.0
+  - azureml-automl-core==1.59.0
   - rouge-score>=0.1.2
   - nltk>=3.9.1
   - pandas>=2.2.3
