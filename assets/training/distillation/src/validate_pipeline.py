@@ -39,7 +39,7 @@ from common.constants import (
     TOP_P,
     VLLM_CHAT_SCORE_PATH,
     MIN_RECORDS_FOR_FT,
-    MATH_MIN_RECORDS_FOR_FT
+    MATH_MIN_RECORDS_FOR_FT,
 )
 
 from common.utils import (
@@ -112,7 +112,7 @@ class PipelineInputsValidator:
     def _get_max_len_summary(self) -> bool:
         return self._args.max_len_summary != 80
 
-    def _validate_model_endpoint_name(self,endpoint_name: str):
+    def _validate_model_endpoint_name(self, endpoint_name: str):
         endpoint_details = get_endpoint_details(
             mlclient_ws=self._mlclient, endpoint_name=endpoint_name
         )
@@ -126,16 +126,16 @@ class PipelineInputsValidator:
         endpoint_name = self._args.teacher_model_endpoint_name
         teacher_model_connection_name = self._args.teacher_model_connection_name
         if task_type != DataGenerationTaskType.CONVERSATION:
-            if teacher_model_connection_name :
+            if teacher_model_connection_name:
                 try:
-                    connection_details = self._mlclient.connections.get(teacher_model_connection_name)
+                    connection_details = self._mlclient.connections.get(
+                        teacher_model_connection_name
+                    )
                 except Exception as e:
                     raise ACFTValidationException._with_error(
                         AzureMLError.create(
                             ACFTUserError,
-                            pii_safe_message=(
-                                "Error fetching connection details."
-                            ),
+                            pii_safe_message=("Error fetching connection details."),
                         )
                     )
             elif endpoint_name:
@@ -220,7 +220,11 @@ class PipelineInputsValidator:
     def _validate_number_of_records(self, size: int):
         """Validate number of records in the dataset."""
         task_type = self._args.data_generation_task_type
-        min_records = MIN_RECORDS_FOR_FT if task_type != DataGenerationTaskType.MATH else MATH_MIN_RECORDS_FOR_FT
+        min_records = (
+            MIN_RECORDS_FOR_FT
+            if task_type != DataGenerationTaskType.MATH
+            else MATH_MIN_RECORDS_FOR_FT
+        )
         if size < min_records:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
@@ -289,10 +293,7 @@ class PipelineInputsValidator:
                 Expected format: [system, user]"
 
     def _validate_record_for_type_summarization(self, record: list) -> str:
-        if (
-            self._args.data_generation_task_type
-            != DataGenerationTaskType.SUMMARIZATION
-        ):
+        if self._args.data_generation_task_type != DataGenerationTaskType.SUMMARIZATION:
             return
 
         if self._get_cot_status():
@@ -480,7 +481,7 @@ class PipelineInputsValidator:
             with log_activity(
                 logger=logger, activity_name=TelemetryConstants.VALIDATE_MODEL_INFERENCE
             ):
-                    self._validate_model_inference()
+                self._validate_model_inference()
 
 
 @swallow_all_exceptions(time_delay=5)
@@ -489,7 +490,10 @@ def main():
     # Get data generation component input parameters.
     parser = get_parser()
     parser.add_argument("--validation_info", required=True, help="Validation status")
-    parser.add_argument("--teacher_model_connection_name",type=str,required=False,
+    parser.add_argument(
+        "--teacher_model_connection_name",
+        type=str,
+        required=False,
         help="Teacher model Connection name to be used for authentication.",
     )
 
