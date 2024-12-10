@@ -116,7 +116,7 @@ def get_parser():
         required=False,
         help="Teacher model Connection name to be used for authentication.",
     )
-    
+
     parser.add_argument(
         "--teacher_model_max_new_tokens",
         type=int,
@@ -450,14 +450,20 @@ def data_import(args: Namespace):
 
     if teacher_model_connection_name:
         try:
-            connection_details = mlclient_ws.connections.get(teacher_model_connection_name)
+            connection_details = mlclient_ws.connections.get(
+                teacher_model_connection_name
+            )
             teacher_model_endpoint_url = connection_details.endpoint
         except Exception as e:
             logger.error(f"Failed to get connection details: {e}")
-            raise Exception("Failed to get connection details using Connection Name provided")
+            raise Exception(
+                "Failed to get connection details using Connection Name provided"
+            )
 
     elif teacher_model_endpoint_name:
-        endpoint_details = get_endpoint_details(mlclient_ws, teacher_model_endpoint_name)
+        endpoint_details = get_endpoint_details(
+            mlclient_ws, teacher_model_endpoint_name
+        )
         try:
             teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
             teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
@@ -473,7 +479,9 @@ def data_import(args: Namespace):
                     api_key=teacher_model_endpoint_key,
                 )
             )
-            logger.info(f"Connection created with name: {teacher_model_connection_name}")
+            logger.info(
+                f"Connection created with name: {teacher_model_connection_name}"
+            )
         except Exception as e:
             logger.error(
                 f"Failed to create connection for teacher model batch score invocation : {e}"
@@ -485,7 +493,7 @@ def data_import(args: Namespace):
         raise Exception(
             "Teacher model endpoint name or Teacher Model connection name is required to proceed"
         )
-    
+
     if VLLM_CHAT_SCORE_PATH not in teacher_model_endpoint_url:
         teacher_model_endpoint_url += VLLM_CHAT_SCORE_PATH
 

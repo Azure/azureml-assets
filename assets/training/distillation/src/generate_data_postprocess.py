@@ -332,8 +332,8 @@ def data_import(args: Namespace):
         logger=logger, activity_name=TelemetryConstants.POST_PROCESS_TRAINING_DATA
     ):
         logger.info(
-                "Running data postprocessing for train file path: %s", train_file_path
-            )
+            "Running data postprocessing for train file path: %s", train_file_path
+        )
         postprocess_data(
             batch_score_res_path=batch_score_train_path,
             input_file_path=train_file_path,
