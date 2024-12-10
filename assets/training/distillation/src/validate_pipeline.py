@@ -128,10 +128,8 @@ class PipelineInputsValidator:
         if task_type != DataGenerationTaskType.CONVERSATION:
             if teacher_model_connection_name:
                 try:
-                    connection_details = self._mlclient.connections.get(
-                        teacher_model_connection_name
-                    )
-                except Exception as e:
+                    self._mlclient.connections.get(teacher_model_connection_name)
+                except Exception:
                     raise ACFTValidationException._with_error(
                         AzureMLError.create(
                             ACFTUserError,
