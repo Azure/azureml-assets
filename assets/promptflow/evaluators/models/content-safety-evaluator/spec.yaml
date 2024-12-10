@@ -1,11 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: Fluency-Evaluator
+name: Content-Safety-Evaluator
 path: ./
 properties:
   is-promptflow: true
   is-evaluator: true
-  show-artifact: true
-  _default-display-file: ./FluencyEvaluator/fluency.prompty
 tags:
-  hiddenlayerscanned: ""
-version: 5
+  Preview: ""
+version: 1
