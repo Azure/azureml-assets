@@ -144,6 +144,13 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--teacher_model_endpoint_name",
+        type=str,
+        required=False,
+        help="Teacher model endpoint name",
+    )
+
+    parser.add_argument(
         "--min_endpoint_success_ratio",
         type=float,
         required=False,
@@ -308,20 +315,25 @@ def data_import(args: Namespace):
     hash_train_data = args.hash_train_data
     hash_validation_data = args.hash_validation_data
     connection_config_file = args.connection_config_file
+    teacher_model_endpoint_name = args.teacher_model_endpoint_name
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
     enable_cod = True if enable_cod_str.lower() == "true" else False
 
+    if teacher_model_endpoint_name:
+        with log_activity(
+            logger=logger, activity_name=TelemetryConstants.DELETE_WORKSPACE_CONNECTION
+        ):
+            logger.info(
+                "Deleting batch configuration connection when teacher model endpoint name is provided."
+            )
+            delete_connection(connection_config_file)
     with log_activity(
         logger=logger, activity_name=TelemetryConstants.POST_PROCESS_TRAINING_DATA
     ):
         logger.info(
-            "Deleting batch configuration connection used for teacher model invocation."
-        )
-        delete_connection(connection_config_file)
-        logger.info(
-            "Running data postprocessing for train file path: %s", train_file_path
-        )
+                "Running data postprocessing for train file path: %s", train_file_path
+            )
         postprocess_data(
             batch_score_res_path=batch_score_train_path,
             input_file_path=train_file_path,

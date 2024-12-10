@@ -112,29 +112,58 @@ class PipelineInputsValidator:
     def _get_max_len_summary(self) -> bool:
         return self._args.max_len_summary != 80
 
-    def _validate_model_endpoint_args(self):
-        endpoint_name = self._args.teacher_model_endpoint_name
-        if endpoint_name:
-            endpoint_details = get_endpoint_details(
-                mlclient_ws=self._mlclient, endpoint_name=endpoint_name
-            )
-            self._args.teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
-            self._args.teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
-            model_asset_id = endpoint_details.get_deployed_model_id()
-            validate_teacher_model_details(model_asset_id)
+    def _validate_model_endpoint_name(self,endpoint_name: str):
+        endpoint_details = get_endpoint_details(
+            mlclient_ws=self._mlclient, endpoint_name=endpoint_name
+        )
+        self._args.teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
+        self._args.teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
+        model_asset_id = endpoint_details.get_deployed_model_id()
+        validate_teacher_model_details(model_asset_id)
 
-        if (
-            not self._args.teacher_model_endpoint_url
-            or not self._args.teacher_model_endpoint_key
-        ):
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(
-                    ACFTUserError,
-                    pii_safe_message=(
-                        "Endpoint URL and key are required fields for data generation."
-                    ),
+    def _validate_model_endpoint_args(self):
+        task_type = self._args.data_generation_task_type
+        endpoint_name = self._args.teacher_model_endpoint_name
+        teacher_model_connection_name = self._args.teacher_model_connection_name
+        if task_type != DataGenerationTaskType.CONVERSATION:
+            if teacher_model_connection_name :
+                try:
+                    connection_details = self._mlclient.connections.get(teacher_model_connection_name)
+                except Exception as e:
+                    raise ACFTValidationException._with_error(
+                        AzureMLError.create(
+                            ACFTUserError,
+                            pii_safe_message=(
+                                "Error fetching connection details."
+                            ),
+                        )
+                    )
+            elif endpoint_name:
+                self._validate_model_endpoint_name(endpoint_name)
+            else:
+                raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "Either endpoint name or connection name is required for data generation."
+                        ),
+                    )
                 )
-            )
+        else:
+            if endpoint_name:
+                self._validate_model_endpoint_name(endpoint_name)
+            if (
+                not self._args.teacher_model_endpoint_url
+                or not self._args.teacher_model_endpoint_key
+            ):
+                raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "Endpoint URL and key are required fields for data generation."
+                        ),
+                    )
+                )
 
     @exponential_backoff()
     def _validate_model_endpoint(self):
@@ -428,7 +457,8 @@ class PipelineInputsValidator:
             activity_name=TelemetryConstants.VALIDATE_TEACHER_MODEL_ENDPOINT,
         ):
             self._validate_model_endpoint_args()
-            self._validate_model_endpoint()
+            if not self.args.teacher_model_connection_name:
+                self._validate_model_endpoint()
 
         with log_activity(
             logger=logger,

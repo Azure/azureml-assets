@@ -78,6 +78,11 @@ inputs:
     optional: true
     description: Teacher model endpoint name
 
+  teacher_model_connection_name: 
+    type: string
+    optional: true
+    description: Teacher model connection name
+
   teacher_model_endpoint_url:
     type: string
     optional: true
@@ -181,20 +186,6 @@ inputs:
     enum:
       - azureml_workspace_connection
       - managed_identity
-  additional_headers:
-    type: string
-    optional: True
-    description: JSON serialized string expressing additional headers to be added to each request.
-  debug_mode:
-    type: boolean
-    optional: False
-    default: False
-    description: Enable debug mode to print all the debug logs in the score step.
-  ensure_ascii:
-    type: boolean
-    optional: False
-    default: False
-    description: If set to true, the output is guaranteed to have all incoming non-ASCII characters escaped. If set to false, these characters will be output as-is. More detailed information can be found at https://docs.python.org/3/library/json.html
   max_retry_time_interval:
     type: integer
     optional: True
@@ -220,7 +211,7 @@ inputs:
   mini_batch_size:
     type: string
     optional: true
-    default: 100KB
+    default: 10KB
     description: The mini batch size for parallel run.
 
   # ########################### Finetuning Component ########################### #
@@ -307,6 +298,7 @@ jobs:
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
       teacher_model_endpoint_name: '${{parent.inputs.teacher_model_endpoint_name}}'
+      teacher_model_connection_name: '${{parent.inputs.teacher_model_connection_name}}'
       teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
@@ -359,9 +351,8 @@ jobs:
       compute_finetune: '${{parent.inputs.compute_finetune}}'
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
-      teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
       teacher_model_endpoint_name: '${{parent.inputs.teacher_model_endpoint_name}}'
-      teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
+      teacher_model_connection_name: '${{parent.inputs.teacher_model_connection_name}}'
       teacher_model_max_new_tokens: '${{parent.inputs.teacher_model_max_new_tokens}}'
       teacher_model_temperature: '${{parent.inputs.teacher_model_temperature}}'
       teacher_model_top_p: '${{parent.inputs.teacher_model_top_p}}'

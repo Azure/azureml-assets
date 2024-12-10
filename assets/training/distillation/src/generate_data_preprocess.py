@@ -109,20 +109,14 @@ def get_parser():
         required=False,
         help="Teacher model endpoint name",
     )
+
     parser.add_argument(
-        "--teacher_model_endpoint_key",
+        "--teacher_model_connection_name",
         type=str,
         required=False,
-        help="Teacher model endpoint key",
+        help="Teacher model Connection name to be used for authentication.",
     )
-
-    parser.add_argument(
-        "--teacher_model_endpoint_url",
-        type=str,
-        required=True,
-        help="Teacher model endpoint URL",
-    )
-
+    
     parser.add_argument(
         "--teacher_model_max_new_tokens",
         type=int,
@@ -397,8 +391,7 @@ def data_import(args: Namespace):
     generated_train_payload_path = args.generated_train_payload_path
     generated_validation_payload_path = args.generated_validation_payload_path
     teacher_model_endpoint_name = args.teacher_model_endpoint_name
-    teacher_model_endpoint_url = args.teacher_model_endpoint_url
-    teacher_model_endpoint_key = args.teacher_model_endpoint_key
+    teacher_model_connection_name = args.teacher_model_connection_name
     # add optional data-generator params
     teacher_model_max_new_tokens = args.teacher_model_max_new_tokens
     teacher_model_temperature = args.teacher_model_temperature
@@ -426,21 +419,6 @@ def data_import(args: Namespace):
     mlclient_ws = get_workspace_mlclient()
     if not mlclient_ws:
         raise Exception("Could not create MLClient for current workspace")
-
-    if teacher_model_endpoint_name:
-        endpoint_details = get_endpoint_details(
-            mlclient_ws, teacher_model_endpoint_name
-        )
-        teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
-        teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
-        teacher_model_asset_id = endpoint_details.get_deployed_model_id()
-        validate_teacher_model_details(teacher_model_asset_id)
-
-    if not teacher_model_endpoint_url:
-        raise Exception("Endpoint URL is a requried parameter for data generation")
-
-    if not teacher_model_endpoint_key:
-        raise Exception("Endpoint key is a requried parameter for data generation")
 
     if teacher_model_top_p < 0 or teacher_model_top_p > 1:
         raise Exception(
@@ -470,35 +448,54 @@ def data_import(args: Namespace):
     if teacher_model_stop:
         inference_params[STOP_TOKEN] = teacher_model_stop
 
+    if teacher_model_connection_name:
+        try:
+            connection_details = mlclient_ws.connections.get(teacher_model_connection_name)
+            teacher_model_endpoint_url = connection_details.endpoint
+        except Exception as e:
+            logger.error(f"Failed to get connection details: {e}")
+            raise Exception("Failed to get connection details using Connection Name provided")
+
+    elif teacher_model_endpoint_name:
+        endpoint_details = get_endpoint_details(mlclient_ws, teacher_model_endpoint_name)
+        try:
+            teacher_model_endpoint_key = endpoint_details.get_endpoint_key()
+            teacher_model_endpoint_url = endpoint_details.get_endpoint_url()
+            teacher_model_asset_id = endpoint_details.get_deployed_model_id()
+            validate_teacher_model_details(teacher_model_asset_id)
+            guid = uuid.uuid4()
+            short_guid = str(guid)[:8]
+            teacher_model_connection_name = f"distillation-ws-connection-{short_guid}"
+            mlclient_ws.connections.create_or_update(
+                ServerlessConnection(
+                    name=teacher_model_connection_name,
+                    endpoint=teacher_model_endpoint_url,
+                    api_key=teacher_model_endpoint_key,
+                )
+            )
+            logger.info(f"Connection created with name: {teacher_model_connection_name}")
+        except Exception as e:
+            logger.error(
+                f"Failed to create connection for teacher model batch score invocation : {e}"
+            )
+            raise Exception(
+                "Failed to create workspace connection for teacher model batch score invocation "
+            )
+    else:
+        raise Exception(
+            "Teacher model endpoint name or Teacher Model connection name is required to proceed"
+        )
+    
     if VLLM_CHAT_SCORE_PATH not in teacher_model_endpoint_url:
         teacher_model_endpoint_url += VLLM_CHAT_SCORE_PATH
 
     logger.info(f"Teacher Endpoint : {teacher_model_endpoint_url}")
 
-    try:
-        guid = uuid.uuid4()
-        short_guid = str(guid)[:8]
-        connection_name = f"distillation-ws-connection-{short_guid}"
-        mlclient_ws.connections.create_or_update(
-            ServerlessConnection(
-                name=connection_name,
-                endpoint=teacher_model_endpoint_url,
-                api_key=teacher_model_endpoint_key,
-            )
-        )
-        logger.info(f"Connection created with name: {connection_name}")
-        config = {}
-        config["scoring_url"] = teacher_model_endpoint_url
-        config["connection_name"] = connection_name
-        with open(batch_config_connection, "w") as f:
-            json.dump(config, f)
-    except Exception as e:
-        logger.error(
-            f"Failed to create connection for teacher model batch score invocation : {e}"
-        )
-        raise Exception(
-            "Failed to create workspace connection for teacher model batch score invocation "
-        )
+    config = {}
+    config["scoring_url"] = teacher_model_endpoint_url
+    config["connection_name"] = teacher_model_connection_name
+    with open(batch_config_connection, "w") as f:
+        json.dump(config, f)
 
     logger.info("Running data preprocessing")
     preprocess_data(

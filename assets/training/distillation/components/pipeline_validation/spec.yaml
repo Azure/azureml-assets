@@ -40,6 +40,11 @@ inputs:
     optional: true
     description: Teacher model endpoint key
 
+  teacher_model_connection_name: 
+    type: string
+    optional: true
+    description: Teacher model connection name
+
   teacher_model_max_new_tokens:
     type: integer
     default: 128
@@ -148,6 +153,7 @@ command: >-
   $[[--teacher_model_endpoint_name ${{inputs.teacher_model_endpoint_name}}]]
   $[[--teacher_model_endpoint_url ${{inputs.teacher_model_endpoint_url}}]]
   $[[--teacher_model_endpoint_key ${{inputs.teacher_model_endpoint_key}}]]
+  $[[--teacher_model_connection_name ${{inputs.teacher_model_connection_name}}]]
   --teacher_model_max_new_tokens ${{inputs.teacher_model_max_new_tokens}}
   --teacher_model_temperature ${{inputs.teacher_model_temperature}}
   --teacher_model_top_p ${{inputs.teacher_model_top_p}}

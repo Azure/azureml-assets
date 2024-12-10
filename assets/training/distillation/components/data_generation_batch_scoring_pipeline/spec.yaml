@@ -73,20 +73,15 @@ inputs:
     description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
-  teacher_model_endpoint_url:
-    type: string
-    optional: true
-    description: Teacher model endpoint URL
-
   teacher_model_endpoint_name:
     type: string
     optional: true
     description: Teacher model endpoint name
 
-  teacher_model_endpoint_key:
+  teacher_model_connection_name:
     type: string
     optional: true
-    description: Teacher model endpoint key
+    description: Teacher model connection name
 
   teacher_model_max_new_tokens:
     type: integer
@@ -266,8 +261,7 @@ jobs:
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
       teacher_model_endpoint_name: '${{parent.inputs.teacher_model_endpoint_name}}'
-      teacher_model_endpoint_url: '${{parent.inputs.teacher_model_endpoint_url}}'
-      teacher_model_endpoint_key: '${{parent.inputs.teacher_model_endpoint_key}}'
+      teacher_model_connection_name: '${{parent.inputs.teacher_model_connection_name}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       max_len_summary: '${{parent.inputs.max_len_summary}}'
@@ -303,13 +297,9 @@ jobs:
     identity:
       type: user_identity
     inputs:
-      scoring_url: ${{parent.inputs.teacher_model_endpoint_url}}
       deployment_name: ${{parent.inputs.teacher_model_endpoint_name}}
       authentication_type: ${{parent.inputs.authentication_type}}
       configuration_file: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
-      additional_headers: ${{parent.inputs.additional_headers}}
-      debug_mode: ${{parent.inputs.debug_mode}}
-      ensure_ascii: ${{parent.inputs.ensure_ascii}}
       max_retry_time_interval: ${{parent.inputs.max_retry_time_interval}}
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
@@ -408,6 +398,7 @@ jobs:
       hash_validation_data: '${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.hash_validation_data}}'
       enable_chain_of_thought: '${{parent.inputs.enable_chain_of_thought}}'
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
+      teacher_model_endpoint_name: '${{parent.inputs.teacher_model_endpoint_name}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
       connection_config_file: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
