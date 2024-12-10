@@ -457,7 +457,7 @@ class PipelineInputsValidator:
             activity_name=TelemetryConstants.VALIDATE_TEACHER_MODEL_ENDPOINT,
         ):
             self._validate_model_endpoint_args()
-            if not self.args.teacher_model_connection_name:
+            if not self._args.teacher_model_connection_name:
                 self._validate_model_endpoint()
 
         with log_activity(
@@ -476,11 +476,11 @@ class PipelineInputsValidator:
                 logger=logger, activity_name=TelemetryConstants.VALIDATE_VALIDATION_DATA
             ):
                 self._validate_dataset(self._args.validation_file_path)
-
-        with log_activity(
-            logger=logger, activity_name=TelemetryConstants.VALIDATE_MODEL_INFERENCE
-        ):
-            self._validate_model_inference()
+        if not self._args.teacher_model_connection_name:
+            with log_activity(
+                logger=logger, activity_name=TelemetryConstants.VALIDATE_MODEL_INFERENCE
+            ):
+                    self._validate_model_inference()
 
 
 @swallow_all_exceptions(time_delay=5)
@@ -489,6 +489,10 @@ def main():
     # Get data generation component input parameters.
     parser = get_parser()
     parser.add_argument("--validation_info", required=True, help="Validation status")
+    parser.add_argument("--teacher_model_connection_name",type=str,required=False,
+        help="Teacher model Connection name to be used for authentication.",
+    )
+
     args, _ = parser.parse_known_args()
 
     set_logging_parameters(

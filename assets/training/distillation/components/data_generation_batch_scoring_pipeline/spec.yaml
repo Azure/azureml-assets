@@ -194,20 +194,6 @@ inputs:
     type: string
     optional: true
     description: Config file path that contains deployment configurations
-  additional_headers:
-    type: string
-    optional: True
-    description: JSON serialized string expressing additional headers to be added to each request.
-  debug_mode:
-    type: boolean
-    optional: False
-    default: False
-    description: Enable debug mode to print all the debug logs in the score step.
-  ensure_ascii:
-    type: boolean
-    optional: False
-    default: False
-    description: If set to true, the output is guaranteed to have all incoming non-ASCII characters escaped. If set to false, these characters will be output as-is. More detailed information can be found at https://docs.python.org/3/library/json.html
   max_retry_time_interval:
     type: integer
     optional: True
