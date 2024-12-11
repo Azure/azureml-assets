@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: models/huggingface/liuhaotian-LLaVA-13b-delta-v0/1707949909/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:ss
+  description: description.md
+  type: mlflow_model
