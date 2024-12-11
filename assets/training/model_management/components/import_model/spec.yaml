@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: mmd.test.69
+version: mmd.test.75.test
 
 # Pipeline inputs
 inputs:
@@ -311,19 +311,19 @@ jobs:
       output_dir:
         type: uri_file
 
-  output_selector:
+  model_output_selector:
     type: command
     component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1
     compute: ${{parent.inputs.compute}}
     inputs:
-      model_output_t: ${{parent.jobs.mmdetection_image_objectdetection_instancesegmentation_model_import.outputs.output_dir}}
-      condition: ${{parent.jobs.framework_selector.outputs.output}}
-      model_output_f: ${{parent.jobs.download_model.outputs.model_output}}
+      input_a: ${{parent.jobs.mmdetection_image_objectdetection_instancesegmentation_model_import.outputs.output_dir}}
+      condition: ${{parent.jobs.model_framework_selector.outputs.decision}}
+      input_b: ${{parent.jobs.download_model.outputs.model_output}}
     outputs:
-      model_path: ${{parent.outputs.model_path}}
+      output: ${{parent.outputs.model_path}}
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.33.test
+    component: azureml:convert_model_to_mlflow:0.0.34.test
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -337,7 +337,7 @@ jobs:
       model_framework: ${{parent.inputs.model_framework}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path_mmd:  ${{parent.jobs.mmdetection_image_objectdetection_instancesegmentation_model_import.outputs.output_dir}}
-      model_path: ${{parent.outputs.model_path}}
+      model_path: ${{parent.jobs.model_output_selector.outputs.output}}
       hf_config_args: ${{parent.inputs.hf_config_args}}
       hf_tokenizer_args:  ${{parent.inputs.hf_tokenizer_args}}
       hf_model_args: ${{parent.inputs.hf_model_args}}
