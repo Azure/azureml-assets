@@ -62,7 +62,7 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 # by fixing dependencies in the base packages
 RUN pip list && \
     pip install pyarrow==14.0.2 \
-                'transformers[sentencepiece,torch]==4.36.2' \
+                'transformers[sentencepiece,torch]==4.37.2' \
                 aiohttp==3.10.2
 
 # end pip install
