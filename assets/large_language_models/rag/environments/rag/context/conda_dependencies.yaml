@@ -46,3 +46,4 @@ dependencies:
   - sqlalchemy==1.4.46
   - tika~=2.6.0
   - tiktoken==0.5.2
+  - aiohttp~=3.10.2 --no-deps
