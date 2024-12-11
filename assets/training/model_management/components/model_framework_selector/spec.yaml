@@ -33,14 +33,9 @@ outputs:
     mode: rw_mount
     is_control: true
 
-# environment: azureml:model-management-mmd-1:1
 environment: azureml://registries/azureml/environments/model-evaluation/versions/37
-
-code: ../../src
-# command: python run_model_framework_selector.py --model-framework ${{inputs.model_framework}} --decision ${{outputs.decision}}
-
+code: ../../srcgit
 command: mldesigner execute --source run_model_framework_selector.py --name validate --inputs model_framework='${{inputs.model_framework}}' --outputs output='${{outputs.decision}}'
-
 
 tags:
     Preview: ""
