@@ -7,7 +7,7 @@ RUN pip install 'azureml-defaults==1.59.0'
 
 RUN pip uninstall -y onnxruntime
 
-RUN pip install onnx==1.16.2
+RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
