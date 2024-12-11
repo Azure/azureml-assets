@@ -52,4 +52,3 @@ dependencies:
   - PyJWT<3.0.0
   - pytz
   - cryptography>=43.0.1
-  - aiohttp~=3.10.2 --no-deps
