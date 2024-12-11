@@ -120,6 +120,7 @@ class TelemetryConstants:
     POST_PROCESS_TRAINING_DATA = "post_process_training_data"
     POST_PROCESS_VALIDATION_DATA = "post_process_validation_data"
     PROCESS_DATASET_RECORD = "process_dataset_record"
+    DELETE_WORKSPACE_CONNECTION = "delete_workspace_connection"
 
     VALIDATOR = "validator"
     ML_CLIENT_INITIALISATION = "ml_client_initialisation"
