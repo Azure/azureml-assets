@@ -18,7 +18,7 @@ tags:
   freePlayground: "false"
   Preview: ""
   Featured: ""
-  languages: "en,ar,bn,bho,cs,da,de,el,es,fa,fi,fil,fr,gu,hak,ha,he,hi,hu,id,it,ja,jv,kn,ko,ml,mr,nl,no,or,pa,pl,ps,pt,ro,ru,sh,sv,sw,ta,te,th,tl,tr,uk,ur,vi,yo,zh,zh-TW"
+  languages: "en,ar,bn,cs,da,de,el,es,fa,fi,fr,gu,ha,he,hi,hu,id,it,ja,jv,kn,ko,ml,mr,nl,no,or,pa,pl,ps,pt,ro,ru,sv,sw,ta,te,th,tl,tr,uk,ur,vi,yo,zh"
   keywords: "Conversation"
   inference_supported_envs:
   - vllm
