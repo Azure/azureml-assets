@@ -5,10 +5,10 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./coherence.prompty
+  _default-display-file: ./CoherenceEvaluator/coherence.prompty
 tags:
   hiddenlayerscanned: ""
-version: 4
+version: 5
 description: |
   | 	| |
   | -- | -- |
