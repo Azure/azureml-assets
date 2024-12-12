@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202412.2
 
 USER root
-RUN apt-get -y update
+RUN apt-get -y update && apt-get install -y libglib2.0-0
 
 # Install required packages from pypi
 COPY requirements.txt .
