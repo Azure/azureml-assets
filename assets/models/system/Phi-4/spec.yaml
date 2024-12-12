@@ -12,14 +12,23 @@ properties:
 tags:
   author: Microsoft
   SharedComputeCapacityEnabled: ""
+  disable-batch: true
+  maas-inference: false
+  freePlayground: "false"
   Preview: ""
   Featured: ""
-  languages: "en"
+  languages: "en,ar,bn,bho,cs,da,de,el,es,fa,fi,fil,fr,gu,hak,ha,he,hi,hu,id,it,ja,jv,kn,ko,ml,mr,nl,no,or,pa,pl,ps,pt,ro,ru,sh,sv,sw,ta,te,th,tl,tr,uk,ur,vi,yo,zh,zh-TW"
   keywords: "Conversation"
   inference_supported_envs:
     - vllm
   license: MSRLA
   task: chat-completion
+  displayName: "Phi-4"
+  summary: "Phi-4 14B, a highly capable model for low latency scenarios."
+  textContextWindow: 16384
+  maxOutputTokens: 16384
+  inputModalities: "text"
+  outputModalities: "text"
   evaluation: "evaluation.md"
   notes: "notes.md"
   hiddenlayerscanned: ""
