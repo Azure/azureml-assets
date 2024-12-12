@@ -31,8 +31,8 @@ dependencies:
   - inference-schema>=1.8.0
   - lxml
   - markdown
-  - mlflow-skinny==2.3.2
-  - mlflow>=2.6.0
+  - mlflow-skinny==2.19.0
+  - mlflow>=2.16.0
   - msal~=1.31.0
   - nltk==3.9.1
   - openai>=0.27.4
