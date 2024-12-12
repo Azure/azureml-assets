@@ -2,6 +2,8 @@ Phi-4 is a state-of-the-art open model built upon a blend of synthetic datasets,
 
 Phi-4 underwent a rigorous enhancement and alignment process, incorporating both supervised fine-tuning and direct preference optimization to ensure precise instruction adherence and robust safety measures.
 
+For more information, reference the [Phi-4 Technical Report](https://www.microsoft.com/en-us/research/uploads/prod/2024/12/P4TechReport.pdf).
+
 ### Model Architecture
 
 Phi-4 is a 14B parameters, dense decoder-only transformer model. 
