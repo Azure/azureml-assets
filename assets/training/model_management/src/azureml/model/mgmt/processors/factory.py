@@ -36,6 +36,7 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     DinoV2MLFlowConvertor,
     LLaVAMLFlowConvertor,
     SegmentAnythingMLFlowConvertor,
+    VirchowMLFlowConvertor
 )
 
 
@@ -82,6 +83,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
             return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task == PyFuncSupportedTasks.IMAGE_FEATURE_EXTRACTION.value:
+            return VirchowMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -292,6 +297,19 @@ class SegmentAnythingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for segment anything (SAM) model."""
         return SegmentAnythingMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class VirchowMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for segment anything Virchow model."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for segment anything Virchow model."""
+        return VirchowMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,
