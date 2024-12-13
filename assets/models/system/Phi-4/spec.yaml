@@ -13,7 +13,6 @@ tags:
   author: Microsoft
   SharedComputeCapacityEnabled: ""
   disable-batch: true
-  maas-inference: false
   freePlayground: "false"
   Preview: ""
   Featured: ""
@@ -30,6 +29,7 @@ tags:
   inputModalities: "text"
   outputModalities: "text"
   evaluation: "evaluation.md"
+  trainingDataDate: "June 2024"
   notes: "notes.md"
   hiddenlayerscanned: ""
   inference_compute_allow_list:
