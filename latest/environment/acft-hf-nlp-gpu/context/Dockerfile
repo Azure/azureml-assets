@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # need to be removed when updating transformers>4.44.0
 COPY deepspeed /opt/conda/envs/ptca/lib/python3.10/site-packages/transformers/integrations/deepspeed.py
 
-RUN pip install mlflow==2.14.3
+RUN pip install mlflow==2.19.0
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
