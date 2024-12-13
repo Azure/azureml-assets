@@ -15,6 +15,7 @@ tags:
   Featured: ""
   languages: "en"
   keywords: ""
+  industry: manufacturing
   inference_supported_envs:
     - vllm
   license: mit
