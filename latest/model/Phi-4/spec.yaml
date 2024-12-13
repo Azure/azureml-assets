@@ -14,7 +14,6 @@ tags:
   author: Microsoft
   SharedComputeCapacityEnabled: ""
   disable-batch: true
-  maas-inference: false
   freePlayground: "false"
   Preview: ""
   Featured: ""
@@ -61,6 +60,7 @@ tags:
     | Reasoning                    | DROP          | 75.5      | 68.3            | 85.5                 | 79.3                 | **90.2**               | 76.7              | 80.9            |
 
     \* These scores are lower than those reported by Meta, perhaps because simple-evals has a strict formatting requirement that Llama models have particular trouble following. We use the simple-evals framework because it is reproducible, but Meta reports 77 for MATH and 88 for HumanEval on Llama-3.3-70B.
+  trainingDataDate: "June 2024"
   notes: |
     ## Intended Use
 
