@@ -52,13 +52,13 @@ def _submit_data_drift_and_create_manifest_job(
         mdc_preprocessor_output.identity = AmlTokenConfiguration()
         mdc_preprocessor_output.resources = {
             "instance_type": "Standard_E8S_V3",
-            "runtime_version": "3.3",
+            "runtime_version": "3.4",
         }
 
         create_manifest_output.identity = AmlTokenConfiguration()
         create_manifest_output.resources = {
             "instance_type": "Standard_E8S_V3",
-            "runtime_version": "3.3",
+            "runtime_version": "3.4",
         }
 
         return {

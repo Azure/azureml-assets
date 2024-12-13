@@ -58,7 +58,7 @@ args: >-
 
 resources:
   instance_type: ${{parent.inputs.instance_type}}
-  runtime_version: "3.3"
+  runtime_version: "3.4"
 
 identity:
   type: managed

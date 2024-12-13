@@ -112,19 +112,19 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
         mdc_preprocessor_model_inputs.identity = AmlTokenConfiguration()
         mdc_preprocessor_model_inputs.resources = {
             'instance_type': 'Standard_E8S_V3',
-            'runtime_version': '3.3',
+            'runtime_version': '3.4',
         }
 
         mdc_preprocessor_model_outputs.identity = AmlTokenConfiguration()
         mdc_preprocessor_model_outputs.resources = {
             'instance_type': 'Standard_E8S_V3',
-            'runtime_version': '3.3',
+            'runtime_version': '3.4',
         }
 
         data_joiner_output.identity = AmlTokenConfiguration()
         data_joiner_output.resources = {
             'instance_type': 'Standard_E8S_V3',
-            'runtime_version': '3.3',
+            'runtime_version': '3.4',
         }
 
         return {

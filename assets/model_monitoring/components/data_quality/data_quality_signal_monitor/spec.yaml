@@ -77,7 +77,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   feature_selection:
@@ -98,7 +98,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_baseline_data_statistics:
@@ -115,7 +115,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_baseline_data_quality:
@@ -140,7 +140,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_target_data_quality:
@@ -163,7 +163,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   join_data_quality_metrics:
@@ -183,7 +183,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   output_signal_metrics:
@@ -205,7 +205,7 @@ jobs:
         mode: direct
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   evaluate_metric_thresholds:
@@ -219,6 +219,6 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token

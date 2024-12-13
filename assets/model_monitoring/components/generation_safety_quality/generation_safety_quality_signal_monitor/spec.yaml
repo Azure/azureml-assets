@@ -119,7 +119,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_histogram:
@@ -162,7 +162,7 @@ jobs:
         path: ${{parent.outputs.signal_scored_data}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_metrics:
@@ -184,7 +184,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   output_signal_metrics: 
@@ -206,7 +206,7 @@ jobs:
         mode: direct
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   evaluate_metric_thresholds:
@@ -220,6 +220,6 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
