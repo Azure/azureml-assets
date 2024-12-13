@@ -5,7 +5,7 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./retrieval.prompty
+  _default-display-file: ./RetrievalEvaluator/retrieval.prompty
 tags:
   hiddenlayerscanned: ""
-version: 1
+version: 2
