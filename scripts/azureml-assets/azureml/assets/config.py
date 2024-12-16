@@ -87,6 +87,7 @@ class ModelType(Enum):
     MLFLOW = 'mlflow_model'
     CUSTOM = 'custom_model'
     TRITON = 'triton_model'
+    PRESETS = 'presets'
 
 
 class GenericAssetType(Enum):
