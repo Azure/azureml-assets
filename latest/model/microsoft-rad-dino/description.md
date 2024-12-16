@@ -2,11 +2,7 @@
 
 # Model card for RAD-DINO
 
-<!-- Provide a quick summary of what the model is/does. -->
-
 ## Model description
-
-<!-- Provide a longer summary of what this model is. -->
 
 RAD-DINO is a vision transformer model trained to encode chest X-rays using the self-supervised learning method [DINOv2](https://openreview.net/forum?id=a68SUt6zFt).
 
@@ -19,14 +15,8 @@ RAD-DINO is described in detail in [RAD-DINO: Exploring Scalable Medical Image E
 
 ## Uses
 
-<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->
-
 RAD-DINO is shared for research purposes only.
 It is **not meant to be used for clinical practice**.
-
-<!-- ### Downstream use -->
-
-<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->
 
 The model is a vision backbone that can be plugged to other models for downstream tasks.
 Some potential uses are:
@@ -39,13 +29,7 @@ Some potential uses are:
 
 Fine-tuning RAD-DINO is typically not necessary to obtain good performance in downstream tasks.
 
-<!-- ### Out-of-scope use -->
-
-<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->
-
 ## Biases, risks, and limitations
-
-<!-- This section is meant to convey both technical and sociotechnical limitations. -->
 
 RAD-DINO was trained with data from three countries, therefore it might be biased towards population in the training data.
 Underlying biases of the training datasets may not be well characterized.
@@ -122,8 +106,6 @@ torch.Size([1, 768, 37, 37])
 
 ### Training data
 
-<!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->
-
 We used images from five public, deidentified chest X-ray datasets to train this checkpoint of RAD-DINO.
 
 | Dataset   | Num. images |
@@ -144,8 +126,6 @@ We used 16 nodes with 4 A100 GPUs each, and a batch size of 40 images per GPU.
 
 ### Training procedure
 
-<!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->
-
 We refer to the [manuscript](https://arxiv.org/abs/2401.10815) for a detailed description of the training procedure.
 
 #### Preprocessing
@@ -156,44 +136,11 @@ All DICOM files were resized using B-spline interpolation so that their shorter 
 
 - **Training regime:** fp16 using PyTorch-FSDP mixed-precision.
 
-<!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->
-
 ## Evaluation
-
-<!-- This section describes the evaluation protocols and provides the results. -->
 
 Our evaluation is best described in the [manuscript](https://arxiv.org/abs/2401.10815).
 
-<!-- ### Testing data, factors & metrics
-
-#### Testing Data
-
-[More Information Needed]
-
-#### Factors
-
-[More Information Needed]
-
-#### Metrics
-
-[More Information Needed]
-
-### Results
-
-[More Information Needed]
-
-#### Summary -->
-
 ## Environmental impact
-
-<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->
-
-<!-- Carbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700). -->
-
-<!-- Hardware type: A100 PCIe -->
-<!-- Hours: 1d 16h = 40h -->
-<!-- Cloud provider: Azure -->
-<!-- Region: Italy North -->
 
 - **Hardware type:** NVIDIA A100 GPUs
 - **Hours used:** 40 hours/GPU × 16 nodes × 4 GPUs/node = 2560 GPU-hours
@@ -216,8 +163,6 @@ We used [SimpleITK](https://simpleitk.org/) and [Pydicom](https://pydicom.github
 
 ## Citation
 
-<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->
-
 **BibTeX:**
 
 ```bibtex
@@ -235,10 +180,11 @@ We used [SimpleITK](https://simpleitk.org/) and [Pydicom](https://pydicom.github
 
 > Pérez-García, F., Sharma, H., Bond-Taylor, S., Bouzid, K., Salvatelli, V., Ilse, M., Bannur, S., Castro, D.C., Schwaighofer, A., Lungren, M.P., Wetscherek, M.T., Codella, N., Hyland, S.L., Alvarez-Valle, J., & Oktay, O. (2024). *RAD-DINO: Exploring Scalable Medical Image Encoders Beyond Text Supervision*. ArXiv, abs/2401.10815.
 
-## Model card contact
+### Inference samples
 
-Fernando Pérez-García ([`fperezgarcia@microsoft.com`](mailto:fperezgarcia@microsoft.com)).
-
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://aka.ms/azureml-infer-sdk-image-embeddings" target="_blank">image-embeddings-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-cli-image-embeddings" target="_blank">image-embeddings-online-endpoint.sh</a>
 
 ### Sample inputs and outputs
 
