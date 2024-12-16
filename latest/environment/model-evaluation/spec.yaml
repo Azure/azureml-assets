@@ -12,4 +12,4 @@ os_type: linux
 tags:
   OS: Ubuntu20.04
   Evaluation: ""
-  MLFlow: "2.2.1"
+  MLFlow: "2.16.0"
