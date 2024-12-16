@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20241202.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20241215.v1
 
 RUN apt-get update && apt-get -y upgrade
 RUN pip install --upgrade pip
