@@ -41,3 +41,5 @@ dependencies:
   - opencensus-ext-azure=={{latest-pypi-version}}
   - StrEnum=={{latest-pypi-version}}
   - pyDispatcher=={{latest-pypi-version}}
+  # Temp fix for env vuln
+  - mlflow==2.16.0
