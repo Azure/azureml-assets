@@ -22,3 +22,6 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+# Temp fix for env vuln
+RUN pip install mlflow==2.16.0  
