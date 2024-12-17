@@ -9,4 +9,4 @@ image:
     - conda_dependencies.yaml
   publish:
     location: mcr
-    visibility: unlisted
+    visibility: public
