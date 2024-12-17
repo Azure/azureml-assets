@@ -10,7 +10,7 @@ RAD-DINO is described in detail in [RAD-DINO: Exploring Scalable Medical Image E
 
 - **Developed by:** Microsoft Health Futures
 - **Model type:** Vision transformer
-- **License:** [MSRLA](./LICENSE)
+- **License:** MSRLA
 - **Finetuned from model:** [`dinov2-base`](https://huggingface.co/facebook/dinov2-base)
 
 ## Uses
