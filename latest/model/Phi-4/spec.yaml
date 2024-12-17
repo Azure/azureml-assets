@@ -119,7 +119,7 @@ tags:
   hiddenlayerscanned: ""
   inference_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
-
+  benchmark: "quality"
 version: 1
 description: |
   Phi-4 is a state-of-the-art open model built upon a blend of synthetic datasets, data from filtered public domain websites, and acquired academic books and Q&A datasets. The goal of this approach was to ensure that small capable models were trained with data focused on high quality and advanced reasoning.
