@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
+type: command
 name: model_framework_selector
 display_name: Model Framework Selector
-description: Component takes a condition and executes the command based on the condition.
-version: 0.0.1.33.test
-type: command
+description: Checks the framework for model
+version: 0.0.1.38.test-dgoyal
 
 is_deterministic: True
 
@@ -24,18 +24,18 @@ inputs:
   validation_info:
     type: uri_file
     description: Path to the validation info file
-    optional: true
+    optional: false
 
 # Pipeline outputs
 outputs:
-  decision:
+  is_mmd_framework:
     type: boolean
     mode: rw_mount
     is_control: true
 
 environment: azureml://registries/azureml/environments/model-evaluation/versions/37
-code: ../../srcgit
-command: mldesigner execute --source run_model_framework_selector.py --name validate --inputs model_framework='${{inputs.model_framework}}' --outputs output='${{outputs.decision}}'
+code: ../../src
+command: mldesigner execute --source run_model_framework_selector.py --name validate --inputs model_framework='${{inputs.model_framework}}' --outputs output='${{outputs.is_mmd_framework}}'
 
 tags:
     Preview: ""

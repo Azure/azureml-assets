@@ -108,7 +108,11 @@ def run():
     inference_base_image = args.inference_base_image
 
     model_download_metadata_path = args.model_download_metadata
+    
     model_path = args.model_path
+    if model_framework == "MMLab":
+        model_path = args.model_path_mmd
+
     mlflow_model_output_dir = args.mlflow_model_output_dir
     license_file_path = args.license_file_path
     TRUST_CODE_KEY = "trust_remote_code=True"
