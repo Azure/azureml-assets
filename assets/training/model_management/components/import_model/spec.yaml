@@ -297,7 +297,6 @@ jobs:
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
-      # validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
       token: ${{parent.inputs.token}}
     outputs:
