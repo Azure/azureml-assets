@@ -4,7 +4,7 @@ type: command
 name: benchmark_embedding_model
 display_name: Benchmark Embedding Model
 description: Component for benchmarking an embedding model via MTEB.
-version: 0.0.3
+version: 0.0.4
 
 inputs:
   endpoint_url:
