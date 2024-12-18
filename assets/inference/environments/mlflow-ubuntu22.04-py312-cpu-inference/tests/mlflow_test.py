@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_mlflow_cpu_inference():
-    """Tests a sample job using mlflow 22.04 py312 cpu as the environment."""
+def run_mlflow_job(test_name, score_input, description, model_dir="mlflow_2_0_model_folder", mdc_debug="false"):
+    """Run a generic job for testing MLFlow with customizable inputs."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -37,20 +37,23 @@ def test_mlflow_cpu_inference():
     )
     returned_env = ml_client.environments.create_or_update(env_docker_context)
 
-    # create the command
+    # Create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="python main.py --model_dir ${{inputs.model_dir}} "
-        "--score ${{inputs.score}} --score_input ${{inputs.score_input}}",
+        "--score ${{inputs.score}} --score_input ${{inputs.score_input}} "
+        "--monitoring_config ${{inputs.monitoring_config}} --mdc_debug ${{inputs.mdc_debug}}",
         inputs=dict(
             score="/var/mlflow_resources/mlflow_score_script.py",
-            score_input="sample_2_0_input.txt",
-            model_dir="mlflow_2_0_model_folder"
+            score_input=score_input,
+            model_dir=model_dir,
+            monitoring_config="monitoring_config.json",
+            mdc_debug=mdc_debug
         ),
         environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
-        display_name="mlflow-py312-inference-example",
-        description="A test run of the mlflow 22.04 py312 cpu inference curated environment",
+        display_name=f"{test_name}-example",
+        description=description,
         experiment_name="mlflow312InferenceExperiment"
     )
 
@@ -82,3 +85,22 @@ def test_mlflow_cpu_inference():
             ml_client.jobs.stream(returned_job.name)
 
     assert status == JobStatus.COMPLETED
+
+
+def test_mlflow_cpu_inference():
+    """Tests a sample job using mlflow 22.04 py312 cpu as the environment."""
+    run_mlflow_job(
+        test_name="mlflow-py312-inference",
+        score_input="sample_2_0_input.txt",
+        description="A test run of the mlflow 22.04 py312 cpu inference curated environment"
+    )
+
+
+def test_monitoring():
+    """Tests a sample job using mlflow 22.04 py312 cpu as the environment."""
+    run_mlflow_job(
+        test_name="mlflow-py312-monitoring",
+        score_input="sample_input.txt",
+        description="A test run of the mlflow 22.04 py312 cpu monitoring curated environment",
+        mdc_debug="true"
+    )
