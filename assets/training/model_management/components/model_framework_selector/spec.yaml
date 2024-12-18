@@ -4,7 +4,7 @@ type: command
 name: model_framework_selector
 display_name: Model Framework Selector
 description: Checks the framework for model
-version: 0.0.1.38.test-dgoyal
+version: 0.0.1
 
 is_deterministic: True
 
