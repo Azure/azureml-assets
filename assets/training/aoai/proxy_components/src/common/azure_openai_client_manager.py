@@ -5,8 +5,13 @@
 
 import requests
 from azure.identity import ManagedIdentityCredential
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.mgmt.cognitiveservices.models import ApiKeys
+from azure.core.pipeline.policies import BearerTokenCredentialPolicy
+from azure.core.pipeline import PipelineRequest, PipelineContext
+from azure.core.rest import HttpRequest
+from enum import Enum
 from openai import AzureOpenAI
 import os
 from typing import Optional, Dict
@@ -16,6 +21,12 @@ from exception_handler import retry_on_exception
 logger = get_logger(__name__)
 
 
+class AuthenticationType(Enum):
+    """Enum for authentication type."""
+    MANAGED_IDENTITY = "managed_identity"
+    USER_IDENTITY = "user_identity"
+
+
 class AzureOpenAIClientManager:
     """Class for **authentication** related information used for the run."""
 
@@ -23,7 +34,7 @@ class AzureOpenAIClientManager:
     MLFLOW_TRACKING_URI = "MLFLOW_TRACKING_URI"
     api_version = "2024-04-01-preview"
 
-    def __init__(self, endpoint_name, endpoint_resource_group: Optional[str], endpoint_subscription: Optional[str]):
+    def __init__(self, endpoint_name, endpoint_resource_group: Optional[str], endpoint_subscription: Optional[str], authentication_type: Optional[str]):
         """Initialize the AzureOpenAIClientManager."""
         self.endpoint_name = endpoint_name
         self.endpoint_resource_group = endpoint_resource_group
@@ -40,6 +51,12 @@ class AzureOpenAIClientManager:
             self.endpoint_resource_group = workspace_resource_group
             if self.endpoint_resource_group is None:
                 raise Exception("endpoint_resource_group is None")
+        
+        if authentication_type is None:
+            logger.info("Authentication type is not provided, will default to 'managed_identity'")
+            self.authentication_type = AuthenticationType.MANAGED_IDENTITY
+        else:
+            self.authentication_type = AuthenticationType(authentication_type)
         self.aoai_client = self._get_azure_openai_client()
 
     def _get_client_id(self) -> str:
@@ -58,9 +75,13 @@ class AzureOpenAIClientManager:
 
     def _get_credential(self) -> ManagedIdentityCredential:
         """Get the credential."""
-        credential = ManagedIdentityCredential(
-            client_id=self._get_client_id())
-        return credential
+        if self.authentication_type == AuthenticationType.MANAGED_IDENTITY:
+            return ManagedIdentityCredential(
+                client_id=self._get_client_id())
+        elif self.authentication_type == AuthenticationType.USER_IDENTITY:
+            return AzureMLOnBehalfOfCredential()
+        else:
+            raise ValueError(f"Wrong authentication type: {self.authentication_type}")
 
     def get_key_from_cognitive_service_account(self, client: CognitiveServicesManagementClient) -> str:
         """Get key from cognitive service account."""
@@ -75,18 +96,42 @@ class AzureOpenAIClientManager:
         logger.info("Endpoint: {}".format(account.properties.endpoint))
         return account.properties.endpoint
 
+    def _get_bearer_token_provider(self, credential):
+        policy = BearerTokenCredentialPolicy(credential, "https://cognitiveservices.azure.com/.default")
+
+        def _make_request():
+            return PipelineRequest(HttpRequest("CredentialWrapper", "https://fakeurl"), PipelineContext(None))
+
+        def wrapper() -> str:
+            request = _make_request()
+            policy.on_request(request)
+            return request.http_request.headers["Authorization"][len("Bearer ") :]
+        return wrapper
+
     def _get_azure_openai_client(self) -> AzureOpenAI:
         """Get azure openai client."""
-        if self._get_client_id() is None:
-            logger.info("Managed identity client id is empty, will fail...")
-            raise Exception("Managed identity client id is empty")
-        else:
-            logger.info("Managed identity client id is set, will use managed identity authentication")
-            client = CognitiveServicesManagementClient(credential=self._get_credential(),
+        if self.authentication_type == AuthenticationType.MANAGED_IDENTITY:
+            logger.info("Trying to get azure openai client using managed identity")
+            if self._get_client_id() is None:
+                logger.info("Managed identity client id is empty, will fail...")
+                raise Exception("Managed identity client id is empty")
+            else:
+                logger.info("Managed identity client id is set, will use managed identity authentication")
+                client = CognitiveServicesManagementClient(credential=self._get_credential(),
+                                                           subscription_id=self.endpoint_subscription)
+                return AzureOpenAI(azure_endpoint=self.get_endpoint_from_cognitive_service_account(client),
+                                   api_key=self.get_key_from_cognitive_service_account(client),
+                                   api_version=AzureOpenAIClientManager.api_version)
+        elif self.authentication_type == AuthenticationType.USER_IDENTITY:
+            logger.info("Trying to get azure openai client using user identity")
+            credential = self._get_credential()
+            client = CognitiveServicesManagementClient(credential=credential,
                                                        subscription_id=self.endpoint_subscription)
             return AzureOpenAI(azure_endpoint=self.get_endpoint_from_cognitive_service_account(client),
-                               api_key=self.get_key_from_cognitive_service_account(client),
+                               azure_ad_token_provider=self._get_bearer_token_provider(credential),
                                api_version=AzureOpenAIClientManager.api_version)
+        else:
+            raise ValueError(f"Wrong authentication type: {self.authentication_type}")
 
     @property
     def data_upload_url(self) -> str:
