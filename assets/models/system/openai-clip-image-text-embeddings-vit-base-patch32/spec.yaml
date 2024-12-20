@@ -20,7 +20,6 @@ tags:
     Preview: ''
     huggingface_model_id: openai/clip-vit-base-patch32
     SharedComputeCapacityEnabled: ''
-    author: "openai-oss"
     license: mit
     task: embeddings
     hiddenlayerscanned: ''
