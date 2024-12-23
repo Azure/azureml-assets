@@ -27,7 +27,7 @@ tags:
   task: embeddings
   industry: health-and-life-sciences
   hiddenlayerscanned: "true"
-version: 1
+version: 2
 description: |
   ## Model Description
 
