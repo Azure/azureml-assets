@@ -13,7 +13,7 @@ dependencies:
     - azureml-telemetry==1.59.0
     - cryptography==44.0.0
     - certifi==2024.12.14
-    - urllib3==2.2.3
+    - urllib3==2.3.0
     - paramiko==3.5.0
     - idna==3.10
     - tqdm==4.67.1
