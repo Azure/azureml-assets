@@ -52,7 +52,9 @@ RUN pip install llm-optimized-inference==0.2.16 --no-cache-dir
 
 RUN pip uninstall transformers -y
 RUN pip uninstall -y vllm
-RUN pip install vllm==0.6.1.post2
+
+# Install patched vllm wheel
+RUN pip install https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.6.4.post2.dev346-py3-none-any.whl
 RUN pip install transformers==4.46.2
 
 # clean conda and pip caches
