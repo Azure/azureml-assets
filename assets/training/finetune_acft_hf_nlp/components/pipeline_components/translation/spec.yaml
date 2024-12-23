@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: translation_pipeline
-version: 0.0.66
+version: 0.0.67
 type: pipeline
 display_name: Translation Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for translation task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/translation_pipeline) to learn more.
@@ -541,7 +541,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   translation_model_import:
     type: command
-    component: azureml:translation_model_import:0.0.64
+    component: azureml:translation_model_import:0.0.65
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -552,7 +552,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   translation_datapreprocess:
     type: command
-    component: azureml:translation_datapreprocess:0.0.64
+    component: azureml:translation_datapreprocess:0.0.65
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -571,7 +571,7 @@ jobs:
       model_selector_output: '${{parent.jobs.translation_model_import.outputs.output_dir}}'
   translation_finetune:
     type: command
-    component: azureml:translation_finetune:0.0.64
+    component: azureml:translation_finetune:0.0.65
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
