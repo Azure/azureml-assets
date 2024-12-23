@@ -811,6 +811,25 @@ def setup_vllm(task_name: str, finetune_config: Dict[str, Any], base_model_metad
                         base image value is {removed_base_image}.")
     else:
         if base_model_metadata.get("azureml.base_image") is not None:
+            # FT environment for chat-completion task is updated to transformers 4.46.3 and 
+            # FTed model tokenizers can't be loaded with transformers<4.45.0
+            # Hence FMI version < 61 can't be used for deployments and Inferencing.
+            # Currently force updating the image in finetune script.
+            # After models are migrated to mcr.microsoft.com/azureml/curated/foundation-model-inference:61
+            # remove the following code marked for removal, including comments
+            # start of removal code
+            if task_name == Tasks.CHAT_COMPLETION:
+                try:
+                    base_vllm_image = str(base_model_metadata.get("azureml.base_image"))
+                    base_vllm_container, base_vllm_image_version = base_vllm_image.split(":")
+                    if int(base_vllm_image_version) < 61:
+                        logger.info("Updating the vllm inference container version.")
+                        base_model_metadata["azureml.base_image"] = base_vllm_container + ":61"
+                except:
+                    logger.info("Unable to fetch vllm inference container version, force updating the image.")
+                    base_model_metadata["azureml.base_image"] = \
+                        "mcr.microsoft.com/azureml/curated/foundation-model-inference:61"
+            # end of removal code
             logger.info(
                 "Adding inferencing base image {} for {} task.\
                 ".format(base_model_metadata.get("azureml.base_image"), task_name)
