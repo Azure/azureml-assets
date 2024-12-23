@@ -48,14 +48,12 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.16 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.7 --no-cache-dir
 
-RUN pip uninstall transformers -y
 RUN pip uninstall -y vllm
 
 # Install patched vllm wheel
-RUN pip install https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.6.4.post2.dev346-py3-none-any.whl
-RUN pip install transformers==4.46.2
+RUN pip install https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.5.3.post1-cp310-cp310-linux_x86_64.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
