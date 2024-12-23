@@ -4,7 +4,6 @@
 """Main script for the evaluate context."""
 import argparse
 import json
-import logging
 import importlib
 import sys
 import shutil
@@ -20,8 +19,9 @@ from collections import defaultdict
 
 from utils import get_mlclient, extract_model_info, is_input_data_empty
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+from logging_utilities import get_logger
+
+logger = get_logger(name=__name__)
 
 
 def get_args():
@@ -162,7 +162,6 @@ def run_evaluation(command_line_args, evaluators, evaluator_configs):
             final_results[evaluator_name].append(score_value)
 
     final_results = pd.DataFrame(final_results)
-    logger.info(final_results)
     final_results.to_json(command_line_args["evaluated_data"], orient="records", lines=True)
     if results and results.get("rows"):
         # Convert the results to a DataFrame
