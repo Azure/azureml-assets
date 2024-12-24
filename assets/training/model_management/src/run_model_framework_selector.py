@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """Select Model Framework Component."""
-
+from azureml.model.mgmt.config import ModelFramework
 from mldesigner import Input, Output, command_component
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
@@ -16,7 +16,7 @@ def validate(
 ) -> Output(type="boolean", is_control=True):  # noqa: F821
     """Entry function of model validation script."""
 
-    if model_framework == "MMLab":
+    if model_framework == ModelFramework.MMLAB.value:
         result = True
     else:
         result = False

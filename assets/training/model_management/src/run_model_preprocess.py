@@ -110,7 +110,7 @@ def run():
     model_download_metadata_path = args.model_download_metadata
     
     model_path = args.model_path
-    if model_framework == "MMLab":
+    if model_framework == ModelFramework.MMLAB.value:
         model_path = args.model_path_mmd
 
     mlflow_model_output_dir = args.mlflow_model_output_dir
