@@ -282,7 +282,7 @@ jobs:
     inputs:
       model_family: 'MmDetectionImage'
       model_name: ${{parent.inputs.model_id}}
-      download_from_source: False
+      download_from_source: true
     outputs:
       output_dir:
         type: uri_file

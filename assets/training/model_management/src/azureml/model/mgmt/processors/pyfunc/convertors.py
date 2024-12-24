@@ -191,11 +191,11 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
         mlflow_model_wrapper = ImagesDetectionMLflowModelWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
         if self._task == MMLabDetectionTasks.MM_OBJECT_DETECTION.value:
-            pip_requirements = os.path.join(self.MODEL_DIR, "mmdet-od-requirements.txt")
+            conda_env_file = os.path.join(self.MODEL_DIR, "conda_od.yaml")
         elif self._task == MMLabDetectionTasks.MM_INSTANCE_SEGMENTATION.value:
-            pip_requirements = os.path.join(self.MODEL_DIR, "mmdet-is-requirements.txt")
+            conda_env_file = os.path.join(self.MODEL_DIR, "conda_is.yaml")
         else:
-            pip_requirements = None
+            conda_env_file = None
         code_path = [
             os.path.join(self.MODEL_DIR, "detection_predict.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
@@ -204,8 +204,8 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
             artifacts_dict=artifacts_dict,
-            pip_requirements=pip_requirements,
             code_path=code_path,
+            conda_env=conda_env_file,
         )
 
     def _prepare_artifacts_dict(self) -> Dict:
