@@ -1,8 +1,10 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:biweekly.202412.2
 
 WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs -y
+
+RUN dpkg -l
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
@@ -25,7 +27,7 @@ RUN conda install python=3.9 -y
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
-RUN pip install Pillow gunicorn onnx==1.17.0 idna tqdm requests==2.32.1 tornado==6.4.2 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.1
+RUN pip install Pillow gunicorn onnx==1.17.0 idna tqdm requests==2.32.1 tornado==6.4.2 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.1 mlflow==2.19 mlflow-skinny==2.19
 
 # List installed packages
 RUN pip list
