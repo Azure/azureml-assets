@@ -108,7 +108,7 @@ def run():
     inference_base_image = args.inference_base_image
 
     model_download_metadata_path = args.model_download_metadata
-    
+
     model_path = args.model_path
     if model_framework == ModelFramework.MMLAB.value:
         model_path = args.model_path_mmd

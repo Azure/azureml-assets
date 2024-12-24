@@ -9,6 +9,7 @@ from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
 
 logger = get_logger(__name__)
 
+
 @command_component
 @swallow_all_exceptions(logger)
 def validate(
