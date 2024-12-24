@@ -20,4 +20,4 @@ tags:
   task: chat-completion
   author: "Mistral AI"
   benchmark: "quality"
-version: 4
+version: 5

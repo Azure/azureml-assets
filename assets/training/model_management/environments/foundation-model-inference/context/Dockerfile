@@ -24,7 +24,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
 # Create conda environment with py310
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
-    -c conda-forge 
+    -c conda-forge --solver=classic
 
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -53,7 +53,7 @@ RUN pip install llm-optimized-inference==0.2.16 --no-cache-dir
 RUN pip uninstall transformers -y
 RUN pip uninstall -y vllm
 RUN pip install vllm==0.6.1.post2
-RUN pip install transformers==4.44.2
+RUN pip install transformers==4.46.2
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

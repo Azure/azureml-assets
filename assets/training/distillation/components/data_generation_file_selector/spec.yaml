@@ -7,7 +7,7 @@ is_deterministic: True
 tags:
   codegenBy: dsl.condition_output 
 
-display_name: OSS Distillation Fine-Tuning Input File Selector
+display_name: OSS Distillation Data Generation Input File Selector
 description: Component to select the Batch Scoring Selector based on the task type
 
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
