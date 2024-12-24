@@ -16,7 +16,6 @@ def validate(
         model_framework: Input(type="string", optional=False)  # noqa: F821
 ) -> Output(type="boolean", is_control=True):  # noqa: F821
     """Entry function of model validation script."""
-
     if model_framework == ModelFramework.MMLAB.value:
         result = True
     else:
