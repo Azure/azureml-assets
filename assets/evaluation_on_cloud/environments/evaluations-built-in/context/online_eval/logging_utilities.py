@@ -3,7 +3,6 @@
 
 """Logging utilities for the evaluator."""
 
-
 from azure.ml.component.run import CoreRun
 import platform
 
@@ -235,6 +234,7 @@ class AppInsightsPIIStrippingFormatter(logging.Formatter):
 
 class CustomLogRecord(logging.LogRecord):
     """Custom Log Record class for App Insights."""
+
     def __init__(self, *args, **kwargs):
         """__init__."""
         super().__init__(*args, **kwargs)
@@ -243,7 +243,7 @@ class CustomLogRecord(logging.LogRecord):
 
 # Step 2: Set the custom LogRecord factory
 def custom_log_record_factory(*args, **kwargs):
-    """Custom Log Record Factory for App Insights."""
+    """Get CustomLogRecord for App Insights."""
     return CustomLogRecord(*args, **kwargs)
 
 

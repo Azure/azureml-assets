@@ -5,6 +5,8 @@
 
 
 class TelemetryConstants:
+    """Telemetry Constants."""
+
     APP_INSIGHT_HANDLER_NAME = "AppInsightsHandler"
     NON_PII_MESSAGE = '[Hidden as it may contain PII]'
 
