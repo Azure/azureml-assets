@@ -3,8 +3,7 @@
 
 """Preprocess script for the online evaluation context."""
 import pandas as pd
-from croniter import croniter
-from datetime import datetime
+from datetime import datetime, timedelta
 from argparse import ArgumentParser
 
 from azure.monitor.query import LogsQueryStatus
@@ -44,8 +43,8 @@ def calculate_time_window(client, resource_id, schedule_id, provided_start_time)
     # Define timespan for the query
     current_time_str = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     current_time = datetime.strptime(current_time_str, '%Y-%m-%d %H:%M:%S')
-    provided_start_datetime = datetime.datetime.strptime(provided_start_time, '%Y-%m-%d %H:%M:%S')
-    default_timespan_start = max(provided_start_datetime, current_time - datetime.timedelta(days=30))
+    provided_start_datetime = datetime.strptime(provided_start_time, '%Y-%m-%d %H:%M:%S')
+    default_timespan_start = max(provided_start_datetime, current_time - timedelta(days=30))
     timespan = (default_timespan_start, current_time)
 
     response = client.query_resource(resource_id, query=query, timespan=timespan)
@@ -58,7 +57,7 @@ def calculate_time_window(client, resource_id, schedule_id, provided_start_time)
                 # Extract the timestamp from the logged message
                 if "Last Run Time:" in log_message:
                     timestamp_str = log_message.split("Last Run Time:")[1].strip()
-                    return datetime.datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S'), current_time
+                    return datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S'), current_time
         except Exception as e:
             logger.info(f"Error while parsing the last run time: {e}")
     return default_timespan_start, current_time
@@ -109,6 +108,7 @@ def run(args):
     logger.info(f"Start Time: {start_time}, End Time: {end_time}")
     result = get_logs(client, args["resource_id"], args["query"], start_time, end_time)
     save_output(result, args)
+    args["time_window"] = (start_time, end_time)
 
 
 if __name__ == "__main__":

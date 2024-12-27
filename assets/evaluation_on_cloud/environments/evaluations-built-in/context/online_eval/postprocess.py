@@ -74,6 +74,21 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
         _logs.get_logger(__name__).emit(event)
 
 
+def log_processing_time_event(args):
+    """Log processing time event."""
+    body = f"Schedule ID: {args['schedule_id']} | Last Run Time: {args['time_window'][1]}"
+    event = opentelemetry.sdk._logs.LogRecord(
+        timestamp=time_ns(),
+        observed_timestamp=time_ns(),
+        trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        severity_text=None,
+        severity_number=_logs.SeverityNumber.UNSPECIFIED,
+        body=body
+    )
+    _logs.get_logger(__name__).emit(event)
+    logger.info("Processing time event logged. Time window: %s", args['time_window'])
+
+
 def log_evaluation_event(row, service_name) -> None:
     """Log evaluation event."""
     if "evaluation" not in row:
@@ -115,6 +130,7 @@ def run(args):
     data = get_combined_data(args["preprocessed_data"], args["evaluated_data"])
     for _, row in data.iterrows():
         log_evaluation_event(row, args['service_name'])
+    log_processing_time_event(args)
     provider.force_flush()
 
 
