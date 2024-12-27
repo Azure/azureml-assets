@@ -26,6 +26,8 @@ def get_args():
     parser.add_argument("--evaluators", type=str, dest="evaluators")
     parser.add_argument("--evaluator_name_id_map", type=str, dest="evaluator_name_id_map")
     parser.add_argument("--service_name", type=str, dest="service_name", default=None)
+    parser.add_argument("--schedule_name", type=str, dest="schedule_name", default=None)
+    parser.add_argument("--schedule_start_time", type=str, dest="schedule_start_time", default=None)
 
     args, _ = parser.parse_known_args()
     return vars(args)
