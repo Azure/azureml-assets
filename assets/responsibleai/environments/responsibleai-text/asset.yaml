@@ -5,7 +5,7 @@ spec: spec.yaml
 extra_config: environment.yaml
 test:
   pytest:
-    enabled: true 
-    pip_requirements: tests/requirements.txt
+    enabled: true
+    conda_environment: tests/test_conda_env.yaml
     tests_dir: tests
 categories: ["Responsible AI"]
