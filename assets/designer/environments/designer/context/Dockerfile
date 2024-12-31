@@ -9,10 +9,12 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# update curl to fix vulnerability
+# Update system dependencies to fix vulnerability
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl=7.81.0-1ubuntu1.19 && \
+    expat=2.2.9-1ubuntu0.8 \
+    libexpat1=2.2.9-1ubuntu0.8 \
+    libexpat1-dev=2.2.9-1ubuntu0.8 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
     
