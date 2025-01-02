@@ -13,7 +13,8 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl=7.68.0-1ubuntu2.25 \
-    linux-libc-dev && \
+    linux-libc-dev \
+    libcurl3-gnutls && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
