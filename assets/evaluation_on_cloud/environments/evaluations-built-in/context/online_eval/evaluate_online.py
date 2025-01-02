@@ -40,8 +40,6 @@ def run():
     evaluate.run(args)
     postprocess.run(args)
 
-    # Evaluate
-
 
 if __name__ == "__main__":
     with mlflow.start_run() as _run:

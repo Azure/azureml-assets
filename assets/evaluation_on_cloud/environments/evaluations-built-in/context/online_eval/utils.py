@@ -8,7 +8,7 @@ import pandas as pd
 
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azure.identity import ManagedIdentityCredential
+from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
 from azure.monitor.query import LogsQueryClient
 import logging
 
@@ -26,6 +26,10 @@ def get_managed_identity_credentials():
 
 def get_user_identity_credentials():
     """Get the user identity or default credentials."""
+    if os.getenv("IS_OFFLINE", "false").lower() == "true":
+        logger.info("IS_OFFLINE is set to true. Using default credentials.")
+        credential = DefaultAzureCredential()
+        return credential
     logger.info("Trying to load AzureMLOnBehalfOfCredential")
     credential = AzureMLOnBehalfOfCredential()
     logger.info("AzureMLOnBehalfOfCredential successfully loaded.")

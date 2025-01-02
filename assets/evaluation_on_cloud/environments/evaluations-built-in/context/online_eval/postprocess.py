@@ -76,7 +76,7 @@ def log_evaluation_event_single(trace_id, span_id, trace_flags, response_id, eva
 
 def log_processing_time_event(args):
     """Log processing time event."""
-    body = f"Schedule ID: {args['schedule_id']} | Last Run Time: {args['time_window'][1]}"
+    body = f"Schedule ID: {args['schedule_name']} | Last Run Time: {args['time_window'][1]}"
     event = opentelemetry.sdk._logs.LogRecord(
         timestamp=time_ns(),
         observed_timestamp=time_ns(),
