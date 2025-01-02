@@ -28,7 +28,7 @@ dependencies:
   - r-tidyverse=1.2.1
   - r-timedate=3043.102
   - r-tseries=0.10
-  - r=3.5.1s
+  - r=3.5.1
   - libxcrypt=4.4
   - setuptools=70
   - cython=0.29.24
