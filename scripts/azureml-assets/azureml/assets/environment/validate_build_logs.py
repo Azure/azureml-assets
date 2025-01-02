@@ -31,6 +31,27 @@ def validate_py_version(build_log_file_name, build_log_content):
     return 0
 
 
+def validate_ubuntu_version(build_log_file_name, build_log_content):
+    """Validate Ubuntu version.
+
+    Args:
+        build_log_file_name (str): Build log file name.
+        build_log_content (str): Build log content
+
+    Returns:
+        int: Number of errors.
+    """
+    ubuntu2004_match = re.search(r"FROM\s+(.*20\.04.*|.*2004.*)", build_log_content)
+
+    if ubuntu2004_match:
+        logger.log_error(f"{build_log_file_name}: Ubuntu 20.04 reference found in build log."
+                         f"Ubuntu 20.04 is nearing or has reached EOL. Please create an environment "
+                         f"based on a newer Ubuntu version.")
+        return 1
+
+    return 0
+
+
 def validate_build_logs(build_logs_dir):
     """Validate environment build logs.
 
@@ -50,6 +71,7 @@ def validate_build_logs(build_logs_dir):
         with open(build_log_file_path, "r") as f:
             build_log_content = f.read()
             error_count += validate_py_version(build_log_file_name, build_log_content)
+            error_count += validate_ubuntu_version(build_log_file_name, build_log_content)
 
     return error_count == 0
 
