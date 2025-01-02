@@ -12,7 +12,7 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 # update to fix vulnerability
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl=7.68.0-1ubuntu2.25 \
+    curl \
     linux-libc-dev \
     libcurl3-gnutls && \
     apt-get clean && \
