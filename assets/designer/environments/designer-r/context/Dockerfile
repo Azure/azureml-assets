@@ -12,8 +12,8 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 # update to fix vulnerability
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    curl=7.81.0-1ubuntu1.20 && \
-    linux-libc-dev=5.4.0 && \
+    curl=7.68.0-1ubuntu2.25 && \
+    linux-libc-dev=5.4.0-204.224 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

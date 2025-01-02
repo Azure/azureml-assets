@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
 WORKDIR /
 
@@ -9,6 +9,13 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
+# update to fix vulnerability
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl=7.68.0-1ubuntu2.25 && \
+    linux-libc-dev=5.4.0-204.224 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
     
 # Create conda environment
 COPY conda_dependencies.yaml .
