@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
 WORKDIR /
 
@@ -13,7 +13,7 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl=7.81.0-1ubuntu1.20 && \
-    linux-libc-dev=5.15.0-130.140 && \
+    linux-libc-dev=5.4.0 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
     
