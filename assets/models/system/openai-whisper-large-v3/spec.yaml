@@ -10,7 +10,6 @@ properties:
 tags:
   huggingface_model_id: openai/whisper-large-v3
   hiddenlayerscanned: ""
-  author: "openai-oss"
   inference_compute_allow_list:
     [
       Standard_DS5_v2,
