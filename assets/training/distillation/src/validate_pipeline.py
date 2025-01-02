@@ -107,7 +107,8 @@ class PipelineInputsValidator:
                 file_path, lines=True, chunksize=self._args.request_batch_size
             )
         except ValueError as e:
-            # If the file is not present pandas will read it as jsonl string and raises a ValueError if it is not a valid jsonl string.
+            # If the file is not present pandas will read it as jsonl string
+            # raises a ValueError if it is not a valid jsonl string.
             # also raises value error if it is not a valid jsonl file.
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
