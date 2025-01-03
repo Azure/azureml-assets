@@ -14,7 +14,7 @@ inputs:
     description: An optional configuration file to use for deployment settings. This overrides passed in parameters.
   scoring_url:
     type: string
-    optional: false
+    optional: true
     description: The URL of the endpoint.
   model_type:
     type: string
