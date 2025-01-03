@@ -9,14 +9,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# update to fix vulnerability
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    linux-libc-dev \
-    libcurl3-gnutls && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+
 
 # Create conda environment
 COPY conda_dependencies.yaml .
