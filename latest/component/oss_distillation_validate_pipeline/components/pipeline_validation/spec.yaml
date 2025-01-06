@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: OSS Distillation Validate Pipeline
 description: Component to validate inputs to the distillation pipeline
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/81
 
 code: ../../src
 
