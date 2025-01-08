@@ -10,11 +10,14 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  author: microsoft
+  author: Microsoft
   Preview: ""
   Featured: ""
   languages: "en"
   keywords: ""
+  inputModalities: "text"
+  outputModalities: "text"
+  industry: manufacturing
   inference_supported_envs:
     - vllm
   license: mit
