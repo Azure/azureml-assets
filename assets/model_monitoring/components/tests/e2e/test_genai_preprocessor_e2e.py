@@ -32,7 +32,7 @@ def _submit_genai_preprocessor_job(
         genai_preprocessor_output.identity = AmlTokenConfiguration()
         genai_preprocessor_output.resources = {
             'instance_type': 'Standard_E4S_V3',
-            'runtime_version': '3.3',
+            'runtime_version': '3.4',
         }
 
         return {
