@@ -8,7 +8,7 @@ properties:
   inference-recommended-sku: Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: chat-completion
   finetune-min-sku-spec:  96|4|880|256
-  finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96isr_H100_v5
+  finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
@@ -46,8 +46,7 @@ tags:
   finetune_compute_allow_list:
     [
       Standard_NC96ads_A100_v4,
-      Standard_ND96amsr_A100_v4,
-      Standard_ND96isr_H100_v5
+      Standard_ND96amsr_A100_v4
     ]
   inference_supported_envs:
     - vllm
@@ -69,4 +68,4 @@ tags:
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 6
+version: 5
