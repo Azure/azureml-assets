@@ -46,7 +46,7 @@ tags:
   task: text-generation
   author: "Mistral AI"
   benchmark: "quality"
-version: 18
+version: 19
 description: |
   # **Model Details**
 
