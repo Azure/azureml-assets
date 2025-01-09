@@ -13,9 +13,7 @@ tags:
   task: materials-design
   industry: health-and-life-sciences
   Preview: ""
-  inference_supported_envs:
-    - hf
-  license: NA
+  license: mit
   author: Microsoft
   hiddenlayerscanned: "true"
   SharedComputeCapacityEnabled: ""
