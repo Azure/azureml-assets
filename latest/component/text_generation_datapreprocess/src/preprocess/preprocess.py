@@ -55,7 +55,7 @@ def str2bool(arg):
 
 def default_missing_path(arg_str: str, default: Any = None):
     """If path of the arg is missing, reset the value to default. Use this type with paths."""
-    if isinstance(arg_str, str) and not Path(arg_str).is_file():
+    if isinstance(arg_str, str) and not Path(arg_str).exists():
         return default
     return arg_str
 
@@ -309,8 +309,6 @@ def main():
     parser = get_parser()
     # unknown args are the command line strings that could not be parsed by the argparser
     parsed_args, unparsed_args = parser.parse_known_args()
-    logger.info(f"Component Args: {parsed_args}")
-
     set_logging_parameters(
         task_type=parsed_args.task_name,
         acft_custom_dimensions={
@@ -321,7 +319,7 @@ def main():
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
         log_level=logging.INFO,
     )
-
+    logger.info(f"Component Args: {parsed_args}")
     pre_process(parsed_args, unparsed_args)
 
 
