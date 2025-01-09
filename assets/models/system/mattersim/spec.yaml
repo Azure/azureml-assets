@@ -17,7 +17,7 @@ tags:
     - hf
   license: NA
   author: Microsoft
-  hiddenlayerscanned: ""
+  hiddenlayerscanned: "true"
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
     [
