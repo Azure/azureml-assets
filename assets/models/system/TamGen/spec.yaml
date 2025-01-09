@@ -14,7 +14,6 @@ tags:
   industry: health-and-life-sciences
   Preview: ""
   inference_supported_envs:
-    - hf
   license: mit
   author: Microsoft
   hiddenlayerscanned: "true"
