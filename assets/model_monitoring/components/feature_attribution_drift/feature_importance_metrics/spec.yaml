@@ -48,7 +48,7 @@ conf:
     dependencies:
     - pip:
         - azure-storage-file-datalake~=12.8.0
-        - azure-ai-ml~=1.13.0
+        - azure-ai-ml~=1.23.1
         - mltable~=1.3.0
         - interpret-community[mimic]~=0.31.0
         - azureml-fsspec~=1.0.0
