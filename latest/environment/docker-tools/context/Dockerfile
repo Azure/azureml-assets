@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20241215.v1
 RUN apt-get update
 RUN apt-get install docker.io -y
 
-ENV TRIVY_VERSION=0.53.0
-ENV ORAS_VERSION=1.2.0
+ENV TRIVY_VERSION=0.58.1
+ENV ORAS_VERSION=1.2.2
 
 RUN wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb && \
     dpkg -i trivy_${TRIVY_VERSION}_Linux-64bit.deb && \
