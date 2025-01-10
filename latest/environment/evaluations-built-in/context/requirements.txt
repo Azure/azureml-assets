@@ -2,11 +2,11 @@ azure-ai-evaluation==1.1.0
 azureml-mlflow==1.59.0.post1
 azure-ai-ml==1.23.1
 
-openai==1.59.5
+openai==1.59.6
 opentelemetry-api==1.29.0
 opentelemetry-sdk==1.29.0
 azure-monitor-query==1.4.0
 croniter==6.0.0
 azure-monitor-opentelemetry==1.6.4
-promptflow-azure==1.17.0
+promptflow-azure==1.17.1
 azure-identity==1.19.0
