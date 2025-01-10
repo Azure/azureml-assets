@@ -4,7 +4,7 @@ channels:
 dependencies:
   - pip=23.3
   - python=3.9.18
-  - r-base=4.4.0
+  - r-base=4.4.2
   - r-caret=6.0
   - r-catools=1.18.3
   - r-cluster=2.1.8
