@@ -5,7 +5,7 @@ name: model_performance_compute_metrics
 display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance
   monitor.
-version: 0.0.21
+version: 0.0.22
 is_deterministic: true
 
 code: ../../src
@@ -68,7 +68,7 @@ conf:
     dependencies:
       - pip:
         - azure-storage-file-datalake~=12.8.0
-        - azure-ai-ml~=1.13.0
+        - azure-ai-ml~=1.23.1
         - azureml-mlflow~=1.49.0
         - mltable~=1.3.0
         - azureml-fsspec~=1.0.0
