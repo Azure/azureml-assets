@@ -4,7 +4,7 @@ type: spark
 name: genai_mdc_preprocessor
 display_name: GenAI MDC - Preprocessor
 description: Filters the raw span log based on the window provided, and aggregates it to trace level.
-version: 0.0.23
+version: 0.0.24
 is_deterministic: true
 
 code: ../../src
@@ -46,7 +46,7 @@ conf:
     dependencies:
       - pip:
         - azure-storage-file-datalake~=12.8.0
-        - azure-ai-ml~=1.13.0
+        - azure-ai-ml~=1.23.1
         - azureml-mlflow~=1.49.0
         - mltable~=1.3.0
         - azureml-fsspec~=1.0.0
