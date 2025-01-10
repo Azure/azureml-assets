@@ -1,5 +1,5 @@
 name: batch_output_formatter
-version: 0.0.15
+version: 0.0.15.test
 display_name: Batch Output Formatter
 is_deterministic: True
 type: command
@@ -71,8 +71,8 @@ outputs:
   unsafe_content_blocked_requests:
     type: uri_file
 code: ../src
-environment: azureml://registries/azureml/environments/evaluation/labels/latest
-
+#environment: azureml://registries/azureml/environments/evaluation/labels/latest
+environment: azureml://registries/azureml/environments/evaluation/versions/2
 resources:
   instance_count: 1
 

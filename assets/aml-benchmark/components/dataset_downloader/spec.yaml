@@ -4,7 +4,7 @@ type: command
 name: dataset_downloader
 display_name: Dataset Downloader
 description: Downloads the dataset onto blob store.
-version: 0.0.11
+version: 0.0.12.test
 
 inputs:
   dataset_name: 
@@ -34,7 +34,8 @@ outputs:
     description: Path to the directory where the dataset will be downloaded.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+#environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: azureml://registries/azureml/environments/model-evaluation/versions/41
 command: >-
   python -m aml_benchmark.dataset_downloader.main
   $[[--dataset_name ${{inputs.dataset_name}}]] 
