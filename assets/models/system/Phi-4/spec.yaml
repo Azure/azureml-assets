@@ -20,7 +20,7 @@ tags:
   keywords: "Conversation"
   inference_supported_envs:
     - vllm
-  license: MSRLA
+  license: MIT
   task: chat-completion
   displayName: "Phi-4"
   summary: "Phi-4 14B, a highly capable model for low latency scenarios."
@@ -32,6 +32,7 @@ tags:
   trainingDataDate: "June 2024"
   notes: "notes.md"
   hiddenlayerscanned: ""
+  maas-inference: "true"
   inference_compute_allow_list:
     [
       Standard_NC24ads_A100_v4,
@@ -42,4 +43,4 @@ tags:
     ]
   benchmark: "quality"
 
-version: 1
+version: 2
