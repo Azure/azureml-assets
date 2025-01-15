@@ -22,8 +22,8 @@ env:
   docs_dir: docs
 
 permissions:
-  # Required to clone repo
-  contents: read
+  # Required to clone repo and push commits to the wiki repo
+  contents: write
 
 defaults:
   run:
@@ -54,7 +54,6 @@ jobs:
         with:
           repository: Azure/azureml-assets.wiki
           fetch-depth: 0
-          token: ${{ secrets.AZUREML_BOT_PAT }}
           path: ${{ env.wiki_dir }}
 
       - name: Use Python 3.10 or newer
