@@ -22,6 +22,7 @@ from azureml.acft.common_components.utils.error_handling.error_definitions impor
     ACFTUserError,
 )
 
+
 def _create_session_with_retry(retry: int = 3) -> requests.Session:
     """
     Create requests.session with retry.
@@ -118,12 +119,13 @@ def get_target_from_connection(connections_name: str) -> Tuple[str, Optional[str
     if target is None:
         msg = "Target not found in response"
         raise ACFTValidationException._with_error(
-                    AzureMLError.create(
-                        ACFTUserError,
-                        pii_safe_message=(msg),
-                    )
-                )
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(msg),
+            )
+        )
     return target
+
 
 def get_api_key_from_connection(connections_name: str) -> Tuple[str, Optional[str]]:
     """
