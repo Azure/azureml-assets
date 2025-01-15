@@ -8,7 +8,7 @@ is_deterministic: False
 display_name: OSS Distillation Generate Data Postprocess Batch Scoring
 description: Component to prepare data returned from teacher model enpoint in batch 
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/81
 
 inputs:
   # Inputs
@@ -104,6 +104,7 @@ command: >-
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
+  $[[--teacher_model_endpoint_name ${{inputs.teacher_model_endpoint_name}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --connection_config_file ${{inputs.connection_config_file}}
   --generated_batch_train_file_path ${{outputs.generated_batch_train_file_path}}

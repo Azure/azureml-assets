@@ -8,7 +8,7 @@ is_deterministic: False
 display_name: OSS Distillation Generate Data Batch Scoring Preprocess
 description: Component to prepare data to invoke teacher model enpoint in batch 
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/81
 
 inputs:
   # Inputs
@@ -28,12 +28,7 @@ inputs:
     optional: true
     description: Teacher model endpoint name
 
-  teacher_model_endpoint_url: 
-    type: string
-    optional: true
-    description: Teacher model endpoint url
-
-  teacher_model_endpoint_key:
+  teacher_model_connection_name: 
     type: string
     optional: true
     description: Teacher model endpoint key
@@ -133,8 +128,7 @@ command: >-
   --train_file_path  ${{inputs.train_file_path}}
   $[[--validation_file_path  ${{inputs.validation_file_path}}]]
   $[[--teacher_model_endpoint_name ${{inputs.teacher_model_endpoint_name}}]]
-  $[[--teacher_model_endpoint_url ${{inputs.teacher_model_endpoint_url}}]]
-  $[[--teacher_model_endpoint_key ${{inputs.teacher_model_endpoint_key}}]]
+  $[[--teacher_model_connection_name ${{inputs.teacher_model_connection_name}}]]
   --teacher_model_max_new_tokens ${{inputs.teacher_model_max_new_tokens}}
   --teacher_model_temperature ${{inputs.teacher_model_temperature}}
   --teacher_model_top_p ${{inputs.teacher_model_top_p}}

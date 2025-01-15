@@ -41,7 +41,6 @@ if __name__ == "__main__":
     parser.add_argument("--ft_input_validation_file_path", type=str)
 
     args, _ = parser.parse_known_args()
-    print(f"Condition output component received args: {args}.")
     if (
         args.generated_batch_train_file_path is None
         and args.generated_train_file_path is None
