@@ -29,8 +29,8 @@ env:
   asset_config_filename: asset.yaml
 
 permissions:
-  # Required to clone repo
-  contents: read
+  # Required to clone repo and push commit to release branch
+  contents: write
   # Required for OIDC login to Azure
   id-token: write
 
