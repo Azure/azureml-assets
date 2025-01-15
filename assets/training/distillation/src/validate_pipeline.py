@@ -39,7 +39,7 @@ from common.constants import (
     TOP_P,
     VLLM_CHAT_SCORE_PATH,
     MIN_RECORDS_FOR_FT,
-    MATH_MIN_RECORDS_FOR_FT
+    MATH_MIN_RECORDS_FOR_FT,
 )
 
 from common.utils import (
@@ -165,7 +165,9 @@ class PipelineInputsValidator:
             if teacher_model_connection_name:
                 try:
                     get_target_from_connection(teacher_model_connection_name)
-                    self._args.teacher_model_endpoint_key = get_api_key_from_connection(teacher_model_connection_name)[0]
+                    self._args.teacher_model_endpoint_key = get_api_key_from_connection(
+                        teacher_model_connection_name
+                    )[0]
                 except Exception:
                     raise ACFTValidationException._with_error(
                         AzureMLError.create(
@@ -255,7 +257,11 @@ class PipelineInputsValidator:
     def _validate_number_of_records(self, size: int):
         """Validate number of records in the dataset."""
         task_type = self._args.data_generation_task_type
-        min_records = MIN_RECORDS_FOR_FT if task_type != DataGenerationTaskType.MATH else MATH_MIN_RECORDS_FOR_FT
+        min_records = (
+            MIN_RECORDS_FOR_FT
+            if task_type != DataGenerationTaskType.MATH
+            else MATH_MIN_RECORDS_FOR_FT
+        )
         if size < min_records:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
@@ -324,10 +330,7 @@ class PipelineInputsValidator:
                 Expected format: [system, user]"
 
     def _validate_record_for_type_summarization(self, record: list) -> str:
-        if (
-            self._args.data_generation_task_type
-            != DataGenerationTaskType.SUMMARIZATION
-        ):
+        if self._args.data_generation_task_type != DataGenerationTaskType.SUMMARIZATION:
             return
 
         if self._get_cot_status():
