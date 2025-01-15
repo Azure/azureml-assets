@@ -3,7 +3,7 @@ description: >-
   Environment for evaluating models.
 
 name: "evaluation"
-version: "3"
+version: "4"
 
 build:
   path: context/
