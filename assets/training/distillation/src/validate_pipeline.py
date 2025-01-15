@@ -165,7 +165,7 @@ class PipelineInputsValidator:
             if teacher_model_connection_name:
                 try:
                     get_target_from_connection(teacher_model_connection_name)
-                    self._args.teacher_model_endpoint_key = get_api_key_from_connection(teacher_model_connection_name)
+                    self._args.teacher_model_endpoint_key = get_api_key_from_connection(teacher_model_connection_name)[0]
                 except Exception:
                     raise ACFTValidationException._with_error(
                         AzureMLError.create(
