@@ -50,6 +50,8 @@ jobs:
           echo -n ${{ github.token }} | wc -c
           echo "PAT token info:"
           curl -sS -f -I -H "Authorization: token ${{ github.token }}" https://api.github.com
+          echo "PAT token info (attempt 2):"
+          curl -s -o /dev/null -D - https://api.github.com/graphql -H "Authorization: token ${{ github.token }}" -H 'Content-Type: application/graphql' -H 'Accept: application/vnd.github.merge-info-preview+json'
 
   #     - name: Clone branch
   #       uses: actions/checkout@v3
