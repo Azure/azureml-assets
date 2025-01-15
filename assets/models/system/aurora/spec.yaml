@@ -10,7 +10,6 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  industry: atmospheric-and-oceanic-physics
   task: environmental-forecasting
   Preview: ""
   Featured: ""  
