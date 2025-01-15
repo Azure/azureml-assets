@@ -46,6 +46,8 @@ jobs:
     steps:
       - name: Get PAT token info
         run: |
+          echo "PAT token size in characters:"
+          echo -n ${{ github.token }} | wc -c
           echo "PAT token info:"
           curl -sS -f -I -H "Authorization: token ${{ github.token }}" https://api.github.com
 
