@@ -11,7 +11,7 @@ properties:
 
 tags:
   task: materials-design
-  industry: health-and-life-sciences
+  disable-batch: "true"
   Preview: ""
   license: mit
   author: Microsoft

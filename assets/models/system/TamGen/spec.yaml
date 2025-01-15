@@ -11,7 +11,7 @@ properties:
 
 tags:
   task: protein-design
-  industry: health-and-life-sciences
+  disable-batch: "true"
   Preview: ""
   inference_supported_envs:
   license: mit
