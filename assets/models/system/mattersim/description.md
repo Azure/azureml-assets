@@ -30,8 +30,8 @@ Please refer to the [MatterSim](https://arxiv.org/abs/2405.04967) manuscript for
 
 ### Model Sources
 
-- **Repository:** https://github.com/microsoft/mattersim
-- **Paper:** https://arxiv.org/abs/2405.04967
+- **Repository:** <https://github.com/microsoft/mattersim>
+- **Paper:** <https://arxiv.org/abs/2405.04967>
 
 ### Available Models
 
@@ -96,7 +96,6 @@ We evaluate the performance by computing the mean absolute errors (MAEs) of ener
 </p>
 where N is the number of structures in the same dataset, <img src="https://latex.codecogs.com/svg.image?\inline&space;&space;N_{at}^{(i)}"> is the number of atoms in the i-th structure and E, F and S represent ground-truth energy, forces and stress, respectively.
 
-
 ### Results
 
 | Dataset              | Dataset Size | MAE               | mattersim-v1.0.0-1M | mattersim-v1.0.0-5M |
@@ -120,7 +119,30 @@ where N is the number of structures in the same dataset, <img src="https://latex
 |                      |              | Forces [eV/<img src="https://latex.codecogs.com/svg.latex?\AA" alt="\AA">] | 0.933        | 0.824        |
 |                      |              | Stress [GPa]      | 2.065        | 1.999        |
 
-## Technical Specifications [optional]
+## Intended Uses
+
+The MatterSim model is intended for property predictions of materials.
+
+### Direct Use
+
+The model is used for materials simulation and property prediciton tasks. An interface to atomic simulation environment is provided. Examples of direct usages include but not limited to
+
+- Direct prediction of energy, forces and stress of a given materials
+- Phonon prediction using finite difference
+- Molecular dynamics
+
+### Out-of-Scope Use
+
+The model only supports atomistic simulations of materials and molecules. Any attempt and interpretation beyond that should be avoided.
+The model does not support generation of new materials as it is designed for materials simulation and property prediction only.
+The model is intended for research and experimental purposes. Further testing/development are needed before considering its application in real-world scenarios.
+
+## Contact Model Provider
+
+- Han Yang (<hanyang@microsoft.com>)
+- Ziheng Lu (<zihenglu@microsoft.com>)
+
+## Technical Specifications
 
 ### Model Architecture and Objective
 
@@ -133,6 +155,7 @@ The checkpoints released in this repository are those trained on an internal imp
 ## Citation
 
 **BibTeX:**
+
 ```
 @article{yang2024mattersim,
       title={MatterSim: A Deep Learning Atomistic Model Across Elements, Temperatures and Pressures},
@@ -145,20 +168,6 @@ The checkpoints released in this repository are those trained on an internal imp
       journal={arXiv preprint arXiv:2405.04967}
 }
 ```
-
-## Model Card Contact
-
-- Han Yang (hanyang@microsoft.com)
-- Ziheng Lu (zihenglu@microsoft.com)
-
-
-
-
-### Out-of-Scope Use
-
-The model only supports atomistic simulations of materials and molecules. Any attempt and interpretation beyond that should be avoided.
-The model does not support generation of new materials as it is designed for materials simulation and property prediction only.
-The model is intended for research and experimental purposes. Further testing/development are needed before considering its application in real-world scenarios.
 
 ## Bias, Risks, and Limitations
 
