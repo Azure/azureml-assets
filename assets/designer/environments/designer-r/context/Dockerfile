@@ -9,6 +9,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
+USER root
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -17,5 +18,5 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y && \
     conda run -p $CONDA_PREFIX conda remove -p $CONDA_PREFIX --yes r-bslib && \
-    rm -rf /opt/miniconda/pkgs/r-bslib-0.8.0-r44hc72bb7e__0
-
+    rm -rf /opt/miniconda/pkgs/r-bslib-0.8.0-r44hc72bb7e__0 
+    
