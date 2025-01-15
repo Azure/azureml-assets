@@ -29,8 +29,8 @@ env:
   asset_config_filename: asset.yaml
 
 permissions:
-  # Required to clone repo
-  contents: read
+  # Required to clone repo and push commit to release branch
+  contents: write
   # Required for OIDC login to Azure
   id-token: write
 
@@ -220,7 +220,6 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
-          token: ${{ secrets.AZUREML_BOT_PAT }}
           path: ${{ env.release_dir }}
 
       - name: Use Python 3.10 or newer
