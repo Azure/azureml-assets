@@ -220,7 +220,6 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
-          token: ${{ secrets.AZUREML_BOT_PAT }}
           path: ${{ env.release_dir }}
 
       - name: Use Python 3.10 or newer
