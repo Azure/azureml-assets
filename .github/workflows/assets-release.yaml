@@ -44,221 +44,226 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clone branch
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          path: ${{ env.main_dir }}
-      
-      - name: Clone release branch
-        uses: actions/checkout@v3
-        with:
-          ref: release
-          fetch-depth: 0
-          path: ${{ env.release_dir }}
-      
-      - name: Use Python 3.10 or newer
-        uses: actions/setup-python@v4
-        with:
-          python-version: '>=3.10'
-    
-      - name: Install dependencies
-        run: pip install -e $main_dir/$scripts_azureml_assets_dir
-
-      - name: Find updated assets
-        id: find-updated-assets
-        run: python -u $scripts_assets_dir/update_assets.py -i "$asset_dirs" -r ${{ github.workspace }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact
-        working-directory: ${{ env.main_dir }}
-
-      - name: Upload changed assets
-        uses: actions/upload-artifact@v3
-        if: steps.find-updated-assets.outputs.updated_count > 0
-        with:
-          name: ${{ env.changed_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
-      
-      - name: Upload non-testable assets
-        uses: actions/upload-artifact@v3
-        if: steps.find-updated-assets.outputs.updated_count > 0
-        with:
-          name: ${{ env.releasable_assets_artifact }}
-          path: |
-            ${{ runner.temp }}/${{ env.changed_assets_artifact }}
-          # Remove this line and uncomment the one below after testing
-          #  !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
-      
-      - name: Create list of assets
-        id: create-assets-list
+      - name: Get PAT token info
         run: |
-          artifact_dir=${{ runner.temp }}/$asset_list_artifact
-          mkdir -p $artifact_dir
-          python -u $scripts_assets_dir/asset_utils.py list -i "$asset_dirs" -o $artifact_dir/$asset_list_file
-        working-directory: ${{ env.main_dir }}
+          echo "PAT token info:"
+          curl -sS -f -I -H "Authorization: token ${{ github.token }}" https://api.github.com
 
-      - name: Check list of assets
-        if: steps.create-assets-list.outputs.asset_count == 0
-        run: |
-          echo "::error::List of assets is empty. Please check the main branch and this workflow."
-          exit 1
-
-      - name: Upload list of assets
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.asset_list_artifact }}
-          path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
-
-    outputs:
-      updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
-
-  # build-images:
-  #   name: Build and test images
-  #   if: needs.identify-updated-assets.outputs.updated_env_count > 0
-  #   runs-on: ubuntu-latest
-  #   needs: identify-updated-assets
-  #   environment: Testing
-
-  #   env:
-  #     build_logs_artifact_name: build-logs
-  #     tested_dir: tested-environments
-
-  #   steps:
-  #     - name: Download changed assets
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: ${{ env.changed_assets_artifact }}
-  #         path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
-    
   #     - name: Clone branch
   #       uses: actions/checkout@v3
   #       with:
   #         fetch-depth: 1
+  #         path: ${{ env.main_dir }}
       
-  #     - name: Use Python 3.8 or newer
+  #     - name: Clone release branch
+  #       uses: actions/checkout@v3
+  #       with:
+  #         ref: release
+  #         fetch-depth: 0
+  #         path: ${{ env.release_dir }}
+      
+  #     - name: Use Python 3.10 or newer
   #       uses: actions/setup-python@v4
   #       with:
-  #         python-version: '>=3.8'
+  #         python-version: '>=3.10'
     
   #     - name: Install dependencies
-  #       run: pip install -e $scripts_azureml_assets_dir
+  #       run: pip install -e $main_dir/$scripts_azureml_assets_dir
 
-  #     - name: Log in to Azure and create resources
-  #       uses: ./.github/actions/create-azure-resources
-  #       with:
-  #         client-id: ${{ secrets.AZURE_CLIENT_ID }}
-  #         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-  #         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  #         scripts-setup-dir: ${{ env.scripts_setup_dir }}
-      
-  #     - name: Build and test images
-  #       id: build-images
-  #       run: python -u $scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -g $resource_group -r $container_registry -T 'python -V'
-  #       continue-on-error: true
-      
-  #     - name: Upload build logs
+  #     - name: Find updated assets
+  #       id: find-updated-assets
+  #       run: python -u $scripts_assets_dir/update_assets.py -i "$asset_dirs" -r ${{ github.workspace }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+  #       working-directory: ${{ env.main_dir }}
+
+  #     - name: Upload changed assets
   #       uses: actions/upload-artifact@v3
-  #       if: always()
+  #       if: steps.find-updated-assets.outputs.updated_count > 0
   #       with:
-  #         name: ${{ env.build_logs_artifact_name }}
-  #         path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
+  #         name: ${{ env.changed_assets_artifact }}
+  #         path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
       
-  #     - name: Upload tested assets
-  #       if: steps.build-images.outputs.success_count > 0
+  #     - name: Upload non-testable assets
   #       uses: actions/upload-artifact@v3
+  #       if: steps.find-updated-assets.outputs.updated_count > 0
   #       with:
   #         name: ${{ env.releasable_assets_artifact }}
-  #         path: ${{ runner.temp }}/${{ env.tested_dir }}
+  #         path: |
+  #           ${{ runner.temp }}/${{ env.changed_assets_artifact }}
+  #         # Remove this line and uncomment the one below after testing
+  #         #  !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
+      
+  #     - name: Create list of assets
+  #       id: create-assets-list
+  #       run: |
+  #         artifact_dir=${{ runner.temp }}/$asset_list_artifact
+  #         mkdir -p $artifact_dir
+  #         python -u $scripts_assets_dir/asset_utils.py list -i "$asset_dirs" -o $artifact_dir/$asset_list_file
+  #       working-directory: ${{ env.main_dir }}
 
-  check-release-assets:
-    name: Check releaseable assets
-    if: "!cancelled()"
-    runs-on: ubuntu-latest
-    needs:
-      - identify-updated-assets
-      # - build-images
+  #     - name: Check list of assets
+  #       if: steps.create-assets-list.outputs.asset_count == 0
+  #       run: |
+  #         echo "::error::List of assets is empty. Please check the main branch and this workflow."
+  #         exit 1
 
-    steps:
-      - name: Download releasable assets
-        id: download-artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.releasable_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
-        continue-on-error: true
+  #     - name: Upload list of assets
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ env.asset_list_artifact }}
+  #         path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
 
-    outputs:
-      has_releasable_assets: ${{ steps.download-artifact.outputs.download-path }}
+  #   outputs:
+  #     updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
 
-  release-assets:
-    name: Update release branch
-    if: "!cancelled() && github.ref == 'refs/heads/main'"
-    runs-on: ubuntu-latest
-    needs: check-release-assets
+  # # build-images:
+  # #   name: Build and test images
+  # #   if: needs.identify-updated-assets.outputs.updated_env_count > 0
+  # #   runs-on: ubuntu-latest
+  # #   needs: identify-updated-assets
+  # #   environment: Testing
+
+  # #   env:
+  # #     build_logs_artifact_name: build-logs
+  # #     tested_dir: tested-environments
+
+  # #   steps:
+  # #     - name: Download changed assets
+  # #       uses: actions/download-artifact@v3
+  # #       with:
+  # #         name: ${{ env.changed_assets_artifact }}
+  # #         path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
     
-    steps:
-      - name: Download releasable assets
-        if: needs.check-release-assets.outputs.has_releasable_assets != ''
-        id: download-artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.releasable_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
+  # #     - name: Clone branch
+  # #       uses: actions/checkout@v3
+  # #       with:
+  # #         fetch-depth: 1
       
-      - name: Download list of assets
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.asset_list_artifact }}
-          path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
-      
-      - name: Clone branch
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          path: ${{ env.main_dir }}
-
-      - name: Clone release branch
-        uses: actions/checkout@v3
-        with:
-          ref: release
-          fetch-depth: 0
-          token: ${{ secrets.AZUREML_BOT_PAT }}
-          path: ${{ env.release_dir }}
-
-      - name: Use Python 3.10 or newer
-        uses: actions/setup-python@v4
-        with:
-          python-version: '>=3.10'
+  # #     - name: Use Python 3.8 or newer
+  # #       uses: actions/setup-python@v4
+  # #       with:
+  # #         python-version: '>=3.8'
     
-      - name: Install dependencies
-        run: pip install -e $main_dir/$scripts_azureml_assets_dir
+  # #     - name: Install dependencies
+  # #       run: pip install -e $scripts_azureml_assets_dir
+
+  # #     - name: Log in to Azure and create resources
+  # #       uses: ./.github/actions/create-azure-resources
+  # #       with:
+  # #         client-id: ${{ secrets.AZURE_CLIENT_ID }}
+  # #         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+  # #         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  # #         scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
-      - name: Update release branch
-        if: steps.download-artifact.outputs.download-path
-        run: python -u $main_dir/$scripts_assets_dir/copy_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -o $release_dir/latest
-  
-      - name: Delete deprecated assets
-        run: python -u $main_dir/$scripts_assets_dir/asset_utils.py delete -i $release_dir -r ${{ runner.temp }}/$asset_list_artifact/$asset_list_file
-  
-      - name: Copy test files and scripts
-        run: |
-          python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "$asset_dirs" -r $release_dir -w $main_dir
+  # #     - name: Build and test images
+  # #       id: build-images
+  # #       run: python -u $scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -g $resource_group -r $container_registry -T 'python -V'
+  # #       continue-on-error: true
+      
+  # #     - name: Upload build logs
+  # #       uses: actions/upload-artifact@v3
+  # #       if: always()
+  # #       with:
+  # #         name: ${{ env.build_logs_artifact_name }}
+  # #         path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
+      
+  # #     - name: Upload tested assets
+  # #       if: steps.build-images.outputs.success_count > 0
+  # #       uses: actions/upload-artifact@v3
+  # #       with:
+  # #         name: ${{ env.releasable_assets_artifact }}
+  # #         path: ${{ runner.temp }}/${{ env.tested_dir }}
 
-      - name: Copy scripts
-        run: | 
-          rm -Rf $release_dir/$scripts_dir
-          cp -r $main_dir/$scripts_dir $release_dir/$scripts_dir
+  # check-release-assets:
+  #   name: Check releaseable assets
+  #   if: "!cancelled()"
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - identify-updated-assets
+  #     # - build-images
 
-      - name: Create commit and push
-        env:
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: GitHub
-          GIT_COMMITTER_EMAIL: noreply@github.com
-        run: |
-          if [[ -z $(git status -s) ]]; then
-            echo "No updates to the release branch"
-            exit 0
-          fi
-          git add -A .
-          git commit -m "Update release branch" -m "Automated updates made by [$GITHUB_WORKFLOW]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
-          git push
-        working-directory: ${{ env.release_dir }}
+  #   steps:
+  #     - name: Download releasable assets
+  #       id: download-artifact
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: ${{ env.releasable_assets_artifact }}
+  #         path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
+  #       continue-on-error: true
+
+  #   outputs:
+  #     has_releasable_assets: ${{ steps.download-artifact.outputs.download-path }}
+
+  # release-assets:
+  #   name: Update release branch
+  #   if: "!cancelled() && github.ref == 'refs/heads/main'"
+  #   runs-on: ubuntu-latest
+  #   needs: check-release-assets
+    
+  #   steps:
+  #     - name: Download releasable assets
+  #       if: needs.check-release-assets.outputs.has_releasable_assets != ''
+  #       id: download-artifact
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: ${{ env.releasable_assets_artifact }}
+  #         path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
+      
+  #     - name: Download list of assets
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: ${{ env.asset_list_artifact }}
+  #         path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
+      
+  #     - name: Clone branch
+  #       uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 1
+  #         path: ${{ env.main_dir }}
+
+  #     - name: Clone release branch
+  #       uses: actions/checkout@v3
+  #       with:
+  #         ref: release
+  #         fetch-depth: 0
+  #         token: ${{ secrets.AZUREML_BOT_PAT }}
+  #         path: ${{ env.release_dir }}
+
+  #     - name: Use Python 3.10 or newer
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '>=3.10'
+    
+  #     - name: Install dependencies
+  #       run: pip install -e $main_dir/$scripts_azureml_assets_dir
+      
+  #     - name: Update release branch
+  #       if: steps.download-artifact.outputs.download-path
+  #       run: python -u $main_dir/$scripts_assets_dir/copy_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -o $release_dir/latest
+  
+  #     - name: Delete deprecated assets
+  #       run: python -u $main_dir/$scripts_assets_dir/asset_utils.py delete -i $release_dir -r ${{ runner.temp }}/$asset_list_artifact/$asset_list_file
+  
+  #     - name: Copy test files and scripts
+  #       run: |
+  #         python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "$asset_dirs" -r $release_dir -w $main_dir
+
+  #     - name: Copy scripts
+  #       run: | 
+  #         rm -Rf $release_dir/$scripts_dir
+  #         cp -r $main_dir/$scripts_dir $release_dir/$scripts_dir
+
+  #     - name: Create commit and push
+  #       env:
+  #         GIT_AUTHOR_NAME: github-actions[bot]
+  #         GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  #         GIT_COMMITTER_NAME: GitHub
+  #         GIT_COMMITTER_EMAIL: noreply@github.com
+  #       run: |
+  #         if [[ -z $(git status -s) ]]; then
+  #           echo "No updates to the release branch"
+  #           exit 0
+  #         fi
+  #         git add -A .
+  #         git commit -m "Update release branch" -m "Automated updates made by [$GITHUB_WORKFLOW]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+  #         git push
+  #       working-directory: ${{ env.release_dir }}
