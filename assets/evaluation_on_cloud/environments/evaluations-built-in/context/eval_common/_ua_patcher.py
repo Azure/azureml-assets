@@ -10,12 +10,15 @@ from azure.ai.evaluation._version import VERSION
 
 def get_eval_type():
     """Get evaluation type."""
-    stack = inspect.stack()
+    full_stack = inspect.stack()
     eval_type = ""
-    if "evaluate_on_data.py" in stack[1].filename:
-        eval_type = "remote-evaluation"
-    elif "evaluate_online.py" in stack[1].filename:
-        eval_type = "online-evaluation"
+    for stack in full_stack:
+        if "evaluate_on_data.py" in stack.filename:
+            eval_type = "remote-evaluation"
+            break
+        elif "evaluate_online.py" in stack.filename:
+            eval_type = "online-evaluation"
+            break
     return eval_type
 
 
