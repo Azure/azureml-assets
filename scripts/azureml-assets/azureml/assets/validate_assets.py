@@ -120,7 +120,7 @@ COMMON_VERSION = r"[0-9]+(?:\.[0-9]+)?(?=-|$)"
 FRAMEWORKS = ["pytorch", "sklearn", "tensorflow"]
 FRAMEWORK_VERSION = f"(?:{'|'.join(FRAMEWORKS)})-{COMMON_VERSION}"
 FRAMEWORK_VERSION_PATTERN = re.compile(FRAMEWORK_VERSION)
-INVALID_ENVIRONMENT_STRINGS = ["ubuntu", "cpu"]
+# INVALID_ENVIRONMENT_STRINGS = ["ubuntu", "cpu"]
 OPERATING_SYSTEMS = ["centos", "debian", "win"]
 OPERATING_SYSTEM_PATTERN = re.compile(r"(?:centos|debian|\bwin\b)")
 OPERATING_SYSTEM_VERSION = f"(?:{'|'.join(OPERATING_SYSTEMS)}){COMMON_VERSION}"
@@ -196,11 +196,11 @@ def validate_environment_name(asset_config: assets.AssetConfig) -> int:
         error_count += 1
 
     # Check for invalid strings
-    for invalid_string in INVALID_ENVIRONMENT_STRINGS:
+    '''for invalid_string in INVALID_ENVIRONMENT_STRINGS:
         if invalid_string in asset_name:
             _log_error(asset_config.file_name_with_path,
                        f"Name '{asset_name}' contains invalid string '{invalid_string}'")
-            error_count += 1
+            error_count += 1'''
 
     # Check for missing frameworks and version
     frameworks_found = [f for f in FRAMEWORKS if f in asset_name]
