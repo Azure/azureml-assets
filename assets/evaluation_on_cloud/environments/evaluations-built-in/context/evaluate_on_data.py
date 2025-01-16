@@ -12,13 +12,14 @@ import requests
 import shutil
 import sys
 
-from eval_common import ua_patcher  # pylint: disable=unused-import
+from eval_common import ua_patcher  # noqa: F401 # Module imported but unused
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 
 def update_value_in_dict(d, key_substring, new_func):
     """Recursively search for a value containing 'key_substring' and apply 'new_func' to modify it."""
