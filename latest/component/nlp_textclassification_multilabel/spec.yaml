@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: nlp_textclassification_multilabel
-version: 0.0.3
+version: 0.0.4
 type: pipeline
 display_name: PipelineComponent for AutoML NLP Multilabel TextClassification
 description: Pipeline component for AutoML NLP Multilabel Text classification
@@ -230,7 +230,7 @@ jobs:
       huggingface_id: ${{parent.inputs.model_name}}
   preprocess:
     type: command
-    component: azureml:nlp_multilabel_datapreprocessing:0.0.2
+    component: azureml:nlp_multilabel_datapreprocessing:0.0.3
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       label_column_name: ${{parent.inputs.label_column_name}}
