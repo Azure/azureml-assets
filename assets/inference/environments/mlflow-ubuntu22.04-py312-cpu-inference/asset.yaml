@@ -1,4 +1,4 @@
-name: mlflow-py312-inference
+name: mlflow-ubuntu22.04-py312-cpu-inference
 
 version: auto
 type: environment
