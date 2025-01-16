@@ -6,6 +6,9 @@ path: ./
 properties:
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: chat-completion
+  finetune-min-sku-spec: 24|1|220|64
+  finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en
   SharedComputeCapacityEnabled: true
 
@@ -43,6 +46,30 @@ tags:
       Standard_ND96asr_v4,
       Standard_ND96amsr_A100_v4
     ]
+  finetune_compute_allow_list:
+    [ 
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4
+    ]
+  model_specific_defaults:
+    apply_deepspeed: "true"
+    deepspeed_stage: 3
+    apply_lora: "true"
+    apply_ort: "false"
+    precision: 16
+    ignore_mismatched_sizes: "false"
+    num_train_epochs: 1
+    per_device_train_batch_size: 1
+    per_device_eval_batch_size: 1
+    gradient_accumulation_steps: 1
+    learning_rate: 2e-05
+    lr_scheduler_type: "cosine"
+    logging_strategy: "steps"
+    logging_steps: 10
+    save_total_limit: 1
   benchmark: "quality"
 
-version: 2
+version: 3
