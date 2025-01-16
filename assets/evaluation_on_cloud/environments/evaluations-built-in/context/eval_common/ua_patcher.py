@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Patch User Agent in azure.ai.evaluation."""
 import inspect
 
 from azure.ai.evaluation import _user_agent
