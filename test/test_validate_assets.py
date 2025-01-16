@@ -21,7 +21,7 @@ MODEL_VALIDATION_RESULTS = Path("resources/model_validation_results")
         ("invalid-strings", False, True, None, False),
         ("env-with-underscores", False, True, None, False),
         ("framework-ver-missing", False, True, None, False),
-        ("ubuntu-in-name", False, True, None, False),
+        ("ubuntu-in-name", False, True, None, True),
         ("ubuntu-in-name", False, True, re.compile(r"environment/env-ubuntu20.04/.+"), True),
         ("ubuntu-in-name", False, False, None, True),
         ("extra-gpu", False, None, True, False),
