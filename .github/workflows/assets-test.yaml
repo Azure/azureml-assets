@@ -158,7 +158,7 @@ jobs:
         run: python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ env.pytest_reports }}
@@ -179,7 +179,7 @@ jobs:
     steps:
       - name: Download test results
         id: download-artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.pytest_reports }}
           path: ${{ env.pytest_reports }}
