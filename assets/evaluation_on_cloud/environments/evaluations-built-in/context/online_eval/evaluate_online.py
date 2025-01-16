@@ -3,6 +3,8 @@
 
 """Main script for the online evaluation context."""
 import argparse
+
+from eval_common import ua_patcher # pylint: disable=unused-import
 import preprocess
 import evaluate
 import postprocess
