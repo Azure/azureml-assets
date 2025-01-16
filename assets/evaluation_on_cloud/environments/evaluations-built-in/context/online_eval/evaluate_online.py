@@ -9,10 +9,10 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from eval_common import _ua_patcher  # noqa: F401 # Module imported but unused
-import preprocess
-import evaluate
-import postprocess
-import mlflow
+import preprocess  # noqa: E402
+import evaluate  # noqa: E402
+import postprocess  # noqa: E402
+import mlflow  # noqa: E402
 
 
 def get_args():
