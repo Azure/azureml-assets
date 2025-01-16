@@ -8,7 +8,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from eval_common import _ua_patcher  # noqa: F401 # Module imported but unused
+from eval_common import _ua_patcher  # noqa: F401, E402 # Module imported but unused
 import preprocess  # noqa: E402
 import evaluate  # noqa: E402
 import postprocess  # noqa: E402
