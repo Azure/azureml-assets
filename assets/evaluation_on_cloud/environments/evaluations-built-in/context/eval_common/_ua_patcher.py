@@ -9,6 +9,7 @@ from azure.ai.evaluation._version import VERSION
 
 
 def get_eval_type():
+    """Get evaluation type."""
     stack = inspect.stack()
     eval_type = ""
     if "evaluate_on_data.py" in stack[1].filename:
