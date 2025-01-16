@@ -237,7 +237,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml:validation_trigger_import:0.0.14
+    component: azureml:validation_trigger_import:0.0.15
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
