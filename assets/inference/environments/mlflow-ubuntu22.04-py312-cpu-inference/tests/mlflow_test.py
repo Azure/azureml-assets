@@ -49,7 +49,7 @@ def test_mlflow_cpu_inference():
         ),
         environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
-        display_name="mlflow-py312-inference-example",
+        display_name="mlflow-ubuntu22.04-py312-cpu-inference-example",
         description="A test run of the mlflow 22.04 py312 cpu inference curated environment",
         experiment_name="mlflow312InferenceExperiment"
     )

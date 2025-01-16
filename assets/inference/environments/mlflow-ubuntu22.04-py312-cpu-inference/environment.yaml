@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/mlflow-py312-inference
+  name: azureml/curated/mlflow-ubuntu22.04-py312-cpu-inference
   os: linux
   context:
     dir: context

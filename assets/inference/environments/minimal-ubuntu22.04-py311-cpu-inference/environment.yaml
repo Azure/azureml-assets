@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-py311-inference
+  name: azureml/curated/minimal-ubuntu22.04-py311-cpu-inference
   os: linux
   context:
     dir: context

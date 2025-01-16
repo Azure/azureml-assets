@@ -46,7 +46,7 @@ def test_minimal_cpu_inference():
         ),
         environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
-        display_name="minimal-cpu-inference-example",
+        display_name="minimal-ubuntu22.04-py311-cpu-inference-example",
         description="A test run of the minimal 22.04 py311 cpu inference curated environment",
         experiment_name="minimalCPUInferenceExperiment"
     )
