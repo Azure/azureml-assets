@@ -12,7 +12,7 @@ import requests
 import shutil
 import sys
 
-from eval_common import _ua_patcher  # noqa: F401 # Module imported but unused
+from online_eval.eval_common import _ua_patcher  # noqa: F401 # Module imported but unused
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator

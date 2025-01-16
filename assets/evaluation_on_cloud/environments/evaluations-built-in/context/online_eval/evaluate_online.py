@@ -3,10 +3,6 @@
 
 """Main script for the online evaluation context."""
 import argparse
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from eval_common import _ua_patcher  # noqa: F401, E402 # Module imported but unused
 import preprocess  # noqa: E402
