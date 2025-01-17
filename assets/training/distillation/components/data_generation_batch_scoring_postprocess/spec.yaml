@@ -62,6 +62,11 @@ inputs:
     default: "false"
     description: Enable Chain of density for text summarization
 
+  teacher_model_endpoint_name:
+    type: string
+    optional: true
+    description: Teacher model endpoint name
+
   data_generation_task_type:
     type: string
     enum:

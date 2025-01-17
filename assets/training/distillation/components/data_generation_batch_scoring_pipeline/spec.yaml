@@ -297,7 +297,6 @@ jobs:
     identity:
       type: user_identity
     inputs:
-      scoring_url: ${{parent.inputs.teacher_model_endpoint_url}}
       deployment_name: ${{parent.inputs.teacher_model_endpoint_name}}
       authentication_type: ${{parent.inputs.authentication_type}}
       configuration_file: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
