@@ -5,7 +5,6 @@
 import inspect
 
 from azure.ai.evaluation import _user_agent
-from azure.ai.evaluation._version import VERSION
 
 
 def get_eval_type():
@@ -23,4 +22,4 @@ def get_eval_type():
 
 
 eval_type = get_eval_type()
-_user_agent.USER_AGENT = "{}/{}/{}".format("azure-ai-evaluation", VERSION, eval_type)
+_user_agent.USER_AGENT += "/{}".format(eval_type)

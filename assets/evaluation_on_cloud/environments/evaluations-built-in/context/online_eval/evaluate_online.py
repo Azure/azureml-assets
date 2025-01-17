@@ -5,10 +5,10 @@
 import argparse
 
 from eval_common import _ua_patcher  # noqa: F401, E402 # Module imported but unused
-import preprocess  # noqa: E402
-import evaluate  # noqa: E402
-import postprocess  # noqa: E402
-import mlflow  # noqa: E402
+import preprocess
+import evaluate
+import postprocess
+import mlflow
 
 
 def get_args():
