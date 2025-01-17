@@ -71,14 +71,14 @@ jobs:
         working-directory: ${{ env.main_dir }}
 
       - name: Upload changed assets
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.find-updated-assets.outputs.updated_count > 0
         with:
           name: ${{ env.changed_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
       
       - name: Upload non-testable assets
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.find-updated-assets.outputs.updated_count > 0
         with:
           name: ${{ env.releasable_assets_artifact }}
@@ -102,7 +102,7 @@ jobs:
           exit 1
 
       - name: Upload list of assets
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.asset_list_artifact }}
           path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
@@ -179,7 +179,7 @@ jobs:
     steps:
       - name: Download releasable assets
         id: download-artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.releasable_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
@@ -198,13 +198,13 @@ jobs:
       - name: Download releasable assets
         if: needs.check-release-assets.outputs.has_releasable_assets != ''
         id: download-artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.releasable_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
       
       - name: Download list of assets
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.asset_list_artifact }}
           path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
