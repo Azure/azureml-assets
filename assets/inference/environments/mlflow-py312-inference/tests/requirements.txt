@@ -1,4 +1,3 @@
 azure-ai-ml
-marshmallow==3.23.1
 azure.identity
 requests
