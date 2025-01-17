@@ -164,9 +164,9 @@ class PipelineInputsValidator:
         if task_type != DataGenerationTaskType.CONVERSATION:
             if teacher_model_connection_name:
                 try:
-                    self._args.teacher_model_endpoint_url=get_target_from_connection(
+                    self._args.teacher_model_endpoint_url = get_target_from_connection(
                         teacher_model_connection_name
-                        )
+                    )
                     self._args.teacher_model_endpoint_key = get_api_key_from_connection(
                         teacher_model_connection_name
                     )[0]
