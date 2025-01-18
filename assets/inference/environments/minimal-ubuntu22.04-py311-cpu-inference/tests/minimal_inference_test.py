@@ -32,10 +32,10 @@ def test_minimal_cpu_inference():
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="minimal_cpu_inference",
+        name=env_name,
         description="minimal 22.04 py311 cpu inference environment created from a Docker context.",
     )
-    ml_client.environments.create_or_update(env_docker_context)
+    returned_env = ml_client.environments.create_or_update(env_docker_context)
 
     # create the command
     job = command(
@@ -44,7 +44,7 @@ def test_minimal_cpu_inference():
         inputs=dict(
             score="valid_score.py",
         ),
-        environment=f"{env_name}@latest",
+        environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
         display_name="minimal-cpu-inference-example",
         description="A test run of the minimal 22.04 py311 cpu inference curated environment",

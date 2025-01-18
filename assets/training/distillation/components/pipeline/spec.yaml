@@ -297,7 +297,7 @@ outputs:
 jobs:
   oss_distillation_validate_pipeline:
     type: command
-    component: azureml:oss_distillation_validate_pipeline:0.0.4
+    component: azureml:oss_distillation_validate_pipeline:0.0.5
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'

@@ -132,7 +132,7 @@ jobs:
           RESOURCE_GROUP: ${{ env.resource_group }}
           WORKSPACE_NAME: ${{ env.workspace }}
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ env.pytest_report_folder }}
@@ -152,7 +152,7 @@ jobs:
       steps:
         - name: Download test results
           id: download-artifact
-          uses: actions/download-artifact@v3
+          uses: actions/download-artifact@v4
           with:
             name: ${{ env.pytest_report_folder }}
             path: ${{ env.pytest_report_folder }}
