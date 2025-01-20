@@ -191,7 +191,7 @@ def main() -> None:
 
     max_allowed_threads = 1
     print(
-        f"\nUpgrading {len(component_spec_paths)} components with {max_allowed_threads} threads... "\
+        f"\nUpgrading {len(component_spec_paths)} components with {max_allowed_threads} thread(s)... "
         "\nPlease wait and check for errors."
     )
 
