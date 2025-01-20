@@ -1,4 +1,4 @@
-Aurora: A Foundation Model for the Earth System
+# Aurora: A Foundation Model for the Earth System
 
 Aurora is a machine learning model that can predict atmospheric variables, such as temperature.
 It is a _foundation model_, which means that it was first generally trained on a lot of data,
@@ -11,11 +11,35 @@ and one for ocean wave prediction.
 
 ## Resources
 
-* [Aurora Documentation for detailed instruction and examples](https://microsoft.github.io/aurora)
-* [Aurora Academic Paper](https://arxiv.org/abs/2405.13063)
-* [A full-fledged example that runs the model on ERA5](https://microsoft.github.io/aurora/example_era5.html).
+* [Documentation of Aurora  detailed instruction and examples](https://microsoft.github.io/aurora)
+* [Documentation of Foundry Python API detailed instruction and examples](https://microsoft.github.io/aurora/foundry/intro.html)
+* [A full-fledged Foundry example](https://microsoft.github.io/aurora/foundry/demo_hres_t0.html).
+* [Paper with detailed evaluation](https://arxiv.org/abs/2405.13063)
 
-## Implementation
+## Quickstart
 
-_The package currently includes the pretrained model and the fine-tuned version for high-resolution weather forecasting._
-_We are working on the fine-tuned versions for air pollution and ocean wave forecasting, which will be included in due time._
+```python
+from aurora import Batch
+
+from aurora.foundry import BlobStorageChannel, FoundryClient, submit
+
+
+initial_condition = Batch(...)  # Create initial condition for the model.
+
+for pred in submit(
+    initial_condition,
+    model_name="aurora-0.25-finetuned",
+    num_steps=4,  # Every step predicts six hours ahead.
+    foundry_client=FoundryClient(
+        endpoint="https://endpoint/",
+        token="ENDPOINT_TOKEN",
+    ),
+    # Communication with the endpoint happens via an intermediate blob storage container. You
+    # will need to create one and generate an URL with a SAS token that has both read and write
+    # rights.
+    channel=BlobStorageChannel(
+        "https://storageaccount.blob.core.windows.net/container?<READ_WRITE_SAS_TOKEN>"
+    ),
+):
+    pass  # Do something with `pred`, which is a `Batch`.
+```
