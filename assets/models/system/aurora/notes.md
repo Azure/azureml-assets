@@ -1,3 +1,8 @@
+## License
+
+This model and the associated model weights are released under the license [CC-BY-NC-SA-4.0](https://spdx.org/licenses/CC-BY-NC-SA-4.0).
+This means that you are free to share and adapt the material for non-commercial purposes, as long as you provide appropriate credit, indicate if changes were made, and distribute your contributions under the same license.
+
 ## Security
 
 See [SECURITY](https://github.com/microsoft/aurora/blob/main/SECURITY.md).
