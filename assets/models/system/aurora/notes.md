@@ -34,10 +34,3 @@ This project may contain trademarks or logos for projects, products, or services
 Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
-
-## FAQ
-
-### Why are the fine-tuned versions of Aurora for air quality and ocean wave forecasting missing?
-
-The package currently includes the pretrained model and the fine-tuned version for high-resolution weather forecasting.
-We are working on the fine-tuned versions for air pollution and ocean wave forecasting, which will be included in due time.

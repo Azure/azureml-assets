@@ -12,9 +12,10 @@ precisely which models are available.
 
 ## Resources
 
-* [Documentation of the Aurora Foundry Python API detailed instruction and examples](https://microsoft.github.io/aurora/foundry/intro.html)
-* [Documentation of the Aurora Python implementation](https://microsoft.github.io/aurora)
+* [Documentation of the Aurora Foundry Python API](https://microsoft.github.io/aurora/foundry/intro.html)
 * [A full-fledged example that runs the model on Foundry](https://microsoft.github.io/aurora/foundry/demo_hres_t0.html).
+* [Implementation of the Aurora model](https://github.com/microsoft/aurora)
+* [Documentation of the Aurora implementation](https://microsoft.github.io/aurora/intro.html)
 * [Paper with detailed evaluation](https://arxiv.org/abs/2405.13063)
 
 ## Quickstart
