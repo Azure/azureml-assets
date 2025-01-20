@@ -8,6 +8,14 @@
 
 ## Quickstart
 
+First install the model:
+
+```bash
+pip install microsoft-aurora
+```
+
+Then you can make predictions with a Azure Foundry AI endpoint as follows:
+
 ```python
 from aurora import Batch
 
