@@ -71,4 +71,4 @@ tags:
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 6
+version: 7
