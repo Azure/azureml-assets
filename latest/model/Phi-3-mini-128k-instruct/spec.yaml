@@ -182,7 +182,7 @@ tags:
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 12
+version: 13
 description: |-
   The Phi-3-Mini-128K-Instruct is a 3.8 billion-parameter, lightweight, state-of-the-art open model trained using the Phi-3 datasets.
   This dataset includes both synthetic data and filtered publicly available website data, with an emphasis on high-quality and reasoning-dense properties.
