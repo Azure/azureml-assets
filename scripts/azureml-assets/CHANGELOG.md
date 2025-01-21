@@ -4,7 +4,7 @@
 
 ## 1.16.69 (2025-01-25)
 ### 🐛 Bugs Fixed
-- [#3779](https://github.com/Azure/azureml-assets/pull/3779) Add opencensus-ext-azure dependency to fix issue with azure-identity
+- [#3779](https://github.com/Azure/azureml-assets/pull/3779) Add azure-identity dependency to fix issue with azure-ai-ml dependency
 
 ## 1.16.68 (2025-01-02)
 ### 🚀 New Features
