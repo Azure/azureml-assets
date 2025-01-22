@@ -6,7 +6,7 @@ path: ./
 properties:
   languages: EN
   inference-min-sku-spec: 24|1|220|64
-  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4
+  inference-recommended-sku: Standard_NC24ads_A100_v4
   SharedComputeCapacityEnabled: true
 
 tags:
@@ -14,14 +14,15 @@ tags:
   Preview: ""
   Featured: ""  
   author: Microsoft
-  license: custom
+  license: cc-by-nc-sa-4.0
   hiddenlayerscanned: "true"
   notes: "notes.md"
   disable-batch: true
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
     - Standard_NC24ads_A100_v4
-    - Standard_NC48ads_A100_v4
-    - Standard_NC96ads_A100_v4
+  sku_to_num_replicas_map:
+    Standard_NC24ads_A100_v4: 1
+    Default: 1
 
 version: 1
