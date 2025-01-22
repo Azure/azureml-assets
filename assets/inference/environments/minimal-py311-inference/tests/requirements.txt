@@ -1,2 +1,3 @@
 azure-ai-ml==1.24.0
 azure.identity
+python==3.11

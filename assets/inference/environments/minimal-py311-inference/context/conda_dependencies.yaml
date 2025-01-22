@@ -5,7 +5,6 @@ channels:
 dependencies:
 - python=3.11
 - pip=24.0
-- pytest=7.1.1
 - pip:
   - azureml-inference-server-http=={{latest-pypi-version}}
   - numpy=={{latest-pypi-version}}
