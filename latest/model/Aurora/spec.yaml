@@ -6,7 +6,7 @@ path: ./
 properties:
   languages: EN
   inference-min-sku-spec: 24|1|220|64
-  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4
+  inference-recommended-sku: Standard_NC24ads_A100_v4
   SharedComputeCapacityEnabled: true
 
 tags:
@@ -14,9 +14,58 @@ tags:
   Preview: ""
   Featured: ""
   author: Microsoft
-  license: custom
+  license: cc-by-nc-sa-4.0
   hiddenlayerscanned: "true"
   notes: |
+    ## Resources
+
+    * [Documentation of the Aurora Foundry Python API](https://microsoft.github.io/aurora/foundry/intro.html)
+    * [A full-fledged example that runs the model on Foundry](https://microsoft.github.io/aurora/foundry/demo_hres_t0.html).
+    * [Implementation of the Aurora model](https://github.com/microsoft/aurora)
+    * [Documentation of the Aurora implementation](https://microsoft.github.io/aurora/intro.html)
+    * [Paper with detailed evaluation](https://arxiv.org/abs/2405.13063)
+
+    ## Quickstart
+
+    First install the model:
+
+    ```bash
+    pip install microsoft-aurora
+    ```
+
+    Then you can make predictions with a Azure Foundry AI endpoint as follows:
+
+    ```python
+    from aurora import Batch
+
+    from aurora.foundry import BlobStorageChannel, FoundryClient, submit
+
+
+    initial_condition = Batch(...)  # Create initial condition for the model.
+
+    for pred in submit(
+        initial_condition,
+        model_name="aurora-0.25-finetuned",
+        num_steps=4,  # Every step predicts six hours ahead.
+        foundry_client=FoundryClient(
+            endpoint="https://endpoint/",
+            token="ENDPOINT_TOKEN",
+        ),
+        # Communication with the endpoint happens via an intermediate blob storage container. You
+        # will need to create one and generate an URL with a SAS token that has both read and write
+        # rights.
+        channel=BlobStorageChannel(
+            "https://storageaccount.blob.core.windows.net/container?<READ_WRITE_SAS_TOKEN>"
+        ),
+    ):
+        pass  # Do something with `pred`, which is a `Batch`.
+    ```
+
+    ## License
+
+    This model and the associated model weights are released under the license [CC-BY-NC-SA-4.0](https://spdx.org/licenses/CC-BY-NC-SA-4.0).
+    This means that you are free to share and adapt the material for non-commercial purposes, as long as you provide appropriate credit, indicate if changes were made, and distribute your contributions under the same license.
+
     ## Security
 
     See [SECURITY](https://github.com/microsoft/aurora/blob/main/SECURITY.md).
@@ -53,40 +102,24 @@ tags:
     Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
     Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
     Any use of third-party trademarks or logos are subject to those third-party's policies.
-
-    ## FAQ
-
-    ### Why are the fine-tuned versions of Aurora for air quality and ocean wave forecasting missing?
-
-    The package currently includes the pretrained model and the fine-tuned version for high-resolution weather forecasting.
-    We are working on the fine-tuned versions for air pollution and ocean wave forecasting, which will be included in due time.
   disable-batch: true
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
   - Standard_NC24ads_A100_v4
-  - Standard_NC48ads_A100_v4
-  - Standard_NC96ads_A100_v4
+  sku_to_num_replicas_map:
+    Standard_NC24ads_A100_v4: 1
+    Default: 1
 
 version: 1
 description: |
-  Aurora: A Foundation Model for the Earth System
-
-  Aurora is a machine learning model that can predict atmospheric variables, such as temperature.
+  Aurora is a machine learning model that can predict general environmental variables, such as temperature and wind speed.
   It is a _foundation model_, which means that it was first generally trained on a lot of data,
-  and then can be adapted to specialised atmospheric forecasting tasks with relatively little data.
+  and then can be adapted to specialised environmental forecasting tasks with relatively little data.
   We provide four such specialised versions:
   one for medium-resolution weather prediction,
   one for high-resolution weather prediction,
   one for air pollution prediction,
   and one for ocean wave prediction.
-
-  ## Resources
-
-  * [Aurora Documentation for detailed instruction and examples](https://microsoft.github.io/aurora)
-  * [Aurora Academic Paper](https://arxiv.org/abs/2405.13063)
-  * [A full-fledged example that runs the model on ERA5](https://microsoft.github.io/aurora/example_era5.html).
-
-  ## Implementation
-
-  _The package currently includes the pretrained model and the fine-tuned version for high-resolution weather forecasting._
-  _We are working on the fine-tuned versions for air pollution and ocean wave forecasting, which will be included in due time._
+  Currently, this implementation only includes the version for medium-term weather prediction.
+  Please see the documentation of the Aurora Foundry Python API linked below for
+  precisely which models are available.

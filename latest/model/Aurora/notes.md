@@ -1,3 +1,52 @@
+## Resources
+
+* [Documentation of the Aurora Foundry Python API](https://microsoft.github.io/aurora/foundry/intro.html)
+* [A full-fledged example that runs the model on Foundry](https://microsoft.github.io/aurora/foundry/demo_hres_t0.html).
+* [Implementation of the Aurora model](https://github.com/microsoft/aurora)
+* [Documentation of the Aurora implementation](https://microsoft.github.io/aurora/intro.html)
+* [Paper with detailed evaluation](https://arxiv.org/abs/2405.13063)
+
+## Quickstart
+
+First install the model:
+
+```bash
+pip install microsoft-aurora
+```
+
+Then you can make predictions with a Azure Foundry AI endpoint as follows:
+
+```python
+from aurora import Batch
+
+from aurora.foundry import BlobStorageChannel, FoundryClient, submit
+
+
+initial_condition = Batch(...)  # Create initial condition for the model.
+
+for pred in submit(
+    initial_condition,
+    model_name="aurora-0.25-finetuned",
+    num_steps=4,  # Every step predicts six hours ahead.
+    foundry_client=FoundryClient(
+        endpoint="https://endpoint/",
+        token="ENDPOINT_TOKEN",
+    ),
+    # Communication with the endpoint happens via an intermediate blob storage container. You
+    # will need to create one and generate an URL with a SAS token that has both read and write
+    # rights.
+    channel=BlobStorageChannel(
+        "https://storageaccount.blob.core.windows.net/container?<READ_WRITE_SAS_TOKEN>"
+    ),
+):
+    pass  # Do something with `pred`, which is a `Batch`.
+```
+
+## License
+
+This model and the associated model weights are released under the license [CC-BY-NC-SA-4.0](https://spdx.org/licenses/CC-BY-NC-SA-4.0).
+This means that you are free to share and adapt the material for non-commercial purposes, as long as you provide appropriate credit, indicate if changes were made, and distribute your contributions under the same license.
+
 ## Security
 
 See [SECURITY](https://github.com/microsoft/aurora/blob/main/SECURITY.md).
@@ -34,10 +83,3 @@ This project may contain trademarks or logos for projects, products, or services
 Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
-
-## FAQ
-
-### Why are the fine-tuned versions of Aurora for air quality and ocean wave forecasting missing?
-
-The package currently includes the pretrained model and the fine-tuned version for high-resolution weather forecasting.
-We are working on the fine-tuned versions for air pollution and ocean wave forecasting, which will be included in due time.
