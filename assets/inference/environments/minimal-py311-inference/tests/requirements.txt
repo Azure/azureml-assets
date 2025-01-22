@@ -1,3 +1,2 @@
-azure-ai-ml==1.24.0
-azure.identity
-python_version >= "3.11" and python_version < "3.12"
+azure-ai-ml==1.24.0; python_version >= "3.11" and python_version < "3.12"
+azure.identity; python_version >= "3.11" and python_version < "3.12"
