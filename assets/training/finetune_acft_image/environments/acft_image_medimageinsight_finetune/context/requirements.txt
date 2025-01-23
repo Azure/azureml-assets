@@ -1,3 +1,5 @@
+azureml-acft-common-components==0.0.61
+azureml-acft-contrib-hf-nlp==0.0.61
 opencv-python
 pyyaml
 json_tricks
@@ -24,3 +26,4 @@ azureml-mlflow
 torchvision==0.12.0 --index-url https://download.pytorch.org/whl/cu118
 torch==1.11.0 --index-url https://download.pytorch.org/whl/cu118
 https://automlcesdkdataresources.blob.core.windows.net/wheels/MainzVision-0.3.0-py3-none-any.whl
+https://automlcesdkdataresources.blob.core.windows.net/wheels/MainzTrain-0.2.0-py3-none-any.whl
