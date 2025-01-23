@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  AzureML minimal/Ubuntu 22.04/Python 3.12 gpu environment.
+  AzureML minimal/Ubuntu 22.04/Python 3.12 cuda12.4 environment.
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"

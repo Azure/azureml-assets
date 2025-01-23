@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/minimal-py312-cuda11.8-inference
+  name: azureml/curated/minimal-py312-cuda12.4-inference
   os: linux
   context:
     dir: context
