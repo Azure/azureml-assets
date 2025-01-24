@@ -20,9 +20,9 @@ dependencies:
   - azureml-defaults==1.59.0
   - azureml-mlflow==1.59.0.post1
   - azureml-telemetry==1.59.0
-  - azureml-acft-common-components[image]==0.0.65
-  - azureml-evaluate-mlflow==0.0.65
-  - azureml-metrics[all]==0.0.65
+  - azureml-acft-common-components[image]==0.0.66
+  - azureml-evaluate-mlflow==0.0.66
+  - azureml-metrics[all]==0.0.66
   - xgboost>=1.6.1,<2.0.0
   - statsmodels>=0.11.0,<0.14.1
   - lightgbm>=3.2.1,<4.2.0
