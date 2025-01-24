@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.4.31
+version: 0.4.32
 is_deterministic: false
 inputs:
   production_dataset:
@@ -115,7 +115,7 @@ conf:
       - pip:
           - azure-cli-core~=2.66.0
           - azure-ai-evaluation~=1.0.1
-          - azure-ai-ml~=1.22.4
+          - azure-ai-ml~=1.23.1
           - openai~=1.56.2
           - json5==0.9.11
           - mltable~=1.6.1
