@@ -3,6 +3,8 @@
 
 """Main script for the online evaluation context."""
 import argparse
+
+from eval_common import _ua_patcher  # noqa: F401, E402 # Module imported but unused
 import preprocess
 import evaluate
 import postprocess
