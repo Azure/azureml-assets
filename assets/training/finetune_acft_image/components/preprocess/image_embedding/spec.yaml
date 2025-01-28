@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medical_image_embedding_datapreprocessing
-version: 0.0.12
+version: 0.0.1.yesh5
 type: command
 
 is_deterministic: True
@@ -8,21 +8,11 @@ is_deterministic: True
 display_name: Embedding Generation for Medical Images
 description: To genrate embeddings for medical images. See [docs](https://aka.ms/azureml/components/medical_image_embedding_datapreprocessing) to learn more.
 
-environment: azureml:/subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourceGroups/rdondera/providers/Microsoft.MachineLearningServices/workspaces/validatr/environments/medimage-adapter-pt-ft/versions/13
+environment: azureml:/subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourceGroups/rdondera/providers/Microsoft.MachineLearningServices/workspaces/validatr/environments/medimage-embedding-generation/versions/5
 
-code: ../../../src/preprocess
+code: ../../../src/medimage_insight_adapter_preprocess
 
 inputs:
-  endpoint_url:
-    type: string
-    optional: false
-    description: URL of the endpoint to be used.
-
-  endpoint_key:
-    type: string
-    optional: false
-    description: Key for the endpoint to be used.
-
   zeroshot_path:
     type: uri_file
     optional: false
@@ -34,6 +24,12 @@ inputs:
     optional: false
     description: Path to the CSV file containing test-train split information.
     mode: rw_mount
+
+  mlflow_model_path:
+    type: uri_folder
+    optional: false
+    description: Path to the MLflow model to be imported.
+    mode: ro_mount
 
 outputs:
   output_train_pkl:
@@ -47,4 +43,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python medimage_datapreprocess.py --task_name "MedEmbedding" --endpoint_url "${{inputs.endpoint_url}}" --endpoint_key "${{inputs.endpoint_key}}" --zeroshot_path "${{inputs.zeroshot_path}}" --test_train_split_csv_path "${{inputs.test_train_split_csv_path}}" --output_train_pkl "${{outputs.output_train_pkl}}" --output_validation_pkl "${{outputs.output_validation_pkl}}"
+  python medimage_datapreprocess.py --task_name "MedEmbedding" --zeroshot_path "${{inputs.zeroshot_path}}" --test_train_split_csv_path "${{inputs.test_train_split_csv_path}}" --output_train_pkl "${{outputs.output_train_pkl}}" --output_validation_pkl "${{outputs.output_validation_pkl}}" --mlflow_model_path "${{inputs.mlflow_model_path}}"

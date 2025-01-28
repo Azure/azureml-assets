@@ -9,6 +9,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
+import mlflow
 import pandas as pd
 import torch
 import os
@@ -42,22 +43,16 @@ def get_parser():
     parser = argparse.ArgumentParser(description='Process medical images and get embeddigns', allow_abbrev=False)
 
     parser.add_argument(
-        '--endpoint_url',
-        type=str,
-        required=True,
-        help='The endpoint URL embedding generation model.'
-        )
-    parser.add_argument(
-        '--endpoint_key',
-        type=str,
-        required=True,
-        help='The endpoint key for the embedding generation model.'
-        )
-    parser.add_argument(
         '--zeroshot_path',
         type=str,
         required=True,
         help='The path to the zeroshot dataset'
+        )
+    parser.add_argument(
+        '--mlflow_model_path',
+        type=str,
+        required=True,
+        help='The path to the MLflow model'
         )
     parser.add_argument(
         '--test_train_split_csv_path',
@@ -152,22 +147,21 @@ def generate_image_embeddings(medimageinsight: medimageinsight_package, zeroshot
     return image_embedding_dict
 
 
-def initialize_medimageinsight(endpoint_url: str, endpoint_key: str) -> medimageinsight_package:
+def initialize_medimageinsight(mlflow_model_path: str) -> medimageinsight_package:
     """
     Initialize the MedImageInsight package.
 
-    This function initializes the MedImageInsight package using the provided endpoint URL and key.
+    This function initializes the MedImageInsight package using the provided MLflow model path.
 
     Args:
-        endpoint_url (str): The URL of the endpoint.
-        endpoint_key (str): The key for the endpoint.
+        mlflow_model_path (str): The path to the MLflow model.
 
     Returns:
         medimageinsight_package: An instance of the MedImageInsight package.
     """
     medimageinsight = medimageinsight_package(
-        endpoint_url=endpoint_url,
-        endpoint_key=endpoint_key,
+        option="run_local",
+        mlflow_model_path=mlflow_model_path,
     )
     logger.info("Initialized MedImageInsight package")
     return medimageinsight
@@ -230,8 +224,7 @@ def process_embeddings(args):
     and saves the merged dataframes to specified output PKL files.
     Args:
         args (Namespace): A namespace object containing the following attributes:
-            - endpoint_url (str): The URL of the endpoint.
-            - endpoint_key (str): The key for the endpoint.
+            - mlflow_model_path (str): The path to the MLflow model.
             - zeroshot_path (str): The path to the zeroshot data.
             - output_train_pkl (str): The path to save the output training PKL file.
             - output_validation_pkl (str): The path to save the output validation PKL file.
@@ -239,18 +232,15 @@ def process_embeddings(args):
     Returns:
         None
     """
-    endpoint_url = args.endpoint_url
-    endpoint_key = args.endpoint_key
+
+    model_path = args.mlflow_model_path
     zeroshot_path = args.zeroshot_path
     output_train_pkl = args.output_train_pkl
     output_validation_pkl = args.output_validation_pkl
     test_train_split_csv_path = args.test_train_split_csv_path
-
-    logger.info("Endpoint URL: %s", endpoint_url)
     logger.info("Zeroshot path: %s", zeroshot_path)
     logger.info("Test/train split PKL path: %s", test_train_split_csv_path)
-
-    medimageinsight = initialize_medimageinsight(endpoint_url, endpoint_key)
+    medimageinsight = initialize_medimageinsight(model_path)
     image_embedding_dict = generate_image_embeddings(medimageinsight, zeroshot_path)
     df_features = create_features_dataframe(image_embedding_dict)
 
@@ -285,6 +275,6 @@ if __name__ == '__main__':
     main()
 
 '''
-python medimage_datapreprocess.py --task_name "MedEmbedding" --endpoint_url "https://medimageinsight-od3wv.eastus.inference.ml.azure.com/score" --endpoint_key "DFe8Z8VkwDFgdNe8kQJOWBqglpdOwxBn" --zeroshot_path "/home/healthcare-ai/medimageinsight-zeroshot/" --test_train_split_csv_path "/home/healthcare-ai/medimageinsight/classification_demo/data_input/" --output_train_pkl "/home/healthcare-ai/" --output_validation_pkl "/home/healthcare-ai/"
+python medimage_datapreprocess.py --task_name "MedEmbedding" --mlflow_model_path "/mnt/model/MedImageInsight/mlflow_model_folder" --zeroshot_path "/home/healthcare-ai/medimageinsight-zeroshot/" --test_train_split_csv_path "/home/healthcare-ai/medimageinsight/classification_demo/data_input/" --output_train_pkl "/home/healthcare-ai/" --output_validation_pkl "/home/healthcare-ai/"
 
 '''
