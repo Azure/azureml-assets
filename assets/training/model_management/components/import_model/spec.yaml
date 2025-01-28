@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.41
+version: 0.0.42
 
 # Pipeline inputs
 inputs:
@@ -252,6 +252,42 @@ jobs:
       validation_info:
         type: uri_file
 
+  model_framework_selector:
+    type: command
+    component: azureml:model_framework_selector:0.0.1
+    compute: ${{parent.inputs.compute}}
+    resources:
+      instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
+    inputs:
+      validation_info: '${{parent.jobs.validation_trigger_import.outputs.validation_info}}'
+      model_framework: '${{parent.inputs.model_framework}}'
+    outputs:
+      is_mmd_framework:
+        type: uri_file
+
+  is_mmd_model:
+    type: if_else
+    condition: ${{parent.jobs.model_framework_selector.outputs.is_mmd_framework}}
+    true_block: ${{parent.jobs.download_mmd_model}}
+    false_block: ${{parent.jobs.download_model}}
+
+  download_mmd_model:
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.19
+    compute: ${{parent.inputs.compute}}
+    resources:
+      instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
+    inputs:
+      model_family: 'MmDetectionImage'
+      model_name: ${{parent.inputs.model_id}}
+      download_from_source: true
+    outputs:
+      output_dir:
+        type: uri_file
+
   download_model:
     component: azureml:download_model:0.0.30
     compute: ${{parent.inputs.compute}}
@@ -262,7 +298,6 @@ jobs:
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
-      validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
       token: ${{parent.inputs.token}}
     outputs:
@@ -272,7 +307,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.35
+    component: azureml:convert_model_to_mlflow:0.0.36
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -286,6 +321,7 @@ jobs:
       model_framework: ${{parent.inputs.model_framework}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
+      model_path_mmd:  ${{parent.jobs.download_mmd_model.outputs.output_dir}}
       hf_config_args: ${{parent.inputs.hf_config_args}}
       hf_tokenizer_args:  ${{parent.inputs.hf_tokenizer_args}}
       hf_model_args: ${{parent.inputs.hf_model_args}}
