@@ -4,7 +4,7 @@ description: >-
   AzureML MLflow/Ubuntu 20.04/Python 3.9 cpu environment.
 
 name: "mlflow-py39-inference"
-version: "5"
+version: "6"
 
 build:
   path: "context"
