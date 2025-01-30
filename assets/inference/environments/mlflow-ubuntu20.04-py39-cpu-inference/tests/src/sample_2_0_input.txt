@@ -1,1 +1,0 @@
-{"input_data":{"columns":["a", "b", "c"],"index":[0],"data":[[3.0, 1, "foo"]]}}
