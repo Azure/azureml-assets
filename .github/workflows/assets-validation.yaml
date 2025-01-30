@@ -52,7 +52,7 @@ jobs:
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
         with:
-          python-version: '>=3.10,<3.13'
+          python-version: '3.12'
 
       - name: Log in to Azure
         env:
