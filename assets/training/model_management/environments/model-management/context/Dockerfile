@@ -22,10 +22,6 @@ COPY requirements.txt .
 # Going forward  azureml-automl-dnn-vision needs to update version for torch and numpy
 RUN conda install python=3.9 -y
 
-# RUN conda remove jinja2 -y
-
-# RUN conda install -c conda-forge jinja2=3.1.5 -y
-
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
