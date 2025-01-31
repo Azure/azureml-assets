@@ -205,7 +205,7 @@ class PipelineInputsValidator:
         url = url if VLLM_CHAT_SCORE_PATH in url else f"{url}{VLLM_CHAT_SCORE_PATH}"
         logger.info(f"Model endpoint: {url}")
         response = requests.post(
-            url=url, headers=headers, data=json.dumps(inference_params)
+            url=url, headers=headers, data=json.dumps(inference_params), timeout=180
         )
         response.raise_for_status()
 

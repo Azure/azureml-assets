@@ -52,6 +52,8 @@ from common.constants import (
     DEFAULT_MAX_LEN_SUMMARY,
 )
 
+from common.student_models import StudentModels
+
 from common.utils import (
     get_workspace_mlclient,
     get_endpoint_details,
@@ -219,6 +221,13 @@ def get_parser():
         choices=[v.value for v in DataGenerationTaskType],
     )
 
+    parser.add_argument(
+        "--model_asset_id",
+        type=str,
+        required=True,
+        help="Student model to use"
+    )
+
     return parser
 
 
@@ -273,7 +282,9 @@ def generate_synthetic_data(
     generated_validation_file_path: Path,
     train_file_path: Path,
     data_generation_task_type: str,
-    validation_file_path: Path = None,
+    student_model: str,
+    validation_file_path: Path = None
+
 ):
     """Generate and save synthentic data under output_dataset.
 
@@ -288,6 +299,7 @@ def generate_synthetic_data(
         max_len_summary (int): Maximum word count for text summarization
         output_dataset (Path): Path to output directory
         train_file_path (Path): Train JSONL file path
+        student_model (str): Student model name
         validation_file_path (Path, optional): Validation JSONL file path. Defaults to None.
     """
 
@@ -351,7 +363,7 @@ def generate_synthetic_data(
             dict: result dictionary
         """
         try:
-            #  Basic validation for the input data
+            # Basic validation for the input data
             messages = data.pop("messages", [])
             if not messages:  # empty messages
                 return {
@@ -527,10 +539,17 @@ def generate_synthetic_data(
                     )
                 else:
                     output_data.append({"messages": future_result["messages"]})
-            Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
-            with open(output_file_path, "w") as f:
-                for entry in output_data:
-                    f.write(json.dumps(entry) + "\n")
+        Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
+
+        # Reformat data based on student model limitations
+        output_data = StudentModels.reformat(
+            student_model=student_model,
+            task_type=data_generation_task_type,
+            data=output_data
+        )
+        with open(output_file_path, "w") as f:
+            for entry in output_data:
+                f.write(json.dumps(entry) + "\n")
 
         if error_map:
             logger.info(
@@ -594,6 +613,7 @@ def data_import(args: Namespace):
     enable_cod_str = args.enable_chain_of_density
     max_len_summary = args.max_len_summary
     data_generation_task_type = args.data_generation_task_type
+    model_asset_id = args.model_asset_id
 
     # validate file formats
     validate_file_paths_with_supported_formats(
@@ -680,7 +700,8 @@ def data_import(args: Namespace):
         generated_validation_file_path=generated_validation_file_path,
         train_file_path=train_file_path,
         data_generation_task_type=data_generation_task_type,
-        validation_file_path=validation_file_path,
+        student_model=StudentModels.parse_model_asset_id(model_asset_id),
+        validation_file_path=validation_file_path
     )
 
 

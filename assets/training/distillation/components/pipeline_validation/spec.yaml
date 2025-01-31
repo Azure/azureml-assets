@@ -135,6 +135,11 @@ inputs:
     optional: true
     description: Start learning rate.
 
+  model_asset_id:
+    type: string
+    optional: false
+    description: The student model to finetune
+
 outputs:
   validation_info:
     type: uri_file
@@ -163,4 +168,5 @@ command: >-
   $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
   $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
   $[[--learning_rate ${{inputs.learning_rate}}]]
+  --model_asset_id '${{inputs.model_asset_id}}'
   --validation_info ${{outputs.validation_info}}
