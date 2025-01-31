@@ -541,15 +541,12 @@ def generate_synthetic_data(
                     output_data.append({"messages": future_result["messages"]})
         Path(output_file_path.parent).mkdir(exist_ok=True, parents=True)
 
-        # Reformat finetune data based on student model limitations
-        logger.info(f"output data before reformatting: {output_data}")
-
+        # Reformat data based on student model limitations
         output_data = StudentModels.reformat(
             student_model=student_model,
             task_type=data_generation_task_type,
             data=output_data
         )
-        logger.info(f"output data after reformatting: {output_data}")
         with open(output_file_path, "w") as f:
             for entry in output_data:
                 f.write(json.dumps(entry) + "\n")

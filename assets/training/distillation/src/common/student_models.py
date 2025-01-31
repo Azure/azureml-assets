@@ -85,7 +85,7 @@ class StudentModels:
                         {"role": "user", "content": system_message + " " + user_prompt},
                         messages["messages"][2:]
                     ]
-            }      
+            }  
             new_data.append(reformatted_data)
         return new_data
 
@@ -122,5 +122,3 @@ class StudentModels:
         if model not in cls.NO_SYSTEM_PROMPT_MODELS:
             raise Exception("Model is not in supported student model list")
         return model
-
-

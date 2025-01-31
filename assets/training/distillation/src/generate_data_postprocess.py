@@ -299,10 +299,8 @@ def postprocess_data(
         msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
         raise Exception(msg)
 
-    # Reformat finetune data based on student model limitations
-    logger.info(f"output data before reformatting: {output_data}")
+    # Reformat data based on student model limitations
     output_data = StudentModels.reformat(student_model=student_model, task_type=data_generation_task_type, data=output_data)
-    logger.info(f"output data after reformatting: {output_data}")
     with open(output_file_path, "w") as f:
         for record in output_data:
             f.write(json.dumps(record) + "\n")
