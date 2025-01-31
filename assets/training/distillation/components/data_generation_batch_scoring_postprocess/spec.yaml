@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data_batch_postprocess
-version: 0.0.1
+version: 0.0.1.test1
 type: command
 
 is_deterministic: False
@@ -82,6 +82,10 @@ inputs:
     type: uri_file
     description: Connection config file for batch scoring
 
+  model_asset_id:
+    type: string
+    description: The student model to finetune
+
 outputs:
   generated_batch_train_file_path:
     type: uri_file
@@ -104,6 +108,7 @@ command: >-
   --min_endpoint_success_ratio ${{inputs.min_endpoint_success_ratio}}
   $[[--enable_chain_of_thought ${{inputs.enable_chain_of_thought}}]]
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
+  --model_asset_id ${{inputs.model_asset_id}}
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --connection_config_file ${{inputs.connection_config_file}}
   --generated_batch_train_file_path ${{outputs.generated_batch_train_file_path}}

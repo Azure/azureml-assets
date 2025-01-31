@@ -33,10 +33,11 @@ import json
 from common.constants import (
     REQUESTS_RETRY_DELAY,
     REGISTRY_MODEL_PATTERN,
-    SUPPORTED_STUDENT_MODEL_MAP,
     SUPPORTED_TEACHER_MODEL_MAP,
     BackoffConstants,
 )
+
+from common.student_models import StudentModels
 
 
 logger = get_logger_app(
@@ -396,7 +397,7 @@ def validate_student_model_details(model_asset_id: str) -> Tuple[str, str, str]:
     Returns:
         Tuple[str, str, str]: Tuple containing registry name, model name and model version
     """
-    return _get_model_details(model_asset_id, SUPPORTED_STUDENT_MODEL_MAP)
+    return _get_model_details(model_asset_id, StudentModels.SUPPORTED_STUDENT_MODELS)
 
 
 def get_base_url(url: str) -> str:

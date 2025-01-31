@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
-version: 0.0.8
+version: 0.0.9.test1
 type: command
 
 is_deterministic: True
@@ -121,6 +121,10 @@ inputs:
     type: uri_file
     description: Validation status.
     mode: rw_mount
+
+  model_asset_id:
+    type: string
+    description: Student model to use
     
 outputs:
   generated_train_file_path:
@@ -152,5 +156,6 @@ command: >-
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   $[[--max_len_summary ${{inputs.max_len_summary}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
+  --model_asset_id ${{inputs.model_asset_id}}
   --generated_train_file_path ${{outputs.generated_train_file_path}}
   --generated_validation_file_path ${{outputs.generated_validation_file_path}}

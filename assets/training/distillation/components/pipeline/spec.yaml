@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_pipeline
-version: 0.0.10
+version: 0.0.10.test1
 type: pipeline
 
 
@@ -270,11 +270,11 @@ inputs:
     optional: true
     description: Validation parameters propagated from pipeline.
 
-  # Model parameters
+  # Student Model parameters
   model_asset_id:
     type: string
     optional: false
-    description: Asset id of model
+    description: Asset id of the student model
 
   # Model registration
   registered_model_name:
@@ -297,7 +297,7 @@ outputs:
 jobs:
   oss_distillation_validate_pipeline:
     type: command
-    component: azureml:oss_distillation_validate_pipeline:0.0.5
+    component: azureml:oss_distillation_validate_pipeline:0.0.5.test1
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -323,6 +323,7 @@ jobs:
       num_train_epochs: '${{parent.inputs.num_train_epochs}}'
       per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       learning_rate: '${{parent.inputs.learning_rate}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
     outputs:
       validation_info:
         type: uri_file
@@ -330,7 +331,7 @@ jobs:
         
   data_generation_batch_scoring_selector:
     type: command
-    component: azureml:oss_distillation_data_generation_batch_scoring_selector:0.0.1
+    component: azureml:oss_distillation_data_generation_batch_scoring_selector:0.0.1.test1
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -347,7 +348,7 @@ jobs:
     
   oss_distillation_batchscoring_datagen_pipeline:
     type: pipeline
-    component: azureml:oss_distillation_batchscoring_datagen_pipeline:0.0.1
+    component: azureml:oss_distillation_batchscoring_datagen_pipeline:0.0.1.test1
     inputs:
       instance_type_pipeline_validation: '${{parent.inputs.instance_type_pipeline_validation}}'
       instance_type_data_generation: '${{parent.inputs.instance_type_data_generation}}'
@@ -387,6 +388,7 @@ jobs:
       max_concurrency_per_instance: '${{parent.inputs.max_concurrency_per_instance}}'
       mini_batch_size: '${{parent.inputs.mini_batch_size}}'
       validation_info: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
 
     outputs:
       generated_batch_train_file_path: 
@@ -398,7 +400,7 @@ jobs:
 
   oss_distillation_seq_scoring_pipeline:
     type: pipeline
-    component: azureml:oss_distillation_seq_scoring_pipeline:0.0.1
+    component: azureml:oss_distillation_seq_scoring_pipeline:0.0.1.test1
     inputs:
       instance_type_pipeline_validation: '${{parent.inputs.instance_type_pipeline_validation}}'
       instance_type_data_generation: '${{parent.inputs.instance_type_data_generation}}'
@@ -426,6 +428,7 @@ jobs:
       max_len_summary: '${{parent.inputs.max_len_summary}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       validation_output: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
     outputs:  
       generated_train_file_path: 
         type: uri_file
@@ -437,7 +440,7 @@ jobs:
   
   oss_distillation_train_data_generation_file_selector:
     type: command
-    component: azureml:oss_distillation_data_generation_file_selector:0.0.1
+    component: azureml:oss_distillation_data_generation_file_selector:0.0.1.test1
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -460,7 +463,7 @@ jobs:
 
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.25
+    component: azureml://registries/azureml/components/oss_text_generation_data_import/versions/0.0.26
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -472,13 +475,13 @@ jobs:
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"
     inputs:
-      train_file_path: '${{parent.jobs.oss_distillation_train_data_generation_file_selector.outputs.ft_input_train_file_path}}'
-      validation_file_path: '${{parent.jobs.oss_distillation_train_data_generation_file_selector.outputs.ft_input_validation_file_path}}'
+      train_file_path: '${{parent.jobs.oss_distillation_generate_data.outputs.generated_train_file_path}}'
+      validation_file_path: '${{parent.jobs.oss_distillation_generate_data.outputs.generated_validation_file_path}}'
       system_properties: '${{parent.inputs.system_properties}}' 
 
   oss_chat_completion_finetune:
     type: command
-    component: azureml:oss_chat_completion_finetune:0.0.25
+    component: azureml://registries/azureml/components/oss_chat_completion_finetune/versions/0.0.26
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
