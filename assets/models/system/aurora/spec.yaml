@@ -17,6 +17,7 @@ tags:
   license: cc-by-nc-sa-4.0
   hiddenlayerscanned: "true"
   notes: "notes.md"
+  evaluation: "evaluation.md"
   disable-batch: true
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
