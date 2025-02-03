@@ -488,9 +488,9 @@ outputs:
     description: output folder containing _best_ finetuned model in mlflow format.
     mode: rw_mount
 
-  # evaluation_result:
-  #   type: uri_folder
-  #   description: Test Data Evaluation Results
+  evaluation_result:
+    type: uri_folder
+    description: Test Data Evaluation Results
 
 jobs:
   ft_nlp_common_validation:
