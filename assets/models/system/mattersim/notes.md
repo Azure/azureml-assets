@@ -1,3 +1,10 @@
+## Resources
+
+* [An example that runs the model on Foundry](https://github.com/microsoft/mattersim/blob/main/notebooks/foundry-mattersim-phonon.ipynb).
+* [Implementation of the MatterSim model](https://github.com/microsoft/mattersim)
+* [Documentation of the MatterSim implementation](https://microsoft.github.io/mattersim/)
+* [Paper with detailed evaluation](https://arxiv.org/abs/2405.04967)
+
 ## Intended Uses
 
 The MatterSim model is intended for property predictions of materials.
