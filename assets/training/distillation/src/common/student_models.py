@@ -75,7 +75,7 @@ class StudentModels:
 
     @classmethod
     def no_system_prompt_reformat_conversation(cls, data: List[Dict[str, list]]) -> List[Dict[str, list]]:
-       """Add system prompt to user prompt for student models that do not accept system prompts.
+        """Add system prompt to user prompt for student models that do not accept system prompts.
 
         :param data: The synthetic data generated from the teacher model
         :type data: List[Dict[str, list]]
