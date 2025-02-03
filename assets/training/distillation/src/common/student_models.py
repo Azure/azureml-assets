@@ -85,7 +85,7 @@ class StudentModels:
                         {"role": "user", "content": system_message + " " + user_prompt},
                         messages["messages"][2:]
                     ]
-            }  
+            }
             new_data.append(reformatted_data)
         return new_data
 

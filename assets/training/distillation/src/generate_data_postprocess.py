@@ -300,7 +300,11 @@ def postprocess_data(
         raise Exception(msg)
 
     # Reformat data based on student model limitations
-    # output_data = StudentModels.reformat(student_model=student_model, task_type=data_generation_task_type, data=output_data)
+    # output_data = StudentModels.reformat(
+    #   student_model=student_model,
+    #   task_type=data_generation_task_type,
+    #   data=output_data
+    # )
     with open(output_file_path, "w") as f:
         for record in output_data:
             f.write(json.dumps(record) + "\n")
