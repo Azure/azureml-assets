@@ -160,10 +160,6 @@ inputs:
       4. MATH: Generate Math data for numerical responses
       5. SUMMARIZATION: Generate Key Summary for an Article
 
-  model_asset_id:
-    type: string
-    description: The student model to finetune
-
   # Output of validation component.
   validation_info:
     type: uri_file
@@ -396,7 +392,7 @@ jobs:
 
   oss_distillation_generate_data_batch_postprocess:
     type: command
-    component: azureml:oss_distillation_generate_data_batch_postprocess:0.0.1s
+    component: azureml:oss_distillation_generate_data_batch_postprocess:0.0.1
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
@@ -413,7 +409,6 @@ jobs:
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
-      model_asset_id: '${{parent.inputs.model_asset_id}}'
       connection_config_file: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
     outputs:
       generated_batch_train_file_path: '${{parent.outputs.generated_batch_train_file_path}}'

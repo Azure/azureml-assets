@@ -388,7 +388,6 @@ jobs:
       max_concurrency_per_instance: '${{parent.inputs.max_concurrency_per_instance}}'
       mini_batch_size: '${{parent.inputs.mini_batch_size}}'
       validation_info: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
-      model_asset_id: '${{parent.inputs.model_asset_id}}'
 
     outputs:
       generated_batch_train_file_path: 
