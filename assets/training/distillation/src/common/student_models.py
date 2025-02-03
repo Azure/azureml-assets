@@ -10,6 +10,8 @@ from common.constants import REGISTRY_MODEL_PATTERN, DataGenerationTaskType
 
 
 class StudentModels:
+    """Student model information and requirements."""
+
     SUPPORTED_STUDENT_MODELS = {
         "Meta-Llama-3.1-8B-Instruct": {
             "supported_registries": ["azureml-meta"],
@@ -49,8 +51,7 @@ class StudentModels:
 
     @classmethod
     def no_system_prompt_reformat(cls, data: List[Dict[str, list]]) -> List[Dict[str, list]]:
-        """Adds system prompt to user prompt for student models that do not
-        accept system prompts.
+        """Add system prompt to user prompt for student models that do not accept system prompts.
 
         :param data: The synthetic data generated from the teacher model
         :type data: List[Dict[str, list]]
@@ -73,7 +74,14 @@ class StudentModels:
         return new_data
 
     @classmethod
-    def no_system_prompt_reformat_conversation(cls, data: List[Dict[str, list]]):
+    def no_system_prompt_reformat_conversation(cls, data: List[Dict[str, list]]) -> List[Dict[str, list]]:
+       """Add system prompt to user prompt for student models that do not accept system prompts.
+
+        :param data: The synthetic data generated from the teacher model
+        :type data: List[Dict[str, list]]
+        :return: Reformated data
+        :rtype: List[Dict[str, list]]
+        """
         new_data = []
         system_message = ""
         for messages in data:
