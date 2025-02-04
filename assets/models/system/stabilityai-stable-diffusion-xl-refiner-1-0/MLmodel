@@ -14,7 +14,7 @@ flavors:
     python_version: 3.9.20
     streamable: false
 metadata:
-  base_model_name: null
+  base_model_name: stabilityai/stable-diffusion-xl-refiner-1.0
   base_model_task: image-to-image
   is_acft_model: true
   is_finetuned_model: false
