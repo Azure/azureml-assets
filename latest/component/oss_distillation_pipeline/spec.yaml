@@ -300,11 +300,11 @@ inputs:
     optional: true
     description: Validation parameters propagated from pipeline.
 
-  # Model parameters
+  # Student Model parameters
   model_asset_id:
     type: string
     optional: false
-    description: Asset id of model
+    description: Asset id of the student model
 
   # Model registration
   registered_model_name:
@@ -353,6 +353,7 @@ jobs:
       num_train_epochs: '${{parent.inputs.num_train_epochs}}'
       per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       learning_rate: '${{parent.inputs.learning_rate}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
     outputs:
       validation_info:
         type: uri_file
@@ -456,6 +457,7 @@ jobs:
       max_len_summary: '${{parent.inputs.max_len_summary}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       validation_output: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
     outputs:
       generated_train_file_path:
         type: uri_file
@@ -490,7 +492,7 @@ jobs:
 
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.25
+    component: azureml:oss_text_generation_data_import:0.0.26
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -508,7 +510,7 @@ jobs:
 
   oss_chat_completion_finetune:
     type: command
-    component: azureml:oss_chat_completion_finetune:0.0.25
+    component: azureml:oss_chat_completion_finetune:0.0.26
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'

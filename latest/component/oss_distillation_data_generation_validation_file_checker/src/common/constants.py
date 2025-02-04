@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Data generatior constants."""
+"""Data generation constants."""
 
 import re
 from enum import EnumMeta, Enum
@@ -31,15 +31,6 @@ REGISTRY_MODEL_PATTERN = re.compile(
 # MAP keys are model name in registry, which maps to specific model details like registry and supported versions
 SUPPORTED_TEACHER_MODEL_MAP = {
     "Meta-Llama-3.1-405B-Instruct": {
-        "supported_registries": ["azureml-meta"],
-        "supported_version_pattern": re.compile(r"\d+"),
-    }
-}
-
-# SUPPORTED STUDENT MODEL
-# MAP keys are model name in registry, which maps to specific model details like registry and supported versions
-SUPPORTED_STUDENT_MODEL_MAP = {
-    "Meta-Llama-3.1-8B-Instruct": {
         "supported_registries": ["azureml-meta"],
         "supported_version_pattern": re.compile(r"\d+"),
     }

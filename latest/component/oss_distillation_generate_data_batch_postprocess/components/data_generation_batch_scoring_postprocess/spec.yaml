@@ -89,6 +89,7 @@ inputs:
     type: uri_file
     description: Connection config file for batch scoring
 
+
 outputs:
   generated_batch_train_file_path:
     type: uri_file
