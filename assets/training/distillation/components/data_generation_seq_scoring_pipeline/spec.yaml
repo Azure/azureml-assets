@@ -172,6 +172,10 @@ inputs:
       4. MATH: Generate Math data for numerical responses
       5. SUMMARIZATION: Generate Key Summary for an Article
 
+  model_asset_id:
+    type: string
+    description: The student model asset id
+    optional: false
 
   # Training parameters
   num_train_epochs:
@@ -212,7 +216,7 @@ outputs:
 jobs:
   oss_distillation_generate_data:
     type: command
-    component: azureml:oss_distillation_generate_data:0.0.8
+    component: azureml:oss_distillation_generate_data:0.0.9
     compute: '${{parent.inputs.compute_data_generation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_generation}}'
@@ -236,6 +240,7 @@ jobs:
       request_batch_size: '${{parent.inputs.request_batch_size}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
       validation_output: '${{parent.inputs.validation_output}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
     outputs:
       generated_train_file_path: '${{parent.outputs.generated_train_file_path}}'
       generated_validation_file_path: '${{parent.outputs.generated_validation_file_path}}'
