@@ -1,9 +1,0 @@
-name: minimal
-channels:
-- conda-forge
-- anaconda
-dependencies:
-- python=3.9.13
-- pip
-- pip:
-  - azureml-inference-server-http==1.4.0
