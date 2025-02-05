@@ -25,7 +25,7 @@ RUN pip install 'responsibleai~=0.36.0' \
                 'responsibleai-text[qa]==0.2.7'
 
 # Install main azureml packages
-RUN pip install 'azureml-core==1.59.0' \
+RUN pip install 'azureml-core==1.59.0.post1' \
                 'azureml-mlflow==1.59.0.post1' \
                 'azureml-rai-utils==0.0.6'
 
