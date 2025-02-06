@@ -1,5 +1,4 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline_singularity_standard_high
 version: 0.0.70
 type: pipeline
