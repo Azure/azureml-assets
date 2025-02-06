@@ -36,6 +36,7 @@ from common.constants import (
     STATUS_SUCCESS,
     FINISH_REASON_STOP,
 )
+# from common.student_models import StudentModels
 
 from common.utils import (
     get_hash_value,
@@ -166,6 +167,13 @@ def get_parser():
         help="A config file path that contains deployment configurations.",
     )
 
+    # parser.add_argument(
+    #     "--model_asset_id",
+    #     type=str,
+    #     required=True,
+    #     help="The student model asset id"
+    # )
+
     return parser
 
 
@@ -200,7 +208,8 @@ def postprocess_data(
     data_generation_task_type: str,
     min_endpoint_success_ratio: float,
     output_file_path: str,
-    hash_data: str,
+    hash_data: str
+    # student_model: str
 ):
     """Generate and save synthentic data under output_dataset.
 
@@ -213,6 +222,7 @@ def postprocess_data(
         min_endpoint_success_ratio (float): Minimum success ratio below which run will be considered a failure
         output_file_path (str): Output JSONL file path.
         hash_data (str): Path to the jsonl file containing the hash for each payload.
+        student_model (str): The student model to finetune
     """
     error_count = 0
     output_data = []
@@ -288,6 +298,13 @@ def postprocess_data(
     if success_ratio < min_endpoint_success_ratio:
         msg = f"Success ratio for dataset {input_file_path}: {success_ratio} < {min_endpoint_success_ratio}."
         raise Exception(msg)
+
+    # Reformat data based on student model limitations
+    # output_data = StudentModels.reformat(
+    #   student_model=student_model,
+    #   task_type=data_generation_task_type,
+    #   data=output_data
+    # )
     with open(output_file_path, "w") as f:
         for record in output_data:
             f.write(json.dumps(record) + "\n")
@@ -308,6 +325,7 @@ def data_import(args: Namespace):
     hash_train_data = args.hash_train_data
     hash_validation_data = args.hash_validation_data
     connection_config_file = args.connection_config_file
+    # model_asset_id = args.model_asset_id
 
     enable_cot = True if enable_cot_str.lower() == "true" else False
     enable_cod = True if enable_cod_str.lower() == "true" else False
@@ -330,7 +348,8 @@ def data_import(args: Namespace):
             data_generation_task_type=data_generation_task_type,
             min_endpoint_success_ratio=min_endpoint_success_ratio,
             output_file_path=generated_batch_train_file_path,
-            hash_data=hash_train_data,
+            hash_data=hash_train_data
+            # student_model=StudentModels.parse_model_asset_id(model_asset_id)
         )
     if validation_file_path:
         with log_activity(
@@ -349,7 +368,8 @@ def data_import(args: Namespace):
                 data_generation_task_type=data_generation_task_type,
                 min_endpoint_success_ratio=min_endpoint_success_ratio,
                 output_file_path=generated_batch_validation_file_path,
-                hash_data=hash_validation_data,
+                hash_data=hash_validation_data
+                # student_model=StudentModels.parse_model_asset_id(model_asset_id)
             )
     else:
         Path(generated_batch_validation_file_path.parent).mkdir(
