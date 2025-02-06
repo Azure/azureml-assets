@@ -50,6 +50,8 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.17 --no-cache-dir
 
+RUN pip uninstall -y vllm
+RUN pip install https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.1.dev3855+ga5cd445.cu122-cp310-cp310-linux_x86_64.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
