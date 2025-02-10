@@ -2,6 +2,18 @@
 ### 🚀 New Features
 
 
+## 1.16.70 (2025-02-06)
+### 🐛 Bugs Fixed
+- [#3825](https://github.com/Azure/azureml-assets/pull/3825) Pick up latest dependency changes
+
+## 1.16.69 (2025-01-21)
+### 🐛 Bugs Fixed
+- [#3779](https://github.com/Azure/azureml-assets/pull/3779) Add azure-identity dependency to fix issue with azure-ai-ml dependency
+
+## 1.16.68 (2025-01-02)
+### 🚀 New Features
+- [#3714](https://github.com/Azure/azureml-assets/pull/3714) Block environment/image releases based on Ubuntu 20.04
+
 ## 1.16.67 (2024-11-18)
 ### 🚀 New Features
 - [#3605](https://github.com/Azure/azureml-assets/pull/3605) Improve logging for environment release tag already found in copy_assets

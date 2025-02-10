@@ -7,7 +7,7 @@ import requests
 import pandas as pd
 import json
 from argparse import Namespace
-
+from pathlib import Path
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import (
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
@@ -93,9 +93,40 @@ class PipelineInputsValidator:
             self._validate_data_generation_inputs()
 
     def _get_dataframe(self, file_path: str):
-        return pd.read_json(
-            file_path, lines=True, chunksize=self._args.request_batch_size
-        )
+        if not Path(file_path).is_file():
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"File not found at {file_path}. Please provide a valid file path."
+                    ),
+                )
+            )
+        try:
+            return pd.read_json(
+                file_path, lines=True, chunksize=self._args.request_batch_size
+            )
+        except ValueError as e:
+            # If the file is not present pandas will read it as jsonl string
+            # raises a ValueError if it is not a valid jsonl string.
+            # also raises value error if it is not a valid jsonl file.
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"Error while reading JSON file. Make sure the file is a valid jsonl file. Error: {e}"
+                    ),
+                )
+            )
+        except Exception as e:
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"An unexpected error occurred while reading the file: {e}"
+                    ),
+                )
+            )
 
     def _get_inference_request_headers(self) -> dict:
         key = self._args.teacher_model_endpoint_key
@@ -174,7 +205,7 @@ class PipelineInputsValidator:
         url = url if VLLM_CHAT_SCORE_PATH in url else f"{url}{VLLM_CHAT_SCORE_PATH}"
         logger.info(f"Model endpoint: {url}")
         response = requests.post(
-            url=url, headers=headers, data=json.dumps(inference_params)
+            url=url, headers=headers, data=json.dumps(inference_params), timeout=180
         )
         response.raise_for_status()
 

@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
 name: feature_attribution_drift_compute_metrics
-version: 0.3.23
+version: 0.3.25
 display_name: Feature Attribution Drift - Compute Metrics
 is_deterministic: true
 description: Feature attribution drift using model monitoring.
@@ -47,6 +47,7 @@ conf:
         - fsspec~=2023.4.0
         - interpret-community[mimic]~=0.31.0
         - protobuf~=3.20
+        - numpy<2.0.0
     name: interpret-spark
 args: >-
   --baseline_data ${{inputs.baseline_data}}
