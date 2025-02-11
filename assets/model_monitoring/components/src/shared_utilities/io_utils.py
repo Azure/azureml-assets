@@ -141,7 +141,7 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
         return False
 
 
-def read_mltable_in_spark(mltable_path: str):
+def read_mltable_in_spark(mltable_path: str) -> DataFrame:
     """Read mltable in spark."""
     if mltable_path is None:
         raise InvalidInputError("MLTable path is None.")
