@@ -544,7 +544,8 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     system_properties = parse_system_properties(decode_param_from_env_var("system_properties"))
 
     # set log_level_debug as environment parameter
-    log_level_debug_enabled = system_properties.get(SystemSettings.LOG_LEVEL_DEBUG, False) if system_properties else False
+    log_level_debug_enabled = \
+        system_properties.get(SystemSettings.LOG_LEVEL_DEBUG, False) if system_properties else False
     os.environ[SystemSettings.LOG_LEVEL_DEBUG] = str(log_level_debug_enabled)
 
     # model selector
