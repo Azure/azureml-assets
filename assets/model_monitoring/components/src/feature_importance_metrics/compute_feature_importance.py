@@ -29,6 +29,8 @@ from feature_importance_metrics.feature_importance_utilities import (
 
 CONTINUOUS_ERR = ('The target column is continuous. ' +
                   'Please specify the task type as regression.')
+CONTINUOUS_SYSTEM_ERR_VARIANTS = ["Unknown label type: 'continuous'",
+                                  "Unknown label type: continuous"]
 
 
 def parse_args():
@@ -97,8 +99,9 @@ def create_lightgbm_model(X, y, task_type):
     try:
         model = lgbm.fit(X, y)
     except ValueError as e:
+        e_str = str(e)
         # Depending on lightgbm version this error message can be slightly different
-        if "Unknown label type: 'continuous'" or "Unknown label type: continuous" in str(e):
+        if any(variant in e_str for variant in CONTINUOUS_SYSTEM_ERR_VARIANTS):
             raise InvalidInputError(CONTINUOUS_ERR)
         raise e
     log_time_and_message(f"Created lightgbm model using task_type: {task_type}")
