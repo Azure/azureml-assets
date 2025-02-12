@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: OSS Chat Completion Finetune
 description: FTaaS component to finetune model for Chat Completion task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/78
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/80
 
 inputs:
   task_name:

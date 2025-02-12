@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222
 
 USER root
 
@@ -12,6 +12,9 @@ COPY data_import_run.py /azureml/data_import/run.py
 COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
+
+# need to be removed when updating transformers>4.44.0
+COPY deepspeed /opt/conda/envs/ptca/lib/python3.10/site-packages/transformers/integrations/deepspeed.py
 
 RUN pip install mlflow==2.19.0
 RUN python -m nltk.downloader punkt
