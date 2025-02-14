@@ -14,7 +14,7 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge
 
 RUN conda list
 # Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
@@ -65,7 +65,6 @@ RUN pip install 'torch>=2.2.2'
 RUN pip install 'opencv-python-headless==4.8.1.78'
 
 RUN conda clean -a -y
-
 RUN pip freeze
 
 # This is needed for mpi to locate libpython

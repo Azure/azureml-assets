@@ -9,8 +9,7 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
-    conda clean -a -y
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge
 
 RUN conda list
 # Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
@@ -48,6 +47,7 @@ RUN pip install git+https://github.com/huggingface/evaluate.git
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
 
+RUN conda clean -a -y
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
