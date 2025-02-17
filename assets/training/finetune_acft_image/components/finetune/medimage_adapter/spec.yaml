@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimgage_adapter_finetune
-version: 0.0.3
+version: 0.0.1.yesh1
 type: command
 
 is_deterministic: True
@@ -8,9 +8,10 @@ is_deterministic: True
 display_name: Medical Image Adapter Finetune
 description: Component to finetune the model using the medical image data
 
-environment: azureml:/subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourceGroups/rdondera/providers/Microsoft.MachineLearningServices/workspaces/validatr/environments/medimage-adapter-pt-ft/versions/13
+#environment: azureml://registries/yesh-westeurome/environments/medimage-adapter-pt-ft/versions/13
+environment : azureml://registries/models-staging/environments/medimage-adapter-pt-ft/versions/13
 
-code: ../../../src/finetune
+code: ../../../src/medimage_insight_adapter_finetune
 
 distribution:
   type: pytorch
