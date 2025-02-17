@@ -21,6 +21,7 @@ from MainzTrain.Utils.Timing import Timer
 
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
+CHECKPOINT_PATH = "mlflow_model_folder/artifacts/checkpoints/vision_model/medimageinsight-v1.0.0.pt"
 
 
 def add_env_parser_to_yaml() -> None:
@@ -112,14 +113,55 @@ def load_opt_from_config_files(conf_files: List[str]) -> Dict[str, Any]:
         dict: a dictionary of opt settings
     """
     opt = {}
-    for conf_file in conf_files:
-        with open(conf_file, encoding='utf-8') as f:
-            # config_dict = yaml.safe_load(f)
-            config_dict = yaml.unsafe_load(f)
+    
+    with open(conf_files, encoding='utf-8') as f:
+        # config_dict = yaml.safe_load(f)
+        config_dict = yaml.unsafe_load(f)
 
         load_config_dict_to_opt(opt, config_dict)
 
     return opt
+
+
+def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
+    """
+    Copy all files recursively from MLFLOW_MODEL_FOLDER to MLFLOW_OUTPUT_MODEL_FOLDER.
+    Also, copy the model_state_dict.pt file from the highest numbered folder in SAVE_DIR
+    to the specified destination in MLFLOW_OUTPUT_MODEL_FOLDER.
+
+    Args:
+        cmdline_args (Dict[str, Any]): The command line arguments passed to the script.
+    """
+    import shutil
+
+    # Copy all files recursively from MLFLOW_MODEL_FOLDER to MLFLOW_OUTPUT_MODEL_FOLDER
+    src_folder = cmdline_args['MLFLOW_MODEL_FOLDER']
+    dest_folder = cmdline_args['MLFLOW_OUTPUT_MODEL_FOLDER']
+    logger.info(f"Copying files from {src_folder} to {dest_folder}")
+    shutil.copytree(src_folder, dest_folder, dirs_exist_ok=True)
+
+    # Find the highest numbered folder in SAVE_DIR
+    save_dir = cmdline_args['SAVE_DIR']
+    logger.info(f"Searching for the highest numbered folder in {save_dir}")
+    numbered_folders = [d for d in os.listdir(save_dir) if os.path.isdir(os.path.join(save_dir, d)) and d.isdigit()]
+    if not numbered_folders:
+        logger.error("No numbered folders found in SAVE_DIR")
+        raise FileNotFoundError("No numbered folders found in SAVE_DIR")
+
+    highest_numbered_folder = max(numbered_folders, key=int)
+    logger.info(f"Highest numbered folder found: {highest_numbered_folder}")
+    smoothed_model_folder = os.path.join(save_dir, highest_numbered_folder, 'default', 'smoothed_model')
+    model_file = os.path.join(smoothed_model_folder, 'model_state_dict.pt')
+
+    if not os.path.exists(model_file):
+        logger.error(f"model_state_dict.pt not found in {smoothed_model_folder}")
+        raise FileNotFoundError(f"model_state_dict.pt not found in {smoothed_model_folder}")
+
+    # Copy model_state_dict.pt to the specified destination
+    destination_path = os.path.join(dest_folder, CHECKPOINT_PATH)
+    logger.info(f"Copying model_state_dict.pt from {model_file} to {destination_path}")
+    os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+    shutil.copy2(model_file, destination_path)
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -136,6 +178,12 @@ def get_parser() -> argparse.ArgumentParser:
         help="The name of the task to be executed",
     )
     parser.add_argument(
+        "--mlflow_model_folder",
+        default="mlflow_model_folder",
+        type=str,
+        help="Input dir of MedImage Insight model",
+    )
+    parser.add_argument(
         '--log_every',
         type=int,
         default=10,
@@ -143,29 +191,33 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--resume',
-        action='store_true',
-        help='Resume training from checkpoint.'
+        type=bool,
+        default=True,
+        help='Resume training from checkpoint (True or False).'
     )
     parser.add_argument(
         '--reset_data_loader',
-        action='store_false',
-        help='Reset data loader.'
+        type=bool,
+        default=False,
+        help='Reset data loader (True or False).'
     )
     parser.add_argument(
         '--fp16',
-        action='store_true',
-        help='Use FP16 precision.'
+        type=bool,
+        default=True,
+        help='Use FP16 precision (True or False).'
     )
     parser.add_argument(
         '--zero_stage',
-        type=int,
-        default=0,
-        help='ZeRO optimization stage.'
+        type=bool,
+        default=False,
+        help='ZeRO optimization stage (True or False).'
     )
     parser.add_argument(
         '--deepspeed',
-        action='store_false',
-        help='Use DeepSpeed optimization.'
+        type=bool,
+        default=False,
+        help='Use DeepSpeed optimization (True or False).'
     )
     parser.add_argument(
         '--save_per_optim_steps',
@@ -187,13 +239,15 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--set_sampler_epoch',
-        action='store_false',
+        type=bool,
+        default=False,
         help='Set sampler epoch.'
     )
     parser.add_argument(
         '--verbose',
-        action='store_true',
-        help='Enable verbose logging.'
+        type=bool,
+        default=False,
+        help='Enable verbose logging (True or False).'
     )
     parser.add_argument(
         '--workers',
@@ -203,8 +257,9 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--pin_memory',
-        action='store_true',
-        help='Pin memory in data loader.'
+        type=bool,
+        default=False,
+        help='Pin memory in data loader (True or False).'
     )
     parser.add_argument(
         '--dataset_root',
@@ -305,12 +360,121 @@ def get_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         '--conf_files',
-        nargs='+',
+        type=str,
         required=True,
         help='Path(s) to the MainzTrain config file(s).'
-        )
+    )
+    parser.add_argument(
+        '--drop_path_rate',
+        type=float,
+        default=0.2,
+        help='Drop path rate.'
+    )
+    parser.add_argument(
+        '--context_length',
+        type=int,
+        default=77,
+        help='Context length.'
+    )
+    parser.add_argument(
+        '--scale',
+        nargs=2,
+        type=float,
+        default=[0.8, 1.0],
+        help='Scale range.'
+    )
+    parser.add_argument(
+        '--ratio',
+        nargs=2,
+        type=float,
+        default=[0.75, 1.3333333],
+        help='Aspect ratio range.'
+    )
+    parser.add_argument(
+        '--re_prob',
+        type=float,
+        default=0.25,
+        help='Random erasing probability.'
+    )
+    parser.add_argument(
+        '--hflip',
+        type=float,
+        default=0.0,
+        help='Horizontal flip probability.'
+    )
+    parser.add_argument(
+        '--vflip',
+        type=float,
+        default=0.0,
+        help='Vertical flip probability.'
+    )
+    parser.add_argument(
+        '--text_augmentation',
+        type=int,
+        default=1,
+        help='Text augmentation flag.'
+    )
+    parser.add_argument(
+        '--batch_size_total',
+        type=int,
+        default=1024,
+        help='Total batch size.'
+    )
+    parser.add_argument(
+        '--decay',
+        type=float,
+        default=0.999,
+        help='Decay rate.'
+    )
+    parser.add_argument(
+        '--start_learning_rate',
+        type=float,
+        default=0.00001,
+        help='Start learning rate.'
+    )
+    parser.add_argument(
+        '--world_size',
+        type=int,
+        default=8,
+        help='Number of GPUs on which to finetune.'
+    )
+    parser.add_argument(
+        '--optimizer',
+        type=str,
+        default='AdamW',
+        help='Optimizer type.'
+    )
+    parser.add_argument(
+        '--weight_decay',
+        type=float,
+        default=0.2,
+        help='Weight decay.'
+    )
+    parser.add_argument(
+        '--mlflow_output_model_folder',
+        type=str,
+        help='Output directory for the MLflow model.'
+    )
 
     return parser
+
+
+def copy_eval_image_tsv(eval_image_tsv: str, save_dir: str) -> str:
+    """
+    Copy the evaluation image TSV file to the evaluate directory within the save directory.
+
+    Args:
+        eval_image_tsv (str): Path to the evaluation image TSV file.
+        save_dir (str): Directory to save the copied TSV file.
+
+    Returns:
+        str: The path to the copied TSV file.
+    """
+    evaluate_dir = os.path.join(save_dir, 'evaluate')
+    os.makedirs(evaluate_dir, exist_ok=True)
+    eval_image_tsv_dest = os.path.join(evaluate_dir, os.path.basename(eval_image_tsv))
+    os.system(f'cp {eval_image_tsv} {eval_image_tsv_dest}')
+    return eval_image_tsv_dest
 
 
 def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -325,9 +489,14 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
         and the processed command line arguments dictionary.
     """
     add_env_parser_to_yaml()
-    opt = load_opt_from_config_files(cmdline_args.conf_files)
+    # Extract the directory from the conf_files path
+    conf_files_dir = os.path.dirname(cmdline_args.conf_files)
+    conf_files = [os.path.join(conf_files_dir, f) for f in os.listdir(conf_files_dir) if os.path.isfile(os.path.join(conf_files_dir, f))]
+    cmdline_args.conf_files = [conf_files_dir]
+    for conf_file in conf_files:
+        opt = load_opt_from_config_files(conf_file)
     cmdline_args = vars(cmdline_args)
-    cmdline_args = {k.upper() if k != 'conf_files' else k: v for k, v in cmdline_args.items()}
+    cmdline_args = {k.upper() if k not in ('conf_files', 'world_size') else k: v for k, v in cmdline_args.items()}
 
     load_config_dict_to_opt(opt, cmdline_args)
 
@@ -339,6 +508,30 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
     for key, val in cmdline_args.items():
         if val is not None:
             opt[key] = val
+    
+    # Append CHECKPOINT_PATH to mlflow_model_folder and update UNICL_MODEL's PRETRAINED key
+    if 'MLFLOW_MODEL_FOLDER' in cmdline_args:
+        mlflow_model_path = os.path.join(cmdline_args['MLFLOW_MODEL_FOLDER'], CHECKPOINT_PATH)
+        if 'UNICL_MODEL' in opt and 'PRETRAINED' in opt['UNICL_MODEL']:
+            opt['UNICL_MODEL']['PRETRAINED'] = mlflow_model_path
+    if 'DATASET' in opt and 'ROOT' in opt['DATASET']:
+        opt['DATASET']['ROOT'] = cmdline_args['DATASET_ROOT']
+    if opt['DATASET']['SAMPLER'] == 'default':
+        opt['SET_SAMPLER_EPOCH'] = False
+
+    opt['ZEROSHOT_EVAL_DATASET']['ZIP_FILE'] = cmdline_args['EVAL_ZIP_FILE']
+    opt['ZEROSHOT_EVAL_DATASET']['ZIP_MAP_FILE'] = cmdline_args['EVAL_ZIP_MAP_FILE']
+    opt['ZEROSHOT_EVAL_DATASET']['LABEL_FILE'] = cmdline_args['EVAL_LABEL_FILE']
+    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['EVAL_IMAGE_TSV'] = \
+        copy_eval_image_tsv(cmdline_args['EVAL_IMAGE_TSV'], opt['SAVE_DIR'])
+    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['EVAL_TEXT_TSV'] = \
+        copy_eval_image_tsv(cmdline_args['EVAL_TEXT_TSV'], opt['SAVE_DIR'])
+    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['IMAGE_TSV'] = \
+        copy_eval_image_tsv(cmdline_args['IMAGE_TSV'], opt['SAVE_DIR'])
+    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['TEXT_TSV'] = \
+        copy_eval_image_tsv(cmdline_args['TEXT_TSV'], opt['SAVE_DIR'])
+    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['LABEL_FILE'] = \
+        copy_eval_image_tsv(cmdline_args['LABEL_FILE'], opt['SAVE_DIR'])
 
     return opt, cmdline_args
 
@@ -362,10 +555,49 @@ def main(args: List[str] = None) -> None:
     )
     opt, _ = load_opt_command(args)
     command = 'train'
-
     if opt.get('SAVE_TIMER_LOG', False):
         Timer.setEnabled(True)
+    logger.info(opt)
+    from pathlib import Path
+    dataset_root = opt['DATASET']['ROOT']
+    for root, dirs, files in os.walk(dataset_root):
+        for name in files:
+            logger.info(f"File: {os.path.join(root, name)}")
+        for name in dirs:
+            logger.info(f"Directory: {os.path.join(root, name)}")
+    logger.info('start in dataset root')
+    dataset_path = os.path.join(opt['DATASET']['ROOT'], 'full')
+    logger.info('dataset_path')
+    logger.info(dataset_path)
+    for root, dirs, files in os.walk(dataset_path):
+        for name in files:
+            logger.info(f"File: {os.path.join(root, name)}")
+        for name in dirs:
+            logger.info(f"Directory: {os.path.join(root, name)}")
+    tsv_files = Path(dataset_path).glob('**/*.tsv')
+    logger.info('tsv_files')
+    logger.info(tsv_files)
+    tsv_filenames = sorted(
+        [
+            str(path)
+            for path in tsv_files
+        ]
+    )
+    from os.path import basename
 
+    image_tsv_files = [
+        filename
+        for filename in tsv_filenames
+        if (
+                'image-' in basename(filename)
+                or 'image_' in basename(filename)
+                or '_image' in basename(filename)
+                or '-image' in basename(filename)
+                or 'images-' in basename(filename)
+        )
+    ]
+    logger.info('image-tsv-files')
+    logger.info(image_tsv_files)
     trainer = MainzTrainer(opt)
 
     if opt.get('DEBUG_DUMP_TRACEBACKS_INTERVAL', 0) > 0:
@@ -397,6 +629,8 @@ def main(args: List[str] = None) -> None:
         timer_log_dir = trainer.log_folder if trainer.log_folder is not None else trainer.save_folder
         timer_log_file = os.path.join(timer_log_dir, f"timer_log_{opt['rank']}.txt")
         Timer.timer_report(timer_log_file)
+
+    copy_model_files(args)
 
 
 if __name__ == "__main__":

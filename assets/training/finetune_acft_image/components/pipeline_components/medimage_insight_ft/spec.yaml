@@ -1,11 +1,288 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: medimage_insight_ft_pipeline
-version: 0.0.1.yesh5
+version: 0.0.1.yesh7
 type: pipeline
-display_name: Medical Image Insight Classification Adapter Pipeline
+display_name: Medical Image Insight Embedding Generator and Classification Adapter Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_pipeline) to learn more.
 
 inputs:
+
+  mlflow_embedding_model_path:
+    type: uri_folder
+    optional: false
+    description: Path to the MLflow model to be imported.
+    mode: ro_mount
+  
+  dataset_root:
+    type: uri_folder
+    optional: false
+    description: Path to the dataset root.
+    mode: download
+
+  eval_image_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation image TSV file.
+    mode: ro_mount
+
+  eval_text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation text TSV file.
+    mode: ro_mount
+
+  image_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the image TSV file.
+    mode: ro_mount
+
+  text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the text TSV file.
+    mode: ro_mount
+
+  label_file:
+    type: uri_file
+    optional: false
+    description: Path to the label file.
+    mode: ro_mount
+
+  cweight_file:
+    type: uri_file
+    optional: false
+    description: Path to the class weight file.
+    mode: ro_mount
+
+  eval_zip_file:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation zip file.
+    mode: ro_mount
+
+  eval_zip_map_file:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation zip map file.
+    mode: ro_mount
+
+  eval_label_file:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation label file.
+    mode: ro_mount
+
+  conf_files:
+    type: uri_file
+    optional: false
+    description: Path to the configuration files.
+    mode: ro_mount
+
+  log_every:
+    type: integer
+    min: 1
+    default: 10
+    optional: true
+    description: Log every n steps.
+
+  resume:
+    type: boolean
+    default: false
+    optional: true
+    description: Resume training from checkpoint.
+
+  reset_data_loader:
+    type: boolean
+    default: false
+    optional: true
+    description: Reset data loader.
+
+  fp16:
+    type: boolean
+    default: false
+    optional: true
+    description: Use mixed precision training.
+
+  zero_stage:
+    type: integer
+    min: 0
+    default: 0
+    optional: true
+    description: Zero optimization stage.
+
+  deepspeed:
+    type: boolean
+    default: false
+    optional: true
+    description: Use DeepSpeed for distributed training.
+
+  save_per_optim_steps:
+    type: integer
+    min: 1
+    default: 100
+    optional: true
+    description: Save model every n optimization steps.
+
+  eval_per_optim_steps:
+    type: integer
+    min: 1
+    default: 100
+    optional: true
+    description: Evaluate model every n optimization steps.
+
+  grad_clipping:
+    type: number
+    default: 1.0
+    optional: true
+    description: Gradient clipping value.
+
+  world_size:
+    type: integer
+    min: 1
+    default: 8
+    optional: true
+    description: Number of GPUs on which to finetune.
+
+  set_sampler_epoch:
+    type: boolean
+    default: False
+    optional: true
+    description: Set sampler epoch.
+
+  verbose:
+    type: boolean
+    default: false
+    optional: true
+    description: Verbose logging.
+
+  workers:
+    type: integer
+    min: 0
+    default: 6
+    optional: true
+    description: Number of workers.
+
+  pin_memory:
+    type: boolean
+    default: false
+    optional: true
+    description: Pin memory.
+
+  binary_metrics:
+    type: integer
+    min: 0
+    default: 1
+    optional: true
+    description: Use binary metrics.
+
+  zs_mode:
+    type: integer
+    min: 0
+    default: 2
+    optional: true
+    description: Zero-shot mode.
+
+  zs_weight:
+    type: number
+    default: 1.0
+    optional: true
+    description: Zero-shot weight.
+
+  knn:
+    type: integer
+    min: 0
+    default: 200
+    optional: true
+    description: Number of nearest neighbors.
+
+  batch_size_per_gpu:
+    type: integer
+    min: 1
+    default: 2
+    optional: true
+    description: Batch size per GPU.
+
+  max_num_epochs:
+    type: integer
+    min: 1
+    default: 10000
+    optional: true
+    description: Maximum number of epochs.
+
+  gradient_accumulate_step:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Gradient accumulation steps.
+
+  drop_path_rate:
+    type: number
+    default: 0.2
+    optional: true
+    description: Drop path rate.
+
+  context_length:
+    type: integer
+    default: 77
+    optional: true
+    description: Context length.
+
+  scale:
+    type: number
+    default: 0.8
+    optional: true
+    description: Scale range.
+
+  ratio:
+    type: number
+    default: 0.75
+    optional: true
+    description: Aspect ratio range.
+
+  re_prob:
+    type: number
+    default: 0.25
+    optional: true
+    description: Random erasing probability.
+
+  hflip:
+    type: number
+    default: 0.0
+    optional: true
+    description: Horizontal flip probability.
+
+  vflip:
+    type: number
+    default: 0.0
+    optional: true
+    description: Vertical flip probability.
+
+  text_augmentation:
+    type: integer
+    default: 1
+    optional: true
+    description: Text augmentation flag.
+
+  batch_size_total:
+    type: integer
+    default: 1024
+    optional: true
+    description: Total batch size.
+
+  decay:
+    type: number
+    default: 0.999
+    optional: true
+    description: Decay rate.
+
+  start_learning_rate:
+    type: number
+    default: 0.00001
+    optional: true
+    description: Start learning rate.
+#start of adapter pipeline inputs 
   instance_type_preprocess:
       type: string
       optional: true
@@ -112,15 +389,69 @@ inputs:
     description: Maximum number of epochs for training.
 
 outputs:
+  save_dir:
+    type: uri_folder
+    description: Directory to save the model.
+    mode: rw_mount
+  
+  mlflow_model_folder:
+    type: uri_folder
+    description: Directory to save the MLflow model.
+    mode: rw_mount
+  
   output_model_path:
     type: uri_folder
     description: Path to save the output model.
     mode: rw_mount
 
+
 jobs:
+  medical_image_embedding_model_finetune:
+    type: command
+    component: azureml://registries/models-staging/components/medimgage_embedding_finetune/versions/0.0.2
+    compute: '${{parent.inputs.compute_finetune}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
+    inputs:
+      mlflow_model_path: '${{parent.inputs.mlflow_embedding_model_path}}'
+      log_every: ${{parent.inputs.log_every}}
+      resume: ${{parent.inputs.resume}}
+      reset_data_loader: ${{parent.inputs.reset_data_loader}}
+      fp16: ${{parent.inputs.fp16}}
+      zero_stage: ${{parent.inputs.zero_stage}}
+      deepspeed: ${{parent.inputs.deepspeed}}
+      save_per_optim_steps: ${{parent.inputs.save_per_optim_steps}}
+      eval_per_optim_steps: ${{parent.inputs.eval_per_optim_steps}}
+      grad_clipping: ${{parent.inputs.grad_clipping}}
+      set_sampler_epoch: ${{parent.inputs.set_sampler_epoch}}
+      verbose: ${{parent.inputs.verbose}}
+      workers: ${{parent.inputs.workers}}
+      world_size: ${{parent.inputs.world_size}}
+      pin_memory: ${{parent.inputs.pin_memory}}
+      dataset_root: '${{parent.inputs.dataset_root}}'
+      eval_image_tsv: '${{parent.inputs.eval_image_tsv}}'
+      eval_text_tsv: '${{parent.inputs.eval_text_tsv}}'
+      image_tsv: '${{parent.inputs.image_tsv}}'
+      text_tsv: '${{parent.inputs.text_tsv}}'
+      label_file: '${{parent.inputs.label_file}}'
+      binary_metrics: ${{parent.inputs.binary_metrics}}
+      cweight_file: '${{parent.inputs.cweight_file}}'
+      zs_mode: ${{parent.inputs.zs_mode}}
+      zs_weight: ${{parent.inputs.zs_weight}}
+      knn: ${{parent.inputs.knn}}
+      eval_zip_file: '${{parent.inputs.eval_zip_file}}'
+      eval_zip_map_file: '${{parent.inputs.eval_zip_map_file}}'
+      eval_label_file: '${{parent.inputs.eval_label_file}}'
+      batch_size_per_gpu: ${{parent.inputs.batch_size_per_gpu}}
+      max_num_epochs: ${{parent.inputs.max_num_epochs}}
+      gradient_accumulate_step: ${{parent.inputs.gradient_accumulate_step}}
+      conf_files: '${{parent.inputs.conf_files}}'
+    outputs:
+      save_dir: '${{parent.outputs.save_dir}}'
+      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   medical_image_embedding_datapreprocessing:
     type: command
-    component: azureml:medical_image_embedding_datapreprocessing:0.0.1.yesh5
+    component: azureml://registries/models-staging/components/medical_image_embedding_datapreprocessing/versions/0.0.1.yesh5
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -130,7 +461,7 @@ jobs:
       test_train_split_csv_path: '${{parent.inputs.test_train_split_csv_path}}'
   medimgage_adapter_finetune:
     type: command
-    component: azureml:medimgage_adapter_finetune:0.0.1.yesh1
+    component: azureml://registries/models-staging/components/medimgage_adapter_finetune/versions/0.0.1.yesh1
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
