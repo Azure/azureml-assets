@@ -2,6 +2,14 @@
 ### 🚀 New Features
 
 
+## 1.16.71 (2025-02-12)
+### 🐛 Bugs Fixed
+- [#3838](https://github.com/Azure/azureml-assets/pull/3838) Add setter for AzureBlobstoreAssetPath storage_name
+
+## 1.16.70 (2025-02-06)
+### 🐛 Bugs Fixed
+- [#3825](https://github.com/Azure/azureml-assets/pull/3825) Pick up latest dependency changes
+
 ## 1.16.69 (2025-01-21)
 ### 🐛 Bugs Fixed
 - [#3779](https://github.com/Azure/azureml-assets/pull/3779) Add azure-identity dependency to fix issue with azure-ai-ml dependency

@@ -692,6 +692,12 @@ class AzureBlobstoreAssetPath(AssetPath):
         """Storage name."""
         return self._storage_name
 
+    @storage_name.setter
+    def storage_name(self, storage_name: str):
+        """Set storage name."""
+        self._storage_name = storage_name
+        self._uri = None
+
     @property
     def container_name(self) -> str:
         """Container name."""
