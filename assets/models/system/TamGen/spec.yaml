@@ -11,11 +11,13 @@ properties:
 
 tags:
   task: protein-design
+  industry: health-and-life-sciences
   disable-batch: "true"
   Preview: ""
   inference_supported_envs:
   license: mit
   author: Microsoft
+  notes: "notes.md"
   hiddenlayerscanned: "true"
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
