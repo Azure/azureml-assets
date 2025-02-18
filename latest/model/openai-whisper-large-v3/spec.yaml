@@ -32,7 +32,7 @@ tags:
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
-version: 6
+version: 7
 description: |
   Whisper is a model that can recognize and translate speech using deep learning. It was trained on a large amount of data from different sources and languages. Whisper models can handle various tasks and domains without needing to adjust the model.
 
@@ -63,7 +63,7 @@ description: |
   ```json
   {
      "input_data": {
-         "audio": ["https://www2.cs.uic.edu/~i101/SoundFiles/gettysburg.wav", "https://www2.cs.uic.edu/~i101/SoundFiles/preamble.wav"],
+         "audio": ["https://www.cs.uic.edu/~troy/spring09/cs101/SoundFiles/gettysburg.wav", "https://www.cs.uic.edu/~troy/spring09/cs101/SoundFiles/preamble.wav"],
          "language": ["en", "en"]
      }
   }
@@ -72,11 +72,11 @@ description: |
   #### Sample output
   ```json
   [
-      {
-          "text":"four score and seven years ago our fathers brought forth on this continent a new nation conceived in liberty and dedicated to the proposition that all men are created equal now we are engaged in a great civil war testing whether that nation or any nation so conceived and so dedicated can long endure"
-      }
-      {
-          "text":" we the people of the united states in order to form a more perfect union establish justice insure domestic tranquillity provide for the common defense promote the general welfare and secure the blessings of liberty to ourselves and our posterity do ordain and establish this constitution for the united states of america"
-      }
+    {
+      "text": " four score and seven years ago our fathers brought forth on this continent a new nation conceived in liberty and dedicated to the proposition that all men are created equal now we are engaged in a great civil war testing whether that nation or any nation so conceived and so dedicated can long endure"
+    },
+    {
+      "text": " we the people of the united states in order to form a more perfect union establish justice insure domestic tranquillity provide for the common defense promote the general welfare and secure the blessings of liberty to ourselves and our posterity do ordain and establish this constitution for the united states of america"
+    }
   ]
   ```
