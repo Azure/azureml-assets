@@ -531,7 +531,6 @@ class AzureBlobstoreAssetPath(AssetPath):
             self._cloud_suffix = AzureBlobstoreAssetPath.AZURE_CLOUD_SUFFIX
         else:
             self._cloud_suffix = _get_storage_endpoint_from_metadata()
-        self._account_uri = f"https://{storage_name}.blob.{self._cloud_suffix}"
 
         # Its possible that the account URL may need additional tweaking to add a SAS
         # token if the account does not allow for anonymous access. However, for
@@ -679,6 +678,11 @@ class AzureBlobstoreAssetPath(AssetPath):
         container_prefix = self._container_path + "/"
         file_contents = container_client.download_blob(container_prefix + name, encoding=encoding).readall()
         return file_contents
+
+    @property
+    def _account_uri(self) -> str:
+        """Account URI."""
+        return f"https://{self._storage_name}.blob.{self._cloud_suffix}"
 
     @property
     def uri(self) -> str:
