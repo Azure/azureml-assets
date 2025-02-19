@@ -701,7 +701,6 @@ class AzureBlobstoreAssetPath(AssetPath):
         """Set storage name."""
         self._storage_name = storage_name
         self._uri = None
-        self._account_uri = f"https://{storage_name}.blob.{self._cloud_suffix}"
 
     @property
     def container_name(self) -> str:
