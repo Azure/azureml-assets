@@ -1,6 +1,9 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.72 (2025-02-29)
+### 🐛 Bugs Fixed
+- [#3846](https://github.com/Azure/azureml-assets/pull/3846) Update account_uri when storage_name is updated for AzureBlobstoreAssetPath
 
 ## 1.16.71 (2025-02-12)
 ### 🐛 Bugs Fixed
