@@ -14,7 +14,7 @@ dependencies:
 - tqdm
 - setuptools=72.1.0
 - wheel=0.44.0
-- openssl=3.0.15
+- openssl=3.4.0
 - pip:
   - inference-schema
   - azureml-core=={{latest-pypi-version}}
