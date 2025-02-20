@@ -1,0 +1,44 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.6
+name: medimage_embedding_adapter_merge
+display_name: Merge Adapter Model with Embedding Generation Model
+description: Import and integrate Adapter and Embedding Generation Model
+
+is_deterministic: True
+
+environment : azureml://registries/models-staging/environments/acpt-medimage-embedding/versions/13
+
+code: ../../../src/model_converters/medimage_embed_adapter_merge
+
+inputs:
+
+  # Continual-Finetuning model path
+  adapter_model:
+    type: custom_model
+    optional: true
+    description: Classification Model From Adapter Training.
+
+  mlflow_model:
+    type: mlflow_model
+    optional: true
+    description: Integrated Mlflow Model Asset.
+
+  configuration:
+    type: uri_folder
+    optional: true
+    description: Configuration file for the model merging process.
+
+
+outputs:
+  output_dir:
+    type: mlflow_model
+    description: Folder to store model metadata.
+
+command: >-
+  python medimage_model_merge.py 
+  $[[--adapter_model ${{inputs.adapter_model}}]]
+  $[[--mlflow_model ${{inputs.mlflow_model}}]]
+  $[[--configuration ${{inputs.configuration}}]]
+  --output_dir ${{outputs.output_dir}}

@@ -1,9 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: medimage_insight_ft_pipeline
-version: 0.0.1.yesh7
+version: 0.0.1.yesh26
 type: pipeline
 display_name: Medical Image Insight Embedding Generator and Classification Adapter Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_pipeline) to learn more.
+
+distribution:
+  type: mpi
 
 inputs:
 
@@ -289,12 +292,14 @@ inputs:
       default: Standard_d12_v2
       description: Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. 
         The parameter compute_preprocess must be set to 'serverless' for instance_type to be used
+
   instance_type_finetune:
     type: string
     optional: true
     default: Standard_nc24rs_v3
     description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. 
       The parameter compute_finetune must be set to 'serverless' for instance_type to be used
+
   compute_preprocess:
     type: string
     optional: true
@@ -302,6 +307,7 @@ inputs:
     description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
   compute_finetune:
     type: string
     optional: true
@@ -309,10 +315,6 @@ inputs:
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
-  mlflow_model_path:
-    type: uri_folder
-    optional: false
-    description: Path to the MLflow model to be used.
 
   zeroshot_path:
     type: uri_file
@@ -388,6 +390,11 @@ inputs:
     optional: true
     description: Maximum number of epochs for training.
 
+  merge_configuration_folder:
+    type: uri_folder
+    description: Files reqiured for merging the models.
+    mode: rw_mount
+
 outputs:
   save_dir:
     type: uri_folder
@@ -395,12 +402,12 @@ outputs:
     mode: rw_mount
   
   mlflow_model_folder:
-    type: uri_folder
+    type: mlflow_model
     description: Directory to save the MLflow model.
     mode: rw_mount
   
-  output_model_path:
-    type: uri_folder
+  merged_mlfow_model:
+    type: mlflow_model
     description: Path to save the output model.
     mode: rw_mount
 
@@ -408,7 +415,7 @@ outputs:
 jobs:
   medical_image_embedding_model_finetune:
     type: command
-    component: azureml://registries/models-staging/components/medimgage_embedding_finetune/versions/0.0.2
+    component: azureml://registries/models-staging/components/medimgage_embedding_finetune/versions/0.0.11
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -452,11 +459,11 @@ jobs:
   medical_image_embedding_datapreprocessing:
     type: command
     component: azureml://registries/models-staging/components/medical_image_embedding_datapreprocessing/versions/0.0.1.yesh5
-    compute: '${{parent.inputs.compute_finetune}}'
+    compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
     inputs:
-      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      mlflow_model_path: '${{parent.jobs.medical_image_embedding_model_finetune.outputs.mlflow_model_folder}}'
       zeroshot_path: '${{parent.inputs.zeroshot_path}}'
       test_train_split_csv_path: '${{parent.inputs.test_train_split_csv_path}}'
   medimgage_adapter_finetune:
@@ -477,5 +484,15 @@ jobs:
       input_channels: '${{parent.inputs.input_channels}}'
       learning_rate: '${{parent.inputs.learning_rate}}'
       max_epochs: '${{parent.inputs.max_epochs}}'
+  medimage_embedding_adapter_merge:
+    type: command
+    component: azureml://registries/models-staging/components/medimage_embedding_adapter_merge/versions/0.0.6
+    compute: '${{parent.inputs.compute_finetune}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
+    inputs:
+      adapter_model: '${{parent.jobs.medimgage_adapter_finetune.outputs.output_model_path}}'
+      mlflow_model: '${{parent.jobs.medical_image_embedding_model_finetune.outputs.mlflow_model_folder}}'
+      configuration: '${{parent.inputs.merge_configuration_folder}}'
     outputs:
-      output_model_path: '${{parent.outputs.output_model_path}}'
+      output_dir: '${{parent.outputs.merged_mlfow_model}}'
