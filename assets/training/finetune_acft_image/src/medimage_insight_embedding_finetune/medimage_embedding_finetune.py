@@ -21,7 +21,7 @@ from MainzTrain.Utils.Timing import Timer
 
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
-CHECKPOINT_PATH = "mlflow_model_folder/artifacts/checkpoints/vision_model/medimageinsight-v1.0.0.pt"
+CHECKPOINT_PATH = "artifacts/checkpoints/vision_model/medimageinsigt-v1.0.0.pt"
 
 
 def add_env_parser_to_yaml() -> None:
@@ -141,16 +141,26 @@ def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
     shutil.copytree(src_folder, dest_folder, dirs_exist_ok=True)
 
     # Find the highest numbered folder in SAVE_DIR
-    save_dir = cmdline_args['SAVE_DIR']
+    save_dir = cmdline_args['SAVE_DIR']+'/INPUT_conf_files_conf~'
+    run_folders = [d for d in os.listdir(save_dir) if os.path.isdir(os.path.join(save_dir, d)) and d.startswith('run_')]
+    if not run_folders:
+        logger.error("No run folders found in SAVE_DIR")
+        raise FileNotFoundError("No run folders found in SAVE_DIR")
+
+    highest_run_folder = max(run_folders, key=lambda x: int(x.split('_')[1]))
+    logger.info(f"Highest run folder found: {highest_run_folder}")
+    h_run_folder_path = os.path.join(save_dir, highest_run_folder)
+    logger.info(f"Highest run folder path: {h_run_folder_path}")
     logger.info(f"Searching for the highest numbered folder in {save_dir}")
-    numbered_folders = [d for d in os.listdir(save_dir) if os.path.isdir(os.path.join(save_dir, d)) and d.isdigit()]
+    numbered_folders = \
+        [d for d in os.listdir(h_run_folder_path) if os.path.isdir(os.path.join(h_run_folder_path, d)) and d.isdigit()]
     if not numbered_folders:
         logger.error("No numbered folders found in SAVE_DIR")
         raise FileNotFoundError("No numbered folders found in SAVE_DIR")
 
     highest_numbered_folder = max(numbered_folders, key=int)
     logger.info(f"Highest numbered folder found: {highest_numbered_folder}")
-    smoothed_model_folder = os.path.join(save_dir, highest_numbered_folder, 'default', 'smoothed_model')
+    smoothed_model_folder = os.path.join(h_run_folder_path, highest_numbered_folder, 'default', 'smoothed_model')
     model_file = os.path.join(smoothed_model_folder, 'model_state_dict.pt')
 
     if not os.path.exists(model_file):
@@ -630,7 +640,7 @@ def main(args: List[str] = None) -> None:
         timer_log_file = os.path.join(timer_log_dir, f"timer_log_{opt['rank']}.txt")
         Timer.timer_report(timer_log_file)
 
-    copy_model_files(args)
+    copy_model_files(opt)
 
 
 if __name__ == "__main__":
