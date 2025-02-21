@@ -15,13 +15,36 @@ import sys
 import torch
 import yaml
 from typing import Any, Dict, List, Tuple
-
+from safetensors.torch import save_file
 from MainzTrain.Trainers.MainzTrainer import MainzTrainer
 from MainzTrain.Utils.Timing import Timer
+import MainzVision as mv
 
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
 CHECKPOINT_PATH = "artifacts/checkpoints/vision_model/medimageinsigt-v1.0.0.pt"
+UNICLMODEL = 'UniCLModel.py'
+MED_IMAGE_INSIGHT = 'MedImageInsight'
+CODE = 'code'
+DATASET_NAME = 'KNNSHOT_FINETUNE'
+EVAL_IMAGE_TSV = 'EVAL_IMAGE_TSV'
+EVAL_TEXT_TSV = 'EVAL_TEXT_TSV'
+IMAGE_TSV = 'IMAGE_TSV'
+TEXT_TSV = 'TEXT_TSV'
+LABEL_FILE = 'LABEL_FILE'
+SAVE_DIR = 'SAVE_DIR'
+LIB = 'Lib'
+SITE_PACKAGES = 'site-packages'
+MainzVision = 'MainzVision'
+USER_DIR = 'user_dir'
+MLFLOW_MODEL_FOLDER = 'MLFLOW_MODEL_FOLDER'
+UNICL_MODEL = 'UNICL_MODEL'
+PRETRAINED = 'PRETRAINED'
+DATASET = 'DATASET'
+ROOT = 'ROOT'
+DATASET_ROOT = 'DATASET_ROOT'
+SAMPLER = 'SAMPLER'
+SET_SAMPLER_EPOCH = 'SET_SAMPLER_EPOCH'
 
 
 def add_env_parser_to_yaml() -> None:
@@ -171,7 +194,8 @@ def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
     destination_path = os.path.join(dest_folder, CHECKPOINT_PATH)
     logger.info(f"Copying model_state_dict.pt from {model_file} to {destination_path}")
     os.makedirs(os.path.dirname(destination_path), exist_ok=True)
-    shutil.copy2(model_file, destination_path)
+    tensor = torch.load(model_file)
+    save_file(tensor, destination_path)
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -498,6 +522,7 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
         Tuple[Dict[str, Any], Dict[str, Any]]: A tuple containing the combined options dictionary
         and the processed command line arguments dictionary.
     """
+    DATASET_NAME = 'KNNSHOT_FINETUNE'
     add_env_parser_to_yaml()
     # Extract the directory from the conf_files path
     conf_files_dir = os.path.dirname(cmdline_args.conf_files)
@@ -520,29 +545,35 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
             opt[key] = val
     
     # Append CHECKPOINT_PATH to mlflow_model_folder and update UNICL_MODEL's PRETRAINED key
-    if 'MLFLOW_MODEL_FOLDER' in cmdline_args:
-        mlflow_model_path = os.path.join(cmdline_args['MLFLOW_MODEL_FOLDER'], CHECKPOINT_PATH)
-        if 'UNICL_MODEL' in opt and 'PRETRAINED' in opt['UNICL_MODEL']:
-            opt['UNICL_MODEL']['PRETRAINED'] = mlflow_model_path
-    if 'DATASET' in opt and 'ROOT' in opt['DATASET']:
-        opt['DATASET']['ROOT'] = cmdline_args['DATASET_ROOT']
-    if opt['DATASET']['SAMPLER'] == 'default':
-        opt['SET_SAMPLER_EPOCH'] = False
+    if MLFLOW_MODEL_FOLDER in cmdline_args:
+        mlflow_model_path = os.path.join(cmdline_args[MLFLOW_MODEL_FOLDER], CHECKPOINT_PATH)
+        if UNICL_MODEL in opt and PRETRAINED in opt[UNICL_MODEL]:
+            opt[UNICL_MODEL][PRETRAINED] = mlflow_model_path
+    if DATASET in opt and ROOT in opt[DATASET]:
+        opt[DATASET][ROOT] = cmdline_args[DATASET_ROOT]
+    if opt[DATASET][SAMPLER] == 'default':
+        opt[SET_SAMPLER_EPOCH] = False
 
     opt['ZEROSHOT_EVAL_DATASET']['ZIP_FILE'] = cmdline_args['EVAL_ZIP_FILE']
     opt['ZEROSHOT_EVAL_DATASET']['ZIP_MAP_FILE'] = cmdline_args['EVAL_ZIP_MAP_FILE']
-    opt['ZEROSHOT_EVAL_DATASET']['LABEL_FILE'] = cmdline_args['EVAL_LABEL_FILE']
-    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['EVAL_IMAGE_TSV'] = \
-        copy_eval_image_tsv(cmdline_args['EVAL_IMAGE_TSV'], opt['SAVE_DIR'])
-    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['EVAL_TEXT_TSV'] = \
-        copy_eval_image_tsv(cmdline_args['EVAL_TEXT_TSV'], opt['SAVE_DIR'])
-    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['IMAGE_TSV'] = \
-        copy_eval_image_tsv(cmdline_args['IMAGE_TSV'], opt['SAVE_DIR'])
-    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['TEXT_TSV'] = \
-        copy_eval_image_tsv(cmdline_args['TEXT_TSV'], opt['SAVE_DIR'])
-    opt['KNNSHOT_GOOGLE_EFFUSION_S100_N100_ZSM2']['LABEL_FILE'] = \
-        copy_eval_image_tsv(cmdline_args['LABEL_FILE'], opt['SAVE_DIR'])
+    opt['ZEROSHOT_EVAL_DATASET'][LABEL_FILE] = cmdline_args['EVAL_LABEL_FILE']
+    for key in opt.keys():
+        if key.startswith('EVALDATASET_'):
+            DATASET_NAME = key
+            logger.info(f"Selected DATASET_NAME: {DATASET_NAME}")
+            break
+    opt[DATASET_NAME][EVAL_IMAGE_TSV] = \
+        copy_eval_image_tsv(cmdline_args[EVAL_IMAGE_TSV], opt[SAVE_DIR])
+    opt[DATASET_NAME][EVAL_TEXT_TSV] = \
+        copy_eval_image_tsv(cmdline_args[EVAL_TEXT_TSV], opt[SAVE_DIR])
+    opt[DATASET_NAME][IMAGE_TSV] = \
+        copy_eval_image_tsv(cmdline_args[IMAGE_TSV], opt[SAVE_DIR])
+    opt[DATASET_NAME][TEXT_TSV] = \
+        copy_eval_image_tsv(cmdline_args[TEXT_TSV], opt[SAVE_DIR])
+    opt[DATASET_NAME][LABEL_FILE] = \
+        copy_eval_image_tsv(cmdline_args[LABEL_FILE], opt[SAVE_DIR])
 
+    opt[USER_DIR] = os.path.dirname(mv.__file__)
     return opt, cmdline_args
 
 
@@ -584,30 +615,7 @@ def main(args: List[str] = None) -> None:
             logger.info(f"File: {os.path.join(root, name)}")
         for name in dirs:
             logger.info(f"Directory: {os.path.join(root, name)}")
-    tsv_files = Path(dataset_path).glob('**/*.tsv')
-    logger.info('tsv_files')
-    logger.info(tsv_files)
-    tsv_filenames = sorted(
-        [
-            str(path)
-            for path in tsv_files
-        ]
-    )
-    from os.path import basename
 
-    image_tsv_files = [
-        filename
-        for filename in tsv_filenames
-        if (
-                'image-' in basename(filename)
-                or 'image_' in basename(filename)
-                or '_image' in basename(filename)
-                or '-image' in basename(filename)
-                or 'images-' in basename(filename)
-        )
-    ]
-    logger.info('image-tsv-files')
-    logger.info(image_tsv_files)
     trainer = MainzTrainer(opt)
 
     if opt.get('DEBUG_DUMP_TRACEBACKS_INTERVAL', 0) > 0:
