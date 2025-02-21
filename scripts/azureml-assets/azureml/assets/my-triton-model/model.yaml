@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: system-reg-test/triton-model-test/v1
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: triton_model

@@ -1,0 +1,7 @@
+name: my-triton-model
+type: triton_model
+path: https://984f3efd66f.blob.core.windows.net:443/kelly-regi-2933be20-e38c-538a-bdf8-ba6ddc099456
+version: '1'
+description: hello world this is my triton model
+properties: {}
+tags: {}

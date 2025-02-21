@@ -1,0 +1,4 @@
+name: my-triton-model
+version: 1
+path: ./
+type: triton_model
