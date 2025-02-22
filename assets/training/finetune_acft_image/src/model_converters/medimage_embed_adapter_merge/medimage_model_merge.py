@@ -11,7 +11,6 @@ COMPONENT_NAME = "ACFT-MedImage-Embedding-Classifier-ModelMerge"
 TASK_TYPE = "ModelMerge"
 PYTHON_MODEL = "python_model.pkl"
 MLMODEL = "MLmodel"
-MLFLOW_FOLDER = "mlflow_model_folder"
 ARTIFACTS = "artifacts"
 ADAPTER_MODEL = "adapter_model"
 ADAPTER_CODE = "adapter_model.py"
@@ -34,7 +33,7 @@ def merge_models(adapter_model_path, mlflow_model_path, output_dir, configuratio
             shutil.copy(src_file, dst_file)
             logger.info(f"Copied {src_file} to {dst_file}")
 
-    code_dir = os.path.join(output_dir, MLFLOW_FOLDER, CODE_FOLDER)
+    code_dir = os.path.join(output_dir, CODE_FOLDER)
     os.makedirs(code_dir, exist_ok=True)
     shutil.copy(ADAPTER_CODE, code_dir)
     logger.info(f"Copied {ADAPTER_CODE} to {code_dir}")
@@ -42,7 +41,7 @@ def merge_models(adapter_model_path, mlflow_model_path, output_dir, configuratio
     logger.info(f"Copied {MLFLOW_WRAP_CODE} to {code_dir}")
 
     # Copy best_metric_model.pth to mlflow_model_path+"/mlflow_model_folder/artifacts/adapter_model"
-    artifacts_dir = os.path.join(output_dir, MLFLOW_FOLDER, ARTIFACTS, ADAPTER_MODEL)
+    artifacts_dir = os.path.join(output_dir, ARTIFACTS, ADAPTER_MODEL)
     os.makedirs(artifacts_dir, exist_ok=True)
     shutil.copy(os.path.join(adapter_model_path, BEST_METRIC_MODEL), os.path.join(artifacts_dir, BEST_METRIC_MODEL))
     os.rename(os.path.join(artifacts_dir, BEST_METRIC_MODEL), os.path.join(artifacts_dir, ADAPTER_PTH))
@@ -51,10 +50,10 @@ def merge_models(adapter_model_path, mlflow_model_path, output_dir, configuratio
     logger.info(f"Copied {CONFIG_JSON} to {artifacts_dir}")
 
     # Copy MLModel and python_model.pkl from configuration to mlflow_model_path+"/mlflow_model_folder/"
-    shutil.copy(os.path.join(configuration, MLMODEL), os.path.join(output_dir, MLFLOW_FOLDER))
-    logger.info(f"Copied {MLMODEL} to {os.path.join(output_dir, MLFLOW_FOLDER)}")
-    shutil.copy(os.path.join(configuration, PYTHON_MODEL), os.path.join(output_dir, MLFLOW_FOLDER))
-    logger.info(f"Copied {PYTHON_MODEL} to {os.path.join(output_dir, MLFLOW_FOLDER)}")
+    shutil.copy(os.path.join(configuration, MLMODEL), output_dir)
+    logger.info(f"Copied {MLMODEL} to {output_dir}")
+    shutil.copy(os.path.join(configuration, PYTHON_MODEL), output_dir)
+    logger.info(f"Copied {PYTHON_MODEL} to {output_dir}")
 
 
 def main():
