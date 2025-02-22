@@ -429,7 +429,7 @@ jobs:
       max_epochs: '${{parent.inputs.max_epochs}}'
   medimage_embedding_adapter_merge:
     type: command
-    component: azureml://registries/models-staging/components/medimage_embedding_adapter_merge/versions/0.0.6
+    component: azureml://registries/models-staging/components/medimage_embedding_adapter_merge/versions/0.0.7
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
