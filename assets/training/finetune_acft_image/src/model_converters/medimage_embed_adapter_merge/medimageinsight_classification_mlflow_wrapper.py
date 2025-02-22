@@ -133,7 +133,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
                         }
                     )
 
-        df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE_PREDICTIONS] = predictions
+        df_result["image_predictions"] = predictions
         return df_result
 
 
