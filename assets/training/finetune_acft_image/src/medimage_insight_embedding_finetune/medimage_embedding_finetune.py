@@ -296,11 +296,6 @@ def get_parser() -> argparse.ArgumentParser:
         help='Pin memory in data loader (True or False).'
     )
     parser.add_argument(
-        '--dataset_root',
-        type=str,
-        help='Root directory of the dataset.'
-    )
-    parser.add_argument(
         '--eval_image_tsv',
         type=str,
         help='Path to evaluation image TSV file.'
@@ -326,48 +321,10 @@ def get_parser() -> argparse.ArgumentParser:
         help='Path to label file.'
     )
     parser.add_argument(
-        '--binary_metrics',
-        type=int,
-        default=1,
-        help='Use binary metrics.'
-    )
-    parser.add_argument(
-        '--cweight_file',
-        type=str,
-        help='Path to class weight file.'
-    )
-    parser.add_argument(
-        '--zs_mode',
-        type=int,
-        default=2,
-        help='Zero-shot mode.'
-    )
-    parser.add_argument(
-        '--zs_weight',
-        type=float,
-        default=1.0,
-        help='Zero-shot weight.'
-    )
-    parser.add_argument(
         '--knn',
         type=int,
         default=200,
         help='Number of nearest neighbors for KNN.'
-    )
-    parser.add_argument(
-        '--eval_zip_file',
-        type=str,
-        help='Path to evaluation zip file.'
-    )
-    parser.add_argument(
-        '--eval_zip_map_file',
-        type=str,
-        help='Path to evaluation zip map file.'
-    )
-    parser.add_argument(
-        '--eval_label_file',
-        type=str,
-        help='Path to evaluation label file.'
     )
     parser.add_argument(
         '--batch_size_per_gpu',
@@ -522,7 +479,6 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
         Tuple[Dict[str, Any], Dict[str, Any]]: A tuple containing the combined options dictionary
         and the processed command line arguments dictionary.
     """
-    DATASET_NAME = 'KNNSHOT_FINETUNE'
     add_env_parser_to_yaml()
     # Extract the directory from the conf_files path
     conf_files_dir = os.path.dirname(cmdline_args.conf_files)
@@ -549,29 +505,25 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
         mlflow_model_path = os.path.join(cmdline_args[MLFLOW_MODEL_FOLDER], CHECKPOINT_PATH)
         if UNICL_MODEL in opt and PRETRAINED in opt[UNICL_MODEL]:
             opt[UNICL_MODEL][PRETRAINED] = mlflow_model_path
+
+    eval_image_tsv = copy_eval_image_tsv(cmdline_args[EVAL_IMAGE_TSV], opt[SAVE_DIR])
+    eval_text_tsv = copy_eval_image_tsv(cmdline_args[EVAL_TEXT_TSV], opt[SAVE_DIR])
+    image_tsv = copy_eval_image_tsv(cmdline_args[IMAGE_TSV], opt[SAVE_DIR])
+    text_tsv = copy_eval_image_tsv(cmdline_args[TEXT_TSV], opt[SAVE_DIR])
+    label_file = copy_eval_image_tsv(cmdline_args[LABEL_FILE], opt[SAVE_DIR])
+
     if DATASET in opt and ROOT in opt[DATASET]:
-        opt[DATASET][ROOT] = cmdline_args[DATASET_ROOT]
+        opt[DATASET]["TRAIN_TSV_LIST"] = [image_tsv, text_tsv]
     if opt[DATASET][SAMPLER] == 'default':
         opt[SET_SAMPLER_EPOCH] = False
 
-    opt['ZEROSHOT_EVAL_DATASET']['ZIP_FILE'] = cmdline_args['EVAL_ZIP_FILE']
-    opt['ZEROSHOT_EVAL_DATASET']['ZIP_MAP_FILE'] = cmdline_args['EVAL_ZIP_MAP_FILE']
-    opt['ZEROSHOT_EVAL_DATASET'][LABEL_FILE] = cmdline_args['EVAL_LABEL_FILE']
     for key in opt.keys():
         if key.startswith('EVALDATASET_'):
-            DATASET_NAME = key
-            logger.info(f"Selected DATASET_NAME: {DATASET_NAME}")
-            break
-    opt[DATASET_NAME][EVAL_IMAGE_TSV] = \
-        copy_eval_image_tsv(cmdline_args[EVAL_IMAGE_TSV], opt[SAVE_DIR])
-    opt[DATASET_NAME][EVAL_TEXT_TSV] = \
-        copy_eval_image_tsv(cmdline_args[EVAL_TEXT_TSV], opt[SAVE_DIR])
-    opt[DATASET_NAME][IMAGE_TSV] = \
-        copy_eval_image_tsv(cmdline_args[IMAGE_TSV], opt[SAVE_DIR])
-    opt[DATASET_NAME][TEXT_TSV] = \
-        copy_eval_image_tsv(cmdline_args[TEXT_TSV], opt[SAVE_DIR])
-    opt[DATASET_NAME][LABEL_FILE] = \
-        copy_eval_image_tsv(cmdline_args[LABEL_FILE], opt[SAVE_DIR])
+            opt[key][EVAL_IMAGE_TSV] = eval_image_tsv
+            opt[key][EVAL_TEXT_TSV] = eval_text_tsv
+            opt[key][IMAGE_TSV] = image_tsv
+            opt[key][TEXT_TSV] = text_tsv
+            opt[key][LABEL_FILE] = label_file
 
     opt[USER_DIR] = os.path.dirname(mv.__file__)
     return opt, cmdline_args
