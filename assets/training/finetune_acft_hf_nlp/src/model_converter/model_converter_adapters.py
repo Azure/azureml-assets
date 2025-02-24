@@ -296,14 +296,16 @@ class Pytorch_to_OSS_MlFlow_ModelConverter(ModelConverter, PyTorch_to_MlFlow_Mod
         # Temp Fix:
         # specific check for t5 text-classification, translation, summarization so that base model
         # dependencies doesn't get pass and use transformers version 4.44.0 from infer dependencies
-        if not self.is_t5_finetune(model.config.model_type):
-            conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
-            if conda_file_path.is_file():
-                self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
-                logger.info(
-                    f"Found {MLFlowHFFlavourConstants.CONDA_YAML_FILE} from base model. "
-                    "Using it for saving Mlflow model."
-                )
+        # Fix: 1/23/2025 : To make sure the old models also use the latest transformers version
+        # if not self.is_t5_finetune(model.config.model_type):
+        #     conda_file_path = Path(self.ft_pytorch_model_path, MLFlowHFFlavourConstants.CONDA_YAML_FILE)
+        #     if conda_file_path.is_file():
+        #         self.mlflow_save_model_kwargs.update({"conda_env": str(conda_file_path)})
+        #         logger.info(
+        #             f"Found {MLFlowHFFlavourConstants.CONDA_YAML_FILE} from base model. "
+        #             "Using it for saving Mlflow model."
+        #         )
+
 
         # saving oss mlflow model
         model_pipeline = pipeline(task=self.mlflow_task_type, model=model, tokenizer=tokenizer, config=model.config)
