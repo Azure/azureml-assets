@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: medimage_insight_ft_pipeline
-version: 0.0.4
+version: 0.0.7
 type: pipeline
 display_name: Medical Image Insight Embedding Generator and Classification Adapter Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_pipeline) to learn more.
@@ -429,7 +429,7 @@ jobs:
       max_epochs: '${{parent.inputs.max_epochs}}'
   medimage_embedding_adapter_merge:
     type: command
-    component: azureml://registries/models-staging/components/medimage_embedding_adapter_merge/versions/0.0.7
+    component: azureml://registries/mablonde-registry-101/components/medimage_embedding_adapter_merge/versions/0.0.10
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
