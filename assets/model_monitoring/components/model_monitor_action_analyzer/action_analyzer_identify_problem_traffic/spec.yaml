@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_identify_problem_traffic
 display_name: Action Analyzer - Identify Problem Traffic 
 description: Separate bad queries into different groups.
-version: 0.0.20
+version: 0.0.21
 is_deterministic: True
 inputs:
   signal_output:
@@ -61,6 +61,7 @@ conf:
         - bertopic[flair]
         - nbformat
         - openAI
+        - numpy<2.0.0
 code: ../../src
 
 entry:
