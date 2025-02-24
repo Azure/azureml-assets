@@ -41,7 +41,7 @@ jobs:
         uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
           forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
-      - name: Use Python 3.10 or newer
+      - name: Use Python 3.12 or below
         uses: actions/setup-python@v4
         with:
           python-version: '<=3.12'
