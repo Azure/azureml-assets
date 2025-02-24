@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.7
+version: 0.0.10
 name: medimage_embedding_adapter_merge
 display_name: Merge Adapter Model with Embedding Generation Model
 description: Import and integrate Adapter and Embedding Generation Model
