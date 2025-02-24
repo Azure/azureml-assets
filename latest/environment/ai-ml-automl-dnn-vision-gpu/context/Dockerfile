@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:biweekly.202502.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:biweekly.202502.2
 
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
