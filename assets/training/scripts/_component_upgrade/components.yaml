@@ -46,8 +46,6 @@ component:
   - image_object_detection_pipeline
 
   # FT NLP
-  - text_classification_finetune
-  - token_classification_finetune
   - text_classification_model_import
   - token_classification_model_import
   - nlp_multiclass_datapreprocessing
