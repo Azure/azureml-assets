@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medical_image_embedding_datapreprocessing
-version: 0.0.1.yesh5
+version: 0.0.9
 type: command
 
 is_deterministic: True
@@ -13,17 +13,29 @@ environment: azureml://registries/models-staging/environments/medimage-embedding
 code: ../../../src/medimage_insight_adapter_preprocess
 
 inputs:
-  zeroshot_path:
+  eval_image_tsv:
     type: uri_file
     optional: false
-    description: Path to the zeroshot data file.
-    mode: rw_mount
+    description: Path to the evaluation image TSV file.
+    mode: ro_mount
 
-  test_train_split_csv_path:
+  eval_text_tsv:
     type: uri_file
     optional: false
-    description: Path to the CSV file containing test-train split information.
-    mode: rw_mount
+    description: Path to the evaluation text TSV file.
+    mode: ro_mount
+
+  image_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the image TSV file.
+    mode: ro_mount
+
+  text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the text TSV file.
+    mode: ro_mount
 
   mlflow_model_path:
     type: uri_folder
@@ -43,4 +55,12 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python medimage_datapreprocess.py --task_name "MedEmbedding" --zeroshot_path "${{inputs.zeroshot_path}}" --test_train_split_csv_path "${{inputs.test_train_split_csv_path}}" --output_train_pkl "${{outputs.output_train_pkl}}" --output_validation_pkl "${{outputs.output_validation_pkl}}" --mlflow_model_path "${{inputs.mlflow_model_path}}"
+  python medimage_datapreprocess.py 
+  --task_name "MedEmbedding" 
+  --eval_image_tsv "${{inputs.eval_image_tsv}}" 
+  --eval_text_tsv "${{inputs.eval_text_tsv}}" 
+  --image_tsv "${{inputs.image_tsv}}" 
+  --text_tsv "${{inputs.text_tsv}}" 
+  --output_train_pkl "${{outputs.output_train_pkl}}" 
+  --output_validation_pkl "${{outputs.output_validation_pkl}}" 
+  --mlflow_model_path "${{inputs.mlflow_model_path}}"

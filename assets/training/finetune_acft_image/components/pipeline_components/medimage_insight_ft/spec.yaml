@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: medimage_insight_ft_pipeline
-version: 0.0.7
+version: 0.0.14
 type: pipeline
 display_name: Medical Image Insight Embedding Generator and Classification Adapter Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_pipeline) to learn more.
@@ -142,7 +142,6 @@ inputs:
     optional: true
     description: Pin memory.
 
-
   knn:
     type: integer
     min: 0
@@ -267,18 +266,6 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
-  zeroshot_path:
-    type: uri_file
-    optional: false
-    description: Path to the zeroshot data file.
-    mode: rw_mount
-
-  test_train_split_csv_path:
-    type: uri_file
-    optional: false
-    description: Path to the CSV file containing test-train split information.
-    mode: rw_mount
-
   train_dataloader_batch_size:
     type: integer
     min: 1
@@ -307,13 +294,6 @@ inputs:
     optional: true
     description: Number of workers for the validation dataloader.
 
-  output_classes:
-    type: integer
-    min: 1
-    default: 5
-    optional: true
-    description: Number of output classes.
-
   hidden_dimensions:
     type: integer
     min: 1
@@ -340,11 +320,6 @@ inputs:
     default: 10
     optional: true
     description: Maximum number of epochs for training.
-
-  merge_configuration_folder:
-    type: uri_folder
-    description: Files reqiured for merging the models.
-    mode: rw_mount
 
 outputs:
   save_dir:
@@ -401,17 +376,19 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   medical_image_embedding_datapreprocessing:
     type: command
-    component: azureml://registries/models-staging/components/medical_image_embedding_datapreprocessing/versions/0.0.1.yesh5
+    component: azureml://registries/mablonde-registry-101/components/medical_image_embedding_datapreprocessing/versions/0.0.9
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
     inputs:
       mlflow_model_path: '${{parent.jobs.medical_image_embedding_model_finetune.outputs.mlflow_model_folder}}'
-      zeroshot_path: '${{parent.inputs.zeroshot_path}}'
-      test_train_split_csv_path: '${{parent.inputs.test_train_split_csv_path}}'
+      eval_image_tsv: '${{parent.inputs.eval_image_tsv}}'
+      eval_text_tsv: '${{parent.inputs.eval_text_tsv}}'
+      image_tsv: '${{parent.inputs.image_tsv}}'
+      text_tsv: '${{parent.inputs.text_tsv}}'
   medimgage_adapter_finetune:
     type: command
-    component: azureml://registries/models-staging/components/medimgage_adapter_finetune/versions/0.0.1.yesh1
+    component: azureml://registries/mablonde-registry-101/components/medimgage_adapter_finetune/versions/0.0.4
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -422,20 +399,22 @@ jobs:
       validation_dataloader_batch_size: '${{parent.inputs.validation_dataloader_batch_size}}'
       train_dataloader_workers: '${{parent.inputs.train_dataloader_workers}}'
       validation_dataloader_workers: '${{parent.inputs.validation_dataloader_workers}}'
-      output_classes: '${{parent.inputs.output_classes}}'
+      label_file: '${{parent.inputs.label_file}}'
       hidden_dimensions: '${{parent.inputs.hidden_dimensions}}'
       input_channels: '${{parent.inputs.input_channels}}'
       learning_rate: '${{parent.inputs.learning_rate}}'
       max_epochs: '${{parent.inputs.max_epochs}}'
   medimage_embedding_adapter_merge:
     type: command
-    component: azureml://registries/mablonde-registry-101/components/medimage_embedding_adapter_merge/versions/0.0.10
+    component: azureml://registries/mablonde-registry-101/components/medimage_embedding_adapter_merge/versions/0.0.12
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
     inputs:
       adapter_model: '${{parent.jobs.medimgage_adapter_finetune.outputs.output_model_path}}'
       mlflow_model: '${{parent.jobs.medical_image_embedding_model_finetune.outputs.mlflow_model_folder}}'
-      configuration: '${{parent.inputs.merge_configuration_folder}}'
+      label_file: '${{parent.inputs.label_file}}'
+      hidden_dimensions: '${{parent.inputs.hidden_dimensions}}'
+      input_channels: '${{parent.inputs.input_channels}}'
     outputs:
       output_dir: '${{parent.outputs.merged_mlfow_model}}'

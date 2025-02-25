@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.10
+version: 0.0.12
 name: medimage_embedding_adapter_merge
 display_name: Merge Adapter Model with Embedding Generation Model
 description: Import and integrate Adapter and Embedding Generation Model
@@ -25,11 +25,25 @@ inputs:
     optional: true
     description: Integrated Mlflow Model Asset.
 
-  configuration:
-    type: uri_folder
-    optional: true
-    description: Configuration file for the model merging process.
+  label_file:
+    type: uri_file
+    optional: false
+    description: Path to the label file.
+    mode: ro_mount
 
+  hidden_dimensions:
+    type: integer
+    min: 1
+    default: 512
+    optional: true
+    description: Number of hidden dimensions.
+
+  input_channels:
+    type: integer
+    min: 1
+    default: 1024
+    optional: true
+    description: Number of input channels.
 
 outputs:
   output_dir:
@@ -40,5 +54,7 @@ command: >-
   python medimage_model_merge.py 
   $[[--adapter_model ${{inputs.adapter_model}}]]
   $[[--mlflow_model ${{inputs.mlflow_model}}]]
-  $[[--configuration ${{inputs.configuration}}]]
+  $[[--hidden_dimensions "${{inputs.hidden_dimensions}}"]]
+  $[[--input_channels "${{inputs.input_channels}}"]]
+  --label_file "${{inputs.label_file}}" 
   --output_dir ${{outputs.output_dir}}

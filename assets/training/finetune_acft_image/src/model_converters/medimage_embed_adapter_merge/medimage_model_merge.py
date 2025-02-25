@@ -1,3 +1,4 @@
+import json
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
@@ -21,7 +22,7 @@ CODE_FOLDER = "code"
 ADAPTER_PTH = "adapter_model.pth"
 
 
-def merge_models(adapter_model_path, mlflow_model_path, output_dir, configuration):
+def merge_models(adapter_model_path, mlflow_model_path, output_dir, hidden_dimensions, input_channels, label_file):
     logger.info(f"Merging adapter model from {adapter_model_path} with MLflow model from {mlflow_model_path}")
 
     # Copy contents from mlflow_model_path to output_dir recursively
@@ -46,13 +47,25 @@ def merge_models(adapter_model_path, mlflow_model_path, output_dir, configuratio
     shutil.copy(os.path.join(adapter_model_path, BEST_METRIC_MODEL), os.path.join(artifacts_dir, BEST_METRIC_MODEL))
     os.rename(os.path.join(artifacts_dir, BEST_METRIC_MODEL), os.path.join(artifacts_dir, ADAPTER_PTH))
     logger.info(f"Copied {BEST_METRIC_MODEL} to {artifacts_dir}")
-    shutil.copy(os.path.join(configuration, CONFIG_JSON), artifacts_dir)
+
+    with open(label_file, "r") as f:
+        labels = [l for l in f.read().splitlines() if not l.strip()]
+        
+    config = {
+        "hidden_dim": hidden_dimensions,
+        "in_channels": input_channels,
+        "labels": labels
+
+    }
+    with open(os.path.join(artifacts_dir, CONFIG_JSON), "w") as f:
+        json.dump(config, f, indent=4)
+
     logger.info(f"Copied {CONFIG_JSON} to {artifacts_dir}")
 
     # Copy MLModel and python_model.pkl from configuration to mlflow_model_path+"/mlflow_model_folder/"
-    shutil.copy(os.path.join(configuration, MLMODEL), output_dir)
+    shutil.copy(MLMODEL, output_dir)
     logger.info(f"Copied {MLMODEL} to {output_dir}")
-    shutil.copy(os.path.join(configuration, PYTHON_MODEL), output_dir)
+    shutil.copy(PYTHON_MODEL, output_dir)
     logger.info(f"Copied {PYTHON_MODEL} to {output_dir}")
 
 
@@ -61,7 +74,23 @@ def main():
     parser.add_argument("--adapter_model", type=str, required=True, help="Path to the adapter model")
     parser.add_argument("--mlflow_model", type=str, required=True, help="Path to the MLflow model")
     parser.add_argument("--output_dir", type=str, required=True, help="Directory to save the merged model")
-    parser.add_argument("--configuration", type=str, required=False, help="Path to the update configuration file")
+    parser.add_argument(
+        '--hidden_dimensions',
+        type=int,
+        required=True,
+        help='Number of hidden dimensions.'
+    )
+    parser.add_argument(
+        '--input_channels',
+        type=int,
+        required=True,
+        help='Number of input channels.'
+    )
+    parser.add_argument(
+        '--label_file',
+        type=str,
+        help='Path to label file.'
+    )
 
     args = parser.parse_args()
     set_logging_parameters(
@@ -73,7 +102,7 @@ def main():
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
-    merge_models(args.adapter_model, args.mlflow_model, args.output_dir, args.configuration)
+    merge_models(args.adapter_model, args.mlflow_model, args.output_dir, args.hidden_dimensions, args.input_channels, args.label_file)
 
 
 if __name__ == "__main__":
