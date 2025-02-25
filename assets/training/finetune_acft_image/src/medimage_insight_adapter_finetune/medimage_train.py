@@ -79,10 +79,9 @@ def get_parser():
         help='Number of workers for the validation dataloader.'
     )
     parser.add_argument(
-        '--output_classes',
-        type=int,
-        required=True,
-        help='Number of output classes.'
+        '--label_file',
+        type=str,
+        help='Path to label file.'
     )
     parser.add_argument(
         '--hidden_dimensions',
@@ -150,10 +149,13 @@ def initialize_model(args: argparse.Namespace) -> torch.nn.Module:
     Returns:
         torch.nn.Module: Initialized model.
     """
+    with open(args.label_file, "r") as f:
+        labels = [l.strip() for l in f.read().splitlines() if l.strip()]
+
     return training.create_model(
         in_channels=args.input_channels,
         hidden_dim=args.hidden_dimensions,
-        num_class=args.output_classes
+        num_class=len(labels)
     )
 
 

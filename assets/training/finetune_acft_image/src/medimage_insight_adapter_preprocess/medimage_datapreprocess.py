@@ -1,26 +1,29 @@
 import argparse
-from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml.acft.common_components import (
+    get_logger_app,
+    set_logging_parameters,
+    LoggingLiterals,
+)
+from azureml.acft.common_components.utils.error_handling.exceptions import (
+    ACFTValidationException,
+)
+from azureml.acft.common_components.utils.error_handling.error_definitions import (
+    ACFTUserError,
+)
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
-from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
+from azureml.acft.contrib.hf.nlp.constants.constants import (
+    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+)
 import mlflow
 import pandas as pd
-import torch
+import numpy as np
 import os
-from classification_demo.MedImageInsight import medimageinsight_package
-from classification_demo.adaptor_training import training
-import matplotlib.pyplot as plt
-import SimpleITK as sitk
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, f1_score
-
-# Suppress SimpleITK warnings
-sitk.ProcessObject_SetGlobalWarningDisplay(False)
+import json
 
 
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Generator"
@@ -28,10 +31,12 @@ TRAIN_EMBEDDING_FILE_NAME = "train_embeddings.pkl"
 VALIDATION_EMBEDDING_FILE_NAME = "validation_embeddings.pkl"
 
 
-logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.process_embedding.embeddings_generator")
-'''
+logger = get_logger_app(
+    "azureml.acft.contrib.hf.scripts.src.process_embedding.embeddings_generator"
+)
+"""
 Input Arguments: endpoint_url, endpoint_key, zeroshot_path, test_train_split_pkl_path
-'''
+"""
 
 
 def get_parser():
@@ -40,26 +45,26 @@ def get_parser():
 
     Those arguments that are not relevant for the input task should be ignored.
     """
-    parser = argparse.ArgumentParser(description='Process medical images and get embeddigns', allow_abbrev=False)
+    parser = argparse.ArgumentParser(
+        description="Process medical images and get embeddigns", allow_abbrev=False
+    )
 
     parser.add_argument(
-        '--zeroshot_path',
-        type=str,
-        required=True,
-        help='The path to the zeroshot dataset'
-        )
+        "--eval_image_tsv", type=str, help="Path to evaluation image TSV file."
+    )
     parser.add_argument(
-        '--mlflow_model_path',
-        type=str,
-        required=True,
-        help='The path to the MLflow model'
-        )
+        "--eval_text_tsv", type=str, help="Path to evaluation text TSV file."
+    )
     parser.add_argument(
-        '--test_train_split_csv_path',
+        "--image_tsv", type=str, help="Path to training image TSV file."
+    )
+    parser.add_argument("--text_tsv", type=str, help="Path to training text TSV file.")
+    parser.add_argument(
+        "--mlflow_model_path",
         type=str,
         required=True,
-        help='The path to the test/train split CSV file'
-        )
+        help="The path to the MLflow model",
+    )
     parser.add_argument(
         "--task_name",
         type=str,
@@ -80,119 +85,37 @@ def get_parser():
     return parser
 
 
-def load_csv_files(test_train_split_csv_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Load training and validation CSV files into DataFrames.
+def generate_embeddings(image_tsv, text_tsv, mlflow_model):
+    image_df = pd.read_csv(image_tsv, sep="\t")
+    image_df.columns = ["Name", "image"]
+    image_df["text"] = None
+    image_embeddings = mlflow_model.predict(image_df)
+    image_df["features"] = image_embeddings["image_features"].apply(lambda item: np.array(item[0]))
 
-    This function loads the training and validation csv files from the specified path
-    and returns them as pandas DataFrames.
+    text_df = pd.read_csv(text_tsv, sep="\t")
+    text_df.columns = ["Name", "classification"]
 
-    Args:
-        test_train_split_csv_path (str): The path to the directory containing the test/train split CSV files.
+    def extract_text_field(text):
+        try:
+            text_json = json.loads(text)
+            return text_json.get("class_id", -1)
+        except json.JSONDecodeError:
+            logger.error("Failed to decode JSON from text column")
+            return ""
 
-    Returns:
-        tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the training and validation DataFrames.
-    """
-    train_csv_path = f"{test_train_split_csv_path}/adaptor_tutorial_train_split.csv"
-    val_csv_path = f"{test_train_split_csv_path}/adaptor_tutorial_test_split.csv"
-    logger.info("Train CSV path: %s", train_csv_path)
-    logger.info("Validation CSV path: %s", val_csv_path)
-
-    train_df = pd.read_csv(train_csv_path)
-    val_df = pd.read_csv(val_csv_path)
-    logger.info("Loaded training and validation CSV files into DataFrames")
-    return train_df, val_df
+    text_df["Label"] = text_df["classification"].apply(extract_text_field)
+    return pd.merge(image_df, text_df, on="Name", how="inner")
 
 
-def create_features_dataframe(image_embedding_dict: dict) -> pd.DataFrame:
-    """
-    Create a DataFrame from image embeddings.
-
-    This function creates a DataFrame from the provided image embedding dictionary.
-    The DataFrame contains two columns: "Name" and "features".
-
-    Args:
-        image_embedding_dict (dict): A dictionary containing image embeddings.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing the image features.
-    """
-    df_features = pd.DataFrame(
-        {
-            "Name": list(image_embedding_dict.keys()),
-            "features": [v["image_feature"] for v in image_embedding_dict.values()],
-        }
-    )
-    logger.info("Created DataFrame for image features")
-    return df_features
-
-
-def generate_image_embeddings(medimageinsight: medimageinsight_package, zeroshot_path: str) -> dict:
-    """
-    Generate image embeddings using the MedImageInsight package.
-
-    This function generates image embeddings for the provided zeroshot path using the MedImageInsight package.
-
-    Args:
-        medimageinsight (medimageinsight_package): An instance of the MedImageInsight package.
-        zeroshot_path (str): The path to the zeroshot data.
-
-    Returns:
-        dict: A dictionary containing the image embeddings.
-    """
-    image_embedding_dict, _ = medimageinsight.generate_embeddings(
-        data={"image": zeroshot_path, "text": None, "params": {"get_scaling_factor": False}}
-    )
-    logger.info("Generated embeddings for images")
-    return image_embedding_dict
-
-
-def initialize_medimageinsight(mlflow_model_path: str) -> medimageinsight_package:
-    """
-    Initialize the MedImageInsight package.
-
-    This function initializes the MedImageInsight package using the provided MLflow model path.
-
-    Args:
-        mlflow_model_path (str): The path to the MLflow model.
-
-    Returns:
-        medimageinsight_package: An instance of the MedImageInsight package.
-    """
-    medimageinsight = medimageinsight_package(
-        option="run_local",
-        mlflow_model_path=mlflow_model_path,
-    )
-    logger.info("Initialized MedImageInsight package")
-    return medimageinsight
-
-
-def merge_dataframes(train_df: pd.DataFrame, val_df: pd.DataFrame,
-                     df_features: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Merge training and validation DataFrames with features DataFrame.
-
-    This function merges the provided training and validation DataFrames with the features DataFrame
-    based on the "Name" column.
-
-    Args:
-        train_df (pd.DataFrame): The training DataFrame.
-        val_df (pd.DataFrame): The validation DataFrame.
-        df_features (pd.DataFrame): The features DataFrame containing image features.
-
-    Returns:
-        tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the merged training and validation DataFrames.
-    """
-    train_merged = pd.merge(train_df, df_features, on="Name", how="inner")
-    val_merged = pd.merge(val_df, df_features, on="Name", how="inner")
-    logger.info("Merged training and validation DataFrames with features DataFrame")
-    return train_merged, val_merged
-
-
-def save_merged_dataframes(train_merged: pd.DataFrame, val_merged: pd.DataFrame, output_train_pkl_path: str,
-                           output_validation_pkl_path: str, train_embedding_file_name: str,
-                           validation_embedding_file_name: str) -> None:
-    """ Save merged DataFrames to PKL files.
+def save_merged_dataframes(
+    train_merged: pd.DataFrame,
+    val_merged: pd.DataFrame,
+    output_train_pkl_path: str,
+    output_validation_pkl_path: str,
+    train_embedding_file_name: str,
+    validation_embedding_file_name: str,
+) -> None:
+    """Save merged DataFrames to PKL files.
 
     This function saves the provided training and validation merged DataFrames
     to the specified PKL file paths with the given file names. It also creates
@@ -211,8 +134,12 @@ def save_merged_dataframes(train_merged: pd.DataFrame, val_merged: pd.DataFrame,
     os.makedirs(output_train_pkl_path, exist_ok=True)
     os.makedirs(output_validation_pkl_path, exist_ok=True)
 
-    train_merged.to_pickle(os.path.join(output_train_pkl_path, train_embedding_file_name))
-    val_merged.to_pickle(os.path.join(output_validation_pkl_path, validation_embedding_file_name))
+    train_merged.to_pickle(
+        os.path.join(output_train_pkl_path, train_embedding_file_name)
+    )
+    val_merged.to_pickle(
+        os.path.join(output_validation_pkl_path, validation_embedding_file_name)
+    )
     logger.info("Saved merged DataFrames to PKL files")
 
 
@@ -234,21 +161,28 @@ def process_embeddings(args):
     """
 
     model_path = args.mlflow_model_path
-    zeroshot_path = args.zeroshot_path
     output_train_pkl = args.output_train_pkl
     output_validation_pkl = args.output_validation_pkl
-    test_train_split_csv_path = args.test_train_split_csv_path
-    logger.info("Zeroshot path: %s", zeroshot_path)
-    logger.info("Test/train split PKL path: %s", test_train_split_csv_path)
-    medimageinsight = initialize_medimageinsight(model_path)
-    image_embedding_dict = generate_image_embeddings(medimageinsight, zeroshot_path)
-    df_features = create_features_dataframe(image_embedding_dict)
+    image_tsv = args.image_tsv
+    text_tsv = args.text_tsv
+    eval_image_tsv = args.eval_image_tsv
+    eval_text_tsv = args.eval_text_tsv
 
-    train_df, val_df = load_csv_files(test_train_split_csv_path)
-    train_merged, val_merged = merge_dataframes(train_df, val_df, df_features)
+    mlflow_model = mlflow.pyfunc.load_model(model_path)
+    image_embeddings = generate_embeddings(image_tsv, text_tsv, mlflow_model)
+    eval_image_embeddings = generate_embeddings(
+        eval_image_tsv, eval_text_tsv, mlflow_model
+    )
 
-    save_merged_dataframes(train_merged, val_merged, output_train_pkl, output_validation_pkl,
-                           TRAIN_EMBEDDING_FILE_NAME, VALIDATION_EMBEDDING_FILE_NAME)
+    save_merged_dataframes(
+        image_embeddings,
+        eval_image_embeddings,
+        output_train_pkl,
+        output_validation_pkl,
+        TRAIN_EMBEDDING_FILE_NAME,
+        VALIDATION_EMBEDDING_FILE_NAME,
+    )
+
     logger.info("Processing medical images and getting embeddings completed")
 
 
@@ -262,7 +196,7 @@ def main():
         acft_custom_dimensions={
             LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
             LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
-            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
@@ -271,10 +205,10 @@ def main():
     process_embeddings(args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 
-'''
+"""
 python medimage_datapreprocess.py --task_name "MedEmbedding" --mlflow_model_path "/mnt/model/MedImageInsight/mlflow_model_folder" --zeroshot_path "/home/healthcare-ai/medimageinsight-zeroshot/" --test_train_split_csv_path "/home/healthcare-ai/medimageinsight/classification_demo/data_input/" --output_train_pkl "/home/healthcare-ai/" --output_validation_pkl "/home/healthcare-ai/"
 
-'''
+"""
