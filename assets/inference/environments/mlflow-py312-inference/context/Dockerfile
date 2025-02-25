@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/inference-base-2204:latest
+FROM mcr.microsoft.com/azureml/inference-base-2204:{{latest-image-tag}}
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/mlflow
