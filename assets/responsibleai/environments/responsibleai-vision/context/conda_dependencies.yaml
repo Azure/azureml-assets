@@ -1,7 +1,6 @@
 name: responsibleai-vision
 channels:
   - conda-forge
-  - defaults
   - anaconda
   - pytorch
 dependencies:
