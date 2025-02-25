@@ -1,6 +1,13 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.73 (2025-02-21)
+### 🐛 Bugs Fixed
+- [#3853](https://github.com/Azure/azureml-assets/pull/3853) Add H100 GPU to supported_inference_skus.json
+
+## 1.16.72 (2025-02-19)
+### 🐛 Bugs Fixed
+- [#3846](https://github.com/Azure/azureml-assets/pull/3846) Update account_uri when storage_name is updated for AzureBlobstoreAssetPath
 
 ## 1.16.71 (2025-02-12)
 ### 🐛 Bugs Fixed
