@@ -49,7 +49,7 @@ def merge_models(adapter_model_path, mlflow_model_path, output_dir, hidden_dimen
     logger.info(f"Copied {BEST_METRIC_MODEL} to {artifacts_dir}")
 
     with open(label_file, "r") as f:
-        labels = [l for l in f.read().splitlines() if not l.strip()]
+        labels = [l.strip() for l in f.read().splitlines() if l.strip()]
         
     config = {
         "hidden_dim": hidden_dimensions,
