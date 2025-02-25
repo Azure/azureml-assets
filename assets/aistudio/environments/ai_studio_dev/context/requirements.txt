@@ -11,3 +11,5 @@ langchain-openai
 semantic-kernel
 pytest
 keyring
+# Temporary fix version for security patch
+cryptography>44.0.0
