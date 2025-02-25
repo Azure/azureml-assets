@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/rai_eval_ui_dag_flow/v10
+  container_path: models/rai_eval_ui_dag_flow/v11
   storage_name: amlraipfmodels
   type: azureblob
 publish:
