@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/inference-base-2204:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/inference-base-2204:latest
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/mlflow
@@ -22,7 +22,7 @@ COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
 
 # Create conda environment
 # Add default packages
-RUN conda config --add create_default_packages azureml-inference-server-http azureml-ai-monitoring azureml-contrib-services
+RUN conda config --add create_default_packages azureml-inference-server-http --add create_default_packages azureml-ai-monitoring --add create_default_packages azureml-contrib-services
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
