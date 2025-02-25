@@ -9,11 +9,6 @@ RUN apt update && apt upgrade -y && apt install -y fuse
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# inference server dependencies, it has to be installed after the requirements.txt
-RUN pip install azureml-inference-server-http
-# Temporary fix version for security patch
-RUN pip install -U setuptools>=70.0.0
-
 # Adding this install under root's path for the custom AI Studio container solution
 ENV PATH="/home/vscode/.dotnet/tools:${PATH}"
 
