@@ -23,19 +23,20 @@ import mlflow
 import pandas as pd
 import numpy as np
 import os
-import json
 
 
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Generator"
-TRAIN_EMBEDDING_FILE_NAME = "train_embeddings.pkl"
-VALIDATION_EMBEDDING_FILE_NAME = "validation_embeddings.pkl"
+EMBEDDING_FILE_NAME = "embeddings.pkl"
 
 
 logger = get_logger_app(
     "azureml.acft.contrib.hf.scripts.src.process_embedding.embeddings_generator"
 )
 """
-Input Arguments: endpoint_url, endpoint_key, zeroshot_path, test_train_split_pkl_path
+Input Arguments:
+    --image_tsv: Path to image TSV file.
+    --mlflow_model_path: The path to the MLflow model.
+    --output_pkl: Output PKL file path.
 """
 
 
@@ -48,17 +49,15 @@ def get_parser():
     parser = argparse.ArgumentParser(
         description="Process medical images and get embeddigns", allow_abbrev=False
     )
-
     parser.add_argument(
-        "--eval_image_tsv", type=str, help="Path to evaluation image TSV file."
-    )
+        "--task_name",
+        type=str,
+        required=True,
+        help="The name of the task to be executed",
+    )    
     parser.add_argument(
-        "--eval_text_tsv", type=str, help="Path to evaluation text TSV file."
+        "--image_tsv", type=str, help="Path to image TSV file."
     )
-    parser.add_argument(
-        "--image_tsv", type=str, help="Path to training image TSV file."
-    )
-    parser.add_argument("--text_tsv", type=str, help="Path to training text TSV file.")
     parser.add_argument(
         "--mlflow_model_path",
         type=str,
@@ -66,121 +65,74 @@ def get_parser():
         help="The path to the MLflow model",
     )
     parser.add_argument(
-        "--task_name",
+        "--output_pkl",
         type=str,
-        required=True,
-        help="The name of the task to be executed",
-    )
-    parser.add_argument(
-        "--output_train_pkl",
-        type=str,
-        help="Output train PKL file path",
-    )
-    parser.add_argument(
-        "--output_validation_pkl",
-        type=str,
-        help="Output validation PKL file path",
+        help="Output PKL file path",
     )
 
     return parser
 
 
-def generate_embeddings(image_tsv, text_tsv, mlflow_model):
+def generate_embeddings(image_tsv, mlflow_model):
     image_df = pd.read_csv(image_tsv, sep="\t")
     image_df.columns = ["Name", "image"]
     image_df["text"] = None
     image_embeddings = mlflow_model.predict(image_df)
     image_df["features"] = image_embeddings["image_features"].apply(lambda item: np.array(item[0]))
 
-    text_df = pd.read_csv(text_tsv, sep="\t")
-    text_df.columns = ["Name", "classification"]
-
-    def extract_text_field(text):
-        try:
-            text_json = json.loads(text)
-            return text_json.get("class_id", -1)
-        except json.JSONDecodeError:
-            logger.error("Failed to decode JSON from text column")
-            return ""
-
-    text_df["Label"] = text_df["classification"].apply(extract_text_field)
-    return pd.merge(image_df, text_df, on="Name", how="inner")
+    return image_df
 
 
-def save_merged_dataframes(
-    train_merged: pd.DataFrame,
-    val_merged: pd.DataFrame,
-    output_train_pkl_path: str,
-    output_validation_pkl_path: str,
-    train_embedding_file_name: str,
-    validation_embedding_file_name: str,
+def save_dataframe(
+    image_embeddings: pd.DataFrame,
+    output_pkl_path: str,
 ) -> None:
-    """Save merged DataFrames to PKL files.
+    """Save image embeddings DataFrame to a PKL file.
 
-    This function saves the provided training and validation merged DataFrames
-    to the specified PKL file paths with the given file names. It also creates
-    the directories if they do not exist.
+    This function saves the provided image embeddings DataFrame
+    to the specified PKL file path with the given file name. It also creates
+    the directory if it does not exist.
 
     Args:
-        train_merged (pd.DataFrame): The merged training DataFrame to be saved.
-        val_merged (pd.DataFrame): The merged validation DataFrame to be saved.
-        output_train_pkl_path (str): The directory path where the training PKL file will be saved.
-        output_validation_pkl_path (str): The directory path where the validation PKL file will be saved.
-        train_embedding_file_name (str): The file name for the training PKL file.
-        validation_embedding_file_name (str): The file name for the validation PKL file.
+        image_embeddings (pd.DataFrame): The DataFrame containing image embeddings to be saved.
+        output_pkl_path (str): The directory path where the PKL file will be saved.
     Returns:
         None
     """
-    os.makedirs(output_train_pkl_path, exist_ok=True)
-    os.makedirs(output_validation_pkl_path, exist_ok=True)
+    os.makedirs(output_pkl_path, exist_ok=True)
 
-    train_merged.to_pickle(
-        os.path.join(output_train_pkl_path, train_embedding_file_name)
+    image_embeddings.to_pickle(
+        os.path.join(output_pkl_path, EMBEDDING_FILE_NAME)
     )
-    val_merged.to_pickle(
-        os.path.join(output_validation_pkl_path, validation_embedding_file_name)
-    )
+
     logger.info("Saved merged DataFrames to PKL files")
 
 
 def process_embeddings(args):
     """
-    Process medical image embeddings and save the results to PKL files.
-    This function initializes the medimageinsight object, generates image embeddings,
-    creates a features dataframe, loads train and validation PKL files, merges the dataframes,
-    and saves the merged dataframes to specified output PKL files.
+    Process medical image embeddings and save the results to a PKL file.
+    This function loads the MLflow model, generates image embeddings from the provided TSV file,
+    and saves the embeddings to the specified output PKL file.
+    
     Args:
         args (Namespace): A namespace object containing the following attributes:
             - mlflow_model_path (str): The path to the MLflow model.
-            - zeroshot_path (str): The path to the zeroshot data.
-            - output_train_pkl (str): The path to save the output training PKL file.
-            - output_validation_pkl (str): The path to save the output validation PKL file.
-            - test_train_split_csv_path (str): The path to the test/train split CSV file.
+            - image_tsv (str): The path to the image TSV file.
+            - output_pkl (str): The path to save the output PKL file.
     Returns:
         None
     """
 
     model_path = args.mlflow_model_path
-    output_train_pkl = args.output_train_pkl
-    output_validation_pkl = args.output_validation_pkl
+    output_pkl = args.output_pkl
     image_tsv = args.image_tsv
-    text_tsv = args.text_tsv
-    eval_image_tsv = args.eval_image_tsv
-    eval_text_tsv = args.eval_text_tsv
 
     mlflow_model = mlflow.pyfunc.load_model(model_path)
-    image_embeddings = generate_embeddings(image_tsv, text_tsv, mlflow_model)
-    eval_image_embeddings = generate_embeddings(
-        eval_image_tsv, eval_text_tsv, mlflow_model
-    )
+    image_embeddings = generate_embeddings(image_tsv, mlflow_model)
 
-    save_merged_dataframes(
+    save_dataframe(
         image_embeddings,
-        eval_image_embeddings,
-        output_train_pkl,
-        output_validation_pkl,
-        TRAIN_EMBEDDING_FILE_NAME,
-        VALIDATION_EMBEDDING_FILE_NAME,
+        output_pkl
     )
 
     logger.info("Processing medical images and getting embeddings completed")
@@ -207,8 +159,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-"""
-python medimage_datapreprocess.py --task_name "MedEmbedding" --mlflow_model_path "/mnt/model/MedImageInsight/mlflow_model_folder" --zeroshot_path "/home/healthcare-ai/medimageinsight-zeroshot/" --test_train_split_csv_path "/home/healthcare-ai/medimageinsight/classification_demo/data_input/" --output_train_pkl "/home/healthcare-ai/" --output_validation_pkl "/home/healthcare-ai/"
-
-"""

@@ -1,31 +1,24 @@
 import argparse
+import json
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
 )
-from azureml._common._error_definition.azureml_error import AzureMLError
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 import pandas as pd
 import torch
 import os
-from classification_demo.MedImageInsight import medimageinsight_package
-from classification_demo.adaptor_training import training
+import training
 import matplotlib.pyplot as plt
-import SimpleITK as sitk
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, f1_score
-
-# Suppress SimpleITK warnings
-sitk.ProcessObject_SetGlobalWarningDisplay(False)
 
 
 COMPONENT_NAME = "ACFT-MedImage-Classification-Training"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.classification_adaptor_train")
-TRAIN_EMBEDDING_FILE_NAME = "train_embeddings.pkl"
-VALIDATION_EMBEDDING_FILE_NAME = "validation_embeddings.pkl"
+EMBEDDING_FILE_NAME = "embeddings.pkl"
 
 
 def get_parser():
@@ -53,6 +46,18 @@ def get_parser():
         type=str,
         required=True,
         help='The path to the validation data.'
+    )
+    parser.add_argument(
+        "--train_text_tsv", 
+        type=str, 
+        help="Path to evaluation text TSV file.",
+        required=True
+    )
+    parser.add_argument(
+        "--validation_text_tsv", 
+        type=str, 
+        help="Path to training text TSV file.",
+        required=True
     )
     parser.add_argument(
         '--train_dataloader_batch_size',
@@ -117,8 +122,7 @@ def get_parser():
     return parser
 
 
-def load_data(train_data_path: str, validation_data_path: str, train_file_name: str,
-              validation_file_name: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_data(train_data_path: str, validation_data_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load the training and validation data from the provided folder paths.
 
@@ -132,12 +136,50 @@ def load_data(train_data_path: str, validation_data_path: str, train_file_name: 
         tuple[pd.DataFrame, pd.DataFrame]: DataFrames containing the training and validation data.
     """
 
-    train_data_file = os.path.join(train_data_path, train_file_name)
-    validation_data_file = os.path.join(validation_data_path, validation_file_name)
+    train_data_file = os.path.join(train_data_path, EMBEDDING_FILE_NAME)
+    validation_data_file = os.path.join(validation_data_path, EMBEDDING_FILE_NAME)
     train_data = pd.read_pickle(train_data_file)
     validation_data = pd.read_pickle(validation_data_file)
     return train_data, validation_data
 
+def merge_data_with_text(
+    train_data: pd.DataFrame,
+    validation_data: pd.DataFrame,
+    train_text_tsv: str,
+    validation_text_tsv: str
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Merge the training and validation data with the corresponding text data.
+
+    Args:
+        train_data (pd.DataFrame): DataFrame containing the training data.
+        validation_data (pd.DataFrame): DataFrame containing the validation data.
+        train_text_tsv (str): Path to the TSV file containing training text data.
+        validation_text_tsv (str): Path to the TSV file containing validation text data.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame]: Merged DataFrames for training and validation data.
+    """
+    train_text_df = pd.read_csv(train_text_tsv, sep="\t")
+    train_text_df.columns = ["Name", "classification_json"]
+    validation_text_df = pd.read_csv(validation_text_tsv, sep="\t")
+    validation_text_df.columns = ["Name", "classification_json"]
+
+    def extract_label_from_json(json_str):
+        try:
+            json_obj = json.loads(json_str)
+            return json_obj.get("class_id", -1)
+        except json.JSONDecodeError:
+            logger.error("Failed to decode JSON from text column")
+            return -1
+    
+    train_text_df["Label"] = train_text_df["classification_json"].apply(extract_label_from_json)
+    validation_text_df["Label"] = validation_text_df["classification_json"].apply(extract_label_from_json)
+
+    train_data = pd.merge(train_data, train_text_df, on="Name")[["Name", "features", "Label"]]
+    validation_data = pd.merge(validation_data, validation_text_df, on="Name")[["Name", "features", "Label"]]
+
+    return train_data, validation_data
 
 def initialize_model(args: argparse.Namespace) -> torch.nn.Module:
     """
@@ -255,10 +297,11 @@ def main():
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
-    train_data, validation_data = load_data(args.train_data_path, args.validation_data_path,
-                                            TRAIN_EMBEDDING_FILE_NAME, VALIDATION_EMBEDDING_FILE_NAME)
+    train_data, validation_data = load_data(args.train_data_path, args.validation_data_path)
+    train_data, validation_data = merge_data_with_text(train_data, validation_data, args.train_text_tsv, args.validation_text_tsv)
     model = initialize_model(args)
     train_dataloader, validation_dataloader = prepare_dataloaders(train_data, validation_data, args)
+
     best_accuracy, best_auc = train_model(train_dataloader, validation_dataloader, model, args)
     print(f"Best Accuracy of the Adaptor: {best_accuracy:.4f}")
     print(f"Best AUC of the Adaptor: {best_auc:.4f}")
@@ -268,4 +311,4 @@ if __name__ == "__main__":
     main()
 
 # Example command to run this script:
-# python medimage_train.py --task_name "AdapterTrain" --train_data_path "/home/healthcare-ai/train_merged.pkl" --validation_data_path "/home/healthcare-ai/val_merged.pkl" --train_dataloader_batch_size 8 --validation_dataloader_batch_size 1 --train_dataloader_workers 2 --validation_dataloader_workers 2 --output_classes 5 --hidden_dimensions 512 --input_channels 1024 --learning_rate 0.0003 --max_epochs 10 --output_model_path "/home/healthcare-ai/"
+# python medimage_train.py --task_name "AdapterTrain" --train_data_path "/home/healthcare-ai/train_data" --validation_data_path "/home/healthcare-ai/val_data" --train_text_tsv "/home/healthcare-ai/train_text.tsv" --validation_text_tsv "/home/healthcare-ai/val_text.tsv" --train_dataloader_batch_size 8 --validation_dataloader_batch_size 1 --train_dataloader_workers 2 --validation_dataloader_workers 2 --label_file "/home/healthcare-ai/labels.txt" --hidden_dimensions 512 --input_channels 1024 --learning_rate 0.0003 --max_epochs 10 --output_model_path "/home/healthcare-ai/"
