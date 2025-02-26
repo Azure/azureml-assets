@@ -1,25 +1,24 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20250224.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20250224.v1
+
 # Install OpenCV native dependencies
 RUN apt-get update
 RUN apt-get install -y python3-opencv
 RUN apt-get remove -y libavutil56 libswresample3 libavformat58
-RUN apt-get remove -y libavcodec58 libswscale5 libopenexr24 libpmix2
+RUN apt-get remove -y libavcodec58 libswscale5 libpmix2
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai-vision
-
-# Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+WORKDIR /
+ENV CONDA_PREFIX=/azureml-envs/responsibleai-vision
+ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 
 # Create conda environment
 COPY conda_dependencies.yaml .
-RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
-    rm conda_dependencies.yaml && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
-    conda clean -a -y
+RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
+    rm conda_dependencies.yaml
+
+# Prepend path to AzureML conda environment
+ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 RUN conda list
-# Conda install and pip install could happen side by side. Remove crypytography with vulnerability from conda
-RUN conda remove cryptography
 
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0'
 
@@ -38,8 +37,7 @@ RUN pip install 'azureml-core==1.59.0.post1' \
 RUN pip install 'azureml-dataset-runtime==1.59.0' \
                 'azureml-automl-dnn-vision==1.59.0'
 
-RUN pip install 'shap==0.41.0' \
-                'scikit-learn>=1.5.1' \
+RUN pip install 'scikit-learn>=1.5.1' \
                 'interpret-community==0.31.0' \
                 'Pillow>=10.3.0' \
                 'setuptools>=65.5.1' \
@@ -47,6 +45,8 @@ RUN pip install 'shap==0.41.0' \
                 'scipy==1.10.0' \
                 'statsmodels==0.14.0' \
                 'gunicorn>=22.0.0'
+
+RUN pip install 'shap==0.46.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
@@ -62,10 +62,16 @@ RUN pip install 'Werkzeug>=3.0.3' \
 
 # To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
 RUN pip install 'torch>=2.2.2'
-# To resolve vulnerability issue
+# To resolve GHSA-jh2j-j4j9-crg3 vulnerability issue
 RUN pip install 'opencv-python-headless==4.8.1.78'
+
+# clean conda and pip caches
+RUN conda run -p $CONDA_PREFIX pip cache purge && \
+    conda clean -a -y
+
+RUN rm -rf ~/.cache/pip
 
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
-ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH

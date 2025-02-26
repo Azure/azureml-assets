@@ -1,7 +1,6 @@
 name: responsibleai-text
 channels:
   - conda-forge
-  - defaults
   - huggingface
   - anaconda
   - pytorch
