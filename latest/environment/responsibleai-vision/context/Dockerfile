@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20250224.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20250225.v1
 
 # Install OpenCV native dependencies
 RUN apt-get update
