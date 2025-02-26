@@ -175,7 +175,6 @@ class TestGSQHistogram:
     def test_gsq_with_added_passthrough_columns(self, code_zip_test_setup,
                                                 gsq_preprocessor_test_setup):
         """Test dataset with extra passthrough columns added."""
-
         metric_names = [name for name in ALL_METRIC_NAMES if SIMILARITY not in name]
         mltable_path = get_mltable_path()
         # make copy of directory
