@@ -141,10 +141,14 @@ def _write_mltable_yaml(mltable_obj, folder_path: str):
         return False
 
 
-def read_mltable_in_spark(mltable_path: str):
+def read_mltable_in_spark(mltable_path: str) -> DataFrame:
     """Read mltable in spark."""
     if mltable_path is None:
         raise InvalidInputError("MLTable path is None.")
+    # validate if we can access the mltable, e.g. if env. is ready to access credential-less data
+    store_url = StoreUrl(mltable_path)
+    store_url.get_credential(True)  # will raise exception if not able to access
+
     spark = init_spark()
     try:
         return spark.read.mltable(mltable_path)
