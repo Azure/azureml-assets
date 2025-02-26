@@ -9,7 +9,7 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import command, Input, MLClient
-from azure.ai.ml._restclient.models import JobStatus
+from azure.ai.ml.operations._run_history_constants import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
@@ -54,7 +54,7 @@ def test_azure_ai_ml_automl():
         compute=os.environ.get("gpu_cluster"),
         display_name="sklearn-diabetes-example",
         description="A test run of the ai-ml-automl-dnn-text-gpu-ptca curated environment",
-        experiment_name="sklearnExperiment"
+        experiment_name="sklearnExperiment",
     )
 
     returned_job = ml_client.create_or_update(job)
@@ -70,9 +70,11 @@ def test_azure_ai_ml_automl():
         time.sleep(30)  # sleep 30 seconds
     else:
         # Timeout
-        ml_client.jobs.cancel(returned_job.name)
-        raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
-                        f"Last status was {status}.")
+        ml_client.jobs.begin_cancel(returned_job.name)
+        raise Exception(
+            f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
+            f"Last status was {status}."
+        )
 
     if status == JobStatus.FAILED:
         ml_client.jobs.download(returned_job.name)
