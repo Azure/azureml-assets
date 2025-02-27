@@ -1,7 +1,6 @@
 name: responsibleai-tabular
 channels:
   - conda-forge
-  - defaults
   - anaconda
 dependencies:
   - python=3.9
