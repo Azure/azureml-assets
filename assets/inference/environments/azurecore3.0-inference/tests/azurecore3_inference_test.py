@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the minimal 22.04 py311 cpu environment."""
+"""Tests running a sample job in the azurecore3.0 py311 cpu environment."""
 import os
 import time
 from pathlib import Path
@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_minimal_cpu_inference():
-    """Tests a sample job using minimal 22.04 py311 cpu as the environment."""
+def test_azurecore3_inference():
+    """Tests a sample job using azurecore3.0 py311 cpu as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,12 +28,12 @@ def test_minimal_cpu_inference():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "minimal_cpu_inference"
+    env_name = "azurecore3.0_inference"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="minimal 22.04 py311 cpu inference environment created from a Docker context.",
+        description="azurecore3.0 py311 inference environment created from a Docker context.",
     )
     returned_env = ml_client.environments.create_or_update(env_docker_context)
 
@@ -46,9 +46,9 @@ def test_minimal_cpu_inference():
         ),
         environment=returned_env,
         compute=os.environ.get("cpu_cluster"),
-        display_name="minimal-cpu-inference-example",
-        description="A test run of the minimal 22.04 py311 cpu inference curated environment",
-        experiment_name="minimalCPUInferenceExperiment"
+        display_name="azurecore3.0-inference-example",
+        description="A test run of the azurecore3.0 py311 cpu inference curated environment",
+        experiment_name="azurecore3.0InferenceExperiment"
     )
 
     returned_job = ml_client.create_or_update(job)
