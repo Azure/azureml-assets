@@ -154,23 +154,15 @@ jobs:
             sleep $sleep_timer
           done &
 
-      - name: Sets ASSET_CONFIG_NAME
-        id: env
-        env:
-          name: "${{ matrix.asset_config_path }}"
-        # replace all '/' in asset path, not just first one, and write to $GITHUB_ENV
-        run: |
-          echo "ASSET_CONFIG_NAME=${name//\//-}" >> $GITHUB_ENV
-
       - name: Test asset
-        run: python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports-"${{ env.ASSET_CONFIG_NAME }}"
+        run: python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports-"${{ strategy.job-index }}"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
-          path: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
+          name: ${{ env.pytest_reports }}-${{ strategy.job-index }}
+          path: ${{ env.pytest_reports }}-${{ strategy.job-index }}
 
   report:
     name: Publish test results
@@ -179,8 +171,6 @@ jobs:
     needs:
       - test
       - setup
-    strategy:
-      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
 
     permissions:
       # Required for EnricoMi/publish-unit-test-result-action
@@ -189,20 +179,13 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Sets ASSET_CONFIG_NAME
-        id: env
-        env:
-          name: "${{ matrix.asset_config_path }}"
-        # replace all '/' in asset path, not just first one, and write to $GITHUB_ENV
-        run: |
-          echo "ASSET_CONFIG_NAME=${name//\//-}" >> $GITHUB_ENV
-
-      - name: Download test results
+      - name: Download all test results
         id: download-artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
-          path: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
+          path: ${{ env.pytest_reports }}
+          pattern: ${{ env.pytest_reports }}-*
+          merge-multiple: true
         continue-on-error: true
 
       - name: Publish test results
@@ -210,4 +193,4 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: Test Results for ${{ github.workflow }}
-          junit_files: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}/**/*.xml
+          junit_files: ${{ env.pytest_reports }}/**/*.xml
