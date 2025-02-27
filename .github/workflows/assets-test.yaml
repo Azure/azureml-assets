@@ -69,7 +69,7 @@ jobs:
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
         with:
-          python-version: '>=3.10'
+          python-version: '3.12'
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
@@ -118,7 +118,7 @@ jobs:
       - name: Use Python 3.10 or newer
         uses: actions/setup-python@v4
         with:
-          python-version: '>=3.10'
+          python-version: '3.12'
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
@@ -154,21 +154,33 @@ jobs:
             sleep $sleep_timer
           done &
 
+      - name: Sets ASSET_CONFIG_NAME
+        id: env
+        env:
+          name: "${{ matrix.asset_config_path }}"
+        # replace all '/' in asset path, not just first one, and write to $GITHUB_ENV
+        run: |
+          echo "ASSET_CONFIG_NAME=${name//\//-}" >> $GITHUB_ENV
+
       - name: Test asset
-        run: python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports
+        run: python -u $scripts_test_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $scripts_test_dir/requirements.txt -r $GITHUB_WORKSPACE/$pytest_reports-"${{ env.ASSET_CONFIG_NAME }}"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ env.pytest_reports }}
-          path: ${{ env.pytest_reports }}
+          name: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
+          path: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
 
   report:
     name: Publish test results
     if: always()
     runs-on: ubuntu-latest
-    needs: test
+    needs:
+      - test
+      - setup
+    strategy:
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
 
     permissions:
       # Required for EnricoMi/publish-unit-test-result-action
@@ -177,12 +189,20 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Sets ASSET_CONFIG_NAME
+        id: env
+        env:
+          name: "${{ matrix.asset_config_path }}"
+        # replace all '/' in asset path, not just first one, and write to $GITHUB_ENV
+        run: |
+          echo "ASSET_CONFIG_NAME=${name//\//-}" >> $GITHUB_ENV
+
       - name: Download test results
         id: download-artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.pytest_reports }}
-          path: ${{ env.pytest_reports }}
+          name: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
+          path: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}
         continue-on-error: true
 
       - name: Publish test results
@@ -190,4 +210,4 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: Test Results for ${{ github.workflow }}
-          junit_files: ${{ env.pytest_reports }}/**/*.xml
+          junit_files: ${{ env.pytest_reports }}-${{ env.ASSET_CONFIG_NAME }}/**/*.xml

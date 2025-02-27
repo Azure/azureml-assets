@@ -160,7 +160,6 @@ inputs:
       4. MATH: Generate Math data for numerical responses
       5. SUMMARIZATION: Generate Key Summary for an Article
 
-
   # Output of validation component.
   validation_info:
     type: uri_file
