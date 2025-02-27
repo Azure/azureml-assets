@@ -1,0 +1,4 @@
+extra_config: model.yaml #DO NOT CHANGE
+spec: spec.yaml #DO NOT CHANGE
+type: model #DO NOT CHANGE
+categories: ["contoso"] #only include the author name
