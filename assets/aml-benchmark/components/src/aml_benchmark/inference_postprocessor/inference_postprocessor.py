@@ -292,6 +292,13 @@ class InferencePostprocessor(object):
                 text = self.remove_prefix(text, prefix)
         return text
 
+    def apply_preprocess_think_tokens(self, text: str) -> str:
+        """Remove think tokens and the content inside them. Extract the content outside the think token."""
+        processed_text = text.replace("<\/think>", "</think>")
+        pattern = r'<think>.*?</think>'
+        processed_text = re.sub(pattern, '', processed_text, flags=re.DOTALL)
+        return processed_text.strip()
+
     def apply_strip_characters(self, text: str) -> str:
         """Remove set of characters from the begining and end the given text."""
         if self.strip_characters:
@@ -396,6 +403,8 @@ class InferencePostprocessor(object):
 
     def apply_generic_processor(self, out_string: str, row: dict = None) -> List:
         """Processor steps."""
+        out_string = self.apply_preprocess_think_tokens(out_string)
+        print(f"Preprocess think tokens: {out_string}")
         out_string = self.apply_remove_prompt_prefix(out_string, row)
         out_string = self.apply_remove_prefixes(out_string)
         out_string = self.apply_separator(out_string)
@@ -404,6 +413,7 @@ class InferencePostprocessor(object):
         out_string = self.apply_regex_expr(out_string)
         out_string = self.apply_strip_characters(out_string)
         out_string = self.apply_label_map(out_string)
+        print(f"Postprocessor output: {out_string}")
         return out_string
 
     def extract_inferences(

@@ -4,7 +4,7 @@ type: command
 name: inference_postprocessor
 display_name: Inference Postprocessor
 description: Inference Postprocessor
-version: 0.0.12.test
+version: 0.0.16.test
 is_deterministic: true
 
 inputs:
