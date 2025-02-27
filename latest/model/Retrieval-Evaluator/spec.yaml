@@ -8,7 +8,7 @@ properties:
   _default-display-file: ./RetrievalEvaluator/retrieval.prompty
 tags:
   hiddenlayerscanned: ""
-version: 2
+version: 3
 description: |
   | 	| |
   | -- | -- |
