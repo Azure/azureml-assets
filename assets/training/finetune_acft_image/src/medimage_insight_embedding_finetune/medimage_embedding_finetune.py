@@ -1,4 +1,5 @@
 import argparse
+import uuid
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
@@ -15,7 +16,7 @@ import sys
 import torch
 import yaml
 from typing import Any, Dict, List, Tuple
-from safetensors.torch import save_file
+from safetensors.torch import save_file, load_file
 from MainzTrain.Trainers.MainzTrainer import MainzTrainer
 from MainzTrain.Utils.Timing import Timer
 import MainzVision as mv
@@ -450,22 +451,22 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def copy_eval_image_tsv(eval_image_tsv: str, save_dir: str) -> str:
+def copy_tsv(tsv_file: str, save_dir: str) -> str:
     """
-    Copy the evaluation image TSV file to the evaluate directory within the save directory.
+    Copy the TSV file to the save directory in a unique folder
 
     Args:
-        eval_image_tsv (str): Path to the evaluation image TSV file.
+        tsv_file (str): Path to the TSV file.
         save_dir (str): Directory to save the copied TSV file.
 
     Returns:
         str: The path to the copied TSV file.
     """
-    evaluate_dir = os.path.join(save_dir, 'evaluate')
-    os.makedirs(evaluate_dir, exist_ok=True)
-    eval_image_tsv_dest = os.path.join(evaluate_dir, os.path.basename(eval_image_tsv))
-    os.system(f'cp {eval_image_tsv} {eval_image_tsv_dest}')
-    return eval_image_tsv_dest
+    unique_dir = os.path.join(save_dir, str(uuid.uuid4()))
+    os.makedirs(unique_dir, exist_ok=True)
+    tsv_dest = os.path.join(unique_dir, os.path.basename(tsv_file))
+    os.system(f'cp {tsv_file} {tsv_dest}')
+    return tsv_dest
 
 
 def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -501,16 +502,21 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
             opt[key] = val
     
     # Append CHECKPOINT_PATH to mlflow_model_folder and update UNICL_MODEL's PRETRAINED key
+    # Convert from safetensors to torch
     if MLFLOW_MODEL_FOLDER in cmdline_args:
         mlflow_model_path = os.path.join(cmdline_args[MLFLOW_MODEL_FOLDER], CHECKPOINT_PATH)
+        safe_model = load_file(mlflow_model_path)
+        os.makedirs(SAVE_DIR, exist_ok=True)
+        new_path = os.path.join(SAVE_DIR, "medimageinsigt-v1.0.0-native.pt")
+        torch.save(safe_model, new_path)
         if UNICL_MODEL in opt and PRETRAINED in opt[UNICL_MODEL]:
-            opt[UNICL_MODEL][PRETRAINED] = mlflow_model_path
+            opt[UNICL_MODEL][PRETRAINED] = new_path
 
-    eval_image_tsv = copy_eval_image_tsv(cmdline_args[EVAL_IMAGE_TSV], opt[SAVE_DIR])
-    eval_text_tsv = copy_eval_image_tsv(cmdline_args[EVAL_TEXT_TSV], opt[SAVE_DIR])
-    image_tsv = copy_eval_image_tsv(cmdline_args[IMAGE_TSV], opt[SAVE_DIR])
-    text_tsv = copy_eval_image_tsv(cmdline_args[TEXT_TSV], opt[SAVE_DIR])
-    label_file = copy_eval_image_tsv(cmdline_args[LABEL_FILE], opt[SAVE_DIR])
+    eval_image_tsv = copy_tsv(cmdline_args[EVAL_IMAGE_TSV], opt[SAVE_DIR])
+    eval_text_tsv = copy_tsv(cmdline_args[EVAL_TEXT_TSV], opt[SAVE_DIR])
+    image_tsv = copy_tsv(cmdline_args[IMAGE_TSV], opt[SAVE_DIR])
+    text_tsv = copy_tsv(cmdline_args[TEXT_TSV], opt[SAVE_DIR])
+    label_file = copy_tsv(cmdline_args[LABEL_FILE], opt[SAVE_DIR])
 
     if DATASET in opt and ROOT in opt[DATASET]:
         opt[DATASET]["TRAIN_TSV_LIST"] = [image_tsv, text_tsv]

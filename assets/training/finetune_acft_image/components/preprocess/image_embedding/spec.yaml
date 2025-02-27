@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medical_image_embedding_datapreprocessing
-version: 0.0.9
+version: 0.0.11
 type: command
 
 is_deterministic: True
@@ -9,32 +9,14 @@ display_name: Embedding Generation for Medical Images
 description: To genrate embeddings for medical images. See [docs](https://aka.ms/azureml/components/medical_image_embedding_datapreprocessing) to learn more.
 
 #environment: azureml:/subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourceGroups/rdondera/providers/Microsoft.MachineLearningServices/workspaces/validatr/environments/medimage-embedding-generation/versions/5
-environment: azureml://registries/models-staging/environments/medimage-embedding-generation/versions/5
+environment: azureml://registries/mablonde-registry-101/environments/medimage-embedding-generation/versions/7
 code: ../../../src/medimage_insight_adapter_preprocess
 
 inputs:
-  eval_image_tsv:
-    type: uri_file
-    optional: false
-    description: Path to the evaluation image TSV file.
-    mode: ro_mount
-
-  eval_text_tsv:
-    type: uri_file
-    optional: false
-    description: Path to the evaluation text TSV file.
-    mode: ro_mount
-
   image_tsv:
     type: uri_file
     optional: false
     description: Path to the image TSV file.
-    mode: ro_mount
-
-  text_tsv:
-    type: uri_file
-    optional: false
-    description: Path to the text TSV file.
     mode: ro_mount
 
   mlflow_model_path:
@@ -44,23 +26,14 @@ inputs:
     mode: ro_mount
 
 outputs:
-  output_train_pkl:
+  output_pkl:
     type: uri_folder
     description: Path to the output training PKL file.
     mode: rw_mount
 
-  output_validation_pkl:
-    type: uri_folder
-    description: Path to the output validation PKL file.
-    mode: rw_mount
-
 command: >-
   python medimage_datapreprocess.py 
-  --task_name "MedEmbedding" 
-  --eval_image_tsv "${{inputs.eval_image_tsv}}" 
-  --eval_text_tsv "${{inputs.eval_text_tsv}}" 
+  --task_name "MedEmbedding"
   --image_tsv "${{inputs.image_tsv}}" 
-  --text_tsv "${{inputs.text_tsv}}" 
-  --output_train_pkl "${{outputs.output_train_pkl}}" 
-  --output_validation_pkl "${{outputs.output_validation_pkl}}" 
+  --output_pkl "${{outputs.output_pkl}}" 
   --mlflow_model_path "${{inputs.mlflow_model_path}}"

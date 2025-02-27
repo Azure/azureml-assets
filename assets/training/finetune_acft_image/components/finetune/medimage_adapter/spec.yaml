@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimgage_adapter_finetune
-version: 0.0.4
+version: 0.0.7
 type: command
 
 is_deterministic: True
@@ -27,6 +27,18 @@ inputs:
     type: uri_file
     optional: false
     description: Path to the validation data file.
+    mode: ro_mount
+
+  validation_text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation text TSV file.
+    mode: ro_mount
+
+  train_text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the text TSV file.
     mode: ro_mount
 
   train_dataloader_batch_size:
@@ -101,6 +113,8 @@ command: >-
   --task_name "AdapterTrain" 
   --train_data_path "${{inputs.train_data_path}}" 
   --validation_data_path "${{inputs.validation_data_path}}" 
+  --validation_text_tsv "${{inputs.validation_text_tsv}}"
+  --train_text_tsv "${{inputs.train_text_tsv}}"
   --label_file "${{inputs.label_file}}" 
   $[[--train_dataloader_batch_size "${{inputs.train_dataloader_batch_size}}"]]
   $[[--validation_dataloader_batch_size "${{inputs.validation_dataloader_batch_size}}"]]
