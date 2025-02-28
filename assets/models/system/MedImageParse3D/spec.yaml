@@ -1,35 +1,46 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json #DO NOT CHANGE
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: modelname #make sure this is a machine name, must match what's in the API
-path: ./ #DO NOT CHANGE
+name: MedImageParse3D #Final model name to be added
+path: ./
 
 properties:
-  finetuning-tasks: chat-completion #Only add if finetuning is supported
-  AzureOpenAI-ModelName: "modelname" #only include this field for Azure OpenAI models. Make sure this is a machine name, must match what's in the API. Remove if MaaS/MaaP model.
-  AzureOpenAI-Version: "YYYY-MM-DD" #only include this field for Azure OpenAI models. This is the model version, must match what's in the API. Remove if MaaS/MaaP model.
-  intellectualPropertyPublisher: authorname #put what is the author name
+  inference-min-sku-spec: 6|1|112|64 #It would be updated based on minsku
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5 #Min SKU to be checked with ADITI
+  languages: en
+  SharedComputeCapacityEnabled: true
 
 tags:
-  Featured: "" #only include if the model gets a model catalog announcement.
-  task: chat-completion #you can add multiple inference tasks
-  benchmark: "" #this refers to the type of benchmark evaluation performed on the model. Confirm with Benchmark team what is the appropriate metadata. Types: "quality, cost, latency"
-  author: "authorname" #this is the model provider name.
-  textContextWindow: ""
-  maxOutputTokens: 4096 #keep this value set for 4096 unless otherwise noted.
-  languages: "en,it,af,es,de,fr,id,ru,pl,uk,el,lv,zh,ar,tr,ja,sw,cy,ko,is,bn,ur,ne,th,pa,mr,te" #put at least one language.
-  inputModalities: "text,image,audio"
-  outputModalities: "text"
-  trainingDataDate: "Oct 2023" #this is the training cutoff date.
-  evaluation: "evaluation.md" #include this if you have evaluation.md for the model.
-  notes: "notes.md" #include this if you have notes.md for the model.
-  license: "custom" #all Azure OpenAI/MaaS models use a custom license.
-  modelCapabilities: "agents,assistants" #add this if your model supports agents/assistants. Remove if not supported.
-  #GitHub Models metadata. Always include the following as the model may become available on GitHub at a later time.
-  freePlayground: "true" #default value is false. Only change to true if the backend eng team confirms.
-  displayName: "model name" #only put a name that would be used in marketing materials.
-  summary: "An affordable, efficient AI solution for diverse text and image tasks." #use 1-2 sentences to describe the model. It must be distinctive so users can tell apart one model from another in the same model family (ex. do not use the same description for gpt-4o-mini and gpt-4o)
-  keywords: "Multipurpose,Multilingual,Multimodal" #only pick 3 from the provided list.
-  licenseDescription: "Use of Azure OpenAI Service is subject to applicable Microsoft\nProduct Terms <https://www.microsoft.com/licensing/terms/welcome/welcomepage> including the Universal License Terms for Microsoft Generative AI Services and the service-specific terms for the Azure OpenAI product offering." #this is a CELA requirement. Must confirm with CELA on what license to include.
-  playgroundRateLimitTier: "low" #this is determined based on the compute availability. Contact @joscalz @mabables for the decision.
-
-version: "2024-07-18" #use the model version in the API.
+  Preview: ""
+  Featured: ""
+  task: image-segmentation #Is this the task?
+  industry: health-and-life-sciences
+  displayName: "MedImageParse3D"
+  author: Microsoft
+  hiddenlayerscanned: ""
+  SharedComputeCapacityEnabled: ""
+  license: mit
+  languages: "en"
+  evaluation: "evaluation.md"
+  notes: "notes.md"
+  inputModalities: "<type of input prompts supported>"
+  outputModalities: "<type of output modalities support>"
+  keywords: "Multimodal"
+  licenseDescription: "<license description as string here>"
+  inference_compute_allow_list:
+    [
+      Standard_NC6s_v3,
+      Standard_NC12s_v3,
+      Standard_NC24s_v3,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND40rs_v2,
+      Standard_NC40ads_H100_v5,
+      Standard_NC80adis_H100_v5,
+      Standard_ND96isr_H100_v5,
+    ]
+  inference_supported_envs:
+    - hf
+version: 1
