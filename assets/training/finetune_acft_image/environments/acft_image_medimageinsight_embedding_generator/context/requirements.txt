@@ -1,5 +1,5 @@
-azureml-acft-common-components==0.0.65
-azureml-acft-contrib-hf-nlp==0.0.65
+azureml-acft-common-components=={{latest-pypi-version}}
+azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 https://automlcesdkdataresources.blob.core.windows.net/wheels/classification_demo-0.1.2-py3-none-any.whl
 mlflow==2.14.3
 cloudpickle==2.2.1
