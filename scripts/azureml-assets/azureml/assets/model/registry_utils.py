@@ -276,21 +276,24 @@ def prepare_data(spec_path: Path, data_config: DataConfig, temp_dir: Path, ml_cl
         return None, False
 
 
-def update_model_metadata(
-    model_name: str,
-    model_version: str,
+def update_metadata(
+    name: str,
+    version: str,
     update: AssetVersionUpdate,
     ml_client: MLClient,
+    asset_type: assets.AssetType,
     allow_no_op_update: bool = False,
 ):
-    """Update the mutable metadata of already registered Model."""
+    """Update the mutable metadata of an already registered asset."""
     try:
-        model = ml_client.models.get(name=model_name, version=model_version)
+        # Get existing asset
+        operations = RegistryUtils.get_operations_from_type(asset_type=asset_type, ml_client=ml_client)
+        asset = operations.get(name=name, version=version)
         need_update = False
 
         # Update tags
         if update.tags:
-            updated_tags = copy.deepcopy(model.tags)
+            updated_tags = copy.deepcopy(asset.tags)
 
             if update.tags.replace is not None:
                 updated_tags = update.tags.replace
@@ -302,47 +305,47 @@ def update_model_metadata(
                     for k in update.tags.delete:
                         updated_tags.pop(k, None)
 
-            if updated_tags != model.tags:
+            if updated_tags != asset.tags:
                 logger.print("tags has been updated.")
-                model.tags = updated_tags
+                asset.tags = updated_tags
                 need_update = True
 
         # Update properties
         if update.properties:
-            updated_properties = copy.deepcopy(model.properties)
+            updated_properties = copy.deepcopy(asset.properties)
             if update.properties.add is not None:
                 for k, v in update.properties.add.items():
-                    if k in model.properties and model.properties[k] != v:
-                        raise Exception(f"Value of property {k} for model {model_name} cannot "
+                    if k in asset.properties and asset.properties[k] != v:
+                        raise Exception(f"Value of property {k} for {asset_type.value} {name} cannot "
                                         f"be replaced to {v} without increasing the version.")
                     updated_properties[k] = v
 
-            if updated_properties != model.properties:
-                logger.print("properties has been updated.")
-                model.properties = updated_properties
+            if updated_properties != asset.properties:
+                logger.print("properties has been updated")
+                asset.properties = updated_properties
                 need_update = True
 
         # Update description
-        if update.description is not None and model.description != update.description:
+        if update.description is not None and asset.description != update.description:
             logger.print("description has been updated")
-            model.description = update.description
+            asset.description = update.description
             need_update = True
 
         if allow_no_op_update or need_update:
-            ml_client.models.create_or_update(model)
-            logger.print(f"Model metadata updated successfully for {model_name}")
+            operations.create_or_update(asset)
+            logger.print(f"{asset_type.value.capitalize()} metadata updated successfully for {name}")
         else:
-            logger.print(f"No update found for model {model_name}. Skipping")
+            logger.print(f"No update found for {asset_type.value} {name}. Skipping")
     except Exception as e:
-        logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
+        logger.log_error(f"Failed to update metadata for {asset_type.value} : {name} : {e}")
 
-    # Archive or restore model based on stage
+    # Archive or restore asset based on stage
     try:
         if update.stage == "Archived":
-            logger.print(f"Archiving model {model_name} version {model_version}")
-            ml_client.models.archive(name=model_name, version=model_version)
+            logger.print(f"Archiving {asset_type.value} {name} version {version}")
+            operations.archive(name=name, version=version)
         elif update.stage == "Active":
-            logger.print(f"Restoring model {model_name} version {model_version}")
-            ml_client.models.restore(name=model_name, version=model_version)
+            logger.print(f"Restoring {asset_type.value} {name} version {version}")
+            operations.restore(name=name, version=version)
     except Exception as e:
-        logger.log_error(f"Failed to archive or restore model {model_name} version {model_version}: {e}")
+        logger.log_error(f"Failed to archive or restore {asset_type.value} {name} version {version}: {e}")

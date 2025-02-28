@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.74 (2025-02-28)
+### 🐛 Bugs Fixed
+- [#3887](https://github.com/Azure/azureml-assets/pull/3887) Add support for component and data metadata updates
+
 ## 1.16.73 (2025-02-21)
 ### 🐛 Bugs Fixed
 - [#3853](https://github.com/Azure/azureml-assets/pull/3853) Add H100 GPU to supported_inference_skus.json
