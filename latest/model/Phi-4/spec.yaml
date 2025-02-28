@@ -160,7 +160,7 @@ tags:
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 5
+version: 6
 description: |
   Phi-4 is a state-of-the-art open model built upon a blend of synthetic datasets, data from filtered public domain websites, and acquired academic books and Q&A datasets. The goal of this approach was to ensure that small capable models were trained with data focused on high quality and advanced reasoning.
 
