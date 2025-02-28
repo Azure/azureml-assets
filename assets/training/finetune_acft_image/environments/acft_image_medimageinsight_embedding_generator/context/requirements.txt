@@ -1,7 +1,6 @@
 azureml-acft-common-components=={{latest-pypi-version}}
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-https://automlcesdkdataresources.blob.core.windows.net/wheels/classification_demo-0.1.2-py3-none-any.whl
-mlflow==2.14.3
+mlflow==2.20.0
 cloudpickle==2.2.1
 colorama==0.4.6
 einops==0.8.0
@@ -21,5 +20,4 @@ sentencepiece==0.2.0
 tenacity==9.0.0
 timm==1.0.13
 tornado==6.4.2
-SimpleITK~=2.4.0
 transformers==4.16.2
