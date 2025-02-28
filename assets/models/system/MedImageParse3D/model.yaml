@@ -1,8 +1,8 @@
 path:
-  container_name: models #DO NOT CHANGE
-  container_path: OAI/presets #OAI/preset for Azure OpenAI/MaaS models. Include the area path for MaaP models.
-  storage_name: automlcesdkdataresources #DO NOT CHANGE
-  type: azureblob #DO NOT CHANGE
+  container_name: models
+  container_path: <container path to be confirmed with Aditi>
+  storage_name: automlcesdkdataresources
+  type: azureblob
 publish:
-  description: description.md #DO NOT CHANGE
-  type: custom_model #custom_model is the correct type for Azure OpenAI/MaaS models. Use mlflow_model for MaaP models.
+  description: description.md
+  type: custom_model
