@@ -387,6 +387,7 @@ jobs:
       instance_count: '${{parent.inputs.instance_count}}'
       max_concurrency_per_instance: '${{parent.inputs.max_concurrency_per_instance}}'
       mini_batch_size: '${{parent.inputs.mini_batch_size}}'
+      model_asset_id: '${{parent.inputs.model_asset_id}}'
       validation_info: '${{parent.jobs.oss_distillation_validate_pipeline.outputs.validation_info}}'
 
     outputs:
