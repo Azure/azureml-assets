@@ -160,9 +160,9 @@ def merge_data_with_text(
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: Merged DataFrames for training and validation data.
     """
-    train_text_df = pd.read_csv(train_text_tsv, sep="\t")
+    train_text_df = pd.read_csv(train_text_tsv, sep="\t", header=None)
     train_text_df.columns = ["Name", "classification_json"]
-    validation_text_df = pd.read_csv(validation_text_tsv, sep="\t")
+    validation_text_df = pd.read_csv(validation_text_tsv, sep="\t", header=None)
     validation_text_df.columns = ["Name", "classification_json"]
 
     def extract_label_from_json(json_str):
