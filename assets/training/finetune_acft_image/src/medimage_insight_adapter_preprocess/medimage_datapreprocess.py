@@ -74,7 +74,7 @@ def get_parser():
 
 
 def generate_embeddings(image_tsv, mlflow_model):
-    image_df = pd.read_csv(image_tsv, sep="\t")
+    image_df = pd.read_csv(image_tsv, sep="\t", header=None)
     image_df.columns = ["Name", "image"]
     image_df["text"] = None
     image_embeddings = mlflow_model.predict(image_df)

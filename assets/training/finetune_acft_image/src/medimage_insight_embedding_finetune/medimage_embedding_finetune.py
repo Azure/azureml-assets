@@ -12,7 +12,6 @@ from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_
 import faulthandler
 import os
 import re
-import sys
 import torch
 import yaml
 from typing import Any, Dict, List, Tuple
@@ -24,19 +23,12 @@ import MainzVision as mv
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
 CHECKPOINT_PATH = "artifacts/checkpoints/vision_model/medimageinsigt-v1.0.0.pt"
-UNICLMODEL = 'UniCLModel.py'
-MED_IMAGE_INSIGHT = 'MedImageInsight'
-CODE = 'code'
-DATASET_NAME = 'KNNSHOT_FINETUNE'
 EVAL_IMAGE_TSV = 'EVAL_IMAGE_TSV'
 EVAL_TEXT_TSV = 'EVAL_TEXT_TSV'
 IMAGE_TSV = 'IMAGE_TSV'
 TEXT_TSV = 'TEXT_TSV'
 LABEL_FILE = 'LABEL_FILE'
 SAVE_DIR = 'SAVE_DIR'
-LIB = 'Lib'
-SITE_PACKAGES = 'site-packages'
-MainzVision = 'MainzVision'
 USER_DIR = 'user_dir'
 MLFLOW_MODEL_FOLDER = 'MLFLOW_MODEL_FOLDER'
 UNICL_MODEL = 'UNICL_MODEL'
@@ -219,84 +211,6 @@ def get_parser() -> argparse.ArgumentParser:
         help="Input dir of MedImage Insight model",
     )
     parser.add_argument(
-        '--log_every',
-        type=int,
-        default=10,
-        help='Log every n steps.'
-    )
-    parser.add_argument(
-        '--resume',
-        type=bool,
-        default=True,
-        help='Resume training from checkpoint (True or False).'
-    )
-    parser.add_argument(
-        '--reset_data_loader',
-        type=bool,
-        default=False,
-        help='Reset data loader (True or False).'
-    )
-    parser.add_argument(
-        '--fp16',
-        type=bool,
-        default=True,
-        help='Use FP16 precision (True or False).'
-    )
-    parser.add_argument(
-        '--zero_stage',
-        type=bool,
-        default=False,
-        help='ZeRO optimization stage (True or False).'
-    )
-    parser.add_argument(
-        '--deepspeed',
-        type=bool,
-        default=False,
-        help='Use DeepSpeed optimization (True or False).'
-    )
-    parser.add_argument(
-        '--save_per_optim_steps',
-        type=int,
-        default=100,
-        help='Save checkpoint every n optimization steps.'
-    )
-    parser.add_argument(
-        '--eval_per_optim_steps',
-        type=int,
-        default=100,
-        help='Evaluate every n optimization steps.'
-    )
-    parser.add_argument(
-        '--grad_clipping',
-        type=float,
-        default=1.0,
-        help='Gradient clipping value.'
-    )
-    parser.add_argument(
-        '--set_sampler_epoch',
-        type=bool,
-        default=False,
-        help='Set sampler epoch.'
-    )
-    parser.add_argument(
-        '--verbose',
-        type=bool,
-        default=False,
-        help='Enable verbose logging (True or False).'
-    )
-    parser.add_argument(
-        '--workers',
-        type=int,
-        default=6,
-        help='Number of workers.'
-    )
-    parser.add_argument(
-        '--pin_memory',
-        type=bool,
-        default=False,
-        help='Pin memory in data loader (True or False).'
-    )
-    parser.add_argument(
         '--eval_image_tsv',
         type=str,
         help='Path to evaluation image TSV file.'
@@ -322,30 +236,6 @@ def get_parser() -> argparse.ArgumentParser:
         help='Path to label file.'
     )
     parser.add_argument(
-        '--knn',
-        type=int,
-        default=200,
-        help='Number of nearest neighbors for KNN.'
-    )
-    parser.add_argument(
-        '--batch_size_per_gpu',
-        type=int,
-        default=2,
-        help='Batch size per GPU.'
-    )
-    parser.add_argument(
-        '--max_num_epochs',
-        type=int,
-        default=10000,
-        help='Maximum number of epochs.'
-    )
-    parser.add_argument(
-        '--gradient_accumulate_step',
-        type=int,
-        default=1,
-        help='Number of gradient accumulation steps.'
-    )
-    parser.add_argument(
         '--save_dir',
         type=str,
         help='Directory to save the output.'
@@ -355,92 +245,6 @@ def get_parser() -> argparse.ArgumentParser:
         type=str,
         required=True,
         help='Path(s) to the MainzTrain config file(s).'
-    )
-    parser.add_argument(
-        '--drop_path_rate',
-        type=float,
-        default=0.2,
-        help='Drop path rate.'
-    )
-    parser.add_argument(
-        '--context_length',
-        type=int,
-        default=77,
-        help='Context length.'
-    )
-    parser.add_argument(
-        '--scale',
-        nargs=2,
-        type=float,
-        default=[0.8, 1.0],
-        help='Scale range.'
-    )
-    parser.add_argument(
-        '--ratio',
-        nargs=2,
-        type=float,
-        default=[0.75, 1.3333333],
-        help='Aspect ratio range.'
-    )
-    parser.add_argument(
-        '--re_prob',
-        type=float,
-        default=0.25,
-        help='Random erasing probability.'
-    )
-    parser.add_argument(
-        '--hflip',
-        type=float,
-        default=0.0,
-        help='Horizontal flip probability.'
-    )
-    parser.add_argument(
-        '--vflip',
-        type=float,
-        default=0.0,
-        help='Vertical flip probability.'
-    )
-    parser.add_argument(
-        '--text_augmentation',
-        type=int,
-        default=1,
-        help='Text augmentation flag.'
-    )
-    parser.add_argument(
-        '--batch_size_total',
-        type=int,
-        default=1024,
-        help='Total batch size.'
-    )
-    parser.add_argument(
-        '--decay',
-        type=float,
-        default=0.999,
-        help='Decay rate.'
-    )
-    parser.add_argument(
-        '--start_learning_rate',
-        type=float,
-        default=0.00001,
-        help='Start learning rate.'
-    )
-    parser.add_argument(
-        '--world_size',
-        type=int,
-        default=8,
-        help='Number of GPUs on which to finetune.'
-    )
-    parser.add_argument(
-        '--optimizer',
-        type=str,
-        default='AdamW',
-        help='Optimizer type.'
-    )
-    parser.add_argument(
-        '--weight_decay',
-        type=float,
-        default=0.2,
-        help='Weight decay.'
     )
     parser.add_argument(
         '--mlflow_output_model_folder',
@@ -557,22 +361,6 @@ def main(args: List[str] = None) -> None:
     if opt.get('SAVE_TIMER_LOG', False):
         Timer.setEnabled(True)
     logger.info(opt)
-    from pathlib import Path
-    dataset_root = opt['DATASET']['ROOT']
-    for root, dirs, files in os.walk(dataset_root):
-        for name in files:
-            logger.info(f"File: {os.path.join(root, name)}")
-        for name in dirs:
-            logger.info(f"Directory: {os.path.join(root, name)}")
-    logger.info('start in dataset root')
-    dataset_path = os.path.join(opt['DATASET']['ROOT'], 'full')
-    logger.info('dataset_path')
-    logger.info(dataset_path)
-    for root, dirs, files in os.walk(dataset_path):
-        for name in files:
-            logger.info(f"File: {os.path.join(root, name)}")
-        for name in dirs:
-            logger.info(f"Directory: {os.path.join(root, name)}")
 
     trainer = MainzTrainer(opt)
 
@@ -586,16 +374,7 @@ def main(args: List[str] = None) -> None:
 
     logger.info(f"Running command: {command}")
     with torch.autograd.profiler.profile(use_cuda=True, enabled=opt.get('AUTOGRAD_PROFILER', False) and opt['rank'] == 0) as prof:
-        if command == "train":
-            trainer.train()
-        elif command == "evaluate":
-            trainer.eval(splits=splits)
-        elif command == 'train-and-evaluate':
-            best_checkpoint_path = trainer.train()
-            opt['PYLEARN_MODEL'] = best_checkpoint_path
-            trainer.eval(splits=splits)
-        else:
-            raise ValueError(f"Unknown command: {command}")
+        trainer.train()
 
     if opt.get('AUTOGRAD_PROFILER', False):
         logger.info(prof.key_averages().table(sort_by="cuda_time_total"))
