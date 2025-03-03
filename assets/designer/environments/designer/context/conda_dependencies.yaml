@@ -6,7 +6,7 @@ dependencies:
   - setuptools=70
   - cython=0.29.24
   - numpy==1.23.5
-  - scipy==1.10.0 
+  - scipy==1.10.0
   - pip:
     - azureml-designer-classic-modules==0.0.191
     - cryptography==44.0.1
