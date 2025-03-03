@@ -40,7 +40,7 @@ Please see Microsoft's Responsible AI Principles and approach available at [http
 
 ## Training Data
 
-The training data include AMOS22-CT, AMOS22-MRI, MSD, LIDC-IDRI.
+The training data include AMOS22-CT, AMOS22-MRI.
 
 
 ### License and where to send questions or comments about the model
