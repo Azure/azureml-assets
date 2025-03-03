@@ -35,7 +35,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--scoring_url",
         type=str,
-        help="The URL of the endpoint."
+        help="The URL of the endpoint.",
+        default=None,
     )
     parser.add_argument(
         "--connection_name",
@@ -248,7 +249,7 @@ def _get_overriding_configs(configuration_file: Optional[str]) -> Dict[Any, Any]
 
 @swallow_all_exceptions(logger)
 def main(
-    scoring_url: str,
+    scoring_url: Optional[str],
     connection_name: str,
     authentication_type: AuthenticationType,
     debug_mode: bool,
