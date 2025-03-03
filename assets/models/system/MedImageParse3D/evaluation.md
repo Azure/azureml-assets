@@ -2,7 +2,7 @@
 
 <!-- `evaluation.md` is highly recommended, but not required. It captures information about the performance of the model. We highly recommend including this section as this information is often used to decide what model to use. -->
 
-We benchmarked MedImageParse 3D against task-specific nnU-Net models on AMOS22 CT and MRI datasets. Note that we trained a single model to solve all different tasks solely via text prompting, e.g. "gallbladder in abdomen MRI", while nnU-Net was trained as multiple expert models for each individual object in each modality. Therefore, we made this comparison of one single model v.s. 27 task-specific models.
+We benchmarked MedImageParse3D against task-specific nnU-Net models on AMOS22 CT and MRI datasets. Note that we trained a single model to solve all different tasks solely via text prompting, e.g. "gallbladder in abdomen MRI", while nnU-Net was trained as multiple expert models for each individual object in each modality. Therefore, we made this comparison of one single model v.s. 27 task-specific models.
 
 **CT**
 | Dice score (%)           | aorta  | bladder | duodenum | esophagus | gallbladder | left adrenal gland | left kidney | liver  | pancreas | IVC | right adrenal gland | right kidney | spleen | stomach | Average   |
