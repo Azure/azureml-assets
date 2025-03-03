@@ -183,6 +183,13 @@ tags:
   SharedComputeCapacityEnabled: ""
   hiddenlayerscanned: ""
   _aml_system_vanity_registry: "azureml-phi"
+  maas-finetuning-deploy-regions:
+  - eastus2
+  - eastus
+  - northcentralus
+  - westus3
+  - westus
+  - southcentralus
   inference_compute_allow_list: [Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4,
     Standard_NC96ads_A100_v4]
   finetune_compute_allow_list: [Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4]
