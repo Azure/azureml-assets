@@ -19,7 +19,7 @@ tags:
     Standard_NC96ads_A100_v4]
   inference_supported_envs:
   - vllm
-version: 3
+version: 2
 description: |
   ## Model Summary
 
