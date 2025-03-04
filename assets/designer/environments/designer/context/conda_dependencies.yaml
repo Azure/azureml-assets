@@ -9,5 +9,7 @@ dependencies:
   - scipy==1.10.0
   - pip:
     - azureml-designer-classic-modules==0.0.191
+    - cryptography==44.0.1
+    - lightgbm==4.6.0
     - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
 
