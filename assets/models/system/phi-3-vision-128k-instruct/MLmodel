@@ -13,7 +13,7 @@ flavors:
     python_model: python_model.pkl
     python_version: 3.10.14
 metadata:
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:63
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:39
   base_model_name: phi3-mini-vision
   base_model_task: chat-completion
   is_acft_model: true
