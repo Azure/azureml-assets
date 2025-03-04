@@ -30,7 +30,7 @@ dependencies:
   - mltable==1.6.1
   - openai==1.65.2
   - azure-ai-ml==1.25.0
-  - mldesigner==0.1.0b18
+  - mldesigner==0.1.0b19
   - tiktoken
   - idna==3.7
   - pydantic
