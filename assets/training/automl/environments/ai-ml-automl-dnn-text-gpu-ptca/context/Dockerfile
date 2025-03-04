@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu121-py310-torch222:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:{{latest-image-tag}}
 
 USER root:root
 
@@ -15,8 +15,8 @@ RUN pip install torch-ort==1.18.0 && TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9
 
 RUN pip uninstall -y onnxruntime
 
-RUN pip install transformers==4.38.2
-RUN pip install optimum==1.21.4
+RUN pip install transformers==4.48.0
+RUN pip install optimum==1.23.3
 RUN pip install accelerate==0.33.0
 RUN pip install deepspeed~=0.15.1
 RUN pip install numpy==1.22.0
