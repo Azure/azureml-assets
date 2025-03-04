@@ -2,7 +2,6 @@
 
 <!-- `description.md` is required. -->
 
-### Overview
 Biomedical image analysis is fundamental for biomedical discovery in cell biology, pathology, radiology, and many other biomedical domains. 3D medical images such as CT and MRI play unique roles in clinical practices. MedImageParse 3D is a foundation model for imaging parsing that can jointly conduct segmentation, detection, and recognition for 3D medical images including CT and MRI. Through joint learning, we can improve accuracy for individual tasks and enable novel applications such as segmenting relevant objects in an image through a text prompt, rather than requiring users to laboriously specify the bounding box for each object. 
 
 MedImageParse 3D was trained on a large dataset comprising triples of image, segmentation mask, and textual description. It takes in 3D medical image volume with a text prompt about the target object type (e.g. pancreas in CT), and outputs the corresponding segmentation mask in 3D volume the same shape as the input image. MedImageParse 3D is also able to identify invalid user inputs describing objects that do not exist in the image. MedImageParse 3D can perform object detection, which aims to locate a specific object of interest, including objects with irregular shapes or of small size.

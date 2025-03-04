@@ -5,4 +5,4 @@ path:
   type: azureblob
 publish:
   description: description.md
-  type: custom_model
+  type: mlflow_model
