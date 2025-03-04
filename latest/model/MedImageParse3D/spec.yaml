@@ -16,7 +16,7 @@ tags:
   Featured: ""
   task: image-segmentation
   industry: health-and-life-sciences
-  displayName: "MedImageParse3D"
+  displayName: "MedImageParse 3D"
   author: Microsoft
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
@@ -27,19 +27,19 @@ tags:
 
     <!-- `evaluation.md` is highly recommended, but not required. It captures information about the performance of the model. We highly recommend including this section as this information is often used to decide what model to use. -->
 
-    We benchmarked MedImageParse3D against task-specific nnU-Net models on AMOS22 CT and MRI datasets. Note that we trained a single model to solve all different tasks solely via text prompting, e.g. "gallbladder in abdomen MRI", while nnU-Net was trained as multiple expert models for each individual object in each modality. Therefore, we made this comparison of one single model v.s. 27 task-specific models.
+    We benchmarked MedImageParse 3D against task-specific nnU-Net models on AMOS22 CT and MRI datasets. Note that we trained a single model to solve all different tasks solely via text prompting, e.g. "gallbladder in abdomen MRI", while nnU-Net was trained as multiple expert models for each individual object in each modality. Therefore, we made this comparison of one single model v.s. 27 task-specific models.
 
     **CT**
     | Dice score (%)           | aorta  | bladder | duodenum | esophagus | gallbladder | left adrenal gland | left kidney | liver  | pancreas | IVC | right adrenal gland | right kidney | spleen | stomach | Average   |
     |-----------------|--------|---------|----------|-----------|-------------|---------------------|-------------|--------|----------|----------|---------------------|-------------|--------|---------|--------|
-    | MedImageParse3D  | 95.27 | 90.17  | 83.27   | 87.11    | 85.96      | 79.48              | 96.39      | 97.71 | 88.42   | 92.02   | 79.39              | 96.88      | 96.91 | 91.49  | 90.00 |
+    | MedImageParse 3D  | 95.27 | 90.17  | 83.27   | 87.11    | 85.96      | 79.48              | 96.39      | 97.71 | 88.42   | 92.02   | 79.39              | 96.88      | 96.91 | 91.49  | 90.00 |
     | nnU-Net        | 95.20 | 87.52  | 80.72   | 87.31    | 83.06      | 78.06              | 95.39      | 96.09 | 86.57   | 90.38   | 78.24              | 93.19      | 96.91 | 89.79  | 88.35 |
     | SegVol      | 92.07  | 88.03   | 72.49    | 64.47    | 79.05       | 76.31               | 94.58       | 96.24  | 80.97    | 83.65    | 71.07               | 92.92       | 94.03  | 88.82   | 83.75  |
 
     **MRI**
     | Dice score (%)           | aorta  | duodenum | esophagus | gallbladder | left adrenal gland | left kidney | liver  | pancreas | IVC | right adrenal gland | right kidney | spleen | stomach | Average   |
     |-----------------|--------|----------|-----------|-------------|---------------------|-------------|--------|----------|----------|---------------------|-------------|--------|---------|--------|
-    | MedImageParse3D  | 95.73 | 76.03   | 81.38    | 66.58      | 63.35              | 96.92      | 97.65 | 88.70   | 87.26   | 68.14              | 96.69      | 96.88 | 88.93  | 84.94 |
+    | MedImageParse 3D  | 95.73 | 76.03   | 81.38    | 66.58      | 63.35              | 96.92      | 97.65 | 88.70   | 87.26   | 68.14              | 96.69      | 96.88 | 88.93  | 84.94 |
     | nnU-Net        | 95.64 | 66.78   | 73.62    | 66.32      | 57.15              | 95.82      | 97.25 | 79.29   | 90.66   | 53.29              | 85.48      | 96.66 | 88.80  | 80.52 |
 
 
@@ -64,8 +64,8 @@ tags:
             
 
     ### Out-of-Scope Use Cases
-    This model is intended and provided as-is for research and model development exploration. MedImageParse3D is not designed or intended to be deployed in clinical settings as-is nor is it intended for use in the diagnosis or treatment of any health or medical condition, and the model’s performance for such purposes has not been established. 
-    You bear sole responsibility and liability for any use of MedImageParse3D, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals. When evaluating the model for your use case, carefully consider the impacts of overreliance, including overreliance within the context of radiology specifically and more generally for generative AI [Appropriate reliance on Generative AI: Research synthesis - Microsoft Research]([https://www.microsoft.com/en-us/research/publication/appropriate-reliance-on-generative-ai-research-synthesis/])
+    This model is intended and provided as-is for research and model development exploration. MedImageParse 3D is not designed or intended to be deployed in clinical settings as-is nor is it intended for use in the diagnosis or treatment of any health or medical condition, and the model’s performance for such purposes has not been established. 
+    You bear sole responsibility and liability for any use of MedImageParse 3D, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals. When evaluating the model for your use case, carefully consider the impacts of overreliance, including overreliance within the context of radiology specifically and more generally for generative AI [Appropriate reliance on Generative AI: Research synthesis - Microsoft Research]([https://www.microsoft.com/en-us/research/publication/appropriate-reliance-on-generative-ai-research-synthesis/])
 
     ## Responsible AI Considerations
     Microsoft believes Responsible AI is a shared responsibility and we have identified six principles and practices to help organizations address risks, innovate, and create value: fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability. When downloaded or used in accordance with our terms of service, developers should work with their supporting model team to ensure this model meets requirements for the relevant use case and addresses unforeseen product misuse.   
@@ -73,7 +73,7 @@ tags:
     While testing the model with images and/or text, ensure that the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
 
     The model is not designed for the following use cases:
-    * **Use by clinicians to inform clinical decision-making, as a diagnostic tool or as a medical device** - Although MedImageParse3D is highly accurate in parsing biomedical data, it is not designed or intended to be deployed in clinical settings as-is not is it for use in the diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions (including to support clinical decision-making), or as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional.  
+    * **Use by clinicians to inform clinical decision-making, as a diagnostic tool or as a medical device** - Although MedImageParse 3D is highly accurate in parsing biomedical data, it is not designed or intended to be deployed in clinical settings as-is not is it for use in the diagnosis, cure, mitigation, treatment, or prevention of disease or other conditions (including to support clinical decision-making), or as a substitute of professional medical advice, diagnosis, treatment, or clinical judgment of a healthcare professional.  
 
     * **Scenarios without consent for data** - Any scenario that uses health data for a purpose for which consent was not obtained.   
 
@@ -88,7 +88,7 @@ tags:
 
 
     ### License and where to send questions or comments about the model
-    The license for MedImageParse is the MIT license. Please cite our [`Paper`](https://aka.ms/biomedparse-paper) if you use the model for your research.
+    The license for MedImageParse 3D is the MIT license. Please cite our [`Paper`](https://aka.ms/biomedparse-paper) if you use the model for your research.
     For questions or comments, please contact: hlsfrontierteam@microsoft.com
 
     ### Citation
@@ -113,7 +113,7 @@ description: |
 
   Traditional segmentation models do segmentation alone, requiring a fully supervised mask during training and typically need either manual bounding boxes or automatic proposals at inference if multiple objects are present. Such model doesn’t inherently know which object to segment unless trained specifically for that class, and it can’t take a text query to switch targets. MedImageParse 3D can segment via text prompts describing the object without needing a user-drawn bounding box. This semantic prompt-based approach lets it parse the image and find relevant objects anywhere in the image.
 
-  In summary, MedImageParse shows potential to be a building block for an all-in-one tool for biomedical image analysis by jointly solving segmentation, detection, and recognition. It is broadly applicable to different 3D image modalities through text prompting, which may pave a future path for efficient and accurate image-based biomedical discovery when built upon and integrated into an application.
+  In summary, MedImageParse 3D shows potential to be a building block for an all-in-one tool for biomedical image analysis by jointly solving segmentation, detection, and recognition. It is broadly applicable to different 3D image modalities through text prompting, which may pave a future path for efficient and accurate image-based biomedical discovery when built upon and integrated into an application.
 
 
   ### Model Architecture
