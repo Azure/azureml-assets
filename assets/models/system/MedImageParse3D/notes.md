@@ -42,7 +42,7 @@ The training data include AMOS22-CT, AMOS22-MRI.
 
 
 ### License and where to send questions or comments about the model
-The license for MedImageParse is the MIT license. Please cite our [`Paper`](https://aka.ms/biomedparse-paper) if you use the model for your research.
+The license for MedImageParse3D is the MIT license. Please cite our [`Paper`](https://aka.ms/biomedparse-paper) if you use the model for your research.
 For questions or comments, please contact: hlsfrontierteam@microsoft.com
 
 ### Citation
