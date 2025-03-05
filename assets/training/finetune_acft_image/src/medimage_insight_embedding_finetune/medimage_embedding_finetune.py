@@ -16,9 +16,9 @@ import torch
 import yaml
 from typing import Any, Dict, List, Tuple
 from safetensors.torch import save_file, load_file
-from MainzTrain.Trainers.MainzTrainer import MainzTrainer
-from MainzTrain.Utils.Timing import Timer
-import MainzVision as mv
+from azureml.acft.image.components.mainztrain.Trainers.MainzTrainer import MainzTrainer
+from azureml.acft.image.components.mainztrain.Utils.Timing import Timer
+import azureml.acft.image.components.mainzvision as mv
 
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
