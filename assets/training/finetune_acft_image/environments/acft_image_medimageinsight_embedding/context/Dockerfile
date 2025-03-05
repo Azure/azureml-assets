@@ -9,8 +9,5 @@ RUN apt-get -y install unzip
 
 # Install required packages from pypi
 COPY requirements.txt .
-COPY MainzVision-1.0.0-py3-none-any.whl .
-COPY MainzTrain-0.2.0-py3-none-any.whl .
 RUN pip install -r requirements.txt --no-cache-dir
-RUN pip install MainzVision-1.0.0-py3-none-any.whl
-RUN pip install MainzTrain-0.2.0-py3-none-any.whl
+
