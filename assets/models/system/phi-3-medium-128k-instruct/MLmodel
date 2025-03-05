@@ -25,7 +25,7 @@ metadata:
   base_model_name: Phi-3-medium-128k-instruct
   base_model_task: chat-completion
   model_provider_name: microsoft
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:57
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:63
 mlflow_version: 2.10.2
 model_uuid: 53cc26bc8d2843c48369a20e205983f9
 utc_time_created: '2024-05-01 17:06:09.382806'

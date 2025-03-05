@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-devel-ubuntu20.04
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -48,12 +48,7 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 # RUN pip install -e ./ --no-cache-dir
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.16 --no-cache-dir
-
-RUN pip uninstall transformers -y
-RUN pip uninstall -y vllm
-RUN pip install vllm==0.6.1.post2
-RUN pip install transformers==4.44.2
+RUN pip install llm-optimized-inference==0.2.21 --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

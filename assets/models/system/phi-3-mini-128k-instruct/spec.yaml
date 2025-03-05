@@ -65,9 +65,11 @@ tags:
     per_device_eval_batch_size: 1
     gradient_accumulation_steps: 1
     learning_rate: 5e-6
+    learning_rate_min: 5e-7
+    learning_rate_max: 5e-5
     lr_scheduler_type: "cosine"
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 12
+version: 13

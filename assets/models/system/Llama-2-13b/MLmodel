@@ -21,7 +21,7 @@ flavors:
     loader_module: azureml.evaluate.mlflow.hftransformers
     python_version: 3.8.16
 metadata:
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:58
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:63
   base_model_name: Llama-2-13b
   base_model_task: text-generation
   model_provider_name: meta
