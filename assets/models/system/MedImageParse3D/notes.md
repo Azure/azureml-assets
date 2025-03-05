@@ -4,7 +4,6 @@
 
 ## Intended Use
 
-
 ### Primary Use Cases
 
 * **Supported Data Input Format** 
@@ -20,8 +19,7 @@
 
 ### Out-of-Scope Use Cases
 This model is intended and provided as-is for research and model development exploration. MedImageParse 3D is not designed or intended to be deployed in clinical settings as-is nor is it intended for use in the diagnosis or treatment of any health or medical condition, and the model’s performance for such purposes has not been established. 
-You bear sole responsibility and liability for any use of MedImageParse 3D, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals.
-
+You bear sole responsibility and liability for any use of MedImageParse 3D, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals. When evaluating the model for your use case, carefully consider the impacts of overreliance, including overreliance within the context of radiology specifically and more generally for generative AI [Appropriate reliance on Generative AI: Research synthesis - Microsoft Research]([https://www.microsoft.com/en-us/research/publication/appropriate-reliance-on-generative-ai-research-synthesis/])
 
 ## Responsible AI Considerations
 Microsoft believes Responsible AI is a shared responsibility and we have identified six principles and practices to help organizations address risks, innovate, and create value: fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability. When downloaded or used in accordance with our terms of service, developers should work with their supporting model team to ensure this model meets requirements for the relevant use case and addresses unforeseen product misuse.   
@@ -44,7 +42,7 @@ The training data include AMOS22-CT, AMOS22-MRI.
 
 
 ### License and where to send questions or comments about the model
-Please cite our [`Paper`](https://aka.ms/biomedparse-paper) if you use the model for your research.
+The license for MedImageParse 3D is the MIT license. Please cite our [`Paper`](https://aka.ms/biomedparse-paper) if you use the model for your research.
 For questions or comments, please contact: hlsfrontierteam@microsoft.com
 
 ### Citation
