@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20250303.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20250303.v1
 
 # Install OpenCV native dependencies
 RUN apt-get update
@@ -59,7 +59,9 @@ RUN pip install 'cryptography>=43.0.1'
 RUN pip install 'Werkzeug>=3.0.3' \
                 'tqdm>=4.66.3' \
                 'onnx>=1.17.0'
-
+# To resolve GHSA-2586-f3p4-hq84 vulnerability issue for lightgbm<4.6.0
+# from azureml-automl-dnn-vision package
+RUN pip install 'lightgbm>=4.6.0'
 # To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
 RUN pip install 'torch>=2.2.2'
 # To resolve GHSA-jh2j-j4j9-crg3 vulnerability issue
