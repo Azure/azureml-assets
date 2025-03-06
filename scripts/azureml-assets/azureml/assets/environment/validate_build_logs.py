@@ -61,10 +61,10 @@ def validate_azureml_sdk_dependencies(build_log_file_name, build_log_content):
     Returns:
         int: Number of errors.
     """
-    azure-ai-ml_match = re.search("azure-ai-ml", build_log_content)
-    azureml-core_match = re.search("azureml-core", build_log_content)
+    azure_ai_ml_match = re.search("azure-ai-ml", build_log_content)
+    azureml_core_match = re.search("azureml-core", build_log_content)
 
-    if azure-ai-ml_match and azureml-core_match:
+    if azure_ai_ml_match and azureml_core_match:
         logger.log_error(f"{build_log_file_name}: azure-ai-ml and azureml-core depedencies both found in build log. "
                          f"Please use only one version of the AzureML SDK.")
         return 1
