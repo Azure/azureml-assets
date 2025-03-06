@@ -1,7 +1,7 @@
-azureml-acft-accelerator==0.0.67
+azureml-acft-accelerator==0.0.68
 # azureml-evaluate-mlflow==0.0.67
-azureml-acft-common-components==0.0.67
-azureml-acft-contrib-hf-nlp==0.0.67
+azureml-acft-common-components==0.0.68
+azureml-acft-contrib-hf-nlp==0.0.68
 # Temporarily commenting azureml_acft_multimodal_components since it is not supported in python 3.10 and we need to
 # upgrade to python 3.10 to address scikit-learn vulnerability(version 1.5.0) which requires python>=3.9
 # Uncomment the below line once azureml_acft_multimodal_components is supported in python 3.10
