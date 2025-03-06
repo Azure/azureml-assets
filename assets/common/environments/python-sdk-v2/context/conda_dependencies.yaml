@@ -6,7 +6,7 @@ dependencies:
   - pip=23.3
   - pip:
     - azure-ai-ml=={{latest-pypi-version}}
-    - azure-ml-core=={{latest-pypi-version}}
+    - azureml-core=={{latest-pypi-version}}
     - azure-identity=={{latest-pypi-version}}
     # v1 package for fetching run details
     - azureml-core=={{latest-pypi-version}}
