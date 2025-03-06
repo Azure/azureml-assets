@@ -53,7 +53,7 @@ def validate_ubuntu_version(build_log_file_name, build_log_content):
 
 
 def validate_azureml_sdk_dependencies(build_log_file_name, build_log_content):
-    """Validate Azure dependencies.
+    """Validate AzureML SDK dependencies.
 
     Args:
         build_log_file_name (str): Build log file name.
