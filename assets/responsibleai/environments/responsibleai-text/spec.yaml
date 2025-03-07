@@ -13,6 +13,6 @@ build:
 os_type: linux
 
 tags:
-  OS: Ubuntu20.04
+  OS: Ubuntu22.04
   Training: ""
   Preview: ""
