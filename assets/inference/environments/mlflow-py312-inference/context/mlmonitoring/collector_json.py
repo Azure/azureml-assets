@@ -1,6 +1,6 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+"""For collector json."""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 import sys
 import random
@@ -20,6 +20,7 @@ except ImportError:
 
 
 def _build_log_data_by_type(data):
+    """For build log data by type."""
     if 'pandas' in sys.modules and isinstance(data, pd.DataFrame):
         return PandasFrameData(data)
 
@@ -29,16 +30,20 @@ def _build_log_data_by_type(data):
 
 
 def _raise_if_exception(e: Exception):
+    """For raise if exception."""
     raise e
 
 
 class JsonCollector(CollectorBase):
+    """For JsonCollector."""
+
     def __init__(
             self,
             *,
             name: str,
             on_error: Callable[[Exception], Any] = None
     ):
+        """For init."""
         super().__init__("default")
         self.name = name
         if on_error:
@@ -49,6 +54,7 @@ class JsonCollector(CollectorBase):
         self._validate_mdc_config()
 
     def _validate_mdc_config(self):
+        """For validate mdc config."""
         if not self.name or len(self.name) <= 0:
             # unexpected drop
             msg = "collection name is not provided"
@@ -80,6 +86,7 @@ class JsonCollector(CollectorBase):
             self,
             data,  # supported type: Union[pd.DataFrame]
             correlation_context: CorrelationContext = None) -> CorrelationContext:
+        """For collect."""
         if correlation_context is None:
             correlation_context = get_context()
 

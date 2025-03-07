@@ -1,6 +1,6 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+"""For init."""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 from .logger import init_logging, is_debug, logger
 
