@@ -255,3 +255,5 @@ RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 ENV TF_USE_LEGACY_KERAS=1
+
+# dummy number to change when needing to force rebuild without changing the definition: 1
