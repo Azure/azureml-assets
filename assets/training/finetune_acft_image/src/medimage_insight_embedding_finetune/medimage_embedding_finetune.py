@@ -20,6 +20,7 @@ from azureml.acft.image.components.mainztrain.Trainers.MainzTrainer import Mainz
 from azureml.acft.image.components.mainztrain.Utils.Timing import Timer
 import azureml.acft.image.components.mainzvision as mv
 
+
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
 CHECKPOINT_PATH = "artifacts/checkpoints/vision_model/medimageinsigt-v1.0.0.pt"
@@ -138,6 +139,37 @@ def load_opt_from_config_files(conf_files: List[str]) -> Dict[str, Any]:
 
     return opt
 
+def update_opt(opt):
+    world_size = 1
+    if 'OMPI_COMM_WORLD_SIZE' in os.environ:
+        world_size = int(os.environ['OMPI_COMM_WORLD_SIZE'])
+    if world_size == 1:
+        logger.warning("=> Set 'SET_SAMPLER_EPOCH' to false when world_size is 1")
+        opt['SET_SAMPLER_EPOCH'] = False
+
+    batch_size = opt['TRAIN']['BATCH_SIZE_TOTAL']
+    batch_size_per_step = opt['TRAIN']['BATCH_SIZE_PER_GPU'] * world_size
+    if batch_size <= 0:
+        batch_size = batch_size_per_step
+        opt['TRAIN']['BATCH_SIZE_TOTAL'] = batch_size
+
+    opt['GRADIENT_ACCUMULATE_STEP'] = batch_size // batch_size_per_step
+
+    assert opt["GRADIENT_ACCUMULATE_STEP"] > 0, "GRADIENT_ACCUMULATE_STEP is zero"
+
+    if 'MAX_NUM_EPOCHS' in opt:
+        opt['LR_SCHEDULER_PARAMS']['epochs'] = opt['MAX_NUM_EPOCHS']
+
+    if 'SAMPLER' in opt['DATASET'] and opt['DATASET']['SAMPLER'] == 'chunk':
+        if 'TIMM_AUG' in opt['AUG']:
+            logger.warning(
+                '=> chunk sampler is not compatible with timm dataloader,'
+                '=> update TIMM_AUG.USE_LOADER to False'
+            )
+            opt['AUG']['TIMM_AUG']['USE_LOADER'] = False
+
+    if 'NAME' not in opt:
+        opt['NAME'] = opt['MODEL']['NAME']
 
 def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
     """
@@ -156,6 +188,9 @@ def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
     logger.info(f"Copying files from {src_folder} to {dest_folder}")
     shutil.copytree(src_folder, dest_folder, dirs_exist_ok=True)
 
+def copy_result_files(cmdline_args: Dict[str, Any]) -> None:
+    dest_folder = cmdline_args['MLFLOW_OUTPUT_MODEL_FOLDER']
+    
     # Find the highest numbered folder in SAVE_DIR
     save_dir = cmdline_args['SAVE_DIR']+'/INPUT_conf_files_conf~'
     run_folders = [d for d in os.listdir(save_dir) if os.path.isdir(os.path.join(save_dir, d)) and d.startswith('run_')]
@@ -343,8 +378,6 @@ def main(args: List[str] = None) -> None:
     '''
     Main execution point for PyLearn.
     '''
-
-    logger.info('MainzTrain started')
     parser = get_parser()
     args = parser.parse_args(args)
     set_logging_parameters(
@@ -360,8 +393,20 @@ def main(args: List[str] = None) -> None:
     command = 'train'
     if opt.get('SAVE_TIMER_LOG', False):
         Timer.setEnabled(True)
-    logger.info(opt)
+    logger.info('MainzTrain started')
+    logger.info("Initializing distributed training options")
+    if os.environ.get('MASTER_ADDR'):
+        opt["MASTER_IP"] = os.environ['MASTER_ADDR']
+    if os.environ.get('MASTER_PORT'):
+        opt["PORT"] = os.environ['MASTER_PORT']
 
+    logger.info(f"MASTER_IP: {opt.get('MASTER_IP')}")
+    logger.info(f"PORT: {opt.get('PORT')}")
+    rank = int(os.environ.get('OMPI_COMM_WORLD_RANK', 0))
+    logger.info(f"Rank: {rank}")
+    logger.info(f"Initial opt: {opt}")
+    update_opt(opt)
+    logger.info(f"Updated opt: {opt}")
     trainer = MainzTrainer(opt)
 
     if opt.get('DEBUG_DUMP_TRACEBACKS_INTERVAL', 0) > 0:
@@ -369,8 +414,8 @@ def main(args: List[str] = None) -> None:
         traceback_dir = trainer.log_folder if trainer.log_folder is not None else trainer.save_folder
         traceback_file = os.path.join(traceback_dir, f"tracebacks_{opt['rank']}.txt")
         faulthandler.dump_traceback_later(timeout, repeat=True, file=open(traceback_file, 'w'))
-
-    splits = opt.get('EVALUATION_SPLITS', ["dev", "test"])
+    if rank == 0:
+        copy_model_files(opt)
 
     logger.info(f"Running command: {command}")
     with torch.autograd.profiler.profile(use_cuda=True, enabled=opt.get('AUTOGRAD_PROFILER', False) and opt['rank'] == 0) as prof:
@@ -385,7 +430,8 @@ def main(args: List[str] = None) -> None:
         timer_log_file = os.path.join(timer_log_dir, f"timer_log_{opt['rank']}.txt")
         Timer.timer_report(timer_log_file)
 
-    copy_model_files(opt)
+    if rank == 0:
+        copy_result_files(opt)
 
 
 if __name__ == "__main__":

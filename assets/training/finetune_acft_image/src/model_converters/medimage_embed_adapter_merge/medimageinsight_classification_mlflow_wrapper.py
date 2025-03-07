@@ -36,7 +36,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         :type task_type: str
         """
         super().__init__(task_type, vision_model_name, language_model_name)
-        self._supported_task = Tasks.IMAGE_CLASSIFICATION.value
+        self._supported_task = "image-classification"
         self.adapter_model = None
     
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:

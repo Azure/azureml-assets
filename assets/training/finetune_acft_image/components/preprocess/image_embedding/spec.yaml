@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medical_image_embedding_datapreprocessing
-version: 0.0.13
+version: 0.0.14
 type: command
 
 is_deterministic: True
@@ -25,6 +25,18 @@ inputs:
     description: Path to the MLflow model to be imported.
     mode: ro_mount
 
+  image_standardization_jpeg_compression_ratio:
+    type: integer
+    optional: true
+    default: 75
+    description: JPEG compression ratio for image standardization.
+
+  image_standardization_image_size:
+    type: integer
+    optional: true
+    default: 512
+    description: Image size for standardization.
+
 outputs:
   output_pkl:
     type: uri_folder
@@ -35,5 +47,7 @@ command: >-
   python medimage_datapreprocess.py 
   --task_name "MedEmbedding"
   --image_tsv "${{inputs.image_tsv}}" 
+  $[[--image_standardization_jpeg_compression_ratio "${{inputs.image_standardization_jpeg_compression_ratio}}"]]
+  $[[--image_standardization_image_size "${{inputs.image_standardization_image_size}}"]]  
   --output_pkl "${{outputs.output_pkl}}" 
   --mlflow_model_path "${{inputs.mlflow_model_path}}"

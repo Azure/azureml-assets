@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimgage_embedding_finetune
-version: 0.0.32
+version: 0.0.51
 
 type: command
 
@@ -9,11 +9,11 @@ is_deterministic: True
 display_name: Medical Image Insight Embedding Finetune
 description: Component to finetune the model using the medical image data
 
-environment : azureml://registries/mablonde-registry-101/environments/acpt-medimage-embedding/versions/13
+environment : azureml://registries/mablonde-registry-101/environments/acpt-medimage-embedding/versions/21
 code: ../../../src/medimage_insight_embedding_finetune
 
 distribution:
-  type: pytorch
+  type: mpi
 
 inputs:
   mlflow_model_path:
@@ -57,6 +57,11 @@ inputs:
     optional: false
     description: Path to the configuration files.
     mode: ro_mount
+  process_count_per_instance:
+    type: integer
+    optional: false
+    description: Number of processes per instance.
+    default: 1
 
 outputs:
   save_dir:

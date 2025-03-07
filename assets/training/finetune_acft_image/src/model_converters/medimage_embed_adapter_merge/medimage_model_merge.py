@@ -1,4 +1,5 @@
 import json
+import sys
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
@@ -62,12 +63,21 @@ def merge_models(adapter_model_path, mlflow_model_path, output_dir, hidden_dimen
 
     logger.info(f"Copied {CONFIG_JSON} to {artifacts_dir}")
 
-    # Copy MLModel and python_model.pkl from configuration to mlflow_model_path+"/mlflow_model_folder/"
+    # Copy MLModel from configuration to mlflow_model_path+"/mlflow_model_folder/"
     shutil.copy(MLMODEL, output_dir)
     logger.info(f"Copied {MLMODEL} to {output_dir}")
-    shutil.copy(PYTHON_MODEL, output_dir)
-    logger.info(f"Copied {PYTHON_MODEL} to {output_dir}")
-
+    
+    # Generate pickle model and save it to output_dir
+    sys.path.insert(0, os.path.join(output_dir, CODE_FOLDER))
+    import medimageinsight_classification_mlflow_wrapper
+    import cloudpickle
+    new_model = medimageinsight_classification_mlflow_wrapper.MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(
+        "image-classification",                                                                                                                        
+        "medimageinsigt-v1.0.0.pt",
+        "clip_tokenizer_4.16.2")
+    with open(os.path.join(output_dir, PYTHON_MODEL), "wb") as f:
+        cloudpickle.dump(new_model, f)
+    logger.info(f"Saved {PYTHON_MODEL} to {output_dir}")
 
 def main():
     parser = argparse.ArgumentParser(description="Merge adapter model with MLflow model")
