@@ -59,6 +59,18 @@ def get_parser():
         "--image_tsv", type=str, help="Path to image TSV file."
     )
     parser.add_argument(
+        "--image_standardization_jpeg_compression_ratio",
+        type=int,
+        default=75,
+        help="JPEG compression ratio for image standardization",
+    )
+    parser.add_argument(
+        "--image_standardization_image_size",
+        type=int,
+        default=512,
+        help="Image size for standardization",
+    )
+    parser.add_argument(
         "--mlflow_model_path",
         type=str,
         required=True,
@@ -73,11 +85,17 @@ def get_parser():
     return parser
 
 
-def generate_embeddings(image_tsv, mlflow_model):
+def generate_embeddings(image_tsv, mlflow_model, image_standardization_jpeg_compression_ratio, image_standardization_image_size):
     image_df = pd.read_csv(image_tsv, sep="\t", header=None)
     image_df.columns = ["Name", "image"]
     image_df["text"] = None
-    image_embeddings = mlflow_model.predict(image_df)
+    image_embeddings = mlflow_model.predict(
+        image_df, 
+        params= {
+            'image_standardization_jpeg_compression_ratio': image_standardization_jpeg_compression_ratio, 
+            'image_standardization_image_size': image_standardization_image_size
+            }
+    )
     image_df["features"] = image_embeddings["image_features"].apply(lambda item: np.array(item[0]))
 
     return image_df
@@ -128,7 +146,7 @@ def process_embeddings(args):
     image_tsv = args.image_tsv
 
     mlflow_model = mlflow.pyfunc.load_model(model_path)
-    image_embeddings = generate_embeddings(image_tsv, mlflow_model)
+    image_embeddings = generate_embeddings(image_tsv, mlflow_model, args.image_standardization_jpeg_compression_ratio, args.image_standardization_image_size)
 
     save_dataframe(
         image_embeddings,
