@@ -20,9 +20,9 @@ dependencies:
   - azureml-defaults==1.59.0
   - azureml-mlflow==1.59.0.post1
   - azureml-telemetry==1.59.0
-  - azureml-acft-common-components[image]==0.0.69
-  - azureml-evaluate-mlflow==0.0.69
-  - azureml-metrics[all]==0.0.69
+  - azureml-acft-common-components[image]==0.0.70
+  - azureml-evaluate-mlflow==0.0.70
+  - azureml-metrics[all]==0.0.70
   - xgboost>=1.6.1,<2.0.0
   - statsmodels>=0.11.0,<0.14.1
   - lightgbm>=3.2.1,<4.2.0
@@ -34,7 +34,7 @@ dependencies:
   - tiktoken
   - idna==3.7
   - pydantic
-  - mteb==1.36.10
+  - mteb==1.36.11
   - setuptools>=70.0.0
   - cryptography==43.0.1
   # batch score dependencies
