@@ -15,6 +15,7 @@ import sys
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
+from model_target import ModelTarget
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -76,14 +77,54 @@ def get_evaluator_config(command_line_args):
             evaluator_config[evaluator_name] = {"column_mapping": evaluator["DataMapping"]}
     return evaluator_config
 
+def create_model_target(command_line_args):
+    """Get model target configuration from user input."""
+    if not command_line_args.eval_target:
+        logger.info("No eval_target provided. Returning None.")
+        return None
+    
+    try:
+        logger.info("Eval_target provided.")
+        target_config = json.loads(command_line_args.eval_target)
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in eval_target: {e}")
+        return None
 
-def run_evaluation(command_line_args, evaluators, evaluator_config):
+    model_config = target_config.get("ModelConfig", {})
+
+    x = model_config.get("ApiKey", "")
+    apiKeyValue = os.environ.get(x.upper(), "")
+    if not apiKeyValue:
+        logger.warning(f"API key environment variable '{x.upper()}' is missing or empty!")
+
+    azure_endpoint = model_config.get("AzureEndpoint", "")
+    model_params = target_config.get("ModelParams", {})
+    system_message = target_config.get("SystemMessage", "")
+
+    logger.info(f"Creating ModelTarget with values:")
+    logger.info(f"  - AzureEndpoint: {azure_endpoint}")
+    logger.info(f"  - ApiKey: {'[HIDDEN]' if apiKeyValue else 'MISSING'}")
+    logger.info(f"  - ModelParams: {model_params}")
+    logger.info(f"  - SystemMessage: {system_message}")
+
+    return ModelTarget(
+        endpoint=azure_endpoint,
+        api_key=apiKeyValue,
+        model_params=model_params,
+        system_message=system_message,
+    )
+
+def run_evaluation(command_line_args, evaluators, evaluator_config, model_target):
     """Run evaluation using evaluators."""
     logger.info(f"Running the evaluators: {list(evaluators.keys())}")
+    logger.info(f"Evaluation Data: {command_line_args.eval_data}")
     logger.info(f"With the evaluator config {evaluator_config}")
+    logger.info(f"With the model target {model_target}")
+
     results = evaluate(
         data=command_line_args.eval_data,
         evaluators=evaluators,
+        target=model_target,
         evaluator_config=evaluator_config if evaluator_config else None,
     )
     metrics = {}
@@ -124,6 +165,7 @@ parser.add_argument("--eval_output", type=str)
 parser.add_argument("--evaluators", type=str)
 parser.add_argument("--evaluator_name_id_map", type=str)
 parser.add_argument("--rai_evaluators", type=str, help="Comma-separated list of RAI evaluators", required=False)
+parser.add_argument("--eval_target", type=str, help="Optional evaluation target", required=False)
 
 args = parser.parse_args()
 
@@ -131,11 +173,12 @@ if __name__ == '__main__':
     copy_evaluator_files(args)
     evaluators = initialize_evaluators(args)
     evaluator_config = get_evaluator_config(args)
+    model_target = create_model_target(args)
     logger.info("*************** Collecting Result of Evaluators ******************")
     # Run the evaluation
     with mlflow.start_run() as run:
         try:
-            run_evaluation(args, evaluators, evaluator_config)
+            run_evaluation(args, evaluators, evaluator_config, model_target)
         except Exception as e:
             logger.error("EXCEPT", e)
             get_promptflow_run_logs()
