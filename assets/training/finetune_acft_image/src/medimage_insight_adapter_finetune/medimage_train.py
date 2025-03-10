@@ -113,6 +113,12 @@ def get_parser():
         help='Maximum number of epochs for training.'
     )
     parser.add_argument(
+        '--track_metric',
+        type=str,
+        required=True,
+        help='Metric to track when calculating best model. acc or auc supported.'
+    )    
+    parser.add_argument(
         '--output_model_path',
         type=str,
         required=True,
@@ -279,6 +285,7 @@ def train_model(
         optimizer,
         epochs=int(args.max_epochs),
         root_dir=output_dir,
+        track_metric=args.track_metric
     )
     return best_accuracy, best_auc
 
