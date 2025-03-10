@@ -16,10 +16,9 @@ from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter
 from utils import is_input_data_empty
 
-import logging
+from logging_utilities import get_logger
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logger = get_logger(name=__name__)
 
 DEFAULT_TRACE_ID_COLUMN = "operation_Id"
 DEFAULT_SPAN_ID_COLUMN = "operation_ParentId"
