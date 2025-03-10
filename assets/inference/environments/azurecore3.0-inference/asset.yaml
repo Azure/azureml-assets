@@ -1,0 +1,12 @@
+name: azurecore3.0-inference
+
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: true
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests
+categories: ["Inference"]
