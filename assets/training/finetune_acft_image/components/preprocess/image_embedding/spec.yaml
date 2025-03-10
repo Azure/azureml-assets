@@ -8,8 +8,7 @@ is_deterministic: True
 display_name: Embedding Generation for Medical Images
 description: To genrate embeddings for medical images. See [docs](https://aka.ms/azureml/components/medical_image_embedding_datapreprocessing) to learn more.
 
-#environment: azureml:/subscriptions/dbd697c3-ef40-488f-83e6-5ad4dfb78f9b/resourceGroups/rdondera/providers/Microsoft.MachineLearningServices/workspaces/validatr/environments/medimage-embedding-generation/versions/5
-environment: azureml://registries/models-staging/environments/medimage-embedding-generation/versions/8
+environment: azureml://registries/azureml/environments/medimage-embedding-generation/versions/8
 code: ../../../src/medimage_insight_adapter_preprocess
 
 inputs:
