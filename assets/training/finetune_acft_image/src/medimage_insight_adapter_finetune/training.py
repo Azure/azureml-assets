@@ -7,6 +7,9 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 from tqdm import tqdm
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class feature_loader(data.Dataset):
@@ -175,8 +178,8 @@ def trainer(train_ds, test_ds, model, loss_function_ts, optimizer, epochs, root_
     model = model.to(device)
 
     for epoch in range(max_epoch):
-        print("-" * 10)
-        print(f"Epoch {epoch + 1}/{max_epoch}")
+        logger.info("-" * 10)
+        logger.info(f"Epoch {epoch + 1}/{max_epoch}")
         model.train()
         epoch_loss = 0
         step = 0
@@ -196,11 +199,11 @@ def trainer(train_ds, test_ds, model, loss_function_ts, optimizer, epochs, root_
             optimizer.step()
             epoch_loss += loss.item()
 
-            print(f"{step}/{len(train_ds)}, train_loss: {loss.item():.4f}")
+            logger.info(f"{step}/{len(train_ds)}, train_loss: {loss.item():.4f}")
 
         epoch_loss /= step
         epoch_loss_values.append(epoch_loss)
-        print(f"Epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+        logger.info(f"Epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
         # Validation loop
         model.eval()
@@ -248,9 +251,9 @@ def trainer(train_ds, test_ds, model, loss_function_ts, optimizer, epochs, root_
                 torch.save(
                     model.state_dict(), os.path.join(root_dir, "best_metric_model.pth")
                 )
-                print(f"Saved new best metric {track_metric} model")
+                logger.info(f"Saved new best metric {track_metric} model")
 
-            print(
+            logger.info(
                 f"Current epoch: {epoch + 1} Current AUC: {auc:.4f}"
                 f" Current accuracy: {acc_metric:.4f}"
                 f" Best AUC: {best_metric:.4f}"
@@ -262,8 +265,8 @@ def trainer(train_ds, test_ds, model, loss_function_ts, optimizer, epochs, root_
     training_time = end_time - start_time
     hours, rem = divmod(training_time, 3600)
     minutes, seconds = divmod(rem, 60)
-    print(f"Total Training Time: {int(hours):02}:{int(minutes):02}:{seconds:.2f}")
-    print(
+    logger.info(f"Total Training Time: {int(hours):02}:{int(minutes):02}:{seconds:.2f}")
+    logger.info(
         f"Training completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}"
     )
     return best_acc, best_metric

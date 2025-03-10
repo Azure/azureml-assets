@@ -7,6 +7,7 @@ import json
 import os
 import mlflow
 from PIL import Image
+import numpy as np
 import pandas as pd
 import torch
 import tempfile
@@ -17,10 +18,8 @@ from typing import List, Tuple
 
 import base64
 from io import BytesIO
-
-from adapter_model import MLP_model
-
-
+import logging
+logger = logging.getLogger(__name__)
 class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModelWrapper):
     """MLflow model wrapper for CLIP model, used for getting feature embeddings."""
 
@@ -37,7 +36,8 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         """
         super().__init__(task_type, vision_model_name, language_model_name)
         self._supported_task = "image-classification"
-        self.adapter_model = None
+        self.category_features = None
+        self.category_features_loaded = False
     
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """Load the model and artifacts from the MLflow context.
@@ -48,16 +48,13 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         super().load_context(context)
         
         # also load the adapter model
-        print("Loading Adapter Model")
+        logger.info("Loading configuration")
         model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
-        model_path = os.path.join(model_dir, 'adapter_model', 'adapter_model.pth')
-        config_path = os.path.join(model_dir, 'adapter_model', 'config.json')
+        
+        config_path = os.path.join(model_dir, 'config.json')
         config_data = json.load(open(config_path))
         self.labels = config_data["labels"]
-        self.adapter_model = MLP_model(in_channels=config_data["in_channels"], hidden_dim=config_data["hidden_dim"], num_class=len(self.labels), device=self._device)
-        self.adapter_model.load_state_dict(torch.load(model_path, map_location=self._device))
-        self.adapter_model.to(self._device)
-        print("Adapter Model Loaded")
+
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
@@ -80,7 +77,14 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
 
         from vision_utils import create_temp_file, process_image_pandas_series
 
-        # print(params.keys())
+        if not self.category_features_loaded:
+            logger.info("pre-computing category features")
+            with torch.no_grad():
+                text_vectors = self.compute_text_vectors(self.labels)
+                self.category_features = torch.stack(text_vectors, dim=0)
+
+            self.category_features_loaded = True
+            logger.info("categories computed")
 
         # Decode the base64 image column
         decoded_images = input_data.loc[
@@ -111,31 +115,46 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
                 jpeg_compression_ratio=jpeg_compression_ratio,
                 image_size=image_size,
             )
+            
+            scaling_factor = np.atleast_1d(self._model.logit_scale.detach().cpu().numpy())
+            
+            results = []
+            for image_feature in image_features:
+                logits_per_image = (
+                    torch.from_numpy(scaling_factor).cpu().exp()
+                    * image_feature.cpu()
+                    @ self.category_features.cpu().t()
+                )
 
-        df_result = pd.DataFrame()
+                probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+                categories_and_probabilities = [
+                    {"label": category, "score": float(prob)} for
+                    category, prob in zip(self.labels, probs[0])
+                ]
+                
+                categories_and_probabilities = sorted(
+                    categories_and_probabilities, 
+                    key=lambda x: x["score"], 
+                    reverse=True
+                )
+                results.append(categories_and_probabilities)
 
-        self.adapter_model.eval()
-        predictions = []
-        with torch.no_grad():
-            for features in image_features.tolist():
-                _, output = self.adapter_model(features)
-                # Apply softmax to get probabilities
-                probabilities = torch.softmax(output, dim=1)
-                predicted_classes = probabilities.argmax(dim=1).cpu().numpy()
-                # Collect predictions
-                for predicted_class, prob in zip(
-                    predicted_classes, probabilities.cpu().numpy()
-                ):
-                    predictions.append(
-                        {
-                            "PredictedClass": self.labels[predicted_class],
-                            "Probability": prob[predicted_class].tolist(),
-                        }
+            return results
+
+    def compute_text_vectors(self, categories):
+        text_vectors = []
+        for classname in categories:
+            texts = [f'{classname}.']
+            texts = self._model.tokenizer(
+                        texts, padding='max_length', truncation=True, max_length=77, return_tensors='pt'
                     )
+            texts = dict(map(lambda kv: (kv[0], kv[1].to(self._device)), texts.items()))
 
-        df_result["image_predictions"] = predictions
-        return df_result
-
+            class_embeddings = self._model.encode_text(texts)
+            class_embedding = class_embeddings.mean(dim=0)
+            class_embedding /= class_embedding.norm()
+            text_vectors.append(class_embedding.t())
+        return text_vectors
 
     def run_inference_batch(
         self,
