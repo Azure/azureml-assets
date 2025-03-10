@@ -1,0 +1,137 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+name: validate_model_inferencing
+display_name: Validate Model Inference
+description: deploy a model and validate it using a sample payload
+version: 0.0.1
+
+experiment_name: validate_model
+
+inputs:
+  compute:
+    type: string
+    optional: true
+    default: serverless
+    description: Compute for model deployment and inferencing
+  
+  instance_type:
+    type: string
+    optional: true
+    enum:
+      - Standard_DS1_v2
+      - Standard_DS2_v2
+      - Standard_DS3_v2
+      - Standard_DS4_v2
+      - Standard_DS5_v2
+      - Standard_F2s_v2
+      - Standard_F4s_v2
+      - Standard_F8s_v2
+      - Standard_F16s_v2
+      - Standard_F32s_v2
+      - Standard_F48s_v2
+      - Standard_F64s_v2
+      - Standard_F72s_v2
+      - Standard_FX24mds
+      - Standard_FX36mds
+      - Standard_FX48mds
+      - Standard_E2s_v3
+      - Standard_E4s_v3
+      - Standard_E8s_v3
+      - Standard_E16s_v3
+      - Standard_E32s_v3
+      - Standard_E48s_v3
+      - Standard_E64s_v3
+      - Standard_NC4as_T4_v3
+      - Standard_NC6s_v2
+      - Standard_NC6s_v3
+      - Standard_NC8as_T4_v3
+      - Standard_NC12s_v2
+      - Standard_NC12s_v3
+      - Standard_NC16as_T4_v3
+      - Standard_NC24s_v2
+      - Standard_NC24s_v3
+      - Standard_NC24rs_v3
+      - Standard_NC64as_T4_v3
+      - Standard_ND40rs_v2
+      - Standard_ND96asr_v4
+      - Standard_ND96amsr_A100_v4
+    default: Standard_NC6s_v3
+    description: Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.
+
+  instance_count:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of instances you want to use for deployment. Make sure instance type have enough quota available.
+
+  model_id:
+    type: string
+    optional: true 
+    description: |
+      Asset ID of the model registered in workspace/registry.
+      Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
+      Workspace - azureml:<model-name>:<version>
+
+  inference_payload:
+    type: uri_file
+    optional: true
+    description: JSON payload which would be used to validate deployment
+
+  endpoint_name:
+    type: string
+    optional: true
+    description: Name of the endpoint
+
+  deployment_name:
+    type: string
+    optional: true
+    default: default
+    description: Name of the deployment
+
+  expected_inference_response:
+    type: uri_file
+    description: JSON file containing the expected inference response.
+
+jobs:
+  online_deployment_model:
+    type: command
+    component: azureml:deploy_model:0.0.12
+    compute: ${{parent.inputs.compute}}
+    inputs:
+      model_id: ${{parent.inputs.model_id}}
+      inference_payload: ${{parent.inputs.inference_payload}}
+      endpoint_name: ${{parent.inputs.endpoint_name}}
+      deployment_name: ${{parent.inputs.deployment_name}}
+      instance_type: ${{parent.inputs.instance_type}}
+      instance_count: ${{parent.inputs.instance_count}}
+    identity:
+      type: user_identity
+    outputs:
+      model_deployment_details:
+        type: uri_file
+      inference_response:
+        type: uri_file
+
+  validate_inference:
+    type: command
+    component: azureml:validate_inference:0.0.1
+    identity:
+      type: user_identity
+    inputs:
+      expected_response: ${{parent.inputs.expected_inference_response}}
+      actual_response: ${{parent.jobs.online_deployment_model.outputs.inference_response}}
+    outputs:
+      validation_result:
+        type: uri_file
+
+  delete_endpoints:
+    type: command
+    component: azureml:delete_endpoint:0.0.7
+    inputs:
+      model_deployment_details: ${{parent.jobs.online_deployment_model.outputs.model_deployment_details}}
+      endpoint_name: ${{parent.inputs.endpoint_name}}
+    identity:
+      type: user_identity
+    compute: ${{parent.inputs.compute}}
+

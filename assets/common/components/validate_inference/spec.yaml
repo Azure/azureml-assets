@@ -1,0 +1,36 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: validate_inference
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Validate Inference Response
+description: Compares the expected inference response with the actual response from model deployment.
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/19
+
+code: ../../src
+command: >-
+  python validate_inference.py
+  --expected_response ${{inputs.expected_response}}
+  --actual_response ${{inputs.actual_response}}
+  --validation_result ${{outputs.validation_result}}
+
+inputs:
+  expected_response:
+    type: uri_file
+    description: JSON file containing the expected inference response.
+
+  actual_response:
+    type: uri_file
+    description: JSON file containing the actual inference response from the deployed model.
+
+outputs:
+  validation_result:
+    type: uri_file
+    description: JSON file containing the validation results.
+
+tags:
+    Preview: ""
+    Internal: ""

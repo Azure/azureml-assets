@@ -12,6 +12,7 @@ class AppName:
     DEPLOY_MODEL = "deploy_model"
     BATCH_DEPLOY_MODEL = "batch_deploy_model"
     MLFLOW_MODEL_LOCAL_VALIDATION = "mlflow_model_local_validation"
+    VALIDATE_INFERENCE = "validate_inference"
 
 
 class LoggerConfig:
