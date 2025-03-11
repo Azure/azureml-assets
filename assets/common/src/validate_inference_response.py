@@ -10,7 +10,7 @@ from utils.logging_utils import custom_dimensions, get_logger
 
 
 logger = get_logger(__name__)
-custom_dimensions.app_name = AppName.VALIDATE_INFERENCE
+custom_dimensions.app_name = AppName.VALIDATE_INFERENCE_RESPONSE
 
 
 def load_json(file_path):

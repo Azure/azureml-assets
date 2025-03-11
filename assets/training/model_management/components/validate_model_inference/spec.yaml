@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
 
-name: validate_model_inferencing
+name: validate_model_inference
 display_name: Validate Model Inference
 description: deploy a model and validate it using a sample payload
 version: 0.0.1
@@ -93,6 +93,12 @@ inputs:
     type: uri_file
     description: JSON file containing the expected inference response.
 
+# Pipeline outputs
+outputs:
+  validation_result:
+    description: Output file containing the validation results.
+    type: uri_file
+
 jobs:
   online_deployment_model:
     type: command
@@ -113,17 +119,16 @@ jobs:
       inference_response:
         type: uri_file
 
-  validate_inference:
+  validate_inference_response:
     type: command
-    component: azureml:validate_inference:0.0.1
+    component: azureml:validate_inference_response:0.0.1
     identity:
       type: user_identity
     inputs:
       expected_response: ${{parent.inputs.expected_inference_response}}
       actual_response: ${{parent.jobs.online_deployment_model.outputs.inference_response}}
     outputs:
-      validation_result:
-        type: uri_file
+      validation_result: ${{parent.outputs.validation_result}}
 
   delete_endpoints:
     type: command

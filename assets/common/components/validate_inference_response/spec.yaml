@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: validate_inference
+name: validate_inference_response
 version: 0.0.1
 type: command
 
@@ -12,7 +12,7 @@ environment: azureml://registries/azureml/environments/python-sdk-v2/versions/19
 
 code: ../../src
 command: >-
-  python validate_inference.py
+  python validate_inference_response.py
   --expected_response ${{inputs.expected_response}}
   --actual_response ${{inputs.actual_response}}
   --validation_result ${{outputs.validation_result}}
