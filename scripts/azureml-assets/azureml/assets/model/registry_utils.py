@@ -252,11 +252,14 @@ def prepare_model(spec_path: Path, model_config: ModelConfig, temp_dir: Path, ml
         logger.print(f"Model type: {model_config.type}")
         registry_name = ml_client.models._registry_name
         if model_config.type == assets.ModelType.CUSTOM:
-            model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater, output_level)
+            model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir,
+                                           copy_updater, output_level)
         elif model_config.type == assets.ModelType.MLFLOW:
-            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater, output_level)
+            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir, 
+                                           copy_updater, output_level)
         elif model_config.type == assets.ModelType.TRITON:
-            model_asset = TritonModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater, output_level)
+            model_asset = TritonModelAsset(spec_path, model_config, registry_name, temp_dir,
+                                           copy_updater, output_level)
         else:
             logger.log_error(f"Model type {model_config.type.value} not supported")
             return False

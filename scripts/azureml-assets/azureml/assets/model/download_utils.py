@@ -195,7 +195,8 @@ def copy_azure_artifacts(src_uri: str, dstn_uri: str, copy_updater: CopyUpdater 
     try:
         # Copy between storage accounts, excluding any files to be updated
         update_paths = copy_updater.files if copy_updater else None
-        result = run_azcopy(src_uri, dstn_uri, exclude_paths=update_paths, overwrite=overwrite, output_level=output_level)
+        result = run_azcopy(src_uri, dstn_uri, exclude_paths=update_paths, overwrite=overwrite,
+                            output_level=output_level)
         if result:
             logger.log_error(f"Failed to copy model files from {src_uri}")
             return False
@@ -207,7 +208,8 @@ def copy_azure_artifacts(src_uri: str, dstn_uri: str, copy_updater: CopyUpdater 
         # Download files to a temporary directory, update, and then upload
         with tempfile.TemporaryDirectory() as temp_dir:
             # Download files to update
-            result = run_azcopy(src_uri, temp_dir, include_paths=update_paths, overwrite=overwrite, output_level=output_level)
+            result = run_azcopy(src_uri, temp_dir, include_paths=update_paths, overwrite=overwrite,
+                                output_level=output_level)
             if result:
                 logger.log_error(f"Failed to download model files to update from {src_uri}")
                 return False
