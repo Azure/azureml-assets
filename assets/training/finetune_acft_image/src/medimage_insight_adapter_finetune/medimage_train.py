@@ -1,6 +1,6 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import argparse
 import json
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
