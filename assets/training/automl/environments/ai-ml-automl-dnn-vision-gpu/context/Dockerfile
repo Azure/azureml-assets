@@ -72,3 +72,5 @@ RUN pip install cryptography>=42.0.5 \
 
 # end pip install
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+
+# dummy number to change when needing to force rebuild without changing the definition: 1
