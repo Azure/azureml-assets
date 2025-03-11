@@ -3,8 +3,8 @@ type: command
 
 version: 1.0.6
 name: medimage_embedding_adapter_merge
-display_name: Merge Adapter Model with Embedding Generation Model
-description: Import and integrate Adapter and Embedding Generation Model
+display_name: Package classification model
+description: Integrate labels and generate classification model
 
 is_deterministic: True
 
