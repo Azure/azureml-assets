@@ -51,7 +51,8 @@ class RegistryUtils:
             return ml_client.models
 
     def publish_to_registry(ml_client: MLClient, extra_config: Config, asset_name: str, asset_version: str,
-                            asset_type: assets.AssetType, temp_dir: Path, copy_updater: CopyUpdater = None):
+                            asset_type: assets.AssetType, temp_dir: Path, copy_updater: CopyUpdater = None,
+                            output_level: str = "essential"):
         """Copy artifacts to registry storage.
 
         Args:
@@ -62,6 +63,7 @@ class RegistryUtils:
             asset_type (assets.AssetType): Asset type.
             temp_dir (Path): temp dir for asset operation.
             copy_updater (CopyUpdater): CopyUpdater object to update files during azcopy.
+            output_level (str, optional): Output verbosity level parameter for azcopy. Defaults to "essential".
         """
         src_uri = extra_config.path.uri
         if extra_config.path.type == PathType.GIT:
@@ -81,7 +83,8 @@ class RegistryUtils:
                 asset_name, asset_version, asset_type, ml_client
             )
 
-            success = copy_azure_artifacts(src_uri, sas_uri, copy_updater)
+            success = copy_azure_artifacts(src_uri=src_uri, dstn_uri=sas_uri, copy_updater=copy_updater,
+                                           output_level=output_level)
             if not success:
                 raise Exception("blobstorage copy failed.")
             logger.print(f"Successfully copied {asset_type.value} artifacts to registry storage")
@@ -134,21 +137,22 @@ class Asset:
     """Asset class."""
 
     def __init__(self, spec_path: Path, extra_config: Config, registry_name: str, temp_dir: Path,
-                 copy_updater: CopyUpdater = None):
+                 copy_updater: CopyUpdater = None, output_level: str = "essential"):
         """Initialize asset."""
         self._spec_path = spec_path
         self._extra_config = extra_config
         self._temp_dir = temp_dir
         self._copy_updater = copy_updater
+        self._output_level = output_level
 
 
 class DataAsset(Asset):
     """Asset class for data."""
 
     def __init__(self, spec_path: Path, data_config: DataConfig, registry_name: str, temp_dir: Path,
-                 copy_updater: CopyUpdater = None):
+                 copy_updater: CopyUpdater = None, output_level: str = "essential"):
         """Initialize data asset."""
-        super().__init__(spec_path, data_config, registry_name, temp_dir, copy_updater)
+        super().__init__(spec_path, data_config, registry_name, temp_dir, copy_updater, output_level)
         self._data_config = data_config
 
         try:
@@ -161,7 +165,7 @@ class DataAsset(Asset):
         """Prepare data for publish."""
         data_registry_path = RegistryUtils.publish_to_registry(ml_client, self._data_config, self._data.name,
                                                                self._data.version, AssetType.DATA, self._temp_dir,
-                                                               self._copy_updater)
+                                                               self._copy_updater, self._output_level)
         self._data.path = data_registry_path
         return self._data
 
@@ -170,9 +174,9 @@ class ModelAsset(Asset):
     """Asset class for model."""
 
     def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
-                 copy_updater: CopyUpdater = None):
+                 copy_updater: CopyUpdater = None, output_level: str = "essential"):
         """Initialize model asset."""
-        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
+        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater, output_level)
         self._model_config = model_config
 
         try:
@@ -194,15 +198,15 @@ class MLFlowModelAsset(ModelAsset):
     MLFLOW_MODEL_PATH = "mlflow_model_folder"
 
     def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
-                 copy_updater: CopyUpdater = None):
+                 copy_updater: CopyUpdater = None, output_level: str = "essential"):
         """Initialize Mlflow model asset."""
-        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
+        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater, output_level)
 
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
         model_registry_path = RegistryUtils.publish_to_registry(ml_client, self._model_config, self._model.name,
                                                                 self._model.version, AssetType.MODEL, self._temp_dir,
-                                                                self._copy_updater)
+                                                                self._copy_updater, self._output_level)
         self._model.path = model_registry_path + "/" + MLFlowModelAsset.MLFLOW_MODEL_PATH
         return self._model
 
@@ -211,15 +215,15 @@ class TritonModelAsset(ModelAsset):
     """Asset class for Triton model."""
 
     def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
-                 copy_updater: CopyUpdater = None):
+                 copy_updater: CopyUpdater = None, output_level: str = "essential"):
         """Initialize Triton model asset."""
-        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
+        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater, output_level)
 
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
         model_registry_path = RegistryUtils.publish_to_registry(ml_client, self._model_config, self._model.name,
                                                                 self._model.version, AssetType.MODEL, self._temp_dir,
-                                                                self._copy_updater)
+                                                                self._copy_updater, self._output_level)
         self._model.path = model_registry_path
         return self._model
 
@@ -228,31 +232,34 @@ class CustomModelAsset(ModelAsset):
     """Asset class for custom model."""
 
     def __init__(self, spec_path: Path, model_config: ModelConfig, registry_name: str, temp_dir: Path,
-                 copy_updater: CopyUpdater = None):
+                 copy_updater: CopyUpdater = None, output_level: str = "essential"):
         """Initialize custom model asset."""
-        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater)
+        super().__init__(spec_path, model_config, registry_name, temp_dir, copy_updater, output_level)
 
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
         model_registry_path = RegistryUtils.publish_to_registry(ml_client, self._model_config, self._model.name,
                                                                 self._model.version, AssetType.MODEL, self._temp_dir,
-                                                                self._copy_updater)
+                                                                self._copy_updater, self._output_level)
         self._model.path = model_registry_path
         return self._model
 
 
 def prepare_model(spec_path: Path, model_config: ModelConfig, temp_dir: Path, ml_client: MLClient,
-                  copy_updater: CopyUpdater = None):
+                  copy_updater: CopyUpdater = None, output_level: str = "essential"):
     """Prepare model for publish."""
     try:
         logger.print(f"Model type: {model_config.type}")
         registry_name = ml_client.models._registry_name
         if model_config.type == assets.ModelType.CUSTOM:
-            model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
+            model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir,
+                                           copy_updater, output_level)
         elif model_config.type == assets.ModelType.MLFLOW:
-            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
+            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir,
+                                           copy_updater, output_level)
         elif model_config.type == assets.ModelType.TRITON:
-            model_asset = TritonModelAsset(spec_path, model_config, registry_name, temp_dir, copy_updater)
+            model_asset = TritonModelAsset(spec_path, model_config, registry_name, temp_dir,
+                                           copy_updater, output_level)
         else:
             logger.log_error(f"Model type {model_config.type.value} not supported")
             return False
@@ -264,11 +271,11 @@ def prepare_model(spec_path: Path, model_config: ModelConfig, temp_dir: Path, ml
 
 
 def prepare_data(spec_path: Path, data_config: DataConfig, temp_dir: Path, ml_client: MLClient,
-                 copy_updater: CopyUpdater = None):
+                 copy_updater: CopyUpdater = None, output_level: str = "essential"):
     """Prepare data for publish."""
     try:
         registry_name = ml_client.data._registry_name
-        data_asset = DataAsset(spec_path, data_config, registry_name, temp_dir, copy_updater)
+        data_asset = DataAsset(spec_path, data_config, registry_name, temp_dir, copy_updater, output_level)
         data = data_asset.prepare_data(ml_client)
         return data, True
     except Exception as e:

@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.76 (2025-03-11)
+### 🚀 New Features
+- [#3933](https://github.com/Azure/azureml-assets/pull/3933) Allow azcopy output level to be configurable
+
 ## 1.16.75 (2025-03-11)
 ### 🐛 Bugs Fixed
 - [#3928](https://github.com/Azure/azureml-assets/pull/3928) Fix validate assets for updated task in quality evaluationresult assets
