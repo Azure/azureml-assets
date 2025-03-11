@@ -38,7 +38,7 @@ def merge_models(mlflow_model_path, output_dir, label_file):
         2. Copy the MLflow wrapper code to the output directory.
         3. Read labels from `label_file` and save them in a configuration JSON file in the output directory.
         4. Copy the MLModel configuration to the output directory.
-        5. Generate a pickle model using `medimageinsight_classification_mlflow_wrapper` and save it to the output directory.
+        5. Generate a pickle model and save it to the output directory.
     Raises:
         FileNotFoundError: If any of the specified files or directories do not exist.
         IOError: If there is an error in reading or writing files.

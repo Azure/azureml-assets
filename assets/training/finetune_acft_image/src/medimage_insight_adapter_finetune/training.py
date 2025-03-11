@@ -51,7 +51,7 @@ class feature_loader(data.Dataset):
         Returns:
             tuple: A tuple containing:
             - features (numpy.ndarray): The feature array for the given index.
-            - label (numpy.ndarray or None): The label array for the given index if in 'train' or 'val' mode, otherwise None.
+            - label (numpy.ndarray or None): The label array for index if in 'train' or 'val' mode, otherwise None.
             - img_name (str): The image name corresponding to the given index.
         """
         img_name = self.img_name[item]
