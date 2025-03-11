@@ -24,7 +24,7 @@ def validate_py_version(build_log_file_name, build_log_content):
     py38_match = re.search("python=3.8", build_log_content)
 
     if py38_match:
-        logger.log_error(f"{build_log_file_name}: python=3.8 found in build log."
+        logger.log_error(f"{build_log_file_name}: python=3.8 found in build log. "
                          f"Python 3.8 is now deprecated. Please use a newer Python version.")
         return 1
 
@@ -44,9 +44,30 @@ def validate_ubuntu_version(build_log_file_name, build_log_content):
     ubuntu2004_match = re.search(r"FROM\s+(.*20\.04.*|.*2004.*)", build_log_content)
 
     if ubuntu2004_match:
-        logger.log_error(f"{build_log_file_name}: Ubuntu 20.04 reference found in build log."
+        logger.log_error(f"{build_log_file_name}: Ubuntu 20.04 reference found in build log. "
                          f"Ubuntu 20.04 is nearing or has reached EOL. Please create an environment "
                          f"based on a newer Ubuntu version.")
+        return 1
+
+    return 0
+
+
+def validate_azureml_sdk_dependencies(build_log_file_name, build_log_content):
+    """Validate AzureML SDK dependencies.
+
+    Args:
+        build_log_file_name (str): Build log file name.
+        build_log_content (str): Build log content
+
+    Returns:
+        int: Number of errors.
+    """
+    azure_ai_ml_match = re.search("azure-ai-ml", build_log_content)
+    azureml_core_match = re.search("azureml-core", build_log_content)
+
+    if azure_ai_ml_match and azureml_core_match:
+        logger.log_error(f"{build_log_file_name}: azure-ai-ml and azureml-core depedencies both found in build log. "
+                         f"Please use only one version of the AzureML SDK.")
         return 1
 
     return 0
@@ -72,6 +93,7 @@ def validate_build_logs(build_logs_dir):
             build_log_content = f.read()
             error_count += validate_py_version(build_log_file_name, build_log_content)
             error_count += validate_ubuntu_version(build_log_file_name, build_log_content)
+            error_count += validate_azureml_sdk_dependencies(build_log_file_name, build_log_content)
 
     return error_count == 0
 
