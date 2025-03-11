@@ -4,19 +4,12 @@
 import argparse
 import json
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
-from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
-    swallow_all_exceptions,
-)
-
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 import pandas as pd
 import torch
 import os
 import training
-import matplotlib.pyplot as plt
 
 
 COMPONENT_NAME = "ACFT-MedImage-Classification-Training"
@@ -151,6 +144,7 @@ def load_data(train_data_path: str, validation_data_path: str) -> tuple[pd.DataF
     validation_data = pd.read_pickle(validation_data_file)
     return train_data, validation_data
 
+
 def merge_data_with_text(
     train_data: pd.DataFrame,
     validation_data: pd.DataFrame,
@@ -190,6 +184,7 @@ def merge_data_with_text(
 
     return train_data, validation_data
 
+
 def initialize_model(args: argparse.Namespace) -> torch.nn.Module:
     """
     Initialize the model with the provided arguments.
@@ -201,7 +196,7 @@ def initialize_model(args: argparse.Namespace) -> torch.nn.Module:
         torch.nn.Module: Initialized model.
     """
     with open(args.label_file, "r") as f:
-        labels = [l.strip() for l in f.read().splitlines() if l.strip()]
+        labels = [label.strip() for label in f.read().splitlines() if label.strip()]
 
     return training.create_model(
         in_channels=args.input_channels,
@@ -308,7 +303,10 @@ def main():
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
     train_data, validation_data = load_data(args.train_data_path, args.validation_data_path)
-    train_data, validation_data = merge_data_with_text(train_data, validation_data, args.train_text_tsv, args.validation_text_tsv)
+    train_data, validation_data = merge_data_with_text(train_data,
+                                                       validation_data,
+                                                       args.train_text_tsv,
+                                                       args.validation_text_tsv)
     model = initialize_model(args)
     train_dataloader, validation_dataloader = prepare_dataloaders(train_data, validation_data, args)
 
@@ -319,6 +317,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# Example command to run this script:
-# python medimage_train.py --task_name "AdapterTrain" --train_data_path "/home/healthcare-ai/train_data" --validation_data_path "/home/healthcare-ai/val_data" --train_text_tsv "/home/healthcare-ai/train_text.tsv" --validation_text_tsv "/home/healthcare-ai/val_text.tsv" --train_dataloader_batch_size 8 --validation_dataloader_batch_size 1 --train_dataloader_workers 2 --validation_dataloader_workers 2 --label_file "/home/healthcare-ai/labels.txt" --hidden_dimensions 512 --input_channels 1024 --learning_rate 0.0003 --max_epochs 10 --output_model_path "/home/healthcare-ai/"

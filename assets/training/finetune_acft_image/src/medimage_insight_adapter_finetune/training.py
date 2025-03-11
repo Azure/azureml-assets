@@ -45,10 +45,10 @@ class feature_loader(data.Dataset):
         return len(self.img_name)
 
 
-## MLP Adaptors
-## Input: 1-Dimensional Embeddings
-## in_channels: Number of channels for input embeddings, num_class: Number of classes, finetune_mode: image (image-only)
-## Output: Class-wise Prediction
+# MLP Adaptors
+# Input: 1-Dimensional Embeddings
+# in_channels: Number of channels for input embeddings, num_class: Number of classes, finetune_mode: image (image-only)
+# Output: Class-wise Prediction
 class MLP_model(nn.Module):
     def __init__(self, in_channels, hidden_dim, num_class):
         super().__init__()
@@ -57,7 +57,7 @@ class MLP_model(nn.Module):
         self.hidden_dim = int(hidden_dim)
         self.num_class = num_class
 
-        ## Adaptor Module
+        # Adaptor Module
         self.vision_embd = nn.Sequential(
             nn.Linear(self.in_channels, 512),
             nn.GELU(),
@@ -81,7 +81,7 @@ class MLP_model(nn.Module):
             ),
         )
 
-        ## Prediction Head
+        # Prediction Head
         self.prediction_head = nn.Sequential(nn.Linear(self.hidden_dim, self.num_class))
 
     def forward(self, vision_feat):

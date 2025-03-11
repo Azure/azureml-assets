@@ -4,12 +4,6 @@
 import argparse
 import uuid
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
-from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
-from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
-    swallow_all_exceptions,
-)
-from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 import faulthandler
@@ -69,7 +63,10 @@ def add_env_parser_to_yaml() -> None:
     yaml.add_constructor("!ENV", env_constructor, Loader=loader)
 
 
-def load_config_dict_to_opt(opt: Dict[str, Any], config_dict: Dict[str, Any], splitter: str = '.', log_new: bool = False) -> None:
+def load_config_dict_to_opt(opt: Dict[str, Any],
+                            config_dict: Dict[str, Any],
+                            splitter: str = '.',
+                            log_new: bool = False) -> None:
     """
         Args:
             opt (Dict[str, Any]): The dictionary to be updated with values from config_dict.
@@ -142,6 +139,7 @@ def load_opt_from_config_files(conf_files: List[str]) -> Dict[str, Any]:
 
     return opt
 
+
 def update_opt(opt):
     world_size = 1
     if 'OMPI_COMM_WORLD_SIZE' in os.environ:
@@ -174,6 +172,7 @@ def update_opt(opt):
     if 'NAME' not in opt:
         opt['NAME'] = opt['MODEL']['NAME']
 
+
 def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
     """
     Copy all files recursively from MLFLOW_MODEL_FOLDER to MLFLOW_OUTPUT_MODEL_FOLDER.
@@ -191,12 +190,14 @@ def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
     logger.info(f"Copying files from {src_folder} to {dest_folder}")
     shutil.copytree(src_folder, dest_folder, dirs_exist_ok=True)
 
+
 def copy_result_files(cmdline_args: Dict[str, Any]) -> None:
     dest_folder = cmdline_args['MLFLOW_OUTPUT_MODEL_FOLDER']
 
     # Find the highest numbered folder in SAVE_DIR
     save_dir = cmdline_args['SAVE_DIR']+'/INPUT_conf_files_conf~'
-    run_folders = [d for d in os.listdir(save_dir) if os.path.isdir(os.path.join(save_dir, d)) and d.startswith('run_')]
+    run_folders = [d for d in os.listdir(save_dir)
+                   if os.path.isdir(os.path.join(save_dir, d)) and d.startswith('run_')]
     if not run_folders:
         logger.error("No run folders found in SAVE_DIR")
         raise FileNotFoundError("No run folders found in SAVE_DIR")
@@ -325,7 +326,8 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
     add_env_parser_to_yaml()
     # Extract the directory from the conf_files path
     conf_files_dir = os.path.dirname(cmdline_args.conf_files)
-    conf_files = [os.path.join(conf_files_dir, f) for f in os.listdir(conf_files_dir) if os.path.isfile(os.path.join(conf_files_dir, f))]
+    conf_files = [os.path.join(conf_files_dir, f)
+                  for f in os.listdir(conf_files_dir) if os.path.isfile(os.path.join(conf_files_dir, f))]
     cmdline_args.conf_files = [conf_files_dir]
     for conf_file in conf_files:
         opt = load_opt_from_config_files(conf_file)
@@ -421,7 +423,8 @@ def main(args: List[str] = None) -> None:
         copy_model_files(opt)
 
     logger.info(f"Running command: {command}")
-    with torch.autograd.profiler.profile(use_cuda=True, enabled=opt.get('AUTOGRAD_PROFILER', False) and opt['rank'] == 0) as prof:
+    with torch.autograd.profiler.profile(use_cuda=True,
+                                         enabled=opt.get('AUTOGRAD_PROFILER', False) and opt['rank'] == 0) as prof:
         trainer.train()
 
     if opt.get('AUTOGRAD_PROFILER', False):

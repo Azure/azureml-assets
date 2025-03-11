@@ -13,13 +13,15 @@ import torch
 import tempfile
 
 from medimageinsight_mlflow_wrapper import MEDIMAGEINSIGHTMLFlowModelWrapper
-from config import MLflowLiterals, MLflowSchemaLiterals, Tasks
+from config import MLflowLiterals, MLflowSchemaLiterals
 from typing import List, Tuple
 
 import base64
 from io import BytesIO
 import logging
 logger = logging.getLogger(__name__)
+
+
 class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModelWrapper):
     """MLflow model wrapper for CLIP model, used for getting feature embeddings."""
 
@@ -55,16 +57,20 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         config_data = json.load(open(config_path))
         self.labels = config_data["labels"]
 
-
-    def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame, params: pd.DataFrame) -> pd.DataFrame:
+    def predict(self,
+                context: mlflow.pyfunc.PythonModelContext,
+                input_data: pd.DataFrame,
+                params: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Input images and text for feature embeddings, please note that params are initialized in the file:
+        :param input_data: Input images and text for feature embeddings,
+        please note that params are initialized in the file:
         medimageinsight_mlflow_model/MLmodel from the model's signature
         default values are: params: '[{"name": "image_standardization_jpeg_compression_ratio", "type": "integer",
-        "default": 75, "shape": null}, {"name": "image_standardization_image_size", "type":"integer", "default": 512, "shape": null}]'
+        "default": 75, "shape": null}, {"name": "image_standardization_image_size",
+        "type":"integer", "default": 512, "shape": null}]'
         :type input_data: Pandas DataFrame with a first column name ["image"] containing images where each
         row is an image in base64 String format or publicly accessible url format,
         and second column name ["text"] containing a string. The following cases are supported:
@@ -91,7 +97,6 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
             :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
         ].apply(axis=1, func=process_image_pandas_series)
 
-
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
                 decoded_images.iloc[:, 0]
@@ -99,7 +104,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
                 .tolist()
             )
 
-            ## Image Standardization
+            # Image Standardization
             if params['image_standardization_jpeg_compression_ratio']:
                 jpeg_compression_ratio = int(params['image_standardization_jpeg_compression_ratio'])
             else:
@@ -174,7 +179,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         self._model.eval()
         if image_path_list:
             for img_path in image_path_list:
-                ## Standardize Images before MedImageInsight Preprocessing Stage as JPEG input
+                # Standardize Images before MedImageInsight Preprocessing Stage as JPEG input
                 img = Image.open(img_path).resize((image_size, image_size)).convert('RGB')
                 buffered = BytesIO()
                 img.save(buffered, format='JPEG', quality=jpeg_compression_ratio)
@@ -182,11 +187,11 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
                 image = Image.open(BytesIO(base64.b64decode(img_str))).convert('RGB')
                 img = image
 
-                ## MedImageInsight Preprocessing
+                # MedImageInsight Preprocessing
                 inputs = self.preprocess(img).unsqueeze(0)
                 inputs = inputs.to(self._device)
 
-                ## Generate Image Features
+                # Generate Image Features
                 with torch.no_grad():
                     tmp_image_feature = self._model.encode_image(inputs)
                     output_image_feature.append(tmp_image_feature)

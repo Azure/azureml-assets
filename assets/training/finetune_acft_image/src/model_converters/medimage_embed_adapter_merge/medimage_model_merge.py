@@ -39,7 +39,7 @@ def merge_models(mlflow_model_path, output_dir, label_file):
     logger.info(f"Copied {MLFLOW_WRAP_CODE} to {code_dir}")
 
     with open(label_file, "r") as f:
-        labels = [l.strip() for l in f.read().splitlines() if l.strip()]
+        labels = [label.strip() for label in f.read().splitlines() if label.strip()]
 
     config = {
         "labels": labels
@@ -64,6 +64,7 @@ def merge_models(mlflow_model_path, output_dir, label_file):
     with open(os.path.join(output_dir, PYTHON_MODEL), "wb") as f:
         cloudpickle.dump(new_model, f)
     logger.info(f"Saved {PYTHON_MODEL} to {output_dir}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Merge adapter model with MLflow model")

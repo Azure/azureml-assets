@@ -7,16 +7,6 @@ from azureml.acft.common_components import (
     set_logging_parameters,
     LoggingLiterals,
 )
-from azureml.acft.common_components.utils.error_handling.exceptions import (
-    ACFTValidationException,
-)
-from azureml.acft.common_components.utils.error_handling.error_definitions import (
-    ACFTUserError,
-)
-from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
-    swallow_all_exceptions,
-)
-from azureml._common._error_definition.azureml_error import AzureMLError
 
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml.acft.contrib.hf.nlp.constants.constants import (
@@ -58,9 +48,7 @@ def get_parser():
         required=True,
         help="The name of the task to be executed",
     )
-    parser.add_argument(
-        "--image_tsv", type=str, help="Path to image TSV file."
-    )
+    parser.add_argument("--image_tsv", type=str, help="Path to image TSV file.")
     parser.add_argument(
         "--image_standardization_jpeg_compression_ratio",
         type=int,
@@ -88,18 +76,25 @@ def get_parser():
     return parser
 
 
-def generate_embeddings(image_tsv, mlflow_model, image_standardization_jpeg_compression_ratio, image_standardization_image_size):
+def generate_embeddings(
+    image_tsv,
+    mlflow_model,
+    image_standardization_jpeg_compression_ratio,
+    image_standardization_image_size,
+):
     image_df = pd.read_csv(image_tsv, sep="\t", header=None)
     image_df.columns = ["Name", "image"]
     image_df["text"] = None
     image_embeddings = mlflow_model.predict(
         image_df,
-        params= {
-            'image_standardization_jpeg_compression_ratio': image_standardization_jpeg_compression_ratio,
-            'image_standardization_image_size': image_standardization_image_size
-            }
+        params={
+            "image_standardization_jpeg_compression_ratio": image_standardization_jpeg_compression_ratio,
+            "image_standardization_image_size": image_standardization_image_size,
+        },
     )
-    image_df["features"] = image_embeddings["image_features"].apply(lambda item: np.array(item[0]))
+    image_df["features"] = image_embeddings["image_features"].apply(
+        lambda item: np.array(item[0])
+    )
 
     return image_df
 
@@ -122,9 +117,7 @@ def save_dataframe(
     """
     os.makedirs(output_pkl_path, exist_ok=True)
 
-    image_embeddings.to_pickle(
-        os.path.join(output_pkl_path, EMBEDDING_FILE_NAME)
-    )
+    image_embeddings.to_pickle(os.path.join(output_pkl_path, EMBEDDING_FILE_NAME))
 
     logger.info("Saved merged DataFrames to PKL files")
 
@@ -149,12 +142,14 @@ def process_embeddings(args):
     image_tsv = args.image_tsv
 
     mlflow_model = mlflow.pyfunc.load_model(model_path)
-    image_embeddings = generate_embeddings(image_tsv, mlflow_model, args.image_standardization_jpeg_compression_ratio, args.image_standardization_image_size)
-
-    save_dataframe(
-        image_embeddings,
-        output_pkl
+    image_embeddings = generate_embeddings(
+        image_tsv,
+        mlflow_model,
+        args.image_standardization_jpeg_compression_ratio,
+        args.image_standardization_image_size,
     )
+
+    save_dataframe(image_embeddings, output_pkl)
 
     logger.info("Processing medical images and getting embeddings completed")
 
