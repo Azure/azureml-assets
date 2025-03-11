@@ -1,3 +1,6 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 import argparse
 import json
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -48,14 +51,14 @@ def get_parser():
         help='The path to the validation data.'
     )
     parser.add_argument(
-        "--train_text_tsv", 
-        type=str, 
+        "--train_text_tsv",
+        type=str,
         help="Path to evaluation text TSV file.",
         required=True
     )
     parser.add_argument(
-        "--validation_text_tsv", 
-        type=str, 
+        "--validation_text_tsv",
+        type=str,
         help="Path to training text TSV file.",
         required=True
     )
@@ -117,7 +120,7 @@ def get_parser():
         type=str,
         required=True,
         help='Metric to track when calculating best model. acc or auc supported.'
-    )    
+    )
     parser.add_argument(
         '--output_model_path',
         type=str,
@@ -178,7 +181,7 @@ def merge_data_with_text(
         except json.JSONDecodeError:
             logger.error("Failed to decode JSON from text column")
             return -1
-    
+
     train_text_df["Label"] = train_text_df["classification_json"].apply(extract_label_from_json)
     validation_text_df["Label"] = validation_text_df["classification_json"].apply(extract_label_from_json)
 
@@ -208,8 +211,8 @@ def initialize_model(args: argparse.Namespace) -> torch.nn.Module:
 
 
 def prepare_dataloaders(
-    train_data: pd.DataFrame, 
-    validation_data: pd.DataFrame, 
+    train_data: pd.DataFrame,
+    validation_data: pd.DataFrame,
     args: argparse.Namespace
 ) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
     """
@@ -221,7 +224,7 @@ def prepare_dataloaders(
         args (argparse.Namespace): Parsed command line arguments.
 
     Returns:
-        tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]: 
+        tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
             Dataloaders for the training and validation datasets.
     """
     train_samples = {

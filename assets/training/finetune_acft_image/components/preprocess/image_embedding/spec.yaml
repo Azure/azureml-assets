@@ -6,7 +6,7 @@ type: command
 is_deterministic: True
 
 display_name: Embedding Generation for Medical Images
-description: To genrate embeddings for medical images.
+description: To generate embeddings for medical images.
 
 environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/1
 code: ../../../src/medimage_insight_adapter_preprocess

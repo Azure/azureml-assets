@@ -1,5 +1,6 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
@@ -38,7 +39,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         self._supported_task = "image-classification"
         self.category_features = None
         self.category_features_loaded = False
-    
+
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """Load the model and artifacts from the MLflow context.
 
@@ -46,11 +47,11 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         :type context: mlflow.pyfunc.PythonModelContext
         """
         super().load_context(context)
-        
+
         # also load the adapter model
         logger.info("Loading configuration")
         model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
-        
+
         config_path = os.path.join(model_dir, 'config.json')
         config_data = json.load(open(config_path))
         self.labels = config_data["labels"]
@@ -61,7 +62,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Input images and text for feature embeddings, please note that params are initialized in the file: 
+        :param input_data: Input images and text for feature embeddings, please note that params are initialized in the file:
         medimageinsight_mlflow_model/MLmodel from the model's signature
         default values are: params: '[{"name": "image_standardization_jpeg_compression_ratio", "type": "integer",
         "default": 75, "shape": null}, {"name": "image_standardization_image_size", "type":"integer", "default": 512, "shape": null}]'
@@ -91,7 +92,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
             :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
         ].apply(axis=1, func=process_image_pandas_series)
 
-        
+
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
                 decoded_images.iloc[:, 0]
@@ -111,13 +112,13 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
                 image_size = 512
 
             image_features = self.run_inference_batch(
-                image_path_list=image_path_list, 
+                image_path_list=image_path_list,
                 jpeg_compression_ratio=jpeg_compression_ratio,
                 image_size=image_size,
             )
-            
+
             scaling_factor = np.atleast_1d(self._model.logit_scale.detach().cpu().numpy())
-            
+
             results = []
             for image_feature in image_features:
                 logits_per_image = (
@@ -131,10 +132,10 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
                     {"label": category, "score": float(prob)} for
                     category, prob in zip(self.labels, probs[0])
                 ]
-                
+
                 categories_and_probabilities = sorted(
-                    categories_and_probabilities, 
-                    key=lambda x: x["score"], 
+                    categories_and_probabilities,
+                    key=lambda x: x["score"],
                     reverse=True
                 )
                 results.append(categories_and_probabilities)
@@ -186,11 +187,11 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
                 inputs = self.preprocess(img).unsqueeze(0)
                 inputs = inputs.to(self._device)
 
-                ## Generate Image Features 
+                ## Generate Image Features
                 with torch.no_grad():
                     tmp_image_feature = self._model.encode_image(inputs)
                     output_image_feature.append(tmp_image_feature)
-            
+
             image_features = torch.stack(output_image_feature, dim=0)
         else:
             image_features = None

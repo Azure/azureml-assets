@@ -1,3 +1,6 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 import os
 import numpy as np
 from torch.utils import data
@@ -241,7 +244,7 @@ def trainer(train_ds, test_ds, model, loss_function_ts, optimizer, epochs, root_
             acc_metric = (y_pred.argmax(dim=1) == y_true).sum().item() / len(y_true)
 
             metric_values.append(auc)
-            
+
             metric_record = auc if track_metric == "auc" else acc_metric
             # Save the best model
             if metric_record > best_metric:

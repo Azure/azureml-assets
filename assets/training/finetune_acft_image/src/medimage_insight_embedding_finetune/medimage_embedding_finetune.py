@@ -1,3 +1,6 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 import argparse
 import uuid
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -130,7 +133,7 @@ def load_opt_from_config_files(conf_files: List[str]) -> Dict[str, Any]:
         dict: a dictionary of opt settings
     """
     opt = {}
-    
+
     with open(conf_files, encoding='utf-8') as f:
         # config_dict = yaml.safe_load(f)
         config_dict = yaml.unsafe_load(f)
@@ -190,7 +193,7 @@ def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
 
 def copy_result_files(cmdline_args: Dict[str, Any]) -> None:
     dest_folder = cmdline_args['MLFLOW_OUTPUT_MODEL_FOLDER']
-    
+
     # Find the highest numbered folder in SAVE_DIR
     save_dir = cmdline_args['SAVE_DIR']+'/INPUT_conf_files_conf~'
     run_folders = [d for d in os.listdir(save_dir) if os.path.isdir(os.path.join(save_dir, d)) and d.startswith('run_')]
@@ -339,7 +342,7 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
     for key, val in cmdline_args.items():
         if val is not None:
             opt[key] = val
-    
+
     # Append CHECKPOINT_PATH to mlflow_model_folder and update UNICL_MODEL's PRETRAINED key
     # Convert from safetensors to torch
     if MLFLOW_MODEL_FOLDER in cmdline_args:

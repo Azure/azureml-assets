@@ -1,3 +1,6 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 import argparse
 from azureml.acft.common_components import (
     get_logger_app,
@@ -54,7 +57,7 @@ def get_parser():
         type=str,
         required=True,
         help="The name of the task to be executed",
-    )    
+    )
     parser.add_argument(
         "--image_tsv", type=str, help="Path to image TSV file."
     )
@@ -90,9 +93,9 @@ def generate_embeddings(image_tsv, mlflow_model, image_standardization_jpeg_comp
     image_df.columns = ["Name", "image"]
     image_df["text"] = None
     image_embeddings = mlflow_model.predict(
-        image_df, 
+        image_df,
         params= {
-            'image_standardization_jpeg_compression_ratio': image_standardization_jpeg_compression_ratio, 
+            'image_standardization_jpeg_compression_ratio': image_standardization_jpeg_compression_ratio,
             'image_standardization_image_size': image_standardization_image_size
             }
     )
@@ -131,7 +134,7 @@ def process_embeddings(args):
     Process medical image embeddings and save the results to a PKL file.
     This function loads the MLflow model, generates image embeddings from the provided TSV file,
     and saves the embeddings to the specified output PKL file.
-    
+
     Args:
         args (Namespace): A namespace object containing the following attributes:
             - mlflow_model_path (str): The path to the MLflow model.

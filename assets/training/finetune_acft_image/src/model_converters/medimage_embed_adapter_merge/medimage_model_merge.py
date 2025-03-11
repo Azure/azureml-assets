@@ -1,3 +1,6 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 import json
 import sys
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -37,7 +40,7 @@ def merge_models(mlflow_model_path, output_dir, label_file):
 
     with open(label_file, "r") as f:
         labels = [l.strip() for l in f.read().splitlines() if l.strip()]
-        
+
     config = {
         "labels": labels
     }
@@ -49,13 +52,13 @@ def merge_models(mlflow_model_path, output_dir, label_file):
     # Copy MLModel from configuration to mlflow_model_path+"/mlflow_model_folder/"
     shutil.copy(MLMODEL, output_dir)
     logger.info(f"Copied {MLMODEL} to {output_dir}")
-    
+
     # Generate pickle model and save it to output_dir
     sys.path.insert(0, os.path.join(output_dir, CODE_FOLDER))
     import medimageinsight_classification_mlflow_wrapper
     import cloudpickle
     new_model = medimageinsight_classification_mlflow_wrapper.MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(
-        "image-classification",                                                                                                                        
+        "image-classification",
         "medimageinsigt-v1.0.0.pt",
         "clip_tokenizer_4.16.2")
     with open(os.path.join(output_dir, PYTHON_MODEL), "wb") as f:
