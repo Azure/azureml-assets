@@ -80,7 +80,6 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns "image_features" and/or "text_features"
         """
-
         from vision_utils import create_temp_file, process_image_pandas_series
 
         if not self.category_features_loaded:
@@ -147,6 +146,19 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(MEDIMAGEINSIGHTMLFlowModel
             return results
 
     def compute_text_vectors(self, categories):
+        """
+        Compute text vectors for a list of categories.
+
+        This method takes a list of category names, tokenizes each category name,
+        and computes the corresponding text embeddings using the model's tokenizer
+        and encoder. The embeddings are normalized and returned as a list of vectors.
+        Args:
+            categories (list of str): A list of category names for which text vectors
+                          need to be computed.
+        Returns:
+            list of torch.Tensor: A list of normalized text vectors corresponding to
+                      each category name.
+        """
         text_vectors = []
         for classname in categories:
             texts = [f'{classname}.']

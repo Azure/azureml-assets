@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File containing function for finetuning MedImageInsight."""
+
 import argparse
 import uuid
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -39,11 +41,10 @@ SET_SAMPLER_EPOCH = 'SET_SAMPLER_EPOCH'
 
 
 def add_env_parser_to_yaml() -> None:
-    """
-    Adding ability of resolving environment variables to the yaml SafeLoader.
+    """Adding ability of resolving environment variables to the yaml SafeLoader.
+
     Environment variables in the form of "${<env_var_name>}" can be resolved as strings.
     If the <env_var_name> is not in the env, <env_var_name> itself would be used.
-
     E.g.:
     config:
       username: admin
@@ -67,17 +68,18 @@ def load_config_dict_to_opt(opt: Dict[str, Any],
                             config_dict: Dict[str, Any],
                             splitter: str = '.',
                             log_new: bool = False) -> None:
-    """
-        Args:
-            opt (Dict[str, Any]): The dictionary to be updated with values from config_dict.
-            config_dict (Dict[str, Any]): The dictionary containing configuration key-value pairs to load into opt.
-            splitter (str, optional): The delimiter used to split keys in config_dict. Defaults to '.'.
-            log_new (bool, optional): If True, logs new keys added to opt. Defaults to False.
-        Raises:
-            TypeError: If config_dict is not a dictionary.
-            AssertionError: If the structure of keys in config_dict does not match the expected format.
-        Returns:
-            None
+    """Load config_dict to opt dictionary.
+
+    Args:
+        opt (Dict[str, Any]): The dictionary to be updated with values from config_dict.
+        config_dict (Dict[str, Any]): The dictionary containing configuration key-value pairs to load into opt.
+        splitter (str, optional): The delimiter used to split keys in config_dict. Defaults to '.'.
+        log_new (bool, optional): If True, logs new keys added to opt. Defaults to False.
+    Raises:
+        TypeError: If config_dict is not a dictionary.
+        AssertionError: If the structure of keys in config_dict does not match the expected format.
+    Returns:
+        None
         Load the key, value pairs from config_dict to opt, overriding existing values in opt
         if there is any.
     """
@@ -141,6 +143,7 @@ def load_opt_from_config_files(conf_files: List[str]) -> Dict[str, Any]:
 
 
 def update_opt(opt):
+    """Update the opt dictionary with default values and settings."""
     world_size = 1
     if 'OMPI_COMM_WORLD_SIZE' in os.environ:
         world_size = int(os.environ['OMPI_COMM_WORLD_SIZE'])
@@ -174,8 +177,8 @@ def update_opt(opt):
 
 
 def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
-    """
-    Copy all files recursively from MLFLOW_MODEL_FOLDER to MLFLOW_OUTPUT_MODEL_FOLDER.
+    """Copy all files recursively from MLFLOW_MODEL_FOLDER to MLFLOW_OUTPUT_MODEL_FOLDER.
+
     Also, copy the model_state_dict.pt file from the highest numbered folder in SAVE_DIR
     to the specified destination in MLFLOW_OUTPUT_MODEL_FOLDER.
 
@@ -192,6 +195,7 @@ def copy_model_files(cmdline_args: Dict[str, Any]) -> None:
 
 
 def copy_result_files(cmdline_args: Dict[str, Any]) -> None:
+    """Copy the model_state_dict.pt file from the highest numbered folder in SAVE_DIR."""
     dest_folder = cmdline_args['MLFLOW_OUTPUT_MODEL_FOLDER']
 
     # Find the highest numbered folder in SAVE_DIR
@@ -295,8 +299,7 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def copy_tsv(tsv_file: str, save_dir: str) -> str:
-    """
-    Copy the TSV file to the save directory in a unique folder
+    """Copy the TSV file to the save directory in a unique folder.
 
     Args:
         tsv_file (str): Path to the TSV file.
@@ -313,8 +316,8 @@ def copy_tsv(tsv_file: str, save_dir: str) -> str:
 
 
 def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """
-    Load and combine command line arguments with configuration options.
+    """Load and combine command line arguments with configuration options.
+
     This function processes command line arguments, loads configuration options
     from specified configuration files, and combines them into a single dictionary.
     Args:
@@ -380,9 +383,7 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
 
 
 def main(args: List[str] = None) -> None:
-    '''
-    Main execution point for PyLearn.
-    '''
+    """Entry point for PyLearn."""
     parser = get_parser()
     args = parser.parse_args(args)
     set_logging_parameters(

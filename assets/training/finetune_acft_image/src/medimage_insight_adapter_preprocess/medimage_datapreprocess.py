@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File containing functions for embeddings generation from MedImageInsight."""
+
 import argparse
 from azureml.acft.common_components import (
     get_logger_app,
@@ -77,11 +79,23 @@ def get_parser():
 
 
 def generate_embeddings(
+
     image_tsv,
     mlflow_model,
     image_standardization_jpeg_compression_ratio,
     image_standardization_image_size,
 ):
+    """
+    Generate embeddings for images listed in a TSV file using a given MLflow model.
+
+    Args:
+        image_tsv (str): Path to the TSV file containing image data.
+        mlflow_model (MLflow Model): The MLflow model used to generate image embeddings.
+        image_standardization_jpeg_compression_ratio (float): JPEG compression ratio for image standardization.
+        image_standardization_image_size (tuple): Target size for image standardization (width, height).
+    Returns:
+        pd.DataFrame: DataFrame containing the original image data along with the generated image embeddings.
+    """
     image_df = pd.read_csv(image_tsv, sep="\t", header=None)
     image_df.columns = ["Name", "image"]
     image_df["text"] = None
@@ -125,6 +139,7 @@ def save_dataframe(
 def process_embeddings(args):
     """
     Process medical image embeddings and save the results to a PKL file.
+
     This function loads the MLflow model, generates image embeddings from the provided TSV file,
     and saves the embeddings to the specified output PKL file.
 
@@ -136,7 +151,6 @@ def process_embeddings(args):
     Returns:
         None
     """
-
     model_path = args.mlflow_model_path
     output_pkl = args.output_pkl
     image_tsv = args.image_tsv
@@ -155,6 +169,18 @@ def process_embeddings(args):
 
 
 def main():
+    """
+    To parse arguments, set logging parameters, and process embeddings.
+
+    This function performs the following steps:
+    1. Parses command-line arguments using a parser.
+    2. Logs the parsed arguments.
+    3. Sets logging parameters including task type, project name, project version number, and component name.
+    4. Filters specific logging patterns for Azure Machine Learning.
+    5. Processes embeddings based on the parsed arguments.
+    Returns:
+        None
+    """
     parser = get_parser()
     args, _ = parser.parse_known_args()
     logger.info("Parsed arguments: %s", args)

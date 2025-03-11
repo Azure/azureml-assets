@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File containing function for classification adapter training."""
+
 import argparse
 import json
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -137,7 +139,6 @@ def load_data(train_data_path: str, validation_data_path: str) -> tuple[pd.DataF
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: DataFrames containing the training and validation data.
     """
-
     train_data_file = os.path.join(train_data_path, EMBEDDING_FILE_NAME)
     validation_data_file = os.path.join(validation_data_path, EMBEDDING_FILE_NAME)
     train_data = pd.read_pickle(train_data_file)
@@ -289,6 +290,21 @@ def train_model(
 
 
 def main():
+    """
+    To execute the training process for the medical image insight adapter.
+
+    This function performs the following steps:
+    1. Parses command-line arguments.
+    2. Sets logging parameters for the training task.
+    3. Loads and merges training and validation data with corresponding text data.
+    4. Initializes the model based on the parsed arguments.
+    5. Prepares data loaders for training and validation datasets.
+    6. Trains the model and prints the best accuracy and AUC achieved during training.
+    Args:
+        None
+    Returns:
+        None
+    """
     parser = get_parser()
     args, _ = parser.parse_known_args()
     logger.info("Parsed arguments: %s", args)

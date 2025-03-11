@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File containing function for merging MedImageInsight and Adapter model."""
+
 import json
 import sys
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -24,6 +26,23 @@ CODE_FOLDER = "code"
 
 
 def merge_models(mlflow_model_path, output_dir, label_file):
+    """
+    Merge models and prepares the output directory with necessary files and configurations.
+
+    Args:
+        mlflow_model_path (str): Path to the source MLflow model directory.
+        output_dir (str): Path to the output directory where the merged model and configurations will be saved.
+        label_file (str): Path to the file containing labels, one per line.
+    Steps:
+        1. Recursively copy contents from `mlflow_model_path` to `output_dir`.
+        2. Copy the MLflow wrapper code to the output directory.
+        3. Read labels from `label_file` and save them in a configuration JSON file in the output directory.
+        4. Copy the MLModel configuration to the output directory.
+        5. Generate a pickle model using `medimageinsight_classification_mlflow_wrapper` and save it to the output directory.
+    Raises:
+        FileNotFoundError: If any of the specified files or directories do not exist.
+        IOError: If there is an error in reading or writing files.
+    """
     # Copy contents from mlflow_model_path to output_dir recursively
     for root, dirs, files in os.walk(mlflow_model_path):
         for file in files:
@@ -67,6 +86,19 @@ def merge_models(mlflow_model_path, output_dir, label_file):
 
 
 def main():
+    """
+    Merge an adapter model with an MLflow model.
+
+    This function parses command-line arguments to get the paths for the MLflow model,
+    the output directory to save the merged model, and an optional label file. It then
+    sets the logging parameters and calls the merge_models function to perform the merge.
+    Command-line Arguments:
+    --mlflow_model (str): Path to the MLflow model (required).
+    --output_dir (str): Directory to save the merged model (required).
+    --label_file (str): Path to the label file (optional).
+    Returns:
+    None
+    """
     parser = argparse.ArgumentParser(description="Merge adapter model with MLflow model")
     parser.add_argument("--mlflow_model", type=str, required=True, help="Path to the MLflow model")
     parser.add_argument("--output_dir", type=str, required=True, help="Directory to save the merged model")

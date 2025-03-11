@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File containing function for utilities for finetuning MedimageInsight."""
+
 import os
 import numpy as np
 from torch.utils import data
@@ -16,7 +18,24 @@ logger = logging.getLogger(__name__)
 
 
 class feature_loader(data.Dataset):
+    """Class for loading features and labels for training."""
+
     def __init__(self, data_dict, csv, mode="train"):
+        """
+        Initialize the training class with the given data dictionary, CSV file, and mode.
+
+        Args:
+            data_dict (dict): A dictionary containing data information such as image names and features.
+            csv (str): The path to the CSV file containing additional data.
+            mode (str, optional): The mode in which the class is being used. Default is "train".
+
+        Attributes:
+            data_dict (dict): Stores the provided data dictionary.
+            csv (str): Stores the path to the provided CSV file.
+            mode (str): Stores the mode in which the class is being used.
+            img_name (str): Stores the image name from the data dictionary.
+            features (Any): Stores the features from the data dictionary.
+        """
         self.data_dict = data_dict
         self.csv = csv
         self.mode = mode
@@ -24,6 +43,17 @@ class feature_loader(data.Dataset):
         self.features = data_dict["features"]
 
     def __getitem__(self, item):
+        """
+        Retrieve the features and label (if applicable) for a given index.
+
+        Args:
+            item (int): Index of the item to retrieve.
+        Returns:
+            tuple: A tuple containing:
+            - features (numpy.ndarray): The feature array for the given index.
+            - label (numpy.ndarray or None): The label array for the given index if in 'train' or 'val' mode, otherwise None.
+            - img_name (str): The image name corresponding to the given index.
+        """
         img_name = self.img_name[item]
         features = self.features[item]
         features = features.astype("float32")
@@ -42,6 +72,12 @@ class feature_loader(data.Dataset):
             return features, img_name
 
     def __len__(self):
+        """
+        Return the number of images in the dataset.
+
+        Returns:
+            int: The number of images.
+        """
         return len(self.img_name)
 
 
@@ -50,7 +86,47 @@ class feature_loader(data.Dataset):
 # in_channels: Number of channels for input embeddings, num_class: Number of classes, finetune_mode: image (image-only)
 # Output: Class-wise Prediction
 class MLP_model(nn.Module):
+    """
+    A multi-layer perceptron (MLP) model for image feature extraction and classification.
+
+    Args:
+        in_channels (int): Number of input channels.
+        hidden_dim (int): Dimension of the hidden layer.
+        num_class (int): Number of output classes.
+    Attributes:
+        in_channels (int): Number of input channels.
+        hidden_dim (int): Dimension of the hidden layer.
+        num_class (int): Number of output classes.
+        vision_embd (nn.Sequential): Sequential model for vision embedding.
+        retrieval_conv (nn.Sequential): Sequential model for retrieval convolution.
+        prediction_head (nn.Sequential): Sequential model for prediction head.
+    Methods:
+        forward(vision_feat):
+            Forward pass of the model.
+            Args:
+                vision_feat (torch.Tensor): Input tensor containing vision features.
+            Returns:
+                tuple: A tuple containing:
+                    - feat (torch.Tensor): Feature tensor after retrieval convolution.
+                    - class_output (torch.Tensor): Output tensor containing class predictions.
+    """
+
     def __init__(self, in_channels, hidden_dim, num_class):
+        """
+        Initialize the model with the given parameters.
+
+        Args:
+            in_channels (int): Number of input channels.
+            hidden_dim (int): Dimension of the hidden layer.
+            num_class (int): Number of output classes.
+        Attributes:
+            in_channels (int): Number of input channels.
+            hidden_dim (int): Dimension of the hidden layer.
+            num_class (int): Number of output classes.
+            vision_embd (nn.Sequential): Sequential model for vision embedding.
+            retrieval_conv (nn.Sequential): Sequential model for retrieval convolution.
+            prediction_head (nn.Sequential): Sequential model for prediction head.
+        """
         super().__init__()
 
         self.in_channels = int(in_channels)
@@ -85,6 +161,16 @@ class MLP_model(nn.Module):
         self.prediction_head = nn.Sequential(nn.Linear(self.hidden_dim, self.num_class))
 
     def forward(self, vision_feat):
+        """
+        Forward pass for the model.
+
+        Args:
+            vision_feat (torch.Tensor): Input tensor containing vision features.
+        Returns:
+            tuple: A tuple containing:
+            - feat (torch.Tensor): Processed feature tensor.
+            - class_output (torch.Tensor): Output tensor from the prediction head.
+        """
         feat = self.vision_embd(vision_feat.squeeze(1))
         feat = self.retrieval_conv(torch.unsqueeze(feat, 2))
         class_output = self.prediction_head(feat.squeeze(2))
@@ -94,7 +180,7 @@ class MLP_model(nn.Module):
 
 def load_label_csv(label_csv_file):
     """
-    Loads the label CSV file.
+    Load the label CSV file.
 
     Args:
     - label_csv_file (str): Path to the label CSV file.
@@ -108,7 +194,7 @@ def load_label_csv(label_csv_file):
 
 def create_data_loader(samples, csv, mode, batch_size, num_workers=2, pin_memory=True):
     """
-    Creates a data loader for the generated embeddings.
+    Create a data loader for the generated embeddings.
 
     Args:
     - samples (dict): Dictionary containing the features and image names.
@@ -164,9 +250,9 @@ def create_model(in_channels, hidden_dim, num_class):
 def trainer(train_ds, test_ds, model, loss_function_ts, optimizer, epochs, root_dir, track_metric):
     """
     Trains a classification model and evaluates it on a validation set.
+
     Saves the model with the best validation ROC AUC score.
     """
-
     start_time = time.time()
 
     max_epoch = epochs
@@ -276,6 +362,17 @@ def trainer(train_ds, test_ds, model, loss_function_ts, optimizer, epochs, root_
 
 
 def perform_inference(model, test_loader):
+    """
+    Perform inference using the given model and test data loader.
+
+    Args:
+        model (torch.nn.Module): The trained model to use for inference.
+        test_loader (torch.utils.data.DataLoader): DataLoader containing the test dataset.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries containing the image name, predicted class,
+                              and the probability of the predicted class for each image.
+    """
     predictions = []
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.eval()
@@ -301,6 +398,15 @@ def perform_inference(model, test_loader):
 
 
 def load_trained_model(model, model_path):
+    """
+    Load a trained model from the specified file path and transfers it to the appropriate device.
+
+    Args:
+        model (torch.nn.Module): The model architecture to load the state dictionary into.
+        model_path (str): The file path to the saved model state dictionary.
+    Returns:
+        torch.nn.Module: The model with the loaded state dictionary, moved to the appropriate device.
+    """
     # Load Model State
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.load_state_dict(torch.load(model_path, map_location=device))
