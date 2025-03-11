@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.74 (2025-03-11)
+### 🐛 Bugs Fixed
+- [#](https://github.com/Azure/azureml-assets/pull/3887) Fix validate assets for updated task in quality evaluationresult assets
+
 ## 1.16.74 (2025-02-28)
 ### 🐛 Bugs Fixed
 - [#3887](https://github.com/Azure/azureml-assets/pull/3887) Add support for component and data metadata updates
