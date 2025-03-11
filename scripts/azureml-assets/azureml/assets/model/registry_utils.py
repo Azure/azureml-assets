@@ -255,7 +255,7 @@ def prepare_model(spec_path: Path, model_config: ModelConfig, temp_dir: Path, ml
             model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir,
                                            copy_updater, output_level)
         elif model_config.type == assets.ModelType.MLFLOW:
-            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir, 
+            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir,
                                            copy_updater, output_level)
         elif model_config.type == assets.ModelType.TRITON:
             model_asset = TritonModelAsset(spec_path, model_config, registry_name, temp_dir,
