@@ -33,6 +33,7 @@ def load_json(file_path):
 def get_json_structure(data):
     """
     Recursively extract the structure of JSON (keys only).
+
     For dictionaries, returns a dict of keys mapped to their structure.
     For lists, returns a list with the structure of the first element.
     For other types, returns None.
@@ -49,6 +50,7 @@ def get_json_structure(data):
 def compare_structures(expected, actual):
     """
     Compare JSON structures (keys only) of expected and actual.
+
     Returns a dictionary with validation results.
     """
     expected_structure = get_json_structure(expected)
@@ -81,7 +83,7 @@ def save_validation_result(result, output_path):
 
 
 def main():
-    """Main function to compare expected and actual inference response structures."""
+    """Compare expected and actual inference response structures."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--expected_response", type=str, required=True,
                         help="Path to the expected inference response JSON file.")
