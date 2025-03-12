@@ -92,7 +92,7 @@ inputs:
 outputs:
   save_dir:
     type: uri_folder
-    description: Directory to save the model.
+    description: Directory to save the model and checkpoints.
     mode: rw_mount
 
   mlflow_model_folder:
@@ -102,7 +102,7 @@ outputs:
 
   merged_mlfow_model:
     type: mlflow_model
-    description: Path to save the output model.
+    description: Path to save the output model configured with labels.
     mode: rw_mount
 
 
