@@ -1,8 +1,5 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
-RUN apt-get update
-RUN apt-get install docker.io -y
-
 # Add Docker's official GPG key:
 RUN apt-get update && \
     apt-get install ca-certificates curl && \
