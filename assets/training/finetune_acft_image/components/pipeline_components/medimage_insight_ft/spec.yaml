@@ -92,7 +92,7 @@ inputs:
 outputs:
   save_dir:
     type: uri_folder
-    description: Directory to save the model and checkpoints.
+    description: Directory to save the model and checkpoints, used for pipeline's internal operations.
     mode: rw_mount
 
   mlflow_model_folder:
