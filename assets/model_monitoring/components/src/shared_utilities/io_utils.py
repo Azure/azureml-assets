@@ -185,7 +185,7 @@ def read_mltable_in_spark(mltable_path: str) -> DataFrame:
         re_str = str(re)
         if 'Data asset service returned invalid MLTable yaml' in re_str:
             raise InvalidInputError(f"Failed to read MLTable {mltable_path}, looks like the MLTable is created with "
-                                    "the old DataSet interface, please recreate it with the new DataAsset interface. "
+                                    "DataSetV1 API, please recreate it with DataSetV2 API. "
                                     "You can do it in the AML studio or with the latest SDK.")
         else:
             raise re
