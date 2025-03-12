@@ -29,6 +29,7 @@ def load_json(file_path):
         logger.warning(f"Error loading JSON file {file_path}: {e}")
         return None
 
+
 def get_json_structure(data):
     """
     Recursively extract the structure of JSON (keys only).
@@ -43,6 +44,7 @@ def get_json_structure(data):
         return [get_json_structure(data[0])]
     else:
         return None
+
 
 def compare_structures(expected, actual):
     """
@@ -67,6 +69,7 @@ def compare_structures(expected, actual):
     logger.info(f"result: {result}")
     return result
 
+
 def save_validation_result(result, output_path):
     """Save validation results to a JSON file."""
     try:
@@ -75,6 +78,7 @@ def save_validation_result(result, output_path):
         logger.info(f"Validation result saved to {output_path}")
     except Exception as e:
         logger.error(f"Error saving validation result: {e}")
+
 
 def main():
     """Main function to compare expected and actual inference response structures."""
@@ -102,6 +106,7 @@ def main():
 
     # Save the validation result.
     save_validation_result(validation_result, args.validation_result)
+
 
 if __name__ == "__main__":
     main()
