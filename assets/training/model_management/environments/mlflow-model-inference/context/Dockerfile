@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/mirror/docker/library/ubuntu:22.04
 
+# Copying from earlier version and check if to be removed.
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:adiscon/v8-stable && \
@@ -41,10 +42,12 @@ RUN apt-get update && \
     rm -rf /usr/share/man/* && \
     rm -rf /var/lib/apt/lists/*
 
+    # To be removed
 COPY local/ /
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 
+    # This is failing.
 ADD runit/gunicorn /var/runit/gunicorn
 RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
 RUN chmod +x /var/runit/gunicorn/run
@@ -59,6 +62,7 @@ EXPOSE 5001
 # Copy the script that grants permissions to docker user
 COPY grant_ownership.sh /tmp/
 
+# To be removed
 # Generate notice
 RUN bash generate_notice.sh && rm generate_notice.sh
 
