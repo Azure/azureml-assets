@@ -93,23 +93,26 @@ def create_model_target(command_line_args):
     model_config = target_config.get("ModelConfig", {})
 
     x = model_config.get("ApiKey", "")
-    apiKeyValue = os.environ.get(x.upper(), "")
-    if not apiKeyValue:
+    api_key_value = os.environ.get(x.upper(), "")
+    if not api_key_value:
         logger.warning(f"API key environment variable '{x.upper()}' is missing or empty!")
 
     azure_endpoint = model_config.get("AzureEndpoint", "")
+    deployment_name = model_config.get("AzureDeployment", "")
     model_params = target_config.get("ModelParams", {})
     system_message = target_config.get("SystemMessage", "")
 
     logger.info(f"Creating ModelTarget with values:")
     logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-    logger.info(f"  - ApiKey: {'[HIDDEN]' if apiKeyValue else 'MISSING'}")
+    logger.info(f"  - ApiKey: {'[HIDDEN]' if api_key_value else 'MISSING'}")
+    logger.info(f"  - AzureDeployment: {deployment_name}")
     logger.info(f"  - ModelParams: {model_params}")
     logger.info(f"  - SystemMessage: {system_message}")
 
     return ModelTarget(
         endpoint=azure_endpoint,
-        api_key=apiKeyValue,
+        api_key=api_key_value,
+        deployment_name=deployment_name,
         model_params=model_params,
         system_message=system_message,
     )
