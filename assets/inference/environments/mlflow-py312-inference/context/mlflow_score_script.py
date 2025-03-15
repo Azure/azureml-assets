@@ -17,7 +17,7 @@ from inference_schema.schema_decorators import input_schema, output_schema
 from mlflow.models import Model
 from mlflow.pyfunc import load_model
 from mlflow.pyfunc.scoring_server import _get_jsonable_obj
-from azureml.ai.monitoring import Collector
+from mlmonitoring import Collector
 from mlflow.types.utils import _infer_schema
 from mlflow.types.schema import Schema, ColSpec, DataType
 from mlflow.exceptions import MlflowException
