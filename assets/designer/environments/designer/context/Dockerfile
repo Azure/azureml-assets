@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
 WORKDIR /
 
 ENV CONDA_PREFIX=/azureml-envs/designer
