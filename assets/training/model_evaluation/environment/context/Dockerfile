@@ -8,6 +8,7 @@ ENV CONDA_PREFIX=/azureml-envs/model-evaluation
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 
 COPY conda.yaml .
+
 # Create conda environment
 RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
     rm conda.yaml && \
