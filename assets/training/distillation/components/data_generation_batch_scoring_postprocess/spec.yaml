@@ -81,6 +81,10 @@ inputs:
   connection_config_file:
     type: uri_file
     description: Connection config file for batch scoring
+  
+  model_asset_id:
+    type: string
+    description: The student model to finetune
 
 
 outputs:
@@ -107,5 +111,6 @@ command: >-
   $[[--enable_chain_of_density ${{inputs.enable_chain_of_density}}]]
   --data_generation_task_type ${{inputs.data_generation_task_type}}
   --connection_config_file ${{inputs.connection_config_file}}
+  --model_asset_id ${{inputs.model_asset_id}}
   --generated_batch_train_file_path ${{outputs.generated_batch_train_file_path}}
   --generated_batch_validation_file_path ${{outputs.generated_batch_validation_file_path}}
