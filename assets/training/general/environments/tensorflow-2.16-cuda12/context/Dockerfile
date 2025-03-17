@@ -3,14 +3,14 @@
 
 FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20240327.v1 AS inferencing-assets
 
-# Tag: 12.3.2-cudnn9-devel-ubuntu20.04
-# Env: CUDA_VERSION=12.3.2
+# Tag: 12.8.0-cudnn-devel-ubuntu20.04
+# Env: CUDA_VERSION=12.8.0
 # Env: NCCL_VERSION=2.12.7-1
 # Env: NV_CUDNN_VERSION=9
 
 # DisableDockerDetector "Preferred to use nvidia registry over MCR mirror"
 
-FROM nvcr.io/nvidia/cuda:12.3.2-cudnn9-devel-ubuntu20.04
+FROM nvcr.io/nvidia/cuda:12.8.0-cudnn-devel-ubuntu20.04
 
 USER root:root
 
