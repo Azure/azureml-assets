@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8.18
+  - pip==23.3
+  - pip:
+      - numpy==1.23.5
+      - azureml-train-automl-runtime==1.56.0
+      - azureml-automl-dnn-vision==1.56.0
+      - mlflow==2.9.2
+name: mlflow-env
