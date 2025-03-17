@@ -1,4 +1,0 @@
-numpy==1.23.5
-azureml-train-automl-runtime==1.56.0
-azureml-automl-dnn-vision==1.56.0
-mlflow==2.9.2
