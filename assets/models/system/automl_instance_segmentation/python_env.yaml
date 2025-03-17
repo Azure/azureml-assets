@@ -1,0 +1,7 @@
+python: 3.8.18
+build_dependencies:
+- pip==23.3
+- setuptools==67.6.0
+- wheel==0.40.0
+dependencies:
+- --no-cache-dir -r requirements.txt
