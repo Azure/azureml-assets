@@ -15,7 +15,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig, AssetType, ComponentType, ModelConfig, DataConfig
 from azureml.assets.deployment_config import AssetVersionUpdate
-from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, update_model_metadata, \
+from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, update_metadata, \
     prepare_data, RegistryUtils
 from azureml.assets.util import logger
 from azureml.assets.util.util import resolve_from_file_for_asset
@@ -64,6 +64,7 @@ def prepare_model_for_registration(
     temp_dir: Path,
     ml_client: MLClient,
     copy_updater: CopyUpdater = None,
+    output_level: str = "essential",
 ) -> bool:
     """Prepare model.
 
@@ -77,12 +78,14 @@ def prepare_model_for_registration(
     :type ml_client: MLClient
     :param copy_updater: CopyUpdater object to update files during azcopy
     :type copy_updater: CopyUpdater
+    :param output_level: Parameter for azcopy output verbosity level
+    :type output_level: str
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
     model, success = prepare_model(
         spec_path=spec_file_path, model_config=model_config, temp_dir=temp_dir, ml_client=ml_client,
-        copy_updater=copy_updater
+        copy_updater=copy_updater, output_level=output_level
     )
     if success:
         success = update_spec(model, spec_file_path)
@@ -96,6 +99,7 @@ def prepare_data_for_registration(
     temp_dir: Path,
     ml_client: MLClient,
     copy_updater: CopyUpdater = None,
+    output_level: str = "essential",
 ) -> bool:
     """Prepare data.
 
@@ -109,12 +113,14 @@ def prepare_data_for_registration(
     :type ml_client: MLClient
     :param copy_updater: CopyUpdater object to update files during azcopy
     :type copy_updater: CopyUpdater
+    :param output_level: Parameter for azcopy output verbosity level
+    :type output_level: str
     :return: Data successfully prepared for creation in registry.
     :rtype: bool
     """
     data, success = prepare_data(
         spec_path=spec_file_path, data_config=data_config, temp_dir=temp_dir, ml_client=ml_client,
-        copy_updater=copy_updater
+        copy_updater=copy_updater, output_level=output_level
     )
     if success:
         success = update_spec(data, spec_file_path)
@@ -466,39 +472,45 @@ def stringify_dictionary(dictionary: Dict):
 
 def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_update: bool = False):
     """Update the mutable metadata of asset."""
-    if asset.type == AssetType.MODEL:
-        model_name = asset.name
-        model_version = asset.version
+    if asset.type in [AssetType.COMPONENT, AssetType.DATA, AssetType.MODEL]:
+        asset_name = asset.name
+        asset_version = asset.version
         spec_path = asset.spec_with_path
-        model_config = asset.extra_config_as_object()
 
         tags_to_update = None
         try:
             with open(spec_path) as f:
-                model_spec = YAML().load(f)
-                tags = model_spec.get("tags", {})
-                properties = model_spec.get("properties", {})
+                asset_spec = YAML().load(f)
+                tags = asset_spec.get("tags", {})
+                properties = asset_spec.get("properties", {})
 
-                tags = {k: resolve_from_file_for_asset(model_config, v) for k, v in tags.items()}
+                if asset.type == AssetType.MODEL:
+                    model_config = asset.extra_config_as_object()
+                    tags = {k: resolve_from_file_for_asset(model_config, v) for k, v in tags.items()}
+                    description = model_config.description
 
                 # convert tags, properties value to string
                 tags = stringify_dictionary(tags)
                 properties = stringify_dictionary(properties)
                 tags_to_update = {"replace": tags}
                 properties_to_update = {"add": properties}
-        except Exception as e:
-            logger.log_error(f"Failed to get tags for model {model_name}: {e}")
 
-        update_model_metadata(
-            model_name=model_name,
-            model_version=model_version,
+                if asset.type in [AssetType.COMPONENT, AssetType.DATA]:
+                    description = asset_spec.get("description", None)
+        except Exception as e:
+            logger.log_error(f"Failed to get tags for {asset.type.value} {asset_name}: {e}")
+
+        update_metadata(
+            name=asset_name,
+            version=asset_version,
             update=AssetVersionUpdate(
-                versions=[model_version],
+                versions=[asset_version],
                 tags=tags_to_update,
                 properties=properties_to_update,
-                description=model_config.description
+                description=description
             ),
             ml_client=ml_client,
+            asset_type=asset.type,
             allow_no_op_update=allow_no_op_update,
         )
     else:
@@ -506,7 +518,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
 
 
 def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, version_template: str = None,
-                 debug: bool = None, copy_updater: CopyUpdater = None) -> bool:
+                 debug: bool = None, copy_updater: CopyUpdater = None, output_level: str = "essential") -> bool:
     """Create asset or update model metadata if it already exists.
 
     Args:
@@ -516,6 +528,7 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
         version_template (str, optional): Version template. Defaults to None.
         debug (bool, optional): Enable debug logging. Defaults to None.
         copy_updater (CopyUpdater, optional): CopyUpdater object to update files during azcopy. Defaults to None.
+        output_level (str, optional): Output verbosity level parameter for azcopy. Defaults to "essential".
 
     Returns:
         bool: True of successfully create/updated, otherwise False.
@@ -550,14 +563,14 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
             version = asset.version
             model_config: ModelConfig = asset.extra_config_as_object()
             if not prepare_model_for_registration(model_config, asset.spec_with_path, Path(temp_dir), ml_client,
-                                                  copy_updater):
+                                                  copy_updater, output_level):
                 logger.log_error("Failed to prepare model")
                 return False
         elif asset.type == AssetType.DATA:
             version = asset.version
             data_config: DataConfig = asset.extra_config_as_object()
             if not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), ml_client,
-                                                 copy_updater):
+                                                 copy_updater, output_level):
                 logger.log_error("Failed to prepare data asset")
                 return False
 
