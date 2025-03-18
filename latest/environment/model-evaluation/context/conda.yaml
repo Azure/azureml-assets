@@ -28,13 +28,13 @@ dependencies:
   - lightgbm>=3.2.1,<4.2.0
   - msrest>=0.6.21,<0.7.1
   - mltable==1.6.1
-  - openai==1.66.3
+  - openai==1.66.5
   - azure-ai-ml==1.26.0
   - mldesigner==0.1.0b19
   - tiktoken
   - idna==3.7
   - pydantic
-  - mteb==1.36.25
+  - mteb==1.36.26
   - setuptools>=70.0.0
   - cryptography==43.0.1
   # batch score dependencies
