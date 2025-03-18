@@ -36,7 +36,8 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     DinoV2MLFlowConvertor,
     LLaVAMLFlowConvertor,
     SegmentAnythingMLFlowConvertor,
-    VirchowMLFlowConvertor
+    VirchowMLFlowConvertor,
+    HibouBMLFlowConvertor,
 )
 
 
@@ -47,6 +48,7 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
     """Instantiate and return MLflow convertor."""
     task = translate_params["task"]
     model_id = translate_params.get("model_id")
+    logger.info(f"Model task:{task}, Model ID:{model_id}")
     if model_id is None:
         model_id = ""
 
@@ -83,6 +85,13 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
             return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif (
+            task == PyFuncSupportedTasks.FEATURE_EXTRACTION.value
+            or task == PyFuncSupportedTasks.IMAGE_FEATURE_EXTRACTION.value
+        ) and model_id.startswith(ModelFamilyPrefixes.HIBOU_B.value):
+            return HibouBMLFlowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         elif task == PyFuncSupportedTasks.IMAGE_FEATURE_EXTRACTION.value:
@@ -310,6 +319,19 @@ class VirchowMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for segment anything Virchow model."""
         return VirchowMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class HibouBMLFlowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for segment anything HibouB model."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for segment anything HibouB model."""
+        return HibouBMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,
