@@ -1,8 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""MLflow PythonModel wrapper that loads the Hibou-B image model,
-preprocesses input images, and performs inference to return the pooler output."""
+"""MLflow PythonModel wrapper that loads the Hibou-B image model and performs inference to return the pooler output."""
 
 import io
 import mlflow

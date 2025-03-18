@@ -1253,11 +1253,7 @@ class HibouBMLFlowConvertor(PyFuncMLFLowConvertor):
             raise Exception("Unsupported task for Hibou-B convertor.")
 
     def get_model_signature(self) -> ModelSignature:
-        """
-        Return MLflow model signature with input and output schema for the Hibou-B model.
-        The input is expected to be a DataFrame with a column for image data.
-        The output is a DataFrame with a column for image feature vectors.
-        """
+        """Return MLflow model signature with input and output schema for the Hibou-B model."""
         input_schema = Schema([
             ColSpec(DataType.string, HibouBMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)
         ])
