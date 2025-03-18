@@ -181,6 +181,14 @@ def read_mltable_in_spark(mltable_path: str) -> DataFrame:
                                     "access permission to the user managed identity attached to this AML workspace.")
         else:
             raise ve
+    except RuntimeError as re:
+        re_str = str(re)
+        if 'Data asset service returned invalid MLTable yaml' in re_str:
+            raise InvalidInputError(f"Failed to read MLTable {mltable_path}, looks like the MLTable is created with "
+                                    "DataSetV1 API, please recreate it with DataSetV2 API. "
+                                    "You can do it in the AML studio or with the latest SDK.")
+        else:
+            raise re
     except SystemError as se:
         if 'Name or service not known' in str(se):
             raise InvalidInputError(f"Failed to read MLTable {mltable_path}, the storage account is not found.")
