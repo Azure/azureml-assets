@@ -1,16 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 AS inferencing-assets
+FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20240327.v1 AS inferencing-assets
 
-# Tag: 12.8.1-cudnn-devel-ubuntu22.04
-# Env: CUDA_VERSION=12.8.1
+# Tag: 12.3.2-cudnn9-devel-ubuntu20.04
+# Env: CUDA_VERSION=12.3.2
 # Env: NCCL_VERSION=2.12.7-1
 # Env: NV_CUDNN_VERSION=9
 
 # DisableDockerDetector "Preferred to use nvidia registry over MCR mirror"
 
-FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+FROM nvcr.io/nvidia/cuda:12.3.2-cudnn9-devel-ubuntu20.04
 
 USER root:root
 
@@ -41,6 +41,7 @@ RUN apt-get update && \
     login \
     passwd \
     libldap-common \
+    libldap-2.4-2 \
     openssl - 1.1.1 \
     procps \
     libprocps8 \
@@ -93,7 +94,7 @@ RUN apt-get update && \
 	libibverbs-dev \
     libsm6 \
     libxext6 \
-    libssl3 \
+    libssl1.1 \
     libxrender-dev \
     libglib2.0-0 \
     dh-make \
@@ -150,18 +151,7 @@ RUN apt-get update && apt-get install -y lsb-release && \
 # Inference
 # Copy logging utilities, nginx and rsyslog configuration files, IOT server binary, etc.
 COPY --from=inferencing-assets /artifacts /var/
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libcurl4 \
-        liblttng-ust1 \
-        libunwind8 \
-        libxml++2.6-2v5 \
-        nginx-light \
-        psmisc \
-        rsyslog \
-        runit \
-        unzip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+RUN /var/requirements/install_system_requirements.sh && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
@@ -186,9 +176,9 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
 # Open-MPI-UCX installation
 RUN mkdir /tmp/ucx && \
     cd /tmp/ucx && \
-        wget -q https://github.com/openucx/ucx/releases/download/v1.17.0/ucx-1.17.0.tar.gz && \
-        tar zxf ucx-1.17.0.tar.gz && \
-	cd ucx-1.17.0 && \
+        wget -q https://github.com/openucx/ucx/releases/download/v1.9.0/ucx-1.9.0.tar.gz && \
+        tar zxf ucx-1.9.0.tar.gz && \
+	cd ucx-1.9.0 && \
         ./configure --prefix=/usr/local --enable-optimizations --disable-assertions --disable-params-check --enable-mt && \
         make -j $(nproc --all) && \
         make install && \
@@ -217,10 +207,14 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
 RUN apt-get update && \
     apt-get install -y cmake
 
-# rdma-core
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends rdma-core && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# rdma-core v30.0 for Mlnx_ofed_5_1_2 as user space driver
+RUN mkdir /tmp/rdma-core && \
+    cd /tmp/rdma-core && \
+    git clone --branch v30.0 https://github.com/linux-rdma/rdma-core && \
+    cd /tmp/rdma-core/rdma-core && \
+    debian/rules binary && \
+    dpkg -i ../*.deb && \
+    rm -rf /tmp/rdma-core
 
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \

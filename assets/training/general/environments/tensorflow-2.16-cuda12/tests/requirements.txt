@@ -1,3 +1,2 @@
-marshmallow<=3.23.3
 azure-ai-ml==1.2.0
 azure.identity==1.10.0
