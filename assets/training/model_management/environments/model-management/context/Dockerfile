@@ -2,7 +2,17 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:{{latest
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs -y
+# Update package list, upgrade system, and install required packages in one step
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    wget nscd python3-idna git git-lfs \
+    libctf-nobfd0=2.38-4ubuntu2.7 \
+    libctf0=2.38-4ubuntu2.7 \
+    libbinutils=2.38-4ubuntu2.7 \
+    binutils-common=2.38-4ubuntu2.7 \
+    binutils-x86-64-linux-gnu=2.38-4ubuntu2.7 \
+    binutils=2.38-4ubuntu2.7 \
+    libxml2=2.9.13+dfsg-1ubuntu0.6 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
