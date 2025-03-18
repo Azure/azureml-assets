@@ -59,7 +59,7 @@ class SupportedTasks(_CustomEnum):
     # Virchow
     IMAGE_FEATURE_EXTRACTION = "image-feature-extraction"
 
-     # Hibou-B family
+    # Hibou-B family
     FEATURE_EXTRACTION = "feature-extraction"
 
 

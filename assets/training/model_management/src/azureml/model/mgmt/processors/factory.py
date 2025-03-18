@@ -325,6 +325,7 @@ class VirchowMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             translate_params=translate_params,
         )
 
+
 class HibouBMLFlowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for segment anything HibouB model."""
 
@@ -336,7 +337,7 @@ class HibouBMLFlowConvertorFactory(MLflowConvertorFactoryInterface):
             temp_dir=temp_dir,
             translate_params=translate_params,
         )
-    
+
 
 class MMLabTrackingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for MMTrack video model family."""

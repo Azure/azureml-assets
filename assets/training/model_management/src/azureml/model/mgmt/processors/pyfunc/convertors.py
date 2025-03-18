@@ -1239,6 +1239,7 @@ class VirchowMLFlowConvertor(PyFuncMLFLowConvertor):
         }
         return artifacts_dict
 
+
 class HibouBMLFlowConvertor(PyFuncMLFLowConvertor):
     """PyFunc MLflow convertor for Hibou-B vision model."""
 
@@ -1299,7 +1300,7 @@ class HibouBMLFlowConvertor(PyFuncMLFLowConvertor):
 
     def _prepare_artifacts_dict(self) -> Dict:
         """Prepare artifacts dictionary for the MLflow model.
-        
+
         Assumes that the Hibou-B model directory contains:
           - pytorch_model.bin
           - config.json

@@ -11,7 +11,7 @@ import pandas as pd
 from PIL import Image
 from transformers import AutoImageProcessor, AutoModel
 
-from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
+from config import MLflowSchemaLiterals, MLflowLiterals
 
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
