@@ -40,10 +40,13 @@ RUN apt-get update && \
     rm -rf /usr/share/man/* && \
     rm -rf /var/lib/apt/lists/*
 
+COPY runit/nginx /var/runit/nginx/
+RUN chmod +x /var/runit/nginx/run
+
 RUN mkdir -p etc/nginx/sites-available
-COPY app etc/nginx/sites-available/app
+COPY configs/app etc/nginx/sites-available/app
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
-    rm -f /etc/nginx/sites-enabled/default
+        rm -f /etc/nginx/sites-enabled/default
 
 ADD runit/gunicorn /var/runit/gunicorn
 RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
