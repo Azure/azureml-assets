@@ -19,6 +19,8 @@ import base64
 from io import BytesIO
 
 from adapter_model import MLP_model
+import logging
+logger = logging.getLogger(__name__)
 
 
 class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(
@@ -50,7 +52,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(
         super().load_context(context)
 
         # also load the adapter model
-        print("Loading Adapter Model")
+        logger.info("Loading Adapter Model")
         model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
         model_path = os.path.join(model_dir, "adapter_model", "adapter_model.pth")
         config_path = os.path.join(model_dir, "adapter_model", "config.json")
@@ -66,7 +68,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(
             torch.load(model_path, map_location=self._device)
         )
         self.adapter_model.to(self._device)
-        print("Adapter Model Loaded")
+        logger.info("Adapter Model Loaded")
 
     def predict(
         self,
@@ -129,7 +131,7 @@ class MEDIMAGEINSIGHTClassificationMLFlowModelWrapper(
         results = []
         with torch.no_grad():
             for features in image_features.tolist():
-                print("features", features)
+
                 _, output = self.adapter_model(features)
                 # Apply softmax to get probabilities
                 probabilities = torch.softmax(output, dim=1)

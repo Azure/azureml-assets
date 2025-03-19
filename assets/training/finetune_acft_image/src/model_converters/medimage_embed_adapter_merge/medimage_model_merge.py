@@ -49,10 +49,7 @@ def merge_models(
     label_file,
 ):
     """
-    Merge adapter model with MLflow model.
-
-    This function merges an adapter model with an MLflow model by copying necessary files,
-    generating configuration files, and creating a new model wrapper.
+    Merge adapter model or zero-shot classification wrapper with MLflow model.
 
     Args:
         adapter_model_path (str): Path to the adapter model directory. If None or empty, zero-shot
@@ -154,9 +151,9 @@ def merge_models(
 
 
 def main():
-    """Merge an adapter model with an MLflow model."""
+    """Merge models and prepares the output directory with necessary files and configurations."""
     parser = argparse.ArgumentParser(
-        description="Merge adapter model with MLflow model"
+        description="Prepare model output directory"
     )
     parser.add_argument(
         "--adapter_model",
