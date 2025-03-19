@@ -40,13 +40,24 @@ RUN apt-get update && \
     rm -rf /usr/share/man/* && \
     rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p var/runit
+
 COPY runit/nginx /var/runit/nginx/
+COPY runit/rsyslog /var/runit/rsyslog/
+COPY common/aml_logger /var/azureml-logger
+COPY utilities/start_logger.sh /var/azureml-logger/start_logger.sh
+
+
 RUN chmod +x /var/runit/nginx/run
 
 RUN mkdir -p etc/nginx/sites-available
 COPY configs/app etc/nginx/sites-available/app
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
         rm -f /etc/nginx/sites-enabled/default
+COPY configs/rsyslog.conf    etc/rsyslog.conf
+
+RUN chmod +x var/runit/*/*
+RUN chmod +x var/azureml-logger/start_logger.sh
 
 ADD runit/gunicorn /var/runit/gunicorn
 RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
