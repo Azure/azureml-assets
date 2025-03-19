@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimgage_embedding_finetune
-version: 1.1.1
+version: 0.0.2
 
 type: command
 
