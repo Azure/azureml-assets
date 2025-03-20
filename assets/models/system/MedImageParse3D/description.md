@@ -19,6 +19,7 @@ MedImageParse 3D is built upon BiomedParse with the BoltzFormer architecture, op
 **Input**
 
 ```python
+import base64
 data = {
     "input_data": {
         "columns": ["image", "text"],
@@ -26,7 +27,7 @@ data = {
         "data": [
             [
                 # Base64-encoded .nii.gz data:
-                base64.b64encode(open("./examples/amos_0308.nii.gz", "rb").read()).decode("utf-8"),
+                base64.b64encode(open("./examples/example.nii.gz", "rb").read()).decode("utf-8"),
                 # Example text/string input:
                 "pancreas"
             ]
@@ -53,6 +54,11 @@ The field `"<Base64EncodedNifti>"` contains raw binary NIfTI data, encoded in Ba
 The provided function `decode_base64_to_nifti` handles the decoding logic:
 
 ```python
+import json
+import base64
+import tempfile
+import nibabel as nib
+
 def decode_base64_to_nifti(base64_string: str) -> nib.Nifti1Image:
     """
     Decode a Base64 string back to a NIfTI image.
@@ -75,7 +81,7 @@ def decode_base64_to_nifti(base64_string: str) -> nib.Nifti1Image:
     return nifti_image.get_fdata()
 ```
 
-You would parse output as:
+The output can be parsed using:
 
 ```python
 import json
@@ -94,6 +100,8 @@ print(segmentation_array.shape)  # e.g., (512, 512, 128)
 Optionally, the `plot_segmentation_masks` helper function shows slices of the 3D array if they contain non-zero content:
 
 ```python
+import matplotlib.pyplot as plt 
+
 def plot_segmentation_masks(segmentation_masks):
     """
     Plot each axial slice (z-slice) of the segmentation if it contains a non-zero mask.
