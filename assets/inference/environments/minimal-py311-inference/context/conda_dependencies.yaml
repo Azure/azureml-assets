@@ -11,4 +11,6 @@ dependencies:
   - azure-storage-blob=={{latest-pypi-version}}
   - azure-identity=={{latest-pypi-version}}
   - numpy
-  - joblib=={{latest-pypi-version}}
+  - joblib
+  - scikit-learn
+  - scipy
