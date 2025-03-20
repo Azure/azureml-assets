@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: medimage_insight_ft_pipeline
-version: 0.0.1
+version: 0.0.2
 type: pipeline
 display_name: Medimage Insight Finetune Pipeline
 description: Pipeline Component to finetune MedImageInsight Model.
@@ -48,19 +48,6 @@ inputs:
     description: Path to the configuration files.
     mode: ro_mount
 
-  # preprocessing settings
-  image_standardization_jpeg_compression_ratio:
-    type: integer
-    optional: true
-    default: 75
-    description: JPEG compression ratio for image standardization.
-
-  image_standardization_image_size:
-    type: integer
-    optional: true
-    default: 512
-    description: Image size for standardization.
-
   instance_type_finetune:
     type: string
     optional: true
@@ -99,12 +86,12 @@ outputs:
       internal operations.
     mode: rw_mount
 
-  mlflow_model_folder:
+  embedding_mlflow_model:
     type: mlflow_model
     description: Directory to save the MLflow model.
     mode: rw_mount
 
-  merged_mlfow_model:
+  classification_mlflow_model:
     type: mlflow_model
     description: Path to save the output model configured with labels.
     mode: rw_mount
@@ -113,7 +100,7 @@ outputs:
 jobs:
   medical_image_embedding_model_finetune:
     type: command
-    component: azureml:medimgage_embedding_finetune:0.0.1
+    component: azureml:medimgage_embedding_finetune:0.0.2
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -131,10 +118,10 @@ jobs:
       conf_files: '${{parent.inputs.conf_files}}'
     outputs:
       save_dir: '${{parent.outputs.save_dir}}'
-      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
+      mlflow_model_folder: '${{parent.outputs.embedding_mlflow_model}}'
   medimage_embedding_adapter_merge:
     type: command
-    component: azureml:medimage_embedding_adapter_merge:0.0.1
+    component: azureml:medimage_embedding_adapter_merge:0.0.2
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -142,4 +129,4 @@ jobs:
       mlflow_model: '${{parent.jobs.medical_image_embedding_model_finetune.outputs.mlflow_model_folder}}'
       label_file: '${{parent.inputs.label_file}}'
     outputs:
-      output_dir: '${{parent.outputs.merged_mlfow_model}}'
+      output_dir: '${{parent.outputs.classification_mlflow_model}}'
