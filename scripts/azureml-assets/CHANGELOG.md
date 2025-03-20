@@ -1,6 +1,33 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.76 (2025-03-11)
+### 🚀 New Features
+- [#3933](https://github.com/Azure/azureml-assets/pull/3933) Allow azcopy output level to be configurable
+
+## 1.16.75 (2025-03-11)
+### 🐛 Bugs Fixed
+- [#3928](https://github.com/Azure/azureml-assets/pull/3928) Fix validate assets for updated task in quality evaluationresult assets
+
+## 1.16.74 (2025-02-28)
+### 🐛 Bugs Fixed
+- [#3887](https://github.com/Azure/azureml-assets/pull/3887) Add support for component and data metadata updates
+
+## 1.16.73 (2025-02-21)
+### 🐛 Bugs Fixed
+- [#3853](https://github.com/Azure/azureml-assets/pull/3853) Add H100 GPU to supported_inference_skus.json
+
+## 1.16.72 (2025-02-19)
+### 🐛 Bugs Fixed
+- [#3846](https://github.com/Azure/azureml-assets/pull/3846) Update account_uri when storage_name is updated for AzureBlobstoreAssetPath
+
+## 1.16.71 (2025-02-12)
+### 🐛 Bugs Fixed
+- [#3838](https://github.com/Azure/azureml-assets/pull/3838) Add setter for AzureBlobstoreAssetPath storage_name
+
+## 1.16.70 (2025-02-06)
+### 🐛 Bugs Fixed
+- [#3825](https://github.com/Azure/azureml-assets/pull/3825) Pick up latest dependency changes
 
 ## 1.16.69 (2025-01-21)
 ### 🐛 Bugs Fixed

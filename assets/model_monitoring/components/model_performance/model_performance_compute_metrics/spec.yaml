@@ -4,7 +4,7 @@ type: spark
 name: model_performance_compute_metrics
 display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance monitor.
-version: 0.0.22
+version: 0.0.25
 is_deterministic: true
 
 code: ../../src
@@ -74,6 +74,7 @@ conf:
         - fsspec~=2023.4.0
         - azureml-metrics[tabular]~=0.0.42
         - setuptools[core]
+        - numpy<2.0.0
     name: momo-base-spark
 args: >-
   --task ${{inputs.task}}

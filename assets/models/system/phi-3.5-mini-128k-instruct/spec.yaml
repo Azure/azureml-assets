@@ -37,6 +37,13 @@ tags:
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
   _aml_system_vanity_registry: "azureml-phi"
+  maas-finetuning-deploy-regions: 
+    - eastus2
+    - eastus
+    - northcentralus
+    - westus3
+    - westus
+    - southcentralus
   inference_compute_allow_list:
     [ 
       Standard_NC24ads_A100_v4,
@@ -65,10 +72,12 @@ tags:
     per_device_train_batch_size: 1
     per_device_eval_batch_size: 1
     gradient_accumulation_steps: 1
-    learning_rate: 5e-6
+    learning_rate: 2e-5
+    learning_rate_min: 2e-6
+    learning_rate_max: 2e-4
     lr_scheduler_type: "cosine"
     logging_strategy: "steps"
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 7
+version: 6

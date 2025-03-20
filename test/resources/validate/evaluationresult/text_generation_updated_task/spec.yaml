@@ -1,0 +1,24 @@
+type: evaluationresult
+name: text_generation_correct
+version: 1
+display_name: text_generation_correct
+description: text_generation_correct
+dataset_name: dataset1
+dataset_family: family1
+
+model_name: model1
+model_version: "1"
+model_asset_id: azureml://registries/azureml/models/model1/versions/1
+relationships:
+    - relationshipType: Source
+      assetId: azureml://registries/azureml/models/model1/versions/1
+
+tags:
+    evaluation_type: text_generation
+    task: chat-completion
+    primary_metric: accuracy
+
+metrics:
+    ndcg_at_10: 0.79539
+
+properties: {}
