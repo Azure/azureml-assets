@@ -23,6 +23,7 @@ import azureml.acft.image.components.mainzvision as mv
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
 CHECKPOINT_PATH = "artifacts/checkpoints/vision_model/medimageinsigt-v1.0.0.pt"
+LANG_ENCODER_PATH = "artifacts/checkpoints/language_model/clip_tokenizer_4.16.2"
 EVAL_IMAGE_TSV = 'EVAL_IMAGE_TSV'
 EVAL_TEXT_TSV = 'EVAL_TEXT_TSV'
 IMAGE_TSV = 'IMAGE_TSV'
@@ -356,6 +357,10 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
         os.makedirs(SAVE_DIR, exist_ok=True)
         new_path = os.path.join(SAVE_DIR, "medimageinsigt-v1.0.0-native.pt")
         torch.save(safe_model, new_path)
+
+        opt['LANG_ENCODER']['PRETRAINED_TOKENIZER'] = os.path.join(
+            cmdline_args[MLFLOW_MODEL_FOLDER], LANG_ENCODER_PATH)
+
         if UNICL_MODEL in opt and PRETRAINED in opt[UNICL_MODEL]:
             opt[UNICL_MODEL][PRETRAINED] = new_path
 
