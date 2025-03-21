@@ -115,7 +115,7 @@ def create_model_target(command_line_args):
         azure_endpoint = model_config.get("AzureEndpoint", "")
         azure_endpoint = azure_endpoint.rstrip('/')
         logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-        endpoint = f"{azure_endpoint}/chat/completions"
+        endpoint = f"{azure_endpoint}/chat/completions?api-version={API_VERSION}"
         logger.info(f"  - MAAS Endpoint: {endpoint}")
 
     model_params = target_config.get("ModelParams", {})
