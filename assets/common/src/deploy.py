@@ -162,6 +162,11 @@ def parse_args():
         type=str,
         help="Json file to which deployment details will be written",
     )
+    parser.add_argument(
+        "--inference_response",
+        type=str,
+        help="JSON file containing inference results",
+    )
     # parse args
     args = parser.parse_args()
     logger.info(f"Args received {args}")
@@ -301,6 +306,8 @@ def main():
         args=args
     )
 
+    inference_result = None
+
     if args.inference_payload:
         print("Invoking inference with test payload ...")
         try:
@@ -311,6 +318,12 @@ def main():
             )
             print(f"Response:\n{response}")
             logger.info(f"Endpoint invoked successfully with response :{response}")
+            # Save inference response
+            inference_result = response
+            if args.inference_response:
+                with open(args.inference_response, "w") as f:
+                    json.dump(inference_result, f, indent=4)
+                logger.info("Saved inference response to output JSON file.")
         except Exception as e:
             raise AzureMLException._with_error(
                 AzureMLError.create(OnlineEndpointInvocationError, exception=e)
