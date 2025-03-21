@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/ProtectedMaterialEvaluator/v3/evaluator
+  container_path: models/evaluators/ProtectedMaterialEvaluator/v4/evaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:

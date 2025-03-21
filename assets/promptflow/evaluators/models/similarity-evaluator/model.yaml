@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/SimilarityEvaluator/v3/SimilarityEvaluator
+  container_path: models/evaluators/SimilarityEvaluator/v4/SimilarityEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:
