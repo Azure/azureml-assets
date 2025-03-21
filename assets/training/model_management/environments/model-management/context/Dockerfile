@@ -4,8 +4,6 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs -y
 
-RUN dpkg -l
-
 RUN conda install cryptography=44.0.2
 
 # azcopy install starts
