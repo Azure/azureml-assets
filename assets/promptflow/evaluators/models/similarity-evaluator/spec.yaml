@@ -8,4 +8,4 @@ properties:
   _default-display-file: ./SimilarityEvaluator/similarity.prompty
 tags:
   hiddenlayerscanned: ""
-version: 3
+version: 4
