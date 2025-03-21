@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/F1ScoreEvaluator/v3/F1ScoreEvaluator
+  container_path: models/evaluators/F1ScoreEvaluator/v4/F1ScoreEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:
