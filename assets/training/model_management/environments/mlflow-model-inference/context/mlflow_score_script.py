@@ -162,7 +162,12 @@ def create_param_sample(model_signature_params):
     return sample_params
 
 
-model_path = os.path.join(os.getenv("AZUREML_MODEL_DIR"), os.getenv("MLFLOW_MODEL_FOLDER"))
+azureml_model_dir = os.getenv("AZUREML_MODEL_DIR")
+mlflow_model = os.getenv("MLFLOW_MODEL_FOLDER")
+_logger.info(f"AzureML Model Dir {azureml_model_dir}")
+_logger.info(f"Mlflow_model_folder {mlflow_model}")
+model_path = os.path.normpath(os.path.join(os.getenv("AZUREML_MODEL_DIR"), "mlflow_model_folder/"))
+_logger.info(f"Final model path {model_path}")
 
 # model loaded here using mlfow.models import Model so we have access to the model signature
 model = Model.load(model_path)
