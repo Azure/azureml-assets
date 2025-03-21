@@ -79,12 +79,12 @@ def get_evaluator_config(command_line_args):
             evaluator_config[evaluator_name] = {"column_mapping": evaluator["DataMapping"]}
     return evaluator_config
 
+
 def create_model_target(command_line_args):
     """Get model target configuration from user input."""
     if not command_line_args.eval_target:
         logger.info("No eval_target provided. Returning None.")
         return None
-    
     try:
         logger.info("Eval_target provided.")
         target_config = json.loads(command_line_args.eval_target)
@@ -108,21 +108,21 @@ def create_model_target(command_line_args):
         azure_endpoint = azure_endpoint.rstrip('/')
         deployment_name = model_config.get("AzureDeployment", "")
         logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-        logger.info(f"  - AzureDeployment: {deployment_name}") 
+        logger.info(f"  - AzureDeployment: {deployment_name}")
         endpoint = f"{azure_endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version={API_VERSION}"
         logger.info(f"  - AOAI Endpoint: {endpoint}")
     elif model_config_type == "2":  # MAAS
         azure_endpoint = model_config.get("AzureEndpoint", "")
         azure_endpoint = azure_endpoint.rstrip('/')
         logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-        endpoint = f"{azure_endpoint}/chat/completions" 
+        endpoint = f"{azure_endpoint}/chat/completions"
         logger.info(f"  - MAAS Endpoint: {endpoint}")
 
     model_params = target_config.get("ModelParams", {})
     system_message = target_config.get("SystemMessage", "")
     few_shot_examples = target_config.get("FewShotExamples", [])
 
-    logger.info(f"Creating ModelTarget with values:")
+    logger.info("Creating ModelTarget with values:")
     logger.info(f"  - Endpoint: {endpoint}")
     logger.info(f"  - ApiKey: {'[HIDDEN]' if api_key_value else 'MISSING'}")
     logger.info(f"  - ModelParams: {model_params}")
@@ -136,6 +136,7 @@ def create_model_target(command_line_args):
         system_message=system_message,
         few_shot_examples=few_shot_examples,
     )
+
 
 def run_evaluation(command_line_args, evaluators, evaluator_config, model_target):
     """Run evaluation using evaluators."""

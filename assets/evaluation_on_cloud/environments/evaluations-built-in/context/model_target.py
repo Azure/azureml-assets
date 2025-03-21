@@ -1,14 +1,19 @@
-import re
-import os
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Module for handling model targets in evaluation on cloud."""
 import requests
 import logging
-from azure.core.exceptions import HttpResponseError
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
 class ModelTarget:
+    """Represents a model target and runs the chat/completion API on a query based on the target."""
+
     def __init__(self, endpoint, api_key, model_params, system_message, few_shot_examples):
+        """Initialize ModelTarget."""
         self.endpoint = endpoint
         self.api_key = api_key
         self.model_params = model_params
@@ -16,9 +21,10 @@ class ModelTarget:
         self.few_shot_examples = few_shot_examples
 
     def __call__(self, query, **kwargs):
+        """Invoke the model target with the given input query."""
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer "+ self.api_key
+            "Authorization": "Bearer " + self.api_key
         }
 
         messages = [{"role": "system", "content": self.system_message}]
@@ -33,9 +39,9 @@ class ModelTarget:
             "messages": messages,
             **self.model_params
         }
-        
+
         response = requests.post(self.endpoint, headers=headers, json=payload)
-        
+
         if response.status_code == 200:
             try:
                 output = response.json()
