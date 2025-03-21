@@ -17,6 +17,8 @@ from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
 from model_target import ModelTarget
 
+API_VERSION = "2025-01-01-preview"
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -93,25 +95,46 @@ def create_model_target(command_line_args):
     model_config = target_config.get("ModelConfig", {})
 
     x = model_config.get("ApiKey", "")
-    apiKeyValue = os.environ.get(x.upper(), "")
-    if not apiKeyValue:
+    api_key_value = os.environ.get(x.upper(), "")
+    if not api_key_value:
         logger.warning(f"API key environment variable '{x.upper()}' is missing or empty!")
 
-    azure_endpoint = model_config.get("AzureEndpoint", "")
+    model_config_type = str(model_config.get("Type", ""))
+    logger.info(f"  - Type: {model_config_type}")
+
+    endpoint = ""
+    if model_config_type == "1":  # AOAI
+        azure_endpoint = model_config.get("AzureEndpoint", "")
+        azure_endpoint = azure_endpoint.rstrip('/')
+        deployment_name = model_config.get("AzureDeployment", "")
+        logger.info(f"  - AzureEndpoint: {azure_endpoint}")
+        logger.info(f"  - AzureDeployment: {deployment_name}") 
+        endpoint = f"{azure_endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version={API_VERSION}"
+        logger.info(f"  - AOAI Endpoint: {endpoint}")
+    elif model_config_type == "2":  # MAAS
+        azure_endpoint = model_config.get("AzureEndpoint", "")
+        azure_endpoint = azure_endpoint.rstrip('/')
+        logger.info(f"  - AzureEndpoint: {azure_endpoint}")
+        endpoint = f"{azure_endpoint}/chat/completions" 
+        logger.info(f"  - MAAS Endpoint: {endpoint}")
+
     model_params = target_config.get("ModelParams", {})
     system_message = target_config.get("SystemMessage", "")
+    few_shot_examples = target_config.get("FewShotExamples", [])
 
     logger.info(f"Creating ModelTarget with values:")
-    logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-    logger.info(f"  - ApiKey: {'[HIDDEN]' if apiKeyValue else 'MISSING'}")
+    logger.info(f"  - Endpoint: {endpoint}")
+    logger.info(f"  - ApiKey: {'[HIDDEN]' if api_key_value else 'MISSING'}")
     logger.info(f"  - ModelParams: {model_params}")
     logger.info(f"  - SystemMessage: {system_message}")
+    logger.info(f"  - FewShotExamples: {few_shot_examples}")
 
     return ModelTarget(
-        endpoint=azure_endpoint,
-        api_key=apiKeyValue,
+        endpoint=endpoint,
+        api_key=api_key_value,
         model_params=model_params,
         system_message=system_message,
+        few_shot_examples=few_shot_examples,
     )
 
 def run_evaluation(command_line_args, evaluators, evaluator_config, model_target):

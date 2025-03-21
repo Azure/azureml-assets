@@ -8,23 +8,29 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 class ModelTarget:
-    def __init__(self, endpoint, api_key, model_params, system_message):
+    def __init__(self, endpoint, api_key, model_params, system_message, few_shot_examples):
         self.endpoint = endpoint
         self.api_key = api_key
         self.model_params = model_params
         self.system_message = system_message
+        self.few_shot_examples = few_shot_examples
 
     def __call__(self, query, **kwargs):
         headers = {
             "Content-Type": "application/json",
-            "api-key": self.api_key
+            "Authorization": "Bearer "+ self.api_key
         }
-        
+
+        messages = [{"role": "system", "content": self.system_message}]
+        for example in self.few_shot_examples:
+            if 'User' in example:
+                messages.append({"role": "user", "content": example['User']})
+            if 'Assistant' in example:
+                messages.append({"role": "assistant", "content": example['Assistant']})
+        messages.append({"role": "user", "content": query})
+
         payload = {
-            "messages": [
-                {"role": "system", "content": self.system_message},
-                {"role": "user", "content": query}
-            ],
+            "messages": messages,
             **self.model_params
         }
         
