@@ -16,6 +16,12 @@ flavors:
 mlflow_version: 2.14.3
 model_size_bytes: 2465553032
 model_uuid: 303978b7303b453f99790fd3dae58493
+metadata:
+  azureml.base_image: ad672e2741f64226a038e2be8fac9846.azurecr.io/azureml/azureml_25f498fd4e08c72f14eb874716ee3270
+  base_model_name: Mattersim
+  base_model_task: material-design
+  is_acft_model: true
+  is_finetuned_model: false
 signature:
   inputs: '[{"type": "binary", "name": "image", "required": false}, {"type": "string",
     "name": "text", "required": false}]'
