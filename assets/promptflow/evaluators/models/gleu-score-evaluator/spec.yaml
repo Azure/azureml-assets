@@ -6,4 +6,4 @@ properties:
   is-evaluator: true
   show-artifact: true
   _default-display-file: ./GleuScoreEvaluator/_gleu.py
-version: 3
+version: 4
