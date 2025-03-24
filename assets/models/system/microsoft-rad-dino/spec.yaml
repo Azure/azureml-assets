@@ -26,4 +26,6 @@ tags:
   license: msrla
   author: Microsoft
   task: embeddings
-version: 1
+  industry: health-and-life-sciences
+  hiddenlayerscanned: "true"
+version: 2

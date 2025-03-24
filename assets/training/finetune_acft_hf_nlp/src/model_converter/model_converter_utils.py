@@ -45,6 +45,8 @@ ACFT_TASKS_HUGGINGFACE_MODELS_MAPPING = {
     Tasks.QUESTION_ANSWERING: AutoModelForQuestionAnswering,
     Tasks.TEXT_GENERATION: AutoModelForCausalLM,
     Tasks.CHAT_COMPLETION: AutoModelForCausalLM,
+    Tasks.NLP_MULTICLASS: AutoModelForSequenceClassification,
+    Tasks.NLP_MULTILABEL: AutoModelForSequenceClassification
 }
 
 

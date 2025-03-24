@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.1-cudnn8-ubuntu20.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:{{latest-image-tag}}
 
 USER root
 
@@ -17,7 +17,7 @@ ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 RUN apt-get update && echo 'success updated apt-get!'
 RUN apt-get install -y --no-install-recommends cmake libboost-dev libboost-system-dev libboost-filesystem-dev
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 

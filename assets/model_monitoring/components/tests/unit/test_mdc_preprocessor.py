@@ -20,6 +20,7 @@ from model_data_collector_preprocessor.run import (
     mdc_preprocessor,
 )
 from shared_utilities.momo_exceptions import DataNotFoundError
+from unittest.mock import patch
 
 
 @pytest.fixture(scope="module")
@@ -136,11 +137,15 @@ class TestMDCPreprocessor:
             ("2023-11-06T17:00:00", "2023-11-06T18:00:00"),  # has window folder and file, but empty file
         ]
     )
-    def test_uri_folder_to_spark_df_no_data(self, mdc_preprocessor_test_setup,
+    @patch("shared_utilities.io_utils.StoreUrl")  # patch path is where it is looked up rather than where it is defined
+    def test_uri_folder_to_spark_df_no_data(self, MockStoreUrl, mdc_preprocessor_test_setup,
                                             window_start_time, window_end_time):
         """Test uri_folder_to_spark_df()."""
         def my_add_tags(tags: dict):
             print("my_add_tags:", tags)
+
+        mock_store_url = MockStoreUrl.return_value
+        mock_store_url.get_credential.return_value = "mock credential"
         print("testing test_uri_folder_to_spark_df...")
         print("working dir:", os.getcwd())
 

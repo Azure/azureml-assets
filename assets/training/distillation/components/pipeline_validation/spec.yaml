@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_validate_pipeline
-version: 0.0.4
+version: 0.0.5
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: OSS Distillation Validate Pipeline
 description: Component to validate inputs to the distillation pipeline
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/81
 
 code: ../../src
 
@@ -135,6 +135,11 @@ inputs:
     optional: true
     description: Start learning rate.
 
+  model_asset_id:
+    type: string
+    optional: false
+    description: The student model to finetune
+
 outputs:
   validation_info:
     type: uri_file
@@ -163,4 +168,5 @@ command: >-
   $[[--num_train_epochs ${{inputs.num_train_epochs}}]]
   $[[--per_device_train_batch_size ${{inputs.per_device_train_batch_size}}]]
   $[[--learning_rate ${{inputs.learning_rate}}]]
+  --model_asset_id '${{inputs.model_asset_id}}'
   --validation_info ${{outputs.validation_info}}
