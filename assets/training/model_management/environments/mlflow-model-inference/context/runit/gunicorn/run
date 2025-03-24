@@ -68,6 +68,7 @@ format_print "Dynamic Python Package Installation"
 format_print "###############################################"
 format_print ""
 
+export AZUREML_EXTRA_CONDA_YAML_ABS_PATH="${AZUREML_MODEL_DIR}/mlflow_model_folder/conda.yaml"
 
 if [[ -n "$AZUREML_EXTRA_PYTHON_LIB_PATH" ]]; then
     # Pre-installed mounted dependencies, check for the variable and if the folder exists.
@@ -124,7 +125,7 @@ elif [[ -n "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH" || -n "$AZUREML_EXTRA_CONDA_YAML
         if [ -z "$SERVER_INSTALLED_VERSION" ]; then
             format_print "Install azureml-inference-server-http version ${SERVER_VERSION}"
             # Install the same version of the http server from the default conda environment
-            pip install azureml-inference-server-http=="$SERVER_VERSION" || { handle_error ; }
+            pip install azureml-inference-server-http || { handle_error ; }
         fi
 
     else
