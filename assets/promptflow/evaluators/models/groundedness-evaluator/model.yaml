@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/GroundednessEvaluator/v5/GroundednessEvaluator
+  container_path: models/evaluators/GroundednessEvaluator/v6/GroundednessEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:
