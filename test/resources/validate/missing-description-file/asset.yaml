@@ -1,6 +1,0 @@
-name: test-asset-1
-version: auto
-type: environment
-spec: spec.yaml
-description_file: missing
-extra_config: environment.yaml

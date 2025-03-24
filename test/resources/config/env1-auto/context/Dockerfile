@@ -1,1 +1,0 @@
-FROM fake-image-name

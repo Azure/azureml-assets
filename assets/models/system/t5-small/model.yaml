@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: huggingface/t5-small/1702300795/mlflow_model_folder
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: mlflow_model

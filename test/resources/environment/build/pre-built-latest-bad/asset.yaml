@@ -1,5 +1,0 @@
-name: pre-built-latest-bad
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml

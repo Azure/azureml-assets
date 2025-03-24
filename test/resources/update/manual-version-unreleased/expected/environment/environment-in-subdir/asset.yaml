@@ -1,4 +1,0 @@
-name: environment-in-subdir
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml

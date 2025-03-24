@@ -1,7 +1,0 @@
-{"batch_size":2,"start_time_iso":"1970-01-01T00:00:01+00:00","end_time_iso":"1970-01-01T00:00:01.500000+00:00","output_char_count":12,"input_char_count":1000,"output_token_count":4,"input_token_count":250}
-{"batch_size":2,"start_time_iso":"1970-01-01T00:00:01+00:00","end_time_iso":"1970-01-01T00:00:01.500000+00:00","output_char_count":51,"input_char_count":1000,"output_token_count":12,"input_token_count":225}
-{"batch_size":2,"start_time_iso":"1970-01-01T00:00:01.550000+00:00","end_time_iso":"1970-01-01T00:00:01.815000+00:00","output_char_count":22,"input_char_count":900,"output_token_count":6,"input_token_count":230}
-{"batch_size":2,"start_time_iso":"1970-01-01T00:00:01.550000+00:00","end_time_iso":"1970-01-01T00:00:01.815000+00:00","output_char_count":4,"input_char_count":1100,"output_token_count":4,"input_token_count":245}
-{"batch_size":2,"start_time_iso":"1970-01-01T00:00:01.840000+00:00","end_time_iso":"1970-01-01T00:00:02.100000+00:00","output_char_count":22,"input_char_count":1100,"output_token_count":6,"input_token_count":260}
-{"batch_size":2,"start_time_iso":"1970-01-01T00:00:01.840000+00:00","end_time_iso":"1970-01-01T00:00:02.100000+00:00","output_char_count":5,"input_char_count":1200,"output_token_count":3,"input_token_count":275}
-{"batch_size":1,"start_time_iso":"1970-01-01T00:00:02.170000+00:00","end_time_iso":"1970-01-01T00:00:02.400000+00:00","output_char_count":22,"input_char_count":1200,"output_token_count":6,"input_token_count":270}

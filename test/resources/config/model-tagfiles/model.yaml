@@ -1,5 +1,0 @@
-path:
-  uri = "./model.txt"
-publish:
-  description: description.md
-  type: custom_model

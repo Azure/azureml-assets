@@ -1,8 +1,0 @@
-name: environment-in-parent-dir
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml
-release_paths:
-- "!../src/context/exclude_me1"
-- "!../src/context/exclude_me2"

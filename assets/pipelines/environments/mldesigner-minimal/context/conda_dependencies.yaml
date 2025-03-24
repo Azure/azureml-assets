@@ -1,8 +1,0 @@
-name: mldesigner-minimal
-channels:
-- conda-forge
-dependencies:
-- python=3.9
-- pip=21.3.1
-- pip:
-  - mldesigner=={{latest-pypi-version:pre}}

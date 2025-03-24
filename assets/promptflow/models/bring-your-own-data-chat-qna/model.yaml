@@ -1,8 +1,0 @@
-path:
-  container_name: gallery-samples
-  container_path: bring_your_own_data_chat_qna
-  storage_name: azuremlragexamples
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model

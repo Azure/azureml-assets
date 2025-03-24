@@ -1,5 +1,0 @@
-name: pytorch-1.12-centos123-py39-cuda11.6-inference
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml

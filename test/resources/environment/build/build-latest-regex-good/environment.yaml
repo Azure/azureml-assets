@@ -1,8 +1,0 @@
-image:
-  name: build-latest-regex-good
-  os: linux
-  context:
-    dir: context
-    dockerfile: Dockerfile
-    template_files:
-    - Dockerfile

@@ -1,5 +1,0 @@
-numpy
-regex
-scikit-learn
-tiktoken
-tqdm

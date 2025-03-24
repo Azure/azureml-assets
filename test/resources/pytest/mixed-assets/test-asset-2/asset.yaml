@@ -1,7 +1,0 @@
-name: test-asset-2
-version: 1
-type: component
-spec: spec.yaml
-test:
-  pytest:
-    enabled: true

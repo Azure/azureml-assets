@@ -1,5 +1,0 @@
-path:
-  container_name: prompts
-  container_path: gptv/social_media_post_analysis/v1
-  storage_name: amlregistryassets
-  type: azureblob

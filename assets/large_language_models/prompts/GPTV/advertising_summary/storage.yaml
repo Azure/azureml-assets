@@ -1,5 +1,0 @@
-path:
-  container_name: prompts
-  container_path: gptv/advertising_summary/v1
-  storage_name: amlregistryassets
-  type: azureblob

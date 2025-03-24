@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: samples/qna_with_your_own_data_using_faiss_index/v4/model_folder
-  storage_name: promptflowsamples
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model

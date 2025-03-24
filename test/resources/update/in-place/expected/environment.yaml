@@ -1,9 +1,0 @@
-image:
-  name: environment-in-parent-dir
-  os: linux
-  context:
-    dir: context
-    dockerfile: Dockerfile
-    template_files:
-    - Dockerfile
-    - conda_dependencies.yaml

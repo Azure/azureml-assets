@@ -1,5 +1,0 @@
-name: pytorch-1.12-cuda11.6-py39
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml
