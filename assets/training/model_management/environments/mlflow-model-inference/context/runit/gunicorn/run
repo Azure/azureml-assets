@@ -125,7 +125,7 @@ elif [[ -n "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH" || -n "$AZUREML_EXTRA_CONDA_YAML
         if [ -z "$SERVER_INSTALLED_VERSION" ]; then
             format_print "Install azureml-inference-server-http version ${SERVER_VERSION}"
             # Install the same version of the http server from the default conda environment
-            pip install azureml-inference-server-http=="$SERVER_VERSION" || { handle_error ; }
+            pip install azureml-inference-server-http || { handle_error ; }
         fi
 
     else
