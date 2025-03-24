@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/mirror/docker/library/ubuntu:22.04
 
+User root:root
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:adiscon/v8-stable && \
@@ -40,28 +41,39 @@ RUN apt-get update && \
     rm -rf /usr/share/man/* && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p var/runit
+RUN mkdir -p /var/runit
+RUN mkdir -p /var/azureml-app
+RUN mkdir -p /opt/miniconda/
+RUN mkdir -p etc/nginx/sites-available
 
+COPY runit/gunicorn /var/runit/gunicorn/
 COPY runit/nginx /var/runit/nginx/
 COPY runit/rsyslog /var/runit/rsyslog/
 COPY common/aml_logger /var/azureml-logger
 COPY utilities/start_logger.sh /var/azureml-logger/start_logger.sh
-
-
-RUN chmod +x /var/runit/nginx/run
-
-RUN mkdir -p etc/nginx/sites-available
 COPY configs/app etc/nginx/sites-available/app
-RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
-        rm -f /etc/nginx/sites-enabled/default
-COPY configs/rsyslog.conf    etc/rsyslog.conf
 
 RUN chmod +x var/runit/*/*
 RUN chmod +x var/azureml-logger/start_logger.sh
 
-ADD runit/gunicorn /var/runit/gunicorn
+#RUN chmod +x /var/runit/nginx/run
+
+RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
+        rm -f /etc/nginx/sites-enabled/default
+COPY configs/rsyslog.conf    etc/rsyslog.conf
+
+
 RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
 RUN chmod +x /var/runit/gunicorn/run
+
+RUN sed -i 's/\r$//g' /var/runit/gunicorn/finish
+RUN chmod +x /var/runit/gunicorn/finish
+
+RUN sed -i 's/\r$//g' /var/runit/nginx/run
+RUN chmod +x /var/runit/nginx/run
+
+RUN sed -i 's/\r$//g' /var/runit/nginx/finish
+RUN chmod +x /var/runit/nginx/finish
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=300
@@ -74,6 +86,13 @@ COPY grant_ownership.sh /tmp/
 RUN useradd --create-home dockeruser && \
     bash /tmp/grant_ownership.sh && rm -f /tmp/grant_ownership.sh
 
+RUN chown -R dockeruser /var/runit
+RUN chown -R dockeruser /var/log
+RUN chown -R dockeruser /var/lib/nginx
+RUN chown -R dockeruser /run
+RUN chmod +x /var/azureml-logger/start_logger.sh
+RUN chown -R dockeruser /var/azureml-app
+RUN chown -R dockeruser:dockeruser /opt/miniconda
 USER dockeruser
 
 ENV PATH=/opt/miniconda/bin:$PATH
