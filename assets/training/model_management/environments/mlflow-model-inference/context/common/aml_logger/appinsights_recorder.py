@@ -34,7 +34,7 @@ class AppInsightsRecorder:
                 )
                 logger.addHandler(azureLogHandler)
                 AppInsightsRecorder.tc_singleton = logger
-            except:
+            except Exception as exception:
                 logging.exception(
                     "Failed to initialize Application Insights Client.\n"
                     "Check that there is a valid Instrumentation Key in {0}".format(AppInsightsRecorder.ENV_API_KEY)
@@ -42,7 +42,8 @@ class AppInsightsRecorder:
                 sys.exit(1)
 
     def on_receive(self, raw_msg):
-        # The message is populated with the following four system properties. See rsyslog.conf files for the template from syslog
+        # The message is populated with the following four system properties. 
+        # See rsyslog.conf files for the template from syslog
         (fd, host, time, unparsed_msg) = raw_msg.split(",", 3)
         # The original content is prefixed and comma-separated with the request id (if one exists) at the front.
         (request_id, message) = unparsed_msg.split(",", 1)
@@ -61,6 +62,7 @@ class AppInsightsRecorder:
         AppInsightsRecorder.tc_singleton.info(fd, extra=properties)
 
     def on_exit(self):
-        # The following enables the context to switch to the sender thread so that it can send the remaining messages before shutting down.
+        # The following enables the context to switch to the sender thread.
+        # It can send the remaining messages before shutting down.
         time.sleep(1)
         sys.stdout.flush()
