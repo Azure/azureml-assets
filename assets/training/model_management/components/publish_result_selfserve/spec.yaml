@@ -1,0 +1,51 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+is_deterministic: true
+
+name: publish_validation_results_selfserve
+version: 0.0.1
+display_name: Publish model validation results to Self-Serve
+description: |
+  This component publishes model validation results to the Self-Serve database.
+
+environment: azureml://registries/azureml/environments/model-management/versions/41
+
+inputs:
+  selfserve_base_url:
+    type: string
+    optional: false
+    default: "https://int.api.azureml-test.ms"
+    description: Base URL of the model publisher self-serve API
+  model_name:
+    type: string
+    optional: false
+    description: Name of the model (e.g., VerboGenie)
+  model_version:
+    type: integer
+    optional: false
+    description: Model onboarding version (e.g., 5)
+  publisher_name:
+    type: string
+    optional: false
+    description: Name of the model publisher (e.g., ContosoAI)
+  sku:
+    type: string
+    optional: false
+    default: "Standard_NC24ads_A100_v4"
+    description: Suggested SKU based on benchmark results
+  metrics_storage_uri:
+    type: uri_file
+    optional: false
+    mode: ro_mount
+    description: Path to the file containing the validation metrics csv storage path
+
+code: ../../src
+
+command: >-
+  python publish_validation_results_selfserve.py 
+  --selfserve-base-url ${{inputs.selfserve_base_url}} 
+  --model-name ${{inputs.model_name}} 
+  --model-version ${{inputs.model_version}} 
+  --publisher-name ${{inputs.publisher_name}} 
+  --sku ${{inputs.sku}} 
+  --metrics-storage-uri ${{inputs.metrics_storage_uri}}

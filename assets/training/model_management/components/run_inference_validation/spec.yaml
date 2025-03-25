@@ -1,0 +1,45 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: run_inference_validation
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Run Inference Validation
+description: Compares the expected inference response with the actual response from model deployment.
+
+environment: azureml://registries/azureml/environments/model-management/versions/41
+
+code: ../../src
+command: >-
+  python run_inference_validation.py
+  --inference_payload ${{inputs.inference_payload}}
+  --expected_response ${{inputs.expected_response}}
+  --inference_response ${{inputs.inference_response}}
+  --validation_result ${{outputs.validation_result}}
+  --metrics_storage_uri ${{outputs.metrics_storage_uri}}
+
+inputs:
+  inference_payload:
+    type: uri_file
+    description: JSON input payload used for inference.
+
+  expected_response:
+    type: uri_file
+    description: JSON file containing the expected inference response.
+
+  inference_response:
+    type: uri_file
+    description: JSON file containing the actual inference response from the deployed model.
+
+outputs:
+  validation_result:
+    type: uri_file
+    description: JSON file containing the validation results.
+  metrics_storage_uri:
+    type: uri_file
+    description: JSON file containing the validation metrics csv storage path
+
+tags:
+    Preview: ""
+    Internal: ""
