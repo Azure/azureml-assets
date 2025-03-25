@@ -13,6 +13,7 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 class AppInsightsRecorder:
     """Class to initiate appinsights."""
+
     ENV_API_KEY = "AML_APP_INSIGHTS_KEY"
 
     tc_singleton = None
@@ -25,7 +26,8 @@ class AppInsightsRecorder:
     send_buffer_size = 100
 
     def __init__(self):
-        """Constructor method."""
+        """Initiate class variables."""
+
         if AppInsightsRecorder.tc_singleton is None:
             try:
                 app_insights_key = os.environ[AppInsightsRecorder.ENV_API_KEY]

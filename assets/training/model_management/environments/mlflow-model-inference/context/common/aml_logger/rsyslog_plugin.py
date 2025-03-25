@@ -8,7 +8,7 @@ import recorder_factory
 
 
 def log_stream():
-    """Method to log stream."""
+    """Log message stream."""
     while True:
         raw_msg = sys.stdin.readline()
         if raw_msg:
