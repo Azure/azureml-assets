@@ -8,3 +8,4 @@ dependencies:
   - azure-ml-component==0.9.18.post2
   - azureml-defaults==1.59.0
   - pyarrow>=14.0.1
+  - Jinja2>=3.1.6
