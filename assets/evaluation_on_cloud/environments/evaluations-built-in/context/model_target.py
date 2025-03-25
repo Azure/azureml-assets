@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """Module for handling model targets in evaluation on cloud."""
+from typing import Optional
 import requests
 import logging
 
@@ -20,7 +21,7 @@ class ModelTarget:
         self.system_message = system_message
         self.few_shot_examples = few_shot_examples
 
-    def __call__(self, query, **kwargs):
+    def __call__(self, query: str, ground_truth: str, context: str, **kwargs):
         """Invoke the model target with the given input query."""
         headers = {
             "Content-Type": "application/json",
@@ -33,7 +34,11 @@ class ModelTarget:
                 messages.append({"role": "user", "content": example['User']})
             if 'Assistant' in example:
                 messages.append({"role": "assistant", "content": example['Assistant']})
-        messages.append({"role": "user", "content": query})
+
+        if context:
+            messages.append({"role": "user", "content": f"{context} {query}"})
+        else:
+            messages.append({"role": "user", "content": query})
 
         payload = {
             "messages": messages,
@@ -46,8 +51,8 @@ class ModelTarget:
             try:
                 output = response.json()
                 response_text = output["choices"][0]["message"]["content"]
-                return {"query": query, "response": response_text}
+                return {"query": query, "response": response_text, "context": context, "ground_truth": ground_truth}
             except (KeyError, IndexError):
-                return {"query": query, "response": "Error: Unexpected API response format"}
+                return {"query": query, "response": "Error: Unexpected API response format", "context": context, "ground_truth": ground_truth}
         else:
-            return {"query": query, "response": f"Error: {response.status_code}, {response.text}"}
+            return {"query": query, "response": f"Error: {response.status_code}, {response.text}", "context": context, "ground_truth": ground_truth}
