@@ -3,7 +3,7 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.36
+version: 0.0.37
 type: command
 tags:
   type: evaluation
@@ -101,4 +101,4 @@ command: >-
   $[[--config-file-name '${{inputs.evaluation_config}}']]
   $[[--batch-size '${{inputs.batch_size}}']]
   $[[--config_str '${{inputs.evaluation_config_params}}']]
-  
+
