@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/RetrievalEvaluator/v3/RetrievalEvaluator
+  container_path: models/evaluators/RetrievalEvaluator/v4/RetrievalEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:
