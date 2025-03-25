@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo "`date -uIns` - rsyslog/run $@"
+
+exec "${AML_LOGGER_ROOT:-/var/azureml-logger}/start_logger.sh"
