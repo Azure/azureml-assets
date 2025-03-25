@@ -1,4 +1,4 @@
-azure-ai-evaluation==1.0.0b5
+azure-ai-evaluation==1.2.0
 azureml-mlflow==1.59.0.post1
 azure-ai-ml==1.26.0
 
