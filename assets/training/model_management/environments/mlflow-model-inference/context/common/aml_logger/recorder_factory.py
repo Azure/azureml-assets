@@ -7,5 +7,5 @@ from appinsights_recorder import AppInsightsRecorder
 
 
 def get_recorders():
-    """ Get appinsight object."""
+    """Get appinsight object."""
     return AppInsightsRecorder()

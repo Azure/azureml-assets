@@ -27,7 +27,6 @@ class AppInsightsRecorder:
 
     def __init__(self):
         """Initiate class variables."""
-
         if AppInsightsRecorder.tc_singleton is None:
             try:
                 app_insights_key = os.environ[AppInsightsRecorder.ENV_API_KEY]
