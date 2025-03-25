@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: Adapted-AI-model-for-financial-reports-analysis-phi-4
+name: financial-reports-analysis-v2
 path: ./
 
 properties:
@@ -26,7 +26,7 @@ tags:
     - vllm
   license: MIT
   task: chat-completion
-  displayName: "Adapted-AI-model-for-financial-reports-analysis-phi-4"
+  displayName: "financial-reports-analysis-v2"
   summary: "Adapted AI model for financial reports analysis based on Phi-4"
   textContextWindow: 16384
   maxOutputTokens: 16384
