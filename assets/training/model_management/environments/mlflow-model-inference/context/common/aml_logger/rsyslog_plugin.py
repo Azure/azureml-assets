@@ -1,4 +1,6 @@
-#! /usr/bin/python
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 
 import sys
 import recorder_factory

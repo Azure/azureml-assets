@@ -1,4 +1,7 @@
-#! /usr/bin/python
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import os
 import logging
 import sys

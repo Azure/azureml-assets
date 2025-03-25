@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 # This script is added to ensure that local debugging for online endpoints
 # (https://docs.microsoft.com/en-us/azure/machine-learning/how-to-debug-managed-online-endpoints-visual-studio-code)
 # continue to work after we switch to launching the inference server with azmlinfsrv. Local debugging works by injecting
