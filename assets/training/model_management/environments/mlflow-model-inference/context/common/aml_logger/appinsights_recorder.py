@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Module to record appinsight events."""
+
 import os
 import logging
 import sys
@@ -10,6 +12,7 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 
 class AppInsightsRecorder:
+    """Class to initiate appinsights."""
     ENV_API_KEY = "AML_APP_INSIGHTS_KEY"
 
     tc_singleton = None
@@ -22,6 +25,7 @@ class AppInsightsRecorder:
     send_buffer_size = 100
 
     def __init__(self):
+        """Constructor method."""
         if AppInsightsRecorder.tc_singleton is None:
             try:
                 app_insights_key = os.environ[AppInsightsRecorder.ENV_API_KEY]
@@ -43,6 +47,7 @@ class AppInsightsRecorder:
                 sys.exit(1)
 
     def on_receive(self, raw_msg):
+        """Publish received message as events."""
         # The message is populated with the following four system properties.
         # See rsyslog.conf files for the template from syslog
         (fd, host, time, unparsed_msg) = raw_msg.split(",", 3)
@@ -63,6 +68,7 @@ class AppInsightsRecorder:
         AppInsightsRecorder.tc_singleton.info(fd, extra=properties)
 
     def on_exit(self):
+        """Clean resources on exit."""
         # The following enables the context to switch to the sender thread.
         # It can send the remaining messages before shutting down.
         time.sleep(1)

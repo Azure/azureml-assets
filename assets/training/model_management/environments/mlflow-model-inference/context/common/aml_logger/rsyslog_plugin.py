@@ -1,11 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Module for system log."""
+
 import sys
 import recorder_factory
 
 
 def log_stream():
+    """Method to log stream."""
     while True:
         raw_msg = sys.stdin.readline()
         if raw_msg:
