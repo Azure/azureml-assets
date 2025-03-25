@@ -35,6 +35,7 @@ class AppInsightsRecorder:
                 logger.addHandler(azureLogHandler)
                 AppInsightsRecorder.tc_singleton = logger
             except Exception as exception:
+                logger.error(f"Exception occurred while processing {exception}")
                 logging.exception(
                     "Failed to initialize Application Insights Client.\n"
                     "Check that there is a valid Instrumentation Key in {0}".format(AppInsightsRecorder.ENV_API_KEY)
@@ -42,7 +43,7 @@ class AppInsightsRecorder:
                 sys.exit(1)
 
     def on_receive(self, raw_msg):
-        # The message is populated with the following four system properties. 
+        # The message is populated with the following four system properties.
         # See rsyslog.conf files for the template from syslog
         (fd, host, time, unparsed_msg) = raw_msg.split(",", 3)
         # The original content is prefixed and comma-separated with the request id (if one exists) at the front.

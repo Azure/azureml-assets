@@ -3,10 +3,9 @@
 
 # This script is added to ensure that local debugging for online endpoints
 # (https://docs.microsoft.com/en-us/azure/machine-learning/how-to-debug-managed-online-endpoints-visual-studio-code)
-# continue to work after we switch to launching the inference server with azmlinfsrv. 
+# continue to work after we switch to launching the inference server with azmlinfsrv.
 # Local debugging works by injecting
 # some code to /var/azureml-server/entry.py to launch debugpy before the server is started:
-# https://msdata.visualstudio.com/Vienna/_git/sdk-cli-v2?path=%2Fsrc%2Fazure-ai-ml%2Fazure%2Fai%2Fml%2F_local_endpoints%2Futilities%2Fentry_script_utility.py
 # As azmlinfsrv doesn't use /var/azureml-server/entry.py, we have to do the same to the entry.py used by azmlinfsrv.
 # While entry.py is updated with this logic in version 0.7.2, this script makes sure local debugging also works for
 # servers before version 0.7.2. We should remove this script after most users are on version 0.7.2 or after.
