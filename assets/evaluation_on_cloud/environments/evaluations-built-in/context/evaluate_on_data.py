@@ -19,6 +19,27 @@ from save_evaluation import load_evaluator
 from model_target import ModelTarget
 
 API_VERSION = "2025-01-01-preview"
+AZURE_ENDPOINT = "AzureEndpoint"
+API_KEY = "ApiKey"
+AZURE_DEPLOYMENT = "AzureDeployment"
+TYPE = "Type"
+INPUT_EVAL_DATA_DIR = "INPUT_eval_data"
+OUTPUT_EVAL_DATA_DIR = "OUTPUT_eval_data"
+MODEL_PARAMS = "ModelParams"
+MODEL_CONFIG = "ModelConfig"
+SYSTEM_MESSAGE = "SystemMessage"
+FEW_SHOT_EXAMPLES = "FewShotExamples"
+DATA_MAPPING = "dataMapping"
+DEFAULT_DATA_MAPPING = {
+            "query": "${data.query}",
+            "response": "${data.response}",
+            "ground_truth": "${data.ground_truth}",
+            "context": "${data.context}",
+        }
+DATA_MAPPING_REGEX_PATTERN = r'\${data\.(.*?)}'
+QUERY_KEY = "query"
+CONTEXT_KEY = "context"
+RESPONSE_KEY = "response"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -93,45 +114,40 @@ def create_model_target_and_data_mapping(command_line_args):
         logger.error(f"Invalid JSON in eval_target: {e}")
         return (None, None)
 
-    model_config = target_config.get("ModelConfig", {})
+    model_config = target_config.get(MODEL_CONFIG, {})
 
-    x = model_config.get("ApiKey", "")
+    x = model_config.get(API_KEY, "")
     api_key_value = os.environ.get(x.upper(), "")
     if not api_key_value:
         logger.warning(f"API key environment variable '{x.upper()}' is missing or empty!")
 
-    model_config_type = str(model_config.get("Type", ""))
+    model_config_type = str(model_config.get(TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
 
     endpoint = ""
     if model_config_type == "1":  # AOAI
-        azure_endpoint = model_config.get("AzureEndpoint", "")
+        azure_endpoint = model_config.get(AZURE_ENDPOINT, "")
         azure_endpoint = azure_endpoint.rstrip('/')
-        deployment_name = model_config.get("AzureDeployment", "")
+        deployment_name = model_config.get(AZURE_DEPLOYMENT, "")
         logger.info(f"  - AzureEndpoint: {azure_endpoint}")
         logger.info(f"  - AzureDeployment: {deployment_name}")
         endpoint = f"{azure_endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version={API_VERSION}"
         logger.info(f"  - AOAI Endpoint: {endpoint}")
     elif model_config_type == "2":  # MAAS
-        azure_endpoint = model_config.get("AzureEndpoint", "")
+        azure_endpoint = model_config.get(AZURE_ENDPOINT, "")
         azure_endpoint = azure_endpoint.rstrip('/')
         logger.info(f"  - AzureEndpoint: {azure_endpoint}")
         endpoint = f"{azure_endpoint}/chat/completions?api-version={API_VERSION}"
         logger.info(f"  - MAAS Endpoint: {endpoint}")
 
-    model_params = target_config.get("ModelParams", {}).copy()
-    data_mapping = model_params.pop("dataMapping", None)
+    model_params = target_config.get(MODEL_PARAMS, {}).copy()
+    data_mapping = model_params.pop(DATA_MAPPING, None)
     if data_mapping is None:
-        data_mapping = {
-            "query": "${data.query}",
-            "response": "${data.response}",
-            "ground_truth": "${data.ground_truth}",
-            "context": "${data.context}",
-        }
+        data_mapping = DEFAULT_DATA_MAPPING
         logger.info(f"Using default dataMapping: {data_mapping}")
 
-    system_message = target_config.get("SystemMessage", "")
-    few_shot_examples = target_config.get("FewShotExamples", [])
+    system_message = target_config.get(SYSTEM_MESSAGE, "")
+    few_shot_examples = target_config.get(FEW_SHOT_EXAMPLES, [])
 
     logger.info("Creating ModelTarget with values:")
     logger.info(f"  - Endpoint: {endpoint}")
@@ -156,12 +172,12 @@ def apply_target_on_data(data, model_target, data_mapping):
     """Apply target on input data."""
     df = pd.read_json(data, lines=True)
 
-    if "query" not in data_mapping:
-        raise ValueError("'query' is missing in the data_mapping. The query column mapping is required.")
+    if QUERY_KEY not in data_mapping:
+        raise ValueError(f"'{QUERY_KEY}' is missing in the data_mapping. The {QUERY_KEY} column mapping is required.")
 
     reverse_mapping = {}
     for key, value in data_mapping.items():
-        match = re.search(r'\${data\.(.*?)}', value)
+        match = re.search(DATA_MAPPING_REGEX_PATTERN, value)
         if match:
             reverse_mapping[key] = match.group(1)
         else:
@@ -174,15 +190,15 @@ def apply_target_on_data(data, model_target, data_mapping):
             if old_col in row:
                 mapped_row[new_col] = row[old_col]
 
-        query = mapped_row.get("query", "")
-        context = mapped_row.get("context", "")
+        query = mapped_row.get(QUERY_KEY, "")
+        context = mapped_row.get(CONTEXT_KEY, "")
         response = model_target.generate_response(query=query, context=context)
 
-        response_col = reverse_mapping.get("response", "response")
+        response_col = reverse_mapping.get(RESPONSE_KEY, RESPONSE_KEY)
         row[response_col] = response
         df.loc[index] = row
 
-    output_dir = data.replace("INPUT_eval_data", "OUTPUT_eval_data")
+    output_dir = data.replace(INPUT_EVAL_DATA_DIR, OUTPUT_EVAL_DATA_DIR)
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
     input_filename = os.path.basename(data)
     output_filename = f"{os.path.splitext(input_filename)[0]}_output.jsonl"
@@ -197,7 +213,6 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
     """Run evaluation using evaluators."""
     data = command_line_args.eval_data
     logger.info(f"Running the evaluators: {list(evaluators.keys())}")
-    logger.info(f"Evaluation Data: {data}")
     logger.info(f"With the evaluator config {evaluator_config}")
     logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
 
@@ -205,6 +220,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
         logger.info("Applying target on data")
         data = apply_target_on_data(data=data, model_target=model_target, data_mapping=data_mapping)
 
+    logger.info(f"Evaluation Data: {data}")
     results = evaluate(
         data=data,
         evaluators=evaluators,
