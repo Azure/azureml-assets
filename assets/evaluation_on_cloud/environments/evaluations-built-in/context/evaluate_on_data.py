@@ -8,6 +8,7 @@ import logging
 import mlflow
 import pandas as pd
 import os
+import re
 import requests
 import shutil
 import sys
@@ -80,17 +81,17 @@ def get_evaluator_config(command_line_args):
     return evaluator_config
 
 
-def create_model_target(command_line_args):
+def create_model_target_and_data_mapping(command_line_args):
     """Get model target configuration from user input."""
     if not command_line_args.eval_target:
         logger.info("No eval_target provided. Returning None.")
-        return None
+        return (None, None)
     try:
         logger.info("Eval_target provided.")
         target_config = json.loads(command_line_args.eval_target)
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in eval_target: {e}")
-        return None
+        return (None, None)
 
     model_config = target_config.get("ModelConfig", {})
 
@@ -118,7 +119,17 @@ def create_model_target(command_line_args):
         endpoint = f"{azure_endpoint}/chat/completions?api-version={API_VERSION}"
         logger.info(f"  - MAAS Endpoint: {endpoint}")
 
-    model_params = target_config.get("ModelParams", {})
+    model_params = target_config.get("ModelParams", {}).copy()
+    data_mapping = model_params.pop("dataMapping", None)
+    if data_mapping is None:
+        data_mapping = {
+            "query": "${data.query}",
+            "response": "${data.response}",
+            "ground_truth": "${data.ground_truth}",
+            "context": "${data.context}",
+        }
+        logger.info(f"Using default dataMapping: {data_mapping}")
+
     system_message = target_config.get("SystemMessage", "")
     few_shot_examples = target_config.get("FewShotExamples", [])
 
@@ -128,8 +139,9 @@ def create_model_target(command_line_args):
     logger.info(f"  - ModelParams: {model_params}")
     logger.info(f"  - SystemMessage: {system_message}")
     logger.info(f"  - FewShotExamples: {few_shot_examples}")
+    logger.info(f"  - DataMapping: {data_mapping}")
 
-    return ModelTarget(
+    model_target = ModelTarget(
         endpoint=endpoint,
         api_key=api_key_value,
         model_params=model_params,
@@ -137,18 +149,65 @@ def create_model_target(command_line_args):
         few_shot_examples=few_shot_examples,
     )
 
+    return (model_target, data_mapping)
 
-def run_evaluation(command_line_args, evaluators, evaluator_config, model_target):
+
+def apply_target_on_data(data, model_target, data_mapping):
+    """Apply target on input data."""
+    df = pd.read_json(data, lines=True)
+
+    if "query" not in data_mapping:
+        raise ValueError("'query' is missing in the data_mapping. The query column mapping is required.")
+
+    reverse_mapping = {}
+    for key, value in data_mapping.items():
+        match = re.search(r'\${data\.(.*?)}', value)
+        if match:
+            reverse_mapping[key] = match.group(1)
+        else:
+            reverse_mapping[key] = value
+
+    for index, row_object in df.iterrows():
+        row = row_object.to_dict()
+        mapped_row = {}
+        for new_col, old_col in reverse_mapping.items():
+            if old_col in row:
+                mapped_row[new_col] = row[old_col]
+
+        query = mapped_row.get("query", "")
+        context = mapped_row.get("context", "")
+        response = model_target.generate_response(query=query, context=context)
+
+        response_col = reverse_mapping.get("response", "response")
+        row[response_col] = response
+        df.loc[index] = row
+
+    output_dir = data.replace("INPUT_eval_data", "OUTPUT_eval_data")
+    os.makedirs(os.path.dirname(output_dir), exist_ok=True)
+    input_filename = os.path.basename(data)
+    output_filename = f"{os.path.splitext(input_filename)[0]}_output.jsonl"
+    output_file = os.path.join(os.path.dirname(output_dir), output_filename)
+    df.to_json(output_file, orient="records", lines=True)
+    logger.info(f"Saved updated DataFrame to {output_file}")
+
+    return output_file
+
+
+def run_evaluation(command_line_args, evaluators, evaluator_config, model_target, data_mapping):
     """Run evaluation using evaluators."""
+    data = command_line_args.eval_data
     logger.info(f"Running the evaluators: {list(evaluators.keys())}")
-    logger.info(f"Evaluation Data: {command_line_args.eval_data}")
+    logger.info(f"Evaluation Data: {data}")
     logger.info(f"With the evaluator config {evaluator_config}")
-    logger.info(f"With the model target {model_target}")
+    logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
+
+    if model_target:
+        logger.info("Applying target on data")
+        data = apply_target_on_data(data=data, model_target=model_target, data_mapping=data_mapping)
 
     results = evaluate(
-        data=command_line_args.eval_data,
+        data=data,
         evaluators=evaluators,
-        target=model_target,
         evaluator_config=evaluator_config if evaluator_config else None,
     )
     metrics = {}
@@ -197,12 +256,12 @@ if __name__ == '__main__':
     copy_evaluator_files(args)
     evaluators = initialize_evaluators(args)
     evaluator_config = get_evaluator_config(args)
-    model_target = create_model_target(args)
+    model_target, data_mapping = create_model_target_and_data_mapping(args)
     logger.info("*************** Collecting Result of Evaluators ******************")
     # Run the evaluation
     with mlflow.start_run() as run:
         try:
-            run_evaluation(args, evaluators, evaluator_config, model_target)
+            run_evaluation(args, evaluators, evaluator_config, model_target, data_mapping)
         except Exception as e:
             logger.error("EXCEPT", e)
             get_promptflow_run_logs()

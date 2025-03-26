@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Module for handling model targets in evaluation on cloud."""
-from typing import Optional
 import requests
 import logging
 
@@ -21,7 +20,7 @@ class ModelTarget:
         self.system_message = system_message
         self.few_shot_examples = few_shot_examples
 
-    def __call__(self, query: str, ground_truth: str, context: str, **kwargs):
+    def generate_response(self, query, context=None, **kwargs):
         """Invoke the model target with the given input query."""
         headers = {
             "Content-Type": "application/json",
@@ -51,8 +50,8 @@ class ModelTarget:
             try:
                 output = response.json()
                 response_text = output["choices"][0]["message"]["content"]
-                return {"query": query, "response": response_text, "context": context, "ground_truth": ground_truth}
+                return response_text
             except (KeyError, IndexError):
-                return {"query": query, "response": "Error: Unexpected API response format", "context": context, "ground_truth": ground_truth}
+                return "Error: Unexpected API response format"
         else:
-            return {"query": query, "response": f"Error: {response.status_code}, {response.text}", "context": context, "ground_truth": ground_truth}
+            return f"Error: {response.status_code}, {response.text}"
