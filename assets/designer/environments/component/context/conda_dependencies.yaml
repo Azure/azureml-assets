@@ -8,3 +8,4 @@ dependencies:
   - azure-ml-component=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
   - pyarrow>=14.0.1
+  - Jinja2>=3.1.6
