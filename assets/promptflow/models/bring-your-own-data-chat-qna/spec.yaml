@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Create a chatbot that uses LLM and data from your own indexed files to ground multi-round question and answering capabilities in enterprise chat scenarios.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 7
+version: 8
