@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Use LLM and reranked data from your own index to ground question and answering capabilities.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 2
