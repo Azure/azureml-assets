@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: supply-chain-trade-regulations-v2
+name: supply-chain-trade-regulations-v2
+
 path: ./
 
 properties:
@@ -26,7 +27,8 @@ tags:
     - vllm
   license: MIT
   task: chat-completion
-  displayName: "supply-chain-trade-regulations-v2"
+  displayName: "supply-chain-trade-regulations-v2"
+
   summary: "Adapted AI model for supply chain trade regulations based on Phi-4"
   textContextWindow: 16384
   maxOutputTokens: 16384
@@ -35,7 +37,6 @@ tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
   hiddenlayerscanned: ""
-  maas-inference: "false"
   inference_compute_allow_list:
     [
       Standard_NC24ads_A100_v4,
