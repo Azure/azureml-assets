@@ -26,4 +26,5 @@ signature:
   outputs: '[{"type": "string", "name": "output", "required": true}]'
   params: null
 utc_time_created: '2024-10-04 19:15:32.643224'
-metadata: {azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1}
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1

@@ -24,4 +24,5 @@ signature:
     "string", "name": "pred_text", "required": false}]'
   params: null
 utc_time_created: '2024-09-27 00:51:53.191138'
-metadata: {azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1}
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
