@@ -3,8 +3,7 @@ flavors:
     artifacts:
       model_dir:
         path: artifacts/2024.09.27.v.1.0.0
-        uri: 
-          /mnt/batch/tasks/shared/LS_root/mounts/clusters/albertogpu4/code/Users/albertosa/mii_ado/FlorenceMDdeployment/checkpoints/2024.09.27.v.1.0.0
+        uri: /mnt/batch/tasks/shared/LS_root/mounts/clusters/albertogpu4/code/Users/albertosa/mii_ado/FlorenceMDdeployment/checkpoints/2024.09.27.v.1.0.0
     cloudpickle_version: 3.0.0
     code: code
     env:
