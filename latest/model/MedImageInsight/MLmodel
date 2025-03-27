@@ -27,3 +27,9 @@ signature:
     "integer", "default": 512, "shape": null}, {"name": "get_scaling_factor", "type":
     "boolean", "default": true, "shape": null}]'
 utc_time_created: '2024-10-09 20:19:13.335408'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  base_model_name: MedImageInsight
+  base_model_task: embeddings
+  is_acft_model: true
+  is_finetuned_model: false
