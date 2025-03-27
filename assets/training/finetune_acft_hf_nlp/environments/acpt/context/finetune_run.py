@@ -69,7 +69,8 @@ def retry_with_backoff(delay: int = 1, retries: int = 3):
                     current_retry += 1
                     if current_retry >= retries:
                         raise e
-                    logger.warning(f"Failed to execute function '{func.__name__}'. Retrying in {current_delay} seconds...")
+                    logger.warning(f"Failed to execute function '{func.__name__}'. \
+                                   Retrying in {current_delay} seconds...")
                     time.sleep(current_delay)
                     current_delay *= 2
         return wrapper
