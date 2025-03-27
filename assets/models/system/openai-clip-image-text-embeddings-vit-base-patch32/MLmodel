@@ -13,7 +13,6 @@ flavors:
     python_model: python_model.pkl
     python_version: 3.8.18
 metadata:
-  azureml.base_image: ad672e2741f64226a038e2be8fac9846.azurecr.io/azureml/azureml_25f498fd4e08c72f14eb874716ee3270
   base_model_name: openai/clip-vit-base-patch32
   base_model_task: embeddings
   is_acft_model: true

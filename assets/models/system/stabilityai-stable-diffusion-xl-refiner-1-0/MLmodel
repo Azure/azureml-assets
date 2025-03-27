@@ -14,7 +14,6 @@ flavors:
     python_version: 3.9.20
     streamable: false
 metadata:
-  azureml.base_image: ad672e2741f64226a038e2be8fac9846.azurecr.io/azureml/azureml_25f498fd4e08c72f14eb874716ee3270
   base_model_name: stabilityai/stable-diffusion-xl-refiner-1.0
   base_model_task: image-to-image
   is_acft_model: true
