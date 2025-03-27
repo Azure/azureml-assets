@@ -32,14 +32,14 @@ FEW_SHOT_EXAMPLES = "FewShotExamples"
 DATA_MAPPING = "dataMapping"
 DEFAULT_DATA_MAPPING = {
             "query": "${data.query}",
-            "response": "${data.response}",
-            "ground_truth": "${data.ground_truth}",
             "context": "${data.context}",
         }
 DATA_MAPPING_REGEX_PATTERN = r'\${data\.(.*?)}'
 QUERY_KEY = "query"
 CONTEXT_KEY = "context"
 RESPONSE_KEY = "response"
+GENERATED_RESPONSE_KEY = "generated_response"
+GENERATED_RESPONSE_MAPPING = f"${{data.{GENERATED_RESPONSE_KEY}}}"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -116,10 +116,10 @@ def create_model_target_and_data_mapping(command_line_args):
 
     model_config = target_config.get(MODEL_CONFIG, {})
 
-    x = model_config.get(API_KEY, "")
-    api_key_value = os.environ.get(x.upper(), "")
+    api_key_env = model_config.get(API_KEY, "")
+    api_key_value = os.environ.get(api_key_env.upper(), "")
     if not api_key_value:
-        logger.warning(f"API key environment variable '{x.upper()}' is missing or empty!")
+        logger.warning(f"API key environment variable '{api_key_env.upper()}' is missing or empty!")
 
     model_config_type = str(model_config.get(TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
@@ -171,32 +171,44 @@ def create_model_target_and_data_mapping(command_line_args):
 def apply_target_on_data(data, model_target, data_mapping):
     """Apply target on input data."""
     df = pd.read_json(data, lines=True)
-
-    if QUERY_KEY not in data_mapping:
-        raise ValueError(f"'{QUERY_KEY}' is missing in the data_mapping. The {QUERY_KEY} column mapping is required.")
-
-    reverse_mapping = {}
+    mapping = {}
     for key, value in data_mapping.items():
+        # ignore mappings with empty values
+        if value == "":
+            continue
         match = re.search(DATA_MAPPING_REGEX_PATTERN, value)
         if match:
-            reverse_mapping[key] = match.group(1)
+            mapping[key] = match.group(1)
         else:
-            reverse_mapping[key] = value
+            logger.info(
+                f'Data mapping did not match the format "{key}":"${{data.<colName in dataset>}}", '
+                f'using given {value}'
+            )
+            mapping[key] = value
+
+    if QUERY_KEY not in mapping:
+        logger.info("Using default mapping for query column")
+        mapping[QUERY_KEY] = QUERY_KEY
+    if CONTEXT_KEY not in mapping:
+        logger.info("Using default mapping for context column")
+        mapping[CONTEXT_KEY] = CONTEXT_KEY
 
     for index, row_object in df.iterrows():
         row = row_object.to_dict()
         mapped_row = {}
-        for new_col, old_col in reverse_mapping.items():
-            if old_col in row:
-                mapped_row[new_col] = row[old_col]
+        for actual_col, input_data_col in mapping.items():
+            if input_data_col in row:
+                mapped_row[actual_col] = row[input_data_col]
+            elif actual_col == QUERY_KEY:
+                raise ValueError(
+                    f"'{QUERY_KEY}' is missing in the data_mapping. "
+                    f"The {QUERY_KEY} column mapping is required."
+                )
 
         query = mapped_row.get(QUERY_KEY, "")
         context = mapped_row.get(CONTEXT_KEY, "")
         response = model_target.generate_response(query=query, context=context)
-
-        response_col = reverse_mapping.get(RESPONSE_KEY, RESPONSE_KEY)
-        row[response_col] = response
-        df.loc[index] = row
+        df.loc[index, GENERATED_RESPONSE_KEY] = response
 
     output_dir = data.replace(INPUT_EVAL_DATA_DIR, OUTPUT_EVAL_DATA_DIR)
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
@@ -209,18 +221,29 @@ def apply_target_on_data(data, model_target, data_mapping):
     return output_file
 
 
+def update_evaluator_config_mapping_for_generated_response(evaluator_config):
+    """Ensure 'response' key exists in 'column_mapping' and update it."""
+    for evaluator_name, config in evaluator_config.items():
+        if "column_mapping" not in config:
+            config["column_mapping"] = {}
+        evaluator_config[evaluator_name]["column_mapping"][RESPONSE_KEY] = GENERATED_RESPONSE_MAPPING
+    return evaluator_config
+
+
 def run_evaluation(command_line_args, evaluators, evaluator_config, model_target, data_mapping):
     """Run evaluation using evaluators."""
-    data = command_line_args.eval_data
     logger.info(f"Running the evaluators: {list(evaluators.keys())}")
-    logger.info(f"With the evaluator config {evaluator_config}")
     logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
 
+    data = command_line_args.eval_data
     if model_target:
         logger.info("Applying target on data")
         data = apply_target_on_data(data=data, model_target=model_target, data_mapping=data_mapping)
+        logger.info("Updating evaluator config for generated_response data mapping")
+        evaluator_config = update_evaluator_config_mapping_for_generated_response(evaluator_config)
 
     logger.info(f"Evaluation Data: {data}")
+    logger.info(f"With the evaluator config {evaluator_config}")
     results = evaluate(
         data=data,
         evaluators=evaluators,
