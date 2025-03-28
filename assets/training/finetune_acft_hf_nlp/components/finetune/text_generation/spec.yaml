@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_finetune
-version: 0.0.70
+version: 0.0.72
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
 display_name: Text Generation Finetune
 description: Component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/80
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
 
 code: ../../../src/finetune
 
@@ -20,8 +20,8 @@ inputs:
   apply_lora:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: lora enabled
@@ -29,8 +29,8 @@ inputs:
   merge_lora_weights:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: if set to true, the lora trained weights will be merged to base model before saving
@@ -81,8 +81,8 @@ inputs:
   auto_find_batch_size:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size' goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct batch size by iteratively reducing 'per_device_train_batch_size' by a factor of 2 till the OOM is fixed
@@ -92,10 +92,10 @@ inputs:
     default: adamw_hf
     optional: true
     enum:
-      - adamw_hf
-      - adamw_torch
+    - adamw_hf
+    - adamw_torch
       # - adamw_apex_fused
-      - adafactor
+    - adafactor
     description: Optimizer to be used while training
 
   learning_rate:
@@ -151,19 +151,19 @@ inputs:
     default: linear
     optional: true
     enum:
-      - linear
-      - cosine
-      - cosine_with_restarts
-      - polynomial
-      - constant
-      - constant_with_warmup
+    - linear
+    - cosine
+    - cosine_with_restarts
+    - polynomial
+    - constant
+    - constant_with_warmup
     description: learning rate scheduler to use.
 
   precision:
     type: string
     enum:
-      - "32"
-      - "16"
+    - "32"
+    - "16"
     default: "32"
     optional: true
     description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
@@ -177,8 +177,8 @@ inputs:
   enable_full_determinism:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: Ensure reproducible behavior during distributed training
@@ -192,8 +192,8 @@ inputs:
   ignore_mismatched_sizes:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: Whether or not to raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model
@@ -209,8 +209,8 @@ inputs:
     default: epoch
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The evaluation strategy to adopt during training
 
   evaluation_steps_interval:
@@ -230,8 +230,8 @@ inputs:
     default: steps
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The logging strategy to adopt during training.
 
   logging_steps:
@@ -245,7 +245,7 @@ inputs:
     default: loss
     optional: true
     enum:
-      - loss
+    - loss
     description: Specify the metric to use to compare two different models
 
   resume_from_checkpoint:
@@ -253,8 +253,8 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: Loads Optimizer, Scheduler and Trainer state for finetuning if true
 
   save_total_limit:
@@ -269,8 +269,8 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: Enable early stopping
 
   early_stopping_patience:
@@ -289,8 +289,8 @@ inputs:
   apply_deepspeed:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will enable deepspeed for training
@@ -306,16 +306,16 @@ inputs:
     optional: true
     default: "2"
     enum:
-       - "2"
-       - "3"
+    - "2"
+    - "3"
     description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
 
   # ORT Parameters
   apply_ort:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will use the ONNXRunTime training

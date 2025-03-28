@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: translation_pipeline
-version: 0.0.71
+version: 0.0.73
 type: pipeline
 display_name: Translation Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for translation task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/translation_pipeline) to learn more.
@@ -10,26 +10,22 @@ inputs:
     type: string
     optional: true
     default: Standard_d12_v2
-    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. 
-      The parameter compute_model_import must be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. The parameter compute_model_import must be set to 'serverless' for instance_type to be used
   instance_type_preprocess:
     type: string
     optional: true
     default: Standard_d12_v2
-    description: Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. 
-      The parameter compute_preprocess must be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. The parameter compute_preprocess must be set to 'serverless' for instance_type to be used
   instance_type_finetune:
     type: string
     optional: true
     default: Standard_nc24rs_v3
-    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. 
-      The parameter compute_finetune must be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. The parameter compute_finetune must be set to 'serverless' for instance_type to be used
   instance_type_model_evaluation:
     type: string
     optional: true
     default: Standard_nc24rs_v3
-    description: Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_nc24rs_v3. 
-      The parameter compute_model_evaluation must be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_nc24rs_v3. The parameter compute_model_evaluation must be set to 'serverless' for instance_type to be used
   shm_size_finetune:
     type: string
     optional: true
@@ -46,8 +42,7 @@ inputs:
     min: 1
     default: 1
     optional: true
-    description: number of gpus to be used per node for finetuning, should be equal
-      to number of gpu per node in the compute SKU used for finetune
+    description: number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune
 
   # Model Import parameters (See [docs](https://aka.ms/azureml/components/translation_model_import) to learn more)
   huggingface_id:
@@ -72,10 +67,10 @@ inputs:
     type: string
     optional: false
     enum:
-      - Translation
+    - Translation
     default: Translation
     description: Translation task type
-  
+
   source_lang:
     type: string
     optional: false
@@ -96,12 +91,12 @@ inputs:
   pad_to_max_length:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
-  
+
   max_seq_length:
     type: integer
     optional: true
@@ -145,8 +140,8 @@ inputs:
   apply_lora:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If "true" enables lora.
@@ -154,8 +149,8 @@ inputs:
   merge_lora_weights:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: If "true", the lora weights are merged with the base Hugging Face model weights before saving.
@@ -208,8 +203,8 @@ inputs:
   auto_find_batch_size:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to "true" and if the provided 'per_device_train_batch_size' goes into Out Of Memory (OOM) auto_find_batch_size will find the correct batch size by iteratively reducing batch size by a factor of 2 till the OOM is fixed
@@ -219,10 +214,10 @@ inputs:
     default: adamw_hf
     optional: true
     enum:
-      - adamw_hf
-      - adamw_torch
+    - adamw_hf
+    - adamw_torch
       # - adamw_apex_fused
-      - adafactor
+    - adafactor
     description: Optimizer to be used while training
 
   learning_rate:
@@ -278,19 +273,19 @@ inputs:
     default: linear
     optional: true
     enum:
-      - linear
-      - cosine
-      - cosine_with_restarts
-      - polynomial
-      - constant
-      - constant_with_warmup
+    - linear
+    - cosine
+    - cosine_with_restarts
+    - polynomial
+    - constant
+    - constant_with_warmup
     description: learning rate scheduler to use.
 
   precision:
     type: string
     enum:
-      - "32"
-      - "16"
+    - "32"
+    - "16"
     default: "32"
     optional: true
     description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
@@ -304,8 +299,8 @@ inputs:
   enable_full_determinism:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: Ensure reproducible behavior during distributed training. Check this link https://pytorch.org/docs/stable/notes/randomness.html for more details.
@@ -319,8 +314,8 @@ inputs:
   ignore_mismatched_sizes:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: Not setting this flag will raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model.
@@ -336,8 +331,8 @@ inputs:
     default: epoch
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The evaluation strategy to adopt during training. If set to "steps", either the `evaluation_steps_interval` or `eval_steps` needs to be specified, which helps to determine the step at which the model evaluation needs to be computed else evaluation happens at end of each epoch.
 
   evaluation_steps_interval:
@@ -357,8 +352,8 @@ inputs:
     default: steps
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The logging strategy to adopt during training. If set to "steps", the `logging_steps` will decide the frequency of logging else logging happens at the end of epoch..
 
   logging_steps:
@@ -372,8 +367,8 @@ inputs:
     default: loss
     optional: true
     enum:
-      - loss
-      - bleu
+    - loss
+    - bleu
     description: metric to use to compare two different model checkpoints
 
   resume_from_checkpoint:
@@ -381,8 +376,8 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: If set to "true", resumes the training from last saved checkpoint. Along with loading the saved weights, saved optimizer, scheduler and random states will be loaded if exist. The default value is "false"
 
   save_total_limit:
@@ -396,8 +391,8 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: If set to "true", early stopping is enabled.
 
   early_stopping_patience:
@@ -415,8 +410,8 @@ inputs:
   apply_deepspeed:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will enable deepspeed for training
@@ -432,15 +427,15 @@ inputs:
     optional: true
     default: "2"
     enum:
-       - "2"
-       - "3"
+    - "2"
+    - "3"
     description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
 
   apply_ort:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will use the ONNXRunTime training
@@ -461,30 +456,22 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model_import eg. provide 'FT-Cluster' if
-      your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+    description: compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_preprocess:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+    description: compute to be used for preprocess eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_finetune:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_model_evaluation:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
 outputs:
   pytorch_model_folder:
@@ -504,7 +491,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.70
+    component: azureml:ft_nlp_common_validation:0.0.72
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -541,7 +528,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   translation_model_import:
     type: command
-    component: azureml:translation_model_import:0.0.70
+    component: azureml:translation_model_import:0.0.72
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -552,7 +539,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   translation_datapreprocess:
     type: command
-    component: azureml:translation_datapreprocess:0.0.70
+    component: azureml:translation_datapreprocess:0.0.72
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -571,7 +558,7 @@ jobs:
       model_selector_output: '${{parent.jobs.translation_model_import.outputs.output_dir}}'
   translation_finetune:
     type: command
-    component: azureml:translation_finetune:0.0.70
+    component: azureml:translation_finetune:0.0.72
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -628,7 +615,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.70
+    component: azureml:ft_nlp_model_converter:0.0.72
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'

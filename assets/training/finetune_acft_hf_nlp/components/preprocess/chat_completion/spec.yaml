@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: chat_completion_datapreprocess
-version: 0.0.70
+version: 0.0.72
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
 display_name: Chat Completion DataPreProcess
 description: Component to preprocess data for chat completion task. See [docs](https://aka.ms/azureml/components/chat_completion_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/81
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
 
 code: ../../../src/preprocess
 
@@ -28,12 +28,12 @@ inputs:
   pad_to_max_length:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
-  
+
   max_seq_length:
     type: integer
     optional: true

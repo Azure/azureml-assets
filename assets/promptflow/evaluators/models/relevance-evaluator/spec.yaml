@@ -8,4 +8,4 @@ properties:
   _default-display-file: ./RelevanceEvaluator/relevance.prompty
 tags:
   hiddenlayerscanned: ""
-version: 5
+version: 6
