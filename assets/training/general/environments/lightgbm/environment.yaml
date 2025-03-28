@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/lightgbm-3.3
+  name: azureml/curated/lightgbm
   os: linux
   context:
     dir: context
