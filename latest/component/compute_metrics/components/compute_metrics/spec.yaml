@@ -69,7 +69,7 @@ code: ../../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 command: >-
-  python compute_metrics.py
+  python download_metrics_dependencies.py &&  python compute_metrics.py
   --task '${{inputs.task}}'
   $[[--ground_truths '${{inputs.ground_truth}}']]
   --predictions '${{inputs.prediction}}'
