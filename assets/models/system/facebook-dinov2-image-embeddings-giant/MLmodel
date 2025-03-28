@@ -17,6 +17,7 @@ metadata:
   base_model_task: embeddings
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.10.2
 model_size_bytes: 9092178071
 model_uuid: d45c05b94afe4b7b97604d9ec6ed323c
