@@ -1,0 +1,173 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+name: supply-chain-trade-regulations-v2
+
+path: ./
+
+properties:
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  languages: en
+  SharedComputeCapacityEnabled: true
+
+tags:
+  author: Microsoft
+  SharedComputeCapacityEnabled: ""
+  disable-batch: true
+  Preview: ""
+  Featured: ""
+  languages: "en"
+  keywords: ""
+  freePlayground: "false"
+  licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
+    \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
+    of this software and associated documentation files (the \"Software\"), to deal\n\
+    in the Software without restriction, including without limitation the rights\n\
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies\
+    \ of the Software, and to permit persons to whom the Software is\nfurnished to\
+    \ do so, subject to the following conditions:\n\nThe above copyright notice and\
+    \ this permission notice shall be included in all\ncopies or substantial portions\
+    \ of the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY\
+    \ KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n\
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n\
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY,\
+    \ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR\
+    \ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+  inference_supported_envs:
+  - vllm
+  license: MIT
+  task: chat-completion
+  displayName: "supply-chain-trade-regulations-v2"
+  summary: "Adapted AI model for supply chain trade regulations based on Phi-4"
+  textContextWindow: 16384
+  maxOutputTokens: 16384
+  inputModalities: "text"
+  outputModalities: "text"
+  evaluation: |-
+    <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
+
+    <!-- `evaluation.md` is highly recommended, but not required. It captures information about the performance of the model. We highly recommend including this section as this information is often used to decide what model to use. -->
+
+    We provide two types of benchmark results, the first one is specific to the Trade Compliance domain and based on an in-house evaluation dataset created by subject matter experts. The second one is based on general publicly available datasets that evaluate language understanding, math skill, etc.
+
+    ## Domain-specific benchmarks
+    The Trade Compliance evaluation dataset consists of questions from four sub-domains:
+
+    1. Tariffs & Duty Management: This section contains questions related to the product code and import duty rate specific to a country/region, (e.g., European Union, USA, etc.), e.g., What is the EU TARIC for a smartphone?
+    	- We also report the performance of the model on "Complex - Standard" questions, which involve numerical reasoning and/or calculations, e.g., How much import duties would I pay to import 100 kgs of polyethylene containing 4%  alpha-olefin monomers in Singapore?
+    2. Import/Export Operations: Questions based on the rules and regulations related to import/export, e.g., What is the purpose of the US CTPAT Trade Compliance Program?
+    3. Trade Compliance (TC) Policy & Oversight: Questions related to Trade Compliance, e.g., Which countries/regions do we consider as EU customs territory?
+    4. Trade Sanctions & Export Control: Questions related to current market conditions, e.g., How can I use the Commerce Country Chart when I have the ECCN?
+
+    Additionally, the evaluation dataset contains "Complex - Combination" questions, which are questions that contain multiple sub-queries and potentially span two or more sub-domains within Trade Compliance, e.g., I am a Germany based automotive manufacturer looking to export EV batteries into the US. What license or document requirements as well as tariff code should I consider for the import?
+
+    The scores in the table below are on a scale of 0-2, where 0 is for an incorrect answer, 1 is for a partially correct answer, and 2 is for a fully correct answer.
+
+    | Category            | GPT-4o | GPT-4o-mini | Phi-4 | Adapted-AI-model-for-supply-chain-trade-regulations-analysis |
+    |---------------------|--------|-------------|-------|--------------------------------------|
+    | Tariffs & Duty Management | 1.57 | 1.51 | 1.49 | 1.55 |
+    | Import/Export Operations | 1.83 | 1.86 | 1.88 | 1.93 |
+    | TC Policy & Oversight | 1.84 | 1.86 | 1.87 | 1.91 |
+    | Trade Sanctions & Export Control | 1.73 | 1.72 | 1.75 | 1.79 |
+    | Complex - Standard | 1.65 | 1.58 | 1.50 | 1.65 |
+    | Complex - Combination | 1.46 | 1.45 | 1.46 | 1.58 |
+    | **Average Score** | 1.64 | 1.62 | 1.61 | 1.67 |
+
+    ## General benchmarks
+    | Category | Benchmark | Phi-4 | Adapted-AI-model-for-supply-chain-trade-regulations-analysis |
+    | -------- | --------- | ------------------- | ----------------------- |
+    | Popular aggregated benchmark | AGI Eval | 48.60 | 48.47 |
+    |                              | MMLU | 76.95 | 76.86 |
+    | Language Understanding       | HellaSwag | 63.17 | 62.51 |
+    | Reasoning                    | ARC Easy | 81.48 | 81.36 |
+    |                              | ARC Challenge | 55.89 | 54.44 |
+    |                              | WinoGrande | 76.95 | 77.43 |
+    | Math                         | GSM-8K (strict match) | 90.07 | 89.01 |
+    |                              | GSM-8K (flexible extract) | 90.14 | 89.01 |
+  notes: |
+    <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
+
+    <!-- `note.md` is highly recommended, but not required. It captures information about how your model is created. We highly recommend including this section to provide transparency for the customers. -->
+
+    ## Intended Use
+
+    ### Primary Use Cases
+
+    The model is intended to be used as for scenarios related to Import/Export operations, Trade Sanctions, Export Control and Tariffs and Duty Management, that require analyzing trade codes and regulations. Additionally, the model is trained on a wide range of professional materials in the supply chain domain, and can be used to query supply chain related textual data, for example in the scenario of training and guiding personnel in the supply chain domain.
+
+    We recommend using the model in combination with a Retrieval Augmented Generation (RAG) pipeline to ground the responses on up to date, relevant information. For best results in querying tables, input should be clean, preferably in a markdown format.
+
+    ### Out-of-Scope Use Cases
+
+    The model is not specifically designed or evaluated for all downstream purposes. Developers should consider common limitations of language models as they select use cases, and evaluate and mitigate for accuracy, safety, and fairness before using within a specific downstream use case, particularly for high-risk scenarios.
+
+    The model is not designed for Supply Chain optimization, forecasting or database query generation.
+
+    The model is not designed to provide any professional advice or recommendations.
+
+    Developers should be aware of and adhere to applicable laws or regulations (including privacy, trade compliance laws, etc.) that are relevant to their use case.
+
+    **Nothing written here should be interpreted as or deemed a restriction or modification to the license the model is released under.**
+
+    ## Responsible AI Considerations
+
+    The adapted-AI-model-for-supply-chain-trade-regulations-analysis model, like other language models, can potentially behave in ways that are unfair, unreliable, or offensive. Some of the limiting behaviors to be aware of include:
+
+    - Quality of Service: The Phi models are trained primarily on English text and some additional multilingual text. Languages other than English will experience worse performance as well as performance disparities across non-English. English language varieties with less representation in the training data might experience worse performance than standard American English.
+    - Multilingual performance and safety gaps: We believe it is important to make language models more widely available across different languages, but the Phi 3 models still exhibit challenges common across multilingual releases. As with any deployment of LLMs, developers will be better positioned to test for performance or safety gaps for their linguistic and cultural context and customize the model with additional fine-tuning and appropriate safeguards.
+    - Representation of Harms & Perpetuation of Stereotypes: These models can over- or under-represent groups of people, erase representation of some groups, or reinforce demeaning or negative stereotypes. Despite safety post-training, these limitations may still be present due to differing levels of representation of different groups, cultural contexts, or prevalence of examples of negative stereotypes in training data that reflect real-world patterns and societal biases.
+    - Inappropriate or Offensive Content: These models may produce other types of inappropriate or offensive content, which may make it inappropriate to deploy for sensitive contexts without additional mitigations that are specific to the use case.
+    - Information Reliability: Language models can generate nonsensical content or fabricate content that might sound reasonable but is inaccurate or outdated.
+
+    Developers should apply responsible AI best practices, including mapping, measuring, and mitigating risks associated with their specific use case and cultural, linguistic context. Phi-3 family of models are general purpose models. As developers plan to deploy these models for specific use cases, they are encouraged to fine-tune the models for their use case and leverage the models as part of broader AI systems with language-specific safeguards in place. Important areas for consideration include:
+
+    - Allocation: Models may not be suitable for scenarios that could have consequential impact on legal status or the allocation of resources or life opportunities (ex: housing, employment, credit, etc.) without further assessments and additional debiasing techniques.
+    - High-Risk Scenarios: Developers should assess the suitability of using models in high-risk scenarios where unfair, unreliable or offensive outputs might be extremely costly or lead to harm. This includes providing advice in sensitive or expert domains where accuracy and reliability are critical (ex: legal or health advice). Additional safeguards should be implemented at the application level according to the deployment context.
+    - Misinformation: Models may produce inaccurate information. Developers should follow transparency best practices and inform end-users they are interacting with an AI system. At the application level, developers can build feedback mechanisms and pipelines to ground responses in use-case specific, contextual information, a technique known as Retrieval Augmented Generation (RAG).
+    - Generation of Harmful Content: Developers should assess outputs for their context and use available safety classifiers or custom solutions appropriate for their use case.
+    - Misuse: Other forms of misuse such as fraud, spam, or malware production may be possible, and developers should ensure that their applications do not violate applicable laws and regulations.
+
+    ## Training Data
+
+    The adapted-AI-model-for-supply-chain-trade-regulations-analysis model was trained on materials in the Supply Chain Trade Compliance domain collected from the web, totaling tens of millions of tokens. The training data includes:
+
+    	1. Publicly available documents in the Trade Compliance domain, including tariff codes, duty rates, regulations (with global/regional/local coverage) and authority rulings
+    	2. Verified question-answer sets commonly asked by trade compliance managers on trade regulation, scaled synthetically
+
+    ## Hardware
+
+    Note that by default, the Phi\-4 model uses flash attention, which requires certain types of GPU hardware to run. We have tested on the following GPU types:
+
+    * NVIDIA A100
+    * NVIDIA H100
+
+    ## Disclaimer
+
+    Customer agrees that any information or output resulting from the use of the adapted-AI-model-for-supply-chain-trade-regulations-analysis is for informational or internal process management purposes only, and does not constitute legal, trade compliance, or other professional advice from Microsoft. Customer agrees that it is responsible for its own trade compliance research and decisions, and that the solutions and resulting information provided through the Adapted-AI-model-for-supply-chain-trade-regulations-analysis will not serve as the primary basis for its trade compliance decisions. Customer agrees that Microsoft is not responsible or liable for any decisions or actions Customer, or its authorized third parties, take based on information Customer produces or generates as a user of the Adapted-AI-model-for-supply-chain-trade-regulations-analysis. No solutions provided through the Adapted-AI-model-for-supply-chain-trade-regulations-analysis constitute an offer, solicitation of an offer, or advice to engage in or refrain from any trade-related activities, or any other trade compliance actions by Microsoft.
+
+    ## License
+
+    The model is licensed under the MIT license.
+
+    ## Trademarks
+
+    This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
+
+    ## Resources
+
+    [https://ai.azure.com/explore/models/Phi\-4/version/7/registry/azureml?tid\=72f988bf\-86f1\-41af\-91ab\-2d7cd011db47](https://ai.azure.com/explore/models/Phi-4/version/7/registry/azureml?tid=72f988bf-86f1-41af-91ab-2d7cd011db47)
+  hiddenlayerscanned: ""
+  inference_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
+version: 1
+description: |
+  <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
+
+  <!-- `description.md` is required. -->
+
+  The **adapted AI model for supply chain trade regulations analysis** (preview) is a 14B parameters, lightweight, state-of-the-art open model trained using synthetic Supply Chain domain specific datasets that focuses on the sub-domain of Trade regulations. The model is fine-tuned on Phi-4 as the base model. The training dataset comprises synthetically generated data, with an emphasis on high-quality and complex questions with reasoning-dense properties.
+
+  The adapted AI model for supply chain trade regulations analysis is a dense decoder-only Transformer model which underwent continual pre-training on Trade Compliance documents for domain knowledge injection, followed by supervised fine-tuning for instruction following. The fine-tuned model is capable of answering questions on relevant context from the Supply Chain domain, including information extraction, summarization and complex reasoning tasks (involving multiple sub-queries with tariff code and duty rate identification and associated numerical calculations). When assessed against general benchmarks testing common sense, language understanding, math, code, long context and logical reasoning, this fine-tuned model did not degrade compared to the baseline model performance. For reference, the Phi-4 Technical Report can be found [here](https://www.microsoft.com/en-us/research/wp-content/uploads/2024/12/P4TechReport.pdf).
+
+  *NOTE: This model is in preview*
