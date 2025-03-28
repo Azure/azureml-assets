@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
-version: 0.0.11
+version: 0.0.12
 type: command
 
 is_deterministic: True
@@ -9,7 +9,7 @@ display_name: Deploy model
 description:
   Deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/19
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/28
 
 code: ../../src
 command: >-
@@ -35,6 +35,7 @@ command: >-
   $[[--initial_delay_liveness_probe ${{inputs.initial_delay_liveness_probe}}]]
   $[[--egress_public_network_access ${{inputs.egress_public_network_access}}]]
   --model_deployment_details ${{outputs.model_deployment_details}}
+  --inference_response ${{outputs.inference_response}}
 
 inputs:
   # Output of registering component
@@ -202,6 +203,9 @@ outputs:
   model_deployment_details:
     type: uri_file
     description: Json file to which deployment details will be written
+  inference_response:
+    type: uri_file
+    description: JSON file containing inference results
 
 tags:
     Preview: ""
