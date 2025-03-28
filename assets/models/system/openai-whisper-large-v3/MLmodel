@@ -19,3 +19,9 @@ flavors:
 mlflow_version: 2.6.0
 model_uuid: 7876f44f26274843af12ad59cde6f0e2
 utc_time_created: '2023-11-08 10:17:29.004434'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  base_model_name: openai/whisper-large-v3
+  base_model_task: automatic-speech-recognition
+  is_acft_model: true
+  is_finetuned_model: false
