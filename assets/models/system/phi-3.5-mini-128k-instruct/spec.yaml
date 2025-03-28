@@ -29,7 +29,7 @@ tags:
   maas-inference: "true"
   maas-finetuning: true
   maas-finetuning-offer: true
-  maas-finetuning-regions: eastus2
+  maas-finetuning-regions: eastus2,southcentralus
   license: mit
   disable-batch: "true"
   task: chat-completion
