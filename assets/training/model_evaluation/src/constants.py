@@ -233,6 +233,7 @@ class TelemetryConstants:
     SCORE_NAME = "score"
     EVALUATE_MODEL_NAME = "evaluate_model"
     DOWNLOAD_MODEL_DEPENDENCIES = "download_model_dependencies"
+    DOWNLOAD_METRICS_DEPENDENCIES = "download_metrics_dependencies"
 
     MLFLOW_NAME = "mlflow_evaluate"
 
