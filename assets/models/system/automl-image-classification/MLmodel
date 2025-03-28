@@ -19,6 +19,7 @@ metadata:
   base_model_task: image-classification
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.6.0
 model_uuid: 836be882c838417a8d3fd5d267f7084f
 signature:
