@@ -1,13 +1,6 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
-RUN apt-get update -y && apt-get install wget nscd git cpio less libglib2.0-0 libglib2.0-data util-linux binutils libnghttp2-14 libssh-4 libsqlite3-0 libpam-modules linux-libc-dev libldap-common libldap-2.4-2 libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
-
-# Install specific versions of the required Kerberos libraries
-RUN apt-get install -y \
-    libkrb5support0=1.17-6ubuntu4.9 \
-    libgssapi-krb5-2=1.17-6ubuntu4.9 \
-    libkrb5-3=1.17-6ubuntu4.9 \
-    libk5crypto3=1.17-6ubuntu4.9
+RUN apt-get update -y && apt-get install wget nscd git cpio less libglib2.0-0 libglib2.0-data util-linux binutils libnghttp2-14 libssh-4 libsqlite3-0 libpam-modules linux-libc-dev libldap-common libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
 
 # Hold the packages to prevent future upgrades
 RUN apt-mark hold libkrb5support0 libgssapi-krb5-2 libkrb5-3 libk5crypto3
