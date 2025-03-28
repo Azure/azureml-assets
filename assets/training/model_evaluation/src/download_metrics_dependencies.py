@@ -4,7 +4,7 @@
 """Script for downloading and installing runtime dependencies for compute metrics."""
 
 from logging_utilities import (
-    custom_dimensions, get_logger, swallow_all_exceptions, get_azureml_exception
+    custom_dimensions, get_logger, swallow_all_exceptions
 )
 from azureml.telemetry.activity import log_activity
 from constants import TelemetryConstants
