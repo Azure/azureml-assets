@@ -4,17 +4,18 @@ import sys
 import os
 import uuid
 import json
-import logging
 import requests
 import argparse
 from datetime import datetime, timezone
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from datetime import datetime
+from azureml.model.mgmt.config import AppName
+from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+custom_dimensions.app_name = AppName.PUBHLISH_VALIDATION_RESULTS_SELF_SERVE
 
 
 def read_results_from_file(file_path):
@@ -121,7 +122,7 @@ def update_model_onboarding_version(
 
         response = requests.put(api_url, headers=headers, json=payload)
 
-        logger.info(f"Response: {response.json()}")
+        logger.info(f"Response: {response.text}")
 
         if response.ok:
             logger.info(
@@ -130,11 +131,11 @@ def update_model_onboarding_version(
         else:
             logger.error(
                 f"Failed to update model onboarding version. Status code: {response.status_code}")
-            logger.error(f"Response content: {response.json()}")
+            logger.error(f"Response content: {response.text}")
             raise Exception(
-                f"Request failed with status code {response.status_code}: {response.json()}")
+                f"Request failed with status code {response.status_code}: {response.text}")
     except requests.RequestException as e:
-        logging.error(f"Request failed: {e}")
+        logger.error(f"Request failed: {e}")
         raise
 
 

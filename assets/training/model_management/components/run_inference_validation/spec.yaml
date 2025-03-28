@@ -14,7 +14,7 @@ code: ../../src
 command: >-
   python run_inference_validation.py
   --inference_payload ${{inputs.inference_payload}}
-  --expected_response ${{inputs.expected_response}}
+  $[[--expected_response ${{inputs.expected_response}}]]
   --inference_response ${{inputs.inference_response}}
   --validation_result ${{outputs.validation_result}}
   --metrics_storage_uri ${{outputs.metrics_storage_uri}}
@@ -26,6 +26,7 @@ inputs:
 
   expected_response:
     type: uri_file
+    optional: true
     description: JSON file containing the expected inference response.
 
   inference_response:

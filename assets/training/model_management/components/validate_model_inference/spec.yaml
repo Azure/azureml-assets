@@ -118,6 +118,7 @@ inputs:
 
   expected_inference_response:
     type: uri_file
+    optional: true
     description: JSON file containing the expected inference response.
 
 # Pipeline outputs
@@ -129,7 +130,7 @@ outputs:
 jobs:
   online_deployment_model:
     type: command
-    component: azureml:/deploy_model:0.0.12
+    component: azureml:deploy_model:0.0.12
     compute: ${{parent.inputs.compute}}
     inputs:
       model_id: ${{parent.inputs.model_id}}

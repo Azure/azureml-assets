@@ -73,7 +73,7 @@ def compare_structures(inference_payload, expected_response, inference_response)
         result["differences"] = [
             {"expected": expected_structure, "actual": actual_structure}
         ]
-    logger.info(f"result: {result}")
+    logger.info(f"validation result: {result}")
     return result
 
 
@@ -98,8 +98,6 @@ def fetch_storage_uri():
         output_data_path = run_details['runDefinition']['outputData']['validation_result']['outputLocation']['uri']['path']
         
         output_data_uri = replace_name_in_path(output_data_path, run.id)
-
-        logger.info(f"Output data URI: {output_data_uri}, output_data_path: {output_data_path}")
 
         # Extract datastore name and path from the AzureML URI
         datastore_name, path = extract_datastore_info(output_data_uri)
@@ -131,7 +129,7 @@ def fetch_path(output_dir):
     try:
         # Calculate relative path from the job folder
         rel_path = os.path.relpath(output_dir, os.getcwd())
-        logger.info(f"rel_path: {rel_path}")
+        logger.info(f"api inference validation relative path: {rel_path}")
         result_dict = {
             'api_inference_path': rel_path
         }
@@ -157,14 +155,13 @@ def get_storage_url(datastore_name):
     """Retrieve the storage URL for the specified datastore."""
     # Get MLClient instance
     ml_client = get_mlclient()
-    logger.info(f"ml_client: {ml_client}")
     datastore = ml_client.datastores.get(datastore_name)
     storage_account_name = datastore.account_name
     container_name = datastore.container_name
     endpoint = datastore.endpoint
 
     storage_uri = f"https://{storage_account_name}.blob.{endpoint}/{container_name}"
-    logger.info(f"storage_uri: {storage_uri}")
+    logger.info(f"validation result storage: {storage_uri}")
 
     return storage_uri
 
@@ -197,7 +194,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--inference_payload", type=str, required=True,
                         help="Path to the expected inference response JSON file.")
-    parser.add_argument("--expected_response", type=str, required=True,
+    parser.add_argument("--expected_response", type=str, required=False,
                         help="Path to the expected inference response JSON file.")
     parser.add_argument("--inference_response", type=str, required=True,
                         help="Path to the actual inference response JSON file.")
@@ -210,16 +207,25 @@ def main():
 
     # Load expected and actual responses.
     inference_payload = load_json(args.inference_payload)
-    expected_response = load_json(args.expected_response)
     inference_response = load_json(args.inference_response)
+    if args.expected_response is None:
+        expected_response = load_json(args.expected_response)
+    else:
+        expected_response = None
     logger.info(f"expected response: {expected_response}, actual response: {inference_response}")
 
-    if expected_response is None or inference_response is None:
-        logger.warning("One or both JSON files could not be loaded.")
-        return
-
-    # Compare the JSON structures.
-    validation_result = compare_structures(inference_payload, expected_response, inference_response)
+    if expected_response:
+        validation_result = compare_structures(inference_payload, expected_response, inference_response)
+    else:
+        validation_result = {
+            "inference_payload": inference_payload,
+            "inference_output": inference_response,
+            "structure_match": None,
+            "expected_structure": None,
+            "actual_structure": get_json_structure(inference_response),
+            "differences": []
+        }
+        logger.info("No expected response provided. Skipping structure comparison.")
 
     # Save the validation result.
     save_validation_result(validation_result, args.validation_result)
