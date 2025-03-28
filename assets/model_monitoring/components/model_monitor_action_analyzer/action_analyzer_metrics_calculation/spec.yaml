@@ -39,7 +39,7 @@ conf:
     dependencies:
       - python=3.10
       - pip:
-        - azure-storage-file-datalake~=12.11.0
+        - azure-storage-file-datalake~=12.19.0
         - azure-ai-ml~=1.23.1
         - azureml-mlflow~=1.49.0
         - mltable~=1.3.0
