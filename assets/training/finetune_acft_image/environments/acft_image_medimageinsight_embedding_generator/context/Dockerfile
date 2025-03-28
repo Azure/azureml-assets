@@ -10,3 +10,5 @@ RUN apt-get -y install unzip
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+
+# dummy number to change when needing to force rebuild without changing the definition: 1
