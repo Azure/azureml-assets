@@ -20,5 +20,3 @@ RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
-
-# 3
