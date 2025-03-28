@@ -29,7 +29,6 @@ dependencies:
   - msrest>=0.6.21,<0.7.1
   - mltable=={{latest-pypi-version}}
   - openai=={{latest-pypi-version}}
-  - azure-ai-ml=={{latest-pypi-version}}
   - mldesigner=={{latest-pypi-version:pre}}
   - tiktoken
   - idna==3.7
