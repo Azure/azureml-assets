@@ -1,0 +1,22 @@
+flavors:
+  python_function:
+    artifacts:
+      checkpoint-1M:
+        path: artifacts/mattersim-v1.0.0-1M.pth
+        uri: pretrained_models/mattersim-v1.0.0-1M.pth
+      checkpoint-5M:
+        path: artifacts/mattersim-v1.0.0-5M.pth
+        uri: pretrained_models/mattersim-v1.0.0-5M.pth
+    cloudpickle_version: 3.1.0
+    code: null
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.21
+    streamable: false
+mlflow_version: 2.19.0
+model_size_bytes: 109113119
+model_uuid: c21b8c2a4dc34b11be3ae7398cfca2ce
+utc_time_created: '2025-01-10 14:55:06.304683'

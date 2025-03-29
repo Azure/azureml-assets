@@ -1,0 +1,22 @@
+flavors:
+  python_function:
+    artifacts:
+      aurora-0.25-finetuned:
+        path: artifacts/aurora-0.25-finetuned.ckpt
+        uri: checkpoints/aurora-0.25-finetuned.ckpt
+      aurora-0.25-small-pretrained:
+        path: artifacts/aurora-0.25-small-pretrained.ckpt
+        uri: checkpoints/aurora-0.25-small-pretrained.ckpt
+    cloudpickle_version: 3.1.0
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.11.11
+    streamable: false
+mlflow_version: 2.19.0
+model_size_bytes: 5489678897
+model_uuid: 7fdf61273f3942e99bb8cf69b7a881e9
+utc_time_created: '2025-01-13 20:03:46.109403'
