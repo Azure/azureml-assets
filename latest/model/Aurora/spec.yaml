@@ -117,7 +117,7 @@ tags:
     Standard_NC24ads_A100_v4: 1
     Default: 1
 
-version: 2
+version: 3
 description: |
   Aurora is a machine learning model that can predict general environmental variables, such as temperature and wind speed.
   It is a _foundation model_, which means that it was first generally trained on a lot of data,
