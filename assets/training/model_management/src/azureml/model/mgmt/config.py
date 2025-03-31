@@ -48,6 +48,7 @@ class AppName:
     CONVERT_MODEL_TO_MLFLOW = "convert_model_to_mlflow"
     VALIDATION_TRIGGER_IMPORT = "validation_trigger_import"
     RUN_INFERENCE_VALIDATION = "run_inference_validation"
+    PUBHLISH_VALIDATION_RESULTS_SELF_SERVE = "publish_validation_results_self_serve"
 
 
 class LoggerConfig:
