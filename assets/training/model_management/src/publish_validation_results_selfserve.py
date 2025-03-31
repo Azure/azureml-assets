@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Update model onboarding version with CommonBench results."""
 
 import sys
