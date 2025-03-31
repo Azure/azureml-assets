@@ -165,7 +165,7 @@ def parse_args():
     parser.add_argument(
         "--inference_response",
         type=str,
-        help="Json file to save the inference response",
+        help="Path to the inference response JSON file.",
     )
     # parse args
     args = parser.parse_args()
