@@ -47,5 +47,6 @@ command: >-
   --model-name ${{inputs.model_name}} 
   --model-version ${{inputs.model_version}} 
   --publisher-name ${{inputs.publisher_name}} 
+  --validation-id ${{inputs.validation_id}} 
   --sku ${{inputs.sku}} 
   --metrics-storage-uri ${{inputs.metrics_storage_uri}}

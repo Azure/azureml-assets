@@ -32,78 +32,87 @@ def read_results_from_file(file_path):
         print(f"Error reading from file: {e}")
         return None
 
+def get_auth_token():
+    """Generate auth token for Azure API."""
+    is_obo = False
+    tokenUri = "https://management.azure.com/.default"
+    token = None
+
+    try:
+        credential = AzureMLOnBehalfOfCredential()
+        token = credential.get_token(tokenUri).token
+        is_obo = True
+    except Exception:
+        logger.warning(
+            "Failed to get user credentials, fetching MSI credentials")
+
+    if not is_obo:
+        try:
+            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            token = credential.get_token(tokenUri).token
+        except Exception as ex:
+            raise Exception(f"Failed to get MSI credentials : {ex}")
+
+    return token
+
 
 def update_model_onboarding_version(
     publisher_name,
     model_name,
     model_version,
-    selfserve_base_url,
     sku,
+    validation_id,
+    selfserve_base_url,
     metrics_storage_uri
 ):
     """Update model onboarding version with benchmark results."""
     current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    is_obo = False
-    try:
-        credential = AzureMLOnBehalfOfCredential()
-        token = credential.get_token(
-            "https://management.azure.com/.default").token
-        is_obo = True
-    except Exception as ex:
-        logger.warning(f"Failed to get OBO credentials - {ex}")
-
-    if not is_obo:
-        try:
-            logger.info("Fetching MSI credential")
-            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-            credential = ManagedIdentityCredential(client_id=msi_client_id)
-            token = credential.get_token(
-                "https://management.azure.com/.default").token
-        except Exception as ex:
-            raise (f"Failed to get MSI credentials : {ex}")
-
     metrics_path_dict = read_results_from_file(metrics_storage_uri)
-
-    run_id = str(uuid.uuid4())
 
     validation_result = []
 
-    if metrics_path_dict.get("perf_bench_path") is not None:
-        validation_result.append({
-            "runId": run_id,
-            "type": "PERF_BENCHMARK",
-            "passed": True,
-            "message": "Baseline data is captured successfully",
-            "validationResultUrl": metrics_path_dict.get("perf_bench_path"),
-            "createdTime": current_time,
-            "status": "success",
-            "sku": sku
-        })
+    if validation_id is not None:
+        if metrics_path_dict.get("perf_bench_path") is not None:
+            validation_result.append({
+                "Id": validation_id,
+                "type": "PERF_BENCHMARK",
+                "passed": True,
+                "message": "Baseline data is captured successfully",
+                "validationResultUrl": metrics_path_dict.get("perf_bench_path"),
+                "createdTime": current_time,
+                "status": "success",
+                "sku": sku
+            })
 
-    if metrics_path_dict.get("api_validation_path") is not None:
-        validation_result.append({
-            "runId": run_id,
-            "type": "API_VALIDATION",
-            "passed": True,
-            "message": "API validation passed successfully",
-            "validationResultUrl": metrics_path_dict.get("api_validation_path"),
-            "status": "success",
-            "createdTime": current_time,
-            "sku": sku
-        })
+        if metrics_path_dict.get("api_validation_path") is not None:
+            validation_result.append({
+                "Id": validation_id,
+                "type": "API_VALIDATION",
+                "passed": True,
+                "message": "API validation passed successfully",
+                "validationResultUrl": metrics_path_dict.get("api_validation_path"),
+                "status": "success",
+                "createdTime": current_time,
+                "sku": sku
+            })
 
-    if metrics_path_dict.get("api_inference_path") is not None:
-        validation_result.append({
-            "runId": run_id,
-            "type": "API_VALIDATION",
-            "passed": True,
-            "message": "API inference passed successfully",
-            "validationResultUrl": metrics_path_dict.get("api_inference_path"),
-            "status": "success",
-            "createdTime": current_time,
-            "sku": sku
-        })
+        if metrics_path_dict.get("api_inference_path") is not None:
+            validation_result.append({
+                "Id": validation_id,
+                "type": "API_VALIDATION",
+                "passed": True,
+                "message": "API inference passed successfully",
+                "validationResultUrl": metrics_path_dict.get("api_inference_path"),
+                "status": "success",
+                "createdTime": current_time,
+                "sku": sku
+            })
+    else:
+        logger.error(
+            "Validation run ID is None, not updating validation results in self-serve")
+        sys.exit(1)
 
     payload = {
         "suggestedSKU": sku,
@@ -115,7 +124,7 @@ def update_model_onboarding_version(
     api_url = f"{selfserve_base_url}/model-publisher-self-serve/publishers/{publisher_name}/models/{model_name}/model-onboarding-version/{model_version}/updateModelOnboardingVersion?api-version=2024-12-31"
 
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {get_auth_token()}",
         "Content-Type": "application/json",
         "User-Agent": "AzureML-ModelPublishing/1.0"
     }
