@@ -159,7 +159,7 @@ tags:
   maas-inference: "true"
   maas-finetuning: true
   maas-finetuning-offer: true
-  maas-finetuning-regions: eastus2,southcentralus
+  maas-finetuning-regions: eastus2,eastus,southcentralus,northcentralus,westus,westus3
   license: mit
   disable-batch: "true"
   task: chat-completion
