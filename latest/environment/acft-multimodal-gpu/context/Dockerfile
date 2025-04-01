@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202503.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202503.2.v1
 
 USER root
 RUN apt-get -y update && apt-get install -y expat=2.4.7-1ubuntu0.5
@@ -19,4 +19,3 @@ RUN pip install gunicorn==22.0.0
 RUN pip install onnxruntime==1.17.3
 RUN pip install onnx==1.17.0
 RUN pip install scikit-learn==1.5.0
-# dummy number to change when needing to force rebuild without changing the definition: 2

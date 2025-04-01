@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202503.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202503.2.v1
 
 RUN apt-get -y update && apt-get install -y expat=2.4.7-1ubuntu0.5
 
@@ -14,4 +14,3 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 RUN pip install gunicorn==22.0.0
 RUN pip install certifi==2024.07.04
 RUN pip install onnx==1.17.0
-# dummy number to change when needing to force rebuild without changing the definition: 1

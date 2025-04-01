@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by MMDetection Image Finetune components
 
 name: "acft-mmdetection-image-gpu"
-version: "57"
+version: "58"
 
 build:
   path: "context"

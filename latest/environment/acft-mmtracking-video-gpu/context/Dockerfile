@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202503.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202503.2.v1
 
 USER root
 RUN apt-get -y update && apt-get install -y expat=2.4.7-1ubuntu0.5
@@ -30,5 +30,3 @@ RUN pip install numpy==1.23.5
 # pin required version of yapf to avoid breaking changes in newer versions
 # https://github.com/open-mmlab/mmdetection/issues/10962
 RUN pip install yapf==0.40.1
-
-# dummy number to change when needing to force rebuild without changing the definition: 2

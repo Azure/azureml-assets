@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by HuggingFace Transformers Image Finetune components
 
 name: "acft-transformers-image-gpu"
-version: "54"
+version: "55"
 
 build:
   path: "context"
