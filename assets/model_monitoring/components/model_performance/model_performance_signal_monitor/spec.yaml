@@ -48,7 +48,7 @@ inputs:
     optional: true
   instance_type:
     type: string
-    default: "standard_e4s_v3"
+    default: "standard_e8s_v3"
     optional: True
 outputs:
   signal_output:
