@@ -36,7 +36,7 @@ conf:
       - defaults
     dependencies:
       - pip:
-        - azure-storage-file-datalake~=12.11.0
+        - azure-storage-file-datalake~=12.8.0
         - azure-ai-ml~=1.23.1
         - azureml-mlflow~=1.49.0
         - mltable~=1.6.1
