@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/supply-chain-trade-regulations-v2/mlflow_model_folder
+  container_path: huggingface/industry-ai/supply-chain-trade-regulations-v2/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
