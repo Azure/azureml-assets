@@ -33,6 +33,10 @@ inputs:
     optional: false
     default: "Standard_NC24ads_A100_v4"
     description: Suggested SKU based on benchmark results
+  validation_id:
+    type: string
+    optional: false
+    description: ID of the validation run (used for updating status in self-serve)
   metrics_storage_uri:
     type: uri_file
     optional: false

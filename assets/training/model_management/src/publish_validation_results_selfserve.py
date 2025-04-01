@@ -12,7 +12,6 @@ import argparse
 from datetime import datetime, timezone
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from datetime import datetime
 from azureml.model.mgmt.config import AppName
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 
@@ -71,57 +70,24 @@ def update_model_onboarding_version(
 
     metrics_path_dict = read_results_from_file(metrics_storage_uri)
 
-    validation_result = []
+    validationResultUrl = None
 
-    if validation_id is not None:
-        if metrics_path_dict.get("perf_bench_path") is not None:
-            validation_result.append({
-                "Id": validation_id,
-                "type": "PERF_BENCHMARK",
-                "passed": True,
-                "message": "Baseline data is captured successfully",
-                "validationResultUrl": metrics_path_dict.get("perf_bench_path"),
-                "createdTime": current_time,
-                "status": "success",
-                "sku": sku
-            })
-
-        if metrics_path_dict.get("api_validation_path") is not None:
-            validation_result.append({
-                "Id": validation_id,
-                "type": "API_VALIDATION",
-                "passed": True,
-                "message": "API validation passed successfully",
-                "validationResultUrl": metrics_path_dict.get("api_validation_path"),
-                "status": "success",
-                "createdTime": current_time,
-                "sku": sku
-            })
-
-        if metrics_path_dict.get("api_inference_path") is not None:
-            validation_result.append({
-                "Id": validation_id,
-                "type": "API_VALIDATION",
-                "passed": True,
-                "message": "API inference passed successfully",
-                "validationResultUrl": metrics_path_dict.get("api_inference_path"),
-                "status": "success",
-                "createdTime": current_time,
-                "sku": sku
-            })
+    if validation_id:
+        if metrics_path_dict.get("api_inference_path"):
+            validationResultUrl = metrics_path_dict.get("api_inference_path")
     else:
         logger.error(
             "Validation run ID is None, not updating validation results in self-serve")
         sys.exit(1)
 
     payload = {
-        "suggestedSKU": sku,
-        "status": "Validation",
-        "subStatus": "Validation_Successful",
-        "validationResult": validation_result
+        "passed": True,
+        "status": "Completed",
+        "message": "Validation Successful",
+        "validationResult": validationResultUrl
     }
 
-    api_url = f"{selfserve_base_url}/model-publisher-self-serve/publishers/{publisher_name}/models/{model_name}/model-onboarding-version/{model_version}/updateModelOnboardingVersion?api-version=2024-12-31"
+    api_url = f"{selfserve_base_url}/model-publisher-self-serve/publishers/{publisher_name}/models/{model_name}/versions/{model_version}/validations/{validation_id}/updateValidationResult?api-version=2024-12-31"
 
     headers = {
         "Authorization": f"Bearer {get_auth_token()}",
@@ -164,6 +130,8 @@ if __name__ == "__main__":
     parser.add_argument("--selfserve-base-url", required=True,
                         default="https://int.api.azureml-test.ms",
                         help="Base URL of the model publisher self-serve API")
+    parser.add_argument("--validation-id", required=True,
+                        help="Run ID of the validation run")
     parser.add_argument("--metrics-storage-uri", required=True,
                         help="URI to the storage where validation metrics are stored")
     parser.add_argument("--sku", required=False,
@@ -178,8 +146,9 @@ if __name__ == "__main__":
             args.publisher_name,
             args.model_name,
             args.model_version,
-            args.selfserve_base_url,
             args.sku,
+            args.validation_id,
+            args.selfserve_base_url,
             args.metrics_storage_uri
         )
         logger.info("Model onboarding version update completed successfully")

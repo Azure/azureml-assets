@@ -116,6 +116,11 @@ inputs:
     default: default
     description: Name of the deployment
 
+  validation_id:
+    type: string
+    optional: true
+    description: ID of the validation run (used for updating status in self-serve)
+
   expected_inference_response:
     type: uri_file
     optional: true
@@ -177,5 +182,6 @@ jobs:
       model_name: ${{parent.inputs.model_name}}
       model_version: ${{parent.inputs.model_version}}
       sku: ${{parent.inputs.instance_type}}
+      validation_id: ${{parent.inputs.validation_id}}
       selfserve_base_url: ${{parent.inputs.selfserve_base_url}}
       metrics_storage_uri: ${{parent.jobs.run_inference_validation.outputs.metrics_storage_uri}}
