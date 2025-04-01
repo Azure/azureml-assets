@@ -24,7 +24,7 @@ tags:
   inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 2
+version: 3
 description: |
   Virchow2 is a self-supervised vision transformer pretrained using 3.1M whole slide histopathology images. The model can be used as a tile-level feature extractor (frozen or finetuned) to achieve state-of-the-art results for a wide variety of downstream computational pathology use cases.
 
