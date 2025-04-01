@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.20
+version: 0.0.21
 name: transformers_image_classification_finetune
 display_name: Image Classification HuggingFace Transformers Model Finetune
 description: Component to finetune HuggingFace transformers models for image classification.
