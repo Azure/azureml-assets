@@ -1056,7 +1056,7 @@ def main():
             ds_dict = json.load(fp)
             use_fp16 = "fp16" in ds_dict and "enabled" in ds_dict["fp16"] and ds_dict["fp16"]["enabled"]
 
-    if args.apply_ort and args.deepspeed_config is not None:
+    if args.apply_deepspeed and args.deepspeed_config is not None:
         with open(args.deepspeed_config) as fp:
             try:
                 _ = json.load(fp)
