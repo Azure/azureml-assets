@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.23
+version: 0.0.24
 name: transformers_image_classification_pipeline
 display_name: Image Classification HuggingFace Transformers Pipeline
 description: Pipeline component for image classification using HuggingFace transformers models.
@@ -428,7 +428,7 @@ jobs:
 
   image_classification_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.20
+    component: azureml:transformers_image_classification_finetune:0.0.21
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -480,34 +480,3 @@ jobs:
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
-
-  model_prediction:
-    type: command
-    component: azureml:model_prediction:0.0.35
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    inputs:
-      task: '${{parent.inputs.task_name}}'
-      label_column_name: '${{parent.inputs.label_column_name}}'
-      input_column_names: '${{parent.inputs.input_column_names}}'
-      batch_size: '${{parent.inputs.test_batch_size}}'
-      device: auto
-      evaluation_config: '${{parent.inputs.evaluation_config}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-      test_data: '${{parent.inputs.test_data}}'
-      mlflow_model: '${{parent.jobs.image_classification_finetune.outputs.mlflow_model_folder}}'
-
-  compute_metrics:
-    type: command
-    component: azureml:compute_metrics:0.0.35
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    inputs:
-      task: '${{parent.inputs.task_name}}'
-      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
-      ground_truth_column_name: '${{parent.inputs.label_column_name}}'
-      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
-      prediction_column_name: predictions
-      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
-      evaluation_config: '${{parent.inputs.evaluation_config}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-    outputs:
-      evaluation_result: '${{parent.outputs.evaluation_result}}'

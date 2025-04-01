@@ -1056,6 +1056,18 @@ def main():
             ds_dict = json.load(fp)
             use_fp16 = "fp16" in ds_dict and "enabled" in ds_dict["fp16"] and ds_dict["fp16"]["enabled"]
 
+    if args.apply_ort and args.deepspeed_config is not None:
+        with open(args.deepspeed_config) as fp:
+            try:
+                _ = json.load(fp)
+            except json.JSONDecodeError as e:
+                raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=f"Invalid JSON in deepspeed config file: {str(e)}"
+                    )
+                )
+
     args.fp16 = use_fp16
     args.deepspeed = args.deepspeed_config if args.apply_deepspeed else None
     if args.metric_for_best_model in MetricConstants.METRIC_LESSER_IS_BETTER:
