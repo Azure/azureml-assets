@@ -39,7 +39,6 @@ CONTEXT_KEY = "context"
 RESPONSE_KEY = "response"
 GENERATED_RESPONSE_KEY = "generated_response"
 GENERATED_RESPONSE_MAPPING = f"${{data.{GENERATED_RESPONSE_KEY}}}"
-CHAT_COMPLETIONS_SUFFIX = "/chat/completions"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -123,27 +122,7 @@ def create_model_target_and_data_mapping(command_line_args):
     model_config_type = str(model_config.get(TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
 
-    endpoint = ""
-    if model_config_type == "1":  # AOAI
-        azure_endpoint = model_config.get(AZURE_ENDPOINT, "")
-        azure_endpoint = azure_endpoint.rstrip('/')
-        if CHAT_COMPLETIONS_SUFFIX in azure_endpoint:
-            endpoint = azure_endpoint
-        else:
-            logger.info(f"Adding {CHAT_COMPLETIONS_SUFFIX} to endpoint")
-            endpoint = f"{azure_endpoint}{CHAT_COMPLETIONS_SUFFIX}"
-        logger.info(f"  - AOAI Endpoint: {endpoint}")
-    elif model_config_type == "2":  # MAAS
-        azure_endpoint = model_config.get(AZURE_ENDPOINT, "")
-        azure_endpoint = azure_endpoint.rstrip('/')
-        logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-        if CHAT_COMPLETIONS_SUFFIX in azure_endpoint:
-            endpoint = azure_endpoint
-        else:
-            logger.info(f"Adding {CHAT_COMPLETIONS_SUFFIX} to endpoint")
-            endpoint = f"{azure_endpoint}{CHAT_COMPLETIONS_SUFFIX}"
-        logger.info(f"  - MAAS Endpoint: {endpoint}")
-
+    endpoint = model_config.get(AZURE_ENDPOINT, "")
     model_params = target_config.get(MODEL_PARAMS, {}).copy()
     data_mapping = model_params.pop(DATA_MAPPING, None)
     if data_mapping is None:
