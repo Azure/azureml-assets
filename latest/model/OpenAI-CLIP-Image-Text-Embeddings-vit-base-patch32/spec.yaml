@@ -35,7 +35,7 @@ tags:
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 10
+version: 11
 description: |-
   OpenAI's CLIP (Contrastive Language–Image Pre-training) model was designed to investigate the factors that contribute to the robustness of computer vision tasks. It can seamlessly adapt to a range of image classification tasks without requiring specific training for each, demonstrating efficiency, flexibility, and generality.
 

@@ -35,7 +35,7 @@ tags:
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 2
+version: 3
 description: |-
   The `CLIP` model was developed by researchers at OpenAI to learn about what contributes to robustness in computer vision tasks. The model was also developed to test the ability of models to generalize to arbitrary image classification tasks in a zero-shot manner. It was not developed for general model deployment - to deploy models like `CLIP, researchers will first need to carefully study their capabilities in relation to the specific context they’re being deployed within.
 
