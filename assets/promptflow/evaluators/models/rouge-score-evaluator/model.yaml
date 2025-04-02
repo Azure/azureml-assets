@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/RougeScoreEvaluator/v4/RougeScoreEvaluator
+  container_path: models/evaluators/RougeScoreEvaluator/v5/RougeScoreEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:

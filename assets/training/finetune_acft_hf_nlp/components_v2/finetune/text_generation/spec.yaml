@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_finetune
-version: 0.0.27
+version: 0.0.28
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: OSS Text Generation Finetune
 description: FTaaS component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/84
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/88
 
 inputs:
   task_name:
