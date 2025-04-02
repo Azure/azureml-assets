@@ -31,7 +31,7 @@ tags:
     Standard_E64s_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3,
     Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 5
+version: 6
 description: |-
   The `BLIP-2` model, utilizing OPT-2.7b (a large language model with 2.7 billion parameters), is presented in the <a href='https://arxiv.org/abs/2201.12086' target='_blank'>paper</a> titled "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models". This is a generic and efficient pre-training strategy that easily harvests development of pre-trained vision models and large language models (LLMs) for Vision-Language Pre-training (VLP). This model was made available in this <a href='https://github.com/salesforce/LAVIS/tree/main/projects/blip2' target='_blank'>repository</a>.
 
