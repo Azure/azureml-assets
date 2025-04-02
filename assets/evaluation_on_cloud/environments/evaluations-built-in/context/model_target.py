@@ -52,6 +52,7 @@ class ModelTarget:
                 response_text = output["choices"][0]["message"]["content"]
                 return response_text
             except (KeyError, IndexError):
+                raise RuntimeError(f"Error: Unexpected API response format: {KeyError}")
                 return "Error: Unexpected API response format"
         else:
-            return f"Error: {response.status_code}, {response.text}"
+            raise RuntimeError(f"Error: {response.status_code}, {response.text}")

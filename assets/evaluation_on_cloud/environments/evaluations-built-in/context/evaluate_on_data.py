@@ -18,7 +18,6 @@ from azure.ai.evaluation import evaluate
 from save_evaluation import load_evaluator
 from model_target import ModelTarget
 
-API_VERSION = "2025-01-01-preview"
 AZURE_ENDPOINT = "AzureEndpoint"
 API_KEY = "ApiKey"
 AZURE_DEPLOYMENT = "AzureDeployment"
@@ -40,6 +39,7 @@ CONTEXT_KEY = "context"
 RESPONSE_KEY = "response"
 GENERATED_RESPONSE_KEY = "generated_response"
 GENERATED_RESPONSE_MAPPING = f"${{data.{GENERATED_RESPONSE_KEY}}}"
+CHAT_COMPLETIONS_SUFFIX = "/chat/completions"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -111,15 +111,14 @@ def create_model_target_and_data_mapping(command_line_args):
         logger.info("Eval_target provided.")
         target_config = json.loads(command_line_args.eval_target)
     except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in eval_target: {e}")
-        return (None, None)
+        raise RuntimeError(f"Invalid JSON in eval_target: {e}")
 
     model_config = target_config.get(MODEL_CONFIG, {})
 
     api_key_env = model_config.get(API_KEY, "")
     api_key_value = os.environ.get(api_key_env.upper(), "")
     if not api_key_value:
-        logger.warning(f"API key environment variable '{api_key_env.upper()}' is missing or empty!")
+        raise RuntimeError(f"API key environment variable '{api_key_env.upper()}' is missing or empty!")
 
     model_config_type = str(model_config.get(TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
@@ -128,16 +127,21 @@ def create_model_target_and_data_mapping(command_line_args):
     if model_config_type == "1":  # AOAI
         azure_endpoint = model_config.get(AZURE_ENDPOINT, "")
         azure_endpoint = azure_endpoint.rstrip('/')
-        deployment_name = model_config.get(AZURE_DEPLOYMENT, "")
-        logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-        logger.info(f"  - AzureDeployment: {deployment_name}")
-        endpoint = f"{azure_endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version={API_VERSION}"
+        if CHAT_COMPLETIONS_SUFFIX in azure_endpoint:
+            endpoint = azure_endpoint
+        else:
+            logger.info(f"Adding {CHAT_COMPLETIONS_SUFFIX} to endpoint")
+            endpoint = f"{azure_endpoint}{CHAT_COMPLETIONS_SUFFIX}"
         logger.info(f"  - AOAI Endpoint: {endpoint}")
     elif model_config_type == "2":  # MAAS
         azure_endpoint = model_config.get(AZURE_ENDPOINT, "")
         azure_endpoint = azure_endpoint.rstrip('/')
         logger.info(f"  - AzureEndpoint: {azure_endpoint}")
-        endpoint = f"{azure_endpoint}/chat/completions?api-version={API_VERSION}"
+        if CHAT_COMPLETIONS_SUFFIX in azure_endpoint:
+            endpoint = azure_endpoint
+        else:
+            logger.info(f"Adding {CHAT_COMPLETIONS_SUFFIX} to endpoint")
+            endpoint = f"{azure_endpoint}{CHAT_COMPLETIONS_SUFFIX}"
         logger.info(f"  - MAAS Endpoint: {endpoint}")
 
     model_params = target_config.get(MODEL_PARAMS, {}).copy()
@@ -304,3 +308,4 @@ if __name__ == '__main__':
         except Exception as e:
             logger.error("EXCEPT", e)
             get_promptflow_run_logs()
+            raise RuntimeError(f"EXCEPT: {e}")
