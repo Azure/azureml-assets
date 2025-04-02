@@ -70,7 +70,7 @@ tags:
     Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND40rs_v2, Standard_ND96asr_v4,
     Standard_ND96amsr_A100_v4]
-version: 16
+version: 17
 description: |
   This is the [roberta-base](https://huggingface.co/roberta-base) model, fine-tuned using the [SQuAD2.0](https://huggingface.co/datasets/squad_v2) dataset. It's been trained on question-answer pairs, including unanswerable questions, for the task of Question Answering. 
 

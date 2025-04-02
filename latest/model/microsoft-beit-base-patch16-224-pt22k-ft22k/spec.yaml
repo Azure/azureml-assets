@@ -53,7 +53,7 @@ tags:
   finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 19
+version: 20
 description: |
   BEiT (Bidirectional Encoder representation from Image Transformers) is a vision transformer(ViT) pre-trained with Masked Image Modeling(MIM), which is a self-supervised pre-training inspired by BERT from NLP, followed by Intermediate fine-tuning using ImageNet-22k dataset. It is then fine-tuned for Image Classification. Images have two views of representation in BEiT, image patches and visual tokens which serve as input and output during pre-training, respectively. During self-supervised pre-training stage, some percentage of image patches are masked randomly, and then the visual tokens corresponding to the masked patches are predicted.
 

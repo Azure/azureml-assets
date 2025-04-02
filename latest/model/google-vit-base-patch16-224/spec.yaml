@@ -53,7 +53,7 @@ tags:
   finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 17
+version: 18
 description: |
   The Vision Transformer (ViT) model, as introduced in the <a href="https://arxiv.org/abs/2010.11929" target="_blank">paper</a> "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale" by Dosovitskiy et al., underwent pre-training on ImageNet-21k with a resolution of 224x224. Subsequently, it was fine-tuned on ImageNet 2012, consisting of 1 million images and 1,000 classes, also at a resolution of 224x224. The model was first released in this <a href="https://github.com/google-research/vision_transformer" target="_blank">repository</a>, but the weights were converted to PyTorch from the <a href="https://github.com/huggingface/pytorch-image-models" target="_blank">timm</a> repository by Ross Wightman, who had previously converted the weights from JAX to PyTorch.
 
