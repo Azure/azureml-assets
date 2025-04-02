@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_action_detector
 display_name: Model Monitor - Action Detector
 description: Generate and output actions
-version: 0.0.16
+version: 0.0.17
 is_deterministic: true
 inputs:
   signal_output:

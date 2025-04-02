@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_metric_outputter
 display_name: Model Monitor - Metric Outputter
 description: Output the computed model monitor metrics.
-version: 0.3.34
+version: 0.3.35
 is_deterministic: true
 
 code: ../../src/

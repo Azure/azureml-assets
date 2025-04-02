@@ -4,7 +4,7 @@ type: spark
 name: data_quality_compute_metrics
 display_name:  Data Quality - Compute Metrics
 description: Compute data quality metrics leveraged by the data quality monitor.
-version: 0.3.31
+version: 0.3.32
 is_deterministic: true
 
 inputs:

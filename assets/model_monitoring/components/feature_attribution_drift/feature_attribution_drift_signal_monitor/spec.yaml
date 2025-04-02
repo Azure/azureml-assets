@@ -4,7 +4,7 @@ type: pipeline
 name: feature_attribution_drift_signal_monitor
 display_name: Feature Attribution Drift - Signal Monitor
 description: Computes the feature attribution between a baseline and production data assets.
-version: 0.3.43
+version: 0.3.44
 is_deterministic: true
 
 inputs:
@@ -44,7 +44,7 @@ outputs:
 jobs:
   compute_baseline_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.30
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.31
     inputs:
       baseline_data:
         type: mltable
@@ -63,7 +63,7 @@ jobs:
       type: aml_token
   compute_production_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.30
+    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.31
     inputs:
       baseline_data:
         type: mltable
@@ -82,7 +82,7 @@ jobs:
       type: aml_token
   compute_feature_attribution:
     type: spark
-    component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics/versions/0.3.27
+    component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics/versions/0.3.28
     inputs:
       production_data:
         type: mltable
@@ -101,7 +101,7 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.31
+    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.32
     inputs:
       signal_metrics:
         type: mltable
@@ -122,7 +122,7 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.31
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.32
     inputs:
       signal_metrics:
         type: mltable

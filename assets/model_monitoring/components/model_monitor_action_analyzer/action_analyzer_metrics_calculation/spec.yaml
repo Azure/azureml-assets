@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_metrics_calculation
 display_name: Action Analyzer - Metrics Calculation
 description: Calculate futher metrics for generating actions.
-version: 0.0.20
+version: 0.0.21
 is_deterministic: True
 inputs:
   data_with_groups:
