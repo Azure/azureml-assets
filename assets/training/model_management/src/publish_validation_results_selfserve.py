@@ -70,24 +70,33 @@ def update_model_onboarding_version(
 
     metrics_path_dict = read_results_from_file(metrics_storage_uri)
 
-    validationResultUrl = None
+    validation_result = []
 
     if validation_id:
-        if metrics_path_dict.get("api_inference_path"):
-            validationResultUrl = metrics_path_dict.get("api_inference_path")
+        if metrics_path_dict.get("api_inference_path", None):
+            validation_result.append({
+                "Id": validation_id,
+                "type": "API_VALIDATION",
+                "passed": True,
+                "message": "API inference passed successfully",
+                "validationResultUrl": metrics_path_dict.get("api_inference_path"),
+                "status": "success",
+                "createdTime": current_time,
+                "sku": sku
+            })
     else:
         logger.error(
-            "Validation run ID is None, not updating validation results in self-serve")
+            "Validation  ID is None, not updating validation results in self-serve")
         sys.exit(1)
 
     payload = {
         "passed": True,
         "status": "Completed",
         "message": "Validation Successful",
-        "validationResult": validationResultUrl
+        "validationResult": validation_result
     }
 
-    api_url = f"{selfserve_base_url}/model-publisher-self-serve/publishers/{publisher_name}/models/{model_name}/versions/{model_version}/validations/{validation_id}/updateValidationResult?api-version=2024-12-31"
+    api_url = f"{selfserve_base_url}/model-publisher-self-serve/publishers/{publisher_name}/models/{model_name}/model-onboarding-version/{model_version}/updateModelOnboardingVersion?api-version=2024-12-31"
 
     headers = {
         "Authorization": f"Bearer {get_auth_token()}",
