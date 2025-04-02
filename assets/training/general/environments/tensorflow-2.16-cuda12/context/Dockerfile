@@ -1,16 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20240327.v1 AS inferencing-assets
+FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 AS inferencing-assets
 
-# Tag: 12.3.2-cudnn9-devel-ubuntu20.04
-# Env: CUDA_VERSION=12.3.2
+# Tag: 12.8.1-cudnn-devel-ubuntu22.04
+# Env: CUDA_VERSION=12.8.1
 # Env: NCCL_VERSION=2.12.7-1
 # Env: NV_CUDNN_VERSION=9
 
 # DisableDockerDetector "Preferred to use nvidia registry over MCR mirror"
 
-FROM nvcr.io/nvidia/cuda:12.3.2-cudnn9-devel-ubuntu20.04
+FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 
 USER root:root
 
@@ -29,7 +29,6 @@ ENV HOROVOD_GPU_ALLREDUCE=NCCL
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     # SSH and RDMA
-    #added openssl - 1.1.1 package to mitigate vulnerabilites after cuda upgdrade, will remove this package
     libuuid1 \
     libblkid1 \
     util-linux \
@@ -41,8 +40,6 @@ RUN apt-get update && \
     login \
     passwd \
     libldap-common \
-    libldap-2.4-2 \
-    openssl - 1.1.1 \
     procps \
     libprocps8 \
     libmlx4-1 \
@@ -54,8 +51,6 @@ RUN apt-get update && \
     libgnutls30 \
     libtiff5 \
     dapl2-utils \
-    openssh-client \
-    openssh-server \
     redis \
     iproute2 && \
     # rdma-core dependencies
@@ -94,7 +89,6 @@ RUN apt-get update && \
 	libibverbs-dev \
     libsm6 \
     libxext6 \
-    libssl1.1 \
     libxrender-dev \
     libglib2.0-0 \
     dh-make \
@@ -151,7 +145,18 @@ RUN apt-get update && apt-get install -y lsb-release && \
 # Inference
 # Copy logging utilities, nginx and rsyslog configuration files, IOT server binary, etc.
 COPY --from=inferencing-assets /artifacts /var/
-RUN /var/requirements/install_system_requirements.sh && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libcurl4 \
+        liblttng-ust1 \
+        libunwind8 \
+        libxml++2.6-2v5 \
+        nginx-light \
+        psmisc \
+        rsyslog \
+        runit \
+        unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
@@ -176,9 +181,9 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
 # Open-MPI-UCX installation
 RUN mkdir /tmp/ucx && \
     cd /tmp/ucx && \
-        wget -q https://github.com/openucx/ucx/releases/download/v1.9.0/ucx-1.9.0.tar.gz && \
-        tar zxf ucx-1.9.0.tar.gz && \
-	cd ucx-1.9.0 && \
+        wget -q https://github.com/openucx/ucx/releases/download/v1.17.0/ucx-1.17.0.tar.gz && \
+        tar zxf ucx-1.17.0.tar.gz && \
+	cd ucx-1.17.0 && \
         ./configure --prefix=/usr/local --enable-optimizations --disable-assertions --disable-params-check --enable-mt && \
         make -j $(nproc --all) && \
         make install && \
@@ -199,7 +204,7 @@ RUN mkdir /tmp/openmpi && \
     	
 # Msodbcsql17 installation
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
-    curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
 
@@ -207,14 +212,10 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
 RUN apt-get update && \
     apt-get install -y cmake
 
-# rdma-core v30.0 for Mlnx_ofed_5_1_2 as user space driver
-RUN mkdir /tmp/rdma-core && \
-    cd /tmp/rdma-core && \
-    git clone --branch v30.0 https://github.com/linux-rdma/rdma-core && \
-    cd /tmp/rdma-core/rdma-core && \
-    debian/rules binary && \
-    dpkg -i ../*.deb && \
-    rm -rf /tmp/rdma-core
+# rdma-core
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends rdma-core && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \
@@ -237,8 +238,10 @@ ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # Enable debug
-RUN apt-get update
-RUN apt-get install -y openssh-server openssh-client
+RUN apt-get update && \
+    apt-get install --reinstall -y openssl libssl-dev openssh-server openssh-client && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -250,6 +253,9 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
 RUN conda run -p $CONDA_PREFIX
 
 RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
+
+# Reinstall OpenSSL inside Conda
+RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
