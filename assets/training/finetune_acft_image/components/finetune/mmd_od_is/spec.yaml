@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.21
+version: 0.0.22
 name: mmdetection_image_objectdetection_instancesegmentation_finetune
 display_name: Image Object Detection and Instance Segmentation MMDetection Model Finetune
 description: Component to finetune MMDetection models for image object detection and instance segmentation.

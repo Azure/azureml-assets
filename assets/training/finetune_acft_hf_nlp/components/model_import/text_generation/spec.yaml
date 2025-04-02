@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_model_import
-version: 0.0.71
+version: 0.0.72
 type: command
 
 is_deterministic: true

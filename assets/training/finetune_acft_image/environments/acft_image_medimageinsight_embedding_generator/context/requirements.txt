@@ -6,7 +6,7 @@ colorama==0.4.6
 einops==0.8.0
 ftfy==6.3.1
 fvcore==0.1.5.post20221221
-jinja2==3.1.5
+jinja2==3.1.6
 mup==1.0.0
 numpy==1.23.5
 packaging==24.2

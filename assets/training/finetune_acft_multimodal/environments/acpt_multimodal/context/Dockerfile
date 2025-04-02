@@ -19,4 +19,3 @@ RUN pip install gunicorn==22.0.0
 RUN pip install onnxruntime==1.17.3
 RUN pip install onnx==1.17.0
 RUN pip install scikit-learn==1.5.0
-# dummy number to change when needing to force rebuild without changing the definition: 2

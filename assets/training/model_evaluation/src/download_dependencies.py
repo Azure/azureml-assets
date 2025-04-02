@@ -49,7 +49,9 @@ def main():
             "azureml_metrics",
             "azureml-metrics",
             ]
-        install_deps = []
+        install_deps = [
+            "azure-ai-ml",
+        ]
         logger.info(f"Reading from {reqs_file}")
         with open(reqs_file, "r") as f:
             for line in f.readlines():
