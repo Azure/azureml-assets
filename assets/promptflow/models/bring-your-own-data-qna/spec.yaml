@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Use LLM and data from your own indexed files to ground multi-round question and answering capabilities.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 8
+version: 9

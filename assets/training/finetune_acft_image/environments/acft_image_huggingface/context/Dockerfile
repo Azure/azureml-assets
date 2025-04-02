@@ -11,5 +11,3 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Vulnerability Fix
 RUN pip install gunicorn==22.0.0
 RUN pip install certifi==2024.07.04
-
-# dummy number to change when needing to force rebuild without changing the definition: 3

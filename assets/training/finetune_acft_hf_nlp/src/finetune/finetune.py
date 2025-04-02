@@ -970,6 +970,21 @@ def set_flash_attention(args: Namespace):
     else:
         setattr(args, "apply_flash_attention", False)
         setattr(args, "flash_attention_version", -1)
+    if args.precision == 32 and (args
+                                 .finetune_config
+                                 .get("load_model_kwargs", {})
+                                 .get("use_flash_attention_2", False) is True):
+        # Flash attention is not supported with 32-bit precision
+        logger.warning("Flash Attention is not supported with 32-bit precision.")
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "Flash Attention is not supported with 32-bit precision."
+                        )
+                    )
+                )
+
     logger.info(f"enable Flash attention: {getattr(args, 'apply_flash_attention', None)}")
     logger.info(f"Using Flash Attention version: {getattr(args, 'flash_attention_version', None)}")
     logger.info(f"Flash Attention model load kwargs: {flash_attention_load_model_kwargs}")

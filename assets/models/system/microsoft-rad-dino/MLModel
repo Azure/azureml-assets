@@ -3,7 +3,7 @@ flavors:
     artifacts:
       model_dir:
         path: artifacts/INPUT_model_path
-        uri: /mnt/azureml/cr/j/99e5ffbe82a2402e8941186a4d91e699/cap/data-capability/wd/INPUT_model_path
+        uri: /mnt/azureml/cr/j/94c12179a1b54c6097e32dd209c0ee67/cap/data-capability/wd/INPUT_model_path
     cloudpickle_version: 2.2.1
     code: code
     env:
@@ -18,11 +18,12 @@ metadata:
   base_model_task: embeddings
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.15.1
 model_size_bytes: 441298145
-model_uuid: e286b1721b3f46029708403c5fdb0c28
+model_uuid: c79fd046405a45e59b7b062dbab8712b
 signature:
   inputs: '[{"type": "string", "name": "image", "required": true}]'
   outputs: '[{"type": "string", "name": "image_features", "required": true}]'
   params: null
-utc_time_created: '2024-12-05 08:49:25.479748'
+utc_time_created: '2024-12-05 12:53:17.213830'
