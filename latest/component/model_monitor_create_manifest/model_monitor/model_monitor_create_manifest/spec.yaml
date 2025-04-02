@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_create_manifest
 display_name: Model Monitor - Create Manifest
 description: Creates the model monitor metric manifest.
-version: 0.3.23
+version: 0.3.24
 is_deterministic: true
 
 code: ../../src/

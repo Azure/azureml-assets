@@ -4,7 +4,7 @@ type: spark
 name: model_data_collector_preprocessor
 display_name: Model Data Collector - Preprocessor
 description: Filters the data based on the window provided.
-version: 0.4.28
+version: 0.4.29
 is_deterministic: true
 
 code: ../../src

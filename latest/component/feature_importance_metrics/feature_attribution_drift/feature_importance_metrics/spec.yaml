@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
 name: feature_importance_metrics
-version: 0.3.30
+version: 0.3.31
 display_name: Feature importance
 is_deterministic: true
 description: Feature importance for model monitoring.

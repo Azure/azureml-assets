@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_output_actions
 display_name: Action Analyzer - Output Actions
 description: Merge and output actions.
-version: 0.0.23
+version: 0.0.24
 is_deterministic: true
 inputs:
   action_data:

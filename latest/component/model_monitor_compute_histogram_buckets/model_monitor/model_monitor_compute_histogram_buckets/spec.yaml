@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_compute_histogram_buckets
 display_name: Model Monitor - Compute Histogram Buckets
 description: Compute histogram buckets given up to two datasets.
-version: 0.3.26
+version: 0.3.27
 is_deterministic: true
 
 code: ../../src

@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_correlation_test
 display_name: Action Analyzer - Correlation Test
 description: Perform correlation test on different groups to generate actions.
-version: 0.0.20
+version: 0.0.21
 is_deterministic: true
 inputs:
   data_with_action_metric_score:

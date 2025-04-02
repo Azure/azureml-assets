@@ -5,7 +5,7 @@ name: model_performance_compute_metrics
 display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance
   monitor.
-version: 0.0.25
+version: 0.0.26
 is_deterministic: true
 
 code: ../../src
