@@ -58,7 +58,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_production_explanations:
@@ -77,7 +77,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_feature_attribution:
@@ -96,7 +96,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   output_signal_metrics:
@@ -117,7 +117,7 @@ jobs:
         mode: direct
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   evaluate_metric_thresholds:
@@ -131,6 +131,6 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
