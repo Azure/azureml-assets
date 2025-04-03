@@ -54,7 +54,7 @@ tags:
   finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 2
+version: 3
 description: |-
   # Vision Transformer (base-sized model) trained using DINOv2
   Vision Transformer (ViT) model trained using the DINOv2 method. It was introduced in the paper <a href="https://arxiv.org/abs/2304.07193">DINOv2: Learning Robust Visual Features without Supervision by Oquab et al.</a> and first released in this <a href="https://github.com/facebookresearch/dinov2">repository</a>.
