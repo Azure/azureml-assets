@@ -13,4 +13,4 @@ dependencies:
   - pytorch=2.3.1
   - torchvision=0.18.1
   - pip:
-      - azureml-designer-cv-modules==0.0.66
+      - azureml-designer-cv-modules==0.0.68

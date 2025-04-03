@@ -56,6 +56,27 @@ TASK_SPECIFIC_PARAMS = {
 }
 
 
+def retry_with_backoff(delay: int = 1, retries: int = 3):
+    """Retry with backoff."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            current_retry = 0
+            current_delay = delay
+            while current_retry < retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    current_retry += 1
+                    if current_retry >= retries:
+                        raise e
+                    logger.warning(f"Failed to execute function '{func.__name__}'. \
+                                   Retrying in {current_delay} seconds...")
+                    time.sleep(current_delay)
+                    current_delay *= 2
+        return wrapper
+    return decorator
+
+
 @dataclass
 class ComponentInput:
     """Dataclass for Ftaas pipeline component inputs."""
@@ -578,14 +599,22 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
     if os.path.isfile(validation_file_path):
         cmd += ["--validation_file_path", validation_file_path]
 
-    _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder,
-                        single_run=True, number_of_processes=num_gpus)
+    num_retries = system_properties.get("num_retries", 3) if system_properties else 3
+
+    @retry_with_backoff(delay=2, retries=num_retries)
+    def _run_preprocess_cmd_with_retries():
+        _run_subprocess_cmd(cmd, component_name="preprocess", completion_files_folder=completion_files_folder,
+                            single_run=True, number_of_processes=num_gpus)
+
+    _run_preprocess_cmd_with_retries()
+
+    # finetune
     if not _is_multi_node_enabled():
         cmd_base = ["python", "-m", "torch.distributed.launch", "--nproc_per_node",
                     decode_param_from_env_var('number_of_gpu_to_use_finetuning'), "-m"]
     else:
         cmd_base = ["python", "-m"]
-    # finetune
+
     cmd = [
         "azureml.acft.contrib.hf.nlp.entry_point.finetune.finetune",
         "--apply_lora", decode_param_from_env_var('apply_lora'),

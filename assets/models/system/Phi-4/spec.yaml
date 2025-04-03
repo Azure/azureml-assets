@@ -75,4 +75,4 @@ tags:
     save_total_limit: 1
   benchmark: "quality"
 
-version: 4
+version: 7

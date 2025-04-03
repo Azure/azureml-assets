@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 # Install OpenCV native dependencies
 RUN apt-get update
 RUN apt-get install -y python3-opencv
-RUN apt-get remove -y libavutil56 libswresample3 libavformat58
-RUN apt-get remove -y libavcodec58 libswscale5 libpmix2
+RUN apt-get remove -y libavutil58 libswresample4 libavformat60
+RUN apt-get remove -y libavcodec60 libswscale7 libpmix2 libcjson1
 
 WORKDIR /
 ENV CONDA_PREFIX=/azureml-envs/responsibleai-vision
@@ -30,8 +30,7 @@ RUN pip install 'responsibleai~=0.36.0' \
                 'responsibleai-vision==0.3.8'
 
 # Install azureml packages
-RUN pip install 'azureml-core=={{latest-pypi-version}}' \
-                'azureml-mlflow=={{latest-pypi-version}}' \
+RUN pip install 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.6'
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
@@ -59,7 +58,9 @@ RUN pip install 'cryptography>=43.0.1'
 RUN pip install 'Werkzeug>=3.0.3' \
                 'tqdm>=4.66.3' \
                 'onnx>=1.17.0'
-
+# To resolve GHSA-2586-f3p4-hq84 vulnerability issue for lightgbm<4.6.0
+# from azureml-automl-dnn-vision package
+RUN pip install 'lightgbm>=4.6.0'
 # To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
 RUN pip install 'torch>=2.2.2'
 # To resolve GHSA-jh2j-j4j9-crg3 vulnerability issue

@@ -29,7 +29,7 @@ tags:
   maas-inference: "true"
   maas-finetuning: true
   maas-finetuning-offer: true
-  maas-finetuning-regions: eastus2
+  maas-finetuning-regions: eastus2,eastus,southcentralus,northcentralus,westus,westus3
   license: mit
   disable-batch: "true"
   task: chat-completion
@@ -37,6 +37,13 @@ tags:
   SharedComputeCapacityEnabled : ""
   hiddenlayerscanned : ""
   _aml_system_vanity_registry: "azureml-phi"
+  maas-finetuning-deploy-regions: 
+    - eastus2
+    - eastus
+    - northcentralus
+    - westus3
+    - westus
+    - southcentralus
   inference_compute_allow_list:
     [ 
       Standard_NC24ads_A100_v4,
@@ -73,4 +80,4 @@ tags:
     logging_steps: 10
     save_total_limit: 1
   benchmark: "quality"
-version: 7
+version: 6

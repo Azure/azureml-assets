@@ -1,0 +1,134 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: medimgage_adapter_finetune
+version: 0.0.2
+type: command
+
+is_deterministic: True
+
+display_name: Medical Image Adapter Finetune
+description: Component to finetune the model using the medical image data
+
+environment : azureml://registries/azureml/environments/acft-medimageinsight-adapter-finetune/versions/1
+
+code: ../../../src/medimage_insight_adapter_finetune
+
+distribution:
+  type: pytorch
+
+inputs:
+  train_data_path:
+    type: uri_file
+    optional: false
+    description: Path to the training data file.
+    mode: ro_mount
+
+  validation_data_path:
+    type: uri_file
+    optional: false
+    description: Path to the validation data file.
+    mode: ro_mount
+
+  validation_text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation text TSV file.
+    mode: ro_mount
+
+  train_text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the text TSV file.
+    mode: ro_mount
+
+  train_dataloader_batch_size:
+    type: integer
+    min: 1
+    default: 8
+    optional: true
+    description: Batch size for the training dataloader.
+
+  validation_dataloader_batch_size:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Batch size for the validation dataloader.
+
+  train_dataloader_workers:
+    type: integer
+    min: 0
+    default: 2
+    optional: true
+    description: Number of workers for the training dataloader.
+
+  validation_dataloader_workers:
+    type: integer
+    min: 0
+    default: 2
+    optional: true
+    description: Number of workers for the validation dataloader.
+
+  label_file:
+    type: uri_file
+    optional: false
+    description: Path to the label file.
+    mode: ro_mount
+
+  hidden_dimensions:
+    type: integer
+    min: 1
+    default: 512
+    optional: true
+    description: Number of hidden dimensions.
+
+  input_channels:
+    type: integer
+    min: 1
+    default: 1024
+    optional: true
+    description: Number of input channels.
+
+  learning_rate:
+    type: number
+    default: 0.0003
+    optional: true
+    description: Learning rate for training.
+
+  max_epochs:
+    type: integer
+    min: 1
+    default: 10
+    optional: true
+    description: Maximum number of epochs for training.
+
+  track_metric:
+    type: string
+    default: "acc"
+    optional: true
+    description: Metric to track when calculating best model. acc or auc supported.
+
+outputs:
+  output_model_path:
+    type: uri_folder
+    description: Path to save the output model.
+    mode: rw_mount
+
+command: >-
+  python medimage_train.py
+  --task_name "AdapterTrain"
+  --train_data_path "${{inputs.train_data_path}}"
+  --validation_data_path "${{inputs.validation_data_path}}"
+  --validation_text_tsv "${{inputs.validation_text_tsv}}"
+  --train_text_tsv "${{inputs.train_text_tsv}}"
+  --label_file "${{inputs.label_file}}"
+  $[[--train_dataloader_batch_size "${{inputs.train_dataloader_batch_size}}"]]
+  $[[--validation_dataloader_batch_size "${{inputs.validation_dataloader_batch_size}}"]]
+  $[[--train_dataloader_workers "${{inputs.train_dataloader_workers}}"]]
+  $[[--validation_dataloader_workers "${{inputs.validation_dataloader_workers}}"]]
+  $[[--hidden_dimensions "${{inputs.hidden_dimensions}}"]]
+  $[[--input_channels "${{inputs.input_channels}}"]]
+  $[[--learning_rate "${{inputs.learning_rate}}"]]
+  $[[--max_epochs "${{inputs.max_epochs}}"]]
+  $[[--track_metric "${{inputs.track_metric}}"]]
+  --output_model_path "${{outputs.output_model_path}}"
+

@@ -4,7 +4,7 @@ type: command
 name: batch_benchmark_config_generator
 display_name: Batch Benchmark Config Generator
 description: Generates the config for the batch score component.
-version: 0.0.10
+version: 0.0.11
 is_deterministic: true
 
 inputs:
@@ -14,8 +14,8 @@ inputs:
     description: An optional configuration file to use for deployment settings. This overrides passed in parameters.
   scoring_url:
     type: string
-    optional: false
-    description: The URL of the endpoint.
+    optional: true
+    description: The URL of the endpoint. Optional only if this field is provided in the configuration_file.
   model_type:
     type: string
     description: Type of model. Can be one of ('oai', 'oss', 'vision_oss')
@@ -89,7 +89,6 @@ code: ../src
 environment: azureml://registries/azureml/environments/evaluation/versions/5
 command: >-
   python -m aml_benchmark.batch_config_generator.main 
-  --scoring_url '${{inputs.scoring_url}}'
   --model_type ${{inputs.model_type}}
   --authentication_type ${{inputs.authentication_type}}
   --debug_mode ${{inputs.debug_mode}}
@@ -98,7 +97,8 @@ command: >-
   --max_worker_count ${{inputs.max_worker_count}}
   --response_segment_size ${{inputs.response_segment_size}}
   --batch_score_config_path ${{outputs.batch_score_config}}
-  $[[--configuration_file ${{inputs.configuration_file}}]]
+  $[[--scoring_url '${{inputs.scoring_url}}']]
+  $[[--configuration_file '${{inputs.configuration_file}}']]
   $[[--max_retry_time_interval ${{inputs.max_retry_time_interval}}]]
   $[[--connection_name '${{inputs.connection_name}}']]
   $[[--deployment_name '${{inputs.deployment_name}}']]

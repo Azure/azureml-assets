@@ -6,5 +6,9 @@ dependencies:
 - python=3.11
 - pip=24.0
 - pip:
+  - azureml-defaults=={{latest-pypi-version}}
   - azureml-inference-server-http=={{latest-pypi-version}}
-  - numpy=={{latest-pypi-version}}
+  - azure-storage-blob=={{latest-pypi-version}}
+  - azure-identity=={{latest-pypi-version}}
+  - numpy
+  - joblib=={{latest-pypi-version}}

@@ -4,7 +4,7 @@ type: pipeline
 name: genai_token_statistics_signal_monitor
 display_name: GenAI Token Statistics - Signal Monitor
 description: Computes the token and cost metrics over LLM outputs.
-version: 0.0.18
+version: 0.0.21
 is_deterministic: true
 inputs:
   monitor_name:
@@ -30,7 +30,7 @@ outputs:
 jobs:
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/genai_token_statistics_compute_metrics/versions/0.0.18
+    component: azureml://registries/azureml/components/genai_token_statistics_compute_metrics/versions/0.0.21
     inputs:
       production_dataset:
         type: mltable
@@ -44,12 +44,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   output_signal_metrics: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.32
+    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.35
     inputs:
       signal_metrics:
         type: mltable
@@ -66,6 +66,6 @@ jobs:
         mode: direct
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token

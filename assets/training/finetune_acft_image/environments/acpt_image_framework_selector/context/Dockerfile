@@ -14,4 +14,3 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 RUN pip install gunicorn==22.0.0
 RUN pip install certifi==2024.07.04
 RUN pip install onnx==1.17.0
-# dummy number to change when needing to force rebuild without changing the definition: 2

@@ -3,12 +3,11 @@ azureml-acft-accelerator=={{latest-pypi-version}}
 azureml-acft-common-components[image]~={{latest-pypi-version}}
 azureml-acft-image-components=={{latest-pypi-version}}
 azureml-core=={{latest-pypi-version}}
-azure-ai-ml==1.19.0
 requests
 datasets==2.19.0
-transformers==4.39.3
+transformers==4.48.0
 accelerate==0.29.3
-optimum==1.19.0
+optimum==1.23.3
 diffusers==0.27.2
 huggingface-hub==0.25.2
 setuptools>=71.1.0

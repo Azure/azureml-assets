@@ -1,0 +1,52 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: medical_image_embedding_datapreprocessing
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Embedding Generation for Medical Images
+description: To generate embeddings for medical images.
+
+environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/1
+code: ../../../src/medimage_insight_adapter_preprocess
+
+inputs:
+  image_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the image TSV file.
+    mode: ro_mount
+
+  mlflow_model_path:
+    type: uri_folder
+    optional: false
+    description: Path to the MLflow model to be imported.
+    mode: ro_mount
+
+  image_standardization_jpeg_compression_ratio:
+    type: integer
+    optional: true
+    default: 75
+    description: JPEG compression ratio for image standardization.
+
+  image_standardization_image_size:
+    type: integer
+    optional: true
+    default: 512
+    description: Image size for standardization.
+
+outputs:
+  output_pkl:
+    type: uri_folder
+    description: Path to the output training PKL file.
+    mode: rw_mount
+
+command: >-
+  python medimage_datapreprocess.py
+  --task_name "MedEmbedding"
+  --image_tsv "${{inputs.image_tsv}}"
+  $[[--image_standardization_jpeg_compression_ratio "${{inputs.image_standardization_jpeg_compression_ratio}}"]]
+  $[[--image_standardization_image_size "${{inputs.image_standardization_image_size}}"]]
+  --output_pkl "${{outputs.output_pkl}}"
+  --mlflow_model_path "${{inputs.mlflow_model_path}}"

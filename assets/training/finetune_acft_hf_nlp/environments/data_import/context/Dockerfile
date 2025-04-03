@@ -16,3 +16,5 @@ RUN pip install scikit-learn==1.5.1
 
 # The below file is required for baking the code into the environment 
 COPY data_import_run.py /azureml/data_import/run.py
+
+# dummy number to change when needing to force rebuild without changing the definition: 2

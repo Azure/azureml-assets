@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_metrics_calculation
 display_name: Action Analyzer - Metrics Calculation
 description: Calculate futher metrics for generating actions.
-version: 0.0.18
+version: 0.0.21
 is_deterministic: True
 inputs:
   data_with_groups:
@@ -39,11 +39,11 @@ conf:
     dependencies:
       - python=3.10
       - pip:
-        - azure-storage-file-datalake~=12.8.0
+        - azure-storage-file-datalake~=12.11.0
         - azure-ai-ml~=1.23.1
-        - azureml-mlflow~=1.49.0
-        - mltable~=1.3.0
-        - azureml-fsspec~=1.0.0
+        - azureml-mlflow~=1.59.0
+        - mltable~=1.6.1
+        - azureml-fsspec~=1.3.1
         - fsspec~=2023.4.0
         - numpy<2.0.0
     name: momo-base-spark

@@ -1,0 +1,25 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/checkpoints
+        uri: ../med-insight
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.0
+    streamable: false
+mlflow_version: 2.19.0
+model_size_bytes: 2475017669
+model_uuid: 9ce21eb5d0764ba6a266b567e5b9f07c
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": false}]'
+  outputs: '[{"type": "string", "name": "predictions", "required": false}]'
+  params: '[{"name": "image_standardization_jpeg_compression_ratio", "type": "integer",
+    "default": 75, "shape": null}, {"name": "image_standardization_image_size", "type":
+    "integer", "default": 512, "shape": null}]'
+utc_time_created: '2025-01-27 23:26:13.774816'

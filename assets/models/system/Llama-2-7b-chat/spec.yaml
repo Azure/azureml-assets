@@ -20,6 +20,11 @@ tags:
   license: custom
   author: Meta
   task: chat-completion
+  InferenceLegacyDate: '2025-02-28'
+  InferenceDeprecationDate: '2025-03-31'
+  InferenceRetirementDate: '2025-06-30'
+  FinetuneDeprecationDate: '2025-03-31'
+  FinetuneRetirementDate: '2025-06-30'
   hiddenlayerscanned: ""
   disable-batch: "true"
   maas-inference: true

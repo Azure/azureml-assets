@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
 name: feature_attribution_drift_compute_metrics
-version: 0.3.25
+version: 0.3.28
 display_name: Feature Attribution Drift - Compute Metrics
 is_deterministic: true
 description: Feature attribution drift using model monitoring.
@@ -40,10 +40,10 @@ conf:
     - anaconda
     dependencies:
     - pip:
-        - azure-storage-file-datalake~=12.8.0
-        - azure-ai-ml~=1.13.0
-        - mltable~=1.3.0
-        - azureml-fsspec~=1.0.0
+        - azure-storage-file-datalake~=12.11.0
+        - azure-ai-ml~=1.23.1
+        - mltable~=1.6.1
+        - azureml-fsspec~=1.3.1
         - fsspec~=2023.4.0
         - interpret-community[mimic]~=0.31.0
         - protobuf~=3.20
