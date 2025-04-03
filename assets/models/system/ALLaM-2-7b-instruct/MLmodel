@@ -14,8 +14,7 @@ flavors:
     loader_module: azureml.evaluate.mlflow.hftransformers
     python_version: 3.9.19
 metadata:
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:58
-  base_model_name: ALLaM-2-7b-instruct
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1  base_model_name: ALLaM-2-7b-instruct
   base_model_task: chat-completion
   is_acft_model: true
   is_finetuned_model: false
