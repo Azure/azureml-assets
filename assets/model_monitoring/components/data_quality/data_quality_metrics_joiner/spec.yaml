@@ -4,7 +4,7 @@ type: spark
 name: data_quality_metrics_joiner
 display_name:  Data Quality - Metrics Joiner
 description: Join baseline and target data quality metrics into a single output.
-version: 0.3.24
+version: 0.3.25
 is_deterministic: true
 
 inputs:

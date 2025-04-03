@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_data_joiner
 display_name: Model Monitor - Data Joiner
 description: Joins two data assets on the given columns for model monitor.
-version: 0.3.26
+version: 0.3.27
 is_deterministic: true
 
 code: ../../src/
