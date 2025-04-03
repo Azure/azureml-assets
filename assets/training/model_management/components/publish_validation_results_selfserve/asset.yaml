@@ -1,0 +1,11 @@
+type: component
+spec: spec.yaml
+categories:
+  [
+    "CommonBench Baselining",
+    "Benchmarking",
+    "Run Benchmark",
+    "Publish Results",
+    "Self-Serve API",
+    "API Inferencing"
+  ]
