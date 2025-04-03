@@ -7,4 +7,4 @@ dependencies:
   - setuptools=70
   - cython=0.29.24
   - pip:
-      - azureml-designer-datatransform-modules==0.0.100
+      - azureml-designer-datatransform-modules==0.0.101
