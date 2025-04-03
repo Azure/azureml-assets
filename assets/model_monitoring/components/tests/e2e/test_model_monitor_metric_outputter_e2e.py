@@ -36,7 +36,7 @@ def _submit_metric_outputter_job(
         metric_outputter_output.identity = AmlTokenConfiguration()
         metric_outputter_output.resources = {
             "instance_type": "Standard_E8S_V3",
-            "runtime_version": "3.3",
+            "runtime_version": "3.4",
         }
 
         return {"signal_output": metric_outputter_output.outputs.signal_output}

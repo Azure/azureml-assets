@@ -23,6 +23,7 @@ metadata:
   base_model_task: image-instance-segmentation
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.10.2
 model_size_bytes: 191490861
 model_uuid: a86c066aad6a4cae9457f4ade7db156e
