@@ -4,7 +4,7 @@ type: pipeline
 name: model_monitor_action_analyzer
 display_name: Model Monitor - Action Analyzer
 description: Generate and output actions to the default datastore.
-version: 0.0.24
+version: 0.0.25
 is_deterministic: true
 inputs:
   signal_output:
@@ -52,7 +52,7 @@ outputs:
 jobs:
   identify_problem_traffic:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.23
+    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.24
     inputs:
       signal_output: 
         type: uri_folder
@@ -69,12 +69,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   metrics_calculation:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.20
+    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.21
     inputs:
       data_with_groups:
         type: mltable
@@ -86,12 +86,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   correlation_test:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.20
+    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.21
     inputs:
       data_with_action_metric_score:
         type: mltable
@@ -101,12 +101,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   output_actions:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.23
+    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.24
     inputs:
       action_data:
         type: mltable
@@ -123,6 +123,6 @@ jobs:
         mode: direct
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
