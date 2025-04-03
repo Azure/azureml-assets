@@ -204,12 +204,20 @@ def apply_target_on_data(data, model_target, data_mapping):
     return output_file
 
 
-def update_evaluator_config_mapping_for_generated_response(evaluator_config):
+def update_evaluator_config_mapping_for_generated_response(command_line_args, evaluator_config):
     """Ensure 'response' key exists in 'column_mapping' and update it."""
     for evaluator_name, config in evaluator_config.items():
         if "column_mapping" not in config:
             config["column_mapping"] = {}
         evaluator_config[evaluator_name]["column_mapping"][RESPONSE_KEY] = GENERATED_RESPONSE_MAPPING
+
+    # create generated_repsonse mapping for evaluators without column_mapping provided.
+    evaluators_o = json.loads(command_line_args.evaluators)
+    for evaluator_name in evaluators_o:
+        if evaluator_name not in evaluator_config:
+            evaluator_config[evaluator_name] = {"column_mapping": {}}
+        evaluator_config[evaluator_name]["column_mapping"][RESPONSE_KEY] = GENERATED_RESPONSE_MAPPING
+
     return evaluator_config
 
 
@@ -223,7 +231,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
         logger.info("Applying target on data")
         data = apply_target_on_data(data=data, model_target=model_target, data_mapping=data_mapping)
         logger.info("Updating evaluator config for generated_response data mapping")
-        evaluator_config = update_evaluator_config_mapping_for_generated_response(evaluator_config)
+        evaluator_config = update_evaluator_config_mapping_for_generated_response(command_line_args, evaluator_config)
 
     logger.info(f"Evaluation Data: {data}")
     logger.info(f"With the evaluator config {evaluator_config}")
