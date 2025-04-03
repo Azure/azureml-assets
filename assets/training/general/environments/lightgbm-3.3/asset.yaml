@@ -1,4 +1,4 @@
-name: lightgbm
+name: lightgbm-3.3
 version: auto
 type: environment
 spec: spec.yaml

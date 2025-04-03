@@ -1,4 +1,4 @@
-name: lightgbm
+name: lightgbm-3.3
 channels:
 - conda-forge
 - anaconda
