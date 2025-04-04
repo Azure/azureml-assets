@@ -81,7 +81,7 @@ RUN apt-get update && \
 	pciutils \
 	libnuma-dev \
 	ibutils \
-	ibverbs-utils \ 
+	ibverbs-utils \
 	rdmacm-utils \
 	infiniband-diags \
 	perftest \
@@ -132,7 +132,19 @@ RUN apt-get update && \
     libncursesw5 \
     libctf-nobfd0 \
     perl \
-    fuse && \
+    fuse \
+    # Vulnerability fixes
+    krb5-admin-server=1.19.2-2ubuntu0.6 \
+    krb5-kdc=1.19.2-2ubuntu0.6 \
+    libgssapi-krb5-2=1.19.2-2ubuntu0.6 \
+    libgssrpc4=1.19.2-2ubuntu0.6 \
+    libkdb5-10=1.19.2-2ubuntu0.6 \
+    libpam-cap=1:2.44-1ubuntu0.22.04.2 \
+    libtasn1-6=4.18.0-4ubuntu0.1 \
+    libtasn1-bin=4.18.0-4ubuntu0.1 \
+    libk5crypto3 \
+    libkrad0 \
+    cmark-gfm && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
                
