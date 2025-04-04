@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.24
+version: 0.0.25
 name: transformers_image_classification_pipeline
 display_name: Image Classification HuggingFace Transformers Pipeline
 description: Pipeline component for image classification using HuggingFace transformers
@@ -449,10 +449,6 @@ outputs:
   pytorch_model_folder:
     type: custom_model
     description: Output dir to save the finetune model as torch model.
-  # ######################### Compute metrics Component ######################### #
-  evaluation_result:
-    type: uri_folder
-    description: Test Data Evaluation Results
 
 jobs:
   finetune_common_validation:
@@ -492,7 +488,7 @@ jobs:
 
   image_classification_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.21
+    component: azureml:transformers_image_classification_finetune:0.0.22
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch

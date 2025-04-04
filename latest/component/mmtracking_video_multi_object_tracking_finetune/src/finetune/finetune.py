@@ -424,7 +424,7 @@ def get_parser():
 
     # # evaluation
     parser.add_argument(
-        "--evaluation_strategy",
+        "--eval_strategy",
         type=str,
         choices=(
             IntervalStrategy.NO,
@@ -883,7 +883,21 @@ def main():
     """Driver function."""
     parser = get_parser()
     args, _ = parser.parse_known_args()
+    # Validate argument types without modifying args
+    for action in parser._actions:
+        arg_name = action.dest
+        expected_type = action.type
+        arg_value = getattr(args, arg_name, None)
 
+        if expected_type and arg_value is not None:
+            try:
+                # Attempt to cast the argument to the expected type without modifying args
+                expected_type(arg_value)
+            except (ValueError, TypeError):
+                error_msg = f"Argument '{arg_name}' expects type {expected_type.__name__}, but got value '{arg_value}'"
+                raise ACFTValidationException._with_error(
+                    AzureMLError.create(ACFTUserError, pii_safe_message=error_msg)
+                )
     print(f"Deepspeed Version: {deepspeed.__version__}")
 
     if args.task_name in [Tasks.HF_SD_TEXT_TO_IMAGE]:
