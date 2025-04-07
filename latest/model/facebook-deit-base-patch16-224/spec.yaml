@@ -53,7 +53,7 @@ tags:
   finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 19
+version: 20
 description: |
   DeiT (Data-efficient image Transformers) is an image transformer that do not require very large amounts of data for training. This is achieved through a novel distillation procedure using teacher-student strategy, which results in high throughput and accuracy. DeiT is pre-trained and fine-tuned on ImageNet-1k (1 million images, 1,000 classes) at resolution 224x224. The model was first released in this <a href="https://github.com/facebookresearch/deit" target="_blank">repository</a>, but the weights were converted to PyTorch from the <a href="https://github.com/huggingface/pytorch-image-models" target="_blank">timm</a> repository by Ross Wightman.
 

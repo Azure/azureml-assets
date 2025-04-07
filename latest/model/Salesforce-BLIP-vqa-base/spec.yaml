@@ -37,7 +37,7 @@ tags:
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 6
+version: 7
 description: |-
   `BLIP` (Bootstrapping Language-Image Pre-training) designed for unified vision-language understanding and generation is a new VLP framework that expands the scope of downstream tasks compared to existing methods. The framework encompasses two key contributions from both model and data perspectives.
 

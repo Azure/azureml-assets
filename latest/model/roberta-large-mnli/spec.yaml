@@ -66,7 +66,7 @@ tags:
     Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_NC4as_T4_v3,
     Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_ND40rs_v2,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
-version: 15
+version: 16
 description: |
   **roberta-large-mnli** is the [RoBERTa large model](https://huggingface.co/roberta-large) fine-tuned on the [Multi-Genre Natural Language Inference (MNLI)](https://huggingface.co/datasets/multi_nli) corpus. The model is a pretrained model on English language text using a masked language modeling (MLM) objective.
 
