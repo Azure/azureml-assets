@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get purge -y software-properties-common && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        procps \ 
+        #procps \ 
         libgnutls30 \ 
         libk5crypto3 \ 
         libkrb5-3 \ 
@@ -16,11 +16,11 @@ RUN apt-get update && \
         nginx-light \
         wget \
         runit \
-        libtinfo6 \ 
-        libncurses6 \ 
-        ncurses-bin \ 
-        ncurses-base \ 
-        libncursesw6 \ 
+        #libtinfo6 \ 
+        #libncurses6 \ 
+        #ncurses-bin \ 
+        #ncurses-base \ 
+        #libncursesw6 \ 
         libcap2 \ 
         libc6 \    
         libc-bin \
@@ -29,11 +29,11 @@ RUN apt-get update && \
         build-essential \
         psmisc \
         unzip \
-        perl \
+        #perl \
         binutils-multiarch \
         binutils \
         libcurl4 \
-        libunwind8 \
+        #libunwind8 \
         systemd \
         libssl3 && \
     apt-get autoremove -y && \
@@ -118,8 +118,8 @@ USER root
 
 COPY mlmonitoring /var/mlflow_resources/mlmonitoring
 COPY mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
-COPY mlflow_hf_score_cpu.py /var/mlflow_resources/mlflow_hf_score_cpu.py
-COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
+#COPY mlflow_hf_score_cpu.py /var/mlflow_resources/mlflow_hf_score_cpu.py
+#COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
 
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
