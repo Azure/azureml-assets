@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: run_inference_validation
-version: 0.0.1
+version: 0.0.1.17
 type: command
 
 is_deterministic: True
@@ -21,7 +21,7 @@ command: >-
 
 inputs:
   inference_payload:
-    type: uri_file
+    type: string
     description: JSON input payload used for inference.
 
   expected_response:

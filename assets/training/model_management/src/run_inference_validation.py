@@ -33,6 +33,16 @@ def load_json(file_path):
         return None
 
 
+def load_json_from_string(json_string):
+    """Load JSON data from a string."""
+    try:
+        data = json.loads(json_string)
+        return data
+    except Exception as e:
+        logger.warning(f"Error parsing JSON from string: {e}")
+        return None
+
+
 def get_json_structure(data):
     """
     Recursively extract the structure of JSON (keys only).
@@ -50,7 +60,7 @@ def get_json_structure(data):
         return None
 
 
-def compare_structures(inference_payload, expected_response, inference_response):
+def compare_structures(inference_payload, expected_response, inference_response, success_status, inference_time):
     """
     Compare JSON structures (keys only) of expected and actual.
 
@@ -61,12 +71,13 @@ def compare_structures(inference_payload, expected_response, inference_response)
     logger.info(f"expected_structure: {expected_structure} \n actual_structure: {actual_structure}")
 
     result = {
-        "inference_payload": inference_payload,
-        "inference_output": inference_response, 
-        "structure_match": expected_structure == actual_structure,
-        "expected_structure": expected_structure,
-        "actual_structure": actual_structure,
-        "differences": []
+        "success": success_status,
+        "inference_time" : inference_time,
+        "sample_request": inference_payload,
+        "sample_response": expected_response,
+        "actual_response": inference_response,
+        "structure_match": expected_structure == actual_structure if expected_response else None,
+        "structural_difference": []
     }
 
     if not result["structure_match"]:
@@ -193,7 +204,7 @@ def main():
     """Compare expected and actual inference response structures."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--inference_payload", type=str, required=True,
-                        help="Path to the expected inference response JSON file.")
+                        help="Serialized JSON payload for inference")
     parser.add_argument("--expected_response", type=str, required=False,
                         help="Path to the expected inference response JSON file.")
     parser.add_argument("--inference_response", type=str, required=True,
@@ -206,24 +217,35 @@ def main():
     args = parser.parse_args()
 
     # Load expected and actual responses.
-    inference_payload = load_json(args.inference_payload)
-    inference_response = load_json(args.inference_response)
-    if args.expected_response is None:
-        expected_response = load_json(args.expected_response)
-    else:
-        expected_response = None
+    inference_payload = load_json_from_string(args.inference_payload)
+    inference_output = load_json(args.inference_response)
+
+    expected_response = load_json(args.expected_response) if args.expected_response else None
     logger.info(f"expected response: {expected_response}, actual response: {inference_response}")
 
+    inference_response = inference_output.get("response")
+    inference_time = inference_output.get("inference_time_ms", 0)  # Default to 0 if not present
+
+    # Infer success status based on the presence of a valid response
+    success_status = inference_response is not None and bool(inference_response)
+
     if expected_response:
-        validation_result = compare_structures(inference_payload, expected_response, inference_response)
+        validation_result = validation_result = compare_structures(
+            inference_payload,
+            expected_response,
+            inference_response,
+            success_status,
+            inference_time
+        )
     else:
         validation_result = {
-            "inference_payload": inference_payload,
-            "inference_output": inference_response,
+            "success": success_status,
+            "inference_time": inference_time,
+            "sample_request": inference_payload,
+            "sample_response": expected_response,
+            "actual_response": inference_response,
             "structure_match": None,
-            "expected_structure": None,
-            "actual_structure": get_json_structure(inference_response),
-            "differences": []
+            "actual_structure": []
         }
         logger.info("No expected response provided. Skipping structure comparison.")
 
