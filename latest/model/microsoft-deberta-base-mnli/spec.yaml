@@ -66,7 +66,7 @@ tags:
     Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_NC4as_T4_v3,
     Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_ND40rs_v2,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
-version: 15
+version: 16
 description: |
   [DeBERTa](https://arxiv.org/abs/2006.03654) (Decoding-enhanced BERT with Disentangled Attention) improves the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. It outperforms BERT and RoBERTa on  majority of NLU tasks with 80GB training data. 
 
