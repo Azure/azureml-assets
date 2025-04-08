@@ -23,8 +23,7 @@ metadata:
   base_model_task: image-object-detection
   is_acft_model: true
   is_finetuned_model: false
-  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
-mlflow_version: 2.10.2
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1mlflow_version: 2.10.2
 model_size_bytes: 395598039
 model_uuid: 5d5ad3dae64e4868b9eaafd9b78a5e51
 signature:
