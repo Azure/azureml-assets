@@ -1,5 +1,5 @@
 # Install Python SDK
-azure-ai-ml==1.26.1
+azure-ai-ml==1.26.2
 openai
 # hardcoded the version of azureml-mlflow here for faster Docker image building speed
 azureml-mlflow==1.59.0.post1

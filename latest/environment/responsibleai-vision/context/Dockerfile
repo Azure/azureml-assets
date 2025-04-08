@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20250331.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20250407.v1
 
 # Install OpenCV native dependencies
 RUN apt-get update
