@@ -42,6 +42,7 @@ class AssetType(Enum):
     EVALUATIONRESULT = 'evaluationresult'
     MODEL = 'model'
     PROMPT = 'prompt'
+    AGENTBLUEPRINT = 'agentblueprint'
 
 
 class ComponentType(Enum):

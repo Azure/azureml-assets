@@ -2,20 +2,20 @@ flavors:
   python_function:
     artifacts:
       model_dir:
-        path: artifacts/2024.09.27.v.1.0.0
-        uri: /mnt/batch/tasks/shared/LS_root/mounts/clusters/albertogpu4/code/Users/albertosa/mii_ado/FlorenceMDdeployment/checkpoints/2024.09.27.v.1.0.0
-    cloudpickle_version: 3.0.0
+        path: artifacts/checkpoints
+        uri: /__w/1/s/checkpoints
+    cloudpickle_version: 2.2.1
     code: code
     env:
       conda: conda.yaml
       virtualenv: python_env.yaml
     loader_module: mlflow.pyfunc.model
     python_model: python_model.pkl
-    python_version: 3.8.19
+    python_version: 3.9.21
     streamable: false
 mlflow_version: 2.14.3
-model_size_bytes: 2465553032
-model_uuid: 303978b7303b453f99790fd3dae58493
+model_size_bytes: 2465552996
+model_uuid: cdfdf13e98c64aa6bdf98da09ab8fcc1
 signature:
   inputs: '[{"type": "binary", "name": "image", "required": false}, {"type": "string",
     "name": "text", "required": false}]'
@@ -26,4 +26,10 @@ signature:
     "default": 75, "shape": null}, {"name": "image_standardization_image_size", "type":
     "integer", "default": 512, "shape": null}, {"name": "get_scaling_factor", "type":
     "boolean", "default": true, "shape": null}]'
-utc_time_created: '2024-10-09 20:19:13.335408'
+utc_time_created: '2025-01-15 18:05:59.362746'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  base_model_name: MedImageInsight
+  base_model_task: embeddings
+  is_acft_model: true
+  is_finetuned_model: false

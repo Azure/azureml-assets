@@ -14,5 +14,3 @@ keyring
 # dev dependencies
 setuptools>70.0.0
 azureml-inference-server-http
-# Security patch
-jinja2>=3.1.6

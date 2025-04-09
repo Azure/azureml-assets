@@ -1,7 +1,7 @@
 path:
-  container_name: gallery-samples
-  container_path: multi-index-rerank-qna
-  storage_name: azuremlragexamples
+  container_name: models
+  container_path: promptflow/multi-index-rerank-qna
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md
