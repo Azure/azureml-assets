@@ -379,7 +379,7 @@ def main():
         outfile.write(json_object)
     logger.info("Saved deployment details in output json file.")
 
-# run script
+
 if __name__ == "__main__":
     # run main function
     main()

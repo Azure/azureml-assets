@@ -5,7 +5,6 @@
 
 import sys
 import os
-import uuid
 import json
 import requests
 import argparse
@@ -30,6 +29,7 @@ def read_results_from_file(file_path):
     except Exception as e:
         print(f"Error reading from file: {e}")
         return None
+
 
 def get_auth_token():
     """Generate auth token for Azure API."""

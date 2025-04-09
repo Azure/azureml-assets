@@ -62,6 +62,7 @@ def get_json_structure(data):
     else:
         return None
 
+
 def compare_structures(expected_response, actual_response):
     """
     Compare JSON structures (keys only) of expected and actual.
@@ -113,23 +114,24 @@ def replace_name_in_path(path_template, name_value):
     """Replace the placeholder in the output path with the actual job name."""
     return path_template.replace('${{name}}', name_value)
 
+
 def fetch_storage_uri():
     """Return the storage URI of the output file from the AzureML pipeline run."""
     try:
         run = Run.get_context()
         run_details = run.get_details()
         output_data_path = run_details['runDefinition']['outputData']['validation_result']['outputLocation']['uri']['path']
-        
+
         output_data_uri = replace_name_in_path(output_data_path, run.id)
 
         # Extract datastore name and path from the AzureML URI
         datastore_name, path = extract_datastore_info(output_data_uri)
-        
+
         # Construct the storage URI
         storage_uri = get_storage_url(datastore_name)
         full_storage_uri = f"{storage_uri}/{path}"
         logger.info(f"Full storage URI: {full_storage_uri}")
-        
+
         return full_storage_uri
     except Exception as e:
         logger.error(f"Error fetching storage URI: {e}")
