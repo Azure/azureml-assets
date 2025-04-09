@@ -56,7 +56,7 @@ tags:
     Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
     Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 13
+version: 14
 description: |
   CamemBERT is a state-of-the-art language model for French based on the RoBERTa model.
 

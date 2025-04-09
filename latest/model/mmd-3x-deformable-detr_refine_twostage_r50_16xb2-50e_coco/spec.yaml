@@ -52,7 +52,7 @@ tags:
   finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 15
+version: 16
 description: |
   `deformable-detr_refine_twostage_r50_16xb2-50e_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0" target="_blank">OpenMMLab's MMDetection library</a>. DETR has been recently proposed to eliminate the need for many hand-designed components in object detection while demonstrating good performance. However, it suffers from slow convergence and limited feature spatial resolution, due to the limitation of Transformer attention modules in processing image feature maps. To mitigate these issues, we proposed Deformable DETR, whose attention modules only attend to a small set of key sampling points around a reference. Deformable DETR can achieve better performance than DETR (especially on small objects) with 10 times less training epochs. Extensive experiments on the COCO benchmark demonstrate the effectiveness of our approach.
 
