@@ -3,9 +3,12 @@
 
 """Validate the structure of expected and actual inference response JSON files."""
 
+import base64
 import json
 import argparse
 import os
+import sys
+from datetime import datetime, timezone
 from azureml.core import Run
 from azureml.model.mgmt.utils.common_utils import get_mlclient
 from azureml.model.mgmt.config import AppName
@@ -59,43 +62,52 @@ def get_json_structure(data):
     else:
         return None
 
-
-def compare_structures(inference_payload, expected_response, inference_response, success_status, inference_time):
+def compare_structures(expected_response, actual_response):
     """
     Compare JSON structures (keys only) of expected and actual.
 
-    Returns a dictionary with validation results.
+    Returns a dictionary with structural differences and a match flag.
     """
     expected_structure = get_json_structure(expected_response)
-    actual_structure = get_json_structure(inference_response)
+    actual_structure = get_json_structure(actual_response)
     logger.info(f"expected_structure: {expected_structure} \n actual_structure: {actual_structure}")
 
-    result = {
-        "success": success_status,
-        "inference_time" : inference_time,
-        "sample_request": inference_payload,
-        "sample_response": expected_response,
-        "actual_response": inference_response,
-        "structure_match": expected_structure == actual_structure if expected_response else None,
-        "structural_difference": []
-    }
+    structure_match = expected_structure == actual_structure if expected_response else None
+    structural_difference = []
 
-    if not result["structure_match"]:
-        result["differences"] = [
+    if not structure_match:
+        structural_difference = [
             {"expected": expected_structure, "actual": actual_structure}
         ]
-    logger.info(f"validation result: {result}")
-    return result
+
+    logger.info(f"Structure match: {structure_match}, Structural differences: {structural_difference}")
+    return {
+        "structure_match": structure_match,
+        "structural_difference": structural_difference
+    }
 
 
-def save_validation_result(result, output_path):
+def save_validation_result(request_details, output_path, validation_id, sku, status):
     """Save validation results to a JSON file."""
     try:
+        current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        validation_result = {
+            "id": validation_id,
+            "runId": validation_id,
+            "sku": sku,
+            "createdTime": current_time,
+            "updatedTime": current_time,
+            "type": "MAAP_INFERENCING",
+            "status": status,
+            "requestDetails": request_details
+        }
+
         with open(output_path, "w") as f:
-            json.dump(result, f, indent=4)
+            json.dump(validation_result, f, indent=4)
         logger.info(f"Validation result saved to {output_path}")
     except Exception as e:
         logger.error(f"Error saving validation result: {e}")
+
 
 def replace_name_in_path(path_template, name_value):
     """Replace the placeholder in the output path with the actual job name."""
@@ -213,45 +225,55 @@ def main():
                         help="Path to save validation results.")
     parser.add_argument("--metrics_storage_uri", type=str, required=True,
                         help="Path to store the metrics.")
+    parser.add_argument("--sku", required=False,
+                        default="Standard_NC24ads_A100_v4",
+                        help="Suggested SKU based on benchmark results")
+    parser.add_argument("--validation-id", required=True,
+                        help="Run ID of the validation run")
 
     args = parser.parse_args()
 
-    # Load expected and actual responses.
-    inference_payload = load_json_from_string(args.inference_payload)
+    inference_payload = None
+    if args.inference_payload:
+        decoded_bytes = base64.b64decode(args.inference_payload)
+
+        # Convert bytes to string
+        decoded_str = decoded_bytes.decode('utf-8')
+        logger.info(f"Decoded string: {decoded_str}")
+
+        inference_payload = json.loads(decoded_str)
+
+    inference_output = load_json(args.inference_response)
+    if not inference_output:
+        logger.error("Inference output is missing or invalid.")
+        sys.exit(1)
+
     inference_output = load_json(args.inference_response)
 
     expected_response = load_json(args.expected_response) if args.expected_response else None
-    logger.info(f"expected response: {expected_response}, actual response: {inference_response}")
 
     inference_response = inference_output.get("response")
-    inference_time = inference_output.get("inference_time_ms", 0)  # Default to 0 if not present
+    inference_time = inference_output.get("inference_time", 0)
+    logger.info(f"inference_payload: {inference_payload}, expected response: {expected_response}, actual response: {inference_response}")
 
     # Infer success status based on the presence of a valid response
     success_status = inference_response is not None and bool(inference_response)
+    status = "Success" if success_status else "Failed"
 
+    request_details = {
+        "inputRequest": inference_payload,
+        "inputResponse": expected_response,
+        "actualResponse": inference_response,
+        "responseTime": inference_time,
+        "structuralDiff": None,
+    }
     if expected_response:
-        validation_result = validation_result = compare_structures(
-            inference_payload,
-            expected_response,
-            inference_response,
-            success_status,
-            inference_time
-        )
-    else:
-        validation_result = {
-            "success": success_status,
-            "inference_time": inference_time,
-            "sample_request": inference_payload,
-            "sample_response": expected_response,
-            "actual_response": inference_response,
-            "structure_match": None,
-            "actual_structure": []
-        }
-        logger.info("No expected response provided. Skipping structure comparison.")
+        comparison_result = compare_structures(expected_response, inference_response)
+        request_details["structuralDiff"] = comparison_result.get("structural_difference", [])
 
     # Save the validation result.
-    save_validation_result(validation_result, args.validation_result)
-    logger.info(f"validation_result: {validation_result}, Validation result saved to {args.validation_result}")
+    save_validation_result(request_details, args.validation_result, args.validation_id, args.sku, status)
+    logger.info(f"validation_result: {request_details}, Validation result saved to {args.validation_result}")
 
     store_metrics_paths(args.metrics_storage_uri)
 

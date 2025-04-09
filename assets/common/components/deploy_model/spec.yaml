@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
-version: 0.0.12.10
+version: 0.0.12
 type: command
 
 is_deterministic: True

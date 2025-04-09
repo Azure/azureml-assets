@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: run_inference_validation
-version: 0.0.1.17
+version: 0.0.1
 type: command
 
 is_deterministic: True
@@ -16,6 +16,8 @@ command: >-
   --inference_payload ${{inputs.inference_payload}}
   $[[--expected_response ${{inputs.expected_response}}]]
   --inference_response ${{inputs.inference_response}}
+  --validation-id ${{inputs.validation_id}}
+  --sku ${{inputs.sku}}
   --validation_result ${{outputs.validation_result}}
   --metrics_storage_uri ${{outputs.metrics_storage_uri}}
 
@@ -32,6 +34,17 @@ inputs:
   inference_response:
     type: uri_file
     description: JSON file containing the actual inference response from the deployed model.
+
+  sku:
+    type: string
+    optional: false
+    default: "Standard_NC24ads_A100_v4"
+    description: Suggested SKU based on benchmark results
+
+  validation_id:
+    type: string
+    optional: false
+    description: ID of the validation run (used for updating status in self-serve)
 
 outputs:
   validation_result:
