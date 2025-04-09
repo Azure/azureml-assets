@@ -346,7 +346,8 @@ def main():
             end_time = time.time()
             inference_time_ms = int((end_time - start_time) * 1000)
 
-            logger.info(f"Endpoint invoked successfully with inference time :{inference_time_ms} ms and response: {response}")
+            logger.info(f"Endpoint invoked successfully with inference time :{inference_time_ms} ms " +
+                        f"and response: {response}")
             # Save inference response
             if args.inference_response:
                 inference_result = {

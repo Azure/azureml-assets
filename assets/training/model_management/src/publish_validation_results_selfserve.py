@@ -98,7 +98,10 @@ def update_model_onboarding_version(
         "validationResult": validation_result
     }
 
-    api_url = f"{selfserve_base_url}/model-publisher-self-serve/publishers/{publisher_name}/models/{model_name}/model-onboarding-version/{model_version}/updateModelOnboardingVersion?api-version=2024-12-31"
+    api_url = (
+        f"{selfserve_base_url}/model-publisher-self-serve/publishers/{publisher_name}/models/{model_name}"
+        f"/model-onboarding-version/{model_version}/updateModelOnboardingVersion?api-version=2024-12-31"
+    )
 
     headers = {
         "Authorization": f"Bearer {get_auth_token()}",

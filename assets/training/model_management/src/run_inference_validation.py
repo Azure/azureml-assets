@@ -120,7 +120,8 @@ def fetch_storage_uri():
     try:
         run = Run.get_context()
         run_details = run.get_details()
-        output_data_path = run_details['runDefinition']['outputData']['validation_result']['outputLocation']['uri']['path']
+        output_data = run_details['runDefinition']['outputData']['validation_result']['outputLocation']['uri']
+        output_data_path = output_data['path']
 
         output_data_uri = replace_name_in_path(output_data_path, run.id)
 
@@ -256,7 +257,8 @@ def main():
 
     inference_response = inference_output.get("response")
     inference_time = inference_output.get("inference_time", 0)
-    logger.info(f"inference_payload: {inference_payload}, expected response: {expected_response}, actual response: {inference_response}")
+    logger.info(f"inference_payload: {inference_payload}, expected response: {expected_response}, "
+                f"actual response: {inference_response}")
 
     # Infer success status based on the presence of a valid response
     success_status = inference_response is not None and bool(inference_response)
