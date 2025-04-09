@@ -4,7 +4,7 @@ type: spark
 name: gsq_input_schema_adaptor
 display_name: Input Schema Adaptor
 description: Adapt data to fit into GSQ component.
-version: 0.0.22
+version: 0.0.24
 is_deterministic: True
 inputs:
   production_dataset:

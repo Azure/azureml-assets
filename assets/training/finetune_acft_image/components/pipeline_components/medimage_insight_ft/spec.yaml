@@ -1,0 +1,142 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+name: medimage_insight_ft_pipeline
+version: 0.0.3
+type: pipeline
+display_name: Medimage Insight Finetune Pipeline
+description: Pipeline Component to finetune MedImageInsight Model.
+
+inputs:
+  mlflow_embedding_model_path:
+    type: uri_folder
+    optional: false
+    description: Path to the MLflow model to be imported.
+    mode: ro_mount
+
+  eval_image_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation image TSV file.
+    mode: ro_mount
+
+  eval_text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the evaluation text TSV file.
+    mode: ro_mount
+
+  eval_train_image_tsv:
+    type: uri_file
+    optional: true
+    description: Optional path used for the evaluation task. If not specified, will use the training path.
+    mode: ro_mount
+
+  eval_train_text_tsv:
+    type: uri_file
+    optional: true
+    description: Optional path used for the evaluation task. If not specified, will use the training path.
+    mode: ro_mount
+
+  image_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the image TSV file.
+    mode: ro_mount
+
+  text_tsv:
+    type: uri_file
+    optional: false
+    description: Path to the text TSV file.
+    mode: ro_mount
+
+  label_file:
+    type: uri_file
+    optional: false
+    description: Path to the label file.
+    mode: ro_mount
+
+  conf_files:
+    type: uri_file
+    optional: false
+    description: Path to the configuration files.
+    mode: ro_mount
+
+  instance_type_finetune:
+    type: string
+    optional: true
+    default: Standard_nc24rs_v3
+    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3.
+      The parameter compute_finetune must be set to 'serverless' for instance_type to be used
+
+  compute_finetune:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
+  process_count_per_instance:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of processes to run per instance. This is used to set the number of GPUs to use for training.
+
+  instance_count:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of instances to use for training.
+outputs:
+  save_dir:
+    type: uri_folder
+    description: Directory to save the model and checkpoints, used for pipeline's internal operations.
+    mode: rw_mount
+
+  embedding_mlflow_model:
+    type: mlflow_model
+    description: Directory to save the MLflow model.
+    mode: rw_mount
+
+  classification_mlflow_model:
+    type: mlflow_model
+    description: Path to save the output model configured with labels.
+    mode: rw_mount
+
+
+jobs:
+  medical_image_embedding_model_finetune:
+    type: command
+    component: azureml:medimgage_embedding_finetune:0.0.3
+    compute: '${{parent.inputs.compute_finetune}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
+      instance_count: ${{parent.inputs.instance_count}}
+    distribution:
+      type: mpi
+      process_count_per_instance: ${{parent.inputs.process_count_per_instance}}
+    inputs:
+      mlflow_model_path: '${{parent.inputs.mlflow_embedding_model_path}}'
+      eval_image_tsv: '${{parent.inputs.eval_image_tsv}}'
+      eval_text_tsv: '${{parent.inputs.eval_text_tsv}}'
+      eval_train_image_tsv: '${{parent.inputs.eval_train_image_tsv}}'
+      eval_train_text_tsv: '${{parent.inputs.eval_train_text_tsv}}'
+      image_tsv: '${{parent.inputs.image_tsv}}'
+      text_tsv: '${{parent.inputs.text_tsv}}'
+      label_file: '${{parent.inputs.label_file}}'
+      conf_files: '${{parent.inputs.conf_files}}'
+    outputs:
+      save_dir: '${{parent.outputs.save_dir}}'
+      mlflow_model_folder: '${{parent.outputs.embedding_mlflow_model}}'
+  medimage_embedding_adapter_merge:
+    type: command
+    component: azureml:medimage_embedding_adapter_merge:0.0.2
+    compute: '${{parent.inputs.compute_finetune}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
+    inputs:
+      mlflow_model: '${{parent.jobs.medical_image_embedding_model_finetune.outputs.mlflow_model_folder}}'
+      label_file: '${{parent.inputs.label_file}}'
+    outputs:
+      output_dir: '${{parent.outputs.classification_mlflow_model}}'

@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 
 name: feature_retrieval
-version: 1.1.0
+version: 1.1.1
 type: spark
 
 display_name: Feature Retrieval
@@ -62,5 +62,5 @@ conf:
       - python=3.8
       - pip:
         - protobuf==3.19.6
-        - azureml-featurestore~=1.1.0
+        - azureml-featurestore~=1.1.1
     name: fs_env

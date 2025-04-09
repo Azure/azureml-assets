@@ -23,3 +23,9 @@ flavors:
 mlflow_version: 2.6.0
 model_uuid: c1fab90dbbd74498abfe8894d35b62d6
 utc_time_created: '2023-11-02 06:27:25.427477'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  base_model_name: microsoft-phi-1-5
+  task: text-generation
+  is_acft_model: true
+  is_finetuned_model: false

@@ -59,6 +59,9 @@ class SupportedTasks(_CustomEnum):
     # Virchow
     IMAGE_FEATURE_EXTRACTION = "image-feature-extraction"
 
+    # Hibou-B family
+    FEATURE_EXTRACTION = "feature-extraction"
+
 
 class ModelFamilyPrefixes(_CustomEnum):
     """Prefixes for some of the models converted to PyFunc MLflow."""
@@ -71,3 +74,6 @@ class ModelFamilyPrefixes(_CustomEnum):
 
     # Virchow model family.
     VIRCHOW = "paige-ai/Virchow"
+
+    # Hibou-B family
+    HIBOU_B = "histai/hibou-b"

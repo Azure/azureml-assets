@@ -250,6 +250,7 @@ def _log_metrics(metrics, artifacts):
                     if not isinstance(v, np.ndarray) and not isinstance(v, list):
                         continue
                     x, y = np.histogram(v, bins=10)
+                    # TODO: check if we need to look in different keys for precision, recall and f1
                     x = np.array(x).tolist()
                     y = np.array(y).tolist()
 
@@ -261,14 +262,14 @@ def _log_metrics(metrics, artifacts):
                     y = np.array(y).tolist()
 
                     run.log_table("Bert Precision", value={"_score": json.dumps(list(y)[1:]),
-                                                           "count": json.dumps(list(x))})
+                                                          "count": json.dumps(list(x))})
 
                     x, y = np.histogram(v, bins=10)
                     x = np.array(x).tolist()
                     y = np.array(y).tolist()
 
                     run.log_table("Bert Recall", value={"_score": json.dumps(list(y)[1:]),
-                                                        "count": json.dumps(list(x))})
+                                                          "count": json.dumps(list(x))})
             elif name in metrics_constants.Metric.QA_GPT_METRICS_SET:
                 try:
                     if not isinstance(score, list) and not isinstance(score, np.ndarray):

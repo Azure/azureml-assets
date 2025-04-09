@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_datapreprocess
-version: 0.0.70
+version: 0.0.72
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
 display_name: Text Generation DataPreProcess
 description: Component to preprocess data for text generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/80
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
 
 code: ../../../src/preprocess
 
@@ -17,18 +17,12 @@ inputs:
   text_key:
     type: string
     optional: false
-    description: key for text in an example. format your data keeping in mind that
-      text is concatenated with ground_truth while finetuning in the form - text + groundtruth.
-      for eg. "text"="knock knock\n", "ground_truth"="who's there"; will be treated as "knock knock\nwho's there"
+    description: key for text in an example. format your data keeping in mind that text is concatenated with ground_truth while finetuning in the form - text + groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's there"; will be treated as "knock knock\nwho's there"
 
   ground_truth_key:
     type: string
     optional: true
-    description: key for ground_truth in an example. 
-      we take separate column for ground_truth to enable use cases like summarization, translation, 
-      question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed.
-      This separation is useful for calculating metrics.
-      for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the dialogue}"
+    description: key for ground_truth in an example. we take separate column for ground_truth to enable use cases like summarization, translation, question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed. This separation is useful for calculating metrics. for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the dialogue}"
 
   batch_size:
     type: integer
@@ -40,12 +34,12 @@ inputs:
   pad_to_max_length:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
-  
+
   max_seq_length:
     type: integer
     optional: true
@@ -101,7 +95,7 @@ inputs:
 outputs:
   output_dir:
     type: uri_folder
-    description:  The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data
+    description: The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data
     mode: rw_mount
 
 command: >-

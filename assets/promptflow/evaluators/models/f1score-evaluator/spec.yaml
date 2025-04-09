@@ -8,4 +8,4 @@ properties:
   _default-display-file: ./F1ScoreEvaluator/_f1_score.py
 tags:
   hiddenlayerscanned: ""
-version: 3
+version: 4

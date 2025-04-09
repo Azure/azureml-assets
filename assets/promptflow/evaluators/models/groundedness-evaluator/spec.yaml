@@ -8,4 +8,4 @@ properties:
   _default-display-file: ./GroundednessEvaluator/groundedness_without_query.prompty
 tags:
   hiddenlayerscanned: ""
-version: 5
+version: 6

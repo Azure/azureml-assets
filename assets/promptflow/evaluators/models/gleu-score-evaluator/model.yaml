@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/GleuScoreEvaluator/v3/GleuScoreEvaluator
+  container_path: models/evaluators/GleuScoreEvaluator/v4/GleuScoreEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:

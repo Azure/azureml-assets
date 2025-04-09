@@ -64,6 +64,7 @@ def prepare_model_for_registration(
     temp_dir: Path,
     ml_client: MLClient,
     copy_updater: CopyUpdater = None,
+    output_level: str = "essential",
 ) -> bool:
     """Prepare model.
 
@@ -77,12 +78,14 @@ def prepare_model_for_registration(
     :type ml_client: MLClient
     :param copy_updater: CopyUpdater object to update files during azcopy
     :type copy_updater: CopyUpdater
+    :param output_level: Parameter for azcopy output verbosity level
+    :type output_level: str
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
     model, success = prepare_model(
         spec_path=spec_file_path, model_config=model_config, temp_dir=temp_dir, ml_client=ml_client,
-        copy_updater=copy_updater
+        copy_updater=copy_updater, output_level=output_level
     )
     if success:
         success = update_spec(model, spec_file_path)
@@ -96,6 +99,7 @@ def prepare_data_for_registration(
     temp_dir: Path,
     ml_client: MLClient,
     copy_updater: CopyUpdater = None,
+    output_level: str = "essential",
 ) -> bool:
     """Prepare data.
 
@@ -109,12 +113,14 @@ def prepare_data_for_registration(
     :type ml_client: MLClient
     :param copy_updater: CopyUpdater object to update files during azcopy
     :type copy_updater: CopyUpdater
+    :param output_level: Parameter for azcopy output verbosity level
+    :type output_level: str
     :return: Data successfully prepared for creation in registry.
     :rtype: bool
     """
     data, success = prepare_data(
         spec_path=spec_file_path, data_config=data_config, temp_dir=temp_dir, ml_client=ml_client,
-        copy_updater=copy_updater
+        copy_updater=copy_updater, output_level=output_level
     )
     if success:
         success = update_spec(data, spec_file_path)
@@ -512,7 +518,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
 
 
 def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, version_template: str = None,
-                 debug: bool = None, copy_updater: CopyUpdater = None) -> bool:
+                 debug: bool = None, copy_updater: CopyUpdater = None, output_level: str = "essential") -> bool:
     """Create asset or update model metadata if it already exists.
 
     Args:
@@ -522,6 +528,7 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
         version_template (str, optional): Version template. Defaults to None.
         debug (bool, optional): Enable debug logging. Defaults to None.
         copy_updater (CopyUpdater, optional): CopyUpdater object to update files during azcopy. Defaults to None.
+        output_level (str, optional): Output verbosity level parameter for azcopy. Defaults to "essential".
 
     Returns:
         bool: True of successfully create/updated, otherwise False.
@@ -556,14 +563,14 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
             version = asset.version
             model_config: ModelConfig = asset.extra_config_as_object()
             if not prepare_model_for_registration(model_config, asset.spec_with_path, Path(temp_dir), ml_client,
-                                                  copy_updater):
+                                                  copy_updater, output_level):
                 logger.log_error("Failed to prepare model")
                 return False
         elif asset.type == AssetType.DATA:
             version = asset.version
             data_config: DataConfig = asset.extra_config_as_object()
             if not prepare_data_for_registration(data_config, asset.spec_with_path, Path(temp_dir), ml_client,
-                                                 copy_updater):
+                                                 copy_updater, output_level):
                 logger.log_error("Failed to prepare data asset")
                 return False
 

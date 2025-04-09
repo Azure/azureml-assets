@@ -1,0 +1,60 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.2
+name: medimage_embedding_adapter_merge
+display_name: Package Classification Model
+description: Integrate labels and generates classification model
+
+is_deterministic: True
+
+environment : azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/1
+
+code: ../../../src/model_converters/medimage_embed_adapter_merge
+
+inputs:
+
+  # Continual-Finetuning model path
+  adapter_model:
+    type: custom_model
+    optional: true
+    description: Classification Model From Adapter Training.
+
+  mlflow_model:
+    type: mlflow_model
+    optional: true
+    description: Integrated Mlflow Model Asset.
+
+  label_file:
+    type: uri_file
+    optional: false
+    description: Path to the label file.
+    mode: ro_mount
+
+  hidden_dimensions:
+    type: integer
+    min: 1
+    default: 512
+    optional: true
+    description: Number of hidden dimensions.
+
+  input_channels:
+    type: integer
+    min: 1
+    default: 1024
+    optional: true
+    description: Number of input channels.
+
+outputs:
+  output_dir:
+    type: mlflow_model
+    description: Folder to store model metadata.
+
+command: >-
+  python medimage_model_merge.py 
+  $[[--adapter_model ${{inputs.adapter_model}}]]
+  $[[--mlflow_model ${{inputs.mlflow_model}}]]
+  $[[--hidden_dimensions "${{inputs.hidden_dimensions}}"]]
+  $[[--input_channels "${{inputs.input_channels}}"]]
+  --label_file "${{inputs.label_file}}" 
+  --output_dir ${{outputs.output_dir}}
