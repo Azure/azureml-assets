@@ -18,6 +18,7 @@ metadata:
   base_model_task: zero-shot-image-classification
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.15.1
 model_size_bytes: 789393877
 model_uuid: 87e0b5b21dc34fad8381248be8107f2b
