@@ -1,7 +1,7 @@
 path:
-  container_name: gallery-samples
-  container_path: bring_your_own_data_qna
-  storage_name: azuremlragexamples
+  container_name: models
+  container_path: promptflow/bring_your_own_data_qna
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md

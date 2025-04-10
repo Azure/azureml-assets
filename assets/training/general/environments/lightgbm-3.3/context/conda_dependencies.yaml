@@ -15,7 +15,7 @@ dependencies:
   - azureml-telemetry=={{latest-pypi-version}}
   - scikit-learn~=1.5.1
   - xgboost~=1.7.6
-  - lightgbm~=3.3.5
+  - lightgbm>=4.6.0
   - distributed~=2021.10.0
   - adlfs~=0.7.0
   # azureml-automl-common-tools packages

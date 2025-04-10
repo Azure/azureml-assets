@@ -8,15 +8,30 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Union, Tuple
 
+from urllib.parse import urlparse
+
 import mltable
 import pandas as pd
 
 import mlflow
 import torch
 from ml_wrappers.common.constants import Device
-from azureml.core import Run
 from raiutils.data_processing import serialize_json_safe
 
+from azure.core.configuration import Configuration
+from azure.core.pipeline import Pipeline
+from azure.core.pipeline.policies import (
+    CustomHookPolicy,
+    HeadersPolicy,
+    HttpLoggingPolicy,
+    NetworkTraceLoggingPolicy,
+    ProxyPolicy,
+    RedirectPolicy,
+    RetryPolicy,
+    UserAgentPolicy,
+)
+from azure.core.pipeline.transport import RequestsTransport
+from azure.core.rest import HttpRequest
 from spacy.cli import download
 from azureml.rai.utils import ModelSerializer
 from azureml.rai.utils.dataset_manager import DownloadManager
@@ -40,22 +55,26 @@ CPU = "cpu"
 GPU = "gpu"
 PORTABLE_PATH = "PortablePath"
 COMPONENT_NAME = "azureml.rai.vision"
+DEFAULT_MODULE_NAME = "rai_vision_insights"
+DEFAULT_MODULE_VERSION = "0.0.0"
+
+# Taken from azure-ai-evaluation _eval_run.py file
+_MAX_RETRIES = 5
+_BACKOFF_FACTOR = 2
+_TIMEOUT = 5
+_POLLING_INTERVAL = 30
 
 _ai_logger = None
+_module_name = DEFAULT_MODULE_NAME
+_module_version = DEFAULT_MODULE_VERSION
 
 
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        run = Run.get_context()
-        module_name = run.properties["azureml.moduleName"]
-        module_version = run.properties["azureml.moduleid"]
         _ai_logger = LoggerFactory.get_logger(
-            __file__, module_name, module_version, COMPONENT_NAME)
+            __file__, _module_name, _module_version, COMPONENT_NAME)
     return _ai_logger
-
-
-_get_logger()
 
 
 class DashboardInfo:
@@ -251,6 +270,10 @@ def parse_args():
             "CPU, >=0 will run the model on the associated CUDA device id.")
     )
 
+    # Component info
+    parser.add_argument("--component_name", type=str, required=True)
+    parser.add_argument("--component_version", type=str, required=True)
+
     # Outputs
     parser.add_argument("--dashboard", type=str, required=True)
     parser.add_argument("--ux_json", type=str, required=True)
@@ -339,12 +362,80 @@ def fetch_model_id(model_info_path: str):
     return model_info[DashboardInfo.MODEL_ID_KEY]
 
 
+def get_http_client():
+    config = Configuration()
+    config.headers_policy = HeadersPolicy()
+    config.proxy_policy = ProxyPolicy()
+    config.redirect_policy = RedirectPolicy()
+    config.retry_policy = RetryPolicy(
+                retry_total=_MAX_RETRIES,
+                retry_connect=_MAX_RETRIES,
+                retry_read=_MAX_RETRIES,
+                retry_status=_MAX_RETRIES,
+                retry_on_status_codes=(408, 429, 500, 502, 503, 504),
+                retry_backoff_factor=_BACKOFF_FACTOR)
+    config.custom_hook_policy = CustomHookPolicy()
+    config.logging_policy = NetworkTraceLoggingPolicy()
+    config.http_logging_policy = HttpLoggingPolicy()
+    config.user_agent_policy = UserAgentPolicy()
+    config.polling_interval = _POLLING_INTERVAL
+    return Pipeline(
+        transport=RequestsTransport(),
+        policies=[
+            config.headers_policy,
+            config.user_agent_policy,
+            config.proxy_policy,
+            config.redirect_policy,
+            config.retry_policy,
+            config.custom_hook_policy,
+            config.logging_policy,
+        ]
+    )
+
+
+def get_scope() -> str:
+    """
+    Return the scope information for the workspace.
+
+    :return: The scope information for the workspace.
+    :rtype: str
+    """
+    workspace_name = os.environ.get("AZUREML_ARM_WORKSPACE_NAME")
+    resource_group = os.environ.get("AZUREML_ARM_RESOURCEGROUP")
+    subscription_id = os.environ.get("AZUREML_ARM_SUBSCRIPTION")
+    return (
+        "/subscriptions/{}/resourceGroups/{}/providers"
+        "/Microsoft.MachineLearningServices"
+        "/workspaces/{}"
+    ).format(
+        subscription_id,
+        resource_group,
+        workspace_name,
+    )
+
+
+def get_run_history_uri(tracking_uri: str, run_id: str,
+                        experiment_id: str) -> str:
+    """
+    Get the run history service URI.
+
+    :return: The run history service URI.
+    :rtype: str
+    """
+    url_base = urlparse(tracking_uri).netloc
+    return (
+        f"https://{url_base}"
+        "/history/v1.0"
+        f"{get_scope()}"
+        f"/experimentids/{experiment_id}/runs/{run_id}"
+    )
+
+
 def add_properties_to_gather_run(
     dashboard_info: Dict[str, str], tool_present_dict: Dict[str, str],
     is_gpu: bool
 ):
     _logger.info("Adding properties to the gather run")
-    gather_run = Run.get_context()
 
     run_properties = {
         PropertyKeyValues.RAI_INSIGHTS_TYPE_KEY:
@@ -369,8 +460,25 @@ def add_properties_to_gather_run(
         key = PropertyKeyValues.RAI_INSIGHTS_TOOL_KEY_FORMAT.format(k)
         run_properties[key] = str(v)
 
-    _logger.info("Making service call")
-    gather_run.add_properties(run_properties)
+    _logger.info("Making service call from MlflowClient")
+    with mlflow.start_run() as run:
+        run_id = run.info.run_id
+        experiment_id = run.info.experiment_id
+        json_dict = {"runId": run_id, "properties": run_properties}
+        headers = {}
+        headers["User-Agent"] = _module_name + "(" + _module_version + ")"
+        token = os.environ.get("MLFLOW_TRACKING_TOKEN")
+        headers["Authorization"] = f"Bearer {token}"
+
+        session = get_http_client()
+        method = "PATCH"
+        url = get_run_history_uri(mlflow.get_tracking_uri(), run_id,
+                                  experiment_id)
+        request = HttpRequest(method, url, headers=headers, json=json_dict)
+        response = session.run(request, timeout=_TIMEOUT).http_response
+        _logger.info("Response from run history on adding properties: ",
+                     response)
+
     _logger.info("Properties added to gather run")
 
 
@@ -535,6 +643,9 @@ if __name__ == "__main__":
     args = parse_args()
     print("Arguments parsed successfully")
     print(args)
+    _module_name = args.component_name
+    _module_version = args.component_version
+    _get_logger()
 
     # run main function
     main(args)

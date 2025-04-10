@@ -4,7 +4,7 @@ type: pipeline
 name: model_performance_signal_monitor
 display_name: Model Performance - Signal Monitor
 description: Computes the model performance
-version: 0.0.27
+version: 0.0.28
 is_deterministic: true
 inputs:
   task:
@@ -48,7 +48,7 @@ inputs:
     optional: true
   instance_type:
     type: string
-    default: "standard_e4s_v3"
+    default: "standard_e8s_v3"
     optional: True
 outputs:
   signal_output:
@@ -57,7 +57,7 @@ outputs:
 jobs:
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.25
+    component: azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.26
     inputs:
       task: ${{parent.inputs.task}}
       baseline_data_target_column: ${{parent.inputs.baseline_data_target_column}}
@@ -73,12 +73,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   output_signal_metrics: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.34
+    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.35
     inputs:
       signal_metrics:
         type: mltable
@@ -94,12 +94,12 @@ jobs:
         mode: direct
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.31
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.32
     inputs:
       signal_metrics:
         type: mltable
@@ -108,6 +108,6 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token

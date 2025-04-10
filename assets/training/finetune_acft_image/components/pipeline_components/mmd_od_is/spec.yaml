@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.26
+version: 0.0.27
 name: mmdetection_image_objectdetection_instancesegmentation_pipeline
 display_name: Image Object Detection and Instance Segmentation MMDetection Pipeline
 description: Pipeline component for image object detection and instance segmentation using MMDetection models.
@@ -426,7 +426,7 @@ jobs:
 
   image_od_is_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.21
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.22
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -482,7 +482,7 @@ jobs:
 
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.35
+    component: azureml:model_prediction:0.0.37
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'

@@ -18,6 +18,7 @@ flavors:
     tokenizer_type: BertTokenizerFast
     transformers_version: 4.35.2
 metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
   base_model_name: bert-base-uncased
   base_model_task: fill-mask
   is_acft_model: true

@@ -3,8 +3,8 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 # Install OpenCV native dependencies
 RUN apt-get update
 RUN apt-get install -y python3-opencv
-RUN apt-get remove -y libavutil56 libswresample3 libavformat58
-RUN apt-get remove -y libavcodec58 libswscale5 libpmix2
+RUN apt-get remove -y libavutil58 libswresample4 libavformat60
+RUN apt-get remove -y libavcodec60 libswscale7 libpmix2 libcjson1
 
 WORKDIR /
 ENV CONDA_PREFIX=/azureml-envs/responsibleai-vision
@@ -30,8 +30,7 @@ RUN pip install 'responsibleai~=0.36.0' \
                 'responsibleai-vision==0.3.8'
 
 # Install azureml packages
-RUN pip install 'azureml-core=={{latest-pypi-version}}' \
-                'azureml-mlflow=={{latest-pypi-version}}' \
+RUN pip install 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.6'
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
