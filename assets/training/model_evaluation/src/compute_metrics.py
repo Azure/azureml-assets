@@ -3,9 +3,6 @@
 
 """Main script for compute metrics."""
 
-import subprocess
-import sys
-
 # commenting the below code due to the import error from torch
 # install_deps = ["torch==1.13.1", "torchvision==0.14.1"]
 # command = [sys.executable, '-m', 'pip', 'install'] + install_deps
