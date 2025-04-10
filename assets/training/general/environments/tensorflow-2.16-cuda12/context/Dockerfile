@@ -28,123 +28,21 @@ ENV HOROVOD_GPU_ALLREDUCE=NCCL
 # Install Common Dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    # SSH and RDMA
-    libuuid1 \
-    libblkid1 \
-    util-linux \
-    fdisk \
-    libfdisk1 \
-    mount \
-    libmount1 \
-    libsmartcols1 \
-    login \
-    passwd \
-    libldap-common \
-    procps \
-    libprocps8 \
-    libmlx4-1 \
-    libmlx5-1 \
-    librdmacm1 \
-    libibverbs1 \
-    libmthca1 \
-    libdapl2 \
-    libgnutls30 \
-    libtiff5 \
-    dapl2-utils \
-    redis \
-    iproute2 && \
-    # rdma-core dependencies
-    apt-get install -y \
-    udev \
-    libudev-dev \
-    libnl-3-dev \
-    libnl-route-3-dev \
-    gcc \
-    ninja-build \
-    pkg-config \
-    valgrind \
-    cython3 \
-    python3-docutils \
-    pandoc \
-    dh-python \
-    python3-dev && \
-    # Others
-    apt-get install -y \
-    build-essential \
-    bzip2 \
-    libbz2-1.0 \
-    systemd \
     curl \
     git \
     wget \
-    cpio \
-	pciutils \
-	libnuma-dev \
-	ibutils \
-	ibverbs-utils \
-	rdmacm-utils \
-	infiniband-diags \
-	perftest \
+    zlib1g-dev \
 	librdmacm-dev \
 	libibverbs-dev \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libglib2.0-0 \
     dh-make \
-    libc-bin \
-    libx11-dev \
-    libgcrypt20 \
-    binutils-multiarch \
-    nginx \
-    e2fsprogs \
-    e2fsck-static \
-    fuse2fs \
-    logsave \
-    libss2 \
-    libcom-err2 \
-    gnupg \
-    gnupg2 \
-    gpg \
-    libdpkg-perl \
-    dpkg \
-    libpcre3 \
-    libpcre2-8-0 \
-    sqlite3 \
-    uidmap \
-    libkrb5-26-heimdal \             
-    libhcrypto4-heimdal \         
-    libheimntlm0-heimdal \
-    libheimbase1-heimdal \
-    libasn1-8-heimdal \
-    libgssapi3-heimdal \
-    libhx509-5-heimdal \
-    libroken18-heimdal \
-    libwind0-heimdal \
-    libksba8 \
-    libpam-modules \
-    libpam-modules-bin \
-    libpam0g \
-    libpam-runtime \
-    tar \
-    ncurses-bin \
-    ncurses-base \
-    libncursesw5 \
-    libctf-nobfd0 \
-    perl \
-    fuse \
     # Vulnerability fixes
-    krb5-admin-server=1.19.2-2ubuntu0.6 \
-    krb5-kdc=1.19.2-2ubuntu0.6 \
-    libgssapi-krb5-2=1.19.2-2ubuntu0.6 \
-    libgssrpc4=1.19.2-2ubuntu0.6 \
-    libkdb5-10=1.19.2-2ubuntu0.6 \
-    libpam-cap=1:2.44-1ubuntu0.22.04.2 \
-    libtasn1-6=4.18.0-4ubuntu0.1 \
-    libtasn1-bin=4.18.0-4ubuntu0.1 \
+    libgnutls30 \
+    libc-bin \
+    libgssapi-krb5-2 \
+    libpam-cap \
+    libtasn1-6 \
     libk5crypto3 \
-    libkrad0 \
-    cmark-gfm && \
+    libcap2 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
                
