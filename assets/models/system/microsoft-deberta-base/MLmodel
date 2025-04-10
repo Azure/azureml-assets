@@ -22,6 +22,7 @@ metadata:
   base_model_task: fill-mask
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.8.1
 model_size_bytes: 560386938
 model_uuid: 75c8faf8f61c4b92a126586ad3d9b192
