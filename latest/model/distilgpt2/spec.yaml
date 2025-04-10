@@ -69,7 +69,7 @@ tags:
     Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND40rs_v2, Standard_ND96asr_v4,
     Standard_ND96amsr_A100_v4]
-version: 15
+version: 16
 description: |
   DistilGPT2 (short for Distilled-GPT2) is an English-language model pre-trained with the supervision of the 124 million parameter version of GPT-2. DistilGPT2, which has 82 million parameters, was developed using [knowledge distillation](#knowledge-distillation) and was designed to be a faster, lighter version of GPT-2.
 
