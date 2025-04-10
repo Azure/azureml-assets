@@ -26,7 +26,7 @@ tags:
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 
-version: 2
+version: 3
 description: |-
   # LLaVA-Med v1.5, using [mistralai/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) as LLM for a better commercial license
 
