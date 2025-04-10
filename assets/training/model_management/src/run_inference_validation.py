@@ -268,7 +268,7 @@ def main():
         "inputRequest": inference_payload,
         "inputResponse": expected_response,
         "actualResponse": inference_response,
-        "responseTime": inference_time,
+        "responseTimeMs": inference_time,
         "structuralDiff": None,
     }
     if expected_response:
