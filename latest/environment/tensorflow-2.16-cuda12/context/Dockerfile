@@ -36,11 +36,13 @@ RUN apt-get update && \
 	libibverbs-dev \
     dh-make \
     # Vulnerability fixes
-    libgssapi-krb5-2=1.19.2-2ubuntu0.6 \
-    libpam-cap=1:2.44-1ubuntu0.22.04.2 \
-    libtasn1-6=4.18.0-4ubuntu0.1 \
+    libgnutls30 \
+    libc-bin \
+    libgssapi-krb5-2 \
+    libpam-cap \
+    libtasn1-6 \
     libk5crypto3 \
-    libcap2=1:2.44-1ubuntu0.22.04.2 && \
+    libcap2 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
                
