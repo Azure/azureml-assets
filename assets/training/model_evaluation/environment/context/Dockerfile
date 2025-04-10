@@ -24,4 +24,4 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Temp fix for env vuln
-RUN pip install mlflow==2.19.0
+RUN pip install mlflow==2.20.0
