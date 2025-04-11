@@ -22,8 +22,7 @@ metadata:
   base_model_task: summarization
   is_acft_model: true
   is_finetuned_model: false
-  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
-mlflow_version: 2.9.2
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1mlflow_version: 2.9.2
 model_size_bytes: 1225682894
 model_uuid: fc1837a4e5d24a2da2fdd5f08ff88ee2
 signature:
