@@ -6,6 +6,7 @@ import argparse
 import json
 import re
 import time
+import base64
 
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
@@ -59,6 +60,11 @@ def parse_args():
         "--inference_payload",
         type=Path,
         help="Json file with inference endpoint payload.",
+    )
+    parser.add_argument(
+        "--inference_payload_str",
+        type=str,
+        help="Serialized JSON payload for inference.",
     )
     parser.add_argument(
         "--endpoint_name",
@@ -161,6 +167,11 @@ def parse_args():
         "--model_deployment_details",
         type=str,
         help="Json file to which deployment details will be written",
+    )
+    parser.add_argument(
+        "--inference_response",
+        type=str,
+        help="Path to the inference response JSON file.",
     )
     # parse args
     args = parser.parse_args()
@@ -301,16 +312,51 @@ def main():
         args=args
     )
 
-    if args.inference_payload:
+    response = None
+    if args.inference_payload or args.inference_payload_str:
         print("Invoking inference with test payload ...")
         try:
-            response = ml_client.online_endpoints.invoke(
-                endpoint_name=endpoint_name,
-                deployment_name=deployment_name,
-                request_file=args.inference_payload,
-            )
-            print(f"Response:\n{response}")
-            logger.info(f"Endpoint invoked successfully with response :{response}")
+            start_time = time.time()
+            if args.inference_payload_str:
+                print(f"Inference payload string: {args.inference_payload_str}")
+                decoded_bytes = base64.b64decode(args.inference_payload_str)
+
+                # Convert bytes to string
+                decoded_str = decoded_bytes.decode('utf-8')
+                logger.info(f"Decoded string: {decoded_str}")
+
+                payload = json.loads(decoded_str)
+                logger.info(f"Payload:\n {payload}")
+
+                with open("payload.json", "w") as temp_file:
+                    json.dump(payload, temp_file)
+
+                response = ml_client.online_endpoints.invoke(
+                    endpoint_name=endpoint_name,
+                    deployment_name=deployment_name,
+                    request_file="payload.json",
+                )
+            elif args.inference_payload:
+                response = ml_client.online_endpoints.invoke(
+                    endpoint_name=endpoint_name,
+                    deployment_name=deployment_name,
+                    request_file=args.inference_payload,
+                )
+
+            end_time = time.time()
+            inference_time_ms = int((end_time - start_time) * 1000)
+
+            logger.info(f"Endpoint invoked successfully with inference time :{inference_time_ms} ms " +
+                        f"and response: {response}")
+            # Save inference response
+            if args.inference_response:
+                inference_result = {
+                    "response": response,
+                    "inference_time": inference_time_ms
+                }
+                with open(args.inference_response, "w") as f:
+                    json.dump(inference_result, f, indent=4)
+                logger.info(f"Saved inference response and inference time to output JSON file: {inference_result}")
         except Exception as e:
             raise AzureMLException._with_error(
                 AzureMLError.create(OnlineEndpointInvocationError, exception=e)
@@ -335,7 +381,6 @@ def main():
     logger.info("Saved deployment details in output json file.")
 
 
-# run script
 if __name__ == "__main__":
     # run main function
     main()
