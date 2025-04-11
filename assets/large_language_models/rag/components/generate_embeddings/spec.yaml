@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.72
+version: 0.0.73
 name: llm_rag_generate_embeddings
 display_name: LLM - Generate Embeddings
 is_deterministic: true
