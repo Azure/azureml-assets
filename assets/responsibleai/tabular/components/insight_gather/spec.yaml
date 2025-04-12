@@ -27,7 +27,7 @@ outputs:
   ux_json:
     type: path
 
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/14
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/18
 
 code: ../src/
 
