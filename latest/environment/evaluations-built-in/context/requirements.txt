@@ -1,5 +1,5 @@
 azure-ai-evaluation==1.2.0
-azureml-mlflow==1.59.0.post1
+azureml-mlflow==1.60.0
 azure-ai-ml==1.26.2
 
 openai==1.72.0

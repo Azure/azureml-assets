@@ -6,7 +6,7 @@ dependencies:
 - python=3.11
 - pip=24.0
 - pip:
-  - azureml-defaults==1.59.0
+  - azureml-defaults==1.60.0
   - azureml-inference-server-http==1.4.0
   - azure-storage-blob==12.25.1
   - azure-identity==1.21.0

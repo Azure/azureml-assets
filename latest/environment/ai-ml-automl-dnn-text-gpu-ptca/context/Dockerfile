@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly
 
 USER root:root
 
-RUN pip install 'azureml-automl-dnn-nlp==1.59.0'
-RUN pip install 'azureml-defaults==1.59.0'
+RUN pip install 'azureml-automl-dnn-nlp==1.60.0'
+RUN pip install 'azureml-defaults==1.60.0'
 
 RUN pip uninstall -y onnxruntime
 

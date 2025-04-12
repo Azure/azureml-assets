@@ -33,19 +33,19 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # Install pip dependencies
 RUN pip install \
                 # begin pypi dependencies
-                azureml-core==1.59.0.post2 \
-                azureml-mlflow==1.59.0.post1 \
-                azureml-pipeline-core==1.59.0 \
-                azureml-telemetry==1.59.0 \
-                azureml-interpret==1.59.0 \
-                azureml-responsibleai==1.59.0 \
-                azureml-automl-core==1.59.0 \
-                azureml-automl-runtime==1.59.0 \
-                azureml-train-automl-client==1.59.0 \
-                azureml-train-automl-runtime==1.59.0 \
-                azureml-train-automl==1.59.0 \
-                azureml-dataset-runtime==1.59.0 \
-                azureml-defaults==1.59.0 \
+                azureml-core==1.60.0 \
+                azureml-mlflow==1.60.0 \
+                azureml-pipeline-core==1.60.0 \
+                azureml-telemetry==1.60.0 \
+                azureml-interpret==1.60.0 \
+                azureml-responsibleai==1.60.0 \
+                azureml-automl-core==1.60.0 \
+                azureml-automl-runtime==1.60.0 \
+                azureml-train-automl-client==1.60.0 \
+                azureml-train-automl-runtime==1.60.0 \
+                azureml-train-automl==1.60.0 \
+                azureml-dataset-runtime==1.60.0 \
+                azureml-defaults==1.60.0 \
                 # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
                 'mlflow-skinny==2.15.1' \
                 'xgboost==1.5.2' \

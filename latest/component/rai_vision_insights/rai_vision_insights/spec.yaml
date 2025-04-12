@@ -124,7 +124,7 @@ outputs:
     description: Json file to which UX is serialized to for viewing in static AzureML
       Studio UI
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-vision/versions/19
+environment: azureml://registries/azureml/environments/responsibleai-vision/versions/21
 command: >-
   python ./rai_vision_insights.py
   --task_type ${{inputs.task_type}}

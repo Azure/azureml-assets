@@ -18,10 +18,10 @@ dependencies:
   - azure-search-documents>=11.4.0 # explicitly install for [cognitive_search]
     # Azure ML
   - azureml-contrib-services
-  - azureml-telemetry==1.59.0
-  - azureml-dataset-runtime==1.59.0
+  - azureml-telemetry==1.60.0
+  - azureml-dataset-runtime==1.60.0
   - azureml-inference-server-http>=1.3.0
-  - azureml-mlflow==1.59.0.post1
+  - azureml-mlflow==1.60.0
     # More packages needed for RAG extras
   - beautifulsoup4~=4.11.2 # explicitly install for [data_generation]
   - faiss-cpu~=1.7.3 # explicitly install for [faiss]

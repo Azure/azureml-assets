@@ -50,17 +50,17 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # Install pip dependencies
 RUN pip install \
                  # begin pypi dependencies
-                azureml-mlflow==1.59.0.post1 \
-                azureml-dataset-runtime==1.59.0 \
-                azureml-telemetry==1.59.0 \
-                azureml-responsibleai==1.59.0 \
-                azureml-automl-core==1.59.0 \
-                azureml-automl-runtime==1.59.0 \
-                azureml-train-automl-client==1.59.0 \
-                azureml-defaults==1.59.0 \
-                azureml-interpret==1.59.0 \
-                azureml-train-automl-runtime==1.59.0 \
-                azureml-automl-dnn-vision==1.59.0 \
+                azureml-mlflow==1.60.0 \
+                azureml-dataset-runtime==1.60.0 \
+                azureml-telemetry==1.60.0 \
+                azureml-responsibleai==1.60.0 \
+                azureml-automl-core==1.60.0 \
+                azureml-automl-runtime==1.60.0 \
+                azureml-train-automl-client==1.60.0 \
+                azureml-defaults==1.60.0 \
+                azureml-interpret==1.60.0 \
+                azureml-train-automl-runtime==1.60.0 \
+                azureml-automl-dnn-vision==1.60.0 \
                 'azureml-dataprep>=2.24.4' \
                 'azure-identity>=1.16.1'
                 # end pypi dependencies

@@ -8,9 +8,9 @@ sentencepiece==0.2.0
 accelerate==1.6.0
 wget==3.2
 applicationinsights==0.11.10
-azureml-automl-core==1.59.0
-azureml-telemetry==1.59.0
-azureml-automl-dnn-vision==1.59.0
+azureml-automl-core==1.60.0
+azureml-telemetry==1.60.0
+azureml-automl-dnn-vision==1.60.0
 pyarrow==14.0.2
 GitPython==3.1.44
 paramiko==3.5.1
