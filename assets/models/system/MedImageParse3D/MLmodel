@@ -22,3 +22,9 @@ signature:
   outputs: '[{"type": "binary", "name": "pred_seg_mask", "required": true}]'
   params: null
 utc_time_created: '2025-02-25 01:35:10.782397'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  base_model_name: MedImageParse3D
+  task: image-segmentation
+  is_acft_model: true
+  is_finetuned_model: false
