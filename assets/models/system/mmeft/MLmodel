@@ -14,3 +14,9 @@ flavors:
 mlflow_version: 2.5.0
 model_uuid: 3059912bc0324b0d882812ba9fb2ef6e
 utc_time_created: '2023-10-11 08:09:14.250969'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  base_model_name: mmeft
+  task: multimodal-classification
+  is_acft_model: true
+  is_finetuned_model: false
