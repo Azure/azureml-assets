@@ -27,7 +27,7 @@ inputs:
     description: JSON input payload used for inference.
 
   expected_response:
-    type: uri_file
+    type: string
     optional: true
     description: JSON file containing the expected inference response.
 

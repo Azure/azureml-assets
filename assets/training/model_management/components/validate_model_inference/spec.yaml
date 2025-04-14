@@ -119,8 +119,8 @@ inputs:
     optional: true
     description: ID of the validation run (used for updating status in self-serve)
 
-  expected_inference_response:
-    type: uri_file
+  inference_response:
+    type: string
     optional: true
     description: JSON file containing the expected inference response.
 
@@ -147,7 +147,7 @@ jobs:
     outputs:
       model_deployment_details:
         type: uri_file
-      inference_response:
+      model_inference_response:
         type: uri_file
 
   run_inference_validation:
@@ -159,8 +159,8 @@ jobs:
       validation_id: ${{parent.inputs.validation_id}}
       sku: ${{parent.inputs.instance_type}}
       inference_payload: ${{parent.inputs.inference_payload}}
-      expected_response: ${{parent.inputs.expected_inference_response}}
-      inference_response: ${{parent.jobs.online_deployment_model.outputs.inference_response}}
+      expected_response: ${{parent.inputs.inference_response}}
+      inference_response: ${{parent.jobs.online_deployment_model.outputs.model_inference_response}}
     outputs:
       validation_result: ${{parent.outputs.validation_result}}
 

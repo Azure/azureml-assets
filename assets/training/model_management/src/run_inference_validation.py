@@ -94,7 +94,6 @@ def save_validation_result(request_details, output_path, validation_id, sku, sta
         current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         validation_result = {
             "id": validation_id,
-            "runId": validation_id,
             "sku": sku,
             "createdTime": current_time,
             "updatedTime": current_time,
@@ -246,16 +245,32 @@ def main():
 
         inference_payload = json.loads(decoded_str)
 
+    expected_response = None
+    if args.expected_response:
+        decoded_bytes = base64.b64decode(args.expected_response)
+
+        # Convert bytes to string
+        decoded_str = decoded_bytes.decode('utf-8')
+        logger.info(f"Decoded string: {decoded_str}")
+        expected_response = json.loads(decoded_str)
+
+
     inference_output = load_json(args.inference_response)
     if not inference_output:
         logger.error("Inference output is missing or invalid.")
         sys.exit(1)
 
-    inference_output = load_json(args.inference_response)
-
-    expected_response = load_json(args.expected_response) if args.expected_response else None
-
     inference_response = inference_output.get("response")
+    if isinstance(inference_response, str):
+        try:
+            inference_response = json.loads(inference_response)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Failed to parse actualResponse as JSON: {e}")
+
+    if inference_response is None:
+        logger.warning("Actual response is missing or invalid. Setting it to an empty structure.")
+        inference_response = {}
+
     inference_time = inference_output.get("inference_time", 0)
     logger.info(f"inference_payload: {inference_payload}, expected response: {expected_response}, "
                 f"actual response: {inference_response}")
@@ -265,10 +280,11 @@ def main():
     status = "Success" if success_status else "Failed"
 
     request_details = {
-        "inputRequest": inference_payload,
-        "inputResponse": expected_response,
+        "providedRequest": inference_payload,
+        "providedResponse": expected_response,
         "actualResponse": inference_response,
         "responseTimeMs": inference_time,
+        "errorMessage": None,
         "structuralDiff": None,
     }
     if expected_response:

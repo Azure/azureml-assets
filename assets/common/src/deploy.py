@@ -169,7 +169,7 @@ def parse_args():
         help="Json file to which deployment details will be written",
     )
     parser.add_argument(
-        "--inference_response",
+        "--model_inference_response",
         type=str,
         help="Path to the inference response JSON file.",
     )
@@ -349,12 +349,12 @@ def main():
             logger.info(f"Endpoint invoked successfully with inference time :{inference_time_ms} ms " +
                         f"and response: {response}")
             # Save inference response
-            if args.inference_response:
+            if args.model_inference_response:
                 inference_result = {
                     "response": response,
                     "inference_time": inference_time_ms
                 }
-                with open(args.inference_response, "w") as f:
+                with open(args.model_inference_response, "w") as f:
                     json.dump(inference_result, f, indent=4)
                 logger.info(f"Saved inference response and inference time to output JSON file: {inference_result}")
         except Exception as e:

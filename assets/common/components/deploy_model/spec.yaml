@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
-version: 0.0.12.13
+version: 0.0.12
 type: command
 
 is_deterministic: True
@@ -36,7 +36,7 @@ command: >-
   $[[--initial_delay_liveness_probe ${{inputs.initial_delay_liveness_probe}}]]
   $[[--egress_public_network_access ${{inputs.egress_public_network_access}}]]
   --model_deployment_details ${{outputs.model_deployment_details}}
-  --inference_response ${{outputs.inference_response}}
+  --model_inference_response ${{outputs.model_inference_response}}
 
 inputs:
   # Output of registering component
@@ -209,7 +209,7 @@ outputs:
   model_deployment_details:
     type: uri_file
     description: Json file to which deployment details will be written
-  inference_response:
+  model_inference_response:
     type: uri_file
     description: JSON file containing inference results
 
