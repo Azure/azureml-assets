@@ -10,10 +10,9 @@ from argparse import ArgumentParser
 from azure.monitor.query import LogsQueryStatus
 
 from utils import get_app_insights_client
-import logging
+from logging_utilities import get_logger
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logger = get_logger(name=__name__)
 
 
 def get_args():
@@ -79,7 +78,6 @@ def save_output(result, args):
     try:
         # Todo: One conversation will be split across multiple rows. how to combine them?
         logger.info(f"Saving output to {args['preprocessed_data']}")
-        logger.info(f"First few rows of output: {result.head()}")
         result.to_json(args["preprocessed_data"], orient="records", lines=True)
     except Exception as e:
         logger.info("Unable to save output.")
