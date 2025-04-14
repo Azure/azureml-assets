@@ -32,7 +32,7 @@ tags:
   author: "Deci AI"
   huggingface_model_id: Deci/DeciLM-7B-instruct
   datasets: Open-Orca/SlimOrca
-version: 5
+version: 6
 description: |-
   DeciLM-7B-instruct is a model for short-form instruction following, built by LoRA fine-tuning on the SlimOrca dataset. It is a derivative of the recently released DeciLM-7B language model, a pre-trained, high-efficiency generative text model with 7 billion parameters. DeciLM-7B-instruct is one of the best 7B instruct models obtained using simple LoRA fine-tuning, without relying on preference optimization techniques such as RLHF and DPO. DeciLM-7B-instruct is intended for commercial and research use in English. However, like all large language models, its outputs are unpredictable and may generate responses that are inaccurate, biased, or otherwise objectionable. Developers planning to use DeciLM-7B-instruct should undertake thorough safety testing and tuning designed explicitly for their intended applications of the model before deployment.
 
