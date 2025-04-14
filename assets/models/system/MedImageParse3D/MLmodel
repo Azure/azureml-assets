@@ -13,8 +13,6 @@ flavors:
     python_model: python_model.pkl
     python_version: 3.9.21
     streamable: false
-metadata:
-  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.16.0
 model_size_bytes: 2977220934
 model_uuid: b8342713ae55404881e280a8ad77d0cc
