@@ -23,6 +23,7 @@ metadata:
   base_model_task: video-multi-object-tracking
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.10.2
 model_size_bytes: 793188435
 model_uuid: 439c035f257845a98ebce768eec1bf0c
