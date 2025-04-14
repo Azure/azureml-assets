@@ -76,12 +76,23 @@ def update_model_onboarding_version(
         if metrics_path_dict.get("api_inference_path", None):
             validation_result.append({
                 "Id": validation_id,
-                "runId": validation_id,
                 "type": "API_VALIDATION",
                 "passed": True,
                 "message": "API inference passed successfully",
                 "validationResultUrl": metrics_path_dict.get("api_inference_path"),
-                "status": "success",
+                "status": "Completed",
+                "createdTime": current_time,
+                "updatedTime": current_time,
+                "sku": sku
+            })
+        else:
+            validation_result.append({
+                "Id": validation_id,
+                "type": "API_VALIDATION",
+                "passed": True,
+                "message": "API inference passed successfully",
+                "validationResultUrl": metrics_path_dict.get("api_inference_path"),
+                "status": "Failed",
                 "createdTime": current_time,
                 "updatedTime": current_time,
                 "sku": sku

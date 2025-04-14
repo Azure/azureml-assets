@@ -91,6 +91,9 @@ def compare_structures(expected_response, actual_response):
 def save_validation_result(request_details, output_path, validation_id, sku, status):
     """Save validation results to a JSON file."""
     try:
+        if not output_path.endswith(".json"):
+            output_path += ".json"
+
         current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         validation_result = {
             "id": validation_id,
@@ -122,8 +125,9 @@ def fetch_storage_uri():
         output_data = run_details['runDefinition']['outputData']['validation_result']['outputLocation']['uri']
         output_data_path = output_data['path']
 
+        if not output_data_path.endswith(".json"):
+            output_data_path += ".json"
         output_data_uri = replace_name_in_path(output_data_path, run.id)
-
         # Extract datastore name and path from the AzureML URI
         datastore_name, path = extract_datastore_info(output_data_uri)
 
