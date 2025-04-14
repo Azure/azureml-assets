@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.88
+version: 0.0.89
 name: llm_rag_create_promptflow
 display_name: LLM - Create Prompt Flow
 is_deterministic: true
