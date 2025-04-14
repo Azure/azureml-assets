@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.69
+version: 0.0.70
 name: llm_rag_register_qa_data_asset
 display_name: LLM - Register QA Generation Data Asset
 is_deterministic: true
