@@ -16,16 +16,16 @@ ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 RUN apt-get update && echo 'success updated apt-get!'
-RUN apt-get install -y --no-install-recommends cmake>=3.28 libboost-dev libboost-system-dev libboost-filesystem-dev
+RUN apt-get install -y --no-install-recommends cmake=3.28 libboost-dev libboost-system-dev libboost-filesystem-dev
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
 ###############################
-# Pre-Build LightGBM
+# Pre-Build LightGBM    
 ###############################
 RUN cd /usr/local/src && mkdir lightgbm && cd lightgbm && \
-    git clone --recursive --depth 1 https://github.com/microsoft/LightGBM && \
+    git clone --recursive --depth 1 --branch v4.6.0 https://github.com/microsoft/LightGBM && \
     cd LightGBM && mkdir build && cd build && \
     cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=/usr/local/cuda/lib64/libOpenCL.so -DOpenCL_INCLUDE_DIR=/usr/local/cuda/include/ .. && \
     make -j4
