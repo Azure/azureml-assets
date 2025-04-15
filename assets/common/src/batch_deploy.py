@@ -15,8 +15,7 @@ from azure.ai.ml.entities import (
     BatchDeployment,
     BatchRetrySettings,
 )
-from azureml._common._error_definition import AzureMLError
-from azureml._common.exceptions import AzureMLException
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from pathlib import Path
 
 from utils.config import AppName, ComponentVariables
@@ -24,10 +23,7 @@ from utils.common_utils import get_mlclient, get_model_name
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
     swallow_all_exceptions,
-    BatchEndpointInvocationError,
-    EndpointCreationError,
-    DeploymentCreationError,
-    ComputeCreationError,
+    ModelImportErrorStrings,
 )
 
 
@@ -216,8 +212,11 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
         download_batch_output(ml_client, job, args)
 
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(BatchEndpointInvocationError, exception=e)
+        message = ModelImportErrorStrings.BATCH_ENDPOINT_INVOCATION_ERROR
+        raise MlException(
+            message=message.format(exception=e), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.ENDPOINT,
+            error=e
         )
 
 
@@ -239,8 +238,11 @@ def get_or_create_compute(ml_client, compute_name, args):
             ml_client.begin_create_or_update(compute_cluster).wait()
             logger.info("Compute cluster created successfully.")
         except Exception as e:
-            raise AzureMLException._with_error(
-                AzureMLError.create(ComputeCreationError, exception=e)
+            message = ModelImportErrorStrings.COMPUTE_CREATION_ERROR
+            raise MlException(
+                message=message.format(exception=e), no_personal_data_message=message,
+                error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPUTE,
+                error=e
             )
     return compute_cluster
 
@@ -272,16 +274,22 @@ def create_endpoint_and_deployment(ml_client, compute_name, model_id, endpoint_n
         ml_client.begin_create_or_update(endpoint).wait()
         logger.info("Endpoint created successfully.")
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(EndpointCreationError, exception=e)
+        message = ModelImportErrorStrings.ENDPOINT_CREATION_ERROR
+        raise MlException(
+            message=message.format(exception=e), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.ENDPOINT,
+            error=e
         )
 
     try:
         logger.info(f"Creating deployment {deployment}")
         ml_client.batch_deployments.begin_create_or_update(deployment).wait()
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(DeploymentCreationError, exception=e)
+        message = ModelImportErrorStrings.DEPLOYMENT_CREATION_ERROR
+        raise MlException(
+            message=message.format(exception=e), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.DEPLOYMENT,
+            error=e
         )
 
     logger.info("Deployment successful.")
