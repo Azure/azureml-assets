@@ -4,8 +4,6 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs -y
 
-RUN conda install cryptography
-
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
     wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar --no-verbose;\
