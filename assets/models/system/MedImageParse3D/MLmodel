@@ -1,0 +1,30 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/checkpoints
+        uri: /__w/1/s/checkpoints
+    cloudpickle_version: 3.1.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.9.21
+    streamable: false
+mlflow_version: 2.16.0
+model_size_bytes: 2977220934
+model_uuid: b8342713ae55404881e280a8ad77d0cc
+signature:
+  inputs: '[{"type": "binary", "name": "image", "required": true}, {"type": "string",
+    "name": "text", "required": true}]'
+  outputs: '[{"type": "binary", "name": "pred_seg_mask", "required": true}]'
+  params: null
+utc_time_created: '2025-02-25 01:35:10.782397'
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  base_model_name: MedImageParse3D
+  task: image-segmentation
+  is_acft_model: true
+  is_finetuned_model: false
