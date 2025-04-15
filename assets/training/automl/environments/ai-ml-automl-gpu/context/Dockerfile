@@ -16,10 +16,28 @@ ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 RUN apt-get update && echo 'success updated apt-get!'
-RUN apt-get install -y --no-install-recommends cmake>3.28 libboost-dev libboost-system-dev libboost-filesystem-dev
+RUN apt-get install -y --no-install-recommends libboost-dev libboost-system-dev libboost-filesystem-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    wget \
+    ca-certificates \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install CMake 3.28.3
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3.tar.gz && \
+    tar -zxvf cmake-3.28.3.tar.gz && \
+    cd cmake-3.28.3 && \
+    ./bootstrap && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && rm -rf cmake-3.28.3 cmake-3.28.3.tar.gz
+
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
+
+
 
 ###############################
 # Pre-Build LightGBM    
