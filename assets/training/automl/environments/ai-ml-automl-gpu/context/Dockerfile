@@ -16,7 +16,7 @@ ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 RUN apt-get update && echo 'success updated apt-get!'
-RUN apt-get install -y --no-install-recommends cmake=3.28 libboost-dev libboost-system-dev libboost-filesystem-dev
+RUN apt-get install -y --no-install-recommends cmake>3.28 libboost-dev libboost-system-dev libboost-filesystem-dev
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
