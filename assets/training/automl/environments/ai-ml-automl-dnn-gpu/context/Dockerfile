@@ -25,7 +25,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 # Pre-Build LightGBM
 ###############################
 RUN cd /usr/local/src && mkdir lightgbm && cd lightgbm && \
-    git clone --recursive --branch v3.2.1 --depth 1 https://github.com/microsoft/LightGBM && \
+    git clone --recursive --depth 1 https://github.com/microsoft/LightGBM && \
     cd LightGBM && mkdir build && cd build && \
     cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=/usr/local/cuda/lib64/libOpenCL.so -DOpenCL_INCLUDE_DIR=/usr/local/cuda/include/ .. && \
     make -j4
