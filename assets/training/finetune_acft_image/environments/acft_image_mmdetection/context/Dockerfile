@@ -7,8 +7,7 @@ RUN apt-get -y update && apt-get install -y libglib2.0-0
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-RUN apt-get install -y expat=2.4.7-1ubuntu0.5
-
+RUN apt-get install -y expat
 # # # Install mmdet
 # Temporary workaround for https://github.com/open-mmlab/mim/issues/244
 RUN pip install pip==24.0
