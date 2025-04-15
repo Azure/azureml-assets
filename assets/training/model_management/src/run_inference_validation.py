@@ -88,11 +88,11 @@ def compare_structures(expected_response, actual_response):
     }
 
 
-def save_validation_result(request_details, output_path, validation_id, sku, status):
+def save_validation_result(request_details, output_dir, validation_id, sku, status):
     """Save validation results to a JSON file."""
     try:
-        if not output_path.endswith(".json"):
-            output_path += ".json"
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, "validation_result.json")
 
         current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         validation_result = {
@@ -125,18 +125,19 @@ def fetch_storage_uri():
         output_data = run_details['runDefinition']['outputData']['validation_result']['outputLocation']['uri']
         output_data_path = output_data['path']
 
-        if not output_data_path.endswith(".json"):
-            output_data_path += ".json"
         output_data_uri = replace_name_in_path(output_data_path, run.id)
         # Extract datastore name and path from the AzureML URI
         datastore_name, path = extract_datastore_info(output_data_uri)
 
         # Construct the storage URI
         storage_uri = get_storage_url(datastore_name)
-        full_storage_uri = f"{storage_uri}/{path}"
-        logger.info(f"Full storage URI: {full_storage_uri}")
+        folder_uri = f"{storage_uri}/{path}"
+        # Construct the full path to the validation_result.json file
+        full_file_uri = f"{folder_uri}/validation_result.json"
 
-        return full_storage_uri
+        logger.info(f"Full storage URI (file): {full_file_uri}")
+
+        return full_file_uri  # This is the full path to validation_result.json
     except Exception as e:
         logger.error(f"Error fetching storage URI: {e}")
         return None

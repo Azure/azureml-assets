@@ -48,7 +48,7 @@ inputs:
 
 outputs:
   validation_result:
-    type: uri_file
+    type: uri_folder
     description: JSON file containing the validation results.
   metrics_storage_uri:
     type: uri_file
