@@ -9,9 +9,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         #procps \ 
         libgnutls30 \ 
-        libk5crypto3 \ 
-        libkrb5-3 \ 
-        libkrb5support0 \ 
+        #libk5crypto3 \ 
+        #libkrb5-3 \ 
+        #libkrb5support0 \ 
         libpam-modules \ 
         nginx-light \
         wget \
