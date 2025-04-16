@@ -111,6 +111,9 @@ inputs:
       - Standard_NC24s_v2
       - Standard_NC24s_v3
       - Standard_NC24rs_v3
+      - Standard_NC24ads_A100_v4
+      - Standard_NC48ads_A100_v4
+      - Standard_NC96ads_A100_v4
       - Standard_NC64as_T4_v3
       - Standard_ND40rs_v2
       - Standard_ND96asr_v4
