@@ -4,7 +4,7 @@ description: >-
   An environment used by Azure ML AutoML for training models.
 
 name: "ai-ml-automl-dnn-forecasting-gpu"
-version: "21"
+version: "22"
 
 build:
   path: "context"

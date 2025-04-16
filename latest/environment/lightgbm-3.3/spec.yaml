@@ -5,7 +5,7 @@ description: >-
   LightGBM. Contains the Azure ML SDK and additional python packages.
 
 name: "lightgbm-3.3"
-version: "60"
+version: "61"
 
 build:
   path: "context"
