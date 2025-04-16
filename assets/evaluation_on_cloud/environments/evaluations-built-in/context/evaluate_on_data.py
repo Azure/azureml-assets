@@ -210,7 +210,7 @@ def apply_target_on_data(data, model_target, data_mapping):
     output_filename = ""
     if ext == ".csv":
         output_filename = f"{name}_output.csv"
-    else: # .jsonl
+    else:  # .jsonl
         output_filename = f"{name}_output.jsonl"
 
     output_file = os.path.join(os.path.dirname(output_dir), output_filename)
