@@ -155,6 +155,7 @@ def apply_target_on_data(data, model_target, data_mapping):
     """Apply target on input data."""
     input_filename = os.path.basename(data)
     name, ext = os.path.splitext(input_filename)
+    df = pd.DataFrame()
     try:
         if ext == ".csv":
             df = pd.read_csv(data)
@@ -206,6 +207,7 @@ def apply_target_on_data(data, model_target, data_mapping):
 
     output_dir = data.replace(INPUT_EVAL_DATA_DIR, OUTPUT_EVAL_DATA_DIR)
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
+    output_filename = ""
     if ext == ".csv":
         output_filename = f"{name}_output.csv"
     else: # .jsonl
