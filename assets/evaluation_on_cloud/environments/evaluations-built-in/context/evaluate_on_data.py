@@ -246,11 +246,11 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
     logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
 
     data = command_line_args.eval_data
-    logger.info(f"Evaluation Data: {data}")
+    logger.info(f"Evaluation Data filename: {data}")
     if model_target:
         logger.info("Applying target on data")
         data = apply_target_on_data(data=data, model_target=model_target, data_mapping=data_mapping)
-        logger.info(f"Evaluation Data after applying target: {data}")
+        logger.info(f"Evaluation Data filename after applying target: {data}")
         logger.info("Updating evaluator config for generated_response data mapping")
         evaluator_config = update_evaluator_config_mapping_for_generated_response(command_line_args, evaluator_config)
 
