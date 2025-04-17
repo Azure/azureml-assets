@@ -33,7 +33,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3
     make install && \
     cd .. && rm -rf cmake-3.28.3 cmake-3.28.3.tar.gz
 
-    RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
