@@ -4,7 +4,7 @@ type: pipeline
 name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a baseline.
-version: 0.3.52
+version: 0.3.53
 is_deterministic: true
 
 inputs:
@@ -188,7 +188,7 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.32
+    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.33
     inputs:
       signal_metrics:
         type: mltable
