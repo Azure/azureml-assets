@@ -53,6 +53,5 @@ class ModelTarget:
                 return response_text
             except (KeyError, IndexError):
                 raise RuntimeError(f"Error: Unexpected API response format: {KeyError}")
-                return "Error: Unexpected API response format"
         else:
             raise RuntimeError(f"Error: {response.status_code}, {response.text}")
