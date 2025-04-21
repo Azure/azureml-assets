@@ -102,13 +102,12 @@ ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
 ENV AML_APP_ROOT="/var/mlflow_resources"
 ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
+ENV MLFLOW_MODEL_FOLDER="mlflow_model_folder"
 
 USER root
 
 COPY mlmonitoring /var/mlflow_resources/mlmonitoring
 COPY mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
-#COPY mlflow_hf_score_cpu.py /var/mlflow_resources/mlflow_hf_score_cpu.py
-#COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
 
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
