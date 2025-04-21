@@ -180,14 +180,15 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         if self._vllm_enabled:
             mlclient = get_mlclient("azureml")
             vllm_image = mlclient.environments.get("foundation-model-inference", label="latest")
-            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/foundation-model-inference:" + str(vllm_image.version)
+            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/foundation-model-inference:" \
+                + str(vllm_image.version)
             logger.info("Metadata: {}".format(metadata))
         elif not self._vllm_enabled:
             mlclient = get_mlclient("azureml")
-            vllm_image = mlclient.environments.get("mlflow-model-inference", label="latest")
-            metadata.update({
-                "azureml.base_image": "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" + str(vllm_image.version)
-            })
+            mlFlow_image = mlclient.environments.get("mlflow-model-inference", label="latest")
+            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
+                + str(mlFlow_image.version)
+            
             logger.info("Metadata: {}".format(metadata))
 
 

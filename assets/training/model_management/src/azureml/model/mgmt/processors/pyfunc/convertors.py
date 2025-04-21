@@ -120,10 +120,9 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
             from azureml.model.mgmt.utils.common_utils import get_mlclient
   
             mlclient = get_mlclient("azureml")
-            vllm_image = mlclient.environments.get("mlflow-model-inference", label="latest")
-            metadata.update({
-                "azureml.base_image": "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" + str(vllm_image.version)
-            })
+            mlFlow_image = mlclient.environments.get("mlflow-model-inference", label="latest")
+            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
+                + str(mlFlow_image.version)
             logger.info("Metadata: {}".format(metadata))
 
        
