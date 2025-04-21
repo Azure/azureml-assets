@@ -122,7 +122,6 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
             metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
                 + str(mlFlow_image.version)
             logger.info("Metadata: {}".format(metadata))
-       
         # set metadata info
         metadata.update(fetch_mlflow_acft_metadata(
             base_model_name=self._model_id,
