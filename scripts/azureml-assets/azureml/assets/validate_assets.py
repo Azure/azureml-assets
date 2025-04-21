@@ -1028,7 +1028,8 @@ def validate_assets(input_dirs: List[Path],
                     spec_config.pop("variantInfo")
 
             if variant_info is not None:
-                logger.print(f"Found variantInfo in spec, popping out info and rewriting spec. variantInfo: {variant_info}")
+                logger.print(f"Found variantInfo in spec, popping out info and rewriting spec. "
+                             f"variantInfo: {variant_info}")
                 with open(asset_config.spec_with_path, "w") as f:
                     yaml.dump(spec_config, f)
 
