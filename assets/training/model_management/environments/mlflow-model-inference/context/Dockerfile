@@ -7,20 +7,11 @@ RUN apt-get update && \
     apt-get purge -y software-properties-common && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        #procps \ 
         libgnutls30 \ 
-        #libk5crypto3 \ 
-        #libkrb5-3 \ 
-        #libkrb5support0 \ 
         libpam-modules \ 
         nginx-light \
         wget \
         runit \
-        #libtinfo6 \ 
-        #libncurses6 \ 
-        #ncurses-bin \ 
-        #ncurses-base \ 
-        #libncursesw6 \ 
         libcap2 \ 
         libc6 \    
         libc-bin \
@@ -29,11 +20,9 @@ RUN apt-get update && \
         build-essential \
         psmisc \
         unzip \
-        #perl \
         binutils-multiarch \
         binutils \
         libcurl4 \
-        #libunwind8 \
         systemd \
         libssl3 && \
     apt-get autoremove -y && \
