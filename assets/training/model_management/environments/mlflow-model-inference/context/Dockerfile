@@ -30,36 +30,39 @@ RUN apt-get update && \
     rm -rf /usr/share/man/* && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /var/runit
-RUN mkdir -p /var/azureml-app
-RUN mkdir -p /opt/miniconda/
-RUN mkdir -p etc/nginx/sites-available
+COPY context.sh /tmp/
+RUN bash /tmp/context.sh
 
-COPY runit/gunicorn /var/runit/gunicorn/
-COPY runit/nginx /var/runit/nginx/
-COPY runit/rsyslog /var/runit/rsyslog/
-COPY common/aml_logger /var/azureml-logger
-COPY utilities/start_logger.sh /var/azureml-logger/start_logger.sh
-COPY configs/app etc/nginx/sites-available/app
+# RUN mkdir -p /var/runit
+# RUN mkdir -p /var/azureml-app
+# RUN mkdir -p /opt/miniconda/
+# RUN mkdir -p etc/nginx/sites-available
 
-RUN chmod +x var/runit/*/*
-RUN chmod +x var/azureml-logger/start_logger.sh
+# COPY runit/gunicorn /var/runit/gunicorn/
+# COPY runit/nginx /var/runit/nginx/
+# COPY runit/rsyslog /var/runit/rsyslog/
+# COPY common/aml_logger /var/azureml-logger
+# COPY utilities/start_logger.sh /var/azureml-logger/start_logger.sh
+# COPY configs/app etc/nginx/sites-available/app
+
+# RUN chmod +x var/runit/*/*
+# RUN chmod +x var/azureml-logger/start_logger.sh
 
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
         rm -f /etc/nginx/sites-enabled/default
 COPY configs/rsyslog.conf    etc/rsyslog.conf
 
-RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
-RUN chmod +x /var/runit/gunicorn/run
+# RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
+# RUN chmod +x /var/runit/gunicorn/run
 
-RUN sed -i 's/\r$//g' /var/runit/gunicorn/finish
-RUN chmod +x /var/runit/gunicorn/finish
+# RUN sed -i 's/\r$//g' /var/runit/gunicorn/finish
+# RUN chmod +x /var/runit/gunicorn/finish
 
-RUN sed -i 's/\r$//g' /var/runit/nginx/run
-RUN chmod +x /var/runit/nginx/run
+# RUN sed -i 's/\r$//g' /var/runit/nginx/run
+# RUN chmod +x /var/runit/nginx/run
 
-RUN sed -i 's/\r$//g' /var/runit/nginx/finish
-RUN chmod +x /var/runit/nginx/finish
+# RUN sed -i 's/\r$//g' /var/runit/nginx/finish
+# RUN chmod +x /var/runit/nginx/finish
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=300
