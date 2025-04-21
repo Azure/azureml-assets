@@ -45,12 +45,9 @@ COPY configs/app etc/nginx/sites-available/app
 RUN chmod +x var/runit/*/*
 RUN chmod +x var/azureml-logger/start_logger.sh
 
-#RUN chmod +x /var/runit/nginx/run
-
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
         rm -f /etc/nginx/sites-enabled/default
 COPY configs/rsyslog.conf    etc/rsyslog.conf
-
 
 RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
 RUN chmod +x /var/runit/gunicorn/run
