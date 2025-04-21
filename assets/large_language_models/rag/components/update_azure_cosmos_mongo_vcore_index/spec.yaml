@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.32
+version: 0.0.33
 name: llm_rag_update_cosmos_mongo_vcore_index
 display_name: LLM - Update Azure Cosmos Mongo vCore Index
 is_deterministic: true

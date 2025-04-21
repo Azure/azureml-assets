@@ -22,6 +22,7 @@ metadata:
   base_model_task: text-generation
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.8.1
 model_size_bytes: 47369790595
 model_uuid: f7383acbad6f48069c76424fe00f52fd
