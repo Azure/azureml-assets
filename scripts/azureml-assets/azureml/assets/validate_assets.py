@@ -8,6 +8,7 @@ import argparse
 import json
 import re
 import sys
+import yaml
 from collections import defaultdict
 from pathlib import Path
 from ruamel.yaml import YAML
@@ -1016,6 +1017,20 @@ def validate_assets(input_dirs: List[Path],
             else:
                 _log_warning(asset_config_path, e)
             continue
+
+        # Extract model variant info from spec
+        variant_info = None
+        if asset_config.type == assets.AssetType.MODEL:
+            with open(asset_config.spec_with_path, "r") as f:
+                spec_config = yaml.safe_load(f)
+                variant_info = spec_config.get("variantInfo")
+                if variant_info is not None:
+                    spec_config.pop("variantInfo")
+
+            if variant_info is not None:
+                logger.print(f"Found variantInfo in spec, popping out info and rewriting spec. variantInfo: {variant_info}")
+                with open(asset_config.spec_with_path, "w") as f:
+                    yaml.dump(spec_config, f)
 
         # Populate dictionary of asset names to asset config paths
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)

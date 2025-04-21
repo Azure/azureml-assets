@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: analyze-conversations-test
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: standard
+  azureml.promptflow.name: Analyze Conversations
+  azureml.promptflow.description: Use Azure AI Language to analyze conversations & meetings.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 1
+variantInfo:
+  parents:
+  - assetId: 'test'
+  variantMetadata:
+    modelType: 'test'
+    quantization: ['test']
+    device: 'test'
+    executionProvider: 'test'
+    fileSizeBytes: 120
+    vRamFootprintBytes: 0
