@@ -21,7 +21,9 @@ ENV ORAS_VERSION=1.2.2
 
 RUN wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb && \
     dpkg -i trivy_${TRIVY_VERSION}_Linux-64bit.deb && \
-    rm trivy_${TRIVY_VERSION}_Linux-64bit.deb
+    rm trivy_${TRIVY_VERSION}_Linux-64bit.deb && \
+    trivy image --download-db-only && \
+    trivy image --download-java-db-only
 	
 RUN wget https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz && \
 	mkdir -p oras-install/ && \
