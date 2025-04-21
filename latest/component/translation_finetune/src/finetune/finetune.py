@@ -1052,6 +1052,19 @@ def _get_model_flavor(mlflow_flavors: list, mlmodel_data: dict) -> str:
     return None
 
 
+def validate_learning_rate(args: Namespace) -> None:
+    """Validate learning rate."""
+    if args.learning_rate <= 0:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Invalid learning rate. Learning rate should be greater than 0."
+                )
+            )
+        )
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
@@ -1235,6 +1248,8 @@ def finetune(args: Namespace):
 
     # set gradient-checkpointing
     set_gradient_checkpointing(args)
+
+    validate_learning_rate(args)
 
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:

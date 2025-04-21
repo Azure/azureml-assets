@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_classification_datapreprocess
-version: 0.0.72
+version: 0.0.73
 type: command
 
 is_deterministic: true
