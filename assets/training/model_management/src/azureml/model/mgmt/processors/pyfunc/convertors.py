@@ -114,6 +114,19 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         :type metadata: Optional[Dict]. Defaults to {}.
         """
         signatures = self._signatures or self.get_model_signature()
+        
+          # Check and update Base MLFlow Image metadata in Import Model Component
+        if not self._vllm_enabled:
+            from azureml.model.mgmt.utils.common_utils import get_mlclient
+  
+            mlclient = get_mlclient("azureml")
+            vllm_image = mlclient.environments.get("mlflow-model-inference", label="latest")
+            metadata.update({
+                "azureml.base_image": "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" + str(vllm_image.version)
+            })
+            logger.info("Metadata: {}".format(metadata))
+
+       
         # set metadata info
         metadata.update(fetch_mlflow_acft_metadata(
             base_model_name=self._model_id,
