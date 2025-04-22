@@ -439,7 +439,6 @@ class TestHFMLFLowConvertor:
         """Validate conda dep has needed dependencies."""
         # Mock the AzureML credential to avoid authentication issues
         mock_credential.return_value = MagicMock()
-        
         with TemporaryDirectory() as output_dir, TemporaryDirectory() as temp_dir:
             # save model
             nlp_mlflow_convertor = NLPMLflowConvertor(
