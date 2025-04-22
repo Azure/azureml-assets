@@ -4,7 +4,7 @@ type: spark
 name: model_performance_compute_metrics
 display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance monitor.
-version: 0.0.26
+version: 0.0.27
 is_deterministic: true
 
 code: ../../src
@@ -67,7 +67,7 @@ conf:
     dependencies:
       - pip:
         - azure-storage-file-datalake~=12.11.0
-        - azure-ai-ml~=1.23.1
+        - azure-ai-ml~=1.26.3
         - azureml-mlflow~=1.59.0
         - mltable~=1.6.1
         - azureml-fsspec~=1.3.1

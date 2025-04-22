@@ -4,7 +4,7 @@ type: spark
 name: action_analyzer_correlation_test
 display_name: Action Analyzer - Correlation Test
 description: Perform correlation test on different groups to generate actions.
-version: 0.0.21
+version: 0.0.22
 is_deterministic: True
 inputs:
   data_with_action_metric_score:
@@ -32,7 +32,7 @@ conf:
       - pip:
         - azure-storage-file-datalake~=12.11.0
         - azureml-mlflow~=1.59.0
-        - azure-ai-ml~=1.23.1
+        - azure-ai-ml~=1.26.3
         - mltable~=1.6.1
         - azureml-fsspec~=1.3.1
         - fsspec~=2023.4.0

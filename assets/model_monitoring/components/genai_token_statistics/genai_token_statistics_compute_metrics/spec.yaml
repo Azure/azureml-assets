@@ -4,7 +4,7 @@ type: spark
 name: genai_token_statistics_compute_metrics
 display_name:  GenAI Token Statistics - Compute Metrics
 description: Compute token statistics metrics.
-version: 0.0.21
+version: 0.0.22
 is_deterministic: true
 
 inputs:
@@ -42,7 +42,7 @@ conf:
     dependencies:
       - pip:
         - azure-storage-file-datalake~=12.11.0
-        - azure-ai-ml~=1.23.1
+        - azure-ai-ml~=1.26.3
         - azureml-mlflow~=1.59.0
         - mltable~=1.6.1
         - azureml-fsspec~=1.3.1

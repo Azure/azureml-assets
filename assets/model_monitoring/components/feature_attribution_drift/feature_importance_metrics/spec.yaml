@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
 name: feature_importance_metrics
-version: 0.3.31
+version: 0.3.32
 display_name: Feature importance
 is_deterministic: true
 description: Feature importance for model monitoring.
@@ -48,7 +48,7 @@ conf:
     dependencies:
     - pip:
         - azure-storage-file-datalake~=12.11.0
-        - azure-ai-ml~=1.23.1
+        - azure-ai-ml~=1.26.3
         - mltable~=1.6.1
         - interpret-community[mimic]~=0.31.0
         - azureml-fsspec~=1.3.1

@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_evaluate_metrics_threshold
 display_name: Model Monitor - Evaluate Metrics Threshold
 description: Evaluate signal metrics against the threshold provided in the monitoring signal.
-version: 0.3.32
+version: 0.3.33
 is_deterministic: true
 
 code: ../../src
@@ -37,7 +37,7 @@ conf:
     dependencies:
       - pip:
         - azure-storage-file-datalake~=12.8.0
-        - azure-ai-ml~=1.23.1
+        - azure-ai-ml~=1.26.3
         - azureml-mlflow~=1.49.0
         - mltable~=1.6.1
         - azureml-fsspec~=1.3.1

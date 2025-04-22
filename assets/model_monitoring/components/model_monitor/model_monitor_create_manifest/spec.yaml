@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_create_manifest
 display_name: Model Monitor - Create Manifest
 description: Creates the model monitor metric manifest.
-version: 0.3.24
+version: 0.3.25
 is_deterministic: true
 
 code: ../../src/
@@ -72,7 +72,7 @@ conf:
     dependencies:
       - pip:
         - azure-storage-file-datalake~=12.11.0
-        - azure-ai-ml~=1.23.1
+        - azure-ai-ml~=1.26.3
         - azureml-mlflow~=1.59.0
         - mltable~=1.6.1
         - azureml-fsspec~=1.3.1

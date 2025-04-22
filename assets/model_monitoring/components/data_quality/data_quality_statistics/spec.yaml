@@ -4,7 +4,7 @@ type: spark
 name: data_quality_data_statistics
 display_name: Data Quality - Data Statistics
 description: Compute data statistics leveraged by the data quality monitor.
-version: 0.3.27
+version: 0.3.28
 is_deterministic: true
 
 inputs:
@@ -42,7 +42,7 @@ conf:
     dependencies:
       - pip:
         - azure-storage-file-datalake~=12.11.0
-        - azure-ai-ml~=1.23.1
+        - azure-ai-ml~=1.26.3
         - azureml-mlflow~=1.59.0
         - mltable~=1.6.1
         - azureml-fsspec~=1.3.1
