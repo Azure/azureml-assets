@@ -186,7 +186,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         env = mlclient.environments.get(env_name, label="latest")
         metadata["azureml.base_image"] = f"mcr.microsoft.com/azureml/curated/{env_name}:{env.version}"
         logger.info("Metadata: %s", metadata)
-          # if self._vllm_enabled:
+        # if self._vllm_enabled:
         #     mlclient = get_mlclient("azureml")
         #     vllm_image = mlclient.environments.get("foundation-model-inference", label="latest")
         #     metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/foundation-model-inference:" \
