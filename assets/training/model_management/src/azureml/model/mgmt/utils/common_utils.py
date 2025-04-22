@@ -96,7 +96,7 @@ def get_mlclient(registry_name: str = None):
     has_msi_succeeded = False
     try:
         msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-        print(f"msi_client_id: {msi_client_id}")
+        logger.warning(f"msi_client_id: {msi_client_id}")
         credential = ManagedIdentityCredential(client_id=msi_client_id)
         credential.get_token("https://management.azure.com/.default")
         has_msi_succeeded = True
