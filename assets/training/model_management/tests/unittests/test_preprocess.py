@@ -434,9 +434,12 @@ class TestPreprocessModule(unittest.TestCase):
 
 class TestHFMLFLowConvertor:
     """Test HF Model Convertor Factory."""
-
-    def test_mlflow_conda_dep(self, model_path, translate_params):
+    @patch("azureml._common.authentication.AzureMLOnBehalfOfCredential")
+    def test_mlflow_conda_dep(self, mock_credential, model_path, translate_params):
         """Validate conda dep has needed dependencies."""
+        # Mock the AzureML credential to avoid authentication issues
+        mock_credential.return_value = MagicMock()
+        
         with TemporaryDirectory() as output_dir, TemporaryDirectory() as temp_dir:
             # save model
             nlp_mlflow_convertor = NLPMLflowConvertor(
