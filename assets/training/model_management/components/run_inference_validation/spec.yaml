@@ -18,7 +18,7 @@ command: >-
   --inference_response ${{inputs.inference_response}}
   --validation-id ${{inputs.validation_id}}
   --sku ${{inputs.sku}}
-  --validation_result ${{outputs.validation_result}}
+  --validation_results ${{outputs.validation_results}}
   --metrics_storage_uri ${{outputs.metrics_storage_uri}}
 
 inputs:
@@ -47,7 +47,7 @@ inputs:
     description: ID of the validation run (used for updating status in self-serve)
 
 outputs:
-  validation_result:
+  validation_results:
     type: uri_folder
     description: JSON file containing the validation results.
   metrics_storage_uri:

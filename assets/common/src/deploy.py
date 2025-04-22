@@ -191,7 +191,7 @@ def parse_args():
 
 def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
-    endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
+    endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="aad_token")
 
     # deployment
     deployment = ManagedOnlineDeployment(

@@ -65,7 +65,7 @@ inputs:
 
   model_id:
     type: string
-    optional: true 
+    optional: false
     description: |
       Asset ID of the model registered in workspace/registry.
       Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
@@ -100,7 +100,7 @@ inputs:
 
   inference_payload:
     type: string
-    optional: true
+    optional: false
     description: JSON payload which would be used to validate deployment
 
   endpoint_name:
@@ -126,9 +126,9 @@ inputs:
 
 # Pipeline outputs
 outputs:
-  validation_result:
+  validation_results:
     description: Output file containing the validation results.
-    type: uri_file
+    type: uri_folder
 
 jobs:
   online_deployment_model:
@@ -142,8 +142,6 @@ jobs:
       deployment_name: ${{parent.inputs.deployment_name}}
       instance_type: ${{parent.inputs.instance_type}}
       instance_count: ${{parent.inputs.instance_count}}
-    identity:
-      type: user_identity
     outputs:
       model_deployment_details:
         type: uri_file
@@ -153,8 +151,6 @@ jobs:
   run_inference_validation:
     type: command
     component: azureml:run_inference_validation:0.0.1
-    identity:
-      type: user_identity
     inputs:
       validation_id: ${{parent.inputs.validation_id}}
       sku: ${{parent.inputs.instance_type}}
@@ -162,7 +158,7 @@ jobs:
       expected_response: ${{parent.inputs.inference_response}}
       inference_response: ${{parent.jobs.online_deployment_model.outputs.model_inference_response}}
     outputs:
-      validation_result: ${{parent.outputs.validation_result}}
+      validation_results: ${{parent.outputs.validation_results}}
 
   delete_endpoints:
     type: command
@@ -170,8 +166,6 @@ jobs:
     inputs:
       model_deployment_details: ${{parent.jobs.online_deployment_model.outputs.model_deployment_details}}
       endpoint_name: ${{parent.inputs.endpoint_name}}
-    identity:
-      type: user_identity
     compute: ${{parent.inputs.compute}}
 
   publish_results:

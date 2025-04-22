@@ -91,8 +91,12 @@ def compare_structures(expected_response, actual_response):
 def save_validation_result(request_details, output_dir, validation_id, sku, status):
     """Save validation results to a JSON file."""
     try:
+        logger.info(f"Saving validation result to {output_dir}")
+        # Create the output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
+        logger.info(f"Output directory: {output_dir}")
         output_path = os.path.join(output_dir, "validation_result.json")
+        logger.info(f"Output path: {output_path}")
 
         current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         validation_result = {
@@ -110,6 +114,7 @@ def save_validation_result(request_details, output_dir, validation_id, sku, stat
         logger.info(f"Validation result saved to {output_path}")
     except Exception as e:
         logger.error(f"Error saving validation result: {e}")
+        raise Exception(f"Failed to get MSI credentials : {e}")
 
 
 def replace_name_in_path(path_template, name_value):
@@ -122,7 +127,7 @@ def fetch_storage_uri():
     try:
         run = Run.get_context()
         run_details = run.get_details()
-        output_data = run_details['runDefinition']['outputData']['validation_result']['outputLocation']['uri']
+        output_data = run_details['runDefinition']['outputData']['validation_results']['outputLocation']['uri']
         output_data_path = output_data['path']
 
         output_data_uri = replace_name_in_path(output_data_path, run.id)
@@ -228,7 +233,7 @@ def main():
                         help="Path to the expected inference response JSON file.")
     parser.add_argument("--inference_response", type=str, required=True,
                         help="Path to the actual inference response JSON file.")
-    parser.add_argument("--validation_result", type=str, required=True,
+    parser.add_argument("--validation_results", type=str, required=True,
                         help="Path to save validation results.")
     parser.add_argument("--metrics_storage_uri", type=str, required=True,
                         help="Path to store the metrics.")
@@ -297,8 +302,8 @@ def main():
         request_details["structuralDiff"] = comparison_result.get("structural_difference", [])
 
     # Save the validation result.
-    save_validation_result(request_details, args.validation_result, args.validation_id, args.sku, status)
-    logger.info(f"validation_result: {request_details}, Validation result saved to {args.validation_result}")
+    save_validation_result(request_details, args.validation_results, args.validation_id, args.sku, status)
+    logger.info(f"validation_result: {request_details}, Validation result saved to {args.validation_results}")
 
     store_metrics_paths(args.metrics_storage_uri)
 
