@@ -177,18 +177,20 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                                               is_finetuned_model=False,
                                               base_model_task=self._task)
 
-        if self._vllm_enabled:
-            mlclient = get_mlclient("azureml")
-            vllm_image = mlclient.environments.get("foundation-model-inference", label="latest")
-            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/foundation-model-inference:" \
-                + str(vllm_image.version)
-        else:
-            mlclient = get_mlclient("azureml")
-            mlFlow_image = mlclient.environments.get("mlflow-model-inference", label="latest")
-            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
-                + str(mlFlow_image.version)
+        mlclient = get_mlclient("azureml")
+        image_name = "foundation-model-inference" if self._vllm_enabled else "mlflow-model-inference"
+        image = mlclient.environments.get(image_name, label="latest")
+        metadata["azureml.base_image"] = f"mcr.microsoft.com/azureml/curated/{image_name}:" \
+            + str(image.version)
 
         logger.info("Metadata: {}".format(metadata))
+        # else:
+        #     mlclient = get_mlclient("azureml")
+        #     mlFlow_image = mlclient.environments.get("mlflow-model-inference", label="latest")
+        #     metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
+        #         + str(mlFlow_image.version)
+
+
 
         if self._model_flavor == "OSS":
             try:
