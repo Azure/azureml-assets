@@ -189,9 +189,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         #     mlFlow_image = mlclient.environments.get("mlflow-model-inference", label="latest")
         #     metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
         #         + str(mlFlow_image.version)
-
-
-
         if self._model_flavor == "OSS":
             try:
                 self._save_in_oss_flavor(model, metadata, conda_env, code_paths, input_example, pip_requirements)
