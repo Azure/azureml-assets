@@ -9,6 +9,7 @@ from functools import wraps
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 from azureml._common._error_definition.system_error import ClientError  # type: ignore
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 
 
 class ModelImportErrorStrings:
@@ -219,10 +220,15 @@ def swallow_all_exceptions(logger: logging.Logger):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                if isinstance(e, AzureMLException):
+                if isinstance(e, MlException):
                     azureml_exception = e
                 else:
-                    azureml_exception = AzureMLException._with_error(AzureMLError.create(ModelImportError, error=e))
+                    message = ModelImportErrorStrings.LOG_UNSAFE_GENERIC_ERROR
+                    azureml_exception = MlException(
+                        message=message.format(error=e), no_personal_data_message=message,
+                        error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+                        error=e
+                    )
 
                 logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
                 for handler in logger.handlers:
