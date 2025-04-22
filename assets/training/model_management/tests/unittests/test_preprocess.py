@@ -435,7 +435,7 @@ class TestPreprocessModule(unittest.TestCase):
 class TestHFMLFLowConvertor:
     """Test HF Model Convertor Factory."""
 
-    def test_mlflow_conda_dep(self, mock_credential, model_path, translate_params):
+    def test_mlflow_conda_dep(self, model_path, translate_params):
         """Validate conda dep has needed dependencies."""
         with TemporaryDirectory() as output_dir, TemporaryDirectory() as temp_dir:
             # save model
