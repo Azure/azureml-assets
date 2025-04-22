@@ -26,6 +26,7 @@ from mock import MagicMock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
+from azureml.core.authentication import AzureMLOnBehalfOfCredential
 
 
 @pytest.fixture
