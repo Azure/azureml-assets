@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.79 (2025-04-22)
+### 🚀 New Features
+- [#4117](https://github.com/Azure/azureml-assets/pull/4117) Update spec with modelVariant info after validating
+
 ## 1.16.78 (2025-04-21)
 ### 🚀 New Features
 - [#4113](https://github.com/Azure/azureml-assets/pull/4113) Skip validating modelVariant section of asset spec
