@@ -140,7 +140,7 @@ class DataQualitySignal(Signal):
             output[feature_name].metrics.append(feature_metrics)
 
             # Add the feature importance metrics
-            if len(featureimportance_dictionary) != 0:
+            if len(featureimportance_dictionary) != 0 and feature_name in featureimportance_dictionary:
                 if not any('BaselineFeatureImportance' in d.values() for d in output[feature_name].metrics):
                     feature_importance_metric = {
                         "metricName": "BaselineFeatureImportance",

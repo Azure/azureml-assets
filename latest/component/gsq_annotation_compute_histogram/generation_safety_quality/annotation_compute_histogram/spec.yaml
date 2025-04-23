@@ -116,7 +116,7 @@ conf:
       - pip:
           - azure-cli-core~=2.66.0
           - azure-ai-evaluation~=1.0.1
-          - azure-ai-ml~=1.23.1
+          - azure-ai-ml~=1.26.3
           - openai~=1.56.2
           - json5==0.9.11
           - mltable~=1.6.1
