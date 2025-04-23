@@ -1,4 +1,0 @@
-azure.identity>=1.10.0
-pandas>=1.5.1
-azureml-core>=1.48.0
-mltable>=1.2.0
