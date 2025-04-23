@@ -1138,6 +1138,12 @@ def validate_assets(input_dirs: List[Path],
                 _log_error(asset_config.spec_with_path, e)
                 error_count += 1
 
+        # Write variantInfo back to spec
+        if variant_info is not None:
+            spec_config["variantInfo"] = variant_info
+            with open(asset_config.spec_with_path, "w") as f:
+                yaml.dump(spec_config, f)
+
     # Ensure unique assets
     for type_and_name, dirs in asset_dirs.items():
         if len(dirs) > 1:
