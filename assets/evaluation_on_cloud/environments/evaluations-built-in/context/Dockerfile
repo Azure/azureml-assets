@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt

@@ -5,6 +5,7 @@
 import argparse
 import json
 import logging
+from azure.core.credentials import AccessToken
 import mlflow
 import pandas as pd
 import os
@@ -14,7 +15,7 @@ import shutil
 import sys
 
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azure.ai.evaluation import evaluate
+from azure.ai.evaluation._evaluate._evaluate import evaluate
 from save_evaluation import load_evaluator
 from model_target import ModelTarget
 
@@ -75,18 +76,32 @@ def copy_evaluator_files(command_line_args):
         else:
             logger.info(f"Directory for evaluator {evaluator_name} not found.")
 
+class TestCredential(AzureMLOnBehalfOfCredential):
+    def get_token(self, *scopes: str, **kwargs: any) -> AccessToken:
+        """Request an access token for `scopes`.
+
+        This method is called automatically by Azure SDK clients.
+
+        :param str scopes: desired scope for the access token. This credential allows only one scope per request.
+        :rtype: ~azure.core.credentials.AccessToken
+        :return: AzureML On behalf of credentials isn't available in the hosting environment
+        :raises: ~azure.ai.ml.identity.CredentialUnavailableError
+        """
+
+        return self._credential.get_token("https://cognitiveservices.azure.com", **kwargs)
 
 def initialize_evaluators(command_line_args):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
+    print("Custom initalize evaluators call")
     evaluators = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     rai_evaluators = json.loads(command_line_args.rai_evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
-        update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
-        flow = load_evaluator("./" + evaluator_name)
+        update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()]) # resolves env variables for connection strings
+        flow = load_evaluator("./" + evaluator_name) # gets file path for evaluator
         if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
-            init_params["credential"] = AzureMLOnBehalfOfCredential()
+            init_params["credential"] = TestCredential() # sets credential in init_params
         evaluators[evaluator_name] = flow(**init_params)
     return evaluators
 
