@@ -21,7 +21,7 @@ RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
 
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
 RUN pip install scipy==1.10.1
-RUN pip install gunicorn==22.0.0
+RUN pip install gunicorn==23.0.0
 RUN pip install onnx==1.17.0
 
 # It is recommended to upgrade to numpy version 1.23.5 to address the numpy.core.multiarray issue

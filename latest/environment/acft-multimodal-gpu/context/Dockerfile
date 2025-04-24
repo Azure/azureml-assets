@@ -15,7 +15,7 @@ RUN pip install azureml-metrics==0.0.33
 RUN pip install datasets==2.15.0
 RUN pip install pyarrow==14.0.1
 RUN pip install cryptography==44.0.1
-RUN pip install gunicorn==22.0.0
+RUN pip install gunicorn==23.0.0
 RUN pip install onnxruntime==1.17.3
 RUN pip install onnx==1.17.0
 RUN pip install scikit-learn==1.5.0

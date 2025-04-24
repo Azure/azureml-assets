@@ -11,6 +11,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 
 # Vulnerability Fix
-RUN pip install gunicorn==22.0.0
+RUN pip install gunicorn==23.0.0
 RUN pip install certifi==2024.07.04
 RUN pip install onnx==1.17.0
