@@ -22,6 +22,7 @@ metadata:
   base_model_task: question-answering
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.8.1
 model_size_bytes: 133819900
 model_uuid: cd7f3c2d0cb844d6ad675581428a2e82
