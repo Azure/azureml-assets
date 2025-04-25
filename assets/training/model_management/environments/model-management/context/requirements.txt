@@ -15,4 +15,3 @@ pyarrow==14.0.2
 GitPython=={{latest-pypi-version}}
 paramiko=={{latest-pypi-version}}
 cryptography==44.0.2
-mlflow==2.20.3
