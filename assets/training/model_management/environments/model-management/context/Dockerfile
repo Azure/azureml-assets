@@ -25,7 +25,7 @@ RUN conda install python=3.9 -y
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
-RUN pip install Pillow gunicorn onnx==1.17.0 idna tqdm requests==2.32.1 tornado==6.4.2 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.1 mlflow==2.20.3 mlflow-skinny==2.19 marshmallow==3.23.2
+RUN pip install Pillow gunicorn onnx==1.17.0 idna tqdm requests==2.32.1 tornado==6.4.2 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.1 mlflow==2.20.3 mlflow-skinny==2.20.3 marshmallow==3.23.2
 
 # List pip packages
 RUN pip list
