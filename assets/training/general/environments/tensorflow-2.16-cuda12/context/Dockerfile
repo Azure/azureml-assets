@@ -41,11 +41,6 @@ RUN apt-get update && \
     libgssapi-krb5-2 \
     libpam-cap \
     libtasn1-6 \
-    binutils \
-    libbinutils \
-    libctf0 \
-    libctf-nobfd0 \
-    binutils-multiarch \
     libk5crypto3 \
     libcap2 && \
     apt-get clean -y && \
