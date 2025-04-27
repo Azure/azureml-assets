@@ -42,6 +42,8 @@ RUN apt-get update && \
     libpam-cap \
     libtasn1-6 \
     binutils \
+    binutils-x86-64-linux-gnu \
+    binutils-common \
     libbinutils \
     libctf0 \
     libctf-nobfd0 \
