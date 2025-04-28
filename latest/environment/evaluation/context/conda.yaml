@@ -6,7 +6,7 @@ dependencies:
 - python=3.10
 - pip=23.1
 - pip:
-  - azureml-mlflow==1.60.0
+  - azureml-mlflow==1.60.0.post1
   - azure-ai-ml==1.26.4
   - azureml-core==1.60.0
   - azureml-telemetry==1.60.0

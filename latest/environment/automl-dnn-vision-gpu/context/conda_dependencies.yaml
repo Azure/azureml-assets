@@ -16,7 +16,7 @@ dependencies:
 - pip:
   - cryptography>=42.0.5
   - pyarrow-hotfix>=0.5
-  - azureml-mlflow==1.60.0
+  - azureml-mlflow==1.60.0.post1
   - azureml-dataset-runtime==1.60.0
   - azureml-telemetry==1.60.0
   - azureml-responsibleai==1.60.0

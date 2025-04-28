@@ -19,7 +19,7 @@ dependencies:
   - azureml-contrib-services
   - azureml-dataset-runtime==1.60.0
   - azureml-inference-server-http>=1.3.0
-  - azureml-mlflow==1.60.0
+  - azureml-mlflow==1.60.0.post1
   - azureml-telemetry==1.60.0
     # More packages needed for RAG extras
   - beautifulsoup4~=4.11.2 # explicitly install for [data_generation] [document_parsing]
