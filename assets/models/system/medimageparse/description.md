@@ -125,5 +125,5 @@ ultrasound: breast: benign tumor, malignant tumor, tumor
             transperineal: fetal head, public symphysis
 
 **Hardware Requirement for Compute Instances** 
-- Default: Single V100 GPU 
+- Standard GPU VM SKUs: V100, A100, or H100
 - Minimum: Single GPU instance with 8Gb Memory
