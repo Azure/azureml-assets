@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/mirror/docker/library/ubuntu:22.04
+FROM mcr.microsoft.com/mirror/docker/library/ubuntu:22.04:{{latest-image-tag}}
 
 User root:root
 RUN apt-get update && \
