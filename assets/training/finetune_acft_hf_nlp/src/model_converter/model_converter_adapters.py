@@ -36,6 +36,9 @@ from model_converter_utils import load_model, load_tokenizer, copy_tokenizer_fil
 
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.model_converter.model_converter_adapters")
 
+from transformers import Llama4ForConditionalGeneration
+from peft import PeftModel
+PREPROCESSOR_CONFIG = "preprocessor_config.json"
 
 MLFLOW_TASK_HF_PRETRAINED_CLASS_MAP = {
     MLFlowHFFlavourTasks.SINGLE_LABEL_CLASSIFICATION: "AutoModelForSequenceClassification",
@@ -98,6 +101,18 @@ class ModelConverter(ABC):
             )
         logger.info("Copied ml_configs folder.")
 
+    def copy_preprocessor_config(self, src_model_path: str, dst_model_path: str):
+        """Copy preprocessor_config.json to mlflow model artifacts."""
+        preprocessor_config_path = Path(src_model_path, PREPROCESSOR_CONFIG)
+        if preprocessor_config_path.is_file():
+            shutil.copyfile(
+                str(preprocessor_config_path),
+                str(Path(dst_model_path, "data", "model", PREPROCESSOR_CONFIG)),
+            )
+            logger.info(f"Copied {PREPROCESSOR_CONFIG} file.")
+        else:
+            logger.info(f"{PREPROCESSOR_CONFIG} file not found.")
+
 
 class PyTorch_to_MlFlow_ModelConverter:
     """Mixin class to convert pytorch to hftransformers/oss flavour mlflow model."""
@@ -118,6 +133,12 @@ class PyTorch_to_MlFlow_ModelConverter:
         for task in MLFLOW_TASK_HF_PRETRAINED_CLASS_MAP.keys():
             if self.mlflow_task_type == task or self.mlflow_task_type.startswith(task):
                 self.mlflow_hf_args["hf_pretrained_class"] = MLFLOW_TASK_HF_PRETRAINED_CLASS_MAP[task]
+         # Override for llama-4 chat completion
+        if (
+            self.mlflow_task_type == MLFlowHFFlavourTasks.CHAT_COMPLETION
+            and "llama-4" in str(self.ft_pytorch_model_path).lower()
+        ):
+            self.mlflow_hf_args["hf_pretrained_class"] = "Llama4ForConditionalGeneration"
         logger.info(f"Autoclasses for {self.mlflow_task_type} - {self.mlflow_hf_args}")
 
     def set_mlflow_model_parameters(self, model):
@@ -236,6 +257,7 @@ class Pytorch_to_HFTransformers_MlFlow_ModelConverter(ModelConverter, PyTorch_to
         self.add_model_signature()
         self.copy_finetune_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
         self.copy_ml_configs(self.ft_pytorch_model_path, self.mlflow_model_save_path)
+        self.copy_preprocessor_config(self.ft_pytorch_model_path, self.mlflow_model_save_path)
         copy_tokenizer_files_to_model_folder(self.mlflow_model_save_path, self.component_args.task_name)
 
         logger.info("Saved MLFlow model using HFTransformers flavour.")
