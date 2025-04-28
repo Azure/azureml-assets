@@ -176,12 +176,27 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         metadata = fetch_mlflow_acft_metadata(base_model_name=self._model_id,
                                               is_finetuned_model=False,
                                               base_model_task=self._task)
-
+        logger.info("Before vllm enable checking : {}".format(self._vllm_enabled))
+        logger.info(f"transformers: metadata {metadata}")
         if self._vllm_enabled:
+            logger.info("vllm enable checking--TRUE")
             mlclient = get_mlclient("azureml")
+            logger.info("vllm enable checking mlclinet")
             vllm_image = mlclient.environments.get("foundation-model-inference", label="latest")
+            logger.info(f"vllm enable checking -- vllm_image -- {vllm_image}")
             metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/foundation-model-inference:" \
                 + str(vllm_image.version)
+            logger.info(f"transformers: updated metadata {metadata}")
+            logger.info("Metadata: {}".format(metadata))
+        else:
+            logger.info("vllm enable checking--FALSE")
+            mlclient = get_mlclient("azureml")
+            logger.info("vllm enable checking mlclinet")
+            mlFlow_image = mlclient.environments.get("mlflow-model-inference", label="latest")
+            logger.info(f"vllm enable checking -- mlFlow_image -- {mlFlow_image}")
+            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
+                + str(mlFlow_image.version)
+            logger.info(f"transformers: updated metadata {metadata}")
             logger.info("Metadata: {}".format(metadata))
 
         if self._model_flavor == "OSS":
