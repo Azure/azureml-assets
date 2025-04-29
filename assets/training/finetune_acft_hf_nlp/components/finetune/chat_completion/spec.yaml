@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: chat_completion_finetune
-version: 0.0.75.visa01
+version: 0.0.73
 type: command
 
 is_deterministic: true
