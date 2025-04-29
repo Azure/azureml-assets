@@ -1,5 +1,4 @@
-
-name: Close Stale Items
+name: close-stale-items
 
 on:
   schedule:
@@ -18,7 +17,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Close-stale-items
+    - name: Close Stale Items
       uses: actions/stale@v9.1.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
