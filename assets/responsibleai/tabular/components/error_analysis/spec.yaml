@@ -27,7 +27,7 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/19
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/20
 
 command: >-
   python create_error_analysis.py
