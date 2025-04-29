@@ -1,8 +1,8 @@
 name: close-stale-items
 
 on:
-  schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight
+  schedule:
+    - cron: '30 6 * * *'
 
 permissions:
   contents: write
