@@ -4,7 +4,7 @@ description: >-
   CPU based environment for pipelines (ML Designer) minimal version.
 
 name: "mldesigner-minimal"
-version: "37"
+version: "38"
 
 build:
   path: "context"
