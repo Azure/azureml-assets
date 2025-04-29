@@ -8,8 +8,7 @@ is_deterministic: true
 display_name: Chat Completion Finetune
 description: Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_finetune) to learn more.
 
-environment: azureml://locations/westeurope/workspaces/c8f6dca1-4dd5-48d7-aa09-90d084f30fdb/environments/acft-hf-nlp-gpu-llm4/versions/15
-
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
 
 code: ../../../src/finetune
 
@@ -94,10 +93,9 @@ inputs:
 
   optim:
     type: string
-    default: adamw_hf
+    default: adamw_torch
     optional: true
     enum:
-    - adamw_hf
     - adamw_torch
       # - adamw_apex_fused
     - adafactor

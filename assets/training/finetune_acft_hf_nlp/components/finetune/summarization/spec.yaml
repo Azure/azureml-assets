@@ -93,10 +93,9 @@ inputs:
 
   optim:
     type: string
-    default: adamw_hf
+    default: adamw_torch
     optional: true
     enum:
-    - adamw_hf
     - adamw_torch
       # - adamw_apex_fused
     - adafactor

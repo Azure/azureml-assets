@@ -458,11 +458,11 @@ inputs:
     optional: true
     default: serverless
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
-  compute_model_evaluation:
-    type: string
-    optional: true
-    default: serverless
-    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+  # compute_model_evaluation:
+  #   type: string
+  #   optional: true
+  #   default: serverless
+  #   description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
 outputs:
   pytorch_model_folder:
@@ -475,9 +475,9 @@ outputs:
     description: output folder containing _best_ finetuned model in mlflow format.
     mode: rw_mount
 
-  evaluation_result:
-    type: uri_folder
-    description: Test Data Evaluation Results
+  # evaluation_result:
+  #   type: uri_folder
+  #   description: Test Data Evaluation Results
 
 jobs:
   ft_nlp_common_validation:
@@ -614,30 +614,30 @@ jobs:
       # converted_model: '${{parent.jobs.chat_completion_finetune.outputs.mlflow_model_folder}}'
     outputs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
-  model_prediction:
-    type: command
-    component: azureml:model_prediction_with_container:0.0.6
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
-    inputs:
-      task: chat-completion
-      test_data: '${{parent.jobs.chat_completion_datapreprocess.outputs.output_dir}}'
-      label_column_name: messages
-      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-  compute_metrics:
-    type: command
-    component: azureml:compute_metrics:0.0.35
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
-    inputs:
-      task: chat-completion
-      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
-      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
-      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
-      evaluation_config: '${{parent.inputs.evaluation_config}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-    outputs:
-      evaluation_result: '${{parent.outputs.evaluation_result}}'
+  # model_prediction:
+  #   type: command
+  #   component: azureml:model_prediction_with_container:0.0.6
+  #   compute: '${{parent.inputs.compute_model_evaluation}}'
+  #   resources:
+  #     instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+  #   inputs:
+  #     task: chat-completion
+  #     test_data: '${{parent.jobs.chat_completion_datapreprocess.outputs.output_dir}}'
+  #     label_column_name: messages
+  #     mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
+  #     evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+  # compute_metrics:
+  #   type: command
+  #   component: azureml:compute_metrics:0.0.35
+  #   compute: '${{parent.inputs.compute_model_evaluation}}'
+  #   resources:
+  #     instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+  #   inputs:
+  #     task: chat-completion
+  #     ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
+  #     prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
+  #     prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
+  #     evaluation_config: '${{parent.inputs.evaluation_config}}'
+  #     evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+  #   outputs:
+  #     evaluation_result: '${{parent.outputs.evaluation_result}}'
