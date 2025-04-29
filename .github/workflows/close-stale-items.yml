@@ -16,6 +16,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - name: Resolve stale issues
         uses: actions/stale@v9.1.0
         with:
