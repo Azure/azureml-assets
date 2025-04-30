@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: deepseek/deepseek-r1-distill-qwen/deepseek-r1-distill-qwen-7b/onnx/cuda/cuda-int4-rtn-block-32
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
