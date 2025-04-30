@@ -44,7 +44,7 @@ outputs:
   rai_insights_dashboard:
     type: path
 code: ../src/
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/20
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/19
 command: >-
   python create_rai_insights.py
   --title '${{inputs.title}}'

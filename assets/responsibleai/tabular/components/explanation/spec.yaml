@@ -17,7 +17,7 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/20
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/19
 
 command: >-
   python create_explanation.py
