@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: DeepSeek-R1-Distill-Qwen-1.5B-generic-gpu
+version: 1
+path: ./
+tags:
+  foundrylocal: ""
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml-dev/models/DeepSeek-R1-Distill-Qwen-1.5B/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'gpu'
+    executionProvider: 'WebGPUExecutionProvider'
+    fileSizeBytes: 1362648117
+    vRamFootprintBytes: 1362929128
