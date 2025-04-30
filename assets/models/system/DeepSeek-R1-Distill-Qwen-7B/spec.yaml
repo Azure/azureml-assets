@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: DeepSeek-R1-Distill-Qwen-7B
+version: 1
+path: ./
+tags:
+  foundrylocal: ""
+  license: "MIT"
+  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B/blob/main/LICENSE>."
+type: custom_model
