@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/foundry-local/gemma-3-12b-it
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
