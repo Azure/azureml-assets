@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: deepseek/deepseek-r1-distill-qwen
+  container_path: foundrylocal/deepseek-r1-distill-qwen-1.5b
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
