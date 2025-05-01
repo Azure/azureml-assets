@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/deepseek-r1-distill-qwen-7b/onnx/cuda/cuda-int4-rtn-block-32
+  container_path: foundrylocal/deepseek-r1-distill-qwen-7b/onnx/directml/directml-int4-rtn-block-32-acc-level-4
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
