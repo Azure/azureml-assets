@@ -3,5 +3,5 @@ name: deepseek-r1-distill-qwen-1.5b
 version: 1
 path: ./
 tags:
-  foundrylocal: ""
+  foundryLocal: ""
 type: custom_model
