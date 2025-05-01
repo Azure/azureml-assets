@@ -24,3 +24,4 @@ tiktoken==0.6.0
 scipy==1.14.0
 catalogue==2.0.10
 cryptography==44.0.1
+nltk==3.9 # Pinning to fix the unsafe deserialization vulnerability
