@@ -8,20 +8,11 @@ RUN apt-get update && \
     apt-get purge -y software-properties-common && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        procps \ 
         libgnutls30 \ 
-        libk5crypto3 \ 
-        libkrb5-3 \ 
-        libkrb5support0 \ 
         libpam-modules \ 
         nginx-light \
         wget \
         runit \
-        libtinfo6 \ 
-        libncurses6 \ 
-        ncurses-bin \ 
-        ncurses-base \ 
-        libncursesw6 \ 
         libcap2 \ 
         libc6 \    
         libc-bin \
@@ -30,11 +21,9 @@ RUN apt-get update && \
         build-essential \
         psmisc \
         unzip \
-        perl \
         binutils-multiarch \
         binutils \
         libcurl4 \
-        libunwind8 \
         systemd \
         libssl3 && \
     apt-get autoremove -y && \
@@ -57,12 +46,9 @@ COPY configs/app etc/nginx/sites-available/app
 RUN chmod +x var/runit/*/*
 RUN chmod +x var/azureml-logger/start_logger.sh
 
-#RUN chmod +x /var/runit/nginx/run
-
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
         rm -f /etc/nginx/sites-enabled/default
 COPY configs/rsyslog.conf    etc/rsyslog.conf
-
 
 RUN sed -i 's/\r$//g' /var/runit/gunicorn/run
 RUN chmod +x /var/runit/gunicorn/run
@@ -114,13 +100,12 @@ ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
 ENV AML_APP_ROOT="/var/mlflow_resources"
 ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
+ENV MLFLOW_MODEL_FOLDER="mlflow_model_folder"
 
 USER root
 
 COPY mlmonitoring /var/mlflow_resources/mlmonitoring
 COPY mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
-COPY mlflow_hf_score_cpu.py /var/mlflow_resources/mlflow_hf_score_cpu.py
-COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
 
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \

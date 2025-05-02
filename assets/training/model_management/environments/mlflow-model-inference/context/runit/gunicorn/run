@@ -68,7 +68,10 @@ format_print "Dynamic Python Package Installation"
 format_print "###############################################"
 format_print ""
 
-export AZUREML_EXTRA_CONDA_YAML_ABS_PATH="${AZUREML_MODEL_DIR}/mlflow_model_folder/conda.yaml"
+
+if [[ -z "$VARIABLE_NAME" ]]; then
+    export AZUREML_EXTRA_CONDA_YAML_ABS_PATH="${AZUREML_MODEL_DIR}/${MLFLOW_MODEL_FOLDER}/conda.yaml"
+fi
 
 if [[ -n "$AZUREML_EXTRA_PYTHON_LIB_PATH" ]]; then
     # Pre-installed mounted dependencies, check for the variable and if the folder exists.
