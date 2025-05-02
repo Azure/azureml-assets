@@ -21,4 +21,4 @@ variantInfo:
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
     fileSizeBytes: 6861210255
-    vRamFootprintBytes: 5304515348
+    vRamFootprintBytes: 6861445345
