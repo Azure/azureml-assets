@@ -1,11 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: deepseek-r1-distill-qwen-14b-generic-gpu
+name: llama-3.2-1b-instruct-generic-gpu
 version: 1
 path: ./
 tags:
   foundryLocal: ""
   license: "MIT"
-  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/blob/main/LICENSE>."
   author: Microsoft
   inputModalities: "text"
   outputModalities: "text"
@@ -14,11 +14,11 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/deepseek-r1-distill-qwen-14b/versions/1
+  - assetId: azureml://registries/azureml/models/llama-3.2-1b-instruct/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'WebGPUExecutionProvider'
-    fileSizeBytes: 9459665469
-    vRamFootprintBytes: 9460148039
+    fileSizeBytes: 1234803097
+    vRamFootprintBytes: 1234945832

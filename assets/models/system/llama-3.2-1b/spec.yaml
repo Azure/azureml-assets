@@ -1,7 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: llama-3.2-1b
-version: 1
-path: ./
-tags:
-  foundryLocal: ""
-type: custom_model
