@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch251:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 
@@ -16,7 +16,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install mlflow==2.20.3
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
-RUN MAX_JOBS=4 pip install flash-attn==2.5.5 --no-build-isolation
+RUN MAX_JOBS=4 pip install flash-attn==2.7.4.post1 --no-build-isolation
+
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
