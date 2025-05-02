@@ -17,7 +17,7 @@ RUN pip install mlflow==2.20.3
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=4 pip install flash-attn==2.7.4.post1 --no-build-isolation
-
+RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
