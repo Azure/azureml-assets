@@ -1,4 +1,3 @@
-
 This model is an optimized version of DeepSeek-R1-Distill-Llama-8B to enable local inference on GPUs. This model uses RTN quantization.
 
 # Model Description
