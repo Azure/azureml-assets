@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/foundry-local/deepseek-r1-distill-qwen-14b
+  container_path: foundrylocal/onnx-models/phi-3-mini-4k-instruct/onnx/cuda/phi-3-mini-4k-instruct-cuda-int4-rtn-block-32
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
