@@ -4,7 +4,7 @@ version: 1
 path: ./
 tags:
   foundryLocal: ""
-  license: "MIT"
+  license: "llama3.2"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/blob/main/LICENSE>."
   author: Microsoft
   inputModalities: "text"

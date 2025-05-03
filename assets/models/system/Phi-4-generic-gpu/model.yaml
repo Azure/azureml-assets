@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/foundry-local/Phi-4-mini-instruct
+  container_path: foundrylocal/foundry-local/phi-4-medium-instruct/onnx/directml/directml-int4-rtn-block-32-acc-level-4
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

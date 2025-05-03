@@ -1,11 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: phi-3-mini-128k-instruct-cuda-gpu
+name: phi-4-mini-instruct-cuda-gpu
 version: 1
 path: ./
 tags:
   foundryLocal: ""
   license: "MIT"
-  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/microsoft/Phi-3-mini-128k-instruct/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/microsoft/Phi-4-mini-instruct/blob/main/LICENSE>."
   author: Microsoft
   inputModalities: "text"
   outputModalities: "text"
@@ -14,11 +14,11 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/phi-3-mini-128k-instruct/versions/1
+  - assetId: azureml://registries/azureml/models/phi-4-mini-instruct/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 2287070085
-    vRamFootprintBytes: 2287293675
+    fileSizeBytes: 4101693767
+    vRamFootprintBytes: 4127970082
