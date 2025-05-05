@@ -11,6 +11,7 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
+  shortName: deepseek-r1-1.5b
 type: custom_model
 variantInfo:
   parents:

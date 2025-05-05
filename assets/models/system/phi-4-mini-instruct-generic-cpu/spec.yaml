@@ -11,6 +11,7 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
+  shortName: phi-4-mini
 type: custom_model
 variantInfo:
   parents:
