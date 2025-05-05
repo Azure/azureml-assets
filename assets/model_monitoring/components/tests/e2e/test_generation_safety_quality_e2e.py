@@ -95,24 +95,6 @@ class TestGenerationSafetyQualityModelMonitor:
                 "completion_column_name": "answer",
             }
         )
-        print(f"\n==== Azure ML Context ====")
-        print(f"Workspace : {ml_client.workspace_name}")
-        print(f"Resource Group : {ml_client.resource_group_name}")
-        print(f"Subscription : {ml_client.subscription_id}")
-        print(f"=========================\n")
-
-        if pipeline_job.status != "Completed":
-            # 尝试打印详细信息，属性名可能需要根据你的 pipeline_job 类型调整
-            print("Pipeline job failed!")
-            print(f"Status: {pipeline_job.status}")
-            # 打印详细错误信息（属性名可能不同，具体可以 dir(pipeline_job) 看下）
-            if hasattr(pipeline_job, "error"):
-                print(f"Error: {pipeline_job.error}")
-            if hasattr(pipeline_job, "details"):
-                print(f"Details: {pipeline_job.details}")
-            # 你也可以打印日志链接等
-            if hasattr(pipeline_job, "studio_url"):
-                print(f"Check logs at: {pipeline_job.studio_url}")
 
         assert pipeline_job.status == "Completed"
 
@@ -132,24 +114,5 @@ class TestGenerationSafetyQualityModelMonitor:
                 "context_column_name": "context",
             }
         )
-        print(f"\n==== Azure ML Context ====")
-        print(f"Workspace : {ml_client.workspace_name}")
-        print(f"Resource Group : {ml_client.resource_group_name}")
-        print(f"Subscription : {ml_client.subscription_id}")
-        print(f"=========================\n")
-
-
-        if pipeline_job.status != "Completed":
-            # 尝试打印详细信息，属性名可能需要根据你的 pipeline_job 类型调整
-            print("Pipeline job failed!")
-            print(f"Status: {pipeline_job.status}")
-            # 打印详细错误信息（属性名可能不同，具体可以 dir(pipeline_job) 看下）
-            if hasattr(pipeline_job, "error"):
-                print(f"Error: {pipeline_job.error}")
-            if hasattr(pipeline_job, "details"):
-                print(f"Details: {pipeline_job.details}")
-            # 你也可以打印日志链接等
-            if hasattr(pipeline_job, "studio_url"):
-                print(f"Check logs at: {pipeline_job.studio_url}")
 
         assert pipeline_job.status == "Completed"

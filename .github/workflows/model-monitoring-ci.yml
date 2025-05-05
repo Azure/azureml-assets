@@ -64,7 +64,6 @@ jobs:
           STORAGE_ACCOUNT_NAME=azuremlastorage06934ba65
           SUBSCRIPTION_ID=${{ env.subscription_id }}
 
-          # 获取AML Workspace的MSI对象ID
           MSI_PRINCIPAL_ID=$(az ml workspace show -g "$RESOURCE_GROUP" -n "$AML_WORKSPACE_NAME" --query "identity.principalId" -o tsv)
 
           az ml workspace update \
@@ -72,7 +71,6 @@ jobs:
             --name $AML_WORKSPACE_NAME \
             --set identity.type=SystemAssigned
 
-          # 分配权限
           az role assignment create \
             --assignee "$MSI_PRINCIPAL_ID" \
             --role "Storage Blob Data Contributor" \
