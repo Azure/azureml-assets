@@ -14,7 +14,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/1
+  - assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/6
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']

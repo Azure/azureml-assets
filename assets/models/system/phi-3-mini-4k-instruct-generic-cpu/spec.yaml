@@ -14,7 +14,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/phi-3-mini-4k-instruct/versions/1
+  - assetId: azureml://registries/azureml/models/phi-3-mini-4k-instruct/versions/15
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
