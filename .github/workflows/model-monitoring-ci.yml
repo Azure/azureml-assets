@@ -56,7 +56,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
-          
+
       - name: Grant Storage Blob Data Contributor to AML Workspace MSI
         run: |
           AML_WORKSPACE_NAME=${{ env.workspace }}
@@ -69,7 +69,7 @@ jobs:
 
           # 分配权限
           az role assignment create \
-            --assignee-object-id "$MSI_PRINCIPAL_ID" \
+            --assignee "$MSI_PRINCIPAL_ID" \
             --role "Storage Blob Data Contributor" \
             --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
 
