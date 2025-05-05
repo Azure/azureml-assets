@@ -67,6 +67,11 @@ jobs:
           # 获取AML Workspace的MSI对象ID
           MSI_PRINCIPAL_ID=$(az ml workspace show -g "$RESOURCE_GROUP" -n "$AML_WORKSPACE_NAME" --query "identity.principalId" -o tsv)
 
+          az ml workspace update \
+            --resource-group my-resource-group \
+            --name my-ml-workspace \
+            --set identity.type=SystemAssigned
+
           # 分配权限
           az role assignment create \
             --assignee "$MSI_PRINCIPAL_ID" \
