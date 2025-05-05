@@ -68,8 +68,8 @@ jobs:
           MSI_PRINCIPAL_ID=$(az ml workspace show -g "$RESOURCE_GROUP" -n "$AML_WORKSPACE_NAME" --query "identity.principalId" -o tsv)
 
           az ml workspace update \
-            --resource-group my-resource-group \
-            --name my-ml-workspace \
+            --resource-group $RESOURCE_GROUP \
+            --name $AML_WORKSPACE_NAME \
             --set identity.type=SystemAssigned
 
           # 分配权限
