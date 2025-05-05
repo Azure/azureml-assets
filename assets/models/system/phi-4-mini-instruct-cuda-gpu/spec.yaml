@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: phi-4-mini-instruct-cuda-gpu
+name: Phi-4-mini-instruct-cuda-gpu
 version: 1
 path: ./
 tags:
@@ -14,7 +14,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/phi-4-mini-instruct/versions/1
+  - assetId: azureml://registries/azureml/models/Phi-4-mini-instruct/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']

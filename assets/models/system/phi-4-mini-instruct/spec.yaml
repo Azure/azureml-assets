@@ -1,7 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: phi-4-mini-instruct
-version: 1
-path: ./
-tags:
-  foundryLocal: ""
-type: custom_model

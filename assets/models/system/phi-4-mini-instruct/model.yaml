@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: foundrylocal/onnx-models/phi-4-mini-instruct
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model
