@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: foundrylocal/foundry-local/llama-3.1-8b-instruct
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model
