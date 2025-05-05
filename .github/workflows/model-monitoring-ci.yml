@@ -56,6 +56,20 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
+      - name: Grant Storage Blob Data Contributor to AML Workspace MSI
+        run: |
+          AML_WORKSPACE_NAME=${{ env.workspace }}
+          RESOURCE_GROUP=${{ env.resource_group }}
+          STORAGE_ACCOUNT_NAME=azuremlastorage06934ba65
+
+          # 获取AML Workspace的MSI对象ID
+          MSI_PRINCIPAL_ID=$(az ml workspace show -g "$RESOURCE_GROUP" -w "$AML_WORKSPACE_NAME" --query "identity.principalId" -o tsv)
+
+          # 分配权限
+          az role assignment create \
+            --assignee-object-id "$MSI_PRINCIPAL_ID" \
+            --role "Storage Blob Data Contributor" \
+            --scope "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
       - name: Publish Component Specs
         run: python -m pytest ${{ env.testsRootPath }}/e2e/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
         env:
