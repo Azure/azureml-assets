@@ -69,7 +69,7 @@ jobs:
             --name $AML_WORKSPACE_NAME \
             --set identity.type=SystemAssigned
 
-          MSI_PRINCIPAL_ID=$(az ml workspace show -g "$RESOURCE_GROUP" -n "$AML_WORKSPACE_NAME" --query "identity.principalId" -o tsv)
+          MSI_PRINCIPAL_ID=$(az ml workspace show -g "$RESOURCE_GROUP" -n "$AML_WORKSPACE_NAME" --query "identity.principal_id" -o tsv)
 
           az role assignment create \
             --assignee "$MSI_PRINCIPAL_ID" \
