@@ -95,6 +95,12 @@ class TestGenerationSafetyQualityModelMonitor:
                 "completion_column_name": "answer",
             }
         )
+        print(f"\n==== Azure ML Context ====")
+        print(f"Workspace      : {ml_client.workspace_name}")
+        print(f"Resource Group : {ml_client.resource_group_name}")
+        print(f"Subscription   : {ml_client.subscription_id}")
+        print(f"=========================\n")
+
 
         if pipeline_job.status != "Completed":
             # 尝试打印详细信息，属性名可能需要根据你的 pipeline_job 类型调整
@@ -127,6 +133,12 @@ class TestGenerationSafetyQualityModelMonitor:
                 "context_column_name": "context",
             }
         )
+        print(f"\n==== Azure ML Context ====")
+        print(f"Workspace      : {ml_client.workspace_name}")
+        print(f"Resource Group : {ml_client.resource_group_name}")
+        print(f"Subscription   : {ml_client.subscription_id}")
+        print(f"=========================\n")
+
 
         if pipeline_job.status != "Completed":
             # 尝试打印详细信息，属性名可能需要根据你的 pipeline_job 类型调整
