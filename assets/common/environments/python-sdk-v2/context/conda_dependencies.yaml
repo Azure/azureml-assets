@@ -8,7 +8,7 @@ dependencies:
     - azure-ai-ml=={{latest-pypi-version}}
     - azure-identity=={{latest-pypi-version}}
     # v1 package for fetching run details
-    - azureml-core=={{latest-pypi-version}}
+    # - azureml-core=={{latest-pypi-version}}
     # v1 package for logging and telemetry. Switch to using application-insights and implementing custom logging
     - azureml-telemetry=={{latest-pypi-version}}
     - cryptography=={{latest-pypi-version}}

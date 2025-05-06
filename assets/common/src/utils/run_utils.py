@@ -5,7 +5,9 @@
 
 from azureml.core import Run
 from azureml.core.compute import ComputeTarget
-from utils.config import LoggerConfig
+from config import LoggerConfig
+from common_utils import get_mlclient
+import os
 
 
 class JobRunDetails:
@@ -16,7 +18,8 @@ class JobRunDetails:
 
     def __init__(self):
         """Run details init. Should not be called directly and be instantiated via get_run_details."""
-        self._run = Run.get_context()
+        ml_client = get_mlclient()
+        self._run = ml_client.jobs.get(os.environ["AZUREML_RUN_ID"])
         self._details = None
 
     @staticmethod
@@ -29,7 +32,7 @@ class JobRunDetails:
     @property
     def run_id(self):
         """Run ID of the existing run."""
-        return self._run.id
+        return self._run.name
 
     @property
     def parent_run_id(self):
