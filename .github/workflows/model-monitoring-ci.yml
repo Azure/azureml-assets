@@ -58,7 +58,9 @@ jobs:
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
       - name: Print subscription id
-        run: echo "Subscription id is ${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+        run: echo "Subscription id length is ${AZURE_SUBSCRIPTION_ID}"
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
       - name: Publish Component Specs
         run: python -m pytest ${{ env.testsRootPath }}/e2e/utils/test_publish_components_for_ci.py::TestPublishComponentsForCI::test_publish_components
