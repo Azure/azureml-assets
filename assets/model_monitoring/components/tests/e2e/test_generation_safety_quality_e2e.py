@@ -97,6 +97,11 @@ class TestGenerationSafetyQualityModelMonitor:
         )
 
         job_details = ml_client.jobs.get(pipeline_job.name)
+        if pipeline_job.status != "Completed":
+            from azure.ai.ml import MLClient
+            job = ml_client.jobs.get(pipeline_job.name)
+            print(job)
+            
         assert pipeline_job.status == "Completed", f"Job failed! status={pipeline_job.status}, error={job_details}"
 
     def test_generation_safety_quality_genai_successful(
@@ -117,4 +122,9 @@ class TestGenerationSafetyQualityModelMonitor:
         )
 
         job_details = ml_client.jobs.get(pipeline_job.name)
+        if pipeline_job.status != "Completed":
+            from azure.ai.ml import MLClient
+            job = ml_client.jobs.get(pipeline_job.name)
+            print(job)
+
         assert pipeline_job.status == "Completed", f"Job failed! status={pipeline_job.status}, error={job_details}"
