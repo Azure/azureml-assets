@@ -49,7 +49,12 @@ RUN apt-get update && \
     libctf-nobfd0 \
     binutils-multiarch \
     libk5crypto3 \
-    libcap2 && \
+    libcap2  \
+    # Perl vulnerability fixes
+    perl-modules-5.34 \
+    perl \
+    perl-base \
+    libperl5.34 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
                
