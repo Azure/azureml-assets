@@ -4,7 +4,7 @@ description: >-
   AzureML Designer CV image
 
 name: "designer-cv"
-version: "92"
+version: "93"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"

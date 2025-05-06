@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20250427.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20250505.v1
 
 RUN apt-get update && apt-get -y upgrade
 

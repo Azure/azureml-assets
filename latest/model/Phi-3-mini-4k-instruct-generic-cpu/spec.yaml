@@ -1,0 +1,38 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Phi-3-mini-4k-instruct-generic-cpu
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+  license: "MIT"
+  licenseDescription: "This model is provided under the License Terms available at\
+    \ <https://huggingface.co/microsoft/Phi-3-mini-4k-instruct/blob/main/LICENSE>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+  alias: phi-3-mini-4k
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/15
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'cpu'
+    executionProvider: 'CPUExecutionProvider'
+    fileSizeBytes: 2727304232
+    vRamFootprintBytes: 2727617833
+description: |-
+  This model is an optimized version of Phi-3-Mini-4K-Instruct to enable local inference on CPUs. This model uses RTN quantization.
+
+  # Model Description
+  - **Developed by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** MIT
+  - **Model Description:** This is a conversion of the Phi-3-Mini-4K-Instruct for local inference on CPUs.
+  - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+  # Base Model Information
+  See Hugging Face model [Phi-3-Mini-4K-Instruct](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct) for details.
