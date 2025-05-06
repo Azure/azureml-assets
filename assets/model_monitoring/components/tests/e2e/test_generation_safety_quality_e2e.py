@@ -96,7 +96,8 @@ class TestGenerationSafetyQualityModelMonitor:
             }
         )
 
-        assert pipeline_job.status == "Completed"
+        job_details = ml_client.jobs.get(pipeline_job.name)
+        assert pipeline_job.status == "Completed", f"Job failed! status={pipeline_job.status}, error={getattr(job_details, 'error', None)}"
 
     def test_generation_safety_quality_genai_successful(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
@@ -115,4 +116,5 @@ class TestGenerationSafetyQualityModelMonitor:
             }
         )
 
-        assert pipeline_job.status == "Completed"
+        job_details = ml_client.jobs.get(pipeline_job.name)
+        assert pipeline_job.status == "Completed", f"Job failed! status={pipeline_job.status}, error={getattr(job_details, 'error', None)}"
