@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """This file contains e2e tests for the data drift model monitor component."""
-
+import os
 import pytest
 from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
@@ -75,6 +75,28 @@ def _submit_generation_safety_quality_model_monitor_job(
     return ml_client.jobs.get(pipeline_job.name)
 
 
+def download_step_logs(ml_client, pipeline_job_name, step_name, download_dir="./logs"):
+    """
+    查找指定 pipeline job 下的 step，并下载日志到本地。
+    """
+    found = False
+    for child in ml_client.jobs.list(parent_job_name=pipeline_job_name):
+        # 有的版本 display_name 可能是 step name，也可能是别名，视你的 pipeline 定义
+        if child.display_name == step_name or child.name.endswith(step_name):
+            found = True
+            print(f"Found step: {child.display_name} ({child.name})，开始下载日志...")
+            ml_client.jobs.download(child.name, download_path=download_dir, all=True)
+            print(f"日志已下载到 {os.path.abspath(download_dir)}")
+            # 可选：打印部分日志内容
+            log_file = os.path.join(download_dir, child.name, 'logs', '70_driver_log.txt')
+            if os.path.exists(log_file):
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    print("----- 70_driver_log.txt 部分内容 -----")
+                    print(f.read(2000))  # 打印前2000字符
+            break
+    if not found:
+        print(f"未找到 step: {step_name}，请确认名称是否正确。")
+        
 @pytest.mark.gsq_test
 @pytest.mark.e2e
 class TestGenerationSafetyQualityModelMonitor:
@@ -98,11 +120,16 @@ class TestGenerationSafetyQualityModelMonitor:
 
         job_details = ml_client.jobs.get(pipeline_job.name)
         if pipeline_job.status != "Completed":
-            from azure.ai.ml import MLClient
-            job = ml_client.jobs.get(pipeline_job.name)
-            print(job)
-            
-        assert pipeline_job.status == "Completed", f"Job failed! status={pipeline_job.status}, error={job_details}"
+            print(job_details)
+            # 自动下载 logs
+            download_step_logs(
+                ml_client,
+                pipeline_job.name,
+                "generation_safety_quality_signal_monitor_output",
+                download_dir="./logs"
+            )
+
+        assert pipeline_job.status == "Completed"
 
     def test_generation_safety_quality_genai_successful(
         self, ml_client: MLClient, get_component, submit_pipeline_job, test_suite_name
@@ -123,8 +150,13 @@ class TestGenerationSafetyQualityModelMonitor:
 
         job_details = ml_client.jobs.get(pipeline_job.name)
         if pipeline_job.status != "Completed":
-            from azure.ai.ml import MLClient
-            job = ml_client.jobs.get(pipeline_job.name)
-            print(job)
+            print(job_details)
+            # 自动下载 logs
+            download_step_logs(
+                ml_client,
+                pipeline_job.name,
+                "generation_safety_quality_signal_monitor_output",
+                download_dir="./logs"
+            )
 
-        assert pipeline_job.status == "Completed", f"Job failed! status={pipeline_job.status}, error={job_details}"
+        assert pipeline_job.status == "Completed"
