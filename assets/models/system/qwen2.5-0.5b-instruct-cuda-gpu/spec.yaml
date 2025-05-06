@@ -11,7 +11,7 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  baseName: qwen2.5-0.5b
+  alias: qwen2.5-0.5b
 type: custom_model
 variantInfo:
   parents:

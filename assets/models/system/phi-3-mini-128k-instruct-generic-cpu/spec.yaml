@@ -11,7 +11,7 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  baseName: phi-3-mini-128k
+  alias: phi-3-mini-128k
 type: custom_model
 variantInfo:
   parents:
