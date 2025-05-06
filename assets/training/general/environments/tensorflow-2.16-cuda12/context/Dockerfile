@@ -36,11 +36,25 @@ RUN apt-get update && \
 	libibverbs-dev \
     dh-make \
     # Vulnerability fixes
-    libgssapi-krb5-2=1.19.2-2ubuntu0.6 \
-    libpam-cap=1:2.44-1ubuntu0.22.04.2 \
-    libtasn1-6=4.18.0-4ubuntu0.1 \
+    libgnutls30 \
+    libc-bin \
+    libgssapi-krb5-2 \
+    libpam-cap \
+    libtasn1-6 \
+    binutils \
+    binutils-x86-64-linux-gnu \
+    binutils-common \
+    libbinutils \
+    libctf0 \
+    libctf-nobfd0 \
+    binutils-multiarch \
     libk5crypto3 \
-    libcap2=1:2.44-1ubuntu0.22.04.2 && \
+    libcap2  \
+    # Perl vulnerability fixes
+    perl-modules-5.34 \
+    perl \
+    perl-base \
+    libperl5.34 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
                

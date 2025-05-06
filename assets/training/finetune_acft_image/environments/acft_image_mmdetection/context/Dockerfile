@@ -7,7 +7,7 @@ RUN apt-get -y update && apt-get install -y libglib2.0-0
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-RUN apt-get install -y expat=2.4.7-1ubuntu0.5
+RUN apt-get install -y expat
 
 # # # Install mmdet
 # Temporary workaround for https://github.com/open-mmlab/mim/issues/244
@@ -20,4 +20,4 @@ RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/to
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
 # Vulnerability Fix
-RUN pip install gunicorn==22.0.0
+RUN pip install gunicorn==23.0.0

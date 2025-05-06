@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: deepseek-r1-distill-qwen-1.5b-generic-cpu
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+  license: "MIT"
+  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/blob/main/LICENSE>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/deepseek-r1-distill-qwen-1.5b/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'cpu'
+    executionProvider: 'CPUExecutionProvider'
+    fileSizeBytes: 1964944541
+    vRamFootprintBytes: 1965162961
