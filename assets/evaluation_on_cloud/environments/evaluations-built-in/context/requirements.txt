@@ -1,4 +1,4 @@
-azure-ai-evaluation==1.2.0
+azure-ai-evaluation==1.6.0
 azureml-mlflow=={{latest-pypi-version}}
 azure-ai-ml=={{latest-pypi-version}}
 
