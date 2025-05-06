@@ -4,7 +4,7 @@ azure-ai-ml=={{latest-pypi-version}}
 
 openai=={{latest-pypi-version}}
 opentelemetry-api=={{latest-pypi-version}}
-opentelemetry-sdk=={{latest-pypi-version}}
+opentelemetry-sdk==1.31.0
 azure-monitor-query=={{latest-pypi-version}}
 croniter=={{latest-pypi-version}}
 azure-monitor-opentelemetry=={{latest-pypi-version}}
