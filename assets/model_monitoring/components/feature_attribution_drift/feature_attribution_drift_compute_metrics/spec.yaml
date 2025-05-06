@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
 name: feature_attribution_drift_compute_metrics
-version: 0.3.28
+version: 0.3.29
 display_name: Feature Attribution Drift - Compute Metrics
 is_deterministic: true
 description: Feature attribution drift using model monitoring.

@@ -4,7 +4,7 @@ type: spark
 name: genai_mdc_preprocessor
 display_name: GenAI MDC - Preprocessor
 description: Filters the raw span log based on the window provided, and aggregates it to trace level.
-version: 0.0.28
+version: 0.0.29
 is_deterministic: true
 
 code: ../../src
