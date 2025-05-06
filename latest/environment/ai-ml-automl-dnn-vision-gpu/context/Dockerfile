@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu121-py310-torch251:biweekly.202504.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu121-py310-torch251:biweekly.202505.1
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
