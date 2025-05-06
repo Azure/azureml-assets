@@ -1,0 +1,78 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: register_model
+version: 0.0.20
+type: command
+
+is_deterministic: True
+
+display_name: Register model
+description:
+  Register a model to a workspace or a registry. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/25
+
+code: ../../src
+command: >-
+  python -u register.py
+  --model_path ${{inputs.model_path}}
+  $[[--model_type ${{inputs.model_type}}]]
+  $[[--model_name ${{inputs.model_name}}]]
+  $[[--model_version ${{inputs.model_version}}]]
+  $[[--registry_name ${{inputs.registry_name}}]]
+  $[[--model_download_metadata ${{inputs.model_download_metadata}}]]
+  $[[--model_description "${{inputs.model_description}}"]]
+  $[[--model_metadata ${{inputs.model_metadata}}]]
+  --registration_details_folder ${{outputs.registration_details_folder}}
+
+inputs:
+  model_name:
+    type: string
+    optional: true
+    description: Model name to use in the registration. If name already exists, the version will be auto incremented. Model name must be alphanumeric and can contain dashes/hyphens
+
+  model_version:
+    type: string
+    optional: true 
+    description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented. Model version must be a numeric string
+
+  model_type:
+    type: string
+    optional: true
+    enum:
+      - custom_model
+      - mlflow_model
+    default: mlflow_model
+    description: Model type
+
+  model_description:
+    type: string
+    optional: true 
+    description: Description of the model that will be shown in AzureML registry or workspace
+
+  registry_name:
+    type: string
+    optional: true
+    description: Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+
+  model_path:
+    type: uri_folder
+    optional: false
+    description: Path to the model directory
+
+  model_download_metadata:
+    type: uri_file
+    optional: true
+    description: A JSON file which contains information related to model download.
+
+  model_metadata:
+    type: uri_file
+    optional: true
+    description: JSON/YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+
+outputs:
+  registration_details_folder:
+    type: uri_folder
+    description: Folder containing model registration details in a JSON file named model_registration_details.json
+
+tags:
+    Preview: ""
