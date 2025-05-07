@@ -15,7 +15,7 @@ command: >-
   python run_inference_validation.py
   --inference_payload ${{inputs.inference_payload}}
   $[[--expected_response ${{inputs.expected_response}}]]
-  --inference_response ${{inputs.inference_response}}
+  $[[--inference_response ${{inputs.inference_response}}]]
   --validation-id ${{inputs.validation_id}}
   --sku ${{inputs.sku}}
   --validation_results ${{outputs.validation_results}}
@@ -33,6 +33,7 @@ inputs:
 
   inference_response:
     type: uri_file
+    optional: true
     description: JSON file containing the actual inference response from the deployed model.
 
   sku:

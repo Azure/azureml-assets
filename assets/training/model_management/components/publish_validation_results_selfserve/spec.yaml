@@ -39,7 +39,7 @@ inputs:
     description: ID of the validation run (used for updating status in self-serve)
   metrics_storage_uri:
     type: uri_file
-    optional: false
+    optional: true
     mode: ro_mount
     description: Path to the file containing the validation metrics csv storage path
 
@@ -53,4 +53,4 @@ command: >-
   --publisher-name ${{inputs.publisher_name}} 
   --validation-id ${{inputs.validation_id}} 
   --sku ${{inputs.sku}} 
-  --metrics-storage-uri ${{inputs.metrics_storage_uri}}
+  $[[ --metrics-storage-uri ${{inputs.metrics_storage_uri}}]]

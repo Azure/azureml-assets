@@ -67,39 +67,33 @@ def update_model_onboarding_version(
 ):
     """Update model onboarding version with benchmark results."""
     current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    metrics_path_dict = read_results_from_file(metrics_storage_uri)
+    if not metrics_storage_uri:
+        validation_success = False
+        metrics_url = None
+    else:
+        metrics_path_dict = read_results_from_file(metrics_storage_uri)
+        metrics_url = metrics_path_dict.get(
+                "api_inference_path") if metrics_path_dict else None
+        validation_success = metrics_url is not None
 
     validation_result = []
+    logger.info(f"validation_success: {validation_success}, metrics_url: {metrics_url}, metrics_storage_uri: {metrics_storage_uri}")
 
     if validation_id:
-        if metrics_path_dict.get("api_inference_path", None):
-            validation_result.append({
+        validation_result.append({
                 "Id": validation_id,
                 "type": "API_VALIDATION",
                 "passed": True,
                 "message": "API inference passed successfully",
-                "validationResultUrl": metrics_path_dict.get("api_inference_path"),
-                "status": "Completed",
-                "createdTime": current_time,
-                "updatedTime": current_time,
-                "sku": sku
-            })
-        else:
-            validation_result.append({
-                "Id": validation_id,
-                "type": "API_VALIDATION",
-                "passed": True,
-                "message": "API inference passed successfully",
-                "validationResultUrl": metrics_path_dict.get("api_inference_path"),
-                "status": "Failed",
+                "validationResultUrl": metrics_url,
+                "status": "Completed" if validation_success else "Failed",
                 "createdTime": current_time,
                 "updatedTime": current_time,
                 "sku": sku
             })
     else:
         logger.error(
-            "Validation  ID is None, not updating validation results in self-serve")
+            "Validation ID is None, not updating validation results in self-serve")
         sys.exit(1)
 
     payload = {
@@ -157,7 +151,7 @@ if __name__ == "__main__":
                         help="Base URL of the model publisher self-serve API")
     parser.add_argument("--validation-id", required=True,
                         help="Run ID of the validation run")
-    parser.add_argument("--metrics-storage-uri", required=True,
+    parser.add_argument("--metrics-storage-uri", required=False,
                         help="URI to the storage where validation metrics are stored")
     parser.add_argument("--sku", required=False,
                         default="Standard_NC24ads_A100_v4",

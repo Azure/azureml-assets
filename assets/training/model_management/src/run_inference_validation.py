@@ -231,7 +231,7 @@ def main():
                         help="Serialized JSON payload for inference")
     parser.add_argument("--expected_response", type=str, required=False,
                         help="Path to the expected inference response JSON file.")
-    parser.add_argument("--inference_response", type=str, required=True,
+    parser.add_argument("--inference_response", type=str, required=False,
                         help="Path to the actual inference response JSON file.")
     parser.add_argument("--validation_results", type=str, required=True,
                         help="Path to save validation results.")
@@ -264,24 +264,26 @@ def main():
         logger.info(f"Decoded string: {decoded_str}")
         expected_response = json.loads(decoded_str)
 
+    inference_output = None
+    if args.inference_response:
+        inference_output = load_json(args.inference_response)
+        if not inference_output:
+            logger.error("Inference response is missing or invalid.")
 
-    inference_output = load_json(args.inference_response)
-    if not inference_output:
-        logger.error("Inference output is missing or invalid.")
-        sys.exit(1)
-
-    inference_response = inference_output.get("response")
-    if isinstance(inference_response, str):
-        try:
-            inference_response = json.loads(inference_response)
-        except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse actualResponse as JSON: {e}")
+    inference_response = None
+    if inference_output:
+        inference_response = inference_output.get("response")
+        if isinstance(inference_response, str):
+            try:
+                inference_response = json.loads(inference_response)
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse actualResponse as JSON: {e}")
 
     if inference_response is None:
         logger.warning("Actual response is missing or invalid. Setting it to an empty structure.")
         inference_response = {}
 
-    inference_time = inference_output.get("inference_time", 0)
+    inference_time = inference_output.get("inference_time", 0) if inference_output else 0
     logger.info(f"inference_payload: {inference_payload}, expected response: {expected_response}, "
                 f"actual response: {inference_response}")
 
