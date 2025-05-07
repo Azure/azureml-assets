@@ -15,6 +15,9 @@ import sys
 
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
+from azure.ai.evaluation._evaluate._evaluate_aoai import (
+    _convert_remote_eval_params_to_grader
+)
 from save_evaluation import load_evaluator
 from model_target import ModelTarget
 
@@ -84,10 +87,14 @@ def initialize_evaluators(command_line_args):
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
-        flow = load_evaluator("./" + evaluator_name)
-        if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
-            init_params["credential"] = AzureMLOnBehalfOfCredential()
-        evaluators[evaluator_name] = flow(**init_params)
+        if evaluator["Id"].startswith("aoai://"):
+            grader = _convert_remote_eval_params_to_grader(evaluator["Id"], init_params)
+            evaluators[evaluator_name] = grader
+        else:
+            flow = load_evaluator("./" + evaluator_name)
+            if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
+                init_params["credential"] = AzureMLOnBehalfOfCredential()
+            evaluators[evaluator_name] = flow(**init_params)
     return evaluators
 
 

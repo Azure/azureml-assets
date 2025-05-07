@@ -7,7 +7,7 @@ dependencies:
 - pip=23.1
 - pip:
   - azureml-mlflow==1.60.0.post1
-  - azure-ai-ml==1.26.5
+  - azure-ai-ml==1.27.0
   - azureml-core==1.60.0
   - azureml-telemetry==1.60.0
   - mltable==1.6.1
