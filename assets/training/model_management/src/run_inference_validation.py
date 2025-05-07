@@ -46,21 +46,21 @@ def load_json_from_string(json_string):
         return None
 
 
-def get_json_structure(data):
+def get_json_structure(data, parent_key=''):
     """
-    Recursively extract the structure of JSON (keys only).
-
-    For dictionaries, returns a dict of keys mapped to their structure.
-    For lists, returns a list with the structure of the first element.
-    For other types, returns None.
+    Recursively extract key paths from nested JSON.
     """
+    keys = set()
     if isinstance(data, dict):
-        return {key: get_json_structure(value) for key, value in data.items()}
-    elif isinstance(data, list) and len(data) > 0:
-        # Assume all elements share the same structure and return the structure of the first element.
-        return [get_json_structure(data[0])]
-    else:
-        return None
+        for k, v in data.items():
+            full_key = f"{parent_key}.{k}" if parent_key else k
+            keys.add(full_key)
+            keys.update(get_json_structure(v, full_key))
+    elif isinstance(data, list):
+        for index, item in enumerate(data):
+            full_key = f"{parent_key}[{index}]"
+            keys.update(get_json_structure(item, full_key))
+    return keys
 
 
 def compare_structures(expected_response, actual_response):
@@ -71,17 +71,20 @@ def compare_structures(expected_response, actual_response):
     """
     expected_structure = get_json_structure(expected_response)
     actual_structure = get_json_structure(actual_response)
-    logger.info(f"expected_structure: {expected_structure} \n actual_structure: {actual_structure}")
+    logger.info(f"Expected structure: {expected_structure}")
+    logger.info(f"Actual structure: {actual_structure}")
 
-    structure_match = expected_structure == actual_structure if expected_response else None
-    structural_difference = []
+    added_keys = actual_structure - expected_structure
+    removed_keys = expected_structure - actual_structure
+    structure_match = not added_keys and not removed_keys
 
-    if not structure_match:
-        structural_difference = [
-            {"expected": expected_structure, "actual": actual_structure}
-        ]
+    structural_difference = {
+        "added_keys": sorted(list(added_keys)),
+        "removed_keys": sorted(list(removed_keys)),
+    }
 
     logger.info(f"Structure match: {structure_match}, Structural differences: {structural_difference}")
+
     return {
         "structure_match": structure_match,
         "structural_difference": structural_difference
