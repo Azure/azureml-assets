@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: chat_completion_pipeline
-version: 0.0.74
+version: 0.0.75
 type: pipeline
 display_name: Chat Completion Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for chat
@@ -243,12 +243,10 @@ inputs:
 
   optim:
     type: string
-    default: adamw_hf
+    default: adamw_torch
     optional: true
     enum:
-    - adamw_hf
-    - adamw_torch
-      # - adamw_apex_fused
+    - adamw_torch      # - adamw_apex_fused
     - adafactor
     description: Optimizer to be used while training
 
@@ -536,14 +534,11 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in
       the parameter value. If compute cluster name is provided, instance_type field
       will be ignored and the respective cluster will be used
-  compute_model_evaluation:
-    type: string
-    optional: true
-    default: serverless
-    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster'
-      if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
-      in the parameter value. If compute cluster name is provided, instance_type field
-      will be ignored and the respective cluster will be used
+  # compute_model_evaluation:
+  #   type: string
+  #   optional: true
+  #   default: serverless
+  #   description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
 outputs:
   pytorch_model_folder:
@@ -560,14 +555,14 @@ outputs:
     description: output folder containing _best_ finetuned model in mlflow format.
     mode: rw_mount
 
-  evaluation_result:
-    type: uri_folder
-    description: Test Data Evaluation Results
+  # evaluation_result:
+  #   type: uri_folder
+  #   description: Test Data Evaluation Results
 
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.73
+    component: azureml:ft_nlp_common_validation:0.0.74
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -604,7 +599,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   chat_completion_model_import:
     type: command
-    component: azureml:chat_completion_model_import:0.0.73
+    component: azureml:chat_completion_model_import:0.0.74
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -615,7 +610,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   chat_completion_datapreprocess:
     type: command
-    component: azureml:chat_completion_datapreprocess:0.0.73
+    component: azureml:chat_completion_datapreprocess:0.0.74
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -632,7 +627,7 @@ jobs:
       model_selector_output: '${{parent.jobs.chat_completion_model_import.outputs.output_dir}}'
   chat_completion_finetune:
     type: command
-    component: azureml:chat_completion_finetune:0.0.73
+    component: azureml:chat_completion_finetune:0.0.74
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -690,7 +685,7 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.73
+    component: azureml:ft_nlp_model_converter:0.0.74
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -699,30 +694,30 @@ jobs:
       # converted_model: '${{parent.jobs.chat_completion_finetune.outputs.mlflow_model_folder}}'
     outputs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
-  model_prediction:
-    type: command
-    component: azureml:model_prediction_with_container:0.0.6
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
-    inputs:
-      task: chat-completion
-      test_data: '${{parent.jobs.chat_completion_datapreprocess.outputs.output_dir}}'
-      label_column_name: messages
-      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-  compute_metrics:
-    type: command
-    component: azureml:compute_metrics:0.0.35
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
-    inputs:
-      task: chat-completion
-      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
-      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
-      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
-      evaluation_config: '${{parent.inputs.evaluation_config}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-    outputs:
-      evaluation_result: '${{parent.outputs.evaluation_result}}'
+  # model_prediction:
+  #   type: command
+  #   component: azureml:model_prediction_with_container:0.0.6
+  #   compute: '${{parent.inputs.compute_model_evaluation}}'
+  #   resources:
+  #     instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+  #   inputs:
+  #     task: chat-completion
+  #     test_data: '${{parent.jobs.chat_completion_datapreprocess.outputs.output_dir}}'
+  #     label_column_name: messages
+  #     mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
+  #     evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+  # compute_metrics:
+  #   type: command
+  #   component: azureml:compute_metrics:0.0.35
+  #   compute: '${{parent.inputs.compute_model_evaluation}}'
+  #   resources:
+  #     instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+  #   inputs:
+  #     task: chat-completion
+  #     ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
+  #     prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
+  #     prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
+  #     evaluation_config: '${{parent.inputs.evaluation_config}}'
+  #     evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+  #   outputs:
+  #     evaluation_result: '${{parent.outputs.evaluation_result}}'

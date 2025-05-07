@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_finetune
-version: 0.0.73
+version: 0.0.74
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Generation Finetune
 description: Component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 code: ../../../src/finetune
 
@@ -95,12 +95,10 @@ inputs:
 
   optim:
     type: string
-    default: adamw_hf
+    default: adamw_torch
     optional: true
     enum:
-    - adamw_hf
-    - adamw_torch
-      # - adamw_apex_fused
+    - adamw_torch      # - adamw_apex_fused
     - adafactor
     description: Optimizer to be used while training
 

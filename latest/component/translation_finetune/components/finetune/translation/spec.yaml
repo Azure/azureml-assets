@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: translation_finetune
-version: 0.0.73
+version: 0.0.74
 type: command
 
 is_deterministic: true
@@ -11,7 +11,7 @@ description: Component to finetune Hugging Face pretrained models for translatio
   for performance enhancement. See [docs](https://aka.ms/azureml/components/translation_finetune)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 code: ../../../src/finetune
 
@@ -104,12 +104,10 @@ inputs:
 
   optim:
     type: string
-    default: adamw_hf
+    default: adamw_torch
     optional: true
     enum:
-    - adamw_hf
-    - adamw_torch
-      # - adamw_apex_fused
+    - adamw_torch      # - adamw_apex_fused
     - adafactor
     description: Optimizer to be used while training
 

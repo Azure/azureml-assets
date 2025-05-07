@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_finetune
-version: 0.0.28
+version: 0.0.29
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: OSS Text Generation Finetune
 description: FTaaS component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/88
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 inputs:
   task_name:
@@ -147,10 +147,9 @@ inputs:
   optim:
     type: string
     optional: true
-    default: adamw_hf
+    default: adamw_torch
     description: Optimizer to be used while training
     enum:
-    - adamw_hf
     - adamw_torch
     - adafactor
   learning_rate:

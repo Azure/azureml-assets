@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_datapreprocess
-version: 0.0.73
+version: 0.0.74
 type: command
 
 is_deterministic: true
@@ -9,7 +9,7 @@ display_name: Question Answering DataPreProcess
 description: Component to preprocess data for question answering task. See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 code: ../../../src/preprocess
 
