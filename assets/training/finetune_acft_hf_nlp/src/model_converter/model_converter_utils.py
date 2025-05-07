@@ -7,42 +7,33 @@ import shutil
 from argparse import Namespace
 from pathlib import Path
 
-from azureml.acft.accelerator.utils.model_utils import print_model_summary
-from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
 from azureml.acft.accelerator.constants import PeftLoRAConstants
-
+from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
+from azureml.acft.accelerator.utils.model_utils import print_model_summary
+from azureml.acft.common_components import get_logger_app
 from azureml.acft.contrib.hf.nlp.constants.constants import Tasks
-
-from transformers import (
-    AutoTokenizer,
-    PreTrainedModel,
-    PreTrainedTokenizerBase,
-)
-from transformers.models.auto.modeling_auto import (
-    AutoModelForSequenceClassification,
-    AutoModelForTokenClassification,
-    AutoModelForSeq2SeqLM,
-    AutoModelForQuestionAnswering,
-    AutoModelForCausalLM,
-)
-
 from peft.auto import (
+    AutoPeftModelForCausalLM,
+    AutoPeftModelForQuestionAnswering,
+    AutoPeftModelForSeq2SeqLM,
     AutoPeftModelForSequenceClassification,
     AutoPeftModelForTokenClassification,
-    AutoPeftModelForSeq2SeqLM,
-    AutoPeftModelForQuestionAnswering,
-    AutoPeftModelForCausalLM,
 )
-
-from azureml.acft.common_components import get_logger_app
-
+from transformers import AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase
+from transformers.models.auto.modeling_auto import (
+    AutoModelForCausalLM,
+    AutoModelForQuestionAnswering,
+    AutoModelForSeq2SeqLM,
+    AutoModelForSequenceClassification,
+    AutoModelForTokenClassification,
+)
 
 logger = get_logger_app(
     "azureml.acft.contrib.hf.scripts.src.model_converter.model_converter_utils"
 )
-from transformers import Llama4ForConditionalGeneration
-from peft import PeftModel
 import torch
+from peft import PeftModel
+from transformers import Llama4ForConditionalGeneration
 
 ACFT_TASKS_HUGGINGFACE_MODELS_MAPPING = {
     Tasks.SINGLE_LABEL_CLASSIFICATION: AutoModelForSequenceClassification,
