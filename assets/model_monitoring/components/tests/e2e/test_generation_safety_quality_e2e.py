@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 
 """This file contains e2e tests for the data drift model monitor component."""
-import os
-import shutil
+
 import pytest
 from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
@@ -54,6 +53,7 @@ def _submit_generation_safety_quality_model_monitor_job(
             completion_column_name=completion_column_name,
             ground_truth_column_name=ground_truth_column_name,
             context_column_name=context_column_name,
+            instance_type="standard_e8s_v3",
         )
         return {
             "signal_output": generation_safety_quality_signal_monitor_output.outputs.signal_output
@@ -61,7 +61,6 @@ def _submit_generation_safety_quality_model_monitor_job(
 
     pipeline_job = _generation_safety_quality_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
-
     pipeline_job = submit_pipeline_job(
         pipeline_job, experiment_name, expect_failure
     )
@@ -96,12 +95,6 @@ class TestGenerationSafetyQualityModelMonitor:
             }
         )
 
-        if pipeline_job.status != "Completed":
-            job_details = ml_client.jobs.get(pipeline_job.name)
-            print("AzureML Job error detail：")
-            print("Job status:", job_details.status)
-            print("Job error:", job_details.error)  
-
         assert pipeline_job.status == "Completed"
 
     def test_generation_safety_quality_genai_successful(
@@ -120,11 +113,5 @@ class TestGenerationSafetyQualityModelMonitor:
                 "context_column_name": "context",
             }
         )
-
-        if pipeline_job.status != "Completed":
-            job_details = ml_client.jobs.get(pipeline_job.name)
-            print("AzureML Job error detail：")
-            print("Job status:", job_details.status)
-            print("Job error:", job_details.error)  
 
         assert pipeline_job.status == "Completed"
