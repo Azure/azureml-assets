@@ -156,10 +156,11 @@ class TestGenerationSafetyQualityModelMonitor:
         #         "generation_safety_quality_signal_monitor_output",
         #         download_dir="./logs"
         #     )
-        job_details = ml_client.jobs.get(pipeline_job.name)
-        if hasattr(job_details, "error") and job_details.error:
+
+        if pipeline_job.status != "Completed":
+            job_details = ml_client.jobs.get(pipeline_job.name)
             print("AzureML Job 错误详情：")
-            print(job_details.error)
+            print(job_details)
 
         assert pipeline_job.status == "Completed"
 
