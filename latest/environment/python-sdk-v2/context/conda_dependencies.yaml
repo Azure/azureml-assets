@@ -6,7 +6,7 @@ dependencies:
   - pip=23.3
   - pip:
     - azure-ai-ml==1.26.5
-    - azure-identity==1.21.0
+    - azure-identity==1.22.0
     # v1 package for fetching run details
     - azureml-core==1.60.0
     # v1 package for logging and telemetry. Switch to using application-insights and implementing custom logging
