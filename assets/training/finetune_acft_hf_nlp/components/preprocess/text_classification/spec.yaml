@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_classification_datapreprocess
-version: 0.0.74
+version: 0.0.73
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Classification DataPreProcess
 description: Component to preprocess data for single label classification task. See [docs](https://aka.ms/azureml/components/text_classification_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
 
 code: ../../../src/preprocess
 
