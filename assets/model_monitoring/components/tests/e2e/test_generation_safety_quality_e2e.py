@@ -160,7 +160,8 @@ class TestGenerationSafetyQualityModelMonitor:
         if pipeline_job.status != "Completed":
             job_details = ml_client.jobs.get(pipeline_job.name)
             print("AzureML Job 错误详情：")
-            print(job_details)
+            print("Job status:", job_details.status)
+            print("Job error:", job_details.error)  
 
         assert pipeline_job.status == "Completed"
 
