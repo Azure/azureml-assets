@@ -12,6 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini
+  directoryPath: cpu-int4-int8
 type: custom_model
 variantInfo:
   parents:
