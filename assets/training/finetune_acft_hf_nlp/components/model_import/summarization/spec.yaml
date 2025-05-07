@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: summarization_model_import
-version: 0.0.73
+version: 0.0.74
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Summarization Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/summarization_model_import) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 code: ../../../src/model_selector
 
