@@ -79,7 +79,8 @@ def _submit_generation_safety_quality_model_monitor_job(
 def download_and_flatten_logs(ml_client, pipeline_job_name, step_name, download_dir="./log"):
     found = False
     for child in ml_client.jobs.list(parent_job_name=pipeline_job_name):
-        if child.display_name == step_name:
+            print(f"Found child job: {child.display_name} ({child.name})")
+        # if child.display_name == step_name:
             found = True
             print(f"Found step: {child.display_name} ({child.name})，开始下载日志...")
             # 下载到临时目录
