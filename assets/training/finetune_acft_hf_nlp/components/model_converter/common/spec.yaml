@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Common Model Converter
 description: Component to convert the finetune job output to pytorch and mlflow model
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 code: ../../../src/model_converter
 

@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Classification Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/text_classification_model_import) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 code: ../../../src/model_selector
 

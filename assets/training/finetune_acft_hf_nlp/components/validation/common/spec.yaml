@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/87
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 code: ../../../src/validation
 
