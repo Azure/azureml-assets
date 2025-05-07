@@ -75,56 +75,6 @@ def _submit_generation_safety_quality_model_monitor_job(
 
     return ml_client.jobs.get(pipeline_job.name)
 
-
-def download_and_flatten_logs(ml_client, pipeline_job_name, step_name, download_dir="./log"):
-    found = False
-    for child in ml_client.jobs.list(parent_job_name=pipeline_job_name):
-            print(f"Found child job: {child.display_name} ({child.name})")
-        # if child.display_name == step_name:
-            found = True
-            print(f"Found step: {child.display_name} ({child.name})，开始下载日志...")
-            # 下载到临时目录
-            temp_dir = os.path.join(download_dir, "temp_" + child.name)
-            ml_client.jobs.download(child.name, download_path=temp_dir, all=True)
-            print(f"日志已下载到 {os.path.abspath(temp_dir)}")
-            
-            # 创建目标 log 目录
-            os.makedirs(download_dir, exist_ok=True)
-            count = 0
-            
-            # 遍历 temp_dir 下所有文件，复制到 download_dir 下（文件名加上 step/job 前缀防止重名）
-            for root, dirs, files in os.walk(temp_dir):
-                for file in files:
-                    src_path = os.path.join(root, file)
-                    # 生成新文件名，防止同名覆盖
-                    rel_path = os.path.relpath(src_path, start=temp_dir)
-                    new_file_name = f"{child.name.replace('/', '_')}_{rel_path.replace('/', '_')}"
-                    dst_path = os.path.join(download_dir, new_file_name)
-                    shutil.copy2(src_path, dst_path)
-                    count += 1
-            print(f"已整理 {count} 个日志文件到 {os.path.abspath(download_dir)}")
-            
-            # 删除临时目录
-            shutil.rmtree(temp_dir)
-            
-            # 列出所有日志文件，并预览内容
-            print("\n----- log 目录下的所有日志文件 -----")
-            for file in os.listdir(download_dir):
-                file_path = os.path.join(download_dir, file)
-                if os.path.isfile(file_path):
-                    print(file)
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            content = f.read(2000)
-                            print(f"--- {file} 内容预览 ---")
-                            print(content if content else "(文件为空)")
-                            print("文件完毕\n\n\n\n")
-                    except Exception as e:
-                        print(f"无法读取 {file}: {e}")
-            break
-    if not found:
-        print(f"未找到 step: {step_name}，请确认名称是否正确。")
-
 @pytest.mark.gsq_test
 @pytest.mark.e2e
 class TestGenerationSafetyQualityModelMonitor:
@@ -146,20 +96,9 @@ class TestGenerationSafetyQualityModelMonitor:
             }
         )
 
-        # job_details = ml_client.jobs.get(pipeline_job.name)
-        # if pipeline_job.status != "Completed":
-        #     print(job_details)
-        #     # 自动下载 logs
-        #     download_and_flatten_logs(
-        #         ml_client,
-        #         pipeline_job.name,
-        #         "generation_safety_quality_signal_monitor_output",
-        #         download_dir="./logs"
-        #     )
-
         if pipeline_job.status != "Completed":
             job_details = ml_client.jobs.get(pipeline_job.name)
-            print("AzureML Job 错误详情：")
+            print("AzureML Job error detail：")
             print("Job status:", job_details.status)
             print("Job error:", job_details.error)  
 
@@ -182,15 +121,10 @@ class TestGenerationSafetyQualityModelMonitor:
             }
         )
 
-        # job_details = ml_client.jobs.get(pipeline_job.name)
-        # if pipeline_job.status != "Completed":
-        #     print(job_details)
-        #     # 自动下载 logs
-        #     download_and_flatten_logs(
-        #         ml_client,
-        #         pipeline_job.name,
-        #         "generation_safety_quality_signal_monitor_output",
-        #         download_dir="./logs"
-        #     )
+        if pipeline_job.status != "Completed":
+            job_details = ml_client.jobs.get(pipeline_job.name)
+            print("AzureML Job error detail：")
+            print("Job status:", job_details.status)
+            print("Job error:", job_details.error)  
 
-        # assert pipeline_job.status == "Completed"
+        assert pipeline_job.status == "Completed"
