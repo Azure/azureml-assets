@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/onnx-models/qwen-2.5-3b-instruct
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

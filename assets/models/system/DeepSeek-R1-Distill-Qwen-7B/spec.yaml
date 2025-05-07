@@ -1,0 +1,7 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: deepseek-r1-distill-qwen-7b
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+type: custom_model
