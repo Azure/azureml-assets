@@ -3,6 +3,7 @@
 
 """This file contains e2e tests for the data drift model monitor component."""
 import os
+import shutil
 import pytest
 from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
@@ -178,7 +179,7 @@ class TestGenerationSafetyQualityModelMonitor:
         if pipeline_job.status != "Completed":
             print(job_details)
             # 自动下载 logs
-            download_step_logs(
+            download_and_flatten_logs(
                 ml_client,
                 pipeline_job.name,
                 "generation_safety_quality_signal_monitor_output",
