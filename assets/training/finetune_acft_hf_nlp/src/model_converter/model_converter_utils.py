@@ -19,7 +19,12 @@ from peft.auto import (
     AutoPeftModelForSequenceClassification,
     AutoPeftModelForTokenClassification,
 )
-from transformers import AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase
+from transformers import (
+    AutoTokenizer,
+    PreTrainedModel,
+    PreTrainedTokenizerBase,
+    Llama4ForConditionalGeneration,
+)
 from transformers.models.auto.modeling_auto import (
     AutoModelForCausalLM,
     AutoModelForQuestionAnswering,
@@ -28,12 +33,12 @@ from transformers.models.auto.modeling_auto import (
     AutoModelForTokenClassification,
 )
 
+import torch
+from peft import PeftModel
+
 logger = get_logger_app(
     "azureml.acft.contrib.hf.scripts.src.model_converter.model_converter_utils"
 )
-import torch
-from peft import PeftModel
-from transformers import Llama4ForConditionalGeneration
 
 ACFT_TASKS_HUGGINGFACE_MODELS_MAPPING = {
     Tasks.SINGLE_LABEL_CLASSIFICATION: AutoModelForSequenceClassification,
