@@ -3,7 +3,7 @@
 
 ## 1.16.80 (2025-05-07)
 ### 🚀 New Features
-- [#4117](https://github.com/Azure/azureml-assets/pull/4151) Allow model prefix for model names
+- [#4151](https://github.com/Azure/azureml-assets/pull/4151) Allow model prefix for model names
 
 ## 1.16.79 (2025-04-22)
 ### 🚀 New Features
