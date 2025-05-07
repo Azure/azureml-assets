@@ -17,7 +17,6 @@ from transformers import (
     AutoTokenizer,
     PreTrainedModel,
     PreTrainedTokenizerBase,
-    AutoProcessor,
 )
 from transformers.models.auto.modeling_auto import (
     AutoModelForSequenceClassification,
