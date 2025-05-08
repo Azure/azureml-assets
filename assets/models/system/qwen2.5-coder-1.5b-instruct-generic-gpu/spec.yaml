@@ -16,7 +16,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/qwen2.5-coder-1.5b/versions/1
+  - assetId: azureml://registries/azureml/models/qwen2.5-coder-1.5b-instruct/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
