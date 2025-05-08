@@ -40,6 +40,7 @@ conf:
         - fsspec~=2023.4.0
         - numpy<2.0.0
         - cryptography==42.0.5
+        - opentelemetry-sdk~=1.32.1
     name: momo-base-spark
 
 code: ../../src
