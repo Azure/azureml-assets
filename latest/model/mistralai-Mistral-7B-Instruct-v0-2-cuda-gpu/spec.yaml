@@ -13,6 +13,10 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: mistral-7b-v0.2
+  directoryPath: mistral-7b-instruct-v0.2-cuda-int4-rtn-block-32
+  promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\"\
+    , \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"\
+    }"
 type: custom_model
 variantInfo:
   parents:

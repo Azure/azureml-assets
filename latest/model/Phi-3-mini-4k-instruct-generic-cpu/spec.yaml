@@ -13,6 +13,10 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-3-mini-4k
+  directoryPath: phi-3-mini-4k-instruct-cpu-int4-rtn-block-32
+  promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\\
+    n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\"\
+    : \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
 type: custom_model
 variantInfo:
   parents:

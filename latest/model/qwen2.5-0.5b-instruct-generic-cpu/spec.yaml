@@ -13,6 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-0.5b
+  directoryPath: cpu-int4-rtn-block-32-acc-level-4
 type: custom_model
 variantInfo:
   parents:
