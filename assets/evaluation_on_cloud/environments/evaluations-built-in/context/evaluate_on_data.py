@@ -15,6 +15,9 @@ import sys
 
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
+from azure.ai.evaluation._evaluate._evaluate_aoai import (
+    _convert_remote_eval_params_to_grader
+)
 from save_evaluation import load_evaluator
 from model_target import ModelTarget
 
@@ -84,10 +87,14 @@ def initialize_evaluators(command_line_args):
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
-        flow = load_evaluator("./" + evaluator_name)
-        if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
-            init_params["credential"] = AzureMLOnBehalfOfCredential()
-        evaluators[evaluator_name] = flow(**init_params)
+        if evaluator["Id"].startswith("aoai://"):
+            grader = _convert_remote_eval_params_to_grader(evaluator["Id"], init_params)
+            evaluators[evaluator_name] = grader
+        else:
+            flow = load_evaluator("./" + evaluator_name)
+            if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
+                init_params["credential"] = AzureMLOnBehalfOfCredential()
+            evaluators[evaluator_name] = flow(**init_params)
     return evaluators
 
 
@@ -153,7 +160,19 @@ def create_model_target_and_data_mapping(command_line_args):
 
 def apply_target_on_data(data, model_target, data_mapping):
     """Apply target on input data."""
-    df = pd.read_json(data, lines=True)
+    input_filename = os.path.basename(data)
+    name, ext = os.path.splitext(input_filename)
+    df = pd.DataFrame()
+    try:
+        if ext == ".csv":
+            df = pd.read_csv(data)
+        elif ext == ".jsonl":
+            df = pd.read_json(data, lines=True)
+        else:
+            raise RuntimeError(f"Supported file types: jsonl and csv. {ext} not supported.")
+    except Exception as e:
+        raise RuntimeError(f"Failed to read file '{data}': {e}")
+
     mapping = {}
     for key, value in data_mapping.items():
         # ignore mappings with empty values
@@ -195,10 +214,17 @@ def apply_target_on_data(data, model_target, data_mapping):
 
     output_dir = data.replace(INPUT_EVAL_DATA_DIR, OUTPUT_EVAL_DATA_DIR)
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
-    input_filename = os.path.basename(data)
-    output_filename = f"{os.path.splitext(input_filename)[0]}_output.jsonl"
+    output_filename = ""
+    if ext == ".csv":
+        output_filename = f"{name}_output.csv"
+    else:  # .jsonl
+        output_filename = f"{name}_output.jsonl"
+
     output_file = os.path.join(os.path.dirname(output_dir), output_filename)
-    df.to_json(output_file, orient="records", lines=True)
+    if ext == ".csv":
+        df.to_csv(output_file, index=False)
+    else:
+        df.to_json(output_file, orient="records", lines=True)
     logger.info(f"Saved updated DataFrame to {output_file}")
 
     return output_file
@@ -227,13 +253,14 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
     logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
 
     data = command_line_args.eval_data
+    logger.info(f"Evaluation Data filename: {data}")
     if model_target:
         logger.info("Applying target on data")
         data = apply_target_on_data(data=data, model_target=model_target, data_mapping=data_mapping)
+        logger.info(f"Evaluation Data filename after applying target: {data}")
         logger.info("Updating evaluator config for generated_response data mapping")
         evaluator_config = update_evaluator_config_mapping_for_generated_response(command_line_args, evaluator_config)
 
-    logger.info(f"Evaluation Data: {data}")
     logger.info(f"With the evaluator config {evaluator_config}")
     results = evaluate(
         data=data,

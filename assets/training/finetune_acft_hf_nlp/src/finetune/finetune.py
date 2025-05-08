@@ -54,6 +54,8 @@ COMPONENT_NAME = "ACFT-Finetune"
 
 PHI3_MINI_4K_INSTRUCT_MODEL_TYPE = "phi3mini"
 
+LLAMA_SCOUT_MODEL_TYPE = "llama4"
+
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
 
@@ -160,6 +162,7 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     REFINED_WEB,
     HfModelTypes.MIXTRAL,
+    LLAMA_SCOUT_MODEL_TYPE,
 ]
 
 
@@ -298,7 +301,7 @@ def get_parser():
             " `train_batch_size` by afactor of 2 till the OOM is fixed."
         ),
     )
-    # -- optimizer options adamw_hf, adamw_torch, adamw_apex_fused, adafactor
+    # -- optimizer options adamw_torch, adamw_torch, adamw_apex_fused, adafactor
     parser.add_argument(
         "--optim",
         default="adamw_torch",
@@ -1052,6 +1055,19 @@ def _get_model_flavor(mlflow_flavors: list, mlmodel_data: dict) -> str:
     return None
 
 
+def validate_learning_rate(args: Namespace) -> None:
+    """Validate learning rate."""
+    if args.learning_rate <= 0:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Invalid learning rate. Learning rate should be greater than 0."
+                )
+            )
+        )
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
@@ -1236,6 +1252,8 @@ def finetune(args: Namespace):
     # set gradient-checkpointing
     set_gradient_checkpointing(args)
 
+    validate_learning_rate(args)
+
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
             raise ACFTValidationException._with_error(
@@ -1307,6 +1325,11 @@ def finetune(args: Namespace):
             shutil.copy(str(conda_file_path), args.output_dir)
             logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
+        # copy pre-processor config files
+        preprocessor_config_file = Path(args.model_selector_output, "default_model_name", "preprocessor_config.json")
+        if preprocessor_config_file.is_file():
+            shutil.copy(str(preprocessor_config_file), args.output_dir)
+            logger.info("Copied preprocessor_config.json file to output dir.")
         # copy inference config files
         mlflow_ml_configs_dir = Path(args.model_selector_output, "ml_configs")
         ml_config_dir = Path(args.output_dir, "ml_configs")

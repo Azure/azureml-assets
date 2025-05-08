@@ -24,17 +24,12 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 ###############################
 # Pre-Build LightGBM
 ###############################
-RUN cd /usr/local/src && mkdir lightgbm && cd lightgbm && \
-    git clone --recursive --branch v3.2.1 --depth 1 https://github.com/microsoft/LightGBM && \
-    cd LightGBM && mkdir build && cd build && \
-    cmake -DUSE_GPU=1 -DOpenCL_LIBRARY=/usr/local/cuda/lib64/libOpenCL.so -DOpenCL_INCLUDE_DIR=/usr/local/cuda/include/ .. && \
-    make -j4
+RUN pip install --upgrade lightgbm==4.6.0
                 
 ###############################
 # Install GPU LightGBM and XgBoost
 ###############################
-RUN /bin/bash -c "cd /usr/local/src/lightgbm/LightGBM/python-package && python setup.py install --precompile && \
-    pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3"
+RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # begin conda create
 # Install conda packages

@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_tabular_score_card
 display_name: Generate rai insight score card (Public preview)
 description: Generate rai insight score card [Learn More](https://aka.ms/RAIComponents)
-version: 0.18.0
+version: 0.19.0
 type: command
 
 inputs:
@@ -17,7 +17,7 @@ outputs:
   scorecard:
     type: path
 
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/14
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/19
 
 code: ../src/
 
