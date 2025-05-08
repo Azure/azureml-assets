@@ -119,7 +119,7 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.4"
+      runtime_version: "3.3"
     identity:
       type: aml_token
   compute_histogram:
