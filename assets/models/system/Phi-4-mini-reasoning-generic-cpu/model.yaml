@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/onnx-models/phi-4-mini-instruct/onnx/cpu_and_mobile/cpu-int4-int8
+  container_path: foundrylocal/foundry-local-missing/phi-4-mini-reasoning/onnx/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/v1
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
