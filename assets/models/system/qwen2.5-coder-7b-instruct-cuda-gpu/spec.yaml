@@ -23,4 +23,4 @@ variantInfo:
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
     fileSizeBytes: 5078798827
-    vRamFootprintBytes: 5078995599
+    vRamFootprintBytes: 5078996910
