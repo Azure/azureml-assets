@@ -11,7 +11,8 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  alias: qwen2.5-0.5b
+  alias: qwen2.5-coder-0.5b
+  directoryPath: cpu-int4-rtn-block-32-acc-level-4
 type: custom_model
 variantInfo:
   parents:
@@ -21,5 +22,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 861939957
-    vRamFootprintBytes: 862107904
+    fileSizeBytes: 
+    vRamFootprintBytes: 

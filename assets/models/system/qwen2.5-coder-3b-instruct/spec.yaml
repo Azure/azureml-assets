@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: qwen2.5-3b-instruct
+name: qwen2.5-coder-3b-instruct
 version: 1
 path: ./
 tags:
