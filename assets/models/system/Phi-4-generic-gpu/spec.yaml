@@ -12,6 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4
+  directoryPath: directml-int4-rtn-block-32-acc-level-4
 type: custom_model
 variantInfo:
   parents:
