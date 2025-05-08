@@ -13,6 +13,7 @@ tags:
   maxOutputTokens: 2048
   alias: phi-3.5-mini
   directoryPath: directml-int4-rtn-block-32-acc-level-4
+  promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\": \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
 type: custom_model
 variantInfo:
   parents:
