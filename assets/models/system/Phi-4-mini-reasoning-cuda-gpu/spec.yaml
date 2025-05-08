@@ -22,5 +22,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 
-    vRamFootprintBytes: 
+    fileSizeBytes: 3382286745
+    vRamFootprintBytes: 3408448716
