@@ -16,7 +16,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/Phi-4-reasoning/versions/7
+  - assetId: azureml://registries/azureml/models/Phi-4-reasoning/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
