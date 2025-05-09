@@ -116,6 +116,7 @@ conf:
         - azure-ai-ml>=1.26.3
         - openai>=1.56.2
         - promptflow-devkit>=1.18.0
+        - azure-ai-evaluation~=1.0.1
     name: momo-gsq-spark
 code: ../../src
 entry:
