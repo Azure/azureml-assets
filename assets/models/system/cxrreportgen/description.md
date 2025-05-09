@@ -132,8 +132,3 @@ Microsoft believes Responsible AI is a shared responsibility and we have identif
 While testing the model with images and/or text, ensure the the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
 
 For detailed guidelines on ethical use, refer to Microsoft’s [Responsible AI Principles](https://www.microsoft.com/en-us/ai/responsible-ai)
-
-## Hardware Requirement for Compute Instances
-- Supports CPU and GPU
-- Default: Single A100 GPU or Intel CPU
-- Minimum: Single GPU instance with 24Gb Memory (Fastest) or CPU
