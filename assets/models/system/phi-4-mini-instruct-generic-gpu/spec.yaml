@@ -23,5 +23,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'WebGPUExecutionProvider'
-    fileSizeBytes: 3382286745
-    vRamFootprintBytes: 3408532602
+    fileSizeBytes: 3994319585
+    vRamFootprintBytes: 4020946899
