@@ -118,9 +118,6 @@ conf:
           - azure-ai-evaluation~=1.0.1
           - azureml-dataprep==5.1.6
           - mltable~=1.6.1
-          - azureml-mlflow~=1.56.0
-          - mlflow~=2.17.2
-          - pyopenssl<23.0.0
     name: momo-gsq-spark
 code: ../../src
 entry:
