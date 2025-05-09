@@ -4,8 +4,9 @@ name: MedImageInsight
 path: ./
 
 properties:
-  inference-min-sku-spec: 6|1|112|64
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+  inference-min-sku-spec: 4|1|28|64
+  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3,
+    Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
@@ -22,11 +23,12 @@ tags:
   author: Microsoft
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+  inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3,
+    Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 9
+version: 10
 description: |
   Most medical imaging AI today is narrowly built to detect a small set of individual findings on a single modality like chest X-rays. This training approach is data- and computationally inefficient, requiring ~6-12 months per finding1, and often fails to generalize in real world environments. By further training existing multimodal foundation models on medical images and associated text data, Microsoft and Nuance created a multimodal foundation model that shows evidence of generalizing across various medical imaging modalities, anatomies, locations, severities, and types of medical data. The training methods learn to map the medical text and images into a unified numerical vector representation space, which makes it easy for computers to understand the relationships between those modalities.
 
@@ -194,8 +196,3 @@ description: |
     }
   ]
   ```
-
-  ## Hardware Requirement for Compute Instances
-  - Supports CPU and GPU
-  - Default: Single V100 GPU or Intel CPU
-  - Minimum: Single GPU instance with 8Gb Memory (Fastest) or CPU

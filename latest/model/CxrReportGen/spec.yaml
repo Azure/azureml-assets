@@ -24,7 +24,7 @@ tags:
   inference_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC40ads_H100_v5,
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 7
+version: 8
 description: |
   ## Overview
 
@@ -160,8 +160,3 @@ description: |
   While testing the model with images and/or text, ensure the the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
 
   For detailed guidelines on ethical use, refer to Microsoft’s [Responsible AI Principles](https://www.microsoft.com/en-us/ai/responsible-ai)
-
-  ## Hardware Requirement for Compute Instances
-  - Supports CPU and GPU
-  - Default: Single A100 GPU or Intel CPU
-  - Minimum: Single GPU instance with 24Gb Memory (Fastest) or CPU
