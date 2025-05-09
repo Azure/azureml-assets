@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: deepseek/deepseek-r1-distill-qwen/deepseek-r1-distill-qwen-14b/onnx/npu/qnn-deepseek-r1-distill-qwen-14b
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

@@ -12,6 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-7b
+  directoryPath: cuda-int4-rtn-block-32
 type: custom_model
 variantInfo:
   parents:

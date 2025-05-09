@@ -44,7 +44,7 @@ SET_SAMPLER_EPOCH = 'SET_SAMPLER_EPOCH'
 
 
 def add_env_parser_to_yaml() -> None:
-    """Adding ability of resolving environment variables to the yaml SafeLoader.
+    """Add ability of resolving environment variables to the yaml SafeLoader.
 
     Environment variables in the form of "${<env_var_name>}" can be resolved as strings.
     If the <env_var_name> is not in the env, <env_var_name> itself would be used.
