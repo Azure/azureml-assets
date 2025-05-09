@@ -116,7 +116,7 @@ conf:
         - azure-ai-ml>=1.26.3
         - openai>=1.56.2
         - azure-ai-evaluation~=1.0.1
-        - azureml-dataprep==5.3.3
+        - azureml-dataprep==5.1.6
         - mltable~=1.6.1
  
     name: momo-gsq-spark
