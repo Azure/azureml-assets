@@ -11,6 +11,9 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
+  alias: deepseek-r1-1.5b
+  directoryPath: cuda-int4-rtn-block-32
+  promptTemplate: "{\"assistant\": \"{Content}\", \"prompt\": \"\\\\u003C\\\\uFF5CUser\\\\uFF5C\\\\u003E{Content}\\\\u003C\\\\uFF5CAssistant\\\\uFF5C\\\\u003E\"}"
 type: custom_model
 variantInfo:
   parents:
