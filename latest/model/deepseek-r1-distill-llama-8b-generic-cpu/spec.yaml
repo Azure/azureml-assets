@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deepseek-r1-distill-llama-8b-generic-cpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: deepseek-r1-8b
-  directoryPath: cpu-int4-rtn-block-32-acc-level-4
+  directoryPath: v2
   promptTemplate: "{\"assistant\": \"{Content}\", \"prompt\": \"\\\\u003C\\\\uFF5CUser\\\
     \\uFF5C\\\\u003E{Content}\\\\u003C\\\\uFF5CAssistant\\\\uFF5C\\\\u003E\"}"
 type: custom_model
@@ -25,8 +25,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 6861210255
-    vRamFootprintBytes: 6861445345
+    fileSizeBytes: 7126964711
+    vRamFootprintBytes: 7126988563
 description: |-
   This model is an optimized version of DeepSeek-R1-Distill-Llama-8B to enable local inference on CPUs. This model uses RTN quantization.
 

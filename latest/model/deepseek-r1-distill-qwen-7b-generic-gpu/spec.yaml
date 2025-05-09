@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deepseek-r1-distill-qwen-7b-generic-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: deepseek-r1-7b
-  directoryPath: directml-int4-rtn-block-32-acc-level-4
+  directoryPath: v2
   promptTemplate: "{\"assistant\": \"{Content}\", \"prompt\": \"\\\\u003C\\\\uFF5CUser\\\
     \\uFF5C\\\\u003E{Content}\\\\u003C\\\\uFF5CAssistant\\\\uFF5C\\\\u003E\"}"
 type: custom_model
@@ -25,8 +25,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'WebGPUExecutionProvider'
-    fileSizeBytes: 5096273664
-    vRamFootprintBytes: 5096556544
+    fileSizeBytes: 5991479377
+    vRamFootprintBytes: 5991798210
 description: |
   This model is an optimized version of DeepSeek-R1-Distill-Qwen-7B to enable local inference on GPUs. This model uses RTN quantization.
 

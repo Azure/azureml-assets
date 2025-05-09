@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-instruct-cuda-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini
-  directoryPath: cuda-int4-int8
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\\
     n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\"\
     : \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\", \"tool_spec\": \"<|tool|>\\\
@@ -28,8 +28,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 4101693767
-    vRamFootprintBytes: 4127970082
+    fileSizeBytes: 3865470566
+    vRamFootprintBytes: 3892090994
 description: |-
   This model is an optimized version of Phi-4-mini-instruct to enable local inference on CUDA GPUs. This model uses RTN quantization.
 
