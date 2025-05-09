@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-instruct-generic-gpu
-version: 1
+version: v2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini
-  directoryPath: webgpu-int4-rtn-block-32-acc-level-4
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\": \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\", \"tool_spec\": \"<|tool|>\\n{Content}<|end|>\", \"tool\": \"<|tool_response|>\\n{Content}<|end|>\", \"tool_prompt\": \"<|tool_response|>\\n{Content}<|end|>\\n<|assistant|>\"}"
 type: custom_model
 variantInfo:
