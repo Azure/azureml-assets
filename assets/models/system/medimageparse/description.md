@@ -123,7 +123,3 @@ data = {
 ultrasound: breast: benign tumor, malignant tumor, tumor
             heart: left heart atrium, left heart ventricle
             transperineal: fetal head, public symphysis
-
-**Hardware Requirement for Compute Instances** 
-- Default: Single V100 GPU 
-- Minimum: Single GPU instance with 8Gb Memory
