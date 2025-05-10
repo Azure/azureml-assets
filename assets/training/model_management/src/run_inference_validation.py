@@ -8,6 +8,8 @@ import json
 import argparse
 import os
 import sys
+import traceback
+import re
 from datetime import datetime, timezone
 from azureml.core import Run
 from azureml.model.mgmt.utils.common_utils import get_mlclient
@@ -46,50 +48,104 @@ def load_json_from_string(json_string):
         return None
 
 
-def get_json_structure(data, parent_key=''):
+def set_nested_value(d, keys, value):
     """
-    Recursively extract key paths from nested JSON.
+    Helper to set a value into a nested dictionary/list from a list of keys/indexes.
     """
-    keys = set()
+    for i, key in enumerate(keys):
+        is_last = i == len(keys) - 1
+        if isinstance(key, int):
+            while len(d) <= key:
+                d.append({} if not is_last else None)
+            if is_last:
+                d[key] = value
+            else:
+                if not isinstance(d[key], (dict, list)):
+                    d[key] = {}
+                d = d[key]
+        else:
+            if key not in d or not isinstance(d[key], (dict, list)):
+                d[key] = {} if not is_last else None
+            if is_last:
+                d[key] = value
+            else:
+                d = d[key]
+
+def parse_key_path(key):
+    """
+    Converts a key string like '[0].a.b[1]' to a list of keys: [0, 'a', 'b', 1]
+    """
+    parts = re.findall(r'\[(\d+)\]|([^.]+)', key)
+    return [int(i) if i else j for i, j in parts]
+
+def build_nested_json(flat_dict):
+    """
+    Converts a flat key-path dictionary to nested JSON.
+    """
+    result = {} if flat_dict else None
+    for key_path, value in flat_dict.items():
+        keys = parse_key_path(key_path)
+        if isinstance(keys[0], int):
+            if not isinstance(result, list):
+                result = []
+        set_nested_value(result, keys, value)
+    return result
+
+def get_json_structure_with_values(data, parent_key=''):
+    """
+    Recursively extract key paths and their values from nested JSON.
+    Returns a dictionary of full_key_path: value
+    """
+    items = {}
     if isinstance(data, dict):
         for k, v in data.items():
             full_key = f"{parent_key}.{k}" if parent_key else k
-            keys.add(full_key)
-            keys.update(get_json_structure(v, full_key))
+            if isinstance(v, (dict, list)):
+                items.update(get_json_structure_with_values(v, full_key))
+            else:
+                items[full_key] = v
     elif isinstance(data, list):
         for index, item in enumerate(data):
-            full_key = f"{parent_key}[{index}]"
-            keys.update(get_json_structure(item, full_key))
-    return keys
-
+            full_key = f"{parent_key}[{index}]" if parent_key else f"[{index}]"
+            if isinstance(item, (dict, list)):
+                items.update(get_json_structure_with_values(item, full_key))
+            else:
+                items[full_key] = item
+    return items
 
 def compare_structures(expected_response, actual_response):
     """
-    Compare JSON structures (keys only) of expected and actual.
-
-    Returns a dictionary with structural differences and a match flag.
+    Compare JSON structures and return full nested added/removed diffs.
     """
-    expected_structure = get_json_structure(expected_response)
-    actual_structure = get_json_structure(actual_response)
-    logger.info(f"Expected structure: {expected_structure}")
-    logger.info(f"Actual structure: {actual_structure}")
+    expected_structure = get_json_structure_with_values(expected_response)
+    actual_structure = get_json_structure_with_values(actual_response)
 
-    added_keys = actual_structure - expected_structure
-    removed_keys = expected_structure - actual_structure
-    structure_match = not added_keys and not removed_keys
+    logger.info(f"Expected flat structure: {expected_structure}")
+    logger.info(f"Actual flat structure: {actual_structure}")
 
-    structural_difference = {
-        "added_keys": sorted(list(added_keys)),
-        "removed_keys": sorted(list(removed_keys)),
-    }
+    added_keys = actual_structure.keys() - expected_structure.keys()
+    removed_keys = expected_structure.keys() - actual_structure.keys()
 
-    logger.info(f"Structure match: {structure_match}, Structural differences: {structural_difference}")
+    added_flat = {key: actual_structure[key] for key in added_keys}
+    removed_flat = {key: expected_structure[key] for key in removed_keys}
 
-    return {
+    added_nested = build_nested_json(added_flat)
+    removed_nested = build_nested_json(removed_flat)
+
+    structure_match = not added_flat and not removed_flat
+
+    result = {
         "structure_match": structure_match,
-        "structural_difference": structural_difference
+        "structural_difference": {
+            "added": added_nested,
+            "removed": removed_nested
+        }
     }
 
+    logger.info("Comparison result:")
+    logger.info(json.dumps(result, indent=4))
+
+    return result
 
 def save_validation_result(request_details, output_dir, validation_id, sku, status):
     """Save validation results to a JSON file."""
@@ -227,6 +283,109 @@ def extract_datastore_info(datastore_uri_path):
     return None, None
 
 
+def run_inference_validation(args):
+    """Perform the inference validation logic."""
+    try:
+        error_message = ""
+        if args.deployment_error:
+            try:
+                with open(args.deployment_error, "r") as f:
+                    deployment_error = f.read().strip()
+                    error_message += deployment_error
+            except Exception as e:
+                logger.warning(f"Failed to read validation_error file: {e}")
+
+        if args.validation_error:
+            with open(args.validation_error, "w") as error_file:
+                error_file.write(error_message)
+        inference_payload = None
+        if args.inference_payload:
+            decoded_bytes = base64.b64decode(args.inference_payload)
+
+            # Convert bytes to string
+            decoded_str = decoded_bytes.decode('utf-8')
+            logger.info(f"Decoded string: {decoded_str}")
+
+            inference_payload = json.loads(decoded_str)
+
+        expected_response = None
+        if args.expected_response:
+            decoded_bytes = base64.b64decode(args.expected_response)
+
+            # Convert bytes to string
+            decoded_str = decoded_bytes.decode('utf-8')
+            logger.info(f"Decoded string: {decoded_str}")
+            expected_response = json.loads(decoded_str)
+
+        inference_output = None
+        if args.inference_response:
+            inference_output = load_json(args.inference_response)
+            if not inference_output:
+                logger.error("Inference response is missing or invalid.")
+
+        inference_response = None
+        if inference_output:
+            inference_response = inference_output.get("response")
+            if isinstance(inference_response, str):
+                try:
+                    inference_response = json.loads(inference_response)
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse actualResponse as JSON: {e}")
+
+        if inference_response is None:
+            logger.warning("Actual response is missing or invalid. Setting it to an empty structure.")
+            inference_response = {}
+
+        inference_time = inference_output.get("inference_time", 0) if inference_output else 0
+        logger.info(f"inference_payload: {inference_payload}, expected response: {expected_response}, "
+                    f"actual response: {inference_response}")
+
+        # Infer success status based on the presence of a valid response
+        success_status = inference_response is not None and bool(inference_response)
+        status = "Success" if success_status else "Failed"
+
+        request_details = {
+            "providedRequest": inference_payload,
+            "providedResponse": expected_response,
+            "actualResponse": inference_response,
+            "responseTimeMs": inference_time,
+            "errorMessage": error_message,
+            "structuralDiff": None,
+        }
+        logger.info(f"Request details: {request_details}")
+        if expected_response and inference_response:
+            comparison_result = compare_structures(expected_response, inference_response)
+            request_details["structuralDiff"] = comparison_result.get("structural_difference", [])
+
+        # Save the validation result.
+        save_validation_result(request_details, args.validation_results, args.validation_id, args.sku, status)
+        logger.info(f"validation_result: {request_details}, Validation result saved to {args.validation_results}")
+
+        store_metrics_paths(args.metrics_storage_uri)
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        error_message = f"Model validation failed.\n{stack_trace}"
+        logger.error(error_message)
+        # Save the error message in the request details
+        request_details = {
+            "providedRequest": None,
+            "providedResponse": None,
+            "actualResponse": None,
+            "responseTimeMs": 0,
+            "errorMessage": error_message,
+            "structuralDiff": None,
+        }
+
+        # Save the validation result with the error message
+        save_validation_result(request_details, args.validation_results, args.validation_id, args.sku, "Failed")
+
+        # Write the error message to the specified error output file
+        if args.validation_error:
+            with open(args.validation_error, "w") as error_file:
+                error_file.write(error_message)
+        # raise Exception(f"Failed to run inference validation: {error_message}")
+
+
 def main():
     """Compare expected and actual inference response structures."""
     parser = argparse.ArgumentParser()
@@ -236,6 +395,8 @@ def main():
                         help="Path to the expected inference response JSON file.")
     parser.add_argument("--inference_response", type=str, required=False,
                         help="Path to the actual inference response JSON file.")
+    parser.add_argument("--deployment_error", type=str, required=False,
+                        help="Path to the deployment_error.")
     parser.add_argument("--validation_results", type=str, required=True,
                         help="Path to save validation results.")
     parser.add_argument("--metrics_storage_uri", type=str, required=True,
@@ -245,72 +406,12 @@ def main():
                         help="Suggested SKU based on benchmark results")
     parser.add_argument("--validation-id", required=True,
                         help="Run ID of the validation run")
+    parser.add_argument("--validation_error", type=str, required=False,
+                        help="Path to the file where error messages or stack traces will be written.")
 
     args = parser.parse_args()
-
-    inference_payload = None
-    if args.inference_payload:
-        decoded_bytes = base64.b64decode(args.inference_payload)
-
-        # Convert bytes to string
-        decoded_str = decoded_bytes.decode('utf-8')
-        logger.info(f"Decoded string: {decoded_str}")
-
-        inference_payload = json.loads(decoded_str)
-
-    expected_response = None
-    if args.expected_response:
-        decoded_bytes = base64.b64decode(args.expected_response)
-
-        # Convert bytes to string
-        decoded_str = decoded_bytes.decode('utf-8')
-        logger.info(f"Decoded string: {decoded_str}")
-        expected_response = json.loads(decoded_str)
-
-    inference_output = None
-    if args.inference_response:
-        inference_output = load_json(args.inference_response)
-        if not inference_output:
-            logger.error("Inference response is missing or invalid.")
-
-    inference_response = None
-    if inference_output:
-        inference_response = inference_output.get("response")
-        if isinstance(inference_response, str):
-            try:
-                inference_response = json.loads(inference_response)
-            except json.JSONDecodeError as e:
-                logger.warning(f"Failed to parse actualResponse as JSON: {e}")
-
-    if inference_response is None:
-        logger.warning("Actual response is missing or invalid. Setting it to an empty structure.")
-        inference_response = {}
-
-    inference_time = inference_output.get("inference_time", 0) if inference_output else 0
-    logger.info(f"inference_payload: {inference_payload}, expected response: {expected_response}, "
-                f"actual response: {inference_response}")
-
-    # Infer success status based on the presence of a valid response
-    success_status = inference_response is not None and bool(inference_response)
-    status = "Success" if success_status else "Failed"
-
-    request_details = {
-        "providedRequest": inference_payload,
-        "providedResponse": expected_response,
-        "actualResponse": inference_response,
-        "responseTimeMs": inference_time,
-        "errorMessage": None,
-        "structuralDiff": None,
-    }
-    if expected_response:
-        comparison_result = compare_structures(expected_response, inference_response)
-        request_details["structuralDiff"] = comparison_result.get("structural_difference", [])
-
-    # Save the validation result.
-    save_validation_result(request_details, args.validation_results, args.validation_id, args.sku, status)
-    logger.info(f"validation_result: {request_details}, Validation result saved to {args.validation_results}")
-
-    store_metrics_paths(args.metrics_storage_uri)
+    logger.info(f"Arguments: {args}")
+    run_inference_validation(args)
 
 
 if __name__ == "__main__":

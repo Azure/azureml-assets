@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
-version: 0.0.12
+version: 0.0.12.27
 type: command
 
 is_deterministic: True
@@ -37,6 +37,7 @@ command: >-
   $[[--egress_public_network_access ${{inputs.egress_public_network_access}}]]
   --model_deployment_details ${{outputs.model_deployment_details}}
   --model_inference_response ${{outputs.model_inference_response}}
+  --deploy_error ${{outputs.deploy_error}}
 
 inputs:
   # Output of registering component
@@ -215,6 +216,9 @@ outputs:
   model_inference_response:
     type: uri_file
     description: JSON file containing inference results
+  deploy_error:
+    type: uri_file
+    description: File containing error messages or stack traces from the validation step.
 
 tags:
     Preview: ""

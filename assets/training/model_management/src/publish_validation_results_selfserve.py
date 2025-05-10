@@ -63,7 +63,8 @@ def update_model_onboarding_version(
     sku,
     validation_id,
     selfserve_base_url,
-    metrics_storage_uri
+    metrics_storage_uri,
+    error_message
 ):
     """Update model onboarding version with benchmark results."""
     current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -86,6 +87,7 @@ def update_model_onboarding_version(
                 "passed": True,
                 "message": "API inference passed successfully",
                 "validationResultUrl": metrics_url,
+                "errorMessage": error_message if error_message else None,
                 "status": "Completed" if validation_success else "Failed",
                 "createdTime": current_time,
                 "updatedTime": current_time,
@@ -156,9 +158,30 @@ if __name__ == "__main__":
     parser.add_argument("--sku", required=False,
                         default="Standard_NC24ads_A100_v4",
                         help="Suggested SKU based on benchmark results")
+    # parser.add_argument("--deploy-error", required=False,
+    #                     help="Path to the file containing deployment error messages or stack traces")
+    parser.add_argument("--validation-error", required=False,
+                        help="Path to the file containing validation error messages or stack traces")
 
     args = parser.parse_args()
     logger.info(f"Arguments: {args}")
+
+    error_message = ""
+    # if args.deploy_error:
+    #     try:
+    #         with open(args.deploy_error, "r") as f:
+    #             deploy_error_message = f.read().strip()
+    #             error_message += f"Deployment Error: {deploy_error_message}\n"
+    #     except Exception as e:
+    #         logger.warning(f"Failed to read deploy_error file: {e}")
+
+    if args.validation_error:
+        try:
+            with open(args.validation_error, "r") as f:
+                validation_error_message = f.read().strip()
+                error_message += f"Validation Error: {validation_error_message}\n"
+        except Exception as e:
+            logger.warning(f"Failed to read validation_error file: {e}")
 
     try:
         result = update_model_onboarding_version(
@@ -168,7 +191,8 @@ if __name__ == "__main__":
             args.sku,
             args.validation_id,
             args.selfserve_base_url,
-            args.metrics_storage_uri
+            args.metrics_storage_uri,
+            error_message
         )
         logger.info("Model onboarding version update completed successfully")
     except Exception as e:

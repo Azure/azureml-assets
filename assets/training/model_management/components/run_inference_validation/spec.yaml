@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: run_inference_validation
-version: 0.0.1
+version: 0.0.1.65
 type: command
 
 is_deterministic: True
@@ -16,10 +16,12 @@ command: >-
   --inference_payload ${{inputs.inference_payload}}
   $[[--expected_response ${{inputs.expected_response}}]]
   $[[--inference_response ${{inputs.inference_response}}]]
+  $[[--deployment_error ${{inputs.deployment_error}}]]
   --validation-id ${{inputs.validation_id}}
   --sku ${{inputs.sku}}
   --validation_results ${{outputs.validation_results}}
   --metrics_storage_uri ${{outputs.metrics_storage_uri}}
+  --validation_error ${{outputs.validation_error}}
 
 inputs:
   inference_payload:
@@ -46,6 +48,11 @@ inputs:
     type: string
     optional: false
     description: ID of the validation run (used for updating status in self-serve)
+  
+  deployment_error:
+    type: uri_file
+    optional: true
+    description: Error message or stack trace from the inference validation step
 
 outputs:
   validation_results:
@@ -54,6 +61,9 @@ outputs:
   metrics_storage_uri:
     type: uri_file
     description: JSON file containing the validation metrics csv storage path
+  validation_error:
+    type: uri_file
+    description: File containing error messages or stack traces from the validation step.
 
 tags:
     Preview: ""

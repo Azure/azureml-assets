@@ -3,7 +3,7 @@ type: command
 is_deterministic: true
 
 name: publish_validation_results_selfserve
-version: 0.0.1
+version: 0.0.1.22
 display_name: Publish model validation results to Self-Serve
 description: |
   This component publishes model validation results to the Self-Serve database.
@@ -42,6 +42,14 @@ inputs:
     optional: true
     mode: ro_mount
     description: Path to the file containing the validation metrics csv storage path
+  # deploy_error:
+  #   type: uri_file
+  #   optional: true
+  #   description: Error message or stack trace from the deployment step
+  validation_error:
+    type: uri_file
+    optional: true
+    description: Error message or stack trace from the inference validation step
 
 code: ../../src
 
@@ -54,3 +62,4 @@ command: >-
   --validation-id ${{inputs.validation_id}} 
   --sku ${{inputs.sku}} 
   $[[ --metrics-storage-uri ${{inputs.metrics_storage_uri}}]]
+  $[[ --validation-error ${{inputs.validation_error}}]]

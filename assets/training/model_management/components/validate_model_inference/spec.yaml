@@ -4,7 +4,7 @@ type: pipeline
 name: validate_model_inference
 display_name: Validate Model Inference
 description: deploy a model and validate it using a sample payload
-version: 0.0.1
+version: 0.0.1.74
 
 inputs:
   compute:
@@ -136,7 +136,7 @@ outputs:
 jobs:
   online_deployment_model:
     type: command
-    component: azureml:deploy_model:0.0.12
+    component: azureml://registries/azureml-preview-test1/components/deploy_model/versions/0.0.12.27
     compute: ${{parent.inputs.compute}}
     inputs:
       model_id: ${{parent.inputs.model_id}}
@@ -150,22 +150,27 @@ jobs:
         type: uri_file
       model_inference_response:
         type: uri_file
+      deploy_error:
+        type: uri_file
 
   run_inference_validation:
     type: command
-    component: azureml:run_inference_validation:0.0.1
+    component: azureml://registries/azureml-preview-test1/components/run_inference_validation/versions/0.0.1.65
     inputs:
       validation_id: ${{parent.inputs.validation_id}}
       sku: ${{parent.inputs.instance_type}}
       inference_payload: ${{parent.inputs.inference_payload}}
       expected_response: ${{parent.inputs.inference_response}}
       inference_response: ${{parent.jobs.online_deployment_model.outputs.model_inference_response}}
+      deployment_error: ${{parent.jobs.online_deployment_model.outputs.deploy_error}}
     outputs:
       validation_results: ${{parent.outputs.validation_results}}
+      validation_error:
+        type: uri_file
 
   delete_endpoints:
     type: command
-    component: azureml:delete_endpoint:0.0.7
+    component: azureml://registries/azureml-preview-test1/components/delete_endpoint/versions/0.0.7.1
     inputs:
       model_deployment_details: ${{parent.jobs.online_deployment_model.outputs.model_deployment_details}}
       endpoint_name: ${{parent.inputs.endpoint_name}}
@@ -173,7 +178,7 @@ jobs:
 
   publish_results:
     type: command
-    component: azureml:publish_validation_results_selfserve:0.0.1
+    component: azureml://registries/azureml-preview-test1/components/publish_validation_results_selfserve/versions/0.0.1.22
     inputs:
       publisher_name: ${{parent.inputs.publisher_name}}
       model_name: ${{parent.inputs.model_name}}
@@ -182,3 +187,4 @@ jobs:
       validation_id: ${{parent.inputs.validation_id}}
       selfserve_base_url: ${{parent.inputs.selfserve_base_url}}
       metrics_storage_uri: ${{parent.jobs.run_inference_validation.outputs.metrics_storage_uri}}
+      validation_error: ${{parent.jobs.run_inference_validation.outputs.validation_error}}
