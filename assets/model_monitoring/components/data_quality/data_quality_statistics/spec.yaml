@@ -4,7 +4,7 @@ type: spark
 name: data_quality_data_statistics
 display_name: Data Quality - Data Statistics
 description: Compute data statistics leveraged by the data quality monitor.
-version: 0.3.27
+version: 0.3.28
 is_deterministic: true
 
 inputs:

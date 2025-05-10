@@ -4,7 +4,7 @@ type: spark
 name: model_performance_compute_metrics
 display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance monitor.
-version: 0.0.26
+version: 0.0.27
 is_deterministic: true
 
 code: ../../src
