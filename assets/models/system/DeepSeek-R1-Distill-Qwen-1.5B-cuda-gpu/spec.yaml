@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deepseek-r1-distill-qwen-1.5b-cuda-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: deepseek-r1-1.5b
-  directoryPath: cuda-int4-rtn-block-32
+  directoryPath: v2
   promptTemplate: "{\"assistant\": \"{Content}\", \"prompt\": \"\\\\u003C\\\\uFF5CUser\\\\uFF5C\\\\u003E{Content}\\\\u003C\\\\uFF5CAssistant\\\\uFF5C\\\\u003E\"}"
 type: custom_model
 variantInfo:
@@ -23,5 +23,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 1073741824
-    vRamFootprintBytes: 1362861314
+    fileSizeBytes: 1535450808
+    vRamFootprintBytes: 1535670046
