@@ -283,9 +283,10 @@ def extract_datastore_info(datastore_uri_path):
     return None, None
 
 
-def run_inference_validation(args):
+def run_inference_validation():
     """Perform the inference validation logic."""
     try:
+        args = parse_args()
         error_message = ""
         if args.deployment_error:
             try:
@@ -385,8 +386,11 @@ def run_inference_validation(args):
                 error_file.write(error_message)
         # raise Exception(f"Failed to run inference validation: {error_message}")
 
-
 def main():
+    run_inference_validation()
+
+
+def parse_args():
     """Compare expected and actual inference response structures."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--inference_payload", type=str, required=True,
@@ -411,7 +415,7 @@ def main():
 
     args = parser.parse_args()
     logger.info(f"Arguments: {args}")
-    run_inference_validation(args)
+    return args
 
 
 if __name__ == "__main__":

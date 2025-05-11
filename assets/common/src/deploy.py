@@ -274,13 +274,11 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
 @swallow_all_exceptions(logger)
 def main():
     """Run main function."""
-    args = parse_args()
-    logger.info(f"Arguments: {args}")
-    ml_client = get_mlclient()
-    error_message = "None"
-    # get registered model id
-
     try:
+        args = parse_args()
+        logger.info(f"Arguments: {args}")
+        ml_client = get_mlclient()
+        error_message = ""
         if args.model_deployment_details:
             with open(args.model_deployment_details, "w") as outfile:
                 json.dump({}, outfile)
@@ -293,6 +291,7 @@ def main():
             with open(args.deploy_error, "w") as error_file:
                 error_file.write(error_message)
 
+        # get registered model id
         if args.model_id:
             model_id = str(args.model_id)
         elif args.registration_details_folder:

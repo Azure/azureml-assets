@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: run_inference_validation
-version: 0.0.1.65
+version: 0.0.1.66
 type: command
 
 is_deterministic: True

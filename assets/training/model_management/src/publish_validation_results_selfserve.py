@@ -158,8 +158,6 @@ if __name__ == "__main__":
     parser.add_argument("--sku", required=False,
                         default="Standard_NC24ads_A100_v4",
                         help="Suggested SKU based on benchmark results")
-    # parser.add_argument("--deploy-error", required=False,
-    #                     help="Path to the file containing deployment error messages or stack traces")
     parser.add_argument("--validation-error", required=False,
                         help="Path to the file containing validation error messages or stack traces")
 
@@ -167,14 +165,6 @@ if __name__ == "__main__":
     logger.info(f"Arguments: {args}")
 
     error_message = ""
-    # if args.deploy_error:
-    #     try:
-    #         with open(args.deploy_error, "r") as f:
-    #             deploy_error_message = f.read().strip()
-    #             error_message += f"Deployment Error: {deploy_error_message}\n"
-    #     except Exception as e:
-    #         logger.warning(f"Failed to read deploy_error file: {e}")
-
     if args.validation_error:
         try:
             with open(args.validation_error, "r") as f:

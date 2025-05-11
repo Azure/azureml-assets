@@ -4,7 +4,7 @@ type: pipeline
 name: validate_model_inference
 display_name: Validate Model Inference
 description: deploy a model and validate it using a sample payload
-version: 0.0.1.74
+version: 0.0.1.76
 
 inputs:
   compute:
@@ -136,7 +136,7 @@ outputs:
 jobs:
   online_deployment_model:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/deploy_model/versions/0.0.12.27
+    component: azureml://registries/azureml-preview-test1/components/deploy_model/versions/0.0.12.29
     compute: ${{parent.inputs.compute}}
     inputs:
       model_id: ${{parent.inputs.model_id}}
@@ -155,7 +155,7 @@ jobs:
 
   run_inference_validation:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/run_inference_validation/versions/0.0.1.65
+    component: azureml://registries/azureml-preview-test1/components/run_inference_validation/versions/0.0.1.66
     inputs:
       validation_id: ${{parent.inputs.validation_id}}
       sku: ${{parent.inputs.instance_type}}
@@ -174,11 +174,10 @@ jobs:
     inputs:
       model_deployment_details: ${{parent.jobs.online_deployment_model.outputs.model_deployment_details}}
       endpoint_name: ${{parent.inputs.endpoint_name}}
-    compute: ${{parent.inputs.compute}}
 
   publish_results:
     type: command
-    component: azureml://registries/azureml-preview-test1/components/publish_validation_results_selfserve/versions/0.0.1.22
+    component: azureml://registries/azureml-preview-test1/components/publish_validation_results_selfserve/versions/0.0.1.23
     inputs:
       publisher_name: ${{parent.inputs.publisher_name}}
       model_name: ${{parent.inputs.model_name}}
