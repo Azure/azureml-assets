@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-mini-128k-instruct-generic-cpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-3-mini-128k
-  directoryPath: phi-3-mini-128k-instruct-cpu-int4-rtn-block-32
+  directoryPath: cpu-int4-rtn-block-32-acc-level-4
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\\
     n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\"\
     : \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
@@ -27,7 +27,7 @@ variantInfo:
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
     fileSizeBytes: 2727304232
-    vRamFootprintBytes: 2727617833
+    vRamFootprintBytes: 2727517409
 description: |-
   This model is an optimized version of Phi-3-Mini-128K-Instruct to enable local inference on CPUs. This model uses RTN quantization.
 

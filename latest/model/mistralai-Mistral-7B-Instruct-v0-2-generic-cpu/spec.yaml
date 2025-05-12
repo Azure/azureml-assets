@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistralai-Mistral-7B-Instruct-v0-2-generic-cpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: mistral-7b-v0.2
-  directoryPath: mistral-7b-instruct-v0.2-cpu-int4-rtn-block-32
+  directoryPath: mistral-7b-instruct-v0.2-cpu-int4-rtn-block-32-acc-level-4
   promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\"\
     , \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"\
     }"
@@ -26,8 +26,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 4982162063
-    vRamFootprintBytes: 4982386493
+    fileSizeBytes: 4370129223
+    vRamFootprintBytes: 4491341762
 description: |
   This model is an optimized version of Mistral-7B-Instruct-v0.2 to enable local inference on CPUs. This model uses RTN quantization.
 
