@@ -1,0 +1,7 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen2.5-coder-14b-instruct
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+type: custom_model
