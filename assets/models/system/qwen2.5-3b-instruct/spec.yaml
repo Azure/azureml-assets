@@ -2,4 +2,6 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-3b-instruct
 version: 1
 path: ./
+tags:
+  foundryLocal: "hide"
 type: custom_model
