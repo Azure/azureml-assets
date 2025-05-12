@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: delete_endpoint
-version: 0.0.7
+version: 0.0.8
 type: command
 
 is_deterministic: True
@@ -9,7 +9,7 @@ display_name: Delete Endpoint
 description:
   Deletes an endpoint resource.
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/19
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
 
 code: ../../src
 command: >-

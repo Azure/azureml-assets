@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: register_model
-version: 0.0.20
+version: 0.0.21
 type: command
 
 is_deterministic: True
@@ -9,7 +9,7 @@ display_name: Register model
 description:
   Register a model to a workspace or a registry. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/25
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
 
 code: ../../src
 command: >-
