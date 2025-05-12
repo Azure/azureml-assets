@@ -3,7 +3,6 @@ name: qwen2.5-3b-instruct-cuda-gpu
 version: 1
 path: ./
 tags:
-  foundryLocal: ""
   license: "apache-2.0"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/blob/main/LICENSE>."
   author: Microsoft
