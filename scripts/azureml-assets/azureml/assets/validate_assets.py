@@ -721,9 +721,10 @@ def validate_model_scenario(
         _log_error(asset_file_name_with_path, f"{compute_allowlist_tags_name} is missing in model tags")
         error_count += 1
 
-    if (recommended_skus != compute_allowlists):
-        a_minus_b = recommended_skus - compute_allowlists
-        b_minus_a = compute_allowlists - recommended_skus
+    recommended_skus_set = set(recommended_skus)
+    if (recommended_skus_set != compute_allowlists):
+        a_minus_b = recommended_skus_set - compute_allowlists
+        b_minus_a = compute_allowlists - recommended_skus_set
         _log_error(
             asset_file_name_with_path,
             f"{recommended_skus_prop_name} and {compute_allowlist_tags_name} does not match for model.\n"
