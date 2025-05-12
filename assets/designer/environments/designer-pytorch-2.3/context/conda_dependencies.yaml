@@ -7,6 +7,6 @@ dependencies:
   - pip=23.3
   - python=3.9.18
   - pytorch=2.3.1
-  - torchvision=0.21.0
+  - torchvision=0.19
   - pip:
       - azureml-designer-pytorch-modules==0.0.77
