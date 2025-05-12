@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def get_key_from_dict(d, key, default=None):
-    """Get a particular Key from given dict"""
+    """Get a particular Key from given dict."""
     for k, v in d.items():
         if k.lower() == key.lower():
             return v
