@@ -13,6 +13,7 @@ tags:
   maxOutputTokens: 2048
   alias: phi-4
   directoryPath: cuda-int4-rtn-block-32
+  promptTemplate: "{\"system\": \"<|im_start|>system<|im_sep|>{Content}<|im_end|>\", \"user\": \"<|im_start|>user<|im_sep|>{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant<|im_sep|>{Content}<|im_end|>\"}"
 type: custom_model
 variantInfo:
   parents:
