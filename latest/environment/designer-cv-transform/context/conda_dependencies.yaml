@@ -10,7 +10,5 @@ dependencies:
   - cython=0.29.24
   - numpy==1.23.5
   - scipy==1.10.0
-  - pytorch=2.3.1
-  - torchvision=0.18.1
   - pip:
       - azureml-designer-cv-modules==0.0.68
