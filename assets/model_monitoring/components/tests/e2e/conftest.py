@@ -74,6 +74,7 @@ def _create_data_asset(ml_client: MLClient, name: str, path: str, type: AssetTyp
         print(f"Unexpected error: {ex}")
         raise
 
+
 @pytest.fixture(scope="session")
 def main_worker_lock(worker_id):
     """Lock until the main worker releases its lock."""
