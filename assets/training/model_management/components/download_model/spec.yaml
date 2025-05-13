@@ -1,0 +1,67 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: download_model
+version: 0.0.31
+type: command
+
+is_deterministic: True
+
+display_name: Download model
+description: Downloads a publicly available model
+
+environment: azureml://registries/azureml/environments/model-management/versions/41
+
+code: ../../src/
+command: >
+  python run_model_download.py
+  --model-source ${{inputs.model_source}}
+  --model-id '${{inputs.model_id}}'
+  $[[--update-existing-model ${{inputs.update_existing_model}}]]
+  $[[--validation-info ${{inputs.validation_info}}]]
+  $[[--token ${{inputs.token}}]]
+  --model-download-metadata ${{outputs.model_download_metadata}}
+  --model-output-dir ${{outputs.model_output}}
+
+inputs:
+  model_source:
+    type: string
+    description: Storage containers from where model will be sourced from.
+    default: Huggingface
+    enum:
+      - AzureBlob
+      - GIT
+      - Huggingface
+
+  model_id:
+    type: string
+    description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+
+  validation_info:
+    type: uri_file
+    description: Path to the validation info file
+    optional: true
+
+  update_existing_model:
+    type: boolean
+    default: false
+    description: If set to true, will update the existing model. If set to false, will create a new model.
+    optional: true
+
+  token:
+    type: string
+    description: If set use it to access the private models or authenticate the user. For example, user can get the token for HF private model by creating account in Huggingface, accept the condition for models that needs to be downloaded and create access token from browser. For more details please visit - https://huggingface.co/docs/hub/security-tokens
+    optional: true
+
+outputs:
+  model_download_metadata:
+    type: uri_file
+    description: File name to which model download details will be written. File would contain details that could be useful for model registration in forms of model tags and properties
+
+  model_output:
+    type: uri_folder
+    description: Path to the dowloaded model
+    mode: rw_mount
+
+tags:
+    Preview: ""
+
