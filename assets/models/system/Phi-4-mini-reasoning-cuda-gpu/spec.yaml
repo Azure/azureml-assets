@@ -14,6 +14,7 @@ tags:
   alias: phi-4-mini-reasoning
   directoryPath: v1
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
+  parameterSchema: "{\"enabled\": [{\"name\": \"max_tokens\", \"default\": 2048}, {\"name\": \"temperature\"}, {\"name\": \"top_p\"}, {\"name\": \"top_k\"}, {\"name\": \"presence_penalty\"}, {\"name\": \"frequency_penalty\", \"default\": 1}]}"
 type: custom_model
 variantInfo:
   parents:

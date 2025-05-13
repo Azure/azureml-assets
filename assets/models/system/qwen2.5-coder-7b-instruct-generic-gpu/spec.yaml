@@ -14,6 +14,7 @@ tags:
   alias: qwen2.5-coder-7b
   directoryPath: webgpu-int4-rtn-block-32-acc-level-4
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
+  parameterSchema: "{\"enabled\": [{\"name\": \"max_tokens\", \"default\": 2048}, {\"name\": \"temperature\"}, {\"name\": \"top_p\"}, {\"name\": \"top_k\"}, {\"name\": \"presence_penalty\"}, {\"name\": \"frequency_penalty\", \"default\": 1}]}"
 type: custom_model
 variantInfo:
   parents:
