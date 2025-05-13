@@ -14,6 +14,7 @@ tags:
   alias: deepseek-r1-7b
   directoryPath: qnn-deepseek-r1-distill-qwen-7b
   promptTemplate: "{\"assistant\": \"{Content}\", \"prompt\": \"\\\\u003C\\\\uFF5CUser\\\\uFF5C\\\\u003E{Content}\\\\u003C\\\\uFF5CAssistant\\\\uFF5C\\\\u003E\"}"
+  parameterSchema: "{\"enabled\": [{\"name\": \"max_tokens\", \"default\": 2048}, {\"name\": \"temperature\", \"default\": 0.6}, {\"name\": \"top_p\", \"default\": 0.9}, {\"name\": \"top_k\", \"default\": 5}, {\"name\": \"presence_penalty\"}, {\"name\": \"frequency_penalty\", \"default\": 1}, {\"name\": \"random_seed\", \"default\": 57894}]}"
 type: custom_model
 variantInfo:
   parents:
