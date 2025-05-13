@@ -5,7 +5,6 @@
 import argparse
 import json
 import logging
-from azure.core.credentials import AccessToken
 import mlflow
 import pandas as pd
 import os
@@ -15,9 +14,12 @@ import shutil
 import sys
 
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azure.ai.evaluation._evaluate._evaluate import evaluate
+from azure.ai.evaluation import evaluate
+from azure.ai.evaluation._evaluate._evaluate_aoai import (
+    _convert_remote_eval_params_to_grader
+)
 from save_evaluation import load_evaluator
-from model_target import ModelTarget
+from model_target import ModelTarget, get_key_from_dict
 
 AZURE_ENDPOINT = "AzureEndpoint"
 API_KEY = "ApiKey"
@@ -76,33 +78,23 @@ def copy_evaluator_files(command_line_args):
         else:
             logger.info(f"Directory for evaluator {evaluator_name} not found.")
 
-class TestCredential(AzureMLOnBehalfOfCredential):
-    def get_token(self, *scopes: str, **kwargs: any) -> AccessToken:
-        """Request an access token for `scopes`.
-
-        This method is called automatically by Azure SDK clients.
-
-        :param str scopes: desired scope for the access token. This credential allows only one scope per request.
-        :rtype: ~azure.core.credentials.AccessToken
-        :return: AzureML On behalf of credentials isn't available in the hosting environment
-        :raises: ~azure.ai.ml.identity.CredentialUnavailableError
-        """
-
-        return self._credential.get_token("https://cognitiveservices.azure.com", **kwargs)
 
 def initialize_evaluators(command_line_args):
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
-    print("Custom initalize evaluators call")
     evaluators = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     rai_evaluators = json.loads(command_line_args.rai_evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
-        update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()]) # resolves env variables for connection strings
-        flow = load_evaluator("./" + evaluator_name) # gets file path for evaluator
-        if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
-            init_params["credential"] = TestCredential() # sets credential in init_params
-        evaluators[evaluator_name] = flow(**init_params)
+        update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
+        if evaluator["Id"].startswith("aoai://"):
+            grader = _convert_remote_eval_params_to_grader(evaluator["Id"], init_params)
+            evaluators[evaluator_name] = grader
+        else:
+            flow = load_evaluator("./" + evaluator_name)
+            if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
+                init_params["credential"] = AzureMLOnBehalfOfCredential()
+            evaluators[evaluator_name] = flow(**init_params)
     return evaluators
 
 
@@ -127,33 +119,26 @@ def create_model_target_and_data_mapping(command_line_args):
     except json.JSONDecodeError as e:
         raise RuntimeError(f"Invalid JSON in eval_target: {e}")
 
-    model_config = target_config.get(MODEL_CONFIG, {})
+    model_config = get_key_from_dict(target_config, MODEL_CONFIG, {})
 
-    api_key_env = model_config.get(API_KEY, "")
+    api_key_env = get_key_from_dict(model_config, API_KEY, "")
     api_key_value = os.environ.get(api_key_env.upper(), "")
+
     if not api_key_value:
         raise RuntimeError(f"API key environment variable '{api_key_env.upper()}' is missing or empty!")
 
-    model_config_type = str(model_config.get(TYPE, ""))
+    model_config_type = str(get_key_from_dict(model_config, TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
 
-    endpoint = model_config.get(AZURE_ENDPOINT, "")
-    model_params = target_config.get(MODEL_PARAMS, {}).copy()
-    data_mapping = model_params.pop(DATA_MAPPING, None)
+    endpoint = get_key_from_dict(model_config, AZURE_ENDPOINT, "")
+    model_params = get_key_from_dict(target_config, MODEL_PARAMS, {}).copy()
+    data_mapping = get_key_from_dict(model_params, DATA_MAPPING, None)
     if data_mapping is None:
         data_mapping = DEFAULT_DATA_MAPPING
         logger.info(f"Using default dataMapping: {data_mapping}")
 
-    system_message = target_config.get(SYSTEM_MESSAGE, "")
-    few_shot_examples = target_config.get(FEW_SHOT_EXAMPLES, [])
-
-    logger.info("Creating ModelTarget with values:")
-    logger.info(f"  - Endpoint: {endpoint}")
-    logger.info(f"  - ApiKey: {'[HIDDEN]' if api_key_value else 'MISSING'}")
-    logger.info(f"  - ModelParams: {model_params}")
-    logger.info(f"  - SystemMessage: {system_message}")
-    logger.info(f"  - FewShotExamples: {few_shot_examples}")
-    logger.info(f"  - DataMapping: {data_mapping}")
+    system_message = get_key_from_dict(target_config, SYSTEM_MESSAGE, "")
+    few_shot_examples = get_key_from_dict(target_config, FEW_SHOT_EXAMPLES, [])
 
     model_target = ModelTarget(
         endpoint=endpoint,
@@ -162,6 +147,7 @@ def create_model_target_and_data_mapping(command_line_args):
         system_message=system_message,
         few_shot_examples=few_shot_examples,
     )
+    logger.info("Created ModelTarget.")
 
     return (model_target, data_mapping)
 
