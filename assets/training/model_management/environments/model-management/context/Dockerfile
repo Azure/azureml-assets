@@ -5,14 +5,15 @@ WORKDIR /
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs -y
 
 # azcopy install starts
-RUN echo "Downloading azcopy to file azcopy.tar ....";\
-    wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar --no-verbose;\
-    tar -xvf azcopy.tar;\
-    mkdir -p ./azcopy/bin/;\
-    cp ./azcopy_linux_amd64_*/azcopy ./bin/;\
-    rm azcopy.tar;\
-    rm -rf ./azcopy_linux_amd64_*;\
+RUN echo "Downloading azcopy to file azcopy.tar ...." && \
+    wget -q https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar.gz && \
+    tar -xf azcopy.tar.gz && \
+    cp ./azcopy_linux_amd64_*/azcopy /usr/local/bin/ && \
+    chmod +x /usr/local/bin/azcopy && \
+    rm -rf azcopy.tar.gz azcopy_linux_amd64_* && \
+    echo "AzCopy installed at: $(which azcopy)" && \
     which azcopy | grep -o azcopy > /dev/null &&  echo "azcopy not installed" || echo "azcopy installed";
+
 
 COPY requirements.txt .
 
