@@ -1,0 +1,18 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: hello_command
+version: 0.1.0
+type: command
+
+display_name: Hello World from Command
+description: Command Component that takes in a string input message and prints it out.
+is_deterministic: true
+
+inputs:
+  message:
+    type: string
+    default: "Hello, Command Component!"
+code: ../src
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/2
+command: >-
+    python hello.py --message "${{inputs.message}}"

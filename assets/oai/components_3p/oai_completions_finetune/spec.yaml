@@ -1,0 +1,112 @@
+$schema: http://azureml/sdk-2-0/PipelineComponent.json
+display_name: OpenAI Completions Finetune Pipeline
+name: openai_completions_finetune
+version: 0.2.2
+type: pipeline
+description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/ for more info.
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  model:
+    type: string
+    optional: False
+    default: davinci
+    description: OAI model engine
+    enum:
+      - ada
+      - babbage
+      - curie
+      - davinci
+      - text-davinci-fine-tune-002
+  registered_model_name:
+    type: string
+    optional: False
+    description: User-defined registered model name
+  train_dataset:
+    type: uri_folder
+    optional: False
+    description: Input dataset (file or folder). If a folder dataset is passed, includes all nested files.
+  validation_dataset:
+    type: uri_folder
+    optional: True
+    description: Input dataset (file or folder). If a folder dataset is passed, includes all nested files.
+  lora_weights:
+    type: uri_folder
+    description: LoRA weights for continual finetuning. This is optional.
+    optional: True
+  n_epochs:
+    type: integer
+    optional: True
+    default: 4
+    description: Number of epochs for the training
+  batch_size:
+    type: integer
+    optional: True
+    default: -1
+    description: The batch size to use for training. When set to -1, batch_size is calculated as 0.2% of examples in training set and the max is 256.
+  learning_rate_multiplier:
+    type: number
+    optional: True
+    default: 0.1
+    description: The learning rate multiplier to use for training. Must be between 0.0 and 5.0.
+  prompt_loss_weight:
+    type: number
+    optional: True
+    default: 0.1
+    min: 0
+    max: 1
+    description: The prompt loss weight to use for training
+  compute_classification_metrics:
+    type: boolean
+    optional: True
+    description: If set, we calculate classification-specific metrics such as accuracy and F-1 score using the validation set at the end of every epoch. In order to compute classification metrics, you must provide a validation_file. Additionally, you must specify classification_n_classes for multiclass classification or classification_positive_class for binary classification.
+  classification_n_classes:
+    type: integer
+    optional: True
+    description: The number of classes in a classification task. This parameter is required for multiclass classification.
+  classification_positive_class:
+    type: string
+    optional: True
+    description: The positive class in binary classification. This parameter is needed to generate precision, recall, and F1 metrics when doing binary classification.
+  classification_betas:
+    type: string
+    optional: True
+    description: If this is provided, we calculate F-beta scores at the specified beta values. The F-beta score is a generalization of F-1 score. This is only used for binary classification. With a beta of 1 (i.e. the F-1 score), precision and recall are given the same weight. A larger beta score puts more weight on recall and less on precision. A smaller beta score puts more weight on precision and less on recall. The value specified should be a comma separated list of doubles.
+  quota_enforcement_resource_id:
+    type: string
+    optional: True
+    description: Owner subscription id. 
+
+outputs:
+  output_model:
+    type: uri_folder
+    mode: mount
+    description: Dataset with the output model weights (LoRA weights)
+
+jobs:
+  fine_tune:
+    type: command
+    resources:
+      properties:
+        quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
+    component: azureml://registries/azure-openai-preview/components/openai_completions_finetune/versions/0.3.4
+    inputs:
+      model: ${{parent.inputs.model}}
+      registered_model_name: ${{parent.inputs.registered_model_name}}
+      train_dataset: ${{parent.inputs.train_dataset}}
+      validation_dataset: ${{parent.inputs.validation_dataset}}
+      lora_weights: ${{parent.inputs.lora_weights}}
+      n_epochs: ${{parent.inputs.n_epochs}}
+      batch_size: ${{parent.inputs.batch_size}}
+      learning_rate_multiplier: ${{parent.inputs.learning_rate_multiplier}}
+      prompt_loss_weight: ${{parent.inputs.prompt_loss_weight}}
+      compute_classification_metrics: ${{parent.inputs.compute_classification_metrics}}
+      classification_n_classes: ${{parent.inputs.classification_n_classes}}
+      classification_positive_class: ${{parent.inputs.classification_positive_class}}
+      classification_betas: ${{parent.inputs.classification_betas}}
+    outputs:
+      output_model:
+        path: ${{parent.outputs.output_model}}
+        mode: mount
+        type: uri_folder

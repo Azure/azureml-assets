@@ -1,0 +1,8 @@
+type: component
+spec: spec.yaml
+categories: ["Benchmarking"]
+test:
+  pytest:
+    enabled: true
+    conda_environment: ../../dev_conda_env.yaml
+    tests_dir: ../../tests/dataset_preprocessor

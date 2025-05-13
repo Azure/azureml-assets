@@ -1,0 +1,31 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: benchmark_result_aggregator
+display_name: Benchmark result aggregator
+description: Aggregate quality metrics, performance metrics and all of the metadata from the pipeline. Also add them to the root run.
+version: 0.0.14
+is_deterministic: false
+
+inputs:
+  quality_metrics:
+    type: uri_folder
+    description: The quality metrics in json format.
+    optional: True
+  performance_metrics:
+    type: uri_folder
+    description: The performance metrics in json format.
+    optional: True
+
+outputs:
+  benchmark_result:
+    type: uri_file
+    description: The json file with all of the aggregated results.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+command: >-
+  python -m aml_benchmark.benchmark_result_aggregator.main 
+  $[[--quality_metrics_path ${{inputs.quality_metrics}}]] 
+  $[[--performance_metrics_path ${{inputs.performance_metrics}}]] 
+  --output_dataset_path ${{outputs.benchmark_result}}

@@ -1,0 +1,93 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.3
+name: multimodal_classification_datapreprocessing
+display_name: Multimodal Classification Data Preprocessing
+description: Component to preprocess data for multimodal classification task
+
+is_deterministic: True
+
+environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/20
+
+code: ../../../src/preprocess
+
+inputs:
+  # Multimodal Classification task arguments
+  problem_type:
+    type: string
+    default: multimodal-classification
+    optional: false
+    enum:
+      - multimodal-classification-singlelabel
+      - multimodal-classification-multilabel
+    description: Specify whether its single-label or multi-label multimodal classification task.
+
+  label_column:
+    type: string
+    optional: false
+    description: label column name
+
+  image_column:
+    type: string
+    optional: false
+    description: Image column name
+
+  drop_columns:
+    type: string
+    default: ""
+    optional: true
+    description: Set of columns to ignore. Provide string that has comma separated column names.
+
+  numerical_columns_overrides:
+    type: string
+    default: ""
+    optional: true
+    description: columns to treat as numerical. Overrides automatic column purpose detection.
+
+  categorical_columns_overrides:
+    type: string
+    default: ""
+    optional: true
+    description: columns to treat as categorical. Overrides automatic column purpose detection.
+
+  text_columns_overrides:
+    type: string
+    default: ""
+    optional: true
+    description: columns to treat as text. Overrides automatic column purpose detection.
+
+  # Inputs
+  training_data:
+    type: mltable
+    optional: false
+    description: Enter the train mltable path
+
+  validation_data:
+    type: mltable
+    optional: false
+    description: Enter the validation mltable path
+
+  model_selector_output:
+    type: uri_folder
+    optional: false
+    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: folder to store preprocessed outputs of input data
+
+command: >-
+  python preprocess.py
+  --problem_type ${{inputs.problem_type}}
+  --label_column ${{inputs.label_column}}
+  --image_column ${{inputs.image_column}}
+  $[[--drop_columns "${{inputs.drop_columns}}"]]
+  $[[--numerical_columns_overrides "${{inputs.numerical_columns_overrides}}"]]
+  $[[--categorical_columns_overrides "${{inputs.categorical_columns_overrides}}"]]
+  $[[--text_columns_overrides "${{inputs.text_columns_overrides}}"]]
+  --train_mltable_path ${{inputs.training_data}}
+  --validation_mltable_path ${{inputs.validation_data}}
+  --model_selector_output ${{inputs.model_selector_output}}
+  --output_dir ${{outputs.output_dir}}

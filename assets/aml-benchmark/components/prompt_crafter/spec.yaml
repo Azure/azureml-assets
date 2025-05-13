@@ -1,0 +1,153 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: prompt_crafter
+display_name: Prompt Crafter
+description: This component is used to create prompts from a given dataset. From a 
+  given jinja prompt template, it will generate prompts. It can also create 
+  few-shot prompts given a few-shot dataset and the number of shots.
+version: 0.0.14
+is_deterministic: true
+
+inputs:
+  prompt_type:
+    type: string
+    optional: false
+    enum:
+      - chat
+      - completions
+    description: |
+      Determine the prompt format. This component supports chat and completion models.
+      Completions: 
+      {"prompt": "Few shot prompts will go here"}
+      Chat: 
+      Chat models have 3 roles: System, User and Assistant. 
+      Example:
+      {"prompt": [{"role": "system", "content": "You are a helpful assistant"},
+                  {"role": "user", "content": "Example chat input"},
+                  {"role": "assistant", "content": "Example chat output"}]}
+    default: completions
+  test_data:
+    type: uri_file
+    optional: false
+    description: |
+      The uri file (jsonl) used to generate prompts.
+  prompt_pattern:
+    type: string
+    optional: false
+    description: |
+      The pattern to be used to generate the prompts. It should be a valid jinja template. 
+
+      Example:
+      Input Data : 
+      {"question":"Example Question?",
+      "choices":{"option":["Answer1","Answer2","Answer3","Answer4"]},
+      "answerKey":"D"}
+
+      The prompt pattern for the above input data can be:
+      "Question: {{question}}\n
+      Choices are: 
+      (1) {{choices.option[0]}}\n
+      (2) {{choices.option[1]}}\n
+      (3) {{choices.option[2]}}\n
+      (4) {{choices.option[3]}}\n"
+  few_shot_pattern:
+    type: string
+    optional: true
+    description: |
+      The pattern used to generate the few shot portion of a prompt. It should be a valid jinja template.
+      If this pattern is not provided, few shot prompts are generated from a concatenation of prompt_pattern and output_pattern.
+
+      Example:
+      Input Data : 
+      {"question":"Example Question?",
+      "choices":{"option":["Answer1","Answer2","Answer3","Answer4"]},
+      "answerKey":"D"}
+
+      The few shot pattern for the above input data can be:
+      "Question: {{question}}\n
+      Choices are: 
+      (1) {{choices.option[0]}}\n
+      (2) {{choices.option[1]}}\n
+      (3) {{choices.option[2]}}\n
+      (4) {{choices.option[3]}}\n
+      Answer: {{answerKey}}"
+  n_shots:
+    type: integer
+    optional: false
+    default: 0
+    description: |
+      The number of shots to use in the few-shot prompts. Default is 0, which means no few-shot
+      examples will be generated. n_shots must be smaller than the size of few_shot dataset.
+  few_shot_data:
+    type: uri_file
+    optional: true
+    description: |
+      The uri file(jsonl) to be used to generate the n-shot prompts.
+  output_pattern:
+    type: string
+    optional: false
+    description: |
+      The jinja template representing the expected output that would be used for few shot 
+      prompts when n_shot > 0. e.g: {{answerKey}}
+  few_shot_separator:
+    type: string
+    optional: true
+    default: ''
+    description: |
+      The separator to be added between few-shot prompts.
+  system_message:
+    type: string
+    optional: true
+    description: |
+      This is the description of the task that the Assisstant should perform. 
+      Applicable for chat models only.
+      e.g: "You are a helpful assistant." will be added to system role for chat models.
+      {"role": "system", "content": "You are a helpful assistant"}
+  prefix:
+    type: string
+    optional: true
+    description: |
+      The prefix to be added to the prompts. e.g: "Question: "
+  random_seed:
+    type: integer
+    optional: true
+    default: 0
+    description: Random seed for sampling few-shots; if not specified, 0 is used.
+  ground_truth_column_name:
+    type: string
+    optional: true
+    default: ''
+    description: |
+      This will be used as the ground truth column if present in the input.
+      If not present, the output_pattern will be used as the ground truth.
+  additional_columns:
+    type: string
+    optional: true
+    default: ''
+    description: |
+      Any additional columns that would be helpful for computing metrics, if present in the input.
+      If there're multiple such columns, they should be separated by comma (",").
+outputs:
+  output_file:
+    type: uri_file
+    description: Output file path where few_shot_prompt data will be written.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+command: >-
+  python -m aml_benchmark.prompt_crafter.main 
+  --test_data ${{inputs.test_data}}
+  $[[--few_shot_data ${{inputs.few_shot_data}}]]
+  --n_shots ${{inputs.n_shots}}
+  --prompt_type ${{inputs.prompt_type}}
+  $[[--random_seed ${{inputs.random_seed}}]]
+  --prompt_pattern '${{inputs.prompt_pattern}}'
+  --output_pattern '${{inputs.output_pattern}}'
+  $[[--few_shot_pattern '${{inputs.few_shot_pattern}}']]
+  $[[--system_message '${{inputs.system_message}}']]
+  $[[--ground_truth_column_name '${{inputs.ground_truth_column_name}}']]
+  $[[--additional_columns '${{inputs.additional_columns}}']]
+  $[[--prefix '${{inputs.prefix}}']]
+  $[[--few_shot_separator '${{inputs.few_shot_separator}}']]
+  --output_file ${{outputs.output_file}}

@@ -1,0 +1,151 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: inference_postprocessor
+display_name: Inference Postprocessor
+description: Inference Postprocessor
+version: 0.0.12
+is_deterministic: true
+
+inputs:
+  prediction_dataset:
+    type: uri_file
+    description: >-
+      A file that contains predicted values
+    optional: False
+  prediction_column_name:
+    type: string
+    description: >-
+      Key in prediction dataset that contains predictions.
+    optional: False
+  ground_truth_dataset:
+    type: uri_file
+    description: >-
+      A file that contains the ground truth
+    optional: True
+  ground_truth_column_name:
+    type: string
+    description: >-
+      Key in ground truth dataset that contains ground truth. If ground_truth_dataset is given, then,
+      this is required input.
+    optional: True
+  additional_columns:
+    type: string
+    description: >-
+      Name(s) of additional columns that could be helpful for computing some metrics, separated by comma (",").
+    optional: True
+  remove_prefixes:
+    type: string
+    description: >-
+      A set of string prefixes separated by comma list of string prefixes to be removed from the inference
+      results in sequence. The prefixes should be separated by a comma.
+      Example: for the inference string - 
+        "###>>>Hello world."
+      and prefixes -
+        "###,>>>"
+      will output "Hello world".
+    optional: True
+  separator:
+    type: string
+    description: >-
+      The separator used in few_shot patterns. One common example is "###".
+      If provided, response will be split on this separator, and only the first part will be used.
+      Example: "This is the first part ### This is the second part" will result in
+      "This is the first part".
+    optional: True
+  find_first:
+    type: string
+    description: >-
+      A list of strings to search for in the inference results. The first occurrence of each string will \
+      be extracted and the occurrence with minimum index will be returned.
+      Must provide a comma-separated list of strings.
+      Example:
+      >>> find_first = "positive,negative"
+      >>> completion = "This is a positive example, not negative"
+      # Output: "positive"
+    optional: True
+  extract_number:
+    type: string
+    description: >
+      If the inference results contain a number, this can be used to extract the first or last number in the inference results.
+      The number will be extracted as a string.
+      Example:
+      >>> extract_number = "first"
+      >>> prediction = "Adding 0.3 to 1,000 gives 1,000.3"
+      # Output: "0.3"
+      Example:
+      >>> extract_number = "last"
+      >>> prediction = "Adding 0.3 to 1,000 gives 1,000.3"
+      # Output: "1000.3"
+    optional: True
+    enum:
+      - first
+      - last
+  regex_expr:
+    type: string
+    description: >-
+      A regular expression to extract the answer from the inference results. The pattern
+      must contain a group to be extracted. The first group and the first match will be used. 
+      Example: "\n\nThe answer is: (\d)."
+    optional: True
+  strip_characters:
+    type: string
+    description: >-
+      A set of characters to remove from the beginning or end of the extracted answer.It is applied in the very end
+      of the extraction process.
+    optional: True
+  label_map:
+    type: string
+    description: |
+      JSON serialized dictionary to perform mapping. Must contain key-value pair "column_name": "<actual_column_name>" whose 
+      value needs mapping, followed by key-value pairs containing idtolabel or labeltoid mappers.
+      Example format:
+      {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}
+    optional: True
+  template:
+    type: string
+    description: >-
+      Jinja template containing logic to extract prediction. In case of multiple predictions, logic must be written in a written in
+      format so that it outputs a list of formatted predictions.
+      Example:
+      >>> prediction = ["The answer is phone.", "The answer is cellular."]
+      The provided jinja template logic should be able extract and output in this format:
+      # Output : ["phone", "cellular"]
+    optional: True
+  script_path:
+    type: uri_file
+    description: >-
+      Path to the custom postprocessor python script to extract prediction.
+      This [base template]
+      (https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/custom_inference_postprocessors/base_postprocessor_template.py)
+      tshould be used to create a custom postprocessor script.
+    optional: True
+
+
+outputs:
+  output_dataset_result:
+    type: uri_file
+    description: >-
+      Path to the output the post processed result in .jsonl file.
+
+code: ../src
+
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+
+command: >-
+  python -m aml_benchmark.inference_postprocessor.main
+  --prediction_dataset ${{inputs.prediction_dataset}}
+  --prediction_column_name ${{inputs.prediction_column_name}}
+  $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
+  $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
+  $[[--additional_columns ${{inputs.additional_columns}}]]
+  $[[--separator '${{inputs.separator}}']]
+  $[[--find_first '${{inputs.find_first}}']]
+  $[[--regex_expr '${{inputs.regex_expr}}']]
+  $[[--remove_prefixes '${{inputs.remove_prefixes}}']]
+  $[[--strip_characters '${{inputs.strip_characters}}']]
+  $[[--extract_number '${{inputs.extract_number}}']]
+  $[[--label_map '${{inputs.label_map}}']]
+  $[[--template '${{inputs.template}}']]
+  $[[--script_path ${{inputs.script_path}}]]
+  --output_dataset_result ${{outputs.output_dataset_result}}

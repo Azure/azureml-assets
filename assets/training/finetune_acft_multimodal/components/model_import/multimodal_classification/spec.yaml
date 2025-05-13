@@ -1,0 +1,47 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.3
+name: multimodal_classification_model_import
+display_name: Multimodal Classification Model Import
+description: Import PyTorch / MLflow model
+
+is_deterministic: True
+
+environment: azureml://registries/azureml/environments/acft-multimodal-gpu/versions/20
+
+code: ../../../src/model_import/
+
+inputs:
+
+  data_modalities:
+    type: string
+    enum:
+      - "text-image"
+      - "text-image-tabular"
+    default: "text-image-tabular"
+    description: Modalities to be supported
+
+  # Continual-Finetuning model path
+  pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Input folder path containing pytorch model for further finetuning. Proper model/huggingface id must be passed.
+
+  mlflow_model_path:
+    type:  mlflow_model
+    optional: true
+    description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: folder to store model metadata
+
+command: >-
+  python model_import.py
+  --model_name_or_path "openai/clip-vit-base-patch32"
+  --data_modalities ${{inputs.data_modalities}}
+  $[[--pytorch_model_path ${{inputs.pytorch_model_path}}]]
+  $[[--mlflow_model_path ${{inputs.mlflow_model_path}}]]
+  --output_dir ${{outputs.output_dir}}

@@ -1,0 +1,58 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: dataset_sampler
+display_name: Dataset Sampler
+description: Samples a dataset containing JSONL file(s).
+version: 0.0.11
+
+inputs:
+  dataset: 
+    type: uri_folder
+    description: Path to the input directory or .jsonl file from which the data will be sampled.
+    optional: False
+  sampling_style:
+    type: string
+    optional: False
+    default: head
+    description: >-
+      The sampling method to use. Use `head` to sample from beginning of the file, `tail` to sample from the end 
+      of the file, `random` to sample randomly and `duplicate` to append the input file to itself until the correct 
+      output size is reached.
+    enum:
+    - random
+    - head
+    - tail
+    - duplicate
+  sampling_ratio:
+    type: number
+    min: 0
+    optional: True
+    description: >-
+      Portion of the dataset to be sampled. If `sampling style` is not `duplicate`, must be a float in (0,1]; must be null if 
+      `n_samples` is specified. NOTE: If the `sampling_style` is `duplicate`, the component will duplicate the data in a "round robin" 
+      fashion, going over the input several times. This operation is very slow! So be cautious when using for large datasets.
+  n_samples:
+    type: integer
+    optional: True
+    description: Absolute number of samples to be taken (alternative to `sampling_ratio`); must be null if `sampling_ratio` is specified.
+  random_seed:
+    type: integer
+    optional: True
+    description: Random seed for sampling mode; if not specified, 0 is used. Used only when `sampling_style` is `random`.
+
+outputs:
+  output_dataset:
+    type: uri_file
+    description: Path to the jsonl file where the sampled dataset will be saved.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+command: >-
+  python -m aml_benchmark.dataset_sampler.main 
+  --dataset ${{inputs.dataset}} 
+  --sampling_style ${{inputs.sampling_style}} 
+  $[[--sampling_ratio ${{inputs.sampling_ratio}}]] 
+  $[[--n_samples ${{inputs.n_samples}}]] 
+  $[[--random_seed ${{inputs.random_seed}}]] 
+  --output_dataset ${{outputs.output_dataset}}
