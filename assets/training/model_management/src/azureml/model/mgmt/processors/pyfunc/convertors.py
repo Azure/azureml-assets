@@ -114,7 +114,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         :type metadata: Optional[Dict]. Defaults to {}.
         """
         signatures = self._signatures or self.get_model_signature()
-        # set metadata info
+        # set metadata info Check
         metadata.update(fetch_mlflow_acft_metadata(
             base_model_name=self._model_id,
             is_finetuned_model=False,
