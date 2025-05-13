@@ -14,6 +14,7 @@ tags:
   alias: phi-4
   directoryPath: cuda-int4-rtn-block-32
   promptTemplate: "{\"system\": \"<|im_start|>system<|im_sep|>{Content}<|im_end|>\", \"user\": \"<|im_start|>user<|im_sep|>{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant<|im_sep|>{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user<|im_sep|>{Content}<|im_end|><|im_start|>assistant<|im_sep|>\"}"
+  parameterSchema: "{\"enabled\": [{\"name\": \"max_tokens\", \"default\": 2048}, {\"name\": \"temperature\"}, {\"name\": \"top_p\"}, {\"name\": \"top_k\"}, {\"name\": \"presence_penalty\"}, {\"name\": \"frequency_penalty\", \"default\": 1}]}"
 type: custom_model
 variantInfo:
   parents:
