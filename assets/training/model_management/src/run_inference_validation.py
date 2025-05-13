@@ -379,6 +379,7 @@ def run_inference_validation():
 
         # Save the validation result with the error message
         save_validation_result(request_details, args.validation_results, args.validation_id, args.sku, "Failed")
+        store_metrics_paths(args.metrics_storage_uri)
 
         # Write the error message to the specified error output file
         if args.validation_error:
