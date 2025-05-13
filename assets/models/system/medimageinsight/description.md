@@ -164,8 +164,3 @@ data =  {
   }
 ]
 ```
-
-## Hardware Requirement for Compute Instances
-- Supports CPU and GPU
-- Default: Single V100 GPU or Intel CPU
-- Minimum: Single GPU instance with 8Gb Memory (Fastest) or CPU
