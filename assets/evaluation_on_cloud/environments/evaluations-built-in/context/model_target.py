@@ -5,8 +5,21 @@
 import requests
 import logging
 
+
+USER = "User"
+ASSISTANT = "Assistant"
+
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+
+def get_key_from_dict(d, key, default=None):
+    """Get a particular Key from given dict."""
+    for k, v in d.items():
+        if k.lower() == key.lower():
+            return v
+    return default
 
 
 class ModelTarget:
@@ -29,10 +42,12 @@ class ModelTarget:
 
         messages = [{"role": "system", "content": self.system_message}]
         for example in self.few_shot_examples:
-            if 'User' in example:
-                messages.append({"role": "user", "content": example['User']})
-            if 'Assistant' in example:
-                messages.append({"role": "assistant", "content": example['Assistant']})
+            user_content = get_key_from_dict(example, USER, None)
+            if user_content is not None:
+                messages.append({"role": "user", "content": user_content})
+            assistant_content = get_key_from_dict(example, ASSISTANT, None)
+            if assistant_content is not None:
+                messages.append({"role": "assistant", "content": assistant_content})
 
         if context:
             messages.append({"role": "user", "content": f"{context} {query}"})
