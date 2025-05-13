@@ -13,8 +13,10 @@ from azure.ai.ml import MLClient, load_component
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.operations._run_history_constants import RunHistoryConstants, JobStatus
 from azure.ai.ml.entities import Job, Data
+from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import AzureCliCredential
 import pytest
+
 
 from tests.e2e.utils.io_utils import (
     write_to_yaml,
@@ -56,15 +58,21 @@ def _watch_file(file: str, timeout_in_seconds):
 
 
 def _create_data_asset(ml_client: MLClient, name: str, path: str, type: AssetTypes):
-    my_data = Data(
-        path=path,
-        type=type,
-        name=name,
-        version='1'
-    )
-    print(f"Creating a {type} data asset with name '{name}'")
-    ml_client.data.create_or_update(my_data)
-
+    try:
+        ml_client.data.get(name=name, version='1')
+        print(f"Data asset '{name}' version '1' already exists.")
+    except ResourceNotFoundError:
+        my_data = Data(
+            path=path,
+            type=type,
+            name=name,
+            version='1'
+        )
+        print(f"Creating a {type} data asset with name '{name}', version '1'")
+        ml_client.data.create_or_update(my_data)
+    except Exception as ex:
+        print(f"Unexpected error: {ex}")
+        raise
 
 @pytest.fixture(scope="session")
 def main_worker_lock(worker_id):
