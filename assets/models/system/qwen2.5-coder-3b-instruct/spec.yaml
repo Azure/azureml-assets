@@ -3,5 +3,5 @@ name: qwen2.5-coder-3b-instruct
 version: 1
 path: ./
 tags:
-  foundryLocal: ""
+  foundryLocal: "hide"
 type: custom_model

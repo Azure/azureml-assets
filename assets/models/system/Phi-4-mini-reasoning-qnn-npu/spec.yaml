@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: Phi-4-mini-reasoning-cuda-gpu
+name: Phi-4-mini-reasoning-qnn-npu
 version: 1
 path: ./
 tags:
@@ -20,8 +20,8 @@ variantInfo:
   - assetId: azureml://registries/azureml/models/Phi-4-mini-reasoning/versions/1
   variantMetadata:
     modelType: 'ONNX'
-    quantization: ['RTN']
-    device: 'gpu'
-    executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 3382286745
-    vRamFootprintBytes: 3408448716
+    quantization: ['QuaRot', 'GPTQ']
+    device: 'npu'
+    executionProvider: 'QNNExecutionProvider'
+    fileSizeBytes: 2982936576
+    vRamFootprintBytes: 1749486141
