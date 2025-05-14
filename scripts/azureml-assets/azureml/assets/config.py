@@ -583,16 +583,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             # If we fail pass through to the next approach
             pass
 
-        # Our second approach is to use the azure python SDK to view the properties
-        # of the container. If the container allows for anonymous access then we can
-        # return the URI "as-is".
-        #
-        # This approach is slower than the first approach, which is why we
-        # tried the simple HTTP request approach first.
-        #
-        # It also requires Azure Credentials to be configured which may or may
-        # not be present depending on the execution environment. If these credentials
-        # do not exist then fail gracefully, return the URI "as-is", and hope for the best.
+        # Generate a SAS token for the container and append it to the URI
         try:
             blob_service_client = BlobServiceClient(
                 account_url=self._account_uri,
@@ -600,18 +591,9 @@ class AzureBlobstoreAssetPath(AssetPath):
                     process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
                 )
             )
-            container_client = blob_service_client.get_container_client(container=self._container_name)
 
-            # If the container allows for anonymous access then we can return the URI "as-is"
-            if container_client.get_container_properties().public_access is not None:
-                self._token = ""
-                return uri
-
-            # Our final approach is to generate a SAS token for the container and append
-            # it to the URI
             start_time = datetime.now(timezone.utc)
             expiry_time = start_time + token_expiration
-
             key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
 
             self._token = generate_container_sas(
