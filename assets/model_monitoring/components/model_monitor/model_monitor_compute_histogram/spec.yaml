@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_compute_histogram
 display_name: Model Monitor - Compute Histogram
 description: Compute a histogram given an input data and associated histogram buckets.
-version: 0.3.27
+version: 0.3.28
 is_deterministic: true
 
 code: ../../src
