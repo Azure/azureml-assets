@@ -9,4 +9,4 @@ azure-monitor-query==1.4.1
 croniter==6.0.0
 azure-monitor-opentelemetry==1.6.9
 promptflow-azure==1.18.0
-azure-identity==1.22.0
+azure-identity==1.23.0
