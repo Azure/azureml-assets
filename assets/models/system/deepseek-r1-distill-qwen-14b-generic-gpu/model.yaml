@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/fl-perf-improvements/deepseek-r1-distill-qwen-14b/onnx/webgpu/webgpu-int4-kquant-block-32-mixed-acc-level-4/v2
+  container_path: foundrylocal/fl-perf-improvements/deepseek-r1-distill-qwen-14b/onnx/webgpu/webgpu-int4-kquant-block-32-mixed-acc-level-4/v3
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
