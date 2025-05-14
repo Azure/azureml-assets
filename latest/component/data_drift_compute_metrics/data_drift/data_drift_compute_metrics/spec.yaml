@@ -5,7 +5,7 @@ name: data_drift_compute_metrics
 display_name: Data Drift - Compute Metrics
 description: Compute data drift metrics given a baseline and a deployment's model
   data input.
-version: 0.3.33
+version: 0.3.34
 is_deterministic: true
 
 code: ../../src

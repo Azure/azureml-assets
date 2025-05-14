@@ -4,7 +4,7 @@ type: spark
 name: genai_token_statistics_compute_metrics
 display_name: GenAI Token Statistics - Compute Metrics
 description: Compute token statistics metrics.
-version: 0.0.21
+version: 0.0.22
 is_deterministic: true
 
 inputs:
