@@ -639,11 +639,11 @@ class AzureBlobstoreAssetPath(AssetPath):
             List[dict]: List of files and their sizes. Dicts have keys `name` and `size`.
         """
         container_client = self.get_container_client()
-        container_prefix = self._container_path + "/"
+        container_prefix = self._container_path + "/" if self._container_path else None
         blobs = container_client.list_blobs(name_starts_with=container_prefix)
 
         # Remove prefix if desired
-        starting_pos = len(container_prefix) if strip_container_prefix else 0
+        starting_pos = len(container_prefix) if container_prefix and strip_container_prefix else 0
         blobs = [{'name': blob.name[starting_pos:], 'size': blob.size} for blob in blobs]
         return blobs
 
