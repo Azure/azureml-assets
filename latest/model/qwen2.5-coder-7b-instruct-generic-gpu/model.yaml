@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/foundry-local-missing/qwen2.5-coder-7b-instruct/onnx/webgpu/webgpu-int4-rtn-block-32-acc-level-4
+  container_path: foundrylocal/fl-perf-improvements/qwen2.5-coder-7b-instruct/onnx/webgpu/webgpu-int4-rtn-block-32-acc-level-4/v3
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
