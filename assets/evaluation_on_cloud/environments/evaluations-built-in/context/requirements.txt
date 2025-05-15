@@ -1,8 +1,8 @@
-azure-ai-evaluation==1.6.0
+azure-ai-evaluation==1.7.0
 azureml-mlflow=={{latest-pypi-version}}
 azure-ai-ml=={{latest-pypi-version}}
 
-openai==1.77.0
+openai=={{latest-pypi-version}}
 opentelemetry-api==1.31.0
 opentelemetry-sdk==1.31.0
 azure-monitor-query=={{latest-pypi-version}}
