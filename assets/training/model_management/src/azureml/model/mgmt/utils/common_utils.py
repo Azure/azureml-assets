@@ -11,16 +11,11 @@ import sys
 import time
 from argparse import Namespace
 from azure.ai.ml import MLClient
-from azureml._common._error_definition import AzureMLError
-from azureml._common.exceptions import AzureMLException
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ManagedIdentityCredential
 from azureml.core.run import Run
-from azureml.model.mgmt.utils.exceptions import (
-    GenericRunCMDError,
-    HuggingFaceErrorInFetchingModelInfo,
-    UserIdentityMissingError
-    )
+from azureml.model.mgmt.utils.exceptions import ModelImportErrorStrings
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -111,7 +106,12 @@ def get_mlclient(registry_name: str = None):
             # Check if given credential can get token successfully.
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            raise AzureMLException._with_error(AzureMLError.create(UserIdentityMissingError, exception=ex))
+            message = ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+            raise MlException(
+                message=message, no_personal_data_message=message,
+                error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT,
+                error=ex
+            )
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
@@ -280,8 +280,12 @@ def fetch_huggingface_model_info(model_id) -> ModelInfo:
             if model_id == info.modelId:
                 return info
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(HuggingFaceErrorInFetchingModelInfo, model_id=model_id, error=e)
+        message = ModelImportErrorStrings.ERROR_FETCHING_HUGGING_FACE_MODEL_INFO
+        raise MlException(
+            message=message.format(model_id=model_id, error=""),
+            no_personal_data_message=message.format(model_id=model_id, error=e),
+            error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT,
+            error=e
         )
 
 
@@ -347,7 +351,12 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
         logger.info(f"total size: {stdout} KB")
         return int(stdout)
     except Exception as e:
-        raise AzureMLException._with_error(AzureMLError.create(GenericRunCMDError, error=e))
+        message = ModelImportErrorStrings.CMD_EXECUTION_ERROR
+        raise MlException(
+            message=message, no_personal_data_message=message.format(error=e),
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+            error=e
+        )
 
 
 class MlflowMetaConstants:

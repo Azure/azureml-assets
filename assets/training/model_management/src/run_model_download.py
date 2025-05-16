@@ -8,11 +8,10 @@ import json
 import re
 from azureml.model.mgmt.config import AppName, LlamaHFModels, LlamaModels, llama_dict
 from azureml.model.mgmt.downloader import download_model, ModelSource
-from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelAlreadyExists
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelImportErrorStrings
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from azureml.model.mgmt.utils.common_utils import get_mlclient
-from azureml._common.exceptions import AzureMLException
-from azureml._common._error_definition.azureml_error import AzureMLError
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 
 VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
 NEGATIVE_MODEL_NAME_PATTERN = r"[^a-zA-Z0-9-]"
@@ -72,8 +71,12 @@ def validate_if_model_exists(model_id):
         if model:
             version = model.version
             url = f"https://ml.azure.com/registries/{registry}/models/{model_id}/version/{version}"
-            raise AzureMLException._with_error(
-                AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry, url=url)
+            message = ModelImportErrorStrings.MODEL_ALREADY_EXISTS.format(
+                model_id=model_id, registry=registry, url=url
+            )
+            raise MlException(
+                message=message, no_personal_data_message=message,
+                error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT
             )
         else:
             logger.info(f"Model {model_id} has not been imported into the registry. "
