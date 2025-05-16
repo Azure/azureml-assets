@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/foundry-local-missing/phi-3-mini-128k-instruct/onnx/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
