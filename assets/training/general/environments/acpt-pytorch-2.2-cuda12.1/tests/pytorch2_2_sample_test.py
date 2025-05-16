@@ -43,7 +43,7 @@ def test_pytorch_2_2():
         command="pip install -r requirements.txt && pip install multiprocess==0.70.15"
                 " && python pretrain_glue.py --tensorboard_log_dir \"/outputs/runs/\""
                 " --deepspeed ds_config.json --num_train_epochs 5 --output_dir outputs --disable_tqdm 1"
-                " --local_rank $RANK --evaluation_strategy \"epoch\" --logging_strategy \"epoch\""
+                " --local_rank $RANK --logging_strategy \"epoch\""
                 " --per_device_train_batch_size 93 --gradient_accumulation_steps 1"
                 " --per_device_eval_batch_size 93 --learning_rate 3e-05 --adam_beta1 0.8 --adam_beta2 0.999"
                 " --weight_decay 3e-07 --warmup_steps 500 --fp16 --logging_steps 1000"
