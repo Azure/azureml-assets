@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/fl-perf-improvements/qwen2.5-1.5b-instruct/onnx/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/v3
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
