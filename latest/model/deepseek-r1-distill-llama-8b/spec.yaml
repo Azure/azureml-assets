@@ -3,7 +3,7 @@ name: deepseek-r1-distill-llama-8b
 version: 1
 path: ./
 tags:
-  foundryLocal: ""
+  foundryLocal: "hide"
 type: custom_model
 description: |-
   This model is an optimized version of DeepSeek-R1-Distill-Llama-8B for local inference. Optimized models are published here in ONNX format to run on CPU and GPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs, with the precision best suited to each of these targets.

@@ -3,7 +3,7 @@ name: deepseek-r1-distill-llama-8b-generic-cpu
 version: 3
 path: ./
 tags:
-  foundryLocal: ""
+  foundryLocal: "hide"
   license: "MIT"
   licenseDescription: "This model is provided under the License Terms available at\
     \ <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B/blob/main/LICENSE>."
