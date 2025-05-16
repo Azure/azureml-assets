@@ -6,6 +6,7 @@
 /assets/sample/ @Azure/aml-assets
 /assets/data/ @azure/aml-assets @Azure/azureml-data
 /assets/models/ @Azure/aml-ossmodels @azure/aml-assets
+/assets/models/foundrylocal @Azure/local-model-publish
 /assets/common/ @azure/aml-assets @azure/aml-training
 /assets/model_monitoring/ @azure/aml-assets @Azure/aml-model-monitoring
 /assets/large_language_models/ @azure/aml-assets @azure/aml-training @azure/aml-llm @azure/azureml-rag
