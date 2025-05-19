@@ -1,0 +1,402 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.23
+name: mmdetection_image_objectdetection_instancesegmentation_finetune
+display_name: Image Object Detection and Instance Segmentation MMDetection Model Finetune
+description: Component to finetune MMDetection models for image object detection and
+  instance segmentation.
+
+is_deterministic: false
+
+environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/labels/latest
+
+code: ../../../src/finetune
+
+distribution:
+  type: pytorch
+
+inputs:
+
+  # component input: model path
+  model_path:
+    type: uri_folder
+    optional: false
+    description: Output folder of model selector containing model metadata like config,
+      checkpoints, tokenizer config.
+
+  # component input: training mltable
+  training_data:
+    type: mltable
+    optional: false
+    description: Path to the mltable of the training dataset.
+
+  # optional component input: validation mltable
+  validation_data:
+    type: mltable
+    optional: true
+    description: Path to the mltable of the validation dataset.
+
+  image_min_size:
+    type: integer
+    optional: true
+    description: Minimum image size after augmentation that is input to the network.
+      If left empty, it would either be overwritten by image_scale in model config
+      or would be chosen based on the task type and model selected. The image will
+      be rescaled as large as possible within the range [image_min_size, image_max_size].
+      The image size will be constraint so that the max edge is no longer than image_max_size
+      and short edge is no longer than image_min_size.
+
+  image_max_size:
+    type: integer
+    optional: true
+    description: Maximum image size after augmentation that is input to the network.
+      If left empty, it would either be overwritten by image_scale in model config
+      or would be chosen based on the task type and model selected. The image will
+      be rescaled as large as possible within the range [image_min_size, image_max_size].
+      The image size will be constraint so that the max edge is no longer than image_max_size
+      and short edge is no longer than image_min_size.
+
+  task_name:
+    type: string
+    enum:
+    - image-object-detection
+    - image-instance-segmentation
+    description: Which task the model is solving.
+
+  # primary metric
+  metric_for_best_model:
+    type: string
+    optional: true
+    enum:
+    - mean_average_precision
+    - precision
+    - recall
+    description: Specify the metric to use to compare two different models. If left
+      empty, will be chosen automatically based on the task type and model selected.
+
+  # Augmentation parameters
+  apply_augmentations:
+    type: boolean
+    default: true
+    optional: true
+    description: If set to true, will enable data augmentations for training.
+
+  number_of_workers:
+    type: integer
+    default: 8
+    optional: true
+    description: Number of subprocesses to use for data loading (PyTorch only). 0
+      means that the data will be loaded in the main process.
+
+  # Deepspeed Parameters
+  apply_deepspeed:
+    type: boolean
+    default: false
+    optional: true
+    description: If set to true, will enable deepspeed for training. Please note deepspeed
+      is not yet supported for MMDetection, will be enabled in future.
+
+  # optional component input: deepspeed config
+  deepspeed_config:
+    type: uri_file
+    optional: true
+    description: Deepspeed config to be used for finetuning. Please note deepspeed
+      is not yet supported for MMDetection, will be enabled in future.
+
+  apply_ort:
+    type: boolean
+    default: false
+    optional: true
+    description: If set to true, will use the ONNXRunTime training. Please note ONNXRunTime
+      is not yet supported for MMDetection, will be enabled in future.
+
+  # Training parameters
+  number_of_epochs:
+    type: integer
+    optional: true
+    description: Number of training epochs. If left empty, will be chosen automatically
+      based on the task type and model selected.
+
+  max_steps:
+    type: integer
+    optional: true
+    description: If set to a positive number, the total number of training steps to
+      perform. Overrides 'number_of_epochs'. In case of using a finite iterable dataset
+      the training may stop before reaching the set number of steps when all data
+      is exhausted. If left empty, will be chosen automatically based on the task
+      type and model selected.
+
+  training_batch_size:
+    type: integer
+    optional: true
+    description: Train batch size. If left empty, will be chosen automatically based
+      on the task type and model selected.
+
+  validation_batch_size:
+    type: integer
+    optional: true
+    description: Validation batch size. If left empty, will be chosen automatically
+      based on the task type and model selected.
+
+  auto_find_batch_size:
+    type: boolean
+    default: false
+    optional: true
+    description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size'
+      goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct
+      batch size by iteratively reducing 'per_device_train_batch_size' by a factor
+      of 2 till the OOM is fixed.
+
+  # learning rate and learning rate scheduler
+  learning_rate:
+    type: number
+    optional: true
+    description: Start learning rate. Defaults to linear scheduler. If left empty,
+      will be chosen automatically based on the task type and model selected.
+
+  learning_rate_scheduler:
+    type: string
+    optional: true
+    enum:
+    - warmup_linear
+    - warmup_cosine
+    - warmup_cosine_with_restarts
+    - warmup_polynomial
+    - constant
+    - warmup_constant
+    description: The scheduler type to use. If left empty, will be chosen automatically
+      based on the task type and model selected.
+
+  warmup_steps:
+    type: integer
+    optional: true
+    description: Number of steps used for a linear warmup from 0 to learning_rate.
+      If left empty, will be chosen automatically based on the task type and model
+      selected.
+
+  # optimizer
+  optimizer:
+    type: string
+    optional: true
+    enum:
+    - adamw_hf
+    - adamw
+      # - adamw_torch_xla
+      # - adamw_apex_fused
+      # - adamw_bnb_8bit
+      # - adamw_anyprecision
+    - sgd
+    - adafactor
+    - adagrad
+    description: optimizer to be used while training. If left empty, will be chosen
+      automatically based on the task type and model selected.
+
+  weight_decay:
+    type: number
+    optional: true
+    description: The weight decay to apply (if not zero) to all layers except all
+      bias and LayerNorm weights in Adam, AdamW & SGD optimizer. If left empty, will
+      be chosen automatically based on the task type and model selected.
+
+  extra_optim_args:
+    type: string
+    default: ""
+    optional: true
+    description: Optional additional arguments that are supplied to SGD Optimizer.
+      The arguments should be semi-colon separated key value pairs and should be enclosed
+      in double quotes. For example, "momentum=0.5; nesterov=True" for sgd. Please
+      make sure to use a valid parameter names for the chosen optimizer. For exact
+      parameter names, please refer https://pytorch.org/docs/1.13/generated/torch.optim.SGD.html#torch.optim.SGD
+      for SGD. Parameters supplied in extra_optim_args will take precedence over the
+      parameter supplied via other arguments such as weight_decay. If weight_decay
+      is provided via "weight_decay" parameter and via extra_optim_args both, values
+      specified in extra_optim_args will be used.
+
+  # gradient accumulation
+  gradient_accumulation_step:
+    type: integer
+    optional: true
+    description: Number of update steps to accumulate the gradients for, before performing
+      a backward/update pass. If left empty, will be chosen automatically based on
+      the task type and model selected.
+
+  # mixed precision training
+  precision:
+    type: string
+    enum:
+    - "32"
+    - "16"
+    default: "32"
+    optional: true
+    description: Apply mixed precision training. This can reduce memory footprint
+      by performing operations in half-precision.
+
+  # metric thresholds
+  iou_threshold:
+    type: number
+    optional: true
+    description: IOU threshold used during inference in non-maximum suppression post
+      processing.
+
+  box_score_threshold:
+    type: number
+    optional: true
+    description: During inference, only return proposals with a score greater than
+      `box_score_threshold`. The score is the multiplication of the objectness score
+      and classification probability.
+
+  # random seed
+  random_seed:
+    type: integer
+    default: 42
+    optional: true
+    description: Random seed that will be set at the beginning of training.
+
+  # evaluation strategy parameters
+  evaluation_strategy:
+    type: string
+    default: epoch
+    optional: true
+    enum:
+    - epoch
+    - steps
+    description: The evaluation strategy to adopt during training. Please note that
+      the save_strategy and evaluation_strategy should match.
+
+  evaluation_steps:
+    type: integer
+    default: 500
+    optional: true
+    description: Number of update steps between two evals if evaluation_strategy='steps'.
+      Please note that the saving steps should be a multiple of the evaluation steps.
+
+  # logging strategy parameters
+  logging_strategy:
+    type: string
+    default: epoch
+    optional: true
+    enum:
+    - epoch
+    - steps
+    description: The logging strategy to adopt during training.
+
+  logging_steps:
+    type: integer
+    default: 500
+    optional: true
+    description: Number of update steps between two logs if logging_strategy='steps'.
+
+  # Save strategy
+  save_strategy:
+    type: string
+    default: epoch
+    optional: true
+    enum:
+    - epoch
+    - steps
+    description: The checkpoint save strategy to adopt during training. Please note
+      that the save_strategy and evaluation_strategy should match.
+
+  save_steps:
+    type: integer
+    default: 500
+    optional: true
+    description: Number of updates steps before two checkpoint saves if save_strategy="steps".
+      Please note that the saving steps should be a multiple of the evaluation steps.
+
+  # model checkpointing limit
+  save_total_limit:
+    type: integer
+    default: 5
+    optional: true
+    description: If a value is passed, will limit the total amount of checkpoints.
+      Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints".
+
+  # Early Stopping Parameters
+  early_stopping:
+    type: boolean
+    default: false
+    optional: true
+    description: Enable early stopping.
+
+  early_stopping_patience:
+    type: integer
+    default: 1
+    optional: true
+    description: Stop training when the specified metric worsens for early_stopping_patience
+      evaluation calls.
+
+  # Grad Norm
+  max_grad_norm:
+    type: number
+    optional: true
+    description: Maximum gradient norm (for gradient clipping). If left empty, will
+      be chosen automatically based on the task type and model selected.
+
+  # resume from the input model
+  resume_from_checkpoint:
+    type: boolean
+    default: false
+    optional: true
+    description: Loads optimizer, Scheduler and Trainer state for finetuning if true.
+
+  save_as_mlflow_model:
+    type: boolean
+    default: true
+    optional: true
+    description: Save as mlflow model with pyfunc as flavour.
+
+outputs:
+  mlflow_model_folder:
+    type: mlflow_model
+    description: Output dir to save the finetune model as mlflow model.
+  pytorch_model_folder:
+    type: custom_model
+    description: Output dir to save the finetune model as torch model.
+
+command: >2-
+
+  python finetune.py
+  --model_path ${{inputs.model_path}}
+  --train_mltable_path ${{inputs.training_data}}
+  $[[--valid_mltable_path ${{inputs.validation_data}}]]
+  $[[--image_min_size ${{inputs.image_min_size}}]]
+  $[[--image_max_size ${{inputs.image_max_size}}]]
+  --task_name ${{inputs.task_name}}
+  $[[--metric_for_best_model ${{inputs.metric_for_best_model}}]]
+  $[[--apply_augmentations ${{inputs.apply_augmentations}}]]
+  $[[--dataloader_num_workers ${{inputs.number_of_workers}}]]
+  $[[--apply_deepspeed ${{inputs.apply_deepspeed}}]]
+  $[[--deepspeed_config ${{inputs.deepspeed_config}}]]
+  $[[--apply_ort ${{inputs.apply_ort}}]]
+  $[[--num_train_epochs ${{inputs.number_of_epochs}}]]
+  $[[--max_steps ${{inputs.max_steps}}]]
+  $[[--per_device_train_batch_size ${{inputs.training_batch_size}}]]
+  $[[--per_device_eval_batch_size ${{inputs.validation_batch_size}}]]
+  $[[--auto_find_batch_size ${{inputs.auto_find_batch_size}}]]
+  $[[--learning_rate ${{inputs.learning_rate}}]]
+  $[[--lr_scheduler_type ${{inputs.learning_rate_scheduler}}]]
+  $[[--warmup_steps ${{inputs.warmup_steps}}]]
+  $[[--optim ${{inputs.optimizer}}]]
+  $[[--weight_decay ${{inputs.weight_decay}}]]
+  $[[--extra_optim_args ${{inputs.extra_optim_args}}]]
+  $[[--gradient_accumulation_steps ${{inputs.gradient_accumulation_step}}]]
+  $[[--precision ${{inputs.precision}}]]
+  $[[--iou_threshold ${{inputs.iou_threshold}}]]
+  $[[--box_score_threshold ${{inputs.box_score_threshold}}]]
+  $[[--seed ${{inputs.random_seed}}]]
+  $[[--evaluation_strategy ${{inputs.evaluation_strategy}}]]
+  $[[--eval_steps ${{inputs.evaluation_steps}}]]
+  $[[--logging_strategy ${{inputs.logging_strategy}}]]
+  $[[--logging_steps ${{inputs.logging_steps}}]]
+  $[[--save_strategy ${{inputs.save_strategy}}]]
+  $[[--save_steps ${{inputs.save_steps}}]]
+  $[[--save_total_limit ${{inputs.save_total_limit}}]]
+  $[[--apply_early_stopping ${{inputs.early_stopping}}]]
+  $[[--early_stopping_patience ${{inputs.early_stopping_patience}}]]
+  $$[[--max_grad_norm ${{inputs.max_grad_norm}}]]
+  $[[--resume_from_checkpoint ${{inputs.resume_from_checkpoint}}]]
+  $[[--save_as_mlflow_model ${{inputs.save_as_mlflow_model}}]]
+  --mlflow_model_folder ${{outputs.mlflow_model_folder}}
+  --pytorch_model_folder ${{outputs.pytorch_model_folder}}
