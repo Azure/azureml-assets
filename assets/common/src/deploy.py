@@ -6,8 +6,6 @@ import argparse
 import json
 import re
 import time
-import base64
-import traceback
 
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
@@ -61,11 +59,6 @@ def parse_args():
         "--inference_payload",
         type=Path,
         help="Json file with inference endpoint payload.",
-    )
-    parser.add_argument(
-        "--inference_payload_str",
-        type=str,
-        help="Serialized JSON payload for inference.",
     )
     parser.add_argument(
         "--endpoint_name",
@@ -169,16 +162,6 @@ def parse_args():
         type=str,
         help="Json file to which deployment details will be written",
     )
-    parser.add_argument(
-        "--model_inference_response",
-        type=str,
-        help="Path to the inference response JSON file.",
-    )
-    parser.add_argument(
-        "--deploy_error",
-        type=str,
-        help="Path to the inference response JSON file.",
-    )
     # parse args
     args = parser.parse_args()
     logger.info(f"Args received {args}")
@@ -197,7 +180,7 @@ def parse_args():
 
 def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
-    endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="aad_token")
+    endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
 
     # deployment
     deployment = ManagedOnlineDeployment(
@@ -274,147 +257,85 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
 @swallow_all_exceptions(logger)
 def main():
     """Run main function."""
-    try:
-        args = parse_args()
-        logger.info(f"Arguments: {args}")
-        ml_client = get_mlclient()
-        error_message = ""
-        if args.model_deployment_details:
-            with open(args.model_deployment_details, "w") as outfile:
-                json.dump({}, outfile)
+    args = parse_args()
+    ml_client = get_mlclient()
+    # get registered model id
 
-        if args.model_inference_response:
-            with open(args.model_inference_response, "w") as f:
-                json.dump({}, f, indent=4)
-
-        if args.deploy_error:
-            with open(args.deploy_error, "w") as error_file:
-                error_file.write(error_message)
-
-        # get registered model id
-        if args.model_id:
-            model_id = str(args.model_id)
-        elif args.registration_details_folder:
-            registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
-            if registration_details_file.exists():
-                try:
-                    with open(registration_details_file) as f:
-                        model_info = json.load(f)
-                    model_id = model_info["id"]
-                except Exception as e:
-                    raise Exception(f"model_registration_details json file is missing model information {e}.")
-            else:
-                raise Exception(f"{ComponentVariables.REGISTRATION_DETAILS_JSON_FILE} is missing inside folder.")
-        else:
-            raise Exception("Arguments model_id and registration_details both are missing.")
-
-        # Endpoint has following restrictions:
-        # 1. Name must begin with lowercase letter
-        # 2. Followed by lowercase letters, hyphen or numbers
-        # 3. End with a lowercase letter or number
-
-        # 1. Replace underscores and slashes by hyphens and convert them to lower case.
-        # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
-        model_name = get_model_name(model_id)
-
-        endpoint_name = re.sub("[^A-Za-z0-9]", "-", model_name).lower()[:21]
-        endpoint_name = f"{endpoint_name}-{int(time.time())}"
-        endpoint_name = endpoint_name
-
-        endpoint_name = args.endpoint_name if args.endpoint_name else endpoint_name
-        deployment_name = args.deployment_name if args.deployment_name else "default"
-
-        endpoint, deployment = create_endpoint_and_deployment(
-            ml_client=ml_client,
-            endpoint_name=endpoint_name,
-            deployment_name=deployment_name,
-            model_id=model_id,
-            args=args
-        )
-
-        response = None
-        if args.inference_payload or args.inference_payload_str:
-            print("Invoking inference with test payload ...")
+    if args.model_id:
+        model_id = str(args.model_id)
+    elif args.registration_details_folder:
+        registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+        if registration_details_file.exists():
             try:
-                start_time = time.time()
-                if args.inference_payload_str:
-                    print(f"Inference payload string: {args.inference_payload_str}")
-                    decoded_bytes = base64.b64decode(args.inference_payload_str)
-
-                    # Convert bytes to string
-                    decoded_str = decoded_bytes.decode('utf-8')
-                    logger.info(f"Decoded string: {decoded_str}")
-
-                    payload = json.loads(decoded_str)
-                    logger.info(f"Payload:\n {payload}")
-
-                    with open("payload.json", "w") as temp_file:
-                        json.dump(payload, temp_file)
-
-                    response = ml_client.online_endpoints.invoke(
-                        endpoint_name=endpoint_name,
-                        deployment_name=deployment_name,
-                        request_file="payload.json",
-                    )
-                elif args.inference_payload:
-                    response = ml_client.online_endpoints.invoke(
-                        endpoint_name=endpoint_name,
-                        deployment_name=deployment_name,
-                        request_file=args.inference_payload,
-                    )
-
-                end_time = time.time()
-                inference_time_ms = int((end_time - start_time) * 1000)
-
-                logger.info(f"Endpoint invoked successfully with inference time :{inference_time_ms} ms " +
-                            f"and response: {response}")
-                # Save inference response
-                if args.model_inference_response:
-                    inference_result = {
-                        "response": response,
-                        "inference_time": inference_time_ms
-                    }
-                    with open(args.model_inference_response, "w") as f:
-                        json.dump(inference_result, f, indent=4)
-                    logger.info(f"Saved inference response and inference time to output JSON file: {inference_result}")
+                with open(registration_details_file) as f:
+                    model_info = json.load(f)
+                model_id = model_info["id"]
             except Exception as e:
-                raise AzureMLException._with_error(
-                    AzureMLError.create(OnlineEndpointInvocationError, exception=e)
-                )
+                raise Exception(f"model_registration_details json file is missing model information {e}.")
+        else:
+            raise Exception(f"{ComponentVariables.REGISTRATION_DETAILS_JSON_FILE} is missing inside folder.")
+    else:
+        raise Exception("Arguments model_id and registration_details both are missing.")
 
-        print("Saving deployment details ...")
+    # Endpoint has following restrictions:
+    # 1. Name must begin with lowercase letter
+    # 2. Followed by lowercase letters, hyphen or numbers
+    # 3. End with a lowercase letter or number
 
-        # write deployment details to file
-        endpoint_type = "aml_online_inference"
-        deployment_details = {
-            "endpoint_name": endpoint.name,
-            "deployment_name": deployment.name,
-            "endpoint_uri": endpoint.__dict__["_scoring_uri"],
-            "endpoint_type": endpoint_type,
-            "instance_type": args.instance_type,
-            "instance_count": args.instance_count,
-            "max_concurrent_requests_per_instance": args.max_concurrent_requests_per_instance,
-        }
-        json_object = json.dumps(deployment_details, indent=4)
-        with open(args.model_deployment_details, "w") as outfile:
-            outfile.write(json_object)
-        logger.info("Saved deployment details in output json file.")
+    # 1. Replace underscores and slashes by hyphens and convert them to lower case.
+    # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
+    model_name = get_model_name(model_id)
 
-    except Exception as e:
-        # Capture the full traceback
-        stack_trace = traceback.format_exc()
-        error_message = f"Model deployment failed.\n{stack_trace}"
-        logger.error(f"error_message from stack trace: {error_message}, deploy_error_path: {args.deploy_error}")
+    endpoint_name = re.sub("[^A-Za-z0-9]", "-", model_name).lower()[:21]
+    endpoint_name = f"{endpoint_name}-{int(time.time())}"
+    endpoint_name = endpoint_name
 
-        # Write the error message to the specified error output file
-        if args.deploy_error:
-            with open(args.deploy_error, "w") as error_file:
-                error_file.write(error_message)
+    endpoint_name = args.endpoint_name if args.endpoint_name else endpoint_name
+    deployment_name = args.deployment_name if args.deployment_name else "default"
 
-        # Re-raise the exception with the full traceback
-        # raise Exception(error_message)
+    endpoint, deployment = create_endpoint_and_deployment(
+        ml_client=ml_client,
+        endpoint_name=endpoint_name,
+        deployment_name=deployment_name,
+        model_id=model_id,
+        args=args
+    )
+
+    if args.inference_payload:
+        print("Invoking inference with test payload ...")
+        try:
+            response = ml_client.online_endpoints.invoke(
+                endpoint_name=endpoint_name,
+                deployment_name=deployment_name,
+                request_file=args.inference_payload,
+            )
+            print(f"Response:\n{response}")
+            logger.info(f"Endpoint invoked successfully with response :{response}")
+        except Exception as e:
+            raise AzureMLException._with_error(
+                AzureMLError.create(OnlineEndpointInvocationError, exception=e)
+            )
+
+    print("Saving deployment details ...")
+
+    # write deployment details to file
+    endpoint_type = "aml_online_inference"
+    deployment_details = {
+        "endpoint_name": endpoint.name,
+        "deployment_name": deployment.name,
+        "endpoint_uri": endpoint.__dict__["_scoring_uri"],
+        "endpoint_type": endpoint_type,
+        "instance_type": args.instance_type,
+        "instance_count": args.instance_count,
+        "max_concurrent_requests_per_instance": args.max_concurrent_requests_per_instance,
+    }
+    json_object = json.dumps(deployment_details, indent=4)
+    with open(args.model_deployment_details, "w") as outfile:
+        outfile.write(json_object)
+    logger.info("Saved deployment details in output json file.")
 
 
+# run script
 if __name__ == "__main__":
     # run main function
     main()
