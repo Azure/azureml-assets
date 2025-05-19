@@ -68,11 +68,12 @@ format_print "Dynamic Python Package Installation"
 format_print "###############################################"
 format_print ""
 
-export ENV_MLFLOW_MODEL_FOLDER="mlflow_model_folder"
+ENV_MLFLOW_MODEL_FOLDER="mlflow_model_folder"
 if [[ -n "$MLFLOW_MODEL_FOLDER" ]]; then
-    export ENV_MLFLOW_MODEL_FOLDER="${MLFLOW_MODEL_FOLDER}"
+    ENV_MLFLOW_MODEL_FOLDER="${MLFLOW_MODEL_FOLDER}"
 fi
 export AZUREML_EXTRA_CONDA_YAML_ABS_PATH="${AZUREML_MODEL_DIR}/${ENV_MLFLOW_MODEL_FOLDER}/conda.yaml"
+echo "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH"
 
 
 if [[ -n "$AZUREML_EXTRA_PYTHON_LIB_PATH" ]]; then
