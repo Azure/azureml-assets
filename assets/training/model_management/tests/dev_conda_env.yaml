@@ -1,27 +1,28 @@
-channels:
-- conda-forge
-dependencies:
-- python=3.8.0
-- pip<=23.1.2
-- pycocotools==2.0.4
-- pip:
-  ## src requirements
-  - mlflow~=2.10.2
-  - mlflow-skinny~=2.10.2
-  - azureml-mlflow~=1.55.0
-  - azure-ai-ml~=1.13.0
-  - azureml-core~=1.55.0
-  - azureml-automl-core~=1.55.0
-  - azureml-telemetry~=1.55.0
-  - azureml-evaluate-mlflow~=0.0.45
-  - langcodes
-  ## Test requirements
-  - mock
-  - pydash
-  - pytest
-  - pytest-cov
-  - pytest-forked
-  - pytest-mock
-  - pytest-timeout
-  - pytest-xdist
 name: model_mgmt
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip<=23.1.2
+  - pycocotools==2.0.4
+  - pip:
+      ## src requirements
+      - mlflow~=2.10.2
+      - mlflow-skinny~=2.10.2
+      - azureml-mlflow~=1.55.0
+      - azure-ai-ml~=1.13.0
+      - azureml-core~=1.55.0
+      - azureml-automl-core~=1.55.0
+      - azureml-telemetry~=1.55.0
+      - azureml-evaluate-mlflow~=0.0.45
+      - langcodes
+      - marshmallow==3.20.1
+      ## Test requirements
+      - mock
+      - pydash
+      - pytest
+      - pytest-cov
+      - pytest-forked
+      - pytest-mock
+      - pytest-timeout
+      - pytest-xdist
