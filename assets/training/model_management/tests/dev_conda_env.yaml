@@ -4,6 +4,7 @@ dependencies:
 - python=3.8.0
 - pip<=23.1.2
 - pycocotools==2.0.4
+- cython<3
 - pip:
   ## src requirements
   - mlflow~=2.10.2
