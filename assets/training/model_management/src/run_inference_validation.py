@@ -294,7 +294,7 @@ def run_inference_validation():
                     deployment_error = f.read().strip()
                     error_message += deployment_error
             except Exception as e:
-                logger.warning(f"Failed to read validation_error file: {e}")
+                logger.warning(f"Failed to read deployment_error file: {e}")
 
         if args.validation_error:
             with open(args.validation_error, "w") as error_file:
@@ -331,7 +331,7 @@ def run_inference_validation():
                 try:
                     inference_response = json.loads(inference_response)
                 except json.JSONDecodeError as e:
-                    logger.warning(f"Failed to parse actualResponse as JSON: {e}")
+                    logger.warning(f"Failed to parse actual response as JSON: {e}")
 
         if inference_response is None:
             logger.warning("Actual response is missing or invalid. Setting it to an empty structure.")
@@ -385,7 +385,6 @@ def run_inference_validation():
         if args.validation_error:
             with open(args.validation_error, "w") as error_file:
                 error_file.write(error_message)
-        # raise Exception(f"Failed to run inference validation: {error_message}")
 
 def main():
     run_inference_validation()
