@@ -14,8 +14,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda clean -a -y
 
 # Sentence Transformers CPU only install
-RUN pip install --no-cache-dir torch==2.3.1+cpu -f https://download.pytorch.org/whl/torch_stable.html && \
-    pip install --no-cache-dir transformers && \
+RUN pip install --no-cache-dir transformers && \
     pip install --no-cache-dir tqdm numpy scikit-learn scipy nltk sentencepiece pillow && \
     pip install --no-cache-dir sentence-transformers --no-deps
 

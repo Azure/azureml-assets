@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.77
+version: 0.0.78
 name: llm_rag_register_mlindex_asset
 display_name: LLM - Register Vector Index Asset
 is_deterministic: true
