@@ -44,8 +44,7 @@ for pred in submit(
 
 ## License
 
-This model and the associated model weights are released under the license [CC-BY-NC-SA-4.0](https://spdx.org/licenses/CC-BY-NC-SA-4.0).
-This means that you are free to share and adapt the material for non-commercial purposes, as long as you provide appropriate credit, indicate if changes were made, and distribute your contributions under the same license.
+This model and the associated model weights are released under the [MIT licence](https://spdx.org/licenses/MIT).
 
 ## Security
 
@@ -75,7 +74,7 @@ A series of additional verification tests are needed before it can become operat
 
 The models included in the code have been trained on a variety of publicly available data.
 A description of all data, including download links, can be found in [Supplementary C of the paper](https://arxiv.org/pdf/2405.13063).
-The checkpoints include data from ERA5, CMCC, IFS-HR, HRES T0, GFS T0 analysis, and GFS forecasts.
+The checkpoints include data from ERA5, CMCC, IFS-HR, HRES T0, GFS T0, and GFS forecasts.
 
 ## Trademarks
 
