@@ -45,7 +45,7 @@ from azureml.model.mgmt.processors.pyfunc.virchow.config import \
     MLflowSchemaLiterals as VirchowMLFlowSchemaLiterals, MLflowLiterals as VirchowMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.hibou_b.config import \
     MLflowSchemaLiterals as HibouBMLFlowSchemaLiterals, MLflowLiterals as HibouBMLflowLiterals
-
+from azureml.model.mgmt.utils.common_utils import get_mlclient
 
 logger = get_logger(__name__)
 
@@ -114,6 +114,12 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         :type metadata: Optional[Dict]. Defaults to {}.
         """
         signatures = self._signatures or self.get_model_signature()
+        if not self._vllm_enabled:
+            mlclient = get_mlclient("azureml")
+            mlFlow_image = mlclient.environments.get("mlflow-model-inference", label="latest")
+            metadata["azureml.base_image"] = "mcr.microsoft.com/azureml/curated/mlflow-model-inference:" \
+                + str(mlFlow_image.version)
+            logger.info("Metadata: {}".format(metadata))
         # set metadata info
         metadata.update(fetch_mlflow_acft_metadata(
             base_model_name=self._model_id,
