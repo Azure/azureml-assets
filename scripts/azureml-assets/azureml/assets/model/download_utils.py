@@ -94,7 +94,7 @@ def _onerror(func, path, exc_info):
         raise
 
 
-def run_cmd(cmd, cwd: Path = None) -> int:
+def run_cmd(cmd, cwd: Path | None  = None, env: dict | None = None) -> int:
     """Run the command and returns the result."""
     logger.print(cmd)
     result = subprocess.run(
@@ -104,6 +104,7 @@ def run_cmd(cmd, cwd: Path = None) -> int:
         stderr=subprocess.STDOUT,
         encoding=sys.stdout.encoding,
         errors="ignore",
+        env=env,
     )
     if result.returncode != 0:
         logger.log_error(f"Failed with error {result.stdout}")
@@ -173,9 +174,23 @@ def run_azcopy(src_uri: str, dstn_uri: str, include_paths: List[str] = None, exc
     if not overwrite:
         download_cmd.append("--overwrite=false")
 
-    result = run_cmd(download_cmd)
-    logger.print(f"azcopy result: {result}")
-    return result
+    # Create a tempdir and set AZCOPY_LOG_LOCATION in env
+    with tempfile.TemporaryDirectory() as temp_log_dir:
+        env = os.environ.copy()
+        env["AZCOPY_LOG_LOCATION"] = temp_log_dir
+        result = run_cmd(download_cmd, env=env)
+        logger.print(f"azcopy result: {result}")
+
+        if output_level == "default":
+            # list all files in the temp log dir
+            for root, _, files in os.walk(temp_log_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    logger.print(f"azcopy log file: {file_path}")
+                    with open(file_path, "r") as f:
+                        logger.print(f.read())
+
+        return result
 
 
 def copy_azure_artifacts(src_uri: str, dstn_uri: str, copy_updater: CopyUpdater = None,
