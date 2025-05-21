@@ -700,7 +700,13 @@ def validate_model_scenario(
     """
     error_count = 0
     min_sku = model.properties.get(min_sku_prop_name, "").strip()
-    recommended_skus = model.properties.get(recommended_skus_prop_name, "").strip()
+    recommended_skus_value = model.properties.get(recommended_skus_prop_name, None)
+    if isinstance(recommended_skus_value, str):
+        recommended_skus = [sku.strip() for sku in recommended_skus_value.split(",") if sku.strip()]
+    elif isinstance(recommended_skus_value, list):
+        recommended_skus = [str(sku).strip() for sku in recommended_skus_value if str(sku).strip()]
+    else:
+        recommended_skus = []
     compute_allowlists = set(model.tags.get(compute_allowlist_tags_name, []))
 
     if not min_sku:
@@ -715,10 +721,10 @@ def validate_model_scenario(
         _log_error(asset_file_name_with_path, f"{compute_allowlist_tags_name} is missing in model tags")
         error_count += 1
 
-    recommended_skus = set([sku.strip() for sku in recommended_skus.split(",")])
-    if (recommended_skus != compute_allowlists):
-        a_minus_b = recommended_skus - compute_allowlists
-        b_minus_a = compute_allowlists - recommended_skus
+    recommended_skus_set = set(recommended_skus)
+    if (recommended_skus_set != compute_allowlists):
+        a_minus_b = recommended_skus_set - compute_allowlists
+        b_minus_a = compute_allowlists - recommended_skus_set
         _log_error(
             asset_file_name_with_path,
             f"{recommended_skus_prop_name} and {compute_allowlist_tags_name} does not match for model.\n"

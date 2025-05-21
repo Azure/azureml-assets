@@ -1,6 +1,14 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.81 (2025-05-15)
+### 🚀 New Features
+- [#4184](https://github.com/Azure/azureml-assets/pull/4184) Generate SAS token instead of checking container access
+
+## 1.16.80 (2025-05-13)
+### 🚀 New Features
+- [#4172](https://github.com/Azure/azureml-assets/pull/4172) Make asset validation work with new schema validation in ADO
+
 ## 1.16.79 (2025-04-22)
 ### 🚀 New Features
 - [#4117](https://github.com/Azure/azureml-assets/pull/4117) Update spec with modelVariant info after validating
