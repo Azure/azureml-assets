@@ -27,6 +27,14 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Vulnerability fix
 RUN pip install torch==2.6.0 torchvision --no-cache-dir
 
+# Upgrading the libxml2 version
+ARG PACKAGE_NAME="libxml2"
+ARG PACKAGE_VERSION="2.9.13+dfsg-1ubuntu0.7"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ${PACKAGE_NAME}=${PACKAGE_VERSION} \
+    && rm -rf /var/lib/apt/lists/*
+
 # List pip packages
 RUN pip list
 
