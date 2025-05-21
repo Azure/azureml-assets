@@ -19,7 +19,7 @@ from azure.ai.evaluation._evaluate._evaluate_aoai import (
     _convert_remote_eval_params_to_grader
 )
 from save_evaluation import load_evaluator
-from model_target import ModelTarget
+from model_target import ModelTarget, get_key_from_dict
 
 AZURE_ENDPOINT = "AzureEndpoint"
 API_KEY = "ApiKey"
@@ -119,33 +119,30 @@ def create_model_target_and_data_mapping(command_line_args):
     except json.JSONDecodeError as e:
         raise RuntimeError(f"Invalid JSON in eval_target: {e}")
 
-    model_config = target_config.get(MODEL_CONFIG, {})
+    model_config = get_key_from_dict(target_config, MODEL_CONFIG, {})
 
-    api_key_env = model_config.get(API_KEY, "")
+    api_key_env = get_key_from_dict(model_config, API_KEY, "")
     api_key_value = os.environ.get(api_key_env.upper(), "")
+
     if not api_key_value:
         raise RuntimeError(f"API key environment variable '{api_key_env.upper()}' is missing or empty!")
 
-    model_config_type = str(model_config.get(TYPE, ""))
+    model_config_type = str(get_key_from_dict(model_config, TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
 
-    endpoint = model_config.get(AZURE_ENDPOINT, "")
-    model_params = target_config.get(MODEL_PARAMS, {}).copy()
-    data_mapping = model_params.pop(DATA_MAPPING, None)
+    endpoint = get_key_from_dict(model_config, AZURE_ENDPOINT, "")
+    model_params = get_key_from_dict(target_config, MODEL_PARAMS, {}).copy()
+    data_mapping = get_key_from_dict(model_params, DATA_MAPPING, None)
+    data_mapping_key_to_pop = next((k for k in model_params if k.lower() == DATA_MAPPING.lower()), None)
+    if data_mapping_key_to_pop:
+        logger.info(f"Removing dataMapping from model_params {data_mapping_key_to_pop}")
+        model_params.pop(data_mapping_key_to_pop)
     if data_mapping is None:
         data_mapping = DEFAULT_DATA_MAPPING
         logger.info(f"Using default dataMapping: {data_mapping}")
 
-    system_message = target_config.get(SYSTEM_MESSAGE, "")
-    few_shot_examples = target_config.get(FEW_SHOT_EXAMPLES, [])
-
-    logger.info("Creating ModelTarget with values:")
-    logger.info(f"  - Endpoint: {endpoint}")
-    logger.info(f"  - ApiKey: {'[HIDDEN]' if api_key_value else 'MISSING'}")
-    logger.info(f"  - ModelParams: {model_params}")
-    logger.info(f"  - SystemMessage: {system_message}")
-    logger.info(f"  - FewShotExamples: {few_shot_examples}")
-    logger.info(f"  - DataMapping: {data_mapping}")
+    system_message = get_key_from_dict(target_config, SYSTEM_MESSAGE, "")
+    few_shot_examples = get_key_from_dict(target_config, FEW_SHOT_EXAMPLES, [])
 
     model_target = ModelTarget(
         endpoint=endpoint,
@@ -154,6 +151,7 @@ def create_model_target_and_data_mapping(command_line_args):
         system_message=system_message,
         few_shot_examples=few_shot_examples,
     )
+    logger.info("Created ModelTarget.")
 
     return (model_target, data_mapping)
 

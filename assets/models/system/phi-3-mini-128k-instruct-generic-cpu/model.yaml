@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: foundrylocal/onnx-models/phi-3-mini-128k-instruct/onnx/cpu_and_mobile/phi-3-mini-128k-instruct-cpu-int4-rtn-block-32
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model
