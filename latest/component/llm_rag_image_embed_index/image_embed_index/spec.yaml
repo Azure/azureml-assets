@@ -3,7 +3,7 @@ type: command
 
 tags:
   Preview: ""
-version: 0.0.31
+version: 0.0.32
 name: llm_rag_image_embed_index
 display_name: LLM - Embedding images with Florence
 is_deterministic: true

@@ -10,7 +10,6 @@ dependencies:
   - azureml-rag>=0.2.37.1
     # Azure
   - azure-ai-formrecognizer # explicitly install for [document_parsing]
-  - azure-ai-ml>=1.10.0,<=1.16.1 # explicitly install for [data_generation]
   - azure-cosmos>=4.7.0 # explicitly install for [azure_cosmos_nosql]
   - azure-keyvault-secrets==4.6.0
   - azure-mgmt-cognitiveservices~=13.4.0
