@@ -9,7 +9,7 @@ and one for ocean wave prediction.
 Please see the documentation of the
 [Aurora Foundry Python API](https://microsoft.github.io/aurora/foundry/intro.html).
 
-Please email [AIWeatherClimate@microsoft.com](AIWeatherClimate@microsoft.com)
+Please email [AIWeatherClimate@microsoft.com](mailto:AIWeatherClimate@microsoft.com)
 if you are interested in using Aurora for commercial applications.
 For research-related questions or technical support with the open-source version of the model,
 please [open an issue in the GitHub repository](https://github.com/microsoft/aurora/issues/new/choose)
