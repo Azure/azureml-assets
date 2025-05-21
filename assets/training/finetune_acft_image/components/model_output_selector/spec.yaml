@@ -1,0 +1,52 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.20
+name: image_model_output_selector
+display_name: Model output selector for image components
+description: Model output selector control flow component for image tasks
+
+is_deterministic: true
+
+environment: azureml://registries/azureml/environments/acpt-automl-image-framework-selector-gpu/labels/latest
+
+code: ../../src/model_output_selector
+
+inputs:
+  mlflow_model_t:
+    type: mlflow_model
+    optional: True
+    description: Input MLFlow model for true block.
+  mlflow_model_f:
+    type: mlflow_model
+    optional: True
+    description: Input MLFLow model for false block.
+  pytorch_model_t:
+    type: custom_model
+    optional: True
+    description: Input pytorch model for true block.
+  pytorch_model_f:
+    type: custom_model
+    optional: True
+    description: Input pytorch model for false block.
+  condition:
+    type: uri_file
+    description: Condition based on which output models will be selected.
+
+outputs:
+  mlflow_model_folder:
+    type: mlflow_model
+    description: Output MLFLow model selected based on given condition.
+  pytorch_model_folder:
+    type: custom_model
+    description: Output pytorch model selected based on given condition.
+
+command: >-
+  python model_output_selector.py 
+  $[[--mlflow_model_t ${{inputs.mlflow_model_t}}]]
+  $[[--mlflow_model_f ${{inputs.mlflow_model_f}}]]
+  $[[--pytorch_model_t ${{inputs.pytorch_model_t}}]]
+  $[[--pytorch_model_f ${{inputs.pytorch_model_f}}]]
+  --condition ${{inputs.condition}}
+  --output_mlflow ${{outputs.mlflow_model_folder}}
+  --output_pytorch ${{outputs.pytorch_model_folder}}
