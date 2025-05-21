@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:{{latest
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs -y
+RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
@@ -26,14 +26,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
 RUN pip install torch==2.6.0 torchvision --no-cache-dir
-
-# Upgrading the libxml2 version
-ARG PACKAGE_NAME="libxml2"
-ARG PACKAGE_VERSION="2.9.13+dfsg-1ubuntu0.7"
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ${PACKAGE_NAME}=${PACKAGE_VERSION} \
-    && rm -rf /var/lib/apt/lists/*
 
 # List pip packages
 RUN pip list
