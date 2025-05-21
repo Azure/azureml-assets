@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.1
+version: 0.0.9
 name: finetune_common_validation
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
