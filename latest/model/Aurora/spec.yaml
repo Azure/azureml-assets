@@ -14,7 +14,21 @@ tags:
   Preview: ""
   Featured: ""
   author: Microsoft
-  license: cc-by-nc-sa-4.0
+  license: MIT
+  licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
+    \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
+    of this software and associated documentation files (the \"Software\"), to deal\n\
+    in the Software without restriction, including without limitation the rights\n\
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies\
+    \ of the Software, and to permit persons to whom the Software is\nfurnished to\
+    \ do so, subject to the following conditions:\n\nThe above copyright notice and\
+    \ this permission notice shall be included in all\ncopies or substantial portions\
+    \ of the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY\
+    \ KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n\
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n\
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY,\
+    \ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR\
+    \ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
   hiddenlayerscanned: "true"
   notes: |
     ## Resources
@@ -63,8 +77,7 @@ tags:
 
     ## License
 
-    This model and the associated model weights are released under the license [CC-BY-NC-SA-4.0](https://spdx.org/licenses/CC-BY-NC-SA-4.0).
-    This means that you are free to share and adapt the material for non-commercial purposes, as long as you provide appropriate credit, indicate if changes were made, and distribute your contributions under the same license.
+    This model and the associated model weights are released under the [MIT licence](https://spdx.org/licenses/MIT).
 
     ## Security
 
@@ -94,7 +107,7 @@ tags:
 
     The models included in the code have been trained on a variety of publicly available data.
     A description of all data, including download links, can be found in [Supplementary C of the paper](https://arxiv.org/pdf/2405.13063).
-    The checkpoints include data from ERA5, CMCC, IFS-HR, HRES T0, GFS T0 analysis, and GFS forecasts.
+    The checkpoints include data from ERA5, CMCC, IFS-HR, HRES T0, GFS T0, and GFS forecasts.
 
     ## Trademarks
 
@@ -121,11 +134,6 @@ tags:
     \ variables."
   inputModalities: "data"
   outputModalities: "data"
-  licenseDescription: "This model and the associated model weights are released under\
-    \ the license CC-BY-NC-SA-4.0 <https://spdx.org/licenses/CC-BY-NC-SA-4.0>. This\
-    \ means that you are free to share and adapt the material for non-commercial purposes,\
-    \ as long as you provide appropriate credit, indicate if changes were made, and\
-    \ distribute your contributions under the same license."
   freePlayground: "false"
 version: 3
 description: |
@@ -137,6 +145,11 @@ description: |
   one for high-resolution weather prediction,
   one for air pollution prediction,
   and one for ocean wave prediction.
-  Currently, this implementation only includes the version for medium-term weather prediction.
-  Please see the documentation of the Aurora Foundry Python API linked below for
-  precisely which models are available.
+  Please see the documentation of the
+  [Aurora Foundry Python API](https://microsoft.github.io/aurora/foundry/intro.html).
+
+  Please email [AIWeatherClimate@microsoft.com](mailto:AIWeatherClimate@microsoft.com)
+  if you are interested in using Aurora for commercial applications.
+  For research-related questions or technical support with the open-source version of the model,
+  please [open an issue in the GitHub repository](https://github.com/microsoft/aurora/issues/new/choose)
+  or reach out to the authors of the paper.
