@@ -75,6 +75,25 @@ jobs:
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Check for MLFlow model
+        run: |
+          echo "mlflow_model=false" >> $GITHUB_ENV
+
+          for file in ${{ needs.check-directory-file-changes.outputs.files-changed }}; do
+            if [[ "$file" =~ .*\/model.yaml ]]; then
+              if grep -Eq "type:[[:space:]]mlflow_model" "$file"; then
+                echo "mlflow_model=true" >> $GITHUB_ENV
+                echo "$file: MLFlow model detected"
+              fi
+            fi
+          done
+
+      - name: Check PR labels for "mlflow noncompliant exception" label
+        if: fromJSON(env.mlflow_model) && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
+        run: |
+          echo "::error::This PR contains an MLFlow model which is banned from the model catalog. Please reach out to System Registry Content team if you have any questions."
+          exit 1
+
       - name: Validate source tree
         run: python -u $scripts_assets_dir/validate_tree.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
       
