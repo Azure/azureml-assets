@@ -3,12 +3,12 @@ type: command
 is_deterministic: true
 
 name: publish_validation_results_selfserve
-version: 0.0.1.23
+version: 0.0.1
 display_name: Publish model validation results to Self-Serve
 description: |
   This component publishes model validation results to the Self-Serve database.
 
-environment: azureml://registries/azureml/environments/model-management/versions/41
+environment: azureml://registries/azureml/environments/model-management/versions/47
 
 inputs:
   selfserve_base_url:

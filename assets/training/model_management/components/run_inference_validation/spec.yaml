@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: run_inference_validation
-version: 0.0.1.66
+version: 0.0.1
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Run Inference Validation
 description: Compares the expected inference response with the actual response from model deployment.
 
-environment: azureml://registries/azureml/environments/model-management/versions/41
+environment: azureml://registries/azureml/environments/model-management/versions/47
 
 code: ../../src
 command: >-

@@ -74,6 +74,14 @@ inputs:
       Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
       Workspace - azureml:<model-name>:<version>
 
+  environment_id:
+    type: string
+    optional: false
+    description: |
+      Asset ID of the environment registered in workspace/registry.
+      Registry - azureml://registries/<registry-name>/environments/<environment-name>/versions/<version>
+      Workspace - azureml:<environment-name>:<version>
+
   model_name:
     type: string
     optional: false
@@ -140,6 +148,7 @@ jobs:
     compute: ${{parent.inputs.compute}}
     inputs:
       model_id: ${{parent.inputs.model_id}}
+      environment_id: ${{parent.inputs.environment_id}}
       inference_payload_str: ${{parent.inputs.inference_payload}}
       endpoint_name: ${{parent.inputs.endpoint_name}}
       deployment_name: ${{parent.inputs.deployment_name}}

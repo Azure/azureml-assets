@@ -58,6 +58,12 @@ def parse_args():
         help="Registered mlflow model id",
     )
     parser.add_argument(
+        "--environment_id",
+        type=str,
+        required=False,
+        help="AzureML environment ID to use for deployment",
+    )
+    parser.add_argument(
         "--inference_payload",
         type=Path,
         help="Json file with inference endpoint payload.",
@@ -195,7 +201,7 @@ def parse_args():
     return args
 
 
-def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
+def create_endpoint_and_deployment(ml_client, model_id, environment_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
     endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="aad_token")
 
@@ -204,6 +210,7 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         name=deployment_name,
         endpoint_name=endpoint_name,
         model=model_id,
+        environment=environment_id,
         instance_type=args.instance_type,
         instance_count=args.instance_count,
         request_settings=OnlineRequestSettings(
@@ -278,6 +285,7 @@ def main():
         args = parse_args()
         logger.info(f"Arguments: {args}")
         ml_client = get_mlclient()
+
         error_message = ""
         if args.model_deployment_details:
             with open(args.model_deployment_details, "w") as outfile:
@@ -290,6 +298,9 @@ def main():
         if args.deploy_error:
             with open(args.deploy_error, "w") as error_file:
                 error_file.write(error_message)
+
+        # get environment id
+        environment_id = args.environment_id if hasattr(args, "environment_id") else None
 
         # get registered model id
         if args.model_id:
@@ -329,6 +340,7 @@ def main():
             endpoint_name=endpoint_name,
             deployment_name=deployment_name,
             model_id=model_id,
+            environment_id=environment_id,
             args=args
         )
 

@@ -16,6 +16,7 @@ command: >-
   python deploy_inference_model.py
   $[[--registration_details_folder ${{inputs.registration_details_folder}}]]
   $[[--model_id ${{inputs.model_id}}]]
+  $[[--environment_id ${{inputs.environment_id}}]]
   $[[--inference_payload ${{inputs.inference_payload}}]]
   $[[--inference_payload_str ${{inputs.inference_payload_str}}]]
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
@@ -53,6 +54,14 @@ inputs:
       Asset ID of the model registered in workspace/registry.
       Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
       Workspace - azureml:<model-name>:<version>
+
+  environment_id:
+    type: string
+    optional: true
+    description: |
+      Asset ID of the environment registered in workspace/registry.
+      Registry - azureml://registries/<registry-name>/environments/<environment-name>/versions/<version>
+      Workspace - azureml:<environment-name>:<version>
 
   inference_payload:
     type: uri_file
