@@ -1,4 +1,3 @@
-azureml-acft-accelerator=={{latest-pypi-version}}
 # azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-common-components=={{latest-pypi-version}}
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
