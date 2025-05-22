@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_hts_training_setup_step
-version: 0.0.8
+version: 0.0.9
 display_name: AutoML HTS - Training Setup
 type: command
 
@@ -40,7 +40,7 @@ outputs:
 
 
 code: ../../src/setup
-environment: azureml://registries/azureml/environments/automl-gpu/versions/42
+environment: azureml://registries/azureml/environments/automl-gpu/versions/48
 
 command: >-
   python setup.py  --raw-data ${{inputs.raw_data}}
