@@ -80,10 +80,11 @@ jobs:
           echo "mlflow_model=false" >> $GITHUB_ENV
 
           for file in ${{ needs.check-directory-file-changes.outputs.files-changed }}; do
-            if [[ "$file" =~ .*\/model.yaml ]]; then
-              if grep -Eq "type:[[:space:]]mlflow_model" "$file"; then
+            if [[ "$file" =~ .*\/asset.yaml ]]; then
+              model_yaml_file="${file/asset.yaml/model.yaml}"
+              if grep -Eq "type:[[:space:]]mlflow_model" "$model_yaml_file"; then
                 echo "mlflow_model=true" >> $GITHUB_ENV
-                echo "$file: MLFlow model detected"
+                echo "$model_yaml_file: MLFlow model detected"
               fi
             fi
           done
