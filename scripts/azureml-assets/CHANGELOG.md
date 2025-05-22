@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.82 (2025-05-22)
+### 🚀 New Features
+- [#4206](https://github.com/Azure/azureml-assets/pull/4206) Print azcopy log if output_level==default
+
 ## 1.16.81 (2025-05-15)
 ### 🚀 New Features
 - [#4184](https://github.com/Azure/azureml-assets/pull/4184) Generate SAS token instead of checking container access
