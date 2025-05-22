@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.84 (2025-05-22)
+### 🚀 New Features
+- [#4206](https://github.com/Azure/azureml-assets/pull/4208) Fix for python 3.9 - remove union typing
+
 ## 1.16.82 (2025-05-22)
 ### 🚀 New Features
 - [#4206](https://github.com/Azure/azureml-assets/pull/4206) Print azcopy log if output_level==default
