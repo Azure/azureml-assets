@@ -12,7 +12,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install azureml-metrics==0.0.33
 
 # Vulnerability fix
-RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 RUN pip install datasets==2.15.0
 RUN pip install pyarrow==14.0.1
 RUN pip install cryptography==44.0.1
