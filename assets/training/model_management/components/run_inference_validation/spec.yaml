@@ -1,0 +1,70 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: run_inference_validation
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Run Inference Validation
+description: Compares the expected inference response with the actual response from model deployment.
+
+environment: azureml://registries/azureml/environments/model-management/versions/47
+
+code: ../../src
+command: >-
+  python run_inference_validation.py
+  --inference_payload ${{inputs.inference_payload}}
+  $[[--expected_response ${{inputs.expected_response}}]]
+  $[[--inference_response ${{inputs.inference_response}}]]
+  $[[--deployment_error ${{inputs.deployment_error}}]]
+  --validation-id ${{inputs.validation_id}}
+  --sku ${{inputs.sku}}
+  --validation_results ${{outputs.validation_results}}
+  --metrics_storage_uri ${{outputs.metrics_storage_uri}}
+  --validation_error ${{outputs.validation_error}}
+
+inputs:
+  inference_payload:
+    type: string
+    description: JSON input payload used for inference.
+
+  expected_response:
+    type: string
+    optional: true
+    description: JSON file containing the expected inference response.
+
+  inference_response:
+    type: uri_file
+    optional: true
+    description: JSON file containing the actual inference response from the deployed model.
+
+  sku:
+    type: string
+    optional: false
+    default: "Standard_NC24ads_A100_v4"
+    description: Suggested SKU based on benchmark results
+
+  validation_id:
+    type: string
+    optional: false
+    description: ID of the validation run (used for updating status in self-serve)
+  
+  deployment_error:
+    type: uri_file
+    optional: true
+    description: Error message or stack trace from the inference validation step
+
+outputs:
+  validation_results:
+    type: uri_folder
+    description: JSON file containing the validation results.
+  metrics_storage_uri:
+    type: uri_file
+    description: JSON file containing the validation metrics csv storage path
+  validation_error:
+    type: uri_file
+    description: File containing error messages or stack traces from the validation step.
+
+tags:
+    Preview: ""
+    Internal: ""
