@@ -6,6 +6,7 @@ RUN apt-get install -y python3-opencv
 RUN apt-get remove -y libavutil58 libswresample4 libavformat60
 RUN apt-get remove -y libavcodec60 libswscale7 libpmix2 libcjson1
 RUN apt-get remove -y liburiparser1 libzvbi0t64
+RUN apt-get remove -y libzvbi-common
 
 WORKDIR /
 ENV CONDA_PREFIX=/azureml-envs/responsibleai-vision
