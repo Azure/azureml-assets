@@ -7,6 +7,12 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - labeled
+      - unlabeled
+      - synchronize
+      - reopened
   workflow_dispatch:
     inputs:
       asset_dirs:

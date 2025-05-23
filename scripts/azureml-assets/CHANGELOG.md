@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.83 (2025-05-23)
+### 🚀 New Features
+- [#4207](https://github.com/Azure/azureml-assets/pull/4207) Detect if MLFlow model was updated
+
 ## 1.16.82 (2025-05-22)
 ### 🚀 New Features
 - [#4206](https://github.com/Azure/azureml-assets/pull/4206) Print azcopy log if output_level==default
