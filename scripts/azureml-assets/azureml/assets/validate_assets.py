@@ -847,6 +847,11 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
             f"Bypass validation for {asset_config.name} as model type is: {model_config.type.value}"
         )
         return 0
+    else:
+        logger.warning(f"{asset_config.name} is a model of type {model_config.type.value} which is banned from the model catalog")
+        if "GITHUB_OUTPUT" in os.environ:
+            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                print(f"mlflow_model_detected=True", file=f)
 
     # confirm must have
     if not model.tags.get(MLFlowModelTags.TASK):
