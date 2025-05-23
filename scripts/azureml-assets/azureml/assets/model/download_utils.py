@@ -94,7 +94,7 @@ def _onerror(func, path, exc_info):
         raise
 
 
-def run_cmd(cmd, cwd: Path | None = None, env: dict | None = None) -> int:
+def run_cmd(cmd, cwd: Path = None, env: dict = None) -> int:
     """Run the command and returns the result."""
     logger.print(cmd)
     result = subprocess.run(
