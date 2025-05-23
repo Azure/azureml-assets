@@ -25,7 +25,27 @@ RUN conda install python=3.9 -y
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Vulnerability fix
-RUN pip install torch==2.6.0 torchvision --no-cache-dir
+# Remove Conda-installed Torch and related packages
+RUN conda remove -y --force \
+    pytorch \
+    libtorch \
+    torchaudio \
+    torchvision || true
+
+# Remove old Conda cached torch build (optional but clean)
+RUN rm -rf /opt/conda/pkgs/pytorch-* \
+    && rm -rf /opt/conda/pkgs/libtorch-* \
+    && rm -rf /opt/conda/pkgs/torchaudio-* \
+    && rm -rf /opt/conda/pkgs/torchvision-*
+
+# Clean pip cache (optional)
+RUN pip cache purge
+
+# Install Torch 2.6.0 and compatible torchvision
+RUN pip install --no-cache-dir \
+    torch==2.6.0 \
+    torchvision==0.21.0 \
+    torchaudio==2.6.0
 
 # List pip packages
 RUN pip list
