@@ -966,6 +966,7 @@ def validate_mlflow_model(asset_config: assets.AssetConfig) -> int:
 
     # Update mlflow_model_detected variable for Github Actions only
     if "GITHUB_OUTPUT" in os.environ:
+        logger.print(f"Setting GITHUB_OUTPUT env variable for mlflow_model_detected={str(is_mlflow_model).lower()}")
         with open(os.environ["GITHUB_OUTPUT"], "a") as f:
             print(f"mlflow_model_detected={str(is_mlflow_model).lower()}", file=f)
 

@@ -76,7 +76,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Check PR labels for "mlflow noncompliant exception" label if MLFlow model was detected
-        if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected || 'false') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
+        if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected) && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
         run: |
           echo "::error::This PR contains an MLFlow model which is banned from the model catalog. Please reach out to System Registry Content team if you have any questions."
           exit 1
