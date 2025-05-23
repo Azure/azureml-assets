@@ -13,6 +13,7 @@ environment: azureml://registries/azureml/environments/model-management/versions
 
 code: ../../src/
 command: |
+  pip install transformers==4.48.0 torch==2.2.2 numpy==1.23.5 pandas==1.5.3 urllib3==1.26.19 --no-cache-dir --force-reinstall
   # TODO: This has one disadvantage as shell logs wont be pushed to appinsights
   set -ex
   IFS=',' read -ra pip_pkgs <<< "$[[${{inputs.extra_pip_requirements}}]]"
@@ -39,7 +40,7 @@ inputs:
 
   vllm_enabled:
     type: boolean
-    description: Enable vllm in the converted model 
+    description: Enable vllm in the converted model
     default: false
     optional: false
 
@@ -141,7 +142,7 @@ inputs:
       Pip dependencies expressed as below. Do not use quotes for passing.
       eg: pkg1==1.0, pkg2, pkg3==1.0
     optional: true
-  
+
   inference_base_image:
     type: string
     description: |
