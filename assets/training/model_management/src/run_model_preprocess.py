@@ -12,9 +12,8 @@ from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess, check_for_py_files
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks as TransformersSupportedTasks
 from azureml.model.mgmt.processors.pyfunc.config import SupportedTasks as PyFuncSupportedTasks
-from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
-from azureml._common.exceptions import AzureMLException
-from azureml._common._error_definition.azureml_error import AzureMLError
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelImportErrorStrings
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -134,10 +133,14 @@ def run():
 
     if task_name is None:
         supported_tasks = set(TransformersSupportedTasks.list_values() + PyFuncSupportedTasks.list_values())
-        raise AzureMLException._with_error(
-                AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
-                                    supported_tasks=list(supported_tasks))
-            )
+        message = ModelImportErrorStrings.UNSUPPORTED_TASK_TYPE.format(
+            task_type=args.task_name, supported_tasks=list(supported_tasks)
+        )
+        raise MlException(
+            message=message, no_personal_data_message=message,
+            error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT
+        )
+
     files = check_for_py_files(model_path)
     logger.info(f"check if model folder contains .py files or not: {files}")
     if files:

@@ -8,8 +8,6 @@ sentencepiece=={{latest-pypi-version}}
 accelerate=={{latest-pypi-version}}
 wget=={{latest-pypi-version}}
 applicationinsights=={{latest-pypi-version}}
-azureml-automl-core=={{latest-pypi-version}}
-azureml-telemetry=={{latest-pypi-version}}
 azureml-automl-dnn-vision=={{latest-pypi-version}}
 pyarrow==14.0.2
 GitPython=={{latest-pypi-version}}
