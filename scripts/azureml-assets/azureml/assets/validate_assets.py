@@ -847,11 +847,6 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
             f"Bypass validation for {asset_config.name} as model type is: {model_config.type.value}"
         )
         return 0
-    else:
-        logger.log_warning(f"{asset_config.name} is a model of type {model_config.type.value} which is banned from the model catalog")
-        if "GITHUB_OUTPUT" in os.environ:
-            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                print(f"mlflow_model_detected=True", file=f)
 
     # confirm must have
     if not model.tags.get(MLFlowModelTags.TASK):
@@ -949,6 +944,29 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
         )
 
     return error_count
+
+
+def validate_mlflow_model(asset_config: assets.AssetConfig) -> int:
+    """Validate if model is of type MLFlow.
+
+    Args:
+        asset_config (assets.AssetConfig): asset config for model spec
+    """
+    error_count = 0
+    model = model_config = None
+
+    try:
+        model = load_model(asset_config.spec_with_path)
+        model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+    except Exception:
+        logger.log_warning("Could not validate if model is of type MLFlow due to invalid spec or model config")
+
+    if model_config.type == assets.config.ModelType.MLFLOW:
+        logger.log_warning(f"{asset_config.name} is a model of type {model_config.type.value} which is banned from the model catalog")
+        # Update mlflow_model_detected variable for Github Actions only
+        if "GITHUB_OUTPUT" in os.environ:
+            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                print(f"mlflow_model_detected=True", file=f)
 
 
 def get_validated_models_assets_map(model_validation_results_dir: str):
@@ -1087,6 +1105,10 @@ def validate_assets(input_dirs: List[Path],
             # Validate pytest information
             if check_tests:
                 error_count += validate_tests(asset_config)
+
+            # Validate if MLFlow model
+            if asset_config.type == assets.AssetType.MODEL:
+                validate_mlflow_model(asset_config)
 
             if asset_config.type == assets.AssetType.ENVIRONMENT:
                 # Validate Dockerfile
