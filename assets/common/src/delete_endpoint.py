@@ -7,8 +7,8 @@ import argparse
 import json
 from azure.ai.ml import MLClient
 from azure.identity import ManagedIdentityCredential
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azureml.core import Run
 from pathlib import Path
 
 
@@ -59,15 +59,30 @@ def get_ml_client():
     try:
         credential.get_token("https://management.azure.com/.default")
     except Exception as ex:
-        raise (f"Failed to get credentials : {ex}")
-    run = Run.get_context(allow_offline=False)
-    ws = run.experiment.workspace
+        message = "Failed to get credentials : {ex}"
+        raise MlException(
+            message=message.format(ex=ex), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.IDENTITY,
+            error=ex
+        )
+
+    try:
+        subscription_id = os.environ['AZUREML_ARM_SUBSCRIPTION']
+        resource_group = os.environ["AZUREML_ARM_RESOURCEGROUP"]
+        workspace = os.environ["AZUREML_ARM_WORKSPACE_NAME"]
+    except Exception as ex:
+        message = "Failed to get AzureML ARM env variable : {ex}"
+        raise MlException(
+            message=message.format(ex=ex), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+            error=ex
+        )
 
     ml_client = MLClient(
         credential=credential,
-        subscription_id=ws._subscription_id,
-        resource_group_name=ws._resource_group,
-        workspace_name=ws._workspace_name,
+        subscription_id=subscription_id,
+        resource_group_name=resource_group,
+        workspace_name=workspace,
     )
     return ml_client
 

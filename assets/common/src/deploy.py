@@ -13,8 +13,7 @@ from azure.ai.ml.entities import (
     OnlineRequestSettings,
     ProbeSettings,
 )
-from azureml._common._error_definition import AzureMLError
-from azureml._common.exceptions import AzureMLException
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from pathlib import Path
 
 from utils.config import AppName, ComponentVariables
@@ -22,9 +21,7 @@ from utils.common_utils import get_mlclient, get_model_name
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
     swallow_all_exceptions,
-    OnlineEndpointInvocationError,
-    EndpointCreationError,
-    DeploymentCreationError,
+    ModelImportErrorStrings,
 )
 
 
@@ -216,8 +213,11 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         endpoint = ml_client.online_endpoints.get(endpoint.name)
         logger.info(f"Endpoint created {endpoint.id}")
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(EndpointCreationError, exception=e)
+        message = ModelImportErrorStrings.ENDPOINT_CREATION_ERROR
+        raise MlException(
+            message=message.format(exception=e), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.ENDPOINT,
+            error=e
         )
 
     try:
@@ -235,8 +235,11 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         except Exception as ex:
             logger.error(f"Error in fetching deployment logs: {ex}")
 
-        raise AzureMLException._with_error(
-            AzureMLError.create(DeploymentCreationError, exception=e)
+        message = ModelImportErrorStrings.DEPLOYMENT_CREATION_ERROR
+        raise MlException(
+            message=message.format(exception=e), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.DEPLOYMENT,
+            error=e
         )
 
     logger.info(f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}")
@@ -312,8 +315,11 @@ def main():
             print(f"Response:\n{response}")
             logger.info(f"Endpoint invoked successfully with response :{response}")
         except Exception as e:
-            raise AzureMLException._with_error(
-                AzureMLError.create(OnlineEndpointInvocationError, exception=e)
+            message = ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
+            raise MlException(
+                message=message.format(exception=e), no_personal_data_message=message,
+                error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.ENDPOINT,
+                error=e
             )
 
     print("Saving deployment details ...")
