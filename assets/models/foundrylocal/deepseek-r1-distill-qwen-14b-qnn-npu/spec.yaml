@@ -3,7 +3,6 @@ name: deepseek-r1-distill-qwen-14b-qnn-npu
 version: 1
 path: ./
 tags:
-  my-awesome-test-tag: ""
   foundryLocal: ""
   license: "MIT"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B/blob/main/LICENSE>."
