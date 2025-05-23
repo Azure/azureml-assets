@@ -71,12 +71,13 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir
 
       - name: Validate assets
+        id: validate_assets
         run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" -n -I -C -b -t -e
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Check PR labels for "mlflow noncompliant exception" label if MLFlow model was detected
-        if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected) && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
+        if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected || 'false') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
         run: |
           echo "::error::This PR contains an MLFlow model which is banned from the model catalog. Please reach out to System Registry Content team if you have any questions."
           exit 1
