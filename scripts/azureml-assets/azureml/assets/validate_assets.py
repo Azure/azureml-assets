@@ -955,9 +955,10 @@ def validate_mlflow_model(asset_config: assets.AssetConfig) -> int:
     model_config = None
 
     try:
+        load_model(asset_config.spec_with_path)
         model_config: assets.ModelConfig = asset_config.extra_config_as_object()
     except Exception:
-        logger.log_warning("Could not validate if model is of type MLFlow due to invalid model config")
+        logger.log_warning("Could not validate if model is of type MLFlow due to invalid spec or model config")
         return
 
     is_mlflow_model = model_config.type == assets.config.ModelType.MLFLOW
