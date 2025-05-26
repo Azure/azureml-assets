@@ -3,12 +3,54 @@
 
 """Run Utils."""
 
-from azureml.core import Run
-from azureml.core.compute import ComputeTarget
-from config import LoggerConfig
-from common_utils import get_mlclient
+from utils.config import LoggerConfig
 import os
+from azure.ai.ml import MLClient
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
+from utils.exceptions import ModelImportErrorStrings
 
+def get_mlclient():
+    """Return ML Client."""
+    has_msi_succeeded = False
+    try:
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        credential = ManagedIdentityCredential(client_id=msi_client_id)
+        credential.get_token("https://management.azure.com/.default")
+        has_msi_succeeded = True
+    except Exception:
+        # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
+        has_msi_succeeded = False
+    if not has_msi_succeeded:
+        try:
+            credential = AzureMLOnBehalfOfCredential()
+            # Check if given credential can get token successfully.
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            message = ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+            raise MlException(
+                message=message.format(ex=ex), no_personal_data_message=message,
+                error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.IDENTITY,
+                error=ex
+            )
+    try:
+        subscription_id = os.environ.get("AZUREML_ARM_SUBSCRIPTION")
+        resource_group = os.environ.get("AZUREML_ARM_RESOURCEGROUP")
+        workspace = os.environ.get("AZUREML_ARM_WORKSPACE_NAME")
+    except Exception as ex:
+        message = "Failed to get AzureML ARM env variable : {ex}"
+        raise MlException(
+            message=message.format(ex=ex), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+            error=ex
+        )
+    return MLClient(
+        credential= credential,
+        subscription_id=subscription_id,
+        resource_group_name=resource_group,
+        workspace_name=workspace,
+    )
 
 class JobRunDetails:
     """Job Run details."""
@@ -18,8 +60,8 @@ class JobRunDetails:
 
     def __init__(self):
         """Run details init. Should not be called directly and be instantiated via get_run_details."""
-        ml_client = get_mlclient()
-        self._run = ml_client.jobs.get(os.environ["AZUREML_RUN_ID"])
+        self._ml_client = get_mlclient()
+        self._job = self._ml_client.jobs.get(os.environ["AZUREML_RUN_ID"])
         self._details = None
 
     @staticmethod
@@ -32,21 +74,21 @@ class JobRunDetails:
     @property
     def run_id(self):
         """Run ID of the existing run."""
-        return self._run.name
+        return self._job.name
 
     @property
     def parent_run_id(self):
         """Parent RunID of the existing run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self._run.parent.id
+        return self._job.parent if self._job.parent else "No parent job id"
 
     @property
     def details(self):
         """Run details of the existing run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        self._details = self._details or self._run.get_details()
+        self._details = self._details or self._ml_client.jobs.get(self.run_id)
         return self._details
 
     @property
@@ -54,7 +96,7 @@ class JobRunDetails:
         """Return workspace."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self._run.experiment.workspace
+        return self._ml_client.workspaces.get(name=self._ml_client._operation_scope.workspace_name)
 
     @property
     def workspace_name(self):
@@ -68,14 +110,14 @@ class JobRunDetails:
         """Return experiment id."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self._run.experiment.id
+        return self._job.experiment_name
 
     @property
     def subscription_id(self):
         """Return subcription ID."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self.workspace.subscription_id
+        return self._ml_client._operation_scope.subscription_id
 
     @property
     def region(self):
@@ -89,7 +131,7 @@ class JobRunDetails:
         """Return compute target for the current run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self.details.get("target", "")
+        return self._job.compute if self._job.compute else ""
 
     @property
     def vm_size(self):
@@ -101,8 +143,8 @@ class JobRunDetails:
             return "No compute found."
         # TODO: Use V2 way of determining this.
         try:
-            cpu_cluster = ComputeTarget(workspace=self._run.experiment.workspace, name=compute_name)
-            return cpu_cluster.vm_size
+            cpu_cluster = self._ml_client.compute.get(compute_name)
+            return cpu_cluster.properties.vm_size
         except Exception:
             return None
 
@@ -128,9 +170,9 @@ class JobRunDetails:
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
 
-        cur_attribute = self._run.id
-        run = self._run.parent
-        # update current run's root_attribute to the root run.
+        cur_attribute = self._job.id
+        run = self._job.parent
+        #update current run's root_attribute to the root run.
         while run is not None:
             cur_attribute = run.id
             run = run.parent

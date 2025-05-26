@@ -14,9 +14,9 @@ from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Tuple
 
-from logging_utils import get_logger
-from run_utils import JobRunDetails
-from exceptions import ModelImportErrorStrings
+from utils.logging_utils import get_logger
+from utils.run_utils import JobRunDetails
+from utils.exceptions import ModelImportErrorStrings
 
 
 logger = get_logger(__name__)
