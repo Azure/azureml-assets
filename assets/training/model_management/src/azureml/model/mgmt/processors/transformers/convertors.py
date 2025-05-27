@@ -14,7 +14,6 @@ import yaml
 from abc import ABC, abstractmethod
 from PIL import Image
 from azureml.evaluate import mlflow as hf_mlflow
-from azureml.core.conda_dependencies import CondaDependencies
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
@@ -209,12 +208,18 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         if not self._extra_pip_requirements and not pip_requirements:
             python_version = platform.python_version()
             pip_pkgs = self._get_curated_environment_pip_package_list()
-            conda_deps = CondaDependencies.create(conda_packages=None,
-                                                  python_version=python_version,
-                                                  pip_packages=pip_pkgs,
-                                                  pin_sdk_version=False)
+            conda_deps = {
+                "name": "mlflow-env",
+                "channels": ["defaults", "conda-forge"],
+                "dependencies": [
+                    f"python={python_version}",
+                    {
+                        "pip": pip_pkgs
+                    }
+                ]
+            }
 
-            curated_conda_env = conda_env or conda_deps.as_dict()
+            curated_conda_env = conda_env or conda_deps
             pip_requirements = None
 
         # handle OSS trust_remote_code value

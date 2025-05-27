@@ -3,17 +3,64 @@
 
 """Logging utils."""
 
-from azureml.core import Run
-from azureml.core.compute import ComputeTarget
 from azureml.model.mgmt.config import AppName, LoggerConfig
-from azureml.telemetry import get_telemetry_log_handler
-from azureml.telemetry._telemetry_formatter import ExceptionFormatter
+from azure.ai.ml import MLClient
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
+from azureml.model.mgmt.utils.exceptions import ModelImportErrorStrings
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azure.identity import ManagedIdentityCredential
 import platform
 import uuid
-import codecs
 import logging
 import sys
+import os
 
+
+def get_mlclient():
+    """Return ML Client."""
+    has_msi_succeeded = False
+    logger = get_logger(__name__)
+    try:
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        credential = ManagedIdentityCredential(client_id=msi_client_id)
+        credential.get_token("https://management.azure.com/.default")
+        has_msi_succeeded = True
+    except Exception:
+        # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
+        has_msi_succeeded = False
+        logger.warning("ManagedIdentityCredential was not found in the compute. "
+                       "Falling back to AzureMLOnBehalfOfCredential")
+
+    if not has_msi_succeeded:
+        try:
+            credential = AzureMLOnBehalfOfCredential()
+            # Check if given credential can get token successfully.
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            message = ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+            raise MlException(
+                message=message, no_personal_data_message=message,
+                error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT,
+                error=ex
+            )
+    try:
+        subscription_id = os.environ['AZUREML_ARM_SUBSCRIPTION']
+        resource_group = os.environ["AZUREML_ARM_RESOURCEGROUP"]
+        workspace = os.environ["AZUREML_ARM_WORKSPACE_NAME"]
+    except Exception as ex:
+        message = "Failed to get AzureML ARM env variable : {ex}"
+        raise MlException(
+            message=message.format(ex=ex), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+            error=ex
+        )
+
+    return MLClient(
+        credential=credential,
+        subscription_id=subscription_id,
+        resource_group_name=resource_group,
+        workspace_name=workspace,
+    )
 
 class RunDetails:
     """RunDetails."""
@@ -21,26 +68,26 @@ class RunDetails:
     def __init__(self):
         """Run details init."""
         self._run_details = None
-        self._run = Run.get_context()
-
+        self._ml_client = get_mlclient()
+        self._job = self._ml_client.jobs.get(os.environ["AZUREML_RUN_ID"])
     @property
     def run_id(self):
         """Run ID of the existing run."""
-        return self._run.id
+        return self._job.name
 
     @property
     def parent_run_id(self):
         """Parent RunID of the existing run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self._run.parent.id
+        return self._job.parent if self._job.parent else "No parent job id"
 
     @property
     def run_details(self):
         """Run details of the existing run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        self._run_details = self._run_details or self._run.get_details()
+        self._details = self._details or self._ml_client.jobs.get(self.run_id)
         return self._run_details
 
     @property
@@ -48,7 +95,7 @@ class RunDetails:
         """Return workspace."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self._run.experiment.workspace
+        return self._ml_client.workspaces.get(name=self._ml_client._operation_scope.workspace_name)
 
     @property
     def workspace_name(self):
@@ -62,14 +109,14 @@ class RunDetails:
         """Return experiment id."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self._run.experiment.id
+        return self._job.experiment_name
 
     @property
     def subscription_id(self):
         """Return subcription ID."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self.workspace.subscription_id
+        return self._ml_client._operation_scope.subscription_id
 
     @property
     def region(self):
@@ -83,7 +130,7 @@ class RunDetails:
         """Return compute target for the current run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self.run_details.get("target", "")
+        return self._job.compute if self._job.compute else ""
 
     @property
     def vm_size(self):
@@ -96,8 +143,8 @@ class RunDetails:
 
         # TODO: Use V2 way of determining this.
         try:
-            cpu_cluster = ComputeTarget(workspace=self._run.experiment.workspace, name=compute_name)
-            return cpu_cluster.vm_size
+            cpu_cluster = self._ml_client.compute.get(compute_name)
+            return cpu_cluster.properties.vm_size
         except Exception:
             return None
 
@@ -115,8 +162,8 @@ class RunDetails:
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
 
-        cur_attribute = self._run.id
-        run = self._run.parent
+        cur_attribute = self._job.id
+        run = self._job.parent
         # update current run's root_attribute to the root run.
         while run is not None:
             cur_attribute = run.id
@@ -245,25 +292,6 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
         stream_handler.setLevel(numeric_log_level)
         stream_handler.set_name(LoggerConfig.MODEL_IMPORT_HANDLER_NAME)
         logger.addHandler(stream_handler)
-
-    if LoggerConfig.APPINSIGHT_HANDLER_NAME not in handler_names:
-        instrumentation_key = codecs.decode(LoggerConfig.INSTRUMENTATION_KEY, LoggerConfig.CODEC).decode("utf-8")
-
-        appinsights_handler = get_telemetry_log_handler(
-            instrumentation_key=instrumentation_key,
-            component_name="automl",
-        )
-
-        formatter = ExceptionFormatter(
-            fmt=(
-                "%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s [%(process)d]"
-                " %(message)s \n".format(app_name, run_details.run_id)
-            )
-        )
-        appinsights_handler.setFormatter(formatter)
-        appinsights_handler.setLevel(numeric_log_level)
-        appinsights_handler.set_name(LoggerConfig.APPINSIGHT_HANDLER_NAME)
-        logger.addHandler(appinsights_handler)
 
     return logger
 

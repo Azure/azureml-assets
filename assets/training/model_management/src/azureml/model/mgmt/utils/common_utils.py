@@ -14,7 +14,6 @@ from azure.ai.ml import MLClient
 from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ManagedIdentityCredential
-from azureml.core.run import Run
 from azureml.model.mgmt.utils.exceptions import ModelImportErrorStrings
 from contextlib import contextmanager
 from datetime import datetime
@@ -112,15 +111,24 @@ def get_mlclient(registry_name: str = None):
                 error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT,
                 error=ex
             )
+    try:
+        subscription_id = os.environ['AZUREML_ARM_SUBSCRIPTION']
+        resource_group = os.environ["AZUREML_ARM_RESOURCEGROUP"]
+        workspace = os.environ["AZUREML_ARM_WORKSPACE_NAME"]
+    except Exception as ex:
+        message = "Failed to get AzureML ARM env variable : {ex}"
+        raise MlException(
+            message=message.format(ex=ex), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+            error=ex
+        )
 
     if registry_name is None:
-        run = Run.get_context(allow_offline=False)
-        ws = run.experiment.workspace
         return MLClient(
             credential=credential,
-            subscription_id=ws._subscription_id,
-            resource_group_name=ws._resource_group,
-            workspace_name=ws._workspace_name,
+            subscription_id=subscription_id,
+            resource_group_name=resource_group,
+            workspace_name=workspace,
         )
     logger.info(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)

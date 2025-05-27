@@ -8,9 +8,6 @@ import logging
 from functools import wraps
 from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 
-from azureml.core.run import Run  # type: ignore
-from azureml.automl.core._run import run_lifecycle_utilities
-
 
 class ModelImportErrorStrings:
     """Error strings."""
@@ -79,10 +76,6 @@ def swallow_all_exceptions(logger: logging.Logger):
                 logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
                 for handler in logger.handlers:
                     handler.flush()
-
-                # fail the run
-                run = Run.get_context()
-                run_lifecycle_utilities.fail_run(run, azureml_exception, is_aml_compute=True)
 
                 raise azureml_exception
             finally:
