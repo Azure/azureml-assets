@@ -13,5 +13,5 @@
 /assets/evaluation_results/ @azure/aml-assets @azure/aml-benchmarking @azure/aml-llm
 /assets/batch_score/ @azure/aml-assets @Azure/aml-batch-inferencing
 /assets/promptflow/ @Azure/promptflow-builtin @azure/aml-assets
-/assets/training/model_management/environments/foundation-model-inference @azure/aml-assets @Azure/aml-ossmodels
+/assets/training/model_management/environments/foundation-model-inference @azure/aml-assets @Azure/aml-ossmodels @Azure/aml-maap
 /scripts/promptflow-ci/ @Azure/promptflow-builtin @azure/aml-assets
