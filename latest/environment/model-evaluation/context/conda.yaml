@@ -15,7 +15,7 @@ dependencies:
   - protobuf<4.0.0
   - psutil>=5.8,<5.9
   - pandas>=2.0.2,<2.1.0
-  - azureml-core==1.60.0
+  - azureml-core==1.60.0.post1
   - azureml-automl-core==1.60.0
   - azureml-defaults==1.60.0
   - azureml-mlflow==1.60.0.post1

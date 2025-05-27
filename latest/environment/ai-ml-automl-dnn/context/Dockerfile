@@ -43,7 +43,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # GitPython>=3.1.41 is required for https://github.com/advisories/GHSA-2mqj-m65w-jghx and is not available in conda
 RUN pip install \
                 # begin pypi dependencies
-                azureml-core==1.60.0 \
+                azureml-core==1.60.0.post1 \
                 azureml-mlflow==1.60.0.post1 \
                 azureml-pipeline-core==1.60.0 \
                 azureml-telemetry==1.60.0 \

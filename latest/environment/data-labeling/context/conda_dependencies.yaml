@@ -6,7 +6,7 @@ dependencies:
 - python=3.9
 - pip=21.3.1
 - pip:
-  - azureml-core==1.60.0
+  - azureml-core==1.60.0.post1
   - azureml-contrib-dataset==1.60.0
   - azureml-dataset-runtime[fuse,pandas]
   - azureml-defaults==1.60.0
