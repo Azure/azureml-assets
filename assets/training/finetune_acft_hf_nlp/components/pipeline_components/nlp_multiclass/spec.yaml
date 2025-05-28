@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: nlp_textclassification_multiclass
-version: 0.0.4
+version: 0.0.5
 type: pipeline
 display_name: PipelineComponent for AutoML NLP Multiclass TextClassification
 description: Pipeline component for AutoML NLP Multiclass Text classification
@@ -224,7 +224,7 @@ outputs:
 jobs:
   model_import:
     type: command
-    component: azureml:text_classification_model_import:0.0.66
+    component: azureml:text_classification_model_import:0.0.74
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.model_name}}
@@ -240,7 +240,7 @@ jobs:
       enable_long_range_text: ${{parent.inputs.enable_long_range_text}}
   finetune:
     type: command
-    component: azureml:text_classification_finetune:0.0.66
+    component: azureml:text_classification_finetune:0.0.74
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -273,7 +273,7 @@ jobs:
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder_finetune}}
   text_classification_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.66
+    component: azureml:ft_nlp_model_converter:0.0.74
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       instance_type: ${{parent.inputs.instance_type_finetune}}
