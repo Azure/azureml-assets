@@ -81,7 +81,8 @@ class JobRunDetails:
         """Parent RunID of the existing run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        return self._job.parent if self._job.parent else "No parent job id"
+        #return self._job.parent if self._job.parent else "No parent job id"
+        return getattr(self._job, "parent", None) or "No parent job id"
 
     @property
     def details(self):
@@ -141,7 +142,6 @@ class JobRunDetails:
         compute_name = self.compute
         if compute_name == "":
             return "No compute found."
-        # TODO: Use V2 way of determining this.
         try:
             cpu_cluster = self._ml_client.compute.get(compute_name)
             return cpu_cluster.properties.vm_size
@@ -153,7 +153,8 @@ class JobRunDetails:
         """Run properties."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        run_properties = self.details.get("properties", {})
+        #run_properties = self.details.get("properties", {})
+        run_properties = self.details._to_dict().get("properties", {})
         return run_properties.get("azureml.moduleid", LoggerConfig.ASSET_NOT_FOUND)
 
     @property
@@ -171,7 +172,8 @@ class JobRunDetails:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
 
         cur_attribute = self._job.id
-        run = self._job.parent
+        # run = self._job.parent
+        run = getattr(self._job, "parent", None)
         #update current run's root_attribute to the root run.
         while run is not None:
             cur_attribute = run.id
