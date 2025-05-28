@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu121-py310-torch251:biweekly.202505.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu121-py310-torch251:biweekly.202505.2.v1
 
 # Install pip dependencies
 COPY requirements.txt .
