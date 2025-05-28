@@ -1,7 +1,5 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:{{latest-image-tag}}
 
-USER root
-
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -17,9 +15,31 @@ ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 RUN apt-get update && echo 'success updated apt-get!'
 RUN apt-get install -y --no-install-recommends cmake libboost-dev libboost-system-dev libboost-filesystem-dev
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
 
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
+# Create conda environment
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    python=3.9 \
+    # begin conda dependencies
+    pip=22.1.2 \
+    numpy~=1.23.5 \
+    scikit-learn=1.5.1 \
+    holidays=0.29 \
+    setuptools-git \
+    setuptools=78.1.1 \
+    wheel=0.44.0 \
+    scipy=1.10.1 \
+    joblib=1.2.0 \
+    # Install pytorch separately to speed up image build
+    -c conda-forge -c pytorch -c anaconda && \
+    conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    pytorch=2.6.0 \
+    -c pytorch -c nvidia -c conda-forge -y && \
+    # end conda dependencies
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
+    conda clean -a -y
+# end conda create
+
+
 
 ###############################
 # Pre-Build LightGBM
@@ -31,29 +51,6 @@ RUN pip install --upgrade lightgbm==4.6.0
 ###############################
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
-# begin conda create
-# Install conda packages
-RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    # begin conda dependencies
-    numpy~=1.23.5 \
-    scikit-learn=1.5.1 \
-    holidays=0.29 \
-    setuptools-git \
-    setuptools=78.1.1 \
-    wheel=0.44.0 \
-    scipy=1.10.1 \
-    joblib=1.2.0 \
-    # end conda dependencies
-    -c conda-forge -c anaconda
-
-# Ensure future conda and pip calls are tied to this conda environment,
-# and we don't just get lucky from the implicit PATH ordering.
-SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
-# end conda create
-
-# Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN conda install pytorch=2.6.0 -c pytorch -c nvidia -c conda-forge && conda clean -a -y
-# end conda create
 
 # begin pip install
 # Install pip dependencies
@@ -86,7 +83,6 @@ RUN pip install \
                 # end pypi dependencies
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
-
 # end pip install
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
