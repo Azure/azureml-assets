@@ -1067,6 +1067,19 @@ def validate_learning_rate(args: Namespace) -> None:
             )
         )
 
+def validate_early_stop_settings(args: Namespace) -> None:
+    """Validate early stop settings."""
+    if args.apply_early_stopping is True and (args.evaluation_strategy != SaveStrategy.EPOCH or
+                                              args.evaluation_strategy != SaveStrategy.STEPS):
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Set evaluation_strategy to one of steps or epoch when apply_early_stopping is True."
+                    f"Current evaluation_strategy is {args.evaluation_strategy}."
+                )
+            )
+        )
 
 def finetune(args: Namespace):
     """Finetune."""
@@ -1253,6 +1266,9 @@ def finetune(args: Namespace):
     set_gradient_checkpointing(args)
 
     validate_learning_rate(args)
+
+    # validate early stop settings
+    validate_early_stop_settings(args)
 
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
