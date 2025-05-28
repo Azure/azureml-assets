@@ -9,7 +9,7 @@ display_name: Delete Endpoint
 description:
   Deletes an endpoint resource.
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/28
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
 
 code: ../../src
 command: >-
