@@ -52,7 +52,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # end conda create
 
 # Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN conda install pytorch=2.6.0 -c pytorch -c nvidia && conda clean -a -y
+RUN conda install pytorch=2.6.0 -c pytorch -c nvidia -c conda-forge && conda clean -a -y
 # end conda create
 
 # begin pip install
