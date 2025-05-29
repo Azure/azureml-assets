@@ -6,7 +6,6 @@ azure-ml-component=={{latest-pypi-version}}
 azureml-mlflow=={{latest-pypi-version}}
 azureml-contrib-services=={{latest-pypi-version}}
 azureml-contrib-services=={{latest-pypi-version}}
-torch-tb-profiler~=0.4.0
 azureml-inference-server-http
 inference-schema
 MarkupSafe==2.1.2

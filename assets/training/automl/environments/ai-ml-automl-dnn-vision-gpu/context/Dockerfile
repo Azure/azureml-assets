@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu121-py310-torch251:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
@@ -46,7 +46,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     shap=0.39.0 \
     llvmlite=0.39.1 \
     scipy=1.10.1 \
-    setuptools=72.1.0 \
+    setuptools=78.1.1 \
     wheel=0.44.0 \
     tbb=2021.1.1 \
     # end conda dependencies
