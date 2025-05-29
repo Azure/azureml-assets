@@ -961,16 +961,15 @@ def validate_mlflow_model(asset_config: assets.AssetConfig) -> int:
         logger.log_warning("Could not validate if model is of type MLFlow due to invalid spec or model config")
         return
 
-    is_mlflow_model = model_config.type == assets.config.ModelType.MLFLOW
-    if is_mlflow_model:
+    if model_config.type == assets.config.ModelType.MLFLOW:
         logger.log_warning(f"{asset_config.name} is a model of type {model_config.type.value} "
                            f"which is banned from the model catalog")
 
-    # Update mlflow_model_detected variable for Github Actions only
-    if "GITHUB_OUTPUT" in os.environ and is_mlflow_model:
-        logger.print(f"Setting GITHUB_OUTPUT env variable for mlflow_model_detected={str(is_mlflow_model).lower()}")
-        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-            print(f"mlflow_model_detected={str(is_mlflow_model).lower()}", file=f)
+        # Update mlflow_model_detected variable for Github Actions only
+        if "GITHUB_OUTPUT" in os.environ:
+            logger.print(f"Setting GITHUB_OUTPUT env variable for mlflow_model_detected=true")
+            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                print(f"mlflow_model_detected=true", file=f)
 
 
 def get_validated_models_assets_map(model_validation_results_dir: str):
