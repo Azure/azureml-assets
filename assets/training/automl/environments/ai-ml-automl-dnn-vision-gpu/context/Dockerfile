@@ -46,7 +46,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     shap=0.39.0 \
     llvmlite=0.39.1 \
     scipy=1.10.1 \
-    setuptools=72.1.0 \
+    setuptools=78.1.1 \
     wheel=0.44.0 \
     tbb=2021.1.1 \
     # end conda dependencies
