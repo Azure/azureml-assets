@@ -1,6 +1,22 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.84 (2025-05-29)
+### 🚀 New Features
+- [#4207](https://github.com/Azure/azureml-assets/pull/4207) Detect if MLFlow model was updated
+
+## 1.16.83 (2025-05-22)
+### 🚀 New Features
+- [#4208](https://github.com/Azure/azureml-assets/pull/4208) Fix for python 3.9 - remove union typing
+
+## 1.16.82 (2025-05-22)
+### 🚀 New Features
+- [#4206](https://github.com/Azure/azureml-assets/pull/4206) Print azcopy log if output_level==default
+
+## 1.16.81 (2025-05-15)
+### 🚀 New Features
+- [#4184](https://github.com/Azure/azureml-assets/pull/4184) Generate SAS token instead of checking container access
+
 ## 1.16.80 (2025-05-13)
 ### 🚀 New Features
 - [#4172](https://github.com/Azure/azureml-assets/pull/4172) Make asset validation work with new schema validation in ADO
