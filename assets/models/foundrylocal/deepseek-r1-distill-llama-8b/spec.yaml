@@ -4,5 +4,4 @@ version: 1
 path: ./
 tags:
   foundryLocal: "hide"
-  my-awesome-test-tag: 'true'
 type: custom_model
