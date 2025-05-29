@@ -4,7 +4,7 @@ description: >-
   AzureML Designer Transform image
 
 name: "designer-transform"
-version: "99"
+version: "100"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"

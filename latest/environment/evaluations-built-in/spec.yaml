@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Python environment for running promptflow-evals based evaluators.
 
 name: "evaluations-built-in"
-version: "25"
+version: "26"
 
 os_type: linux
 
