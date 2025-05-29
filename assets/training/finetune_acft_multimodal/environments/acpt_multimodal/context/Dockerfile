@@ -19,3 +19,5 @@ RUN pip install gunicorn==23.0.0
 RUN pip install onnxruntime==1.17.3
 RUN pip install onnx==1.17.0
 RUN pip install scikit-learn==1.5.0
+RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
+RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
