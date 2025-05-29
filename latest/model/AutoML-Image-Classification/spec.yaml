@@ -39,7 +39,7 @@ tags:
     Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 6
+version: 7
 description: |
   Automated Machine Learning, or AutoML, is a process that automates the repetitive and time-consuming tasks involved in developing machine learning models. This helps data scientists, analysts, and developers to create models more efficiently and with higher quality, resulting in increased productivity and scalability.
   AutoML Image Classification enables you to train machine learning models to perform *image multiclass* and *image multilabel* tasks according to your own defined labels. It is a computer vision task that involves analyzing and categorizing an image into specific label(s).
