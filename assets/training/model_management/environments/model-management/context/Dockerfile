@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 WORKDIR /
 
@@ -23,9 +23,6 @@ COPY requirements.txt .
 RUN conda install python=3.9 -y
 
 RUN pip install -r requirements.txt --no-cache-dir
-
-# Vulnerability fix
-RUN pip install torch==2.6.0 torchvision --no-cache-dir
 
 # List pip packages
 RUN pip list
