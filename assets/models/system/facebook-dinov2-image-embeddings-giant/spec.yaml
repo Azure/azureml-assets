@@ -17,6 +17,7 @@ properties:
         Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
         Standard_ND40rs_v2
 tags:
+    my-awesome-test-tag: 'true'
     Preview: ''
     huggingface_model_id: facebook/dinov2-giant
     SharedComputeCapacityEnabled: ''
