@@ -1069,19 +1069,21 @@ def validate_learning_rate(args: Namespace) -> None:
 
 def validate_early_stop_settings(args: Namespace) -> None:
     """Validate early stop settings."""
-    if args.apply_early_stopping is True and (args.evaluation_strategy != SaveStrategy.EPOCH or
-                                              args.evaluation_strategy != SaveStrategy.STEPS):
+    if args.apply_early_stopping is True and args.eval_strategy not in (SaveStrategy.EPOCH,
+                                                                               SaveStrategy.STEPS):
         raise ACFTValidationException._with_error(
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
                     f"Set evaluation_strategy to one of steps or epoch when apply_early_stopping is True."
-                    f"Current evaluation_strategy is {args.evaluation_strategy}."
+                    f"Current evaluation_strategy is {args.eval_strategy}."
                 )
             )
         )
+    
 
 def finetune(args: Namespace):
+    logger.info(f"Starting finetune with args: {args}")
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
     enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
@@ -1267,6 +1269,8 @@ def finetune(args: Namespace):
 
     validate_learning_rate(args)
 
+    if not hasattr(args, "eval_strategy"):
+        args.eval_strategy = args.evaluation_strategy
     # validate early stop settings
     validate_early_stop_settings(args)
 
@@ -1314,7 +1318,6 @@ def finetune(args: Namespace):
         args.evaluation_steps_interval = 0.0
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
-
     if args.save_strategy == SaveStrategy.EVALUATION_STRATEGY:
         logger.info(f"Setting save strategy to evaluation strategy: {args.evaluation_strategy}, {args.eval_steps}")
         args.save_strategy = args.evaluation_strategy
