@@ -9,7 +9,7 @@ import codecs
 import logging
 import sys
 
-from azureml.telemetry import get_telemetry_log_handler
+from azure.ai.ml._telemetry import get_appinsights_log_handler
 from azureml.telemetry._telemetry_formatter import ExceptionFormatter
 
 from utils.config import AppName, LoggerConfig
@@ -121,9 +121,9 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
     if LoggerConfig.APPINSIGHT_HANDLER_NAME not in handler_names:
         instrumentation_key = codecs.decode(LoggerConfig.INSTRUMENTATION_KEY, LoggerConfig.CODEC).decode("utf-8")
 
-        appinsights_handler = get_telemetry_log_handler(
+        appinsights_handler = get_appinsights_log_handler(
             instrumentation_key=instrumentation_key,
-            component_name="automl",
+            ...
         )
 
         formatter = ExceptionFormatter(
