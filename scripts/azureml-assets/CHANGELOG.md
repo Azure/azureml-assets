@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.84 (2025-05-29)
+### 🚀 New Features
+- [#4207](https://github.com/Azure/azureml-assets/pull/4207) Detect if MLFlow model was updated
+
 ## 1.16.83 (2025-05-22)
 ### 🚀 New Features
 - [#4208](https://github.com/Azure/azureml-assets/pull/4208) Fix for python 3.9 - remove union typing
