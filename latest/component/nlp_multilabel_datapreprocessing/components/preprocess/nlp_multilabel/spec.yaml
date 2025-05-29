@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: nlp_multilabel_datapreprocessing
-version: 0.0.3
+version: 0.0.4
 type: command
 
 is_deterministic: true
@@ -9,7 +9,7 @@ display_name: DataPreProcessing for AutoMLNLPMultilabel
 description: Component to preprocess data for automl nlp multilabel classification
   task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/labels/latest
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/95
 
 code: ../../../src/preprocess
 
