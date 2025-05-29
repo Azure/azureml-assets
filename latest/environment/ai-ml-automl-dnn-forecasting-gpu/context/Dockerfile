@@ -24,13 +24,13 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scipy=1.10.1 \
     'psutil>=5.2.2,<6.0.0' \
     tqdm \
-    setuptools=72.1.0 \
+    setuptools=78.1.1 \
     wheel=0.44.0 \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
     conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.2.2 \
-    -c pytorch -c nvidia -y && \
+    pytorch=2.6.0 \
+    -c pytorch -c nvidia -c conda-forge -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y

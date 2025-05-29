@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:biweekly.202505.2.v1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:biweekly.202505.2.v1
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
@@ -43,7 +43,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     numpy~=1.23.5 \
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
-    setuptools=72.1.0 \
+    setuptools=78.1.1 \
     wheel=0.44.0 \
     scipy=1.10.1 \
     pybind11=2.10.1 \
@@ -84,7 +84,7 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 # by fixing dependencies in the base packages
 RUN pip list && \
     pip install pyarrow==14.0.2 \
-                'transformers[sentencepiece,torch]==4.48.0' \
-                aiohttp==3.10.2
+                'transformers[sentencepiece,torch]==4.50.0' \
+                aiohttp==3.10.11
 
 # end pip install
