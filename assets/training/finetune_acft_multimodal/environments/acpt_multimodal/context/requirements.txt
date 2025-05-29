@@ -8,9 +8,9 @@ azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 # azureml_acft_multimodal_components=={{latest-pypi-version}}
 # needed by multimodal
 mltable==1.5.0
-transformers==4.50.0
+transformers==4.48.0
 peft==0.4.0
-deepspeed==0.16.4
+deepspeed==0.15.2
 optimum==1.23.3
 accelerate==0.25.0
 diffusers==0.24.0
@@ -24,4 +24,5 @@ bitsandbytes==0.41.0
 einops==0.6.1
 numpy==1.22
 azureml-dataprep==4.12.4
-azureml-metrics
+# Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
+azureml-metrics==0.0.33
