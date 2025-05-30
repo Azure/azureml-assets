@@ -32,7 +32,6 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
-
 from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
@@ -439,7 +438,15 @@ def get_parser():
         help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
     )
     parser.add_argument(
-        "--evaluation_strategy", type=str, default="epoch", help="The evaluation strategy to adopt during training",
+        "--evaluation_strategy", 
+        type=str, 
+        default="epoch", 
+        choices=(
+                    "no",
+                    "steps",
+                    "epoch",
+                ),
+        help="The evaluation strategy to adopt during training",
     )
     parser.add_argument(
         "--evaluation_steps_interval",
@@ -480,7 +487,7 @@ def get_parser():
     parser.add_argument(
         "--save_strategy",
         type=str,
-        default=SaveStrategy.EVALUATION_STRATEGY,
+        default="no",
         help="The checkpoint save strategy to adopt during training.",
     )
     parser.add_argument(
