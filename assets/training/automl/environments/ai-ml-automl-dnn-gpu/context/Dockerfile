@@ -39,7 +39,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=72.1.0 \
+    setuptools=78.1.1 \
     wheel=0.44.0 \
     scipy=1.10.1 \
     joblib=1.2.0 \
@@ -52,7 +52,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # end conda create
 
 # Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN conda install pytorch=2.2.2 -c pytorch -c nvidia && conda clean -a -y
+RUN pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu118
 # end conda create
 
 # begin pip install
