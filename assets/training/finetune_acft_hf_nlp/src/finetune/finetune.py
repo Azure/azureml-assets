@@ -1090,7 +1090,6 @@ def validate_early_stop_settings(args: Namespace) -> None:
 
 
 def finetune(args: Namespace):
-    logger.info(f"Starting finetune with args: {args}")
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
     enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
