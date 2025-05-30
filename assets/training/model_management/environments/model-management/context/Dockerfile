@@ -37,6 +37,8 @@ RUN rm -rf /opt/conda/pkgs/pytorch-* \
     && rm -rf /opt/conda/pkgs/libtorch-* \
     && rm -rf /opt/conda/pkgs/torchaudio-* \
     && rm -rf /opt/conda/pkgs/torchvision-*
+    && rm -rf /opt/conda/lib/python3.9/site-packages/torch* \
+    && rm -rf /opt/conda/envs/ptca/lib/python3.9/site-packages/torch* || true
 
 # Clean pip cache (optional)
 RUN pip cache purge
