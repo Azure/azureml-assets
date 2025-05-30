@@ -1077,8 +1077,7 @@ def validate_learning_rate(args: Namespace) -> None:
 
 def validate_early_stop_settings(args: Namespace) -> None:
     """Validate early stop settings."""
-    if args.apply_early_stopping is True and args.eval_strategy not in (SaveStrategy.EPOCH,
-                                                                               SaveStrategy.STEPS):
+    if args.apply_early_stopping is True and args.eval_strategy not in (SaveStrategy.EPOCH, SaveStrategy.STEPS):
         raise ACFTValidationException._with_error(
             AzureMLError.create(
                 ACFTUserError,
