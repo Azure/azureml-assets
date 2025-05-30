@@ -1,0 +1,40 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: delete_endpoint
+version: 0.0.7
+type: command
+
+is_deterministic: True
+
+display_name: Delete Endpoint
+description:
+  Deletes an endpoint resource.
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
+
+code: ../../src
+command: >-
+  python delete_endpoint.py
+  $[[--model_deployment_details ${{inputs.model_deployment_details}}]]
+  $[[--endpoint_name ${{inputs.endpoint_name}}]]
+  $[[--deployment_name ${{inputs.deployment_name}}]]
+
+inputs:
+  # Output of registering component
+  model_deployment_details:
+    type: uri_file
+    optional: true
+    description: JSON file that contains the deployment details.
+
+  endpoint_name:
+    type: string
+    optional: true
+    description: Name of the endpoint to delete.
+
+  deployment_name:
+    type: string
+    optional: true
+    description: Name of the deployment to delete.
+
+tags:
+    Preview: ""
+    Internal: ""
