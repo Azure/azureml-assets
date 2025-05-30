@@ -438,9 +438,9 @@ def get_parser():
         help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
     )
     parser.add_argument(
-        "--evaluation_strategy", 
-        type=str, 
-        default="epoch", 
+        "--evaluation_strategy",
+        type=str,
+        default="epoch",
         choices=(
                     "no",
                     "steps",
@@ -1074,6 +1074,7 @@ def validate_learning_rate(args: Namespace) -> None:
             )
         )
 
+
 def validate_early_stop_settings(args: Namespace) -> None:
     """Validate early stop settings."""
     if args.apply_early_stopping is True and args.eval_strategy not in (SaveStrategy.EPOCH,
@@ -1087,7 +1088,7 @@ def validate_early_stop_settings(args: Namespace) -> None:
                 )
             )
         )
-    
+
 
 def finetune(args: Namespace):
     logger.info(f"Starting finetune with args: {args}")
