@@ -24,3 +24,4 @@ dependencies:
     - datasets
     - typing-extensions>=4.8.0
     - gevent-websocket
+    - marshmallow==3.26.1

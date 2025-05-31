@@ -67,7 +67,7 @@ RUN pip install 'torch>=2.2.2'
 RUN pip install 'opencv-python-headless==4.8.1.78'
 
 RUN pip install 'setuptools==78.1.1'
-RUN pip install 'marshmallow==3.26.1'
+# RUN pip install 'marshmallow==3.26.1'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
