@@ -28,8 +28,6 @@ RUN pip install 'azureml-mlflow=={{latest-pypi-version}}' \
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-telemetry=={{latest-pypi-version}}' \
-                'setuptools==78.1.1' \
-                'marshmallow<4.0.0' \
                 'gunicorn>=22.0.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
@@ -46,6 +44,8 @@ RUN pip install git+https://github.com/huggingface/evaluate.git
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
+RUN pip install 'setuptools==78.1.1'
+RUN pip install 'marshmallow==3.26.1'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
