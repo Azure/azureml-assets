@@ -24,4 +24,4 @@ dependencies:
     - typing-extensions>=4.8.0
     - gevent-websocket
     - opencv-python-headless==4.8.1.78
-    - marshmallow==3.26.1
+    - marshmallow==3.23.0
