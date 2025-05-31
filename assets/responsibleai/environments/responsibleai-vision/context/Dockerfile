@@ -41,6 +41,7 @@ RUN pip install 'scikit-learn>=1.5.1' \
                 'interpret-community==0.31.0' \
                 'Pillow>=10.3.0' \
                 'setuptools==78.1.1' \
+                'marshmallow<4.0.0' \
                 'numpy==1.26.2' \
                 'scipy==1.10.0' \
                 'statsmodels==0.14.0' \

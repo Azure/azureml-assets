@@ -29,6 +29,7 @@ RUN pip install 'azureml-mlflow=={{latest-pypi-version}}' \
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-telemetry=={{latest-pypi-version}}' \
                 'setuptools==78.1.1' \
+                'marshmallow<4.0.0' \
                 'gunicorn>=22.0.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
