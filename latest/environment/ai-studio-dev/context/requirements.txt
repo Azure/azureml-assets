@@ -12,5 +12,5 @@ semantic-kernel
 pytest
 keyring
 # dev dependencies
-setuptools>70.0.0
+setuptools
 azureml-inference-server-http
