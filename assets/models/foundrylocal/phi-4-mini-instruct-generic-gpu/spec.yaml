@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-instruct-generic-gpu
-version: 3
+version: 4
 path: ./
 tags:
   foundryLocal: ""
