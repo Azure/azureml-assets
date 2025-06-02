@@ -43,9 +43,7 @@ RESPONSE_KEY = "response"
 GENERATED_RESPONSE_KEY = "generated_response"
 GENERATED_RESPONSE_MAPPING = f"${{data.{GENERATED_RESPONSE_KEY}}}"
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
+os.environ["AZUREML_OBO_ENABLED"] = "True"
 
 def update_value_in_dict(d, key_substring, new_func):
     """Recursively search for a value containing 'key_substring' and apply 'new_func' to modify it."""
