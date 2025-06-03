@@ -12,7 +12,7 @@ on:
 env:
   conda_env_prefix: /opt/conda/envs/eval_on_cloud
   eval_on_cloud_tests_dir: assets/evaluation_on_cloud/environments/evaluations-built-in/tests
-  eval_on_cloud_conda_yaml: assets/evaluation_on_cloud/environments/evaluations-built-in/context/conda.yaml
+  eval_on_cloud_conda_yaml: assets/evaluation_on_cloud/environments/evaluations-built-in/tests/conda.yaml
   pytest_reports: pytest-reports
 
 jobs:

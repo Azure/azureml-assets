@@ -8,7 +8,7 @@ dependencies:
   - pandas
   - requests
   - pip:
-      - -r assets/evaluation_on_cloud/environments/evaluations-built-in/context/requirements.txt
+      - -r ../context/requirements.txt
       - promptflow
       - pytest
       - pytest-xdist
