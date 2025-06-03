@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-reasoning-generic-cpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -14,6 +14,11 @@ tags:
   alias: phi-4-mini-reasoning
   directoryPath: v1
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
+  supportsToolCalling: ""
+  toolCallStart: "<|tool_call|>"
+  toolCallEnd: "<|/tool_call|>"
+  toolRegisterStart: "<|tool|>"
+  toolRegisterEnd: "<|/tool|>"
 type: custom_model
 variantInfo:
   parents:
