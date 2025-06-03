@@ -17,6 +17,8 @@ tags:
   supportsToolCalling: ""
   toolCallStart: "<tool_call>"
   toolCallEnd: "</tool_call>"
+  toolRegisterStart: "<tools>"
+  toolRegisterEnd: "</tools>"
 type: custom_model
 variantInfo:
   parents:
