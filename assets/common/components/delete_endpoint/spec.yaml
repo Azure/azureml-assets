@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: delete_endpoint
-version: 0.0.8
+version: 0.0.9
 type: command
 
 is_deterministic: True
