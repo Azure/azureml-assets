@@ -28,7 +28,7 @@ dependencies:
   - lightgbm==4.6.0
   - msrest>=0.6.21,<0.7.1
   - mltable==1.6.1
-  - openai==1.83.0
+  - openai==1.84.0
   - mldesigner==0.1.0b19
   - tiktoken
   - idna==3.7
@@ -37,6 +37,6 @@ dependencies:
   - setuptools>=70.0.0
   - cryptography==45.0.3
   # batch score dependencies
-  - opencensus-ext-azure==1.1.14
+  - opencensus-ext-azure==1.1.15
   - StrEnum==0.4.15
   - pyDispatcher==2.0.7
