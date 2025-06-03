@@ -1,0 +1,14 @@
+name: eval_on_cloud
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - -r assets/evaluation_on_cloud/environments/evaluations-built-in/context/requirements.txt
+      - pandas
+      - requests
+      - promptflow
+      - pytest
+      - pytest-xdist
