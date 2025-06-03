@@ -6,6 +6,7 @@ from pathlib import Path
 import os
 import importlib
 
+
 def test_evaluate_obo_sets_env_var():
     script_path = Path(__file__).parent.parent / "context" / "evaluate_on_data.py"
     module_name = "evaluate_on_data"

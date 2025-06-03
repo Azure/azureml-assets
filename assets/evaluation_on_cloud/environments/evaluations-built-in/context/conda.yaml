@@ -5,10 +5,10 @@ channels:
 dependencies:
   - python=3.10
   - pip
+  - pandas
+  - requests
   - pip:
       - -r assets/evaluation_on_cloud/environments/evaluations-built-in/context/requirements.txt
-      - pandas
-      - requests
       - promptflow
       - pytest
       - pytest-xdist
