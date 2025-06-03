@@ -1,4 +1,4 @@
-name: evaluation-on-cloud-unittests
+name: evaluation-on-cloud-tests
 
 on:
   pull_request:
@@ -6,12 +6,12 @@ on:
       - main
     paths:
       - assets/evaluation_on_cloud/**
-      - .github/workflows/evaluation-on-cloud-unittests.yaml
+      - .github/workflows/evaluation-on-cloud-tests.yaml
   workflow_dispatch:
 
 env:
   conda_env_prefix: /opt/conda/envs/eval_on_cloud
-  eval_on_cloud_unittests_dir: assets/evaluation_on_cloud/environments/evaluations-built-in/tests
+  eval_on_cloud_tests_dir: assets/evaluation_on_cloud/environments/evaluations-built-in/tests
   eval_on_cloud_conda_yaml: assets/evaluation_on_cloud/environments/evaluations-built-in/context/conda.yaml
   pytest_reports: pytest-reports
 
