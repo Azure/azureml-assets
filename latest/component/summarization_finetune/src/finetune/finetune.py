@@ -32,7 +32,6 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
-
 from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
@@ -439,7 +438,15 @@ def get_parser():
         help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
     )
     parser.add_argument(
-        "--evaluation_strategy", type=str, default="epoch", help="The evaluation strategy to adopt during training",
+        "--evaluation_strategy",
+        type=str,
+        default="epoch",
+        choices=(
+                    "no",
+                    "steps",
+                    "epoch",
+                ),
+        help="The evaluation strategy to adopt during training",
     )
     parser.add_argument(
         "--evaluation_steps_interval",
@@ -480,7 +487,7 @@ def get_parser():
     parser.add_argument(
         "--save_strategy",
         type=str,
-        default=SaveStrategy.EVALUATION_STRATEGY,
+        default="no",
         help="The checkpoint save strategy to adopt during training.",
     )
     parser.add_argument(
@@ -1068,6 +1075,20 @@ def validate_learning_rate(args: Namespace) -> None:
         )
 
 
+def validate_early_stop_settings(args: Namespace) -> None:
+    """Validate early stop settings."""
+    if args.apply_early_stopping is True and args.eval_strategy not in (SaveStrategy.EPOCH, SaveStrategy.STEPS):
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Set evaluation_strategy to one of steps or epoch when apply_early_stopping is True."
+                    f"Current evaluation_strategy is {args.eval_strategy}."
+                )
+            )
+        )
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
@@ -1254,6 +1275,11 @@ def finetune(args: Namespace):
 
     validate_learning_rate(args)
 
+    if not hasattr(args, "eval_strategy"):
+        args.eval_strategy = args.evaluation_strategy
+    # validate early stop settings
+    validate_early_stop_settings(args)
+
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
             raise ACFTValidationException._with_error(
@@ -1298,7 +1324,6 @@ def finetune(args: Namespace):
         args.evaluation_steps_interval = 0.0
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
-
     if args.save_strategy == SaveStrategy.EVALUATION_STRATEGY:
         logger.info(f"Setting save strategy to evaluation strategy: {args.evaluation_strategy}, {args.eval_steps}")
         args.save_strategy = args.evaluation_strategy
