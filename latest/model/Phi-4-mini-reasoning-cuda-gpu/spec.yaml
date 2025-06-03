@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-reasoning-cuda-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -18,6 +18,11 @@ tags:
     \ by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"\
     assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
     }"
+  supportsToolCalling: ""
+  toolCallStart: "<|tool_call|>"
+  toolCallEnd: "<|/tool_call|>"
+  toolRegisterStart: "<|tool|>"
+  toolRegisterEnd: "<|/tool|>"
 type: custom_model
 variantInfo:
   parents:
