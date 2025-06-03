@@ -82,7 +82,8 @@ RUN pip install \
                 'psutil>5.0.0,<6.0.0' \
                 'requests>=2.31.0' \
                 'certifi>=2023.07.22' \
-                'cryptography>=42.0.5'
+                'cryptography>=42.0.5' \
+                'jinja2>=3.1.6'
                 # end pypi dependencies
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
