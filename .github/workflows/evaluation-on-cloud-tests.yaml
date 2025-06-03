@@ -40,11 +40,7 @@ jobs:
           set -ex
           apt-get update && apt-get upgrade && apt-get install -y build-essential
           echo $conda_env_prefix
-          sed -i 's/- pip:/- pip:\n $eval_on_cloud_conda_yaml
-          sed -i 's/=={{latest-pypi-version}}//g' $eval_on_cloud_conda_yaml
-          sed -i 's/=={{latest-pypi-version:pre}}//g' $eval_on_cloud_conda_yaml
-          echo "  - pytest" >> $eval_on_cloud_conda_yaml
-          echo "  - pytest-xdist" >> $eval_on_cloud_conda_yaml
+          sed -i 's/=={{latest-pypi-version}}//g' assets/evaluation_on_cloud/environments/evaluations-built-in/context/requirements.txt
           cat $eval_on_cloud_conda_yaml
           conda env create -p $conda_env_prefix -f $eval_on_cloud_conda_yaml
           echo "conda env successfully created at $conda_env_prefix"
