@@ -10,7 +10,7 @@ wget==3.2
 applicationinsights==0.11.10
 azureml-automl-core==1.60.0
 azureml-telemetry==1.60.0
-azureml-automl-dnn-vision==1.60.0
+#azureml-automl-dnn-vision==None
 pyarrow==14.0.2
 GitPython==3.1.44
 paramiko==3.5.1
@@ -22,7 +22,7 @@ onnx==1.17.0
 idna 
 tqdm 
 requests==2.32.1 
-tornado==6.4.2 
+tornado==6.5
 certifi==2024.07.04 
 urllib3==1.26.19 
 scikit-learn==1.5.1 
