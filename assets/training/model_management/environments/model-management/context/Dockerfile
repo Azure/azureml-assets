@@ -22,9 +22,9 @@ COPY requirements.txt .
 # Going forward  azureml-automl-dnn-vision needs to update version for torch and numpy
 RUN conda install python=3.10 -y
 
-RUN pip install -r requirements.txt --no-cache-dir
-
 RUN pip install azureml-automl-dnn-vision --config-settings="--ignore-requires-python"
+
+RUN pip install -r requirements.txt --no-cache-dir
 
 # List pip packages
 RUN pip list
