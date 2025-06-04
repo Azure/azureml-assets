@@ -442,7 +442,7 @@ def get_parser():
         type=str,
         default="epoch",
         choices=(
-                    "no",
+                    "disable",
                     "steps",
                     "epoch",
                 ),
@@ -1274,6 +1274,10 @@ def finetune(args: Namespace):
     set_gradient_checkpointing(args)
 
     validate_learning_rate(args)
+
+    # Fix: Ev2 rollout fails when using no as string in the spec.
+    if args.evaluation_strategy == 'disable':
+        args.evaluation_strategy = 'no'
 
     if not hasattr(args, "eval_strategy"):
         args.eval_strategy = args.evaluation_strategy

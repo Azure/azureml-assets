@@ -321,7 +321,7 @@ inputs:
     enum:
     - epoch
     - steps
-    - "no"
+    - disable
     description: The evaluation strategy to adopt during training. If set to "steps", either the `evaluation_steps_interval` or `eval_steps` needs to be specified, which helps to determine the step at which the model evaluation needs to be computed else evaluation happens at end of each epoch.
 
   evaluation_steps_interval:
