@@ -16,6 +16,21 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
 
 COPY requirements.txt .
 
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y wget curl libicu70 libssl3 libkrb5-3 zlib1g libgcc-s1 ca-certificates
+
+# Install .NET Runtime 6.0.36 using Microsoft's install script
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh && \
+    chmod +x dotnet-install.sh && \
+    ./dotnet-install.sh --runtime dotnet --version 6.0.36 --install-dir /usr/share/dotnet && \
+    rm dotnet-install.sh && \
+    rm -f /usr/bin/dotnet && \
+    ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+
+# Verify installation
+RUN dotnet --list-runtimes
+
 # Switch to python==3.9 to prevent numpy==1.23.5 build failure
 # numpy==1.23.5 is a hard dependency in azureml-automl-dnn-vision
 # which is not compatible with py310.
