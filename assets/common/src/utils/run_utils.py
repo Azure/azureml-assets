@@ -3,6 +3,7 @@
 
 """Run Utils."""
 
+import json
 from utils.config import LoggerConfig
 import os
 from azure.ai.ml import MLClient
@@ -156,14 +157,7 @@ class JobRunDetails:
         #run_properties = self.details.get("properties", {})
         run_properties = self.details._to_dict().get("properties", {})
         return run_properties.get("azureml.moduleid", LoggerConfig.ASSET_NOT_FOUND)
-
-    @property
-    def input_assets(self):
-        """Run properties."""
-        if "OfflineRun" in self.run_id:
-            return {}
-        run_definition = self.details.get("runDefinition", {})
-        return run_definition.get("inputAssets", {})
+        
 
     @property
     def root_attribute(self):

@@ -151,13 +151,19 @@ def get_job_uri_from_input_run_assetId(assetID: str):
     return f"azureml://jobs/{input_parent_job_name}/outputs/{input_asset_name}"
 
 
-def get_run_input_asset_id(input_name: str):
-    """Return Job Input asset ID for a given input name."""
-    run_details: JobRunDetails = JobRunDetails.get_run_details()
-    input_assets = run_details.input_assets.get(input_name, None)
-    if (input_assets and "asset" in input_assets and "assetId" in input_assets["asset"]):
-        return input_assets["asset"]["assetId"]
-    return None
+def get_run_input_asset_id(input_name: str) -> str:
+    """
+    Get asset ID of the input provided to the pipeline component.
+    Looks for environment variable 'AZUREML_JOB_INPUT_<INPUT_NAME>'
+    """
+    
+    env_var = f"AZURE_ML_INPUT_{input_name}"
+    asset_id = os.environ.get(env_var, None)
+
+    if not asset_id:
+        logger.warning(f"No asset ID found for input '{input_name}'. Expected env var: {env_var}")
+    
+    return asset_id
 
 
 def get_job_asset_uri(input_name):
