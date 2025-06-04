@@ -20,9 +20,11 @@ COPY requirements.txt .
 # numpy==1.23.5 is a hard dependency in azureml-automl-dnn-vision
 # which is not compatible with py310.
 # Going forward  azureml-automl-dnn-vision needs to update version for torch and numpy
-RUN conda install python=3.9 -y
+RUN conda install python=3.10 -y
 
 RUN pip install -r requirements.txt --no-cache-dir
+
+RUN pip install azureml-automl-dnn-vision --config-settings="--ignore-requires-python"
 
 # List pip packages
 RUN pip list
