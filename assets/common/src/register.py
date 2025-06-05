@@ -13,16 +13,14 @@ import yaml
 from pathlib import Path
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
-from azureml._common._error_definition import AzureMLError
-from azureml._common.exceptions import AzureMLException
+from azure.ai.ml.exceptions import ValidationException, ErrorTarget, ErrorCategory
 
 from utils.common_utils import get_mlclient, get_job_asset_uri
 from utils.config import AppName, ComponentVariables
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
     swallow_all_exceptions,
-    UnSupportedModelTypeError,
-    MissingModelNameError,
+    ModelImportErrorStrings
 )
 
 
@@ -139,10 +137,17 @@ def main():
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
-        raise AzureMLException._with_error(AzureMLError.create(UnSupportedModelTypeError, model_type=model_type))
+        message = ModelImportErrorStrings.UNSUPPORTED_MODEL_TYPE_ERROR.format(model_type=model_type)
+        raise ValidationException(
+            message=message, no_personal_data_message=message, target=ErrorTarget.MODEL
+        )
 
     if not model_name:
-        raise AzureMLException._with_error(AzureMLError.create(MissingModelNameError))
+        message = ModelImportErrorStrings.MISSING_MODEL_NAME_ERROR
+        raise ValidationException(
+            message=message, no_personal_data_message=message,
+            target=ErrorTarget.MODEL, error_category=ErrorCategory.USER_ERROR
+        )
 
     if not re.match(VALID_MODEL_NAME_PATTERN, model_name):
         # update model name to one supported for registration
