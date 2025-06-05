@@ -45,6 +45,9 @@ RUN pip install git+https://github.com/huggingface/evaluate.git
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
 
+# To resolve vulnerability Python (Pip) Security Update for setuptools (GHSA-5rjg-fvgr-3xxf)
+RUN pip install 'setuptools>=78.1.1'
+
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
