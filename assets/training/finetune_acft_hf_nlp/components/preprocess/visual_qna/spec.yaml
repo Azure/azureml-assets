@@ -1,0 +1,100 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: visual_qna_datapreprocess
+version: 0.0.74
+type: command
+
+is_deterministic: true
+
+display_name: Visual QnA DataPreProcess
+description: Component to preprocess data for Visual QnA task. See [docs](https://aka.ms/azureml/components/visual_qna_datapreprocess) to learn more.
+
+environment: azureml:acft-hf-nlp-gpu:112
+
+code: ../../../src/preprocess
+
+inputs:
+  # Task arguments
+  # Sample example
+  # [ { "messages": [ { "content": "how can identity protection services help protect me against identity theft", "role": "user" }, { "content": "Identity protection services can help protect you against identity theft in several ways:\n\n1. Monitoring: Many identity protection services monitor your credit reports, public records, and other sources for signs of identity theft. If they detect any suspicious activity, they will alert you so you can take action.\n2. Credit freeze: Some identity protection services can help you freeze your credit, which makes it more difficult for thieves to open new accounts in your name.\n3. Identity theft insurance: Some identity protection services offer insurance that can help you recover financially if you become a victim of identity theft.\n4. Assistance: Many identity protection services offer assistance if you become a victim of identity theft. They can help you file a police report, contact credit bureaus, and other steps to help you restore your identity.\n\nOverall, identity protection services can provide you with peace of mind and help you take proactive steps to protect your identity. However, it's important to note that no service can completely guarantee that you will never become a victim of identity theft. It's still important to take steps to protect your own identity, such as being cautious with personal information and regularly monitoring your credit reports.", "role": "assistant" } ] } ]
+
+  batch_size:
+    type: integer
+    optional: true
+    min: 1
+    default: 1000
+    description: Number of examples to batch before calling the tokenization function
+
+  # Tokenization params
+  pad_to_max_length:
+    type: string
+    enum:
+    - "true"
+    - "false"
+    default: "false"
+    optional: true
+    description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
+
+  max_seq_length:
+    type: integer
+    optional: true
+    default: -1
+    description: Controls the maximum length to use when pad_to_max_length parameter is set to `true`. Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
+
+  # Data inputs
+  # Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
+  # If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
+  # If anyone of the file is missing, 20% of the train data will be assigned to it and the remaining 80% will be used for training
+  train_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  test_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
+
+  train_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered training data asset in `mltable` format.
+
+  validation_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered validation data asset in `mltable` format.
+
+  test_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered test data asset in `mltable` format.
+
+  images_folder:
+    type: uri_folder
+    optional: false
+    description: Path to the folder containing the images. The folder should contain images in `jpg`, `jpeg`, `png` format. The images should be referenced in the input data files using the `image_path` key.
+    mode: rw_mount
+    
+  # Model input
+  model_selector_output:
+    type: uri_folder
+    optional: false
+    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+    mode: rw_mount
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data
+    mode: rw_mount
+
+command: >-
+  python preprocess.py --task_name VisualQuestionAnswering $[[--batch_size '${{inputs.batch_size}}']] $[[--pad_to_max_length '${{inputs.pad_to_max_length}}']] $[[--max_seq_length '${{inputs.max_seq_length}}']] $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']] $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']] $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path '${{inputs.test_mltable_path}}']] --images_folder '${{inputs.images_folder}}' --model_selector_output '${{inputs.model_selector_output}}' --output_dir '${{outputs.output_dir}}'
