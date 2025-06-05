@@ -16,6 +16,7 @@ GitPython=={{latest-pypi-version}}
 paramiko=={{latest-pypi-version}}
 cryptography==44.0.2
 ####
+torch==2.6.0
 Pillow 
 gunicorn 
 onnx==1.17.0 
