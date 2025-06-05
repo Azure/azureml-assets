@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/fl-perf-improvements/phi-4-mini-instruct/onnx/cuda/cuda-int4-kquant-block-128-mixed/v3
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

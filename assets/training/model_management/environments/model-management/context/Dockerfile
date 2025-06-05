@@ -1,8 +1,8 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch222:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs -y
+RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
@@ -16,16 +16,11 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
 
 COPY requirements.txt .
 
-# Switch to python==3.9 to prevent numpy==1.23.5 build failure
-# numpy==1.23.5 is a hard dependency in azureml-automl-dnn-vision
-# which is not compatible with py310.
-# Going forward  azureml-automl-dnn-vision needs to update version for torch and numpy
-RUN conda install python=3.9 -y
+# This line is added because azureml-automl-dnn-vision depends on python 3.9.
+# Added ignore python requires to get this installed.
+RUN pip install --ignore-requires-python azureml-automl-dnn-vision
 
 RUN pip install -r requirements.txt --no-cache-dir
-
-# Vulnerability fix
-RUN pip install Pillow gunicorn onnx==1.17.0 idna tqdm requests==2.32.1 tornado==6.4.2 certifi==2024.07.04 urllib3==1.26.19 scikit-learn==1.5.1 mlflow==2.20.3 mlflow-skinny==2.20.3 marshmallow==3.23.2
 
 # List pip packages
 RUN pip list

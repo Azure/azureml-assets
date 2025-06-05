@@ -39,7 +39,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=72.1.0 \
+    setuptools=78.1.1 \
     wheel=0.44.0 \
     scipy=1.10.1 \
     joblib=1.2.0 \
@@ -52,7 +52,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # end conda create
 
 # Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN conda install pytorch=2.2.2 -c pytorch -c nvidia && conda clean -a -y
+RUN pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu118
 # end conda create
 
 # begin pip install
@@ -82,7 +82,8 @@ RUN pip install \
                 'psutil>5.0.0,<6.0.0' \
                 'requests>=2.31.0' \
                 'certifi>=2023.07.22' \
-                'cryptography>=42.0.5'
+                'cryptography>=42.0.5' \
+                'jinja2>=3.1.6'
                 # end pypi dependencies
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d

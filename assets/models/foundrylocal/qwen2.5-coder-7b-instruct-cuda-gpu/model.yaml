@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/fl-perf-improvements/qwen2.5-coder-7b-instruct/onnx/cuda/cuda-int4-rtn-block-32/v3
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

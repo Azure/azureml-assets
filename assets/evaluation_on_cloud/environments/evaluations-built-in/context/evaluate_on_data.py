@@ -21,6 +21,7 @@ from azure.ai.evaluation._evaluate._evaluate_aoai import (
 from save_evaluation import load_evaluator
 from model_target import ModelTarget, get_key_from_dict
 
+os.environ["AZUREML_OBO_ENABLED"] = "True"
 AZURE_ENDPOINT = "AzureEndpoint"
 API_KEY = "ApiKey"
 AZURE_DEPLOYMENT = "AzureDeployment"
@@ -133,6 +134,10 @@ def create_model_target_and_data_mapping(command_line_args):
     endpoint = get_key_from_dict(model_config, AZURE_ENDPOINT, "")
     model_params = get_key_from_dict(target_config, MODEL_PARAMS, {}).copy()
     data_mapping = get_key_from_dict(model_params, DATA_MAPPING, None)
+    data_mapping_key_to_pop = next((k for k in model_params if k.lower() == DATA_MAPPING.lower()), None)
+    if data_mapping_key_to_pop:
+        logger.info(f"Removing dataMapping from model_params {data_mapping_key_to_pop}")
+        model_params.pop(data_mapping_key_to_pop)
     if data_mapping is None:
         data_mapping = DEFAULT_DATA_MAPPING
         logger.info(f"Using default dataMapping: {data_mapping}")

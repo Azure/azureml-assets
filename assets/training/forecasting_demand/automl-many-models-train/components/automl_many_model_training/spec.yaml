@@ -4,7 +4,7 @@ type: pipeline
 name: automl_many_models_training
 display_name: AutoML - Many Models Training
 description: Enables AutoML many models training.
-version: 0.0.8
+version: 0.0.9
 is_deterministic: false
 
 inputs:
@@ -44,7 +44,7 @@ outputs:
 jobs:
   automl_many_models_training_setup_step: 
     type: command
-    component: azureml:automl_many_models_training_setup_step:0.0.8
+    component: azureml:automl_many_models_training_setup_step:0.0.9
     inputs:
       raw_Data: ${{parent.inputs.raw_data}}
       automl_config: ${{parent.inputs.automl_config}}
@@ -61,7 +61,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_many_models_training_step: 
     type: parallel
-    component: azureml:automl_many_models_training_step:0.0.8
+    component: azureml:automl_many_models_training_step:0.0.9
     inputs:
       partitioned_data: ${{parent.jobs.automl_many_models_training_setup_step.outputs.processed_data}}
       metadata: ${{parent.jobs.automl_many_models_training_setup_step.outputs.metadata}}
@@ -84,7 +84,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_many_models_training_collect_step: 
     type: command
-    component: azureml:automl_many_models_training_collection_step:0.0.8
+    component: azureml:automl_many_models_training_collection_step:0.0.9
     inputs:
       setup_metadata: ${{parent.jobs.automl_many_models_training_setup_step.outputs.metadata}}
       input_metadata: ${{parent.jobs.automl_many_models_training_step.outputs.output_metadata}}
