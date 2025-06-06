@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.79
+version: 0.0.80
 name: llm_rag_create_faiss_index
 display_name: LLM - Create FAISS Index
 is_deterministic: true
