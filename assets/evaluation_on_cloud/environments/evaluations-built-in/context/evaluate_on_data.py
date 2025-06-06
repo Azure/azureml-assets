@@ -21,6 +21,7 @@ from azure.ai.evaluation._evaluate._evaluate_aoai import (
 from save_evaluation import load_evaluator
 from model_target import ModelTarget, get_key_from_dict
 
+os.environ["AZUREML_OBO_ENABLED"] = "True"
 AZURE_ENDPOINT = "AzureEndpoint"
 API_KEY = "ApiKey"
 AZURE_DEPLOYMENT = "AzureDeployment"

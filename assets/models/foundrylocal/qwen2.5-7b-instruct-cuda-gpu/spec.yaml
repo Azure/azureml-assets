@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-7b-instruct-cuda-gpu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: ""
@@ -14,6 +14,11 @@ tags:
   alias: qwen2.5-7b
   directoryPath: v3
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
+  supportsToolCalling: ""
+  toolCallStart: "<tool_call>"
+  toolCallEnd: "</tool_call>"
+  toolRegisterStart: "<tools>"
+  toolRegisterEnd: "</tools>"
 type: custom_model
 variantInfo:
   parents:
