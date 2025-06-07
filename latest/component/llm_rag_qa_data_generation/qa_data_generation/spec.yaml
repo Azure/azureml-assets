@@ -3,7 +3,7 @@ type: command
 
 tags:
   Preview: ""
-version: 0.0.79
+version: 0.0.80
 name: llm_rag_qa_data_generation
 display_name: LLM - Generate QnA Test Data
 is_deterministic: true

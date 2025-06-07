@@ -3,7 +3,7 @@ type: command
 
 tags:
   Preview: ""
-version: 0.0.84
+version: 0.0.85
 name: llm_rag_validate_deployments
 display_name: LLM - Validate Deployments
 is_deterministic: false
