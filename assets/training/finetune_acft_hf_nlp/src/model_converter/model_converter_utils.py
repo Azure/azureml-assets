@@ -7,11 +7,13 @@ import shutil
 from argparse import Namespace
 from pathlib import Path
 
+import torch
 from azureml.acft.accelerator.constants import PeftLoRAConstants
 from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
 from azureml.acft.accelerator.utils.model_utils import print_model_summary
 from azureml.acft.common_components import get_logger_app
 from azureml.acft.contrib.hf.nlp.constants.constants import Tasks
+from peft import PeftModel
 from peft.auto import (
     AutoPeftModelForCausalLM,
     AutoPeftModelForQuestionAnswering,
@@ -21,9 +23,9 @@ from peft.auto import (
 )
 from transformers import (
     AutoTokenizer,
+    Llama4ForConditionalGeneration,
     PreTrainedModel,
     PreTrainedTokenizerBase,
-    Llama4ForConditionalGeneration,
 )
 from transformers.models.auto.modeling_auto import (
     AutoModelForCausalLM,
@@ -32,10 +34,6 @@ from transformers.models.auto.modeling_auto import (
     AutoModelForSequenceClassification,
     AutoModelForTokenClassification,
 )
-from transformers.trainer_utils import get_last_checkpoint
-from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
-import torch
-from peft import PeftModel
 
 logger = get_logger_app(
     "azureml.acft.contrib.hf.scripts.src.model_converter.model_converter_utils"
@@ -53,7 +51,6 @@ ACFT_TASKS_HUGGINGFACE_MODELS_MAPPING = {
     Tasks.NLP_MULTICLASS: AutoModelForSequenceClassification,
     Tasks.NLP_MULTILABEL: AutoModelForSequenceClassification,
     Tasks.VISUAL_QUESTION_ANSWERING: Llama4ForConditionalGeneration,
-
 }
 
 
@@ -113,8 +110,8 @@ def load_model(
         # pop any optimizations related parameters
         load_model_kwargs.pop("attn_implementation", None)
         logger.info(f"Loading model with kwargs: {load_model_kwargs}")
-        model_type = getattr(component_args, "model_type", "") 
-        if model_type == "llama4" :
+        model_type = getattr(component_args, "model_type", "")
+        if model_type == "llama4":
             model_name_or_path = getattr(component_args, "model_name_or_path", None)
             model = Llama4ForConditionalGeneration.from_pretrained(
                 model_name_or_path,
@@ -172,8 +169,10 @@ def load_and_merge_peft_lora_model(
     logger.info(f"Loading model with kwargs: {load_model_kwargs}")
     logger.info(f"Loading model from {model_path.lower()}")
     model_type = getattr(component_args, "model_type", "")
-    if model_type == "llama4" :
-        model_name_or_path = Path(component_args.model_import_output, component_args.model_name )  
+    if model_type == "llama4":
+        model_name_or_path = Path(
+            component_args.model_import_output, component_args.model_name
+        )
         logger.info(f"Model name or path: {model_name_or_path}")
         if model_name_or_path.is_dir():
             component_args.model_name_or_path = model_name_or_path
@@ -181,9 +180,11 @@ def load_and_merge_peft_lora_model(
             component_args.model_name_or_path = component_args.model_name
 
         base_model = Llama4ForConditionalGeneration.from_pretrained(
-            component_args.model_name_or_path, torch_dtype=torch.float16, trust_remote_code=True
+            component_args.model_name_or_path,
+            torch_dtype=torch.float16,
+            trust_remote_code=True,
         )
-        logger.info( f"Loaded base model from {model_path.lower()}")
+        logger.info(f"Loaded base model from {model_path.lower()}")
         ds3_peft_model = PeftModel.from_pretrained(
             base_model,
             peft_lora_adapter_path,
@@ -192,7 +193,7 @@ def load_and_merge_peft_lora_model(
             trust_remote_code=True,
         )
     else:
-        logger.info( f"Loaded base model from else {model_path.lower()}")
+        logger.info(f"Loaded base model from else {model_path.lower()}")
         ds3_peft_model = auto_cls.from_pretrained(
             peft_lora_adapter_path,
             **load_model_kwargs,
