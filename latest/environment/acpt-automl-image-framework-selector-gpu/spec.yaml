@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by framework selector component for automl image workloads
 
 name: "acpt-automl-image-framework-selector-gpu"
-version: "57"
+version: "58"
 
 build:
   path: "context"
