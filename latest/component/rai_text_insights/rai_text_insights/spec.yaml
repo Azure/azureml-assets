@@ -72,7 +72,7 @@ outputs:
     description: Json file to which UX is serialized to for viewing in static AzureML
       Studio UI
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-text/versions/18
+environment: azureml://registries/azureml/environments/responsibleai-text/versions/19
 command: >-
   python ./rai_text_insights.py
   --task_type ${{inputs.task_type}}
