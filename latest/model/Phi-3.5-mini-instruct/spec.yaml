@@ -12,6 +12,11 @@ properties:
   finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96amsr_A100_v4
 tags:
+  InferenceLegacyDate: '2025-06-09'
+  InferenceDeprecationDate: '2025-06-30'
+  InferenceRetirementDate: '2025-08-30'
+  FinetuneDeprecationDate: '2025-06-30'
+  FinetuneRetirementDate: '2025-08-30'
   evaluation: |-
     ### Multilingual
     The table below highlights multilingual capability of Phi-3.5-mini on multilingual MMLU, MEGA, and multilingual MMLU-pro datasets. Overall, we observed that even with just 3.8B active parameters, the model is very competitive on multilingual tasks in comparison to other models with a much bigger active parameters.
@@ -157,9 +162,6 @@ tags:
   Featured: ""
   huggingface_model_id: ""
   maas-inference: "true"
-  maas-finetuning: true
-  maas-finetuning-offer: true
-  maas-finetuning-regions: eastus2,eastus,southcentralus,northcentralus,westus,westus3
   license: mit
   disable-batch: "true"
   task: chat-completion

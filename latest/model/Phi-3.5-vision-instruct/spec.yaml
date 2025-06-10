@@ -8,6 +8,11 @@ properties:
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96amsr_A100_v4
 tags:
+  InferenceLegacyDate: '2025-06-09'
+  InferenceDeprecationDate: '2025-06-30'
+  InferenceRetirementDate: '2025-08-30'
+  FinetuneDeprecationDate: '2025-06-30'
+  FinetuneRetirementDate: '2025-08-30'
   evaluation: |
     In this release, the model enables multi-frame image understanding and reasoning which is based on valuable customer feedback. The hero example multi-frame capabilities include detailed image comparison, multi-image summarization/storytelling and video summarization, which have broad applications in many scenarios. We also observed performance improvement on most single image benchmarks, e.g., boosting MMMU performance from 40.2 to 43.0, MMBench performance from 80.5 to 81.9, document understanding benchmark TextVQA from 70.9 to 72.0. We believe most use cases will benefit from this release, but we encourage users to test the new model in their AI applications. We appreciate the enthusiastic adoption of the Phi-3 model family and continue to welcome all the feedback from the community.
 

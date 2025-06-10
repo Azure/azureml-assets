@@ -10,6 +10,11 @@ properties:
   finetune-min-sku-spec: 96|4|880|256
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
+  InferenceLegacyDate: '2025-06-09'
+  InferenceDeprecationDate: '2025-06-30'
+  InferenceRetirementDate: '2025-08-30'
+  FinetuneDeprecationDate: '2025-06-30'
+  FinetuneRetirementDate: '2025-08-30'
   evaluation: |
     To understand the capabilities, we compare Phi-3.5-MoE with a set of models over a variety of benchmarks using our internal benchmark platform. At the high-level overview of the model quality on representative benchmarks:
 
@@ -173,9 +178,6 @@ tags:
   Featured: ""
   huggingface_model_id: ""
   maas-inference: "true"
-  maas-finetuning: true
-  maas-finetuning-offer: true
-  maas-finetuning-regions: eastus2,eastus,southcentralus,northcentralus,westus,westus3
   license: mit
   disable-batch: "true"
   task: chat-completion

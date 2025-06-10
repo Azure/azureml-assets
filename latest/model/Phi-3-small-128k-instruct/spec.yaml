@@ -11,6 +11,11 @@ properties:
   finetune-min-sku-spec: 96|4|880|256
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
+  InferenceLegacyDate: '2025-06-09'
+  InferenceDeprecationDate: '2025-06-30'
+  InferenceRetirementDate: '2025-08-30'
+  FinetuneDeprecationDate: '2025-06-30'
+  FinetuneRetirementDate: '2025-08-30'
   notes: |-
     ## License
 
