@@ -190,6 +190,12 @@ def validate_and_prepare_pipeline_component(
             logger.print(f"Workspace asset URI was used, using component from registry {registry}")
             registry = registry_name
 
+        if not version:
+            logger.log_error(
+                f"Component {name} has invalid version {version}. Please ensure a valid version is specified."
+            )
+            return False
+
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
         asset_details = None
