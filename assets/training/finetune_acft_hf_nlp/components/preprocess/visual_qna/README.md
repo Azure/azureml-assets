@@ -6,7 +6,7 @@ visual_qna_datapreprocess
 
 ### Version 
 
-0.0.17
+0.0.76
 
 ### Type 
 
@@ -22,13 +22,31 @@ Task arguments
 
 Sample example
 
-[ { "messages": [ { "content": "how can identity protection services help protect me against identity theft", "role": "user" }, { "content": "Identity protection services can help protect you against identity theft in several ways:\n\n1. Monitoring: Many identity protection services monitor your credit reports, public records, and other sources for signs of identity theft. If they detect any suspicious activity, they will alert you so you can take action.\n2. Credit freeze: Some identity protection services can help you freeze your credit, which makes it more difficult for thieves to open new accounts in your name.\n3. Identity theft insurance: Some identity protection services offer insurance that can help you recover financially if you become a victim of identity theft.\n4. Assistance: Many identity protection services offer assistance if you become a victim of identity theft. They can help you file a police report, contact credit bureaus, and other steps to help you restore your identity.\n\nOverall, identity protection services can provide you with peace of mind and help you take proactive steps to protect your identity. However, it's important to note that no service can completely guarantee that you will never become a victim of identity theft. It's still important to take steps to protect your own identity, such as being cautious with personal information and regularly monitoring your credit reports.", "role": "assistant" } ] } ]
+# Visual Question Answering (VQA) Data Preprocessing
 
-| Name                        | Description                                                                                                                                                                                | Type    | Default | Optional | Enum |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------- | -------- | ---- |
-| batch_size                  | Number of examples to batch before calling the tokenization function                                                                                                                       | integer | 1000    | True     | NA   |
+## Overview
 
+This component preprocesses visual question answering data for fine-tuning multimodal language models. It handles image-text pairs where each question has multiple choice answers.
 
+## Input Data Format
+
+### Required JSONL Structure
+
+Each line in the JSONL file should contain:
+
+{
+  "Figure_path": "path/to/image.jpg",
+  "Question": "What color is the sky in this image?",
+  "Choice A": "A. Blue",
+  "Choice B": "B. Red", 
+  "Choice C": "C. Green",
+  "Choice D": "D. Yellow",
+  "Answer": "A"
+}
+
+[ { Figure_path | Question | Choice A | Choice B | Choice C | Choice D | Answer
+
+  } ]
 
 Tokenization params
 
