@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: visual_qna_pipeline
-version: 0.0.75
+version: 0.0.77
 type: pipeline
 display_name: Visual QnA Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for visual qna task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/visual_qna_pipeline) to learn more.
@@ -486,7 +486,7 @@ outputs:
 jobs:
   visual_qna_model_import:
     type: command
-    component: azureml:visual_qna_model_import:0.0.76.visa51
+    component: azureml:visual_qna_model_import:0.0.76
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -497,7 +497,7 @@ jobs:
       #validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   visual_qna_datapreprocess:
     type: command
-    component: azureml:visual_qna_datapreprocess:0.0.76.visa50
+    component: azureml:visual_qna_datapreprocess:0.0.76
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -515,7 +515,7 @@ jobs:
       model_selector_output: '${{parent.jobs.visual_qna_model_import.outputs.output_dir}}'
   visual_qna_finetune:
     type: command
-    component: azureml:visual_qna_finetune:0.0.76.visa50
+    component: azureml:visual_qna_finetune:0.0.76
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -573,7 +573,7 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.76.visa50
+    component: azureml:ft_nlp_model_converter:0.0.76
     compute: '${{parent.inputs.compute_finetune}}'
     resources:  
       instance_type: '${{parent.inputs.instance_type_finetune}}'
