@@ -32,9 +32,6 @@ tags:
   Featured: ""
   huggingface_model_id: ""
   maas-inference: "true"
-  maas-finetuning: true
-  maas-finetuning-offer: true
-  maas-finetuning-regions: eastus2,eastus,southcentralus,northcentralus,westus,westus3
   license: mit
   disable-batch: "true"
   task: chat-completion
