@@ -26,7 +26,7 @@ tags:
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 10
+version: 11
 description: |
   Biomedical image analysis is fundamental for biomedical discovery in cell biology, pathology, radiology, and many other biomedical domains. MedImageParse is a biomedical foundation model for imaging parsing that can jointly conduct segmentation, detection, and recognition across 9 imaging modalities. Through joint learning, we can improve accuracy for individual tasks and enable novel applications such as segmenting all relevant objects in an image through a text prompt, rather than requiring users to laboriously specify the bounding box for each object. 
 
@@ -50,17 +50,17 @@ description: |
   MedImageParse is built upon a transformer-based architecture, optimized for processing large biomedical corpora. Leveraging multi-head attention mechanisms, it excels at identifying and understanding biomedical terminology, as well as extracting contextually relevant information from dense scientific texts. The model is pre-trained on vast biomedical datasets, allowing it to generalize across various biomedical domains with high accuracy.
 
   ### License and where to send questions or comments about the model
-  The license for MedImageParse is the MIT license. Please cite our paper if you use the model for your research https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf.
+  The license for MedImageParse is the MIT license. Please cite our paper if you use the model for your research https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf and https://openaccess.thecvf.com/content/CVPR2025/papers/Zhao_Boltzmann_Attention_Sampling_for_Image_Analysis_with_Small_Objects_CVPR_2025_paper.pdf .
   For questions or comments, please contact: hlsfrontierteam@microsoft.com
 
   ### Training information
 
   MedImageParse was trained on a large dataset comprising over six million triples of image, segmentation mask, and textual description.
 
-  MedImageParse used 16 NVIDIA A100-SXM4-40GB GPUs for a duration of 58 hours.
+  MedImageParse used 40 NVIDIA A100-SXM4-80GB GPUs for a duration of 48 hours. 
 
   ### Evaluation Results
-  Please see the paper for detailed information about methods and results. https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf
+  Please see the paper for detailed information about methods and results. https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf as well as https://openaccess.thecvf.com/content/CVPR2025/papers/Zhao_Boltzmann_Attention_Sampling_for_Image_Analysis_with_Small_Objects_CVPR_2025_paper.pdf.
 
   Bar plot comparing the Dice score between our method and competing methods on 102,855 test instances (image-mask-label
   triples) across 9 modalities. MedSAM and SAM require bounding box as input. 
