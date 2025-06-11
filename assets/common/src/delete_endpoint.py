@@ -96,6 +96,9 @@ def main(args):
     if args.model_deployment_details:
         with open(args.model_deployment_details) as f:
             deployment_info = json.load(f)
+        if "endpoint_name" not in deployment_info:
+            print("'endpoint_name' key not found in deployment_info. Cannot proceed with deletion.")
+            return
         endpoint_name = deployment_info["endpoint_name"]
         ml_client.online_endpoints.begin_delete(name=endpoint_name).wait()
     else:
