@@ -68,7 +68,13 @@ format_print "Dynamic Python Package Installation"
 format_print "###############################################"
 format_print ""
 
-export AZUREML_EXTRA_CONDA_YAML_ABS_PATH="${AZUREML_MODEL_DIR}/mlflow_model_folder/conda.yaml"
+ENV_MLFLOW_MODEL_FOLDER="mlflow_model_folder"
+if [[ -n "$MLFLOW_MODEL_FOLDER" ]]; then
+    ENV_MLFLOW_MODEL_FOLDER="${MLFLOW_MODEL_FOLDER}"
+fi
+export AZUREML_EXTRA_CONDA_YAML_ABS_PATH="${AZUREML_MODEL_DIR}/${ENV_MLFLOW_MODEL_FOLDER}/conda.yaml"
+echo "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH"
+
 
 if [[ -n "$AZUREML_EXTRA_PYTHON_LIB_PATH" ]]; then
     # Pre-installed mounted dependencies, check for the variable and if the folder exists.
@@ -92,45 +98,53 @@ elif [[ -n "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH" || -n "$AZUREML_EXTRA_CONDA_YAML
         export CONDA_FULL_PATH="${ENTRY_SCRIPT_DIR}/${AZUREML_EXTRA_CONDA_YAML}"
     fi 
 
-    # NOTE: This may take a very long time if existing dependencies are added! 
-    # Source: https://stackoverflow.com/questions/53250933/conda-takes-20-minutes-to-solve-environment-when-package-is-already-installed
-    if [[ -f $CONDA_FULL_PATH ]]; then
-        format_print "Updating conda environment from ${CONDA_FULL_PATH} !"
+    ENV_DYNAMIC_DEP_INSTALLATION="true"
+    if [[ -n "$DYNAMIC_DEP_INSTALLATION" ]]; then
+        ENV_DYNAMIC_DEP_INSTALLATION="${DYNAMIC_DEP_INSTALLATION}"
+    fi
+    echo "Dynamic dependency installation enabled : $ENV_DYNAMIC_DEP_INSTALLATION"
 
-        # Extract version from amlenv
-        # If this is not installed, the value is empty. There will be a Warning output that states that the package is not installed.
-        SERVER_VERSION="$(pip show azureml-inference-server-http | grep Version | sed -e 's/.*: //')"
+    # Valiated dynamic package installation
+    if [ "$ENV_DYNAMIC_DEP_INSTALLATION" = "true" ]; then
+        # NOTE: This may take a very long time if existing dependencies are added! 
+        # Source: https://stackoverflow.com/questions/53250933/conda-takes-20-minutes-to-solve-environment-when-package-is-already-installed
+        if [[ -f $CONDA_FULL_PATH ]]; then
+            format_print "Updating conda environment from ${CONDA_FULL_PATH} !"
 
-        if [ -z "$SERVER_VERSION" ]; then
-            format_print "azureml-inference-server-http not installed"
-            exit 96
+            # Extract version from amlenv
+            # If this is not installed, the value is empty. There will be a Warning output that states that the package is not installed.
+            SERVER_VERSION="$(pip show azureml-inference-server-http | grep Version | sed -e 's/.*: //')"
+
+            if [ -z "$SERVER_VERSION" ]; then
+                format_print "azureml-inference-server-http not installed"
+                exit 96
+            fi
+
+            # Copy user conda.yml to tmp folder since we don't have write access to user folder
+            # Write access to folder is required for conda env create, and tmp folder has write access
+            export CONDA_FILENAME="${TMPDIR:=/tmp}/copied_env_$(date +%s%N).yaml"
+
+            cp "${CONDA_FULL_PATH}" "${CONDA_FILENAME}"
+
+            # Create a userenv from the conda yaml that replaces the existing amlenv
+            conda env create -n userenv -f "${CONDA_FILENAME}" || { handle_error ; }
+
+            export AZUREML_CONDA_ENVIRONMENT_PATH="/opt/miniconda/envs/userenv"
+            export PATH="/opt/miniconda/envs/userenv/bin:$PATH"
+            export LD_LIBRARY_PATH="$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH"
+                
+            # Check if http server is installed as part of user conda.yml. If the value is empty then the server is not installed.
+            SERVER_INSTALLED_VERSION="$(pip show azureml-inference-server-http | grep Version | sed -e 's/.*: //')"
+
+            if [ -z "$SERVER_INSTALLED_VERSION" ]; then
+                format_print "Install azureml-inference-server-http version ${SERVER_VERSION}"
+                # Install the same version of the http server from the default conda environment
+                pip install azureml-inference-server-http || { handle_error ; }
+            fi
+        else
+            format_print "Dynamic Python packages installation is enabled but expected conda yaml file not found: ${CONDA_FULL_PATH}. Exiting with error ..."
+            exit 98
         fi
-
-        # Copy user conda.yml to tmp folder since we don't have write access to user folder
-        # Write access to folder is required for conda env create, and tmp folder has write access
-        export CONDA_FILENAME="${TMPDIR:=/tmp}/copied_env_$(date +%s%N).yaml"
-
-        cp "${CONDA_FULL_PATH}" "${CONDA_FILENAME}"
-
-        # Create a userenv from the conda yaml that replaces the existing amlenv
-        conda env create -n userenv -f "${CONDA_FILENAME}" || { handle_error ; }
-
-        export AZUREML_CONDA_ENVIRONMENT_PATH="/opt/miniconda/envs/userenv"
-        export PATH="/opt/miniconda/envs/userenv/bin:$PATH"
-        export LD_LIBRARY_PATH="$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH"
-            
-        # Check if http server is installed as part of user conda.yml. If the value is empty then the server is not installed.
-        SERVER_INSTALLED_VERSION="$(pip show azureml-inference-server-http | grep Version | sed -e 's/.*: //')"
-
-        if [ -z "$SERVER_INSTALLED_VERSION" ]; then
-            format_print "Install azureml-inference-server-http version ${SERVER_VERSION}"
-            # Install the same version of the http server from the default conda environment
-            pip install azureml-inference-server-http || { handle_error ; }
-        fi
-
-    else
-        format_print "Dynamic Python packages installation is enabled but expected conda yaml file not found: ${CONDA_FULL_PATH}. Exiting with error ..."
-        exit 98
     fi
 elif [[ -n "$AZUREML_EXTRA_REQUIREMENTS_TXT" ]]; then
     # Dynamic installation requirements.txt, check for the variable and if the file exists for relative and absolute paths.

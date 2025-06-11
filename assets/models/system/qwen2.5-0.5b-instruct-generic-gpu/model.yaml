@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: foundrylocal/onnx-models/qwen-2.5-0.5b-instruct/onnx/directml/directml-int4-awq-block-128
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model

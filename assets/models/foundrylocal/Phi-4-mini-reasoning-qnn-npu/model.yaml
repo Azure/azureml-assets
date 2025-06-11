@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: microsoft/phi-4-mini-reasoning-onnx/npu/qnn-phi4-mini-reasoning-onnx
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

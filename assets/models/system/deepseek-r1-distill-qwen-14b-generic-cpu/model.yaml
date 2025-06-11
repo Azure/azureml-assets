@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: foundrylocal/foundry-local/deepseek-r1-distill-qwen-14b/onnx/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model

@@ -5,7 +5,7 @@ azureml-evaluate-mlflow=={{latest-pypi-version}}
 mltable=={{latest-pypi-version}}
 mpi4py==3.1.5
 sentencepiece==0.1.99
-transformers==4.51.0
+transformers==4.51.3
 huggingface-hub==0.30.0
 datasets==2.17.1
 optimum==1.24.0
@@ -16,11 +16,12 @@ rouge-score==0.1.2
 sacrebleu==2.4.0
 bitsandbytes==0.43.3
 einops==0.7.0
-aiohttp==3.10.5
+aiohttp==3.10.11
 peft==0.9.0
-deepspeed==0.15.4
+deepspeed==0.16.4
 trl==0.8.1
 tiktoken==0.6.0
 scipy==1.14.0
 catalogue==2.0.10
 cryptography==44.0.1
+setuptools==78.1.1

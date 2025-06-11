@@ -700,7 +700,13 @@ def validate_model_scenario(
     """
     error_count = 0
     min_sku = model.properties.get(min_sku_prop_name, "").strip()
-    recommended_skus = model.properties.get(recommended_skus_prop_name, "").strip()
+    recommended_skus_value = model.properties.get(recommended_skus_prop_name, None)
+    if isinstance(recommended_skus_value, str):
+        recommended_skus = [sku.strip() for sku in recommended_skus_value.split(",") if sku.strip()]
+    elif isinstance(recommended_skus_value, list):
+        recommended_skus = [str(sku).strip() for sku in recommended_skus_value if str(sku).strip()]
+    else:
+        recommended_skus = []
     compute_allowlists = set(model.tags.get(compute_allowlist_tags_name, []))
 
     if not min_sku:
@@ -715,10 +721,10 @@ def validate_model_scenario(
         _log_error(asset_file_name_with_path, f"{compute_allowlist_tags_name} is missing in model tags")
         error_count += 1
 
-    recommended_skus = set([sku.strip() for sku in recommended_skus.split(",")])
-    if (recommended_skus != compute_allowlists):
-        a_minus_b = recommended_skus - compute_allowlists
-        b_minus_a = compute_allowlists - recommended_skus
+    recommended_skus_set = set(recommended_skus)
+    if (recommended_skus_set != compute_allowlists):
+        a_minus_b = recommended_skus_set - compute_allowlists
+        b_minus_a = compute_allowlists - recommended_skus_set
         _log_error(
             asset_file_name_with_path,
             f"{recommended_skus_prop_name} and {compute_allowlist_tags_name} does not match for model.\n"
@@ -940,6 +946,32 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     return error_count
 
 
+def validate_mlflow_model(asset_config: assets.AssetConfig) -> int:
+    """Validate if model is of type MLFlow.
+
+    Args:
+        asset_config (assets.AssetConfig): asset config for model spec
+    """
+    model_config = None
+
+    try:
+        load_model(asset_config.spec_with_path)
+        model_config: assets.ModelConfig = asset_config.extra_config_as_object()
+    except Exception:
+        logger.log_warning("Could not validate if model is of type MLFlow due to invalid spec or model config")
+        return
+
+    if model_config.type == assets.config.ModelType.MLFLOW:
+        logger.log_warning(f"{asset_config.name} is a model of type {model_config.type.value} "
+                           f"which is banned from the model catalog")
+
+        # Update mlflow_model_detected variable for Github Actions only
+        if "GITHUB_OUTPUT" in os.environ:
+            logger.print("Setting GITHUB_OUTPUT env variable for mlflow_model_detected=true")
+            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                print("mlflow_model_detected=true", file=f)
+
+
 def get_validated_models_assets_map(model_validation_results_dir: str):
     """Return model assets map."""
     try:
@@ -1076,6 +1108,10 @@ def validate_assets(input_dirs: List[Path],
             # Validate pytest information
             if check_tests:
                 error_count += validate_tests(asset_config)
+
+            # Validate if MLFlow model
+            if asset_config.type == assets.AssetType.MODEL:
+                validate_mlflow_model(asset_config)
 
             if asset_config.type == assets.AssetType.ENVIRONMENT:
                 # Validate Dockerfile
