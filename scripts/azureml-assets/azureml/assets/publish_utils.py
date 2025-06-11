@@ -192,7 +192,8 @@ def validate_and_prepare_pipeline_component(
 
         if not version:
             logger.log_error(
-                f"Component {name} has invalid version {version}. Please ensure a valid version is specified."
+                f"Component {name} parsed label {label} from the asset URI. Labels are not supported "
+                f"for job components. Please specify a valid version instead."
             )
             return False
 
