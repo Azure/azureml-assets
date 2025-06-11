@@ -40,7 +40,6 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 RUN pip install 'scikit-learn>=1.5.1' \
                 'interpret-community==0.31.0' \
                 'Pillow>=10.3.0' \
-                'setuptools>=65.5.1' \
                 'numpy==1.26.2' \
                 'scipy==1.10.0' \
                 'statsmodels==0.14.0' \
@@ -66,6 +65,7 @@ RUN pip install 'lightgbm>=4.6.0'
 RUN pip install 'torch>=2.2.2'
 # To resolve GHSA-jh2j-j4j9-crg3 vulnerability issue
 RUN pip install 'opencv-python-headless==4.8.1.78'
+RUN pip install 'setuptools>=78.1.1'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \

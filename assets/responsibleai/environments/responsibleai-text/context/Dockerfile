@@ -44,6 +44,7 @@ RUN pip install git+https://github.com/huggingface/evaluate.git
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
+RUN pip install 'setuptools>=78.1.1'
 
 # To resolve vulnerability Python (Pip) Security Update for setuptools (GHSA-5rjg-fvgr-3xxf)
 RUN pip install 'setuptools>=78.1.1'
