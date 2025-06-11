@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_finetune
-version: 0.0.75
+version: 0.0.76
 type: command
 
 is_deterministic: true
@@ -17,6 +17,7 @@ distribution:
 
 inputs:
   # Lora parameters
+  # LoRA reduces the number of trainable parameters by learning pairs of rank-decompostion matrices while freezing the original weights. This vastly reduces the storage requirement for large language models adapted to specific tasks and enables efficient task-switching during deployment all without introducing inference latency. LoRA also outperforms several other adaptation methods including adapter, prefix-tuning, and fine-tuning. Currently, LoRA is supported for gpt2, bert, roberta, deberta, distilbert, t5, bart, mbart and camembert model families
   apply_lora:
     type: string
     enum:
@@ -24,7 +25,7 @@ inputs:
     - "false"
     default: "false"
     optional: true
-    description: lora enabled
+    description: If "true" enables lora.
 
   merge_lora_weights:
     type: string
@@ -53,12 +54,22 @@ inputs:
     optional: true
     description: lora dropout value
 
+  use_liger_kernel:
+    type: string
+    enum:
+    - "true"
+    - "false"
+    default: "false"
+    optional: true
+    description: Enable Liger kernel for optimized attention.
+
   # Training parameters
   num_train_epochs:
     type: integer
+    min: 1
     default: 1
     optional: true
-    description: training epochs
+    description: Number of epochs to run for finetune.
 
   max_steps:
     type: integer
@@ -68,6 +79,7 @@ inputs:
 
   per_device_train_batch_size:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: Train batch size
@@ -284,6 +296,8 @@ inputs:
     description: Denotes how much the specified metric must improve to satisfy early stopping conditions
 
   # Deepspeed Parameters
+  # Deepspeed config is a JSON file that can be used to configure optimizer, scheduler, batch size and other training related parameters. A default deepspeed config is used when _apply_deepspeed_ is set to `true`. Alternatively, you can pass your custom deepspeed config. Please follow the [deepspeed docs](https://www.deepspeed.ai/docs/config-json/) to create the custom config.
+  # Please note that to enable deepspeed, `apply_deepspeed` must be set to true, only passing the `deepspeed input` will not suffice
   apply_deepspeed:
     type: string
     enum:
@@ -309,6 +323,7 @@ inputs:
     description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
 
   # ORT Parameters
+  # ONNX Runtime is a cross-platform machine-learning model accelerator, with a flexible interface to integrate hardware-specific libraries.
   apply_ort:
     type: string
     enum:
@@ -318,7 +333,7 @@ inputs:
     optional: true
     description: If set to true, will use the ONNXRunTime training
 
-  # Dataset parameters
+  # Data and Model inputs
   preprocess_output:
     type: uri_folder
     optional: false
@@ -330,12 +345,6 @@ inputs:
     optional: false
     description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
     mode: rw_mount
-
-  # Validation parameters
-  system_properties:
-    type: string
-    optional: true
-    description: Validation parameters propagated from pipeline.
 
 outputs:
   pytorch_model_folder:
