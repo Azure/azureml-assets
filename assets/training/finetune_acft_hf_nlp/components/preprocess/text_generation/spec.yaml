@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Generation DataPreProcess
 description: Component to preprocess data for text generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/98
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/preprocess
 

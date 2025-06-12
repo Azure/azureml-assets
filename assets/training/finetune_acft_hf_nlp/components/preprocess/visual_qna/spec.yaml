@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Visual QnA DataPreProcess
 description: Component to preprocess data for Visual QnA task. See [docs](https://aka.ms/azureml/components/visual_qna_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/98
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/preprocess
 

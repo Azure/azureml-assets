@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Visual Question Answering Finetune
 description: Component to finetune Hugging Face pretrained models for visual qna task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/visual_qna_finetune) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/98
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/finetune
 

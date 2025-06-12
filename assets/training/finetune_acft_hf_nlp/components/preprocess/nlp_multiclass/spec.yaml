@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: DataPreProcessing for AutoMLNLPMulticlass
 description: Component to preprocess data for automl nlp multiclass classification task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/98
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/preprocess
 
