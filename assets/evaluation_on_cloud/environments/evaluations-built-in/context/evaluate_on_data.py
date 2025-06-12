@@ -70,7 +70,6 @@ RESPONSE_KEY = "response"
 GENERATED_RESPONSE_KEY = "generated_response"
 GENERATED_RESPONSE_MAPPING = f"${{data.{GENERATED_RESPONSE_KEY}}}"
 FOUNDRY_EVALUATOR = "built-in"
-AOAI_EVALUATOR = "aoai"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
