@@ -75,25 +75,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 class BuiltInEvaluatorConstructor:
-    """
-    A constructor class for initializing and constructing evaluators based on a given configuration.
-
-    Attributes:
-        evaluator_classes (dict): A mapping of evaluator names to their corresponding classes.
-        logger (object): Logger instance for logging information and errors.
-        evaluator_configuration (dict): Configuration dictionary for the evaluator.
-        service_based_evaluators (list): List of evaluator IDs that require service-based initialization.
-        project_url (str, optional): URL of the Azure AI project. Defaults to None.
-        cogsvc_token (str, optional): Token for Azure Cognitive Services authentication. Defaults to None.
-        evaluator (object): The initialized evaluator instance.
-
-    Methods:
-        _initialize_evaluator():
-            Initializes the evaluator based on the provided configuration.
-        
-        construct():
-            Returns the constructed evaluator instance.
-    """
+    """Constructs a built-in evaluator based on the provided configuration."""
     def __init__(self, evaluator_configuration):
         # Map evaluator names to their corresponding classes
         # NOTE: Maintain alphabetical order for better readability
