@@ -1111,9 +1111,6 @@ def finetune(args: Namespace):
     # fetch model asset id
     model_asset_id = getattr(args, "model_asset_id", None) or ""
 
-    eval_strategy = getattr(args, "eval_strategy", "steps")
-    setattr(args, "eval_strategy", eval_strategy)
-
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
@@ -1122,7 +1119,6 @@ def finetune(args: Namespace):
     logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
     logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
     logger.info(f"Precision: {getattr(args, 'precision', None)}")
-    logger.info(f"Setting evaluation strategy to {eval_strategy}")
 
     # set `ignore_mismatched_sizes` to `false` by default
     if (
