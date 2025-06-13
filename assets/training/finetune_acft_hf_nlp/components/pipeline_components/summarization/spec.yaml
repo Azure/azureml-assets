@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: summarization_pipeline
-version: 0.0.76
+version: 0.0.77
 type: pipeline
 display_name: Summarization Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for summarization task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/summarization_pipeline) to learn more.

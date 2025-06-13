@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline
-version: 0.0.76
+version: 0.0.77
 type: pipeline
 display_name: Text Generation Pipeline
 description: Pipeline component for text generation

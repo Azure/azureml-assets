@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-version: 0.0.76
+version: 0.0.77
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for extractive question answering task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/question_answering_pipeline) to learn more.

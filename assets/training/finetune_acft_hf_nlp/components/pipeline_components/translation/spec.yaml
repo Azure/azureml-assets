@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: translation_pipeline
-version: 0.0.76
+version: 0.0.77
 type: pipeline
 display_name: Translation Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for translation task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/translation_pipeline) to learn more.

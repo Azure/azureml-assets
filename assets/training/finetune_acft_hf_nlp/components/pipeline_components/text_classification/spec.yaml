@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_classification_pipeline
-version: 0.0.76
+version: 0.0.77
 type: pipeline
 display_name: Text Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for text classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/text_classification_pipeline) to learn more.
