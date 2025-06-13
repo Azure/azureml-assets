@@ -17,13 +17,6 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q --solver=cla
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
-    
-# Apply vulnerability security patches
-RUN apt-get update -y && \
-    apt-get install --only-upgrade -y \
-        libsqlite3-0 \
-        libglib2.0-0 \
-        libglib2.0-data 
         
 ## Vulnerability fix
 RUN pip install tqdm requests
