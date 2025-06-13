@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.34
+version: 0.0.35
 name: llm_rag_update_milvus_index
 display_name: LLM - Update Milvus Index
 is_deterministic: true

@@ -6,7 +6,7 @@ dependencies:
   - cpuonly
   - pip=23.3
   - python=3.9.18
-  - setuptools=70
+  - setuptools=78.1.1
   - cython=0.29.24
   - numpy==1.23.5
   - scipy==1.10.0

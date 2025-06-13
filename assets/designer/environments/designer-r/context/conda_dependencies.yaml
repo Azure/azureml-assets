@@ -30,7 +30,7 @@ dependencies:
   - r-timedate=4041.110
   - r-tseries=0.10
   - libxcrypt=4.4
-  - setuptools=70
+  - setuptools=78.1.1
   - cython=0.29.24
   - numpy==1.23.5
   - scipy==1.10.0
