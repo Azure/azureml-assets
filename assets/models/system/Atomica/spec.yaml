@@ -21,6 +21,10 @@ tags:
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
     [
+      Standard_DS12_v2,
+      Standard_DS13_v2,
+      Standard_DS14_v2,
+      Standard_DS15_v2,
       Standard_NC4as_T4_v3,
       Standard_NC8as_T4_v3,
       Standard_NC16as_T4_v3,
