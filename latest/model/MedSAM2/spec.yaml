@@ -1,0 +1,48 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+name: MedSAM2
+path: ./
+
+properties:
+  inference-min-sku-spec: 4|1|28|64
+  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3,
+    Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
+    Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
+  languages: en
+  SharedComputeCapacityEnabled: true
+
+tags:
+  task: image-segmentation
+  industry: health-and-life-sciences
+  Preview: ""
+  inference_supported_envs:
+  - hf
+  license: Apache2.0
+  author: WangLab
+  hiddenlayerscanned: ""
+  SharedComputeCapacityEnabled: ""
+  inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3,
+    Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
+    Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
+version: 1
+description: |-
+  <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
+
+  <!-- `description.md` is required. -->
+
+  MedSAM2 is a breakthrough medical image segmentation foundation model that addresses the critical need for efficient and accurate segmentation in precision medicine. Built upon the Segment Anything Model (SAM) 2.1 architecture, it uniquely bridges the gap between 2D and 3D medical image segmentation, offering a unified solution for both volumetric scans and video data. The model stands out for its ability to reduce manual annotation costs by over 85% while maintaining high accuracy across diverse medical imaging applications.
+
+  The model has been extensively trained on over 455,000 3D image-mask pairs and 76,000 annotated video frames, spanning multiple organs, pathologies, and imaging protocols. MedSAM2's versatility has been validated through comprehensive user studies involving 5,000 CT lesions, 3,984 liver MRI lesions, and 251,550 echocardiogram video frames. The model incorporates a novel self-sorting memory bank mechanism for dynamic feature selection, enabling robust performance across different medical imaging contexts. This makes it particularly valuable for clinical workflows in cardiology, oncology, and surgical specialties where precise 3D organ and lesion segmentation is critical but traditionally time-consuming. Integrated with user-friendly interfaces for both local and cloud deployment, MedSAM2 represents a practical solution for supporting efficient, scalable, and high-quality segmentation in both research and healthcare environments.
+
+  ## Model Architecture
+  MedSAM2 adopts the SAM2 network architecture with four main components:
+  - Image encoder (Hierarchical Vision Transformer)
+  - Memory attention module
+  - Prompt encoder
+  - Mask decoder
+
+  The model uses SAM2.1-Tiny variant with full-model fine-tuning approach, optimized for performance with fewer parameters.
