@@ -4,8 +4,8 @@ name: MedSAM2
 path: ./
 
 properties:
-  inference-min-sku-spec: 4|0|28|56
-  inference-recommended-sku: Standard_DS12_v2, Standard_DS13_v2, Standard_DS14_v2, Standard_DS15_v2, Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
+  inference-min-sku-spec: 4|1|28|64
+  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
   languages: en
   SharedComputeCapacityEnabled: true
 
@@ -21,10 +21,6 @@ tags:
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
     [
-      Standard_DS12_v2,
-      Standard_DS13_v2,
-      Standard_DS14_v2,
-      Standard_DS15_v2,
       Standard_NC4as_T4_v3,
       Standard_NC8as_T4_v3,
       Standard_NC16as_T4_v3,
