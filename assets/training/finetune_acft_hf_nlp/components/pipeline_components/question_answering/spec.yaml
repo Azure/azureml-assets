@@ -666,7 +666,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction_with_container:0.0.6
+    component: azureml:model_prediction_with_container:0.0.8
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
