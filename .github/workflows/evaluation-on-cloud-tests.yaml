@@ -1,0 +1,57 @@
+name: evaluation-on-cloud-tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - assets/evaluation_on_cloud/**
+      - .github/workflows/evaluation-on-cloud-tests.yaml
+  workflow_dispatch:
+
+env:
+  conda_env_prefix: /opt/conda/envs/eval_on_cloud
+  eval_on_cloud_tests_dir: assets/evaluation_on_cloud/environments/evaluations-built-in/tests
+  eval_on_cloud_conda_yaml: assets/evaluation_on_cloud/environments/evaluations-built-in/tests/conda.yaml
+  pytest_reports: pytest-reports
+
+jobs:
+  run_unit_tests:
+    name: Run
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Required for EnricoMi/publish-unit-test-result-action
+      checks: write
+      issues: read
+      pull-requests: write
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+
+      - name: Use Python 3.10 or newer
+        uses: actions/setup-python@v4
+        with:
+          python-version: '>=3.10'
+
+      - name: Create conda env
+        run: |
+          set -ex
+          apt-get update && apt-get upgrade && apt-get install -y build-essential
+          echo $conda_env_prefix
+          sed -i 's/=={{latest-pypi-version}}//g' assets/evaluation_on_cloud/environments/evaluations-built-in/context/requirements.txt
+          cat $eval_on_cloud_conda_yaml
+          conda env create -p $conda_env_prefix -f $eval_on_cloud_conda_yaml
+          echo "conda env successfully created at $conda_env_prefix"
+          conda list -p $conda_env_prefix
+
+      - name: Execute tests
+        run: conda run -p $conda_env_prefix python -m pytest $eval_on_cloud_tests_dir --tb=native --junitxml=$pytest_reports/test-result.xml -x -n 1 -ra --show-capture=no
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Test Results for ${{ github.workflow }}
+          junit_files: ${{ env.pytest_reports }}/**/*.xml

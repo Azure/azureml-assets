@@ -27,3 +27,4 @@ mlflow==2.20.3
 torchvision==0.21.0
 torch==2.6.0
 safetensors==0.5.2
+setuptools==78.1.1
