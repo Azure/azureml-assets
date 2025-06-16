@@ -1,0 +1,78 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: mlflow_model_local_validation
+version: 0.0.18
+type: command
+
+is_deterministic: true
+
+display_name: MLFlow model local validation
+description: Validates if a MLFLow model can be loaded on a compute and is usable
+  for inferencing.
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
+
+code: ../../src/
+command: >-
+  python -u run_mlflow_model_local_validation.py
+  --model-path ${{inputs.model_path}}
+  $[[--test-data-path ${{inputs.test_data_path}}]]
+  $[[--column-rename-map "${{inputs.column_rename_map}}"]]
+  $[[--task-name ${{inputs.task_name}}]]
+  --output-model-path ${{outputs.mlflow_model_folder}}
+
+inputs:
+  model_path:
+    type: mlflow_model
+    mode: ro_mount
+    description: MLFlow model to be validated
+
+  test_data_path:
+    type: uri_file
+    optional: true
+    description: Test dataset for model inferencing
+
+  column_rename_map:
+    type: string
+    optional: true
+    description: |
+      Provide mapping of dataset column names that should be renamed before inferencing.
+      eg: col1:ren1; col2:ren2; col3:ren3
+
+  task_name:
+    description: A Hugging face task on which model was trained on
+    enum:
+    - chat-completion
+    - fill-mask
+    - token-classification
+    - question-answering
+    - summarization
+    - text-generation
+    - text2text-generation
+    - text-classification
+    - translation
+    - image-classification
+    - image-classification-multilabel
+    - image-object-detection
+    - image-instance-segmentation
+    - image-to-text
+    - text-to-image
+    - text-to-image-inpainting
+    - image-text-to-text
+    - image-to-image
+    - zero-shot-image-classification
+    - mask-generation
+    - video-multi-object-tracking
+    - visual-question-answering
+    optional: true
+    type: string
+
+outputs:
+  mlflow_model_folder:
+    type: uri_folder
+    mode: rw_mount
+    description: Validated input model. Here input model is used to block further
+      steps in pipeline job if local validation fails
+
+tags:
+  Preview: ""
