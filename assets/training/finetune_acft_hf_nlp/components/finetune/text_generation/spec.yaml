@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Generation Finetune
 description: Component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/95
 
 code: ../../../src/finetune
 

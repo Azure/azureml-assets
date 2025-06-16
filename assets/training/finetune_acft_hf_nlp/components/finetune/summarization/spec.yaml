@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Summarization Finetune
 description: Component to finetune Hugging Face pretrained models for summarization task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/summarization_finetune) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/95
 
 code: ../../../src/finetune
 
