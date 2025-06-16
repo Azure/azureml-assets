@@ -170,12 +170,14 @@ class BuiltInEvaluatorConstructor:
             return evaluator_class(**init_params)
 
     def construct(self):
-        # Return the constructed evaluator
+        """Return the constructed evaluator"""
+
         return self.evaluator
 
 
 def update_value_in_dict(d, key_substring, new_func):
     """Recursively search for a value containing 'key_substring' and apply 'new_func' to modify it."""
+    
     for key, value in d.items():
         if isinstance(value, dict):
             update_value_in_dict(value, key_substring, new_func)
