@@ -74,6 +74,7 @@ FOUNDRY_EVALUATOR = "built-in"
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
 class BuiltInEvaluatorConstructor:
     """Constructs a built-in evaluator based on the provided configuration."""
     def __init__(self, evaluator_configuration):
@@ -123,7 +124,7 @@ class BuiltInEvaluatorConstructor:
         foundry_eval_regex = r"azureai://([^/]+)/evaluators/([^/]+)"
 
         match_foundry_eval = re.match(foundry_eval_regex, evaluator_id)
-        
+
         if match_foundry_eval:
             evaluator_type = match_foundry_eval.group(1)
             evaluator_name = match_foundry_eval.group(2)
@@ -160,14 +161,14 @@ class BuiltInEvaluatorConstructor:
 
             is_rai_evaluator = self._map_to_rai_evaluator_name(evaluator_name)
             if is_rai_evaluator:
-                logger.info(f"Evaluator id: {self.evaluator_configuration['Id']} provided. Add project url and credentials")
+                logger.info(f"Evaluator id: {self.evaluator_configuration['Id']} provided. Adding credentials")
                 # Add project URL and credential if present
                 if self.evaluator_configuration.get("initParams") is None:
                     logger.info(f"Evaluator configuration initParams is None. Create empty dictionary")
                     self.evaluator_configuration["initParams"] = {}
-                
+
                 self.evaluator_configuration["initParams"]["credential"] = AzureMLOnBehalfOfCredential()
-            
+
             evaluator_class = self.evaluator_classes[evaluator_name]
             init_params = self.evaluator_configuration.get("initParams", {})
 
@@ -176,6 +177,7 @@ class BuiltInEvaluatorConstructor:
     def construct(self):
         # Return the constructed evaluator
         return self.evaluator
+
 
 def update_value_in_dict(d, key_substring, new_func):
     """Recursively search for a value containing 'key_substring' and apply 'new_func' to modify it."""
@@ -223,7 +225,7 @@ def initialize_evaluators(command_line_args):
         # check if evaluator id is new format
         elif evaluator["Id"].startswith("azureai://"):
             logger.info(f"Found foundry built-in evaluator: {evaluator_name}")
-            evaluator_constructor = BuiltInEvaluatorConstructor(evaluator)        
+            evaluator_constructor = BuiltInEvaluatorConstructor(evaluator)    
             load_built_in_evaluator = evaluator_constructor.construct()
             evaluators[evaluator_name] = load_built_in_evaluator
         else:
