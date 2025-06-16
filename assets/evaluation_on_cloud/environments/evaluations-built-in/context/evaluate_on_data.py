@@ -164,7 +164,7 @@ class BuiltInEvaluatorConstructor:
                 logger.info(f"Evaluator id: {self.evaluator_configuration['Id']} provided. Adding credentials")
                 # Add project URL and credential if present
                 if self.evaluator_configuration.get("initParams") is None:
-                    logger.info(f"Evaluator configuration initParams is None. Create empty dictionary")
+                    logger.info("Evaluator configuration initParams is None. Create empty dictionary")
                     self.evaluator_configuration["initParams"] = {}
 
                 self.evaluator_configuration["initParams"]["credential"] = AzureMLOnBehalfOfCredential()
@@ -225,7 +225,7 @@ def initialize_evaluators(command_line_args):
         # check if evaluator id is new format
         elif evaluator["Id"].startswith("azureai://"):
             logger.info(f"Found foundry built-in evaluator: {evaluator_name}")
-            evaluator_constructor = BuiltInEvaluatorConstructor(evaluator)    
+            evaluator_constructor = BuiltInEvaluatorConstructor(evaluator)
             load_built_in_evaluator = evaluator_constructor.construct()
             evaluators[evaluator_name] = load_built_in_evaluator
         else:
