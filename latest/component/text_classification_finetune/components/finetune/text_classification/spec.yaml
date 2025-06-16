@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_classification_finetune
-version: 0.0.75
+version: 0.0.76
 type: command
 
 is_deterministic: false
@@ -11,7 +11,7 @@ description: Component to finetune Hugging Face pretrained models for text class
   for performance enhancement. See [docs](https://aka.ms/azureml/components/text_classification_finetune)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/finetune
 
