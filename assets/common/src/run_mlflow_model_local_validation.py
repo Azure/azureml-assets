@@ -6,18 +6,15 @@
 import argparse
 import os
 import shutil
-from azureml._common._error_definition import AzureMLError
-from azureml._common.exceptions import AzureMLException
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 from pathlib import Path
 
 from utils.config import AppName
-from utils.exceptions import swallow_all_exceptions
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.common_utils import run_command
 from utils.exceptions import (
-    CondaEnvCreationError,
-    CondaFileMissingError,
-    MlflowModelValidationError,
+    swallow_all_exceptions,
+    ModelImportErrorStrings,
 )
 
 
@@ -58,7 +55,11 @@ def run():
 
     conda_file_path = os.path.join(model_dir, CONDA_FILE_NAME)
     if not os.path.exists(conda_file_path):
-        raise AzureMLException._with_error(AzureMLError.create(CondaFileMissingError))
+        message = ModelImportErrorStrings.CONDA_FILE_MISSING_ERROR
+        raise MlException(
+            message=message, no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.MODEL
+        )
 
     # copy conda.yaml to cwd
     shutil.copy(conda_file_path, CONDA_FILE_NAME)
@@ -68,12 +69,22 @@ def run():
     exit_code, stdout = run_command(CREATE_CONDA_CMD.format(ENV_PREFIX, CONDA_FILE_NAME))
     if exit_code != 0:
         logger.warning(f"Error in creating conda env. Error details {stdout}")
-        raise AzureMLException._with_error(AzureMLError.create(CondaEnvCreationError))
+        message = ModelImportErrorStrings.CONDA_ENV_CREATION_ERROR
+        raise MlException(
+            message=message, no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.ENVIRONMENT,
+            error=stdout
+        )
 
     exit_code, stdout = run_command(CONDA_LIST.format(ENV_PREFIX))
     if exit_code != 0:
-        logger.warning(f"Error in listing env at {ENV_PREFIX}. Error details {stdout}")
-        raise AzureMLException._with_error(AzureMLError.create(CondaEnvCreationError))
+        message = "Error in listing env at {ENV_PREFIX}. Error details {stdout}"
+        logger.warning(message.format(ENV_PREFIX=ENV_PREFIX, stdout=stdout))
+        raise MlException(
+            message=message, no_personal_data_message=message.format(ENV_PREFIX=ENV_PREFIX, stdout=stdout),
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.ENVIRONMENT,
+            error=stdout
+        )
     logger.info(f"pip list: \n{stdout}")
 
     cmd = f"python {SCRIPT_PATH} --model-path {model_dir}"
@@ -97,7 +108,12 @@ def run():
 
     if exit_code != 0:
         logger.warning(f"Local validation failed. Error {stdout}")
-        raise AzureMLException._with_error(AzureMLError.create(MlflowModelValidationError))
+        message = ModelImportErrorStrings.MLFLOW_LOCAL_VALIDATION_ERROR
+        raise MlException(
+            message=message, no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.ENVIRONMENT,
+            error=stdout
+        )
 
     # copy the model to output dir
     shutil.copytree(src=model_dir, dst=output_model_path, dirs_exist_ok=True)

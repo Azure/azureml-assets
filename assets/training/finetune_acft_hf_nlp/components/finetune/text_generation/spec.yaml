@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_finetune
-version: 0.0.76
+version: 0.0.77
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Generation Finetune
 description: Component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/95
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/100
 
 code: ../../../src/finetune
 
@@ -17,7 +17,6 @@ distribution:
 
 inputs:
   # Lora parameters
-  # LoRA reduces the number of trainable parameters by learning pairs of rank-decompostion matrices while freezing the original weights. This vastly reduces the storage requirement for large language models adapted to specific tasks and enables efficient task-switching during deployment all without introducing inference latency. LoRA also outperforms several other adaptation methods including adapter, prefix-tuning, and fine-tuning. Currently, LoRA is supported for gpt2, bert, roberta, deberta, distilbert, t5, bart, mbart and camembert model families
   apply_lora:
     type: string
     enum:
@@ -25,7 +24,16 @@ inputs:
     - "false"
     default: "false"
     optional: true
-    description: If "true" enables lora.
+    description: lora enabled
+
+  use_liger_kernel:
+    type: string
+    enum:
+    - "true"
+    - "false"
+    default: "false"
+    optional: true
+    description: Enable Liger kernel for optimized attention.
 
   merge_lora_weights:
     type: string
@@ -54,22 +62,12 @@ inputs:
     optional: true
     description: lora dropout value
 
-  use_liger_kernel:
-    type: string
-    enum:
-    - "true"
-    - "false"
-    default: "false"
-    optional: true
-    description: Enable Liger kernel for optimized attention.
-
   # Training parameters
   num_train_epochs:
     type: integer
-    min: 1
     default: 1
     optional: true
-    description: Number of epochs to run for finetune.
+    description: training epochs
 
   max_steps:
     type: integer
@@ -79,7 +77,6 @@ inputs:
 
   per_device_train_batch_size:
     type: integer
-    min: 1
     default: 1
     optional: true
     description: Train batch size
@@ -296,8 +293,6 @@ inputs:
     description: Denotes how much the specified metric must improve to satisfy early stopping conditions
 
   # Deepspeed Parameters
-  # Deepspeed config is a JSON file that can be used to configure optimizer, scheduler, batch size and other training related parameters. A default deepspeed config is used when _apply_deepspeed_ is set to `true`. Alternatively, you can pass your custom deepspeed config. Please follow the [deepspeed docs](https://www.deepspeed.ai/docs/config-json/) to create the custom config.
-  # Please note that to enable deepspeed, `apply_deepspeed` must be set to true, only passing the `deepspeed input` will not suffice
   apply_deepspeed:
     type: string
     enum:
@@ -323,7 +318,6 @@ inputs:
     description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
 
   # ORT Parameters
-  # ONNX Runtime is a cross-platform machine-learning model accelerator, with a flexible interface to integrate hardware-specific libraries.
   apply_ort:
     type: string
     enum:
@@ -333,7 +327,7 @@ inputs:
     optional: true
     description: If set to true, will use the ONNXRunTime training
 
-  # Data and Model inputs
+  # Dataset parameters
   preprocess_output:
     type: uri_folder
     optional: false
@@ -346,6 +340,12 @@ inputs:
     description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
     mode: rw_mount
 
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
 outputs:
   pytorch_model_folder:
     type: uri_folder
@@ -353,5 +353,5 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python finetune.py $[[--apply_lora '${{inputs.apply_lora}}']] $[[--merge_lora_weights '${{inputs.merge_lora_weights}}']] $[[--lora_alpha '${{inputs.lora_alpha}}']] $[[--lora_r '${{inputs.lora_r}}']] $[[--lora_dropout '${{inputs.lora_dropout}}']] $[[--num_train_epochs '${{inputs.num_train_epochs}}']] $[[--max_steps '${{inputs.max_steps}}']] $[[--per_device_train_batch_size '${{inputs.per_device_train_batch_size}}']] $[[--per_device_eval_batch_size '${{inputs.per_device_eval_batch_size}}']] $[[--auto_find_batch_size '${{inputs.auto_find_batch_size}}']] $[[--optim '${{inputs.optim}}']] $[[--learning_rate '${{inputs.learning_rate}}']] $[[--warmup_steps '${{inputs.warmup_steps}}']] $[[--weight_decay '${{inputs.weight_decay}}']] $[[--adam_beta1 '${{inputs.adam_beta1}}']] $[[--adam_beta2 '${{inputs.adam_beta2}}']] $[[--adam_epsilon '${{inputs.adam_epsilon}}']] $[[--gradient_accumulation_steps '${{inputs.gradient_accumulation_steps}}']] $[[--eval_accumulation_steps '${{inputs.eval_accumulation_steps}}']] $[[--lr_scheduler_type '${{inputs.lr_scheduler_type}}']] $[[--precision '${{inputs.precision}}']] $[[--seed '${{inputs.seed}}']] $[[--enable_full_determinism '${{inputs.enable_full_determinism}}']] $[[--dataloader_num_workers '${{inputs.dataloader_num_workers}}']] $[[--ignore_mismatched_sizes '${{inputs.ignore_mismatched_sizes}}']] $[[--max_grad_norm '${{inputs.max_grad_norm}}']] $[[--evaluation_strategy '${{inputs.evaluation_strategy}}']] $[[--evaluation_steps_interval '${{inputs.evaluation_steps_interval}}']] $[[--eval_steps '${{inputs.eval_steps}}']] $[[--logging_strategy '${{inputs.logging_strategy}}']] $[[--logging_steps '${{inputs.logging_steps}}']] $[[--metric_for_best_model '${{inputs.metric_for_best_model}}']] $[[--resume_from_checkpoint '${{inputs.resume_from_checkpoint}}']] $[[--save_total_limit '${{inputs.save_total_limit}}']] $[[--apply_early_stopping '${{inputs.apply_early_stopping}}']] $[[--early_stopping_patience '${{inputs.early_stopping_patience}}']] $[[--early_stopping_threshold '${{inputs.early_stopping_threshold}}']] $[[--apply_ort '${{inputs.apply_ort}}']] $[[--apply_deepspeed '${{inputs.apply_deepspeed}}']] $[[--deepspeed '${{inputs.deepspeed}}']] $[[--deepspeed_stage '${{inputs.deepspeed_stage}}']] --model_selector_output '${{inputs.model_selector_output}}' --preprocess_output '${{inputs.preprocess_output}}' $[[--system_properties '${{inputs.system_properties}}']] --pytorch_model_folder '${{outputs.pytorch_model_folder}}'
+  python finetune.py $[[--apply_lora '${{inputs.apply_lora}}']] $[[--use_liger_kernel '${{inputs.use_liger_kernel}}']] $[[--merge_lora_weights '${{inputs.merge_lora_weights}}']] $[[--lora_alpha '${{inputs.lora_alpha}}']] $[[--lora_r '${{inputs.lora_r}}']] $[[--lora_dropout '${{inputs.lora_dropout}}']] $[[--num_train_epochs '${{inputs.num_train_epochs}}']] $[[--max_steps '${{inputs.max_steps}}']] $[[--per_device_train_batch_size '${{inputs.per_device_train_batch_size}}']] $[[--per_device_eval_batch_size '${{inputs.per_device_eval_batch_size}}']] $[[--auto_find_batch_size '${{inputs.auto_find_batch_size}}']] $[[--optim '${{inputs.optim}}']] $[[--learning_rate '${{inputs.learning_rate}}']] $[[--warmup_steps '${{inputs.warmup_steps}}']] $[[--weight_decay '${{inputs.weight_decay}}']] $[[--adam_beta1 '${{inputs.adam_beta1}}']] $[[--adam_beta2 '${{inputs.adam_beta2}}']] $[[--adam_epsilon '${{inputs.adam_epsilon}}']] $[[--gradient_accumulation_steps '${{inputs.gradient_accumulation_steps}}']] $[[--eval_accumulation_steps '${{inputs.eval_accumulation_steps}}']] $[[--lr_scheduler_type '${{inputs.lr_scheduler_type}}']] $[[--precision '${{inputs.precision}}']] $[[--seed '${{inputs.seed}}']] $[[--enable_full_determinism '${{inputs.enable_full_determinism}}']] $[[--dataloader_num_workers '${{inputs.dataloader_num_workers}}']] $[[--ignore_mismatched_sizes '${{inputs.ignore_mismatched_sizes}}']] $[[--max_grad_norm '${{inputs.max_grad_norm}}']] $[[--evaluation_strategy '${{inputs.evaluation_strategy}}']] $[[--evaluation_steps_interval '${{inputs.evaluation_steps_interval}}']] $[[--eval_steps '${{inputs.eval_steps}}']] $[[--logging_strategy '${{inputs.logging_strategy}}']] $[[--logging_steps '${{inputs.logging_steps}}']] $[[--metric_for_best_model '${{inputs.metric_for_best_model}}']] $[[--resume_from_checkpoint '${{inputs.resume_from_checkpoint}}']] $[[--save_total_limit '${{inputs.save_total_limit}}']] $[[--apply_early_stopping '${{inputs.apply_early_stopping}}']] $[[--early_stopping_patience '${{inputs.early_stopping_patience}}']] $[[--early_stopping_threshold '${{inputs.early_stopping_threshold}}']] $[[--apply_ort '${{inputs.apply_ort}}']] $[[--apply_deepspeed '${{inputs.apply_deepspeed}}']] $[[--deepspeed '${{inputs.deepspeed}}']] $[[--deepspeed_stage '${{inputs.deepspeed_stage}}']] --model_selector_output '${{inputs.model_selector_output}}' --preprocess_output '${{inputs.preprocess_output}}' $[[--system_properties '${{inputs.system_properties}}']] --pytorch_model_folder '${{outputs.pytorch_model_folder}}'
 
