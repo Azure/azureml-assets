@@ -6,7 +6,7 @@ description: (Public Preview) Environment for Generative AI on Azure containing 
   of use for [Microsoft Azure Previews](https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).
 
 name: "ai-studio-dev"
-version: "11"
+version: "12"
 
 build:
   path: "context"
