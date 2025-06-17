@@ -111,6 +111,7 @@ class BuiltInEvaluatorConstructor:
         self.evaluator = self._initialize_evaluator()
 
     def _get_builtin_evaluator_name_type(self, evaluator_id):
+
         """
         Extract the evaluator name and type from a given evaluator ID if it matches the expected format.
         """
@@ -129,6 +130,7 @@ class BuiltInEvaluatorConstructor:
             return (evaluator_name, evaluator_type)
 
     def _map_to_rai_evaluator_name(self, evaluator_name):
+
         """
         Map given evaluator name to its corresponding RAI evaluator name.
         Returns the RAI evaluator string if found, else None.
@@ -170,12 +172,13 @@ class BuiltInEvaluatorConstructor:
             return evaluator_class(**init_params)
 
     def construct(self):
+
         """Return the constructed evaluator"""
 
         return self.evaluator
 
-
 def update_value_in_dict(d, key_substring, new_func):
+
     """Recursively search for a value containing 'key_substring' and apply 'new_func' to modify it."""
 
     for key, value in d.items():
