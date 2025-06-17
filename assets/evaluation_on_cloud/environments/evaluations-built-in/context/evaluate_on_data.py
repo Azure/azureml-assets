@@ -76,6 +76,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class BuiltInEvaluatorConstructor:
+
     """Constructs a built-in evaluator based on the provided configuration."""
 
     def __init__(self, evaluator_configuration):
@@ -189,7 +190,9 @@ def update_value_in_dict(d, key_substring, new_func):
 
 
 def find_file_and_get_parent_dir(root_dir, file_name="flow.flex.yaml"):
+
     """Find the flex flow or any given file in a directory and return the parent directory."""
+
     for dirpath, _, filenames in os.walk(root_dir):
         if file_name in filenames:
             logger.info(f"Found {file_name} in {dirpath}")
@@ -197,7 +200,9 @@ def find_file_and_get_parent_dir(root_dir, file_name="flow.flex.yaml"):
 
 
 def copy_evaluator_files(command_line_args):
+
     """Copy the mounted evaluator files to the relative paths to enable read/write."""
+
     evaluator_name_id_map = json.loads(command_line_args.evaluator_name_id_map)
     for evaluator_name, evaluator_id in evaluator_name_id_map.items():
         dir_path = find_file_and_get_parent_dir(evaluator_id)
@@ -212,7 +217,9 @@ def copy_evaluator_files(command_line_args):
 
 
 def initialize_evaluators(command_line_args):
+
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
+
     evaluators = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     rai_evaluators = json.loads(command_line_args.rai_evaluators)
@@ -237,7 +244,9 @@ def initialize_evaluators(command_line_args):
 
 
 def get_evaluator_config(command_line_args):
+
     """Get evaluator configuration from user input."""
+
     evaluator_config = {}
     evaluators_o = json.loads(command_line_args.evaluators)
     for evaluator_name, evaluator in evaluators_o.items():
@@ -247,7 +256,9 @@ def get_evaluator_config(command_line_args):
 
 
 def create_model_target_and_data_mapping(command_line_args):
+
     """Get model target configuration from user input."""
+
     if not command_line_args.eval_target:
         logger.info("No eval_target provided. Returning None.")
         return (None, None)
@@ -295,7 +306,9 @@ def create_model_target_and_data_mapping(command_line_args):
 
 
 def apply_target_on_data(data, model_target, data_mapping):
+
     """Apply target on input data."""
+
     input_filename = os.path.basename(data)
     name, ext = os.path.splitext(input_filename)
     df = pd.DataFrame()
@@ -367,7 +380,9 @@ def apply_target_on_data(data, model_target, data_mapping):
 
 
 def update_evaluator_config_mapping_for_generated_response(command_line_args, evaluator_config):
+
     """Ensure 'response' key exists in 'column_mapping' and update it."""
+
     for evaluator_name, config in evaluator_config.items():
         if "column_mapping" not in config:
             config["column_mapping"] = {}
@@ -384,7 +399,9 @@ def update_evaluator_config_mapping_for_generated_response(command_line_args, ev
 
 
 def run_evaluation(command_line_args, evaluators, evaluator_config, model_target, data_mapping):
+
     """Run evaluation using evaluators."""
+
     logger.info(f"Running the evaluators: {list(evaluators.keys())}")
     logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
 
@@ -419,7 +436,9 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
 
 
 def get_promptflow_run_logs():
+
     """Get promptflow run logs."""
+
     if os.path.exists("/root/.promptflow/.runs/"):
         runs = os.listdir("/root/.promptflow/.runs/")
         for run in runs:
