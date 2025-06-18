@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: translation_pipeline
-version: 0.0.76
+version: 0.0.77
 type: pipeline
 display_name: Translation Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for translation task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/translation_pipeline) to learn more.
@@ -489,7 +489,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.75
+    component: azureml:ft_nlp_common_validation:0.0.76
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -526,7 +526,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   translation_model_import:
     type: command
-    component: azureml:translation_model_import:0.0.75
+    component: azureml:translation_model_import:0.0.76
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -537,7 +537,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   translation_datapreprocess:
     type: command
-    component: azureml:translation_datapreprocess:0.0.75
+    component: azureml:translation_datapreprocess:0.0.76
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -556,7 +556,7 @@ jobs:
       model_selector_output: '${{parent.jobs.translation_model_import.outputs.output_dir}}'
   translation_finetune:
     type: command
-    component: azureml:translation_finetune:0.0.75
+    component: azureml:translation_finetune:0.0.76
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -613,7 +613,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.75
+    component: azureml:ft_nlp_model_converter:0.0.76
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -623,7 +623,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction_with_container:0.0.6
+    component: azureml:model_prediction_with_container:0.0.7
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -636,7 +636,7 @@ jobs:
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.35
+    component: azureml:compute_metrics:0.0.36
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
