@@ -112,11 +112,9 @@ class BuiltInEvaluatorConstructor:
         self.evaluator = self._initialize_evaluator()
 
     def _get_builtin_evaluator_name_type(self, evaluator_id):
-
         """
         Extract the evaluator name and type from a given evaluator ID if it matches the expected format.
         """
-
         foundry_eval_regex = r"azureai://([^/]+)/evaluators/([^/]+)"
 
         match_foundry_eval = re.match(foundry_eval_regex, evaluator_id)
@@ -131,12 +129,10 @@ class BuiltInEvaluatorConstructor:
             return (evaluator_name, evaluator_type)
 
     def _map_to_rai_evaluator_name(self, evaluator_name):
-
         """
         Map given evaluator name to its corresponding RAI evaluator name.
         Returns the RAI evaluator string if found, else None.
         """
-
         mapping = {
             "sexual": "Sexual-Content-Evaluator",
             "hate_unfairness": "Hate-and-Unfairness-Evaluator",
@@ -173,13 +169,11 @@ class BuiltInEvaluatorConstructor:
             return evaluator_class(**init_params)
 
     def construct(self):
-
-        """Return the constructed evaluator"""
+        """Return the constructed evaluator."""
         return self.evaluator
 
 
 def update_value_in_dict(d, key_substring, new_func):
-
     """Recursively search for a value containing 'key_substring' and apply 'new_func' to modify it."""
     for key, value in d.items():
         if isinstance(value, dict):
@@ -189,7 +183,6 @@ def update_value_in_dict(d, key_substring, new_func):
 
 
 def find_file_and_get_parent_dir(root_dir, file_name="flow.flex.yaml"):
-
     """Find the flex flow or any given file in a directory and return the parent directory."""
     for dirpath, _, filenames in os.walk(root_dir):
         if file_name in filenames:
@@ -198,7 +191,6 @@ def find_file_and_get_parent_dir(root_dir, file_name="flow.flex.yaml"):
 
 
 def copy_evaluator_files(command_line_args):
-
     """Copy the mounted evaluator files to the relative paths to enable read/write."""
     evaluator_name_id_map = json.loads(command_line_args.evaluator_name_id_map)
     for evaluator_name, evaluator_id in evaluator_name_id_map.items():
@@ -214,7 +206,6 @@ def copy_evaluator_files(command_line_args):
 
 
 def initialize_evaluators(command_line_args):
-
     """Initialize the evaluators using  correct parameters and credentials for rai evaluators."""
     evaluators = {}
     evaluators_o = json.loads(command_line_args.evaluators)
@@ -240,7 +231,6 @@ def initialize_evaluators(command_line_args):
 
 
 def get_evaluator_config(command_line_args):
-
     """Get evaluator configuration from user input."""
     evaluator_config = {}
     evaluators_o = json.loads(command_line_args.evaluators)
@@ -251,7 +241,6 @@ def get_evaluator_config(command_line_args):
 
 
 def create_model_target_and_data_mapping(command_line_args):
-
     """Get model target configuration from user input."""
     if not command_line_args.eval_target:
         logger.info("No eval_target provided. Returning None.")
@@ -389,7 +378,6 @@ def update_evaluator_config_mapping_for_generated_response(command_line_args, ev
 
 
 def run_evaluation(command_line_args, evaluators, evaluator_config, model_target, data_mapping):
-
     """Run evaluation using evaluators."""
     logger.info(f"Running the evaluators: {list(evaluators.keys())}")
     logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
@@ -426,7 +414,6 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
 
 def get_promptflow_run_logs():
     """Get promptflow run logs."""
-
     if os.path.exists("/root/.promptflow/.runs/"):
         runs = os.listdir("/root/.promptflow/.runs/")
         for run in runs:
