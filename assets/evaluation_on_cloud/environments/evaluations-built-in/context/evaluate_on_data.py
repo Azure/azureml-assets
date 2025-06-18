@@ -300,7 +300,6 @@ def create_model_target_and_data_mapping(command_line_args):
 
 
 def apply_target_on_data(data, model_target, data_mapping):
-
     """Apply target on input data."""
     input_filename = os.path.basename(data)
     name, ext = os.path.splitext(input_filename)
@@ -373,7 +372,6 @@ def apply_target_on_data(data, model_target, data_mapping):
 
 
 def update_evaluator_config_mapping_for_generated_response(command_line_args, evaluator_config):
-
     """Ensure 'response' key exists in 'column_mapping' and update it."""
     for evaluator_name, config in evaluator_config.items():
         if "column_mapping" not in config:
@@ -427,8 +425,8 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
 
 
 def get_promptflow_run_logs():
-
     """Get promptflow run logs."""
+
     if os.path.exists("/root/.promptflow/.runs/"):
         runs = os.listdir("/root/.promptflow/.runs/")
         for run in runs:
