@@ -76,7 +76,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 class BuiltInEvaluatorConstructor:
-
     """Constructs a built-in evaluator based on the provided configuration."""
 
     def __init__(self, evaluator_configuration):
