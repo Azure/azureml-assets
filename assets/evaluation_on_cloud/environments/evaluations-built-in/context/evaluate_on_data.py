@@ -80,7 +80,7 @@ class BuiltInEvaluatorConstructor:
     """Constructs a built-in evaluator based on the provided configuration."""
 
     def __init__(self, evaluator_configuration):
-        # Map evaluator names to their corresponding classes
+        """Map evaluator names to their corresponding classes."""
         # NOTE: Maintain alphabetical order for better readability
         self.evaluator_classes = {
             "bleu_score": BleuScoreEvaluator,
@@ -112,9 +112,7 @@ class BuiltInEvaluatorConstructor:
         self.evaluator = self._initialize_evaluator()
 
     def _get_builtin_evaluator_name_type(self, evaluator_id):
-        """
-        Extract the evaluator name and type from a given evaluator ID if it matches the expected format.
-        """
+        """Extract the evaluator name and type from a given evaluator ID if it matches the expected format."""
         foundry_eval_regex = r"azureai://([^/]+)/evaluators/([^/]+)"
 
         match_foundry_eval = re.match(foundry_eval_regex, evaluator_id)
@@ -131,6 +129,7 @@ class BuiltInEvaluatorConstructor:
     def _map_to_rai_evaluator_name(self, evaluator_name):
         """
         Map given evaluator name to its corresponding RAI evaluator name.
+
         Returns the RAI evaluator string if found, else None.
         """
         mapping = {
