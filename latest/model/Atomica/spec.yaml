@@ -20,7 +20,7 @@ tags:
   inference_supported_envs:
   - hf
   license: mit
-  author: WangLab
+  author: "Mims Harvard"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3,
