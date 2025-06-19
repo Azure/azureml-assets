@@ -126,6 +126,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y   
+RUN /opt/miniconda/bin/conda run -p /azureml-envs/mlflow pip install flask-cors==6.0.0
 USER dockeruser
 
 CMD [ "runsvdir", "/var/runit" ]
