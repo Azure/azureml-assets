@@ -32,6 +32,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
+
 from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
@@ -279,6 +280,14 @@ def get_parser():
     parser.add_argument("--lora_dropout", type=float, default=0.0, help="lora dropout value")
     parser.add_argument("--lora_r", default=8, type=int, help="lora dimension")
 
+    # Flash Attention kernel optimization
+    parser.add_argument(
+        "--use_liger_kernel",
+        type=str2bool,
+        default="false",
+        help="Enable Liger kernel for optimized attention",
+    )
+
     # Training settings
     parser.add_argument("--num_train_epochs", default=5, type=int, help="training epochs")
     parser.add_argument(
@@ -490,7 +499,7 @@ def get_parser():
     parser.add_argument(
         "--save_strategy",
         type=str,
-        default="no",
+        default=SaveStrategy.EVALUATION_STRATEGY,
         help="The checkpoint save strategy to adopt during training.",
     )
     parser.add_argument(
@@ -936,7 +945,7 @@ def set_16bit_precision(args: Namespace):
 
 def set_flash_attention(args: Namespace):
     """Set Flash Attention related parameters."""
-    flash_attention_load_model_kwargs = {}
+    flash_attention_load_model_kwargs: Dict[str, Any] = {}
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_FLASH_ATTENTION_2_MODEL_TYPES
@@ -1005,23 +1014,6 @@ def set_flash_attention(args: Namespace):
 
 def set_gradient_checkpointing(args: Namespace):
     """Set Gradient checkpointing related parameters."""
-    if args.apply_lora and not args.apply_deepspeed:
-        # do not set `gradient_checkpointing` for LoRA only training as it fails with the following error:
-        # RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following
-        # reasons: 1) Use of a module parameter outside the `forward` function. Please make sure model parameters
-        # are not shared across multiple concurrent forward-backward passes. or try to use _set_static_graph() as
-        # a workaround if this module graph does not change during training loop.2) Reused parameters in multiple
-        # reentrant backward passes. For example, if you use multiple `checkpoint` functions to wrap the same part
-        # of your model, it would result in the same set of parameters been used by different reentrant backward
-        # passes multiple times, and hence marking a variable ready multiple times. DDP does not support such use
-        # cases in default. You can try to use _set_static_graph() as a workaround if your module graph does not
-        # change over iterations.
-        # Parameter at index xxx has been marked as ready twice. This means that multiple autograd engine  hooks
-        # have fired for this particular parameter during this iteration. You can set the environment variable
-        # TORCH_DISTRIBUTED_DEBUG to either INFO or DETAIL to print parameter names for further debugging.
-        logger.info("Not setting `gradient_checkpointing` to True for LoRA only finetuning.")
-        return
-
     if (
         hasattr(args, "model_type")
         and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
@@ -1030,6 +1022,21 @@ def set_gradient_checkpointing(args: Namespace):
             f"Identified model type: {args.model_type}. Forcing `gradient_checkpointing` to True."
         )
         setattr(args, "gradient_checkpointing", True)
+        if args.apply_lora and not args.apply_deepspeed:
+            # Fixes the following error when using LoRA with gradient checkpointing:
+            # RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following
+            # reasons: 1) Use of a module parameter outside the `forward` function. Please make sure model parameters
+            # are not shared across multiple concurrent forward-backward passes. or try to use _set_static_graph() as
+            # a workaround if this module graph does not change during training loop.2) Reused parameters in multiple
+            # reentrant backward passes. For example, if you use multiple `checkpoint` functions to wrap the same part
+            # of your model, it would result in the same set of parameters been used by different reentrant backward
+            # passes multiple times, and hence marking a variable ready multiple times. DDP does not support such use
+            # cases in default. You can try to use _set_static_graph() as a workaround if your module graph does not
+            # change over iterations.
+            # Parameter at index xxx has been marked as ready twice. This means that multiple autograd engine  hooks
+            # have fired for this particular parameter during this iteration. You can set the environment variable
+            # TORCH_DISTRIBUTED_DEBUG to either INFO or DETAIL to print parameter names for further debugging.
+            setattr(args, "gradient_checkpointing_kwargs", {"use_reentrant": False})
 
     logger.info(f"enable Gradient checkpointing: {getattr(args, 'gradient_checkpointing', None)}")
 
