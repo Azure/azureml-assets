@@ -16,8 +16,8 @@ GitPython=={{latest-pypi-version}}
 paramiko=={{latest-pypi-version}}
 cryptography==44.0.2
 ####
-torch==2.6.0
-torchaudio==2.6.0
+torch==2.7.1
+torchaudio==2.7.1
 setuptools==78.1.1
 Pillow 
 gunicorn 
