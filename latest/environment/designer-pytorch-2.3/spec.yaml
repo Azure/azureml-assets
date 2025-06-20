@@ -4,7 +4,7 @@ description: >-
   AzureML Designer PyTorch image
 
 name: "designer-pytorch-2.3"
-version: "11"
+version: "12"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"

@@ -4,7 +4,7 @@ description: >-
   AzureML Designer IO image
 
 name: "designer-io"
-version: "97"
+version: "98"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
