@@ -20,7 +20,7 @@ dependencies:
   - azureml-contrib-services
   - azureml-telemetry=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
-  - azureml-inference-server-http>=1.3.0
+  - azureml-inference-server-http>=1.4.1 #Upgrading version to ensure flask-cors>=6.0.0 is installed
   - azureml-mlflow=={{latest-pypi-version}}
     # More packages needed for RAG extras
   - beautifulsoup4~=4.11.2 # explicitly install for [data_generation]
