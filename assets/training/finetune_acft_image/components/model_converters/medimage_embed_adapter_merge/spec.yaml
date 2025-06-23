@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.4
+version: 0.0.1
 name: medimageinsight_classification_model
 display_name: Package Classification Model
 description: Integrate labels and generates classification model

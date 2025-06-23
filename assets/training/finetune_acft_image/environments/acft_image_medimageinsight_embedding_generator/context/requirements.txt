@@ -1,5 +1,5 @@
-azureml-acft-common-components==0.0.76 #{{latest-pypi-version}}
-azureml-acft-contrib-hf-nlp==0.0.76  #{{latest-pypi-version}}
+azureml-acft-common-components=={{latest-pypi-version}}
+azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 mlflow==2.20.3
 cloudpickle==2.2.1
 colorama==0.4.6
