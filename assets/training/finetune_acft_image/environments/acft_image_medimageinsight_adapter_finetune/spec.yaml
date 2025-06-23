@@ -3,12 +3,16 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: AzureML ACFT MedImageInsight Adapter Image for Training
 
 
-name: "{{asset.name}}"
-version: "{{asset.version}}"
+#name: "{{asset.name}}"
+name: acft-medimageinsight-adapter-finetune
+#version: "{{asset.version}}"
+version: 8
 
 build:
-  path: "{{image.context.path}}"
-  dockerfile_path: "{{image.dockerfile.path}}"
+  #path: "{{image.context.path}}"
+  path: ./context
+  dockerfile_path: Dockerfile
+  #dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 

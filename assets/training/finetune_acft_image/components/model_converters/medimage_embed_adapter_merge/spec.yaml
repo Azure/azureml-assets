@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.2
-name: medimage_embedding_adapter_merge
+version: 0.0.4
+name: medimageinsight_classification_model
 display_name: Package Classification Model
 description: Integrate labels and generates classification model
 
 is_deterministic: True
 
-environment : azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/1
+environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/9
 
 code: ../../../src/model_converters/medimage_embed_adapter_merge
 
