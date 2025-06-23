@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: medimgage_embedding_finetune
-version: 0.0.3
+name: medimageinsight_embedding_finetune
+version: 0.0.5
 
 type: command
 
@@ -8,7 +8,7 @@ is_deterministic: True
 
 display_name: Medical Image Insight Embedding Finetune
 description: Component to finetune the model using the medical image data
-environment : azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/1
+environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/7
 code: ../../../src/medimage_insight_embedding_finetune
 
 distribution:
