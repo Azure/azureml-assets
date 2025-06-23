@@ -29,3 +29,9 @@ signature:
   params: null
 type_hint_from_example: false
 utc_time_created: '2025-05-08 17:28:36.871725'
+metadata:
+  base_model_name: Atomica
+  base_model_task: embedding
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
