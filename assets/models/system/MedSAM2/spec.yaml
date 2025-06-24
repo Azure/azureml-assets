@@ -16,7 +16,7 @@ tags:
   inference_supported_envs:
     - hf
   license: Apache2.0
-  author: WangLab
+  author: Wanglab
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
