@@ -18,25 +18,19 @@ flavors:
     streamable: false
 is_signature_from_type_hint: false
 mlflow_version: 2.21.3
-model_size_bytes: 156044156
-model_uuid: 04b94ac5bc3241679f55f187d878c799
+model_size_bytes: 156044604
+model_uuid: 2358da73cfed4a57af63d5001d9e645c
 prompts: null
 signature:
   inputs: '[{"name": "nii_image", "type": "tensor", "tensor-spec": {"dtype": "object",
-    "shape": [-1]}}, {"name": "bbox", "type": "tensor", "tensor-spec": {"dtype": "float32",
-    "shape": [-1, 4]}}, {"name": "key_slice_idx", "type": "tensor", "tensor-spec":
-    {"dtype": "int32", "shape": [-1]}}, {"name": "dicom_window", "type": "tensor",
-    "tensor-spec": {"dtype": "float32", "shape": [-1, 2]}}, {"name": "slice_offset",
-    "type": "tensor", "tensor-spec": {"dtype": "int32", "shape": [-1]}}]'
+    "shape": [1]}}, {"name": "bbox", "type": "tensor", "tensor-spec": {"dtype": "float32",
+    "shape": [1, 4]}}, {"name": "key_slice_idx", "type": "tensor", "tensor-spec":
+    {"dtype": "int32", "shape": [1]}}, {"name": "dicom_window", "type": "tensor",
+    "tensor-spec": {"dtype": "float32", "shape": [1, 2]}}, {"name": "slice_offset",
+    "type": "tensor", "tensor-spec": {"dtype": "int32", "shape": [1]}}]'
   outputs: '[{"name": "mask", "type": "tensor", "tensor-spec": {"dtype": "int32",
-    "shape": [-1, -1, -1]}}, {"name": "metadata", "type": "tensor", "tensor-spec":
-    {"dtype": "object", "shape": []}}]'
+    "shape": [1, 512, 512]}}, {"name": "metadata", "type": "tensor", "tensor-spec":
+    {"dtype": "object", "shape": [1]}}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2025-04-22 22:15:33.568565'
-metadata:
-  base_model_name: MedSAM2
-  base_model_task: image-segmentation
-  is_acft_model: true
-  is_finetuned_model: false
-  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+utc_time_created: '2025-06-24 19:14:02.974511'
