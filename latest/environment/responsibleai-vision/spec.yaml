@@ -4,7 +4,7 @@ description: >-
   AzureML Responsible AI Vision environment.
 
 name: "responsibleai-vision"
-version: "26"
+version: "27"
 
 build:
   path: "context"
