@@ -28,7 +28,7 @@ tags:
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 1
+version: 2
 description: |-
   <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
 
