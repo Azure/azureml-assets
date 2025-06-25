@@ -13,7 +13,7 @@ flavors:
     data: data
     env: conda.yaml
     loader_module: azureml.evaluate.mlflow.hftransformers
-    python_version: 3.9.0
+    python_version: 3.9.23
 mlflow_version: 2.6.0
 model_uuid: faf2e837e62a4bf9a1699517f14e265c
 utc_time_created: '2023-10-31 12:09:27.287525'
