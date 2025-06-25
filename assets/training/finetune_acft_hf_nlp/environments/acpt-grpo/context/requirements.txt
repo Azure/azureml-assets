@@ -1,0 +1,8 @@
+accelerate==1.6.0
+datasets==3.6.0
+deepspeed==0.17.1
+transformers==4.51.3
+trl==0.18.2
+liger-kernel==0.5.10
+vllm==0.9.1
+peft==0.15.2
