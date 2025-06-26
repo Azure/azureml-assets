@@ -19,7 +19,7 @@ flavors:
     data: data
     env: conda.yaml
     loader_module: azureml.evaluate.mlflow.hftransformers
-    python_version: 3.8.18
+    python_version: 3.9.23
 metadata:
   base_model_name: Deci/DeciLM-7B
   base_model_task: text-generation
