@@ -6,9 +6,7 @@
 import time
 import logging
 from functools import wraps
-from azureml._common.exceptions import AzureMLException
-from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
-from azureml._common._error_definition.system_error import ClientError  # type: ignore
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException
 
 
 class ModelImportErrorStrings:
@@ -61,149 +59,6 @@ class ModelImportErrorStrings:
     )
 
 
-class ModelImportException(AzureMLException):
-    """Base exception for Model Import handling."""
-
-    def __init__(self, exception_message, **kwargs):
-        """Initialize a new instance of LLMException.
-
-        :param exception_message: A message describing the error
-        :type exception_message: str
-        """
-        super(ModelImportException, self).__init__(exception_message, **kwargs)
-
-    @property
-    def error_code(self):
-        """Return error code for azureml_error."""
-        return self._azureml_error.error_definition.code
-
-
-class ModelImportError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.LOG_UNSAFE_GENERIC_ERROR
-
-
-class NonMsiAttachedComputeError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.NON_MSI_ATTACHED_COMPUTE_ERROR
-
-
-class UnSupportedModelTypeError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.UNSUPPORTED_MODEL_TYPE_ERROR
-
-
-class MissingModelNameError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.MISSING_MODEL_NAME_ERROR
-
-
-class ComputeCreationError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.COMPUTE_CREATION_ERROR
-
-
-class EndpointCreationError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.ENDPOINT_CREATION_ERROR
-
-
-class DeploymentCreationError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.DEPLOYMENT_CREATION_ERROR
-
-
-class OnlineEndpointInvocationError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
-
-
-class BatchEndpointInvocationError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.BATCH_ENDPOINT_INVOCATION_ERROR
-
-
-class UserIdentityMissingError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
-
-
-class CondaEnvCreationError(ClientError):
-    """Conda env creation error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.CONDA_ENV_CREATION_ERROR
-
-
-class CondaFileMissingError(ClientError):
-    """Conda file missing error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.CONDA_FILE_MISSING_ERROR
-
-
-class MlflowModelValidationError(ClientError):
-    """MLflow local validation error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.MLFLOW_LOCAL_VALIDATION_ERROR
-
-
-class InvalidModelIDError(ClientError):
-    """MLflow local validation error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.INVALID_MODEL_ID_ERROR
-
-
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.
 
@@ -219,10 +74,15 @@ def swallow_all_exceptions(logger: logging.Logger):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                if isinstance(e, AzureMLException):
+                if isinstance(e, MlException):
                     azureml_exception = e
                 else:
-                    azureml_exception = AzureMLException._with_error(AzureMLError.create(ModelImportError, error=e))
+                    message = ModelImportErrorStrings.LOG_UNSAFE_GENERIC_ERROR
+                    azureml_exception = MlException(
+                        message=message.format(error=e), no_personal_data_message=message,
+                        error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+                        error=e
+                    )
 
                 logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
                 for handler in logger.handlers:

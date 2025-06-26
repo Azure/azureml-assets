@@ -9,16 +9,13 @@ import sys
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ManagedIdentityCredential
-from azureml._common._error_definition import AzureMLError
-from azureml._common.exceptions import AzureMLException
-from azureml.core.run import Run
+from azure.ai.ml.exceptions import ErrorTarget, ErrorCategory, MlException, ValidationException
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Tuple
 
 from utils.logging_utils import get_logger
-from utils.run_utils import JobRunDetails
-from utils.exceptions import UserIdentityMissingError, InvalidModelIDError
+from utils.exceptions import ModelImportErrorStrings
 
 
 logger = get_logger(__name__)
@@ -59,16 +56,30 @@ def get_mlclient(registry_name: str = None):
             # Check if given credential can get token successfully.
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            raise AzureMLException._with_error(AzureMLError.create(UserIdentityMissingError, exception=ex))
+            message = ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+            raise MlException(
+                message=message.format(ex=ex), no_personal_data_message=message,
+                error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.IDENTITY,
+                error=ex
+            )
+    try:
+        subscription_id = os.environ['AZUREML_ARM_SUBSCRIPTION']
+        resource_group = os.environ["AZUREML_ARM_RESOURCEGROUP"]
+        workspace = os.environ["AZUREML_ARM_WORKSPACE_NAME"]
+    except Exception as ex:
+        message = "Failed to get AzureML ARM env variable : {ex}"
+        raise MlException(
+            message=message.format(ex=ex), no_personal_data_message=message,
+            error_category=ErrorCategory.SYSTEM_ERROR, target=ErrorTarget.COMPONENT,
+            error=ex
+        )
 
     if registry_name is None:
-        run = Run.get_context(allow_offline=False)
-        ws = run.experiment.workspace
         return MLClient(
             credential=credential,
-            subscription_id=ws._subscription_id,
-            resource_group_name=ws._resource_group,
-            workspace_name=ws._workspace_name,
+            subscription_id=subscription_id,
+            resource_group_name=resource_group,
+            workspace_name=workspace,
         )
     logger.info(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
@@ -81,7 +92,11 @@ def get_model_name(model_id: str):
     if match:
         return match.group(2) or match.group(5)
     else:
-        raise AzureMLException._with_error(AzureMLError.create(InvalidModelIDError, model_id=model_id))
+        message = ModelImportErrorStrings.INVALID_MODEL_ID_ERROR
+        raise ValidationException(
+            message=message.format(model_id=model_id), no_personal_data_message=message,
+            error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT
+        )
 
 
 def get_model_name_version(model_id: str):
@@ -100,8 +115,12 @@ def get_model_name_version(model_id: str):
         logger.info(f"ws asset URI, returning {match.group(1)}, {match.group(2)}")
         return match.group(2) or match.group(5)
 
-    logger.info(f"Unsupported model asset uri: {model_id}")
-    raise AzureMLException._with_error(AzureMLError.create(InvalidModelIDError, model_id=model_id))
+    message = "Unsupported model asset uri: {model_id}"
+    logger.info(message.format(model_id=model_id))
+    raise MlException(
+        message=message.format(model_id=model_id), no_personal_data_message=message,
+        error_category=ErrorCategory.USER_ERROR, target=ErrorTarget.COMPONENT
+    )
 
 
 def get_job_uri_from_input_run_assetId(assetID: str):
@@ -131,13 +150,18 @@ def get_job_uri_from_input_run_assetId(assetID: str):
     return f"azureml://jobs/{input_parent_job_name}/outputs/{input_asset_name}"
 
 
-def get_run_input_asset_id(input_name: str):
-    """Return Job Input asset ID for a given input name."""
-    run_details: JobRunDetails = JobRunDetails.get_run_details()
-    input_assets = run_details.input_assets.get(input_name, None)
-    if (input_assets and "asset" in input_assets and "assetId" in input_assets["asset"]):
-        return input_assets["asset"]["assetId"]
-    return None
+def get_run_input_asset_id(input_name: str) -> str:
+    """Get asset ID of the input provided to the pipeline component.
+
+    Looks for environment variable 'AZUREML_JOB_INPUT_<INPUT_NAME>'
+    """
+    env_var = f"AZURE_ML_INPUT_{input_name}"
+    asset_id = os.environ.get(env_var, None)
+
+    if not asset_id:
+        logger.warning(f"No asset ID found for input '{input_name}'. Expected env var: {env_var}")
+
+    return asset_id
 
 
 def get_job_asset_uri(input_name):
