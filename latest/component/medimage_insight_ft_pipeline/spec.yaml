@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: medimage_insight_ft_pipeline
-version: 0.0.3
+version: 0.0.4
 type: pipeline
 display_name: Medimage Insight Finetune Pipeline
 description: Pipeline Component to finetune MedImageInsight Model.
@@ -114,7 +114,7 @@ outputs:
 jobs:
   medical_image_embedding_model_finetune:
     type: command
-    component: azureml:medimgage_embedding_finetune:0.0.3
+    component: azureml:medimgage_embedding_finetune:0.0.4
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -137,7 +137,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.embedding_mlflow_model}}'
   medimage_embedding_adapter_merge:
     type: command
-    component: azureml:medimage_embedding_adapter_merge:0.0.2
+    component: azureml:medimage_embedding_adapter_merge:0.0.3
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
