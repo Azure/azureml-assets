@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: microsoft/aurora/20250114/mlflow_model_folder
+  container_path: microsoft/aurora/20250625/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
