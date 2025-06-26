@@ -135,7 +135,7 @@ tags:
   inputModalities: "data"
   outputModalities: "data"
   freePlayground: "false"
-version: 3
+version: 4
 description: |
   Aurora is a machine learning model that can predict general environmental variables, such as temperature and wind speed.
   It is a _foundation model_, which means that it was first generally trained on a lot of data,
