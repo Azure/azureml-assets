@@ -31,7 +31,7 @@ tags:
   license: apache-2.0
   author: "Deci AI"
   huggingface_model_id: Deci/DeciLM-7B
-version: 6
+version: 7
 description: |-
   DeciLM-7B is a decoder-only text generation model with 7.04 billion parameters, released by Deci under the Apache 2.0 license. It is the top-performing 7B base language model on the Open LLM Leaderboard and uses variable Grouped-Query Attention (GQA) to achieve a superior balance between accuracy and computational efficiency. The model's architecture was generated using Deci's proprietary Neural Architecture Search technology, AutoNAC. DeciLM-7B is intended for commercial and research use in English and can be fine-tuned for various tasks and languages. However, like all large language models, its outputs are unpredictable and may generate responses that are inaccurate, biased, or otherwise objectionable. Developers planning to use DeciLM-7B should undertake thorough safety testing and tuning designed explicitly for their intended applications of the model before deployment.
 
