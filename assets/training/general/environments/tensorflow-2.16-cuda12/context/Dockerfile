@@ -65,7 +65,7 @@ RUN apt-get update && \
     libc6-dev=2.35-0ubuntu3.10 \
     libc-dev-bin=2.35-0ubuntu3.10 \
     libsqlite3-0=3.37.2-2ubuntu0.4 && \
-    apt-get clean -y     \
+    apt-get clean -y  &&   \
     rm -rf /var/lib/apt/lists/*
 
 # Update to latest redis       
