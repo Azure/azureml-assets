@@ -61,10 +61,10 @@ RUN apt-get update && \
 #Update libc6, libc6-dev, libc-dev-bin, libsqlite3-0 to fix USN-7528 and USN-7541
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    libc6=2.35-0ubuntu3.10 \
-    libc6-dev=2.35-0ubuntu3.10 \
-    libc-dev-bin=2.35-0ubuntu3.10 \
-    libsqlite3-0=3.37.2-2ubuntu0.4 && \
+    libc6 \
+    libc6-dev \
+    libc-dev-bin \
+    libsqlite3-0 && \
     apt-get clean -y  &&   \
     rm -rf /var/lib/apt/lists/*
 
