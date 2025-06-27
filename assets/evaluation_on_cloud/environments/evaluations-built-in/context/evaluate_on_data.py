@@ -15,11 +15,37 @@ import sys
 
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.ai.evaluation import evaluate
+from azure.ai.evaluation._evaluators._eci._eci import ECIEvaluator
 from azure.ai.evaluation._evaluate._evaluate_aoai import (
     _convert_remote_eval_params_to_grader
 )
 from save_evaluation import load_evaluator
 from model_target import ModelTarget, get_key_from_dict
+from azure.ai.evaluation import (
+    BleuScoreEvaluator,
+    CodeVulnerabilityEvaluator,
+    CoherenceEvaluator,
+    ContentSafetyEvaluator,
+    F1ScoreEvaluator,
+    FluencyEvaluator,
+    GleuScoreEvaluator,
+    GroundednessEvaluator,
+    GroundednessProEvaluator,
+    HateUnfairnessEvaluator,
+    IndirectAttackEvaluator,
+    MeteorScoreEvaluator,
+    ProtectedMaterialEvaluator,
+    QAEvaluator,
+    RelevanceEvaluator,
+    ResponseCompletenessEvaluator,
+    RetrievalEvaluator,
+    RougeScoreEvaluator,
+    SelfHarmEvaluator,
+    SexualEvaluator,
+    SimilarityEvaluator,
+    UngroundedAttributesEvaluator,
+    ViolenceEvaluator
+)
 
 os.environ["AZUREML_OBO_ENABLED"] = "True"
 AZURE_ENDPOINT = "AzureEndpoint"
@@ -43,9 +69,106 @@ CONTEXT_KEY = "context"
 RESPONSE_KEY = "response"
 GENERATED_RESPONSE_KEY = "generated_response"
 GENERATED_RESPONSE_MAPPING = f"${{data.{GENERATED_RESPONSE_KEY}}}"
+FOUNDRY_EVALUATOR = "built-in"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+
+class BuiltInEvaluatorConstructor:
+    """Constructs a built-in evaluator based on the provided configuration."""
+
+    def __init__(self, evaluator_configuration):
+        """Map evaluator names to their corresponding classes."""
+        # NOTE: Maintain alphabetical order for better readability
+        self.evaluator_classes = {
+            "bleu_score": BleuScoreEvaluator,
+            "code_vulnerability": CodeVulnerabilityEvaluator,
+            "coherence": CoherenceEvaluator,
+            "content_safety": ContentSafetyEvaluator,
+            "eci": ECIEvaluator,
+            "f1_score": F1ScoreEvaluator,
+            "fluency": FluencyEvaluator,
+            "gleu_score": GleuScoreEvaluator,
+            "groundedness": GroundednessEvaluator,
+            "groundedness_pro": GroundednessProEvaluator,
+            "hate_unfairness": HateUnfairnessEvaluator,
+            "indirect_attack": IndirectAttackEvaluator,
+            "meteor_score": MeteorScoreEvaluator,
+            "protected_material": ProtectedMaterialEvaluator,
+            "qa": QAEvaluator,
+            "relevance": RelevanceEvaluator,
+            "response_completeness": ResponseCompletenessEvaluator,
+            "retrieval": RetrievalEvaluator,
+            "rouge_score": RougeScoreEvaluator,
+            "self_harm": SelfHarmEvaluator,
+            "sexual": SexualEvaluator,
+            "similarity_score": SimilarityEvaluator,
+            "ungrounded_attributes": UngroundedAttributesEvaluator,
+            "violence": ViolenceEvaluator,
+        }
+        self.evaluator_configuration = evaluator_configuration
+        self.evaluator = self._initialize_evaluator()
+
+    def _get_builtin_evaluator_name_type(self, evaluator_id):
+        """Extract the evaluator name and type from a given evaluator ID if it matches the expected format."""
+        foundry_eval_regex = r"azureai://([^/]+)/evaluators/([^/]+)"
+
+        match_foundry_eval = re.match(foundry_eval_regex, evaluator_id)
+
+        if match_foundry_eval:
+            evaluator_type = match_foundry_eval.group(1)
+            evaluator_name = match_foundry_eval.group(2)
+
+            if evaluator_type != FOUNDRY_EVALUATOR:
+                raise Exception(f"Unknown evaluator type: {evaluator_type}")
+
+            return (evaluator_name, evaluator_type)
+
+    def _map_to_rai_evaluator_name(self, evaluator_name):
+        """
+        Map given evaluator name to its corresponding RAI evaluator name.
+
+        Returns the RAI evaluator string if found, else None.
+        """
+        mapping = {
+            "sexual": "Sexual-Content-Evaluator",
+            "hate_unfairness": "Hate-and-Unfairness-Evaluator",
+            "violence": "Violent-Content-Evaluator",
+            "self_harm": "Self-Harm-Related-Content-Evaluator",
+            "groundedness_pro": "Groundedness-Pro-Evaluator",
+            "protected_material": "Protected-Material-Evaluator",
+            "indirect_attack": "Indirect-Attack-Evaluator",
+            "content_safety": "Content-Safety-Evaluator",
+            "eci": "ECI-Evaluator",
+            "code_vulnerability": "Code-Vulnerability-Evaluator"
+        }
+        return mapping.get(evaluator_name, None)
+
+    def _initialize_evaluator(self):
+        (evaluator_name, evaluator_type) = self._get_builtin_evaluator_name_type(self.evaluator_configuration["Id"])
+        if evaluator_type == FOUNDRY_EVALUATOR:
+            if evaluator_name not in self.evaluator_classes:
+                raise ValueError(f"Unknown evaluator id: {evaluator_name}")
+
+            is_rai_evaluator = self._map_to_rai_evaluator_name(evaluator_name)
+            if is_rai_evaluator:
+                logger.info(f"Evaluator id: {self.evaluator_configuration['Id']} provided. Adding credentials")
+                # Add project URL and credential if present
+                if self.evaluator_configuration.get("initParams") is None:
+                    logger.info("Evaluator configuration initParams is None. Create empty dictionary")
+                    self.evaluator_configuration["initParams"] = {}
+
+                self.evaluator_configuration["initParams"]["credential"] = AzureMLOnBehalfOfCredential()
+
+            evaluator_class = self.evaluator_classes[evaluator_name]
+            init_params = self.evaluator_configuration.get("initParams", {})
+
+            return evaluator_class(**init_params)
+
+    def construct(self):
+        """Return the constructed evaluator."""
+        return self.evaluator
 
 
 def update_value_in_dict(d, key_substring, new_func):
@@ -91,6 +214,12 @@ def initialize_evaluators(command_line_args):
         if evaluator["Id"].startswith("aoai://"):
             grader = _convert_remote_eval_params_to_grader(evaluator["Id"], init_params)
             evaluators[evaluator_name] = grader
+        # check if evaluator id is new format
+        elif evaluator["Id"].startswith("azureai://"):
+            logger.info(f"Found foundry built-in evaluator: {evaluator_name}")
+            evaluator_constructor = BuiltInEvaluatorConstructor(evaluator)
+            load_built_in_evaluator = evaluator_constructor.construct()
+            evaluators[evaluator_name] = load_built_in_evaluator
         else:
             flow = load_evaluator("./" + evaluator_name)
             if any(rai_eval in evaluator["Id"] for rai_eval in rai_evaluators):
