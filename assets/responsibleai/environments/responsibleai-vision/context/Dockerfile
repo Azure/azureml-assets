@@ -34,9 +34,6 @@ RUN pip install 'responsibleai~=0.36.0' \
 RUN pip install 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.6'
 
-RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
-                'azureml-automl-dnn-vision=={{latest-pypi-version}}'
-
 RUN pip install 'scikit-learn>=1.5.1' \
                 'interpret-community==0.31.0' \
                 'Pillow>=10.3.0' \
@@ -61,11 +58,7 @@ RUN pip install 'Werkzeug>=3.0.3' \
 # To resolve GHSA-2586-f3p4-hq84 vulnerability issue for lightgbm<4.6.0
 # from azureml-automl-dnn-vision package
 RUN pip install 'lightgbm>=4.6.0'
-# To resolve GHSA-53q9-r3pm-6pq6 vulnerability issue for torch < 2.6.0
-# and  urllib3 (GHSA-pq67-6m6q-mj2v) for urllib3 < 2.5.0
-# from azureml-automl-dnn-vision package
-RUN pip install 'torch>=2.6.0'
-RUN pip install 'urllib3>=2.5.0'
+
 # to resolve vulnerability mlflow (GHSA-wxj7-3fx5-pp9m) for mlflow < 3.1.0
 # from azureml-mlflow package
 RUN pip install 'mlflow>=3.1.0'
