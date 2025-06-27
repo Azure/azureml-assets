@@ -61,8 +61,14 @@ RUN pip install 'Werkzeug>=3.0.3' \
 # To resolve GHSA-2586-f3p4-hq84 vulnerability issue for lightgbm<4.6.0
 # from azureml-automl-dnn-vision package
 RUN pip install 'lightgbm>=4.6.0'
-# To resolve CVE-2024-5480 vulnerability issue for torch < 2.2.2
-RUN pip install 'torch>=2.2.2'
+# To resolve GHSA-53q9-r3pm-6pq6 vulnerability issue for torch < 2.6.0
+# and  urllib3 (GHSA-pq67-6m6q-mj2v) for urllib3 < 2.5.0
+# from azureml-automl-dnn-vision package
+RUN pip install 'torch>=2.6.0'
+RUN pip install 'urllib3>=2.5.0'
+# to resolve vulnerability mlflow (GHSA-wxj7-3fx5-pp9m) for mlflow < 3.1.0
+# from azureml-mlflow package
+RUN pip install 'mlflow>=3.1.0'
 # To resolve GHSA-jh2j-j4j9-crg3 vulnerability issue
 RUN pip install 'opencv-python-headless==4.8.1.78'
 RUN pip install 'setuptools>=78.1.1'
