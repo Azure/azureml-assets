@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: medimageinsight_ft_pipeline
-version: 0.0.3
+version: 0.0.4
 type: pipeline
-display_name: Medimage Insight Finetune Pipeline
+display_name: MedImageInsight Finetune Pipeline
 description: Pipeline Component to finetune MedImageInsight Model.
 
 inputs:
@@ -106,9 +106,9 @@ outputs:
 
 
 jobs:
-  medical_image_embedding_model_finetune:
+  medimageinsight_embedding_finetune:
     type: command
-    component: azureml://registries/pranita-registry/components/medimageinsight_embedding_finetune/versions/0.0.5
+    component: azureml://registries/pranita-registry/components/medimageinsight_embedding_finetune/versions/0.0.6
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -129,14 +129,14 @@ jobs:
     outputs:
       save_dir: '${{parent.outputs.save_dir}}'
       mlflow_model_folder: '${{parent.outputs.embedding_mlflow_model}}'
-  medimage_embedding_adapter_merge:
+  medimageinsight_classification_model:
     type: command
-    component: azureml://registries/pranita-registry/components/medimageinsight_classification_model/versions/0.0.4
+    component: azureml://registries/pranita-registry/components/medimageinsight_classification_model/versions/0.0.5
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
     inputs:
-      mlflow_model: '${{parent.jobs.medical_image_embedding_model_finetune.outputs.mlflow_model_folder}}'
+      mlflow_model: '${{parent.jobs.medimageinsight_embedding_finetune.outputs.mlflow_model_folder}}'
       label_file: '${{parent.inputs.label_file}}'
     outputs:
       output_dir: '${{parent.outputs.classification_mlflow_model}}'
