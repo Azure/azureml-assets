@@ -21,6 +21,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     py-cpuinfo=5.0.0 \
     joblib=1.2.0 \
     setuptools-git \
+    setuptools=78.1.1 \
     'psutil>5.0.0,<6.0.0' \
     pytorch=2.6.0 \
     # end conda dependencies
