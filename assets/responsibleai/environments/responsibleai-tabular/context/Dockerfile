@@ -45,6 +45,10 @@ RUN pip install 'cryptography>=43.0.1'
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
 
+# to resolve vulnerability mlflow (GHSA-wxj7-3fx5-pp9m) for mlflow < 3.1.0
+# from azureml-mlflow package
+RUN pip install 'mlflow>=3.1.0'
+
 # To resolve vulnerability issue
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
