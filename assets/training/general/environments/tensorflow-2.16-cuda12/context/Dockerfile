@@ -57,7 +57,17 @@ RUN apt-get update && \
     libperl5.34 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
-               
+
+#Update libc6, libc6-dev, libc-dev-bin, libsqlite3-0 to fix USN-7528 and USN-7541
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libc6 \
+    libc6-dev \
+    libc-dev-bin \
+    libsqlite3-0 && \
+    apt-get clean -y  &&   \
+    rm -rf /var/lib/apt/lists/*
+    
 # Update to latest redis       
 RUN apt-get update && apt-get install -y lsb-release && \
     curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
