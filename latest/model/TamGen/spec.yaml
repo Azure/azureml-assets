@@ -42,7 +42,7 @@ tags:
   inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-version: 2
+version: 3
 description: |
   The TamGen is a 100 million-parameter model that can generate compounds based on the input protein information. TamGen is pre-trained on 10 million compounds from PubChem and fine-tuned on CrossDocked and PDB datasets. We evaluate TamGen on existing benchmarks and achieve top performance. Furthermore, TamGen has successfully identified novel inhibitors for Tuberculosis, which have been subsequently validated through wet-lab experiments.
 
