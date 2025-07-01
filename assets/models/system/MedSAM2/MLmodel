@@ -1,0 +1,36 @@
+flavors:
+  python_function:
+    artifacts:
+      config:
+        path: artifacts/sam2.1_hiera_t512.yaml
+        uri: model_artifacts/sam2.1_hiera_t512.yaml
+      model_dir:
+        path: artifacts/MedSAM2_latest.pt
+        uri: model_artifacts/MedSAM2_latest.pt
+    cloudpickle_version: 3.1.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.12.9
+    streamable: false
+is_signature_from_type_hint: false
+mlflow_version: 2.21.3
+model_size_bytes: 156044604
+model_uuid: 2358da73cfed4a57af63d5001d9e645c
+prompts: null
+signature:
+  inputs: '[{"name": "nii_image", "type": "tensor", "tensor-spec": {"dtype": "object",
+    "shape": [1]}}, {"name": "bbox", "type": "tensor", "tensor-spec": {"dtype": "float32",
+    "shape": [1, 4]}}, {"name": "key_slice_idx", "type": "tensor", "tensor-spec":
+    {"dtype": "int32", "shape": [1]}}, {"name": "dicom_window", "type": "tensor",
+    "tensor-spec": {"dtype": "float32", "shape": [1, 2]}}, {"name": "slice_offset",
+    "type": "tensor", "tensor-spec": {"dtype": "int32", "shape": [1]}}]'
+  outputs: '[{"name": "mask", "type": "tensor", "tensor-spec": {"dtype": "int32",
+    "shape": [1, 512, 512]}}, {"name": "metadata", "type": "tensor", "tensor-spec":
+    {"dtype": "object", "shape": [1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-06-24 19:14:02.974511'

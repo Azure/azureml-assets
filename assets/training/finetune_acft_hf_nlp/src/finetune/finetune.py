@@ -152,6 +152,7 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.FALCON,
     HfModelTypes.REFINEDWEBMODEL,  # falcon
     HfModelTypes.MIXTRAL,
+    LLAMA_SCOUT_MODEL_TYPE,
 ]
 
 
@@ -161,7 +162,6 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     REFINED_WEB,
     HfModelTypes.MIXTRAL,
-    LLAMA_SCOUT_MODEL_TYPE,
 ]
 
 
@@ -179,7 +179,8 @@ ACFT_REGEX_PREFIX = "acft_regex:"
 
 DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
     Tasks.TEXT_GENERATION,
-    Tasks.CHAT_COMPLETION
+    Tasks.CHAT_COMPLETION,
+    Tasks.VISUAL_QUESTION_ANSWERING,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
@@ -193,6 +194,7 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.MIXTRAL,
     HfModelTypes.PHI_LONGROPE,
     PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
+    LLAMA_SCOUT_MODEL_TYPE,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -206,6 +208,7 @@ FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.MIXTRAL,
     HfModelTypes.PHI_LONGROPE,
     PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
+    LLAMA_SCOUT_MODEL_TYPE,
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
@@ -442,7 +445,7 @@ def get_parser():
         type=str,
         default="epoch",
         choices=(
-                    "no",
+                    "disable",
                     "steps",
                     "epoch",
                 ),
@@ -1274,6 +1277,10 @@ def finetune(args: Namespace):
     set_gradient_checkpointing(args)
 
     validate_learning_rate(args)
+
+    # Fix: Ev2 rollout fails when using no as string in the spec.
+    if args.evaluation_strategy == 'disable':
+        args.evaluation_strategy = 'no'
 
     if not hasattr(args, "eval_strategy"):
         args.eval_strategy = args.evaluation_strategy

@@ -190,6 +190,13 @@ def validate_and_prepare_pipeline_component(
             logger.print(f"Workspace asset URI was used, using component from registry {registry}")
             registry = registry_name
 
+        if not version:
+            logger.log_error(
+                f"Component {name} parsed label {label} from the asset URI. Labels are not supported "
+                f"for job components. Please specify a valid version instead."
+            )
+            return False
+
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
         asset_details = None

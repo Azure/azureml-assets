@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: chat_completion_finetune
-version: 0.0.75
+version: 0.0.76
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Chat Completion Finetune
 description: Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_finetune) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/finetune
 
@@ -213,7 +213,7 @@ inputs:
     enum:
     - epoch
     - steps
-    - "no"
+    - disable
     description: The evaluation strategy to adopt during training. If set to "steps", either the `evaluation_steps_interval` or `eval_steps` needs to be specified, which helps to determine the step at which the model evaluation needs to be computed else evaluation happens at end of each epoch.
 
   evaluation_steps_interval:

@@ -4,7 +4,7 @@ channels:
 dependencies:
   - pip=23.3
   - python=3.9.18
-  - setuptools=70
+  - setuptools=78.1.1
   - cython=0.29.24
   - pip:
       - azureml-dataset-runtime>=1.6

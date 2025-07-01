@@ -56,7 +56,6 @@ COPY configs/app etc/nginx/sites-available/app
 
 RUN chmod +x var/runit/*/*
 RUN chmod +x var/azureml-logger/start_logger.sh
-
 #RUN chmod +x /var/runit/nginx/run
 
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \

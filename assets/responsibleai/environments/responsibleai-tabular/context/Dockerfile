@@ -17,7 +17,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 RUN conda list
 
-RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
+RUN pip install --pre 'azure-ai-ml>=1.26.3' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
 # score card rendering is using domonic only for the html elements composer which does not involve requests or urllib3
@@ -49,6 +49,8 @@ RUN pip install 'rai-core-flask==0.7.6'
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
+# vulnerability of requests GHSA-9hjg-9r4m-mvj7
+RUN pip install 'requests>=2.32.4'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
