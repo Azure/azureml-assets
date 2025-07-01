@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: medical_image_embedding_datapreprocessing
+name: medimageinsight_embedding_generation
 version: 0.0.1
 type: command
 
 is_deterministic: True
 
-display_name: Embedding Generation for Medical Images
+display_name: MedImageInsight Embedding Generation
 description: To generate embeddings for medical images.
 
-environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/1
+environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding-generator/versions/9
 code: ../../../src/medimage_insight_adapter_preprocess
 
 inputs:
