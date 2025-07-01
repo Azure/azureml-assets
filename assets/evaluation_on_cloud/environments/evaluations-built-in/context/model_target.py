@@ -4,7 +4,7 @@
 """Module for handling model targets in evaluation on cloud."""
 import requests
 import logging
-
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 
 USER = "User"
 ASSISTANT = "Assistant"
@@ -28,16 +28,19 @@ class ModelTarget:
     def __init__(self, endpoint, api_key, model_params, system_message, few_shot_examples):
         """Initialize ModelTarget."""
         self.endpoint = endpoint
-        self.api_key = api_key
         self.model_params = model_params
         self.system_message = system_message
         self.few_shot_examples = few_shot_examples
+        if api_key:
+            self.credential = api_key
+        else:
+            self.credential = AzureMLOnBehalfOfCredential().get_token("https://cognitiveservices.azure.com/.default").token
 
     def generate_response(self, query, context=None, **kwargs):
         """Invoke the model target with the given input query."""
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + self.api_key
+            "Authorization": "Bearer " + self.credential
         }
 
         messages = [{"role": "system", "content": self.system_message}]
