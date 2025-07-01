@@ -34,7 +34,8 @@ class ModelTarget:
         if api_key:
             self.credential = api_key
         else:
-            self.credential = AzureMLOnBehalfOfCredential().get_token("https://cognitiveservices.azure.com/.default").token
+            aml_obo = AzureMLOnBehalfOfCredential()
+            self.credential = aml_obo.get_token("https://cognitiveservices.azure.com/.default").token
 
     def generate_response(self, query, context=None, **kwargs):
         """Invoke the model target with the given input query."""

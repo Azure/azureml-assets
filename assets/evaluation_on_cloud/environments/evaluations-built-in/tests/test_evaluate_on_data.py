@@ -57,4 +57,3 @@ def test_model_target_sets_credential(monkeypatch):
         few_shot_examples=[],
     )
     assert mt2.credential == "obo_token"
-
