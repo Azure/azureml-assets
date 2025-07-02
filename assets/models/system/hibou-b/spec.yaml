@@ -16,7 +16,7 @@ tags:
   inference_supported_envs:
     - hf
   license: apache-2.0
-  author: histai
+  author: HistAI
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
