@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:20250624.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04@sha256:acbd6bf53f84bc7026e415a9bb7884ae8b9b03b04d48bded6a8a0f94c90927e5
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/automl
 # Prepend path to AzureML conda environment

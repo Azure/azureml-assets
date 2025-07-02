@@ -90,3 +90,27 @@ def process_medsam2_output(result, file_path):
     
     return processed_result
 ```
+
+## Data and Resource Specification for Deployment
+* **Supported Data Input Format** 
+
+1. **Input Format**: The model accepts 3D medical images in NIfTI format (.nii or .nii.gz) for volumetric segmentation tasks. Input data can be provided as base64-encoded strings or direct URLs to NIfTI files.
+
+2. **Input Methods**: The model supports both:
+   - **Base64-encoded NIfTI files**: Local medical images encoded as base64 strings
+   - **Direct URLs**: URLs pointing to remote NIfTI files
+
+3. **Input Schema Requirements**:
+   - `nii_image`: Base64-encoded NIfTI data or URL to NIfTI file
+   - `bbox`: Bounding box coordinates as [x_min, y_min, x_max, y_max] for region of interest
+   - `key_slice_idx`: Index of the key slice for segmentation initialization
+   - `dicom_window`: Intensity windowing values [lower_bound, upper_bound] for normalization
+   - `slice_offset`: Optional slice offset parameter (default: 0)
+
+4. **Supported Medical Image Types and Processing Specifications**:
+   - **CT scans**: Lesion segmentation, organ delineation
+   - **MRI scans**: Multi-sequence support (T1, T2, DWI, contrast-enhanced)
+   - **Format**: NIfTI (.nii or .nii.gz compressed)
+   - **Processing**: Variable input dimensions, automatically resized to 512x512 for inference
+   - **Output**: 3D binary masks matching original image dimensions
+   - For detailed specifications and validation datasets, refer to the [official MedSAM2 repository](https://github.com/bowang-lab/MedSAM2/tree/main)
