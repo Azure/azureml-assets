@@ -155,14 +155,14 @@ class BuiltInEvaluatorConstructor:
             if is_rai_evaluator:
                 logger.info(f"Evaluator id: {self.evaluator_configuration['Id']} provided. Adding credentials")
                 # Add project URL and credential if present
-                if self.evaluator_configuration.get("initParams") is None:
-                    logger.info("Evaluator configuration initParams is None. Create empty dictionary")
-                    self.evaluator_configuration["initParams"] = {}
+                if self.evaluator_configuration.get("InitParams") is None:
+                    logger.info("Evaluator configuration InitParams is None. Create empty dictionary")
+                    self.evaluator_configuration["InitParams"] = {}
 
-                self.evaluator_configuration["initParams"]["credential"] = AzureMLOnBehalfOfCredential()
+                self.evaluator_configuration["InitParams"]["credential"] = AzureMLOnBehalfOfCredential()
 
             evaluator_class = self.evaluator_classes[evaluator_name]
-            init_params = self.evaluator_configuration.get("initParams", {})
+            init_params = self.evaluator_configuration.get("InitParams", {})
 
             return evaluator_class(**init_params)
 
