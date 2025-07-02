@@ -1,6 +1,6 @@
 azure-ai-evaluation==1.7.0
 azureml-mlflow==1.60.0.post1
-azure-ai-ml==1.28.0
+azure-ai-ml==1.27.1
 
 openai==1.78.1
 opentelemetry-api==1.31.0
