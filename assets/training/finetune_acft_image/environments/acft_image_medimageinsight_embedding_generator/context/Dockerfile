@@ -12,4 +12,4 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Upgrade requests in the system Python (3.13) for fixing vulnerability
-RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests==2.32.4
+RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests || true
