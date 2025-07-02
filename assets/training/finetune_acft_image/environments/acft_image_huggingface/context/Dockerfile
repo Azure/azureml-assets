@@ -11,3 +11,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Vulnerability Fix
 RUN pip install gunicorn==23.0.0
 RUN pip install certifi==2024.07.04
+RUN rm -rf /opt/conda/lib/python3.13 || true
