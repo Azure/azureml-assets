@@ -4,11 +4,24 @@
 
 ## Intended Use
 
-This model uses the Pretrained ATOMICA-interface model checkpoint, which serves for construction of ATOMICANets. See below an excerpt extracted from the [Project Website](https://zitniklab.hms.harvard.edu/projects/ATOMICA/) about ATOMICANets:
+### Primary Use Cases
 
-### ATOMICA’s Interfaceome Networks
+Feature extraction from 224 × 224 histopathology image patches. Hibou-B is intended to be used as a frozen encoder to generate patch-level embeddings for downstream tasks. These embeddings can be used for classification, clustering, retrieval, or aggregated to support slide-level analyses.
 
-We use ATOMICA representations to construct interfaceome networks, which aregraphs linking proteins based on similarity in their interaction interfaces with ions, small molecules, nucleic acids, lipids, and proteins. These ATOMICANet modality-specific networks reveal that proteins sharing similar interface features often participate in the same disease pathways, even across different interaction types. This provides a new molecular-level view of disease mechanisms.
+### Out-of-Scope Use Cases
 
-By analyzing disease-associated proteins across 82 diseases, ATOMICANets uncover statistically significant pathway modules in lipid, ion, and small molecule networks. The model predicts disease-relevant interactions for autoimmune neurological disorders and cancer, identifying ion channels in multiple sclerosis and lymphoma-associated proteins across all five interface types. This demonstrates ATOMICA’s value in understanding protein function and disease involvement in a modality-specific, interpretable manner.
+Hibou-B is not designed or validated for clinical decision-making without human oversight. It is not intended for use in real-time, life-critical systems or in workflows that require regulatory-approved diagnostic tools. Developers should independently validate performance in their specific use case and comply with relevant medical regulations.
 
+## Responsible AI Considerations
+
+Like other vision models, Hibou-B may exhibit performance disparities when applied to image domains significantly different from its training distribution. Variations in staining protocols, scanner types, or tissue preparation may impact accuracy. Developers should evaluate the model on representative data and consider additional domain adaptation or fine-tuning where appropriate. The model has not been explicitly audited for fairness or bias in diagnostic outcomes across demographic groups or tissue types.
+
+## Training Data
+
+Hibou-B was trained on a large corpus of 1.3 million whole slide images (WSIs) sourced from human and veterinary pathology cases. The training data includes:
+
+1. 936,441 H&E-stained slides  
+2. 202,464 non-H&E slides  
+3. 2,676 cytology slides  
+
+These were preprocessed into 512 million clean patches using Otsu thresholding and were augmented with stain normalization, color jittering, and geometric transforms. The dataset covers over 300,000 unique cases from a wide range of diagnostic categories and anatomical sites.

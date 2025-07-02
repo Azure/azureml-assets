@@ -1,13 +1,10 @@
 flavors:
   python_function:
     artifacts:
-      config:
-        path: artifacts/pretrain_model_config.json
-        uri: /home/azureuser/cloudfiles/code/Users/haoqiu/atomica_mlflow_test/model_artifacts/pretrain_model_config.json
-      weights:
-        path: artifacts/pretrain_model_weights.pt
-        uri: /home/azureuser/cloudfiles/code/Users/haoqiu/atomica_mlflow_test/model_artifacts/pretrain_model_weights.pt
-    cloudpickle_version: 3.1.1
+      model_dir:
+        path: artifacts/INPUT_model_path
+        uri: /mnt/azureml/cr/j/a399e68aa26f4ab583e67b22be7e179e/cap/data-capability/wd/INPUT_model_path
+    cloudpickle_version: 2.2.1
     code: code
     env:
       conda: conda.yaml
@@ -16,16 +13,18 @@ flavors:
     python_model: python_model.pkl
     python_version: 3.9.21
     streamable: false
-is_signature_from_type_hint: false
-mlflow_version: 2.21.3
-model_size_bytes: 33747357
-model_uuid: 5dce2d05d406461682f5153852bd324b
-prompts: null
+metadata:
+  base_model_name: histai/hibou-b
+  base_model_task: feature-extraction
+  is_acft_model: true
+  is_finetuned_model: false
+mlflow_version: 2.19.0
+model_size_bytes: 343038521
+model_uuid: d8a335521b2f4f4e807bad0603cee59d
 signature:
-  inputs: '[{"type": "string", "name": "pdb_data", "required": true}]'
-  outputs: '[{"type": "string", "name": "graph_embedding", "required": true}, {"type":
-    "string", "name": "block_embedding", "required": true}, {"type": "string", "name":
-    "atom_embedding", "required": true}]'
-  params: null
-type_hint_from_example: false
-utc_time_created: '2025-05-08 17:28:36.871725'
+  inputs: '[{"type": "string", "name": "image", "required": true}]'
+  outputs: '[{"type": "string", "name": "image_features", "required": true}]'
+  params: '[{"name": "device_type", "type": "string", "default": "cuda", "shape":
+    null}, {"name": "to_half_precision", "type": "boolean", "default": false, "shape":
+    null}]'
+utc_time_created: '2025-03-06 17:23:02.384121'

@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: Atomica
+name: hibou-b
 path: ./
 
 properties:
@@ -15,8 +15,8 @@ tags:
   Preview: ""
   inference_supported_envs:
     - hf
-  license: mit
-  author: "Mims Harvard"
+  license: apache-2.0
+  author: histai
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
@@ -38,4 +38,4 @@ tags:
       Standard_NC80adis_H100_v5,
       Standard_ND96isr_H100_v5,
     ]
-version: 2
+version: 1

@@ -2,18 +2,24 @@
 
 <!-- `description.md` is required. -->
 
-ATOMICA is a hierarchical geometric deep learning model trained on over 2.1 million molecular interaction interfaces. It represents interaction complexes using an all-atom graph structure, where nodes correspond to atoms or grouped chemical blocks, and edges reflect both intra- and intermolecular spatial relationships. The model uses SE(3)-equivariant message passing to ensure that learned embeddings are invariant to rotations and translations of molecular structures. The architecture produces embeddings at multiple scales—atom, block, and graph—that capture fine-grained structural detail and broader functional motifs. [Project Website](https://zitniklab.hms.harvard.edu/projects/ATOMICA/)
+Hibou-B is a foundational vision transformer developed for digital pathology, designed to generate high-quality feature representations from histology image patches. These representations can be leveraged for a range of downstream tasks, including classification, segmentation, and detection.
 
-The model has been pretrained on 2,105,703 molecular interaction interfaces from the Protein Data Bank and Cambridge Structural Database, spanning multiple interaction types including protein-small molecule, protein-ion, small molecule-small molecule, protein-protein, protein-peptide, protein-RNA, protein-DNA, and nucleic acid-small molecule complexes. The pretraining strategy involves denoising transformations (rotation, translation, torsion) and masked block-type prediction, enabling the model to learn chemically grounded, transferable features. ATOMICA supports downstream tasks via plug-and-play adaptation with task-specific heads, including binding site prediction and protein interface fingerprinting. [Project Website](https://zitniklab.hms.harvard.edu/projects/ATOMICA/) | [GitHub](https://github.com/mims-harvard/ATOMICA/tree/main)
+Built on the ViT-B/14 architecture, Hibou-B processes 224 × 224 input patches and was trained on 512 million tissue patches extracted from a diverse dataset of 1.3 million whole slide images. The model was trained using self-supervised learning with DINOv2, incorporating stain normalization and extensive geometric augmentations to enable robust generalization across varied histopathological domains.
 
+### Evaluation Results
+To understand the capabilities of Hibou-B, we evaluated it across a range of public digital pathology benchmarks. The model was tested at both patch-level and slide-level granularity to assess its generalization and diagnostic utility across different cancer types and tissue modalities.
 
-
-### Model Architecture
-ATOMICA employs a hierarchical geometric deep learning architecture with the following key components:
-- An all-atom graph representation of molecular complexes where nodes correspond to atoms or chemical blocks
-- SE(3)-equivariant message passing to ensure rotational and translational invariance
-- Multi-scale embeddings at atom, block, and graph levels
-- Pretraining via denoising transformations and masked block-type prediction
+| Category | Benchmark | Hibou-B |
+|--|--|--|
+| Patch-level | CRC-100K | 95.5 |
+|  | PCAM | 94.6 |
+|  | MHIST | 81.2 |
+|  | MSI-CRC | 77.9 |
+|  | MSI-STAD | 79.7 |
+|  | TIL-DET | 94.2 |
+| Slide-level | BRCA | 92.9 |
+|  | NSCLC | 95.2 |
+|  | RCC | 99.3 |
 
 ### Sample inputs and outputs (for real time inference)
 
@@ -21,10 +27,9 @@ ATOMICA employs a hierarchical geometric deep learning architecture with the fol
 ```bash
 data = {
   "input_data": {
-    "columns": ["pdb_data"],
-    "index": [0],
+    "columns": ["image"],
     "data": [
-      ["https://path/to/local/protein.jsonl.gz"]
+      ["base64_encoded_image_string"]
     ]
   }
 }
@@ -34,11 +39,10 @@ data = {
 ```bash
 data = {
   "input_data": {
-    "columns": ["pdb_data"],
-    "index": [0, 1],
+    "columns": ["image"], 
     "data": [
-      ["https://path/to/local/protein1.jsonl.gz"],
-      ["https://path/to/local/protein2.jsonl.gz"]
+      ["base64_encoded_image_string_1"],
+      ["base64_encoded_image_string_2"]
     ]
   }
 }
@@ -46,72 +50,83 @@ data = {
 
 **Output Sample:**
 ```json
-{
-  "predictions": [
-    {
-      "graph_embedding": [0.123456, -0.234567, ...],
-      "block_embedding": [[0.345678, -0.456789, ...], ...],
-      "atom_embedding": [[0.567890, -0.678901, ...], ...]
-    }
-  ]
-}
+[
+  {
+    "image_features": [2.6749861240386963, -0.7507642507553101, 0.2108164280653, ...]
+  }
+]
 ```
 
 **Output Processing Example:**
 ```python
-def process_predictions(predictions, is_batch=False):
-    """Process predictions in a consistent way."""
-    if not predictions:
+def process_hibou_predictions(result):
+    """Process Hibou-B embedding predictions."""
+    if not result:
         print("No predictions found")
         return
 
-    # Extract predictions from response
-    if isinstance(predictions, dict) and 'predictions' in predictions:
-        predictions = predictions['predictions']
-
-    # Handle both single and batch predictions
-    if is_batch:
-        if isinstance(predictions, list):
-            # Multiple predictions
-            for i, pred in enumerate(predictions, 1):
-                print(f"\nPDB {i}:")
-                _display_embeddings(pred)
-        elif isinstance(predictions, dict):
-            # Single prediction in batch format
-            _display_embeddings(predictions)
+    # Handle the response format: [{'image_features': [embedding_list]}]
+    if isinstance(result, list) and len(result) > 0:
+        first_result = result[0]
+        if isinstance(first_result, dict) and 'image_features' in first_result:
+            embeddings = first_result['image_features']
+            embedding_dim = len(embeddings)
+            print(f"Received embeddings with dimension: {embedding_dim}")
+            
+            # Calculate statistics
+            embedding_array = np.array(embeddings)
+            print(f"Embedding statistics:")
+            print(f"  - Mean: {np.mean(embedding_array):.4f}")
+            print(f"  - Std: {np.std(embedding_array):.4f}")
+            print(f"  - Min: {np.min(embedding_array):.4f}")
+            print(f"  - Max: {np.max(embedding_array):.4f}")
+            
+            return embeddings
         else:
-            print(f"Error: Unexpected predictions type: {type(predictions)}")
+            print(f"Unexpected result format - missing 'image_features' key")
+            print(f"Available keys: {list(first_result.keys()) if isinstance(first_result, dict) else 'Not a dict'}")
     else:
-        # Single prediction format
-        if isinstance(predictions, list) and len(predictions) > 0:
-            # Single prediction in list
-            _display_embeddings(predictions[0])
-        elif isinstance(predictions, dict):
-            # Direct dictionary format
-            _display_embeddings(predictions)
-        else:
-            print(f"Error: Invalid prediction format: {type(predictions)}")
+        print(f"Unexpected result format: {type(result)}")
+    
+    return None
 
-def _display_embeddings(pred):
-    """Display embeddings in a concise format."""
-    if not isinstance(pred, dict):
-        print(f"Error: Invalid prediction format: {type(pred)}")
-        return
-        
-    for embed_type in ["graph_embedding", "block_embedding", "atom_embedding"]:
-        if embed_type in pred:
-            embedding = pred[embed_type]
-            if isinstance(embedding, list):
-                arr = np.array(embedding)
-                print(f"\n{embed_type}:")
-                print(f"Shape: {arr.shape}")
-                print(f"Mean: {arr.mean():.6f}, Std: {arr.std():.6f}")
-                print(f"Range: [{arr.min():.6f}, {arr.max():.6f}]")
-        else:
-            print(f"\nWarning: {embed_type} not found in predictions")
-            print("Available keys:", list(pred.keys()) if isinstance(pred, dict) else "Not a dictionary")
+def visualize_embeddings_results(original_image, embeddings, save_path=None):
+    """Visualize the embedding results with distribution plot."""
+    plt.figure(figsize=(15, 6))
+    
+    plt.subplot(1, 3, 1)
+    plt.imshow(original_image)
+    plt.title('Original Image')
+    plt.axis('off')
+    
+    plt.subplot(1, 3, 2)
+    plt.imshow(original_image)
+    embedding_dim = len(embeddings) if embeddings else 0
+    plt.title(f'Processed - Embedding dim: {embedding_dim}')
+    plt.axis('off')
+    
+    # Show embedding distribution
+    plt.subplot(1, 3, 3)
+    if embeddings:
+        embedding_array = np.array(embeddings)
+        plt.hist(embedding_array, bins=50, alpha=0.7, color='blue')
+        plt.title(f'Embedding Distribution\nMean: {np.mean(embedding_array):.3f}\nStd: {np.std(embedding_array):.3f}')
+        plt.xlabel('Embedding Value')
+        plt.ylabel('Frequency')
+    else:
+        plt.text(0.5, 0.5, 'No embeddings', ha='center', va='center')
+        plt.axis('off')
+    
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+    plt.show()
 ```
 
 ## Data and Resource Specification for Deployment
 * **Supported Data Input Format** 
-Text to text
+1. **Input Format**: The model accepts histopathology images in png. Images can be provided as base64-encoded image strings.
+
+2. **Output Format**: The model generates dense embedding vectors representing the visual features of histopathology image in 768-dimensional feature vectors.
+
+3. **Data Sources and Technical Details**: For comprehensive information about training datasets, model architecture, and validation results, refer to the [official hibou repository](https://github.com/HistAI/hibou/tree/main)
