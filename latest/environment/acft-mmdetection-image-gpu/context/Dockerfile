@@ -21,3 +21,5 @@ RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mm
 
 # Vulnerability Fix
 RUN pip install gunicorn==23.0.0
+
+RUN rm -rf /opt/conda/lib/python3.13 || true
