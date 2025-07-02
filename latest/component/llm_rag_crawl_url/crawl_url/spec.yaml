@@ -3,7 +3,7 @@ type: command
 
 tags:
   Preview: ""
-version: 0.0.40
+version: 0.0.41
 name: llm_rag_crawl_url
 display_name: LLM - Crawl URL to Retrieve Data
 is_deterministic: true

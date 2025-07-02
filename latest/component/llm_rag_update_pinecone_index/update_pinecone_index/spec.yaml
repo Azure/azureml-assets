@@ -3,7 +3,7 @@ type: command
 
 tags:
   Preview: ""
-version: 0.0.47
+version: 0.0.48
 name: llm_rag_update_pinecone_index
 display_name: LLM - Update Pinecone Index
 is_deterministic: true
