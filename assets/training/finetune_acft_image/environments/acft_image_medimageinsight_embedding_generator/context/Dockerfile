@@ -10,3 +10,5 @@ RUN apt-get -y install unzip
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+
+RUN rm -rf /opt/conda/lib/python3.13 || true

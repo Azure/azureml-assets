@@ -21,3 +21,4 @@ RUN pip install onnx==1.17.0
 RUN pip install scikit-learn==1.5.0
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
+RUN rm -rf /opt/conda/lib/python3.13 || true
