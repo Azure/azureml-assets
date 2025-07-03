@@ -60,7 +60,7 @@ data = {
 **Output Processing Example:**
 ```python
 def process_hibou_predictions(result):
-    """Process Hibou-B embedding predictions."""
+    """Process Hibou-L embedding predictions."""
     if not result:
         print("No predictions found")
         return
