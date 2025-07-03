@@ -21,4 +21,5 @@ RUN pip install onnx==1.17.0
 RUN pip install scikit-learn==1.5.0
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
-RUN rm -rf /opt/conda/lib/python3.13 || true
+# Upgrade requests in the system Python (3.13) for fixing vulnerability
+RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests || true
