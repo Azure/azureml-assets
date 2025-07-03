@@ -23,6 +23,7 @@ from responsibleai import RAIInsights
 _logger = logging.getLogger(__file__)
 _ai_logger = None
 
+# dummy change to trigger component test pipeline
 
 def _get_logger():
     global _ai_logger
