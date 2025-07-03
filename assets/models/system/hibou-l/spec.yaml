@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: hibou-b
+name: hibou-l
 path: ./
 
 properties:

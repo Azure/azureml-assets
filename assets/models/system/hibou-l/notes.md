@@ -6,7 +6,7 @@
 
 ### Primary Use Cases
 
-Feature extraction from 224 × 224 histopathology image patches. Hibou-B is intended to be used as a frozen encoder to generate patch-level embeddings for downstream tasks. These embeddings can be used for classification, clustering, retrieval, or aggregated to support slide-level analyses.
+Feature extraction from 224 × 224 histopathology image patches. Hibou-L is intended to be used as a frozen encoder to generate patch-level embeddings for downstream tasks. These embeddings can be used for classification, clustering, retrieval, or aggregated to support slide-level analyses.
 
 ### Out-of-Scope Use Cases
 
@@ -14,7 +14,7 @@ Hibou-L is not designed or validated for clinical decision-making without human 
 
 ## Responsible AI Considerations
 
-Like other vision models, Hibou-B may exhibit performance disparities when applied to image domains significantly different from its training distribution. Variations in staining protocols, scanner types, or tissue preparation may impact accuracy. Developers should evaluate the model on representative data and consider additional domain adaptation or fine-tuning where appropriate. The model has not been explicitly audited for fairness or bias in diagnostic outcomes across demographic groups or tissue types.
+Like other vision models, Hibou-L may exhibit performance disparities when applied to image domains significantly different from its training distribution. Variations in staining protocols, scanner types, or tissue preparation may impact accuracy. Developers should evaluate the model on representative data and consider additional domain adaptation or fine-tuning where appropriate. The model has not been explicitly audited for fairness or bias in diagnostic outcomes across demographic groups or tissue types.
 
 ## Training Data
 
