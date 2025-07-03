@@ -52,7 +52,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # end conda create
 
 # Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu118
+RUN pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu118
 # end conda create
 
 # begin pip install

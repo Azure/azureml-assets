@@ -29,7 +29,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
     conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.6.0 \
+    pytorch=2.7.1 \
     -c pytorch -c nvidia -c conda-forge -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -58,7 +58,7 @@ RUN pip install \
                 'inference-schema' \
                 'xgboost==1.5.2' \
                 'cryptography>=42.0.5' \
-                'requests>=2.31.0' \
+                'requests==2.32.4' \
                 'certifi>=2023.07.22' \
                 'spacy==3.7.4' \
                 'GitPython>=3.1.41' \
