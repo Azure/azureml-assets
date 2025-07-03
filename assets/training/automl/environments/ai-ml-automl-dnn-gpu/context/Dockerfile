@@ -80,7 +80,7 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
                 'psutil>5.0.0,<6.0.0' \
-                'requests>=2.31.0' \
+                'requests==2.32.4' \
                 'certifi>=2023.07.22' \
                 'cryptography>=42.0.5' \
                 'jinja2>=3.1.6'
