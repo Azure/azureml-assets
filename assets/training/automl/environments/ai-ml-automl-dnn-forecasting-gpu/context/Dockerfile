@@ -65,7 +65,7 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0'
                 # end pypi dependencies
-RUN pip install --upgrade torch==2.7.1
-# RUN pip install torch==2.7.1+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+# RUN pip install --upgrade torch==2.7.1
+RUN pip install torch==2.7.1+cu118 -f https://download.pytorch.org/whl/torch_stable.html
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
