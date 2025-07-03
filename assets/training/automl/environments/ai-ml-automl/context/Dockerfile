@@ -23,7 +23,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools-git \
     setuptools=78.1.1 \
     'psutil>5.0.0,<6.0.0' \
-    pytorch=2.6.0 \
+    pytorch=2.7.1-rc1 \
     # end conda dependencies
     -c conda-forge -c pytorch -c anaconda -c nvidia && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
