@@ -28,9 +28,9 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     wheel=0.44.0 \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
-    # conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    # pytorch=2.6.0 \
-    # -c pytorch -c nvidia -c conda-forge -y && \
+    conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    pytorch=2.6.0 \
+    -c pytorch -c nvidia -c conda-forge -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
@@ -65,9 +65,5 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0'
                 # end pypi dependencies
-# RUN pip install --upgrade torch==2.7.1
-# RUN pip install torch==2.7.1+cu118 -f https://download.pytorch.org/whl/torch_stable.html
-RUN pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu118
-# RUN pip install torch==2.7.1+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
