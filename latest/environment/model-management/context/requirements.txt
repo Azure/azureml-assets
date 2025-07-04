@@ -24,7 +24,7 @@ gunicorn
 onnx==1.17.0 
 idna 
 tqdm 
-requests==2.32.1 
+requests==2.32.4
 tornado==6.5
 certifi==2024.07.04 
 urllib3==1.26.19 
