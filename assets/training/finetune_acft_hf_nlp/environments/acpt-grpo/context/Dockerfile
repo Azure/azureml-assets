@@ -19,6 +19,5 @@ RUN pip install numpy==2.2.5
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 
 COPY comm /opt/conda/envs/ptca/lib/python3.10/site-packages/deepspeed/comm/comm.py
-COPY base_patch /opt/conda/envs/ptca/lib/python3.10/site-packages/vllm/distributed/device_communicators/base_device_communicator.py
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
