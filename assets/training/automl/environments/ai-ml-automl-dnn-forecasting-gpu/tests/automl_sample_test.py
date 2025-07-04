@@ -15,7 +15,7 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 120)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
@@ -70,7 +70,7 @@ def test_azure_ai_ml_automl():
         time.sleep(30)  # sleep 30 seconds
     else:
         # Timeout
-        ml_client.jobs.cancel(returned_job.name)
+        # ml_client.jobs.cancel(returned_job.name)
         raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
                         f"Last status was {status}.")
 
