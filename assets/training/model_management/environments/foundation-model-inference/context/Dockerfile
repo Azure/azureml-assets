@@ -51,7 +51,9 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 RUN pip install llm-optimized-inference==0.2.28 --no-cache-dir
 
 # torch install
-RUN pip install torch==2.7.1 torchaudio==2.7.1
+RUN pip install torch==2.7.1 --no-cache-dir
+RUN pip uninstall -y flash-attn && \
+    pip install "flash-attn>=2.7.1,<=2.7.4" --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
