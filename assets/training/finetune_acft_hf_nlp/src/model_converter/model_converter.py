@@ -63,6 +63,16 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--model_import_output",
+        default=None,
+        type=str,
+        help=(
+            "output folder of model selector containing model configs, tokenizer, checkpoints in case of model_id."
+            "If huggingface_id is selected, the model download happens dynamically on the fly"
+        ),
+    )
+
+    parser.add_argument(
         "--input_model_format",
         default=ModelFormats.PYTORCH,
         type=str,
