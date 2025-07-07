@@ -1,22 +1,17 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
-# Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
-# Test PR
-ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
+# Optional: Copy MLflow score script from a known image if needed
+# COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
+ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
-# begin conda create
-# Create conda environment
+# Create conda environment with conda dependencies
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
-    # begin conda dependencies
+    python=3.10 \
     pip=22.1.2 \
     numpy~=1.23.5 \
     scikit-learn=1.5.1 \
@@ -26,45 +21,29 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     tqdm \
     setuptools=78.1.1 \
     wheel=0.44.0 \
-    # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
-    conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.6.0 \
-    -c pytorch -c nvidia -c conda-forge -y && \
-    # end conda dependencies
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python --version && \
     conda clean -a -y
-# end conda create
 
-# begin pip install
-# Install pip dependencies
-# GitPython>=3.1.41 is required for https://github.com/advisories/GHSA-2mqj-m65w-jghx and is not available in conda
+# Install pip dependencies with AzureML v2 SDK
 RUN pip install \
-                # begin pypi dependencies
-                azureml-core=={{latest-pypi-version}} \
-                azureml-mlflow=={{latest-pypi-version}} \
-                azureml-defaults=={{latest-pypi-version}} \
-                azureml-telemetry=={{latest-pypi-version}} \
-                azureml-interpret=={{latest-pypi-version}} \
-                azureml-responsibleai=={{latest-pypi-version}} \
-                azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime=={{latest-pypi-version}} \
-                azureml-train-automl=={{latest-pypi-version}} \
-                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
-                'azure-identity>=1.16.1' \
-                'inference-schema' \
-                'xgboost==1.5.2' \
-                'cryptography>=42.0.5' \
-                'requests>=2.31.0' \
-                'certifi>=2023.07.22' \
-                'spacy==3.7.4' \
-                'GitPython>=3.1.41' \
-                'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
-                'py-cpuinfo==5.0.0'
-                # end pypi dependencies
+    marshmallow==3.19.0 \
+    mlflow \
+    azure-ai-ml==1.16.0 \
+    azure-identity==1.16.1 \
+    inference-schema \
+    xgboost==1.5.2 \
+    cryptography>=42.0.5 \
+    requests==2.32.4 \
+    certifi>=2023.07.22 \
+    spacy==3.7.4 \
+    GitPython>=3.1.41 \
+    https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz \
+    py-cpuinfo==5.0.0
 
-RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
-# end pip install
+# Install PyTorch before Horovod
+RUN pip install torch==2.6.0 torchvision torchaudio
+
+# Optional: Install Horovod for distributed training
+RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir \
+    git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d

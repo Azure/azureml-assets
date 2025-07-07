@@ -9,7 +9,9 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import command, Input, MLClient
-from azure.ai.ml._restclient.models import JobStatus
+#from azure.ai.ml._restclient.models import JobStatus
+# from azure.ai.ml.entities import JobStatus
+
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
@@ -65,7 +67,7 @@ def test_azure_ai_ml_automl():
     while time.time() <= timeout:
         job = ml_client.jobs.get(returned_job.name)
         status = job.status
-        if status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+        if status in ["Completed", "Failed"]:
             break
         time.sleep(30)  # sleep 30 seconds
     else:
@@ -74,7 +76,7 @@ def test_azure_ai_ml_automl():
         raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
                         f"Last status was {status}.")
 
-    if status == JobStatus.FAILED:
+    if status == "Failed":
         ml_client.jobs.download(returned_job.name)
         if STD_LOG.exists():
             print(f"*** BEGIN {STD_LOG} ***")
@@ -84,4 +86,4 @@ def test_azure_ai_ml_automl():
         else:
             ml_client.jobs.stream(returned_job.name)
 
-    assert status == JobStatus.COMPLETED
+    assert status == "Completed"
