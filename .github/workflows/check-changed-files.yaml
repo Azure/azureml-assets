@@ -15,7 +15,7 @@ on:
         value: ${{ jobs.check-directory-file-changes.outputs.files-changed }}
       files-added:
         description: List of added files under given directory
-        value: ${{ jobs.check-directory-file-changes.outputs.files-added }}
+        value: ${{ jobs.check-directory-file-changes.outputs.added-files }}
 
 defaults:
   run:
@@ -54,6 +54,13 @@ jobs:
           else
             echo "Updated file(s) found under ${{ inputs.folder_path }}: ${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
           fi
+
+          if ${{ steps.changed-scripts.outputs.added_files == '' }}; then
+            echo "No added files under ${{ inputs.folder_path }}"
+          else
+            echo "Added file(s) found under ${{ inputs.folder_path }}: ${{ steps.changed-scripts.outputs.added_files }}"
+          fi
+
           echo "files-changed=${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}" >> "$GITHUB_OUTPUT"
           echo "files-added=${{ steps.changed-scripts.outputs.added_files }}" >> "$GITHUB_OUTPUT"
 
