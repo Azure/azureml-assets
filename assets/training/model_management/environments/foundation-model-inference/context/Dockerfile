@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.9.0-devel-ubuntu22.04
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -50,11 +50,9 @@ WORKDIR /
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.28 --no-cache-dir
 
-# Install torch 2.7.1 without dependencies
-RUN pip install --no-cache-dir torch==2.7.1 --no-deps && \
-    # Install compatible flash-attn version (e.g., 2.7.4) 
-    pip uninstall -y flash-attn && \
-    pip install --no-cache-dir "flash-attn>=2.7.1,<=2.7.4" --extra-index-url https://pypi.nvidia.com
+# torch install
+RUN pip install torch==2.7.1 --no-cache-dir
+RUN pip install "flash-attn>=2.7.1,<=2.7.4" --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
