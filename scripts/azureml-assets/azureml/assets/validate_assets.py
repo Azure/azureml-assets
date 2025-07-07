@@ -1114,7 +1114,7 @@ def validate_assets(input_dirs: List[Path],
 
             # Validate if MLFlow model if new asset
             if asset_config.type == assets.AssetType.MODEL:
-                if asset_config_path in added_assets:
+                if added_assets and asset_config_path in added_assets:
                     logger.print(f"Validating type of new model: {asset_config.name}")
                     validate_mlflow_model(asset_config)
 
