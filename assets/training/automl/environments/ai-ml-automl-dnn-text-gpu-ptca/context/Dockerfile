@@ -6,6 +6,7 @@ RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}'
 RUN pip install 'azureml-defaults=={{latest-pypi-version}}'
 
 RUN pip uninstall -y onnxruntime
+RUN pip install torch==2.7.1 torchvision==0.22.1
 
 RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
@@ -25,6 +26,8 @@ RUN pip install numpy==1.22.0
 RUN pip install pyarrow==14.0.1
 RUN pip install aiohttp==3.10.11
 RUN pip install idna==3.7
-RUN pip install requests==2.32.3
+RUN pip install requests==2.32.4
+RUN pip install urllib3==2.5.0
+RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
 
 RUN pip list
