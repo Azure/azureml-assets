@@ -7,10 +7,6 @@ RUN apt-get update && apt-get -y upgrade
 RUN pip install --upgrade pip
 
 COPY requirements.txt .
-
-# The below 2 files are required for baking the code into the environment
-
-
 RUN pip install -r requirements.txt --no-cache-dir
 
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
