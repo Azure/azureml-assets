@@ -2,14 +2,12 @@ FROM mcr.microsoft.com/mirror/docker/library/ubuntu:22.04
 
 User root:root
 
-RUN echo "deb http://security.ubuntu.com/ubuntu jammy-security main" >> /etc/apt/sources.list && \
-    apt-get update && \
+RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:adiscon/v8-stable && \
     apt-get purge -y software-properties-common && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        libudev1 \
         procps \ 
         libgnutls30 \ 
         libk5crypto3 \ 
