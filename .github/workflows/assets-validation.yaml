@@ -78,7 +78,10 @@ jobs:
 
       - name: Validate assets
         id: validate_assets
-        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" -d "${{ needs.check-directory-file-changes.outputs.files-added }}" -n -I -C -b -t -e
+        run: |
+          echo "${{ needs.check-directory-file-changes.outputs.files-changed }}"
+          echo "${{ needs.check-directory-file-changes.outputs.files-added }}"
+          python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" -d "${{ needs.check-directory-file-changes.outputs.files-added }}" -n -I -C -b -t -e
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
