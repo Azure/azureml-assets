@@ -14,6 +14,7 @@ RUN pip install azureml-sdk==1.60.0
 RUN pip install numpy==2.2.5
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install mlflow==3.1.0
+RUN pip install transformers==4.51.3
 
 COPY comm /opt/conda/envs/ptca/lib/python3.10/site-packages/deepspeed/comm/comm.py
 # clean conda and pip caches
