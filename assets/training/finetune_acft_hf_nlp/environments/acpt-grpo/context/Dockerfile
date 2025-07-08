@@ -18,6 +18,5 @@ RUN pip install transformers==4.51.3
 RUN pip install urllib3==2.5.0
 RUN pip install requests==2.32.4
 
-COPY comm /opt/conda/envs/ptca/lib/python3.10/site-packages/deepspeed/comm/comm.py
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
