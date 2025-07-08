@@ -16,7 +16,6 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install mlflow==3.1.0
 RUN pip install transformers==4.51.3
 RUN pip install urllib3==2.5.0
-RUN pip install torch==2.7.1-rc1
 RUN pip install requests==2.32.4
 
 COPY comm /opt/conda/envs/ptca/lib/python3.10/site-packages/deepspeed/comm/comm.py
