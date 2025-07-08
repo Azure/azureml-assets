@@ -65,6 +65,7 @@ def test_azure_ai_ml_automl():
     while time.time() <= timeout:
         job = ml_client.jobs.get(returned_job.name)
         status = job.status
+        print(f"Job status: {status}")
         if status in [JobStatus.COMPLETED, JobStatus.FAILED]:
             break
         time.sleep(30)  # sleep 30 seconds
