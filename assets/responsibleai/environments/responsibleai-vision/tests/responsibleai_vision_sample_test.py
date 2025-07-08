@@ -3,7 +3,6 @@
 
 """Tests running a sample job in the responsibleai vision environment."""
 import os
-import time
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import Environment, BuildContext
