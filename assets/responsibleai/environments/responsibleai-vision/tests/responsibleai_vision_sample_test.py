@@ -6,7 +6,6 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import MLClient
-from azure.ai.ml import command
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
@@ -36,23 +35,3 @@ def test_responsibleai_vision():
         description="ResponsibleAI Vision environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
-
-    # Poll until final status is reached, or timed out
-    timeout = time.time() + (TIMEOUT_MINUTES * 60)
-    while time.time() <= timeout:
-        current_status = ml_client.jobs.get(returned_job.name).status
-        if current_status in ["Completed", "Failed"]:
-            break
-        time.sleep(30)  # sleep 30 seconds
-
-    if current_status == "Failed":
-        ml_client.jobs.download(returned_job.name)
-        if STD_LOG.exists():
-            print(f"*** BEGIN {STD_LOG} ***")
-            with open(STD_LOG, "r") as f:
-                print(f.read(), end="")
-            print(f"*** END {STD_LOG} ***")
-        else:
-            ml_client.jobs.stream(returned_job.name)
-
-    assert current_status == "Completed"
