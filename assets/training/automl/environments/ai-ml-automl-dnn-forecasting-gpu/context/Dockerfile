@@ -58,13 +58,12 @@ RUN pip install \
                 'inference-schema' \
                 'xgboost==1.5.2' \
                 'cryptography>=42.0.5' \
-                'requests>=2.31.0' \
+                'requests==2.32.4' \
                 'certifi>=2023.07.22' \
                 'spacy==3.7.4' \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0'
                 # end pypi dependencies
-
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
