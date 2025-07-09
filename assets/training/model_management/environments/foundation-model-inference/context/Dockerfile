@@ -43,7 +43,7 @@ ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
 RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
 
 # For local testing
-# Need to copy src code and install in editable mode
+# Need to copy src code and install in editable mode.
 # COPY . .
 # RUN pip install -e ./ --no-cache-dir
 
