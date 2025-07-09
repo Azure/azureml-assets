@@ -26,7 +26,6 @@ RUN pip install 'responsibleai~=0.36.0' \
 RUN pip install 'azureml-rai-utils==0.0.6'
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
-                'azureml-telemetry=={{latest-pypi-version}}' \
                 'gunicorn>=22.0.0'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
