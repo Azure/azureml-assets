@@ -51,7 +51,7 @@ RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd
 RUN pip install llm-optimized-inference==0.2.28 --no-cache-dir
 
 # Replace vllm with custom version (force reinstall to avoid dependency issues)
-RUN pip install --force-reinstall https://rharkhanitest.blob.core.windows.net/vllm-oai-mini/vllm-0.1.dev7095+g5151897.d20250708-cp310-cp310-linux_x86_64.whl --no-cache-dir
+RUN pip install --force-reinstall https://automlsamplenotebookdata.blob.core.windows.net/vllm/vllm-0.1.dev7095+g5151897.d20250708-cp310-cp310-linux_x86_64.whl --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
