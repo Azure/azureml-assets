@@ -51,10 +51,6 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
 # end conda create
 
-# Conda installs from extra channels. Separate these to avoid solver OOMs.
-RUN pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu118
-# end conda create
-
 # begin pip install
 # Install pip dependencies
 RUN pip install \
@@ -88,6 +84,8 @@ RUN pip install \
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
+# Fix vulnerabilities
+RUN pip install --upgrade urllib3
 # end pip install
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
