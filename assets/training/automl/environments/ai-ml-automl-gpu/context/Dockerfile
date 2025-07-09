@@ -73,6 +73,9 @@ RUN pip install \
                 'requests>=2.31.0' \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
+
+# Fix vulnerabilities
+RUN pip install --upgrade urllib3
 # end pip install
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
