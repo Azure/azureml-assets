@@ -80,5 +80,11 @@ RUN pip install cryptography>=42.0.5 \
                 pyarrow==14.0.2 \
                 aiohttp>=3.9.4
 
+# Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
+RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install torchvision==0.22.1 torch==2.7.1 || true
+RUN /opt/conda/envs/ptca/bin/pip install torchvision==0.22.1 torch==2.7.1
+
 # end pip install
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
