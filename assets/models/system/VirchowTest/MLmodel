@@ -1,0 +1,33 @@
+flavors:
+  python_function:
+    artifacts:
+      checkpoint_path:
+        path: artifacts/Virchow/pytorch_model.bin
+        uri: pytorch_model.bin
+      config_path:
+        path: artifacts/Virchow/config.json
+        uri: config.json
+    cloudpickle_version: 2.2.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.14
+    streamable: false
+metadata:
+  base_model_name: Virchow
+  base_model_task: embeddings
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.13.2
+model_size_bytes: 2525083692
+model_uuid: 60f9e8d90ec344589112026f81464b44
+signature:
+  inputs: '[{"type": "string", "name": "image", "required": true}]'
+  outputs: '[{"type": "string", "name": "output", "required": true}]'
+  params: '[{"name": "device_type", "type": "string", "default": "cuda", "shape": null},
+    {"name": "to_half_precision", "type": "boolean", "default": false, "shape": null}]'
+utc_time_created: '2024-09-01 22:06:50.910220'
