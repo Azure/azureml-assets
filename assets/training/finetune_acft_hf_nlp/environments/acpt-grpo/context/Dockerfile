@@ -3,7 +3,6 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch271:{{latest
 
 USER root
 
-RUN apt-get update && apt-get -y upgrade
 RUN pip install --upgrade pip
 
 COPY requirements.txt .
