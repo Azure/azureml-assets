@@ -41,10 +41,6 @@ RUN pip install 'cryptography>=43.0.1'
 # see issue https://github.com/huggingface/datasets/issues/6182
 RUN pip install git+https://github.com/huggingface/evaluate.git
 
-# to resolve vulnerability mlflow (GHSA-wxj7-3fx5-pp9m) for mlflow < 3.1.0
-# from azureml-mlflow package
-RUN pip install 'mlflow>=3.1.0'
-
 # To resolve vulnerability issue
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'

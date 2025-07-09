@@ -25,6 +25,7 @@ _ai_logger = None
 
 # dummy change to trigger component test pipeline
 
+
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
