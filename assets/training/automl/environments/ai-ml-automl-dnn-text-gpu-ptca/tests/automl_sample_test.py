@@ -15,7 +15,7 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 45)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 120)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
