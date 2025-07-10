@@ -13,7 +13,7 @@ COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install mlflow==2.20.3
+RUN pip install mlflow==3.1.0
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=4 pip install flash-attn==2.7.4.post1 --no-build-isolation
