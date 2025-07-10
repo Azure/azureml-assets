@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by MedImageInsight Embedding Finetune Component
 
 name: "acft-medimageinsight-embedding"
-version: "10"
+version: "11"
 
 build:
   path: "context"
