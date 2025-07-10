@@ -1,7 +1,6 @@
 azureml-acft-common-components=={{latest-pypi-version}}
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 azureml-acft-image-components[hls]=={{latest-pypi-version}}
-azureml-mlflow=={{latest-pypi-version}}
 opencv-python==4.11.0.86
 pyyaml==6.0.2
 json_tricks==3.17.3
@@ -23,7 +22,6 @@ azure-storage-blob==12.13.0
 deepspeed==0.17.1
 GPUtil==1.4.0
 mup==1.0.0
-mlflow==3.1.0
 torchvision==0.22.1
 torch==2.7.1
 safetensors==0.5.2
