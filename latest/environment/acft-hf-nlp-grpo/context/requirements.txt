@@ -1,0 +1,9 @@
+azureml-acft-contrib-hf-nlp==0.0.76
+pillow==11.3.0
+accelerate==1.6.0
+datasets==3.6.0
+deepspeed==0.17.1
+trl==0.18.2
+liger-kernel==0.5.10
+vllm==0.9.1
+peft==0.15.2
