@@ -28,7 +28,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools-git \
     setuptools=78.1.1 \
     wheel=0.44.0 \
-    pytorch=2.6.0 \
+    pytorch=2.7.1 \
     scipy=1.10.1 \
     cudatoolkit=10.0.130 \
     'psutil>5.0.0,<6.0.0' \
@@ -66,6 +66,9 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
                 # end pypi dependencies
 # end pip install
+
+# Fix vulnerabilities
+RUN pip install --upgrade urllib3
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
