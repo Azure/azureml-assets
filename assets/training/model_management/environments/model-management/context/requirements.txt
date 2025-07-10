@@ -30,5 +30,5 @@ certifi==2024.07.04
 urllib3==2.5.0
 scikit-learn==1.5.1 
 mlflow==3.1.0
-mlflow-skinny==2.20.3 
+mlflow-skinny==3.1.0
 marshmallow==3.23.2
