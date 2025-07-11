@@ -3,6 +3,6 @@ mldesigner
 mlflow
 azureml-mlflow
 azureml-core
-requests
+requests==2.32.4
 setuptools>=78.1.1
 Werkzeug==3.1.3

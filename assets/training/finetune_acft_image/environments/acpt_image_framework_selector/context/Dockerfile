@@ -14,3 +14,6 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 RUN pip install gunicorn==23.0.0
 RUN pip install certifi==2024.07.04
 RUN pip install onnx==1.17.0
+
+# Upgrade requests in the system Python (3.13) for fixing vulnerability
+RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests || true
