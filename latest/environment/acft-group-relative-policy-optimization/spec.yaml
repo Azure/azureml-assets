@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   Environment used by Group Relative Policy Optimization component
 
-name: "acft-hf-nlp-grpo"
+name: "acft-group-relative-policy-optimization"
 version: "1"
 
 build:
