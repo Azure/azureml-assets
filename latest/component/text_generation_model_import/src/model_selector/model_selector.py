@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """File containing function for model selector component."""
+import os
 import shutil
 from pathlib import Path
 import argparse
@@ -13,7 +14,7 @@ import logging
 from typing import Optional, Dict, Any
 
 from transformers.utils import GENERATION_CONFIG_NAME
-
+from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM
 from azureml.acft.accelerator.utils.code_utils import update_json_file_and_overwrite
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
@@ -121,6 +122,7 @@ def validate_huggingface_id(huggingface_id: str) -> None:
                 )
             )
         )
+    return True
 
 
 def get_parser():
@@ -198,7 +200,30 @@ def model_selector(args: Namespace) -> Dict[str, Any]:
         # remove the spaces at either ends of hf id
         args.model_name = args.huggingface_id.strip()
         # validate hf_id
-        validate_huggingface_id(args.model_name)
+        if validate_huggingface_id(args.model_name):
+            # if neither pytorch nor mlflow model path is provided, pull from HF
+            if args.pytorch_model_path is None and args.mlflow_model_path is None:
+
+                model_dir = Path(args.output_dir)
+                # download config, tokenizer, and model into model_dir
+                # Download config, tokenizer, and model from Hugging Face
+                config = AutoConfig.from_pretrained(args.model_name)
+                tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+                model = AutoModelForCausalLM.from_pretrained(args.model_name, config=config)
+
+                # Save everything into args.output_dir
+                config.save_pretrained(model_dir)
+                tokenizer.save_pretrained(model_dir)
+                model.save_pretrained(model_dir)
+                logger.info(f"Downloaded and saved model {args.model_name} to {model_dir}")
+
+                # Clear the Hugging Face cache
+                hf_cache = os.getenv(
+                    "HF_HOME",
+                    os.path.join(os.path.expanduser("~"), ".cache", "huggingface")
+                )
+                shutil.rmtree(hf_cache, ignore_errors=True)
+                logger.info(f"Cleared Hugging Face cache at {hf_cache}")
     else:
         # TODO Revist whether `model_id` is still relevant
         args.model_name = args.model_id
