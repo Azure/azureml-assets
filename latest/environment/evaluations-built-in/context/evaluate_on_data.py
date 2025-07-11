@@ -211,7 +211,8 @@ def initialize_evaluators(command_line_args):
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
-        if evaluator["Id"].startswith("aoai://"):
+        if evaluator["Id"].startswith("azureai://") and "azure-openai" in evaluator["Id"]:
+            logger.info(f"Found azure-openai built-in evaluator: {evaluator_name}")
             grader = _convert_remote_eval_params_to_grader(evaluator["Id"], init_params)
             evaluators[evaluator_name] = grader
         # check if evaluator id is new format
