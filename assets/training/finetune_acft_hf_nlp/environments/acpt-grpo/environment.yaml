@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/acft-hf-nlp-grpo
+  name: azureml/curated/acft-group-relative-policy-optimization
   os: linux
   context:
     dir: context
