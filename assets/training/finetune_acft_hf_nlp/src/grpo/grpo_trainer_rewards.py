@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""
-reward functions
-"""
+"""reward functions."""
 import logging
 import re
 from typing import List
@@ -11,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def format_reward(completions, **kwargs):
-    """
-    This function determines whether the predicted answer is in the correct format.
+    """For determining whether the predicted answer is in the correct format.
+
     It checks if the reasoning process is enclosed within <think> and </think> tags,
     while the final answer is enclosed within <answer> and </answer> tags.
 
@@ -31,35 +29,33 @@ def format_reward(completions, **kwargs):
 
 
 def _medmcqa_match_fn(pred, ref):
-    """
-    This function determines whether a predicted answer matches the reference choice for a single MCQA record.
-    Even if the requested output format is not strictly followed, the function extracts the answer based on \
-    static patterns and then matches the extracted answer (A, B, C, D) to the reference choice.
+    """Determine whether a predicted answer matches the reference choice for a single MCQA record.
 
-    The function works as follows:
-        It takes the model's full prediction text and splits it into individual lines.
-        It looks at the very last line:
-        If that line contains the word “Answer”,
-        it strips out everything before the actual answer and cleans up whitespace/punctuation.
-        If the last line didn't include “Answer”, it then searches for any of these markers in the whole prediction:
-        “Final Answer”
-        “<answer>”
-        “<|begin_of_solution|>” For each marker, it finds the last occurrence,
-        grabs up to 250 characters immediately after it (to avoid overly long context), and cleans that snippet.
-        If none of those markers appear at all, it falls back to simply cleaning up the last line.
-        Once it has a candidate answer string, it checks:
-        If it matches the pattern “[A-D].” (e.g. “B.”), it discards the dot and keeps just the letter.
-        If the resulting text isn't one of “A”, “B”, “C” or “D”, the function gives up and returns False.
-        Finally, if the cleaned-up answer letter is valid,
-        it compares it to the reference label and returns True or False depending on whether they match.
+    Even if the requested output format is not strictly followed, extract the answer based on static
+    patterns and match the extracted answer (A, B, C, D) to the reference choice.
+
+    Steps:
+        Split the model’s full prediction text into individual lines.
+        Inspect the last line:
+            If it contains “Answer”, strip out everything before the actual answer and clean up whitespace and punctuation.
+        If the last line does not include “Answer”, search the prediction text for these markers:
+            “Final Answer”
+            “<answer>”
+            “<|begin_of_solution|>”
+        For each marker, find its last occurrence, grab up to 250 characters immediately after it to avoid overly long context, and clean that snippet.
+        If no markers appear, clean up the last line.
+        Once you have a candidate answer string:
+            If it matches the pattern “[A-D].”, discard the dot and keep only the letter.
+            If the result is not one of “A”, “B”, “C”, or “D”, return False.
+        Compare the cleaned-up answer letter to the reference label and return True if they match, otherwise return False.
 
     Args:
-            pred (str): The raw model prediction text.
-            ref (str): The reference answer choice (one of "A", "B", "C", "D").
-    Returns:
-            bool: True if the extracted choice equals ref; False otherwise.
-    """
+        pred (str): The raw model prediction text.
+        ref (str): The reference answer choice (one of "A", "B", "C", "D").
 
+    Returns:
+        bool: True if the extracted choice equals ref; False otherwise.
+    """
     ext_pattern1 = r"Final Answer"
     ext_pattern2 = r"<answer>"
     ext_pattern3 = r"<|begin_of_solution|>"
@@ -160,7 +156,8 @@ reward_registry = {
 
 
 def get_rewards_funcs(reward_names: List[str]):
-    """Helper function to get the reward functions given the names
+    """
+    Retrieve the reward functions for the given names.
 
     Args:
         reward_names (list): List of reward function names.

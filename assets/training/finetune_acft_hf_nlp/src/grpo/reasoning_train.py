@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""
-GRPO trainer
-"""
+"""GRPO trainer."""
 import datasets
 import json
 import logging
@@ -66,9 +64,8 @@ VALIDATION = 'validation'
 
 @dataclass
 class GRPOScriptArguments(ScriptArguments):
-    """
-    Extra script arguments for the GRPO training script.
-    """
+    """Extra script arguments for the GRPO training script."""
+
     final_model_save_path: str = field(
         default="final_model", metadata={"help": "Path to save the final model."}
     )
@@ -92,7 +89,7 @@ class GRPOScriptArguments(ScriptArguments):
 
 
 def get_tokenizer(model_args: ModelConfig) -> PreTrainedTokenizer:
-    """Returns the tokenizer for the model.
+    """Return the tokenizer for the model.
 
     Args:
         model_args (ModelConfig): Model configuration object.
@@ -204,20 +201,17 @@ def prepare_dataset_hf(dataset: DatasetDict,
 
 
 def get_hf_model_config_and_attributes(model_path):
-    """
-    Given a HuggingFace model path, load the config and return its attributes.
-    """
+    """Given a HuggingFace model path, load the config and return its attributes."""
     config = AutoConfig.from_pretrained(model_path)
     return config
 
 
 def main(script_args, training_args, model_args):
-    """Main function to run the GRPO training script.
+    """Run the GRPO training script.
 
     Args:
-        script_args (GRPOScriptArguments): Arguments to configure the datasets, reward functions.
-        training_args (GRPOConfig): Trainer specific settings such as vllm server config,
-                                    learning rate and reward weights.
+        script_args (GRPOScriptArguments): Arguments to configure the datasets and reward functions.
+        training_args (GRPOConfig): Trainer-specific settings such as vLLM server config, learning rate, and reward weights.
         model_args (ModelConfig): Arguments to load the model.
     Returns:
         None

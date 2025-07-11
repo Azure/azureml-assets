@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""
-callback utilities
-"""
+"""callback utilities."""
 import logging
 import shutil
 from pathlib import Path
@@ -22,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 def copy_tokenizer_files_to_model_folder(mlflow_model_folder: str):
     """Copy tokenizer files to model folder.
+
     The mlflow model format expects tokenizer and model files in model folder i.e. "data/model".
 
     Args:
@@ -45,9 +44,7 @@ def copy_tokenizer_files_to_model_folder(mlflow_model_folder: str):
 
 
 class SaveMLflowModelCallback(TrainerCallback):
-    """
-    A [`TrainerCallback`] that saves the model in mlflow model format.
-    """
+    """A [`TrainerCallback`] that saves the model in mlflow model format."""
 
     def __init__(
         self,
@@ -56,7 +53,19 @@ class SaveMLflowModelCallback(TrainerCallback):
         base_model_name: str,
         **kwargs,
     ) -> None:
+        """Initialize the GRPO trainer callbacks.
 
+        Parameters:
+            mlflow_model_save_path (Union[str, Path]): Path or directory where the finetuned model will be saved via MLflow.
+            mlflow_task_type (str): Task type for MLflow tracking (e.g., 'text-classification', 'summarization').
+            base_model_name (str): Name of the base pretrained foundation model.
+            **kwargs: Additional keyword arguments for future extensions.
+        Attributes:
+            mlflow_model_save_path (Union[str, Path]): The configured save path for the MLflow model.
+            mlflow_task_type (str): The MLflow task type associated with this run.
+            metadata (dict): Dictionary of AzureML metadata, including base image, model identifiers, task types,
+                             and flags indicating that this is an ACFT finetuned model.
+        """
         self.mlflow_model_save_path = mlflow_model_save_path
         self.mlflow_task_type = mlflow_task_type
         self.metadata = {
@@ -76,8 +85,7 @@ class SaveMLflowModelCallback(TrainerCallback):
         control: TrainerControl,
         **kwargs,
     ):
-        """
-        Callback function to save the model in mlflow model format at the end of the training.
+        """Save the model in mlflow model format at the end of the training.
 
         Args:
             args (TrainingArguments): The training arguments.
