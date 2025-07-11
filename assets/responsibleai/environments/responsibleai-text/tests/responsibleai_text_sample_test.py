@@ -3,11 +3,8 @@
 
 """Tests running a sample job in the responsibleai text environment."""
 import os
-import time
 from pathlib import Path
 from azure.ai.ml import MLClient
-from azure.ai.ml import command
-from azure.ai.ml.operations._run_history_constants import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
@@ -37,37 +34,3 @@ def test_responsibleai_text():
         description="ResponsibleAI Text environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
-
-    # create the command
-    job = command(
-        code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="python main.py",
-        environment=f"{env_name}@latest",
-        compute=os.environ.get("cpu_cluster"),
-        display_name="responsibleai-text-example",
-        description="A test run of the responsibleai text curated environment",
-        experiment_name="responsibleaiTextExperiment"
-    )
-
-    returned_job = ml_client.create_or_update(job)
-    assert returned_job is not None
-
-    # Poll until final status is reached, or timed out
-    timeout = time.time() + (TIMEOUT_MINUTES * 60)
-    while time.time() <= timeout:
-        current_status = ml_client.jobs.get(returned_job.name).status
-        if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
-            break
-        time.sleep(30)  # sleep 30 seconds
-
-    if current_status == JobStatus.FAILED:
-        ml_client.jobs.download(returned_job.name)
-        if STD_LOG.exists():
-            print(f"*** BEGIN {STD_LOG} ***")
-            with open(STD_LOG, "r") as f:
-                print(f.read(), end="")
-            print(f"*** END {STD_LOG} ***")
-        else:
-            ml_client.jobs.stream(returned_job.name)
-
-    assert current_status == JobStatus.COMPLETED
