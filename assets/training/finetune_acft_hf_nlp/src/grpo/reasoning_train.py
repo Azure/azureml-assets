@@ -211,7 +211,8 @@ def main(script_args, training_args, model_args):
 
     Args:
         script_args (GRPOScriptArguments): Arguments to configure the datasets and reward functions.
-        training_args (GRPOConfig): Trainer-specific settings such as vLLM server config, learning rate, and reward weights.
+        training_args (GRPOConfig): Trainer-specific settings such as vLLM server config, learning rate,
+        and reward weights.
         model_args (ModelConfig): Arguments to load the model.
     Returns:
         None

@@ -56,7 +56,8 @@ class SaveMLflowModelCallback(TrainerCallback):
         """Initialize the GRPO trainer callbacks.
 
         Parameters:
-            mlflow_model_save_path (Union[str, Path]): Path or directory where the finetuned model will be saved via MLflow.
+            mlflow_model_save_path (Union[str, Path]):
+            Path or directory where the finetuned model will be saved via MLflow.
             mlflow_task_type (str): Task type for MLflow tracking (e.g., 'text-classification', 'summarization').
             base_model_name (str): Name of the base pretrained foundation model.
             **kwargs: Additional keyword arguments for future extensions.

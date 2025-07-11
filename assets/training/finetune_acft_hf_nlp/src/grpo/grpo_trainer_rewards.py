@@ -37,17 +37,20 @@ def _medmcqa_match_fn(pred, ref):
     Steps:
         Split the model’s full prediction text into individual lines.
         Inspect the last line:
-            If it contains “Answer”, strip out everything before the actual answer and clean up whitespace and punctuation.
+            If it contains “Answer”, strip out everything before the actual answer
+            and clean up whitespace and punctuation.
         If the last line does not include “Answer”, search the prediction text for these markers:
             “Final Answer”
             “<answer>”
             “<|begin_of_solution|>”
-        For each marker, find its last occurrence, grab up to 250 characters immediately after it to avoid overly long context, and clean that snippet.
+        For each marker, find its last occurrence,
+        grab up to 250 characters immediately after it to avoid overly long context, and clean that snippet.
         If no markers appear, clean up the last line.
         Once you have a candidate answer string:
             If it matches the pattern “[A-D].”, discard the dot and keep only the letter.
             If the result is not one of “A”, “B”, “C”, or “D”, return False.
-        Compare the cleaned-up answer letter to the reference label and return True if they match, otherwise return False.
+        Compare the cleaned-up answer letter to the reference label and return True if they match,
+        otherwise return False.
 
     Args:
         pred (str): The raw model prediction text.
