@@ -50,12 +50,19 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.grpo.reasoning_trai
 
 
 # System prompt used at the time of sampling
-system_prompt = "You are a helpful AI Assistant, designed to provided well-reasoned and detailed responses. You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer. The reasoning process MUST BE enclosed within <think> and </think> tags."
+system_prompt = "You are a helpful AI Assistant, designed to provided well-reasoned and detailed responses.\
+You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer.\
+The reasoning process MUST BE enclosed within <think> and </think> tags."
 
 # Chat template used for the tokenizer
-DEFAULT_CHAT_TEMPLATE = "{% for message in messages %}\n{% if message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'system' %}\n{{ '<|system|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}"
-TRAIN='train'
-VALIDATION='validation'
+DEFAULT_CHAT_TEMPLATE = "{% for message in messages %}\n{% if message['role'] == 'user' %}\n\
+{{ '<|user|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'system' %}\n\
+{{ '<|system|>\n' + message['content'] + eos_token }}\n{% elif message['role'] == 'assistant' %}\n\
+{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n\
+{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}"
+TRAIN = 'train'
+VALIDATION = 'validation'
+
 
 @dataclass
 class GRPOScriptArguments(ScriptArguments):
@@ -66,7 +73,7 @@ class GRPOScriptArguments(ScriptArguments):
         default="final_model", metadata={"help": "Path to save the final model."}
     )
     reward_funcs: list[str] = field(
-        default_factory=lambda: ["format","accuracy"],
+        default_factory=lambda: ["format", "accuracy"],
         metadata={
             "help": "List of reward functions. Possible values: 'format', 'accuracy'."
         },
@@ -83,6 +90,7 @@ class GRPOScriptArguments(ScriptArguments):
         metadata={"help": "Name of the column containing the user prompt."}
     )
 
+
 def get_tokenizer(model_args: ModelConfig) -> PreTrainedTokenizer:
     """Returns the tokenizer for the model.
 
@@ -98,6 +106,7 @@ def get_tokenizer(model_args: ModelConfig) -> PreTrainedTokenizer:
     )
     tokenizer.chat_template = DEFAULT_CHAT_TEMPLATE
     return tokenizer
+
 
 def make_conversation(example, dataset_prompt_column, system_prompt=None):
     """Transform the given record to be compatible for GRPO training.
@@ -116,6 +125,7 @@ def make_conversation(example, dataset_prompt_column, system_prompt=None):
     prompt.append({"role": "user", "content": example[dataset_prompt_column]})
     return {"prompt": prompt}
 
+
 def _log_user_error(message: str):
     """Log a user error message.
 
@@ -131,7 +141,8 @@ def _log_user_error(message: str):
             )
         )
 
-def prepare_dataset(data_splits,dataset_prompt_column="problem", system_prompt=None):
+
+def prepare_dataset(data_splits, dataset_prompt_column="problem", system_prompt=None):
     """Load the splits from the given dataset folder and transform the dataset to be compatible for GRPO training.
 
     Args:
@@ -142,7 +153,7 @@ def prepare_dataset(data_splits,dataset_prompt_column="problem", system_prompt=N
         DatasetDict: The transformed dataset.
     """
     dataset_dict = {}
-    for name,split in data_splits.items():
+    for name, split in data_splits.items():
         if os.path.exists(split):
             dataset_dict[name] = load_dataset(
                 "json",
@@ -152,12 +163,14 @@ def prepare_dataset(data_splits,dataset_prompt_column="problem", system_prompt=N
 
     dataset = DatasetDict(dataset_dict)
     dataset = dataset.map(
-        lambda example: make_conversation(example,dataset_prompt_column=dataset_prompt_column, system_prompt=system_prompt)
+        lambda example: make_conversation(example, dataset_prompt_column=dataset_prompt_column,
+                                          system_prompt=system_prompt)
     )
     for split in dataset:
         if "messages" in dataset[split].column_names:
             dataset[split] = dataset[split].remove_columns("messages")
     return dataset
+
 
 def prepare_dataset_hf(dataset: DatasetDict,
                        dataset_prompt_column: str,
@@ -189,12 +202,14 @@ def prepare_dataset_hf(dataset: DatasetDict,
 
     return prepared
 
+
 def get_hf_model_config_and_attributes(model_path):
     """
     Given a HuggingFace model path, load the config and return its attributes.
     """
     config = AutoConfig.from_pretrained(model_path)
     return config
+
 
 def main(script_args, training_args, model_args):
     """Main function to run the GRPO training script.
@@ -240,7 +255,7 @@ def main(script_args, training_args, model_args):
     logger.info(f"Script parameters {script_args}")
     logger.info(f"Training parameters {training_args}")
 
-    dataset_splits = {TRAIN:script_args.dataset_train_split, VALIDATION:script_args.dataset_validation_split}
+    dataset_splits = {TRAIN: script_args.dataset_train_split, VALIDATION: script_args.dataset_validation_split}
     # If provided model path is a directory, find the subfolder containing HF model artifacts.
     root = model_args.model_name_or_path
     if os.path.isdir(root):
@@ -260,10 +275,10 @@ def main(script_args, training_args, model_args):
                 break
     current_policy = model_args.model_name_or_path
 
-    #Auto Pipeline Parallel setting :
+    # Auto Pipeline Parallel setting :
     config = get_hf_model_config_and_attributes(current_policy)
-    os.environ[VLLM_PP_LAYER_PARTITION] =  str(config.num_attention_heads)
-    os.environ[VLLM_PP_NUM_PARTITIONS]  =  str(config.num_key_value_heads)
+    os.environ[VLLM_PP_LAYER_PARTITION] = str(config.num_attention_heads)
+    os.environ[VLLM_PP_NUM_PARTITIONS] = str(config.num_key_value_heads)
 
     # Load tokenizer
     tokenizer = get_tokenizer(model_args)
@@ -306,11 +321,12 @@ def main(script_args, training_args, model_args):
     dataset_prompt_column = script_args.dataset_prompt_column or "prompt"
     # Load the dataset
     if train_split and val_split:
-        dataset = prepare_dataset(dataset_splits, dataset_prompt_column=dataset_prompt_column, system_prompt=system_prompt)
+        dataset = prepare_dataset(dataset_splits, dataset_prompt_column=dataset_prompt_column,
+                                  system_prompt=system_prompt)
         logger.info("Prepared dataset from local splits.")
     else:
         # Dataset was loaded from Hugging Face Hub, skip local file‐based preparation
-        dataset= prepare_dataset_hf(dataset, dataset_prompt_column=dataset_prompt_column, system_prompt=system_prompt)
+        dataset = prepare_dataset_hf(dataset, dataset_prompt_column=dataset_prompt_column, system_prompt=system_prompt)
         logger.info("Preparing dataset loaded from HF hub")
     logger.info(dataset)
 
@@ -321,7 +337,7 @@ def main(script_args, training_args, model_args):
 
     try:
         base_model_name = current_policy.split('/')[-1]
-    except :
+    except (AttributeError, TypeError):
         base_model_name = script_args.base_model_name
     # Add save callback
     save_mlflow_callback = SaveMLflowModelCallback(
@@ -342,7 +358,6 @@ def main(script_args, training_args, model_args):
     else:
         eval_dataset = None
 
-
     # Create the GRPOTrainer (It does SAMPLING, GRADING and TRAINING)
     trainer = GRPOTrainer(
         # The model to be trained, same copy of the model is used as reference policy.
@@ -360,6 +375,7 @@ def main(script_args, training_args, model_args):
     )
     # Trigger the training loop
     trainer.train()
+
 
 @swallow_all_exceptions(time_delay=60)
 def _main():
@@ -381,8 +397,9 @@ def _main():
     )
     logger.info(f"model config methods: {dir(model_args)}")
     model_args.lora_target_modules = LORA_TARGET_MODULES
-    #script_args has dataset_name
+    # script_args has dataset_name
     main(script_args, training_args, model_args)
+
 
 if __name__ == "__main__":
     try:

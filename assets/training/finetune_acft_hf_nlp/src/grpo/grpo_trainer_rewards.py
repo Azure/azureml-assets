@@ -33,22 +33,25 @@ def format_reward(completions, **kwargs):
 def _medmcqa_match_fn(pred, ref):
     """
     This function determines whether a predicted answer matches the reference choice for a single MCQA record.
-    Even if the requested output format is not strictly followed, the function extracts the answer based on static patterns
-    and then matches the extracted answer (A, B, C, D) to the reference choice.
+    Even if the requested output format is not strictly followed, the function extracts the answer based on \
+    static patterns and then matches the extracted answer (A, B, C, D) to the reference choice.
 
     The function works as follows:
         It takes the model's full prediction text and splits it into individual lines.
         It looks at the very last line:
-        If that line contains the word “Answer”, it strips out everything before the actual answer and cleans up whitespace/punctuation.
+        If that line contains the word “Answer”,
+        it strips out everything before the actual answer and cleans up whitespace/punctuation.
         If the last line didn't include “Answer”, it then searches for any of these markers in the whole prediction:
         “Final Answer”
         “<answer>”
-        “<|begin_of_solution|>” For each marker, it finds the last occurrence, grabs up to 250 characters immediately after it (to avoid overly long context), and cleans that snippet.
+        “<|begin_of_solution|>” For each marker, it finds the last occurrence,
+        grabs up to 250 characters immediately after it (to avoid overly long context), and cleans that snippet.
         If none of those markers appear at all, it falls back to simply cleaning up the last line.
         Once it has a candidate answer string, it checks:
         If it matches the pattern “[A-D].” (e.g. “B.”), it discards the dot and keeps just the letter.
         If the resulting text isn't one of “A”, “B”, “C” or “D”, the function gives up and returns False.
-        Finally, if the cleaned-up answer letter is valid, it compares it to the reference label and returns True or False depending on whether they match.
+        Finally, if the cleaned-up answer letter is valid,
+        it compares it to the reference label and returns True or False depending on whether they match.
 
     Args:
             pred (str): The raw model prediction text.
@@ -63,13 +66,14 @@ def _medmcqa_match_fn(pred, ref):
 
     choices_patobj = re.compile(r"[A-D]\.")
     logger.debug("**")
-    soln_start_match_fn = lambda pat: [
-        match.span()[1] for match in re.finditer(pat, pred, re.DOTALL)
-    ]
+
+    def soln_start_match_fn(pat):
+        return [match.span()[1] for match in re.finditer(pat, pred, re.DOTALL)]
+
     lines = pred.split("\n")
 
     if len(lines) > 0:
-        ## Finding the answer snippet when the LLM response is in required format
+        # Finding the answer snippet when the LLM response is in required format
         check_next_cond = True
         if lines[-1].find("Answer") >= 0:
             hyp_unfilt = (
@@ -82,32 +86,32 @@ def _medmcqa_match_fn(pred, ref):
                 .strip()
             )
             check_next_cond = False
-        ## Finding the answer based on the "Final Answer" string in the LLM response
+        # Finding the answer based on the "Final Answer" string in the LLM response
         if check_next_cond:
             check_next_cond = True
             cond_match = soln_start_match_fn(ext_pattern1)
 
             if len(cond_match) > 0:
-                suffix_text = pred[cond_match[-1] :]
+                suffix_text = pred[cond_match[-1]:]
                 hyp_unfilt = suffix_text[: min(250, len(suffix_text))]
                 check_next_cond = False
-        ## Finding the answer based on the "<answer>" tags in the LLM response
+        # Finding the answer based on the "<answer>" tags in the LLM response
         if check_next_cond:
             check_next_cond = True
             cond_match = soln_start_match_fn(ext_pattern2)
             if len(cond_match) > 0:
-                suffix_text = pred[cond_match[-1] :]
+                suffix_text = pred[cond_match[-1]:]
                 hyp_unfilt = suffix_text[: min(250, len(suffix_text))]
                 check_next_cond = False
-        ## Finding the answer based on the "<|begin_of_solution|>" tags in the LLM response
+        # Finding the answer based on the "<|begin_of_solution|>" tags in the LLM response
         if check_next_cond:
             check_next_cond = True
             cond_match = soln_start_match_fn(ext_pattern3)
             if len(cond_match) > 0:
-                suffix_text = pred[cond_match[-1] :]
+                suffix_text = pred[cond_match[-1]:]
                 hyp_unfilt = suffix_text[: min(250, len(suffix_text))]
                 check_next_cond = False
-        ## Last ditch attempt to parse the response into an answer
+        # Last ditch attempt to parse the response into an answer
         if check_next_cond:
             hyp_unfilt = (
                 lines[-1]
@@ -119,7 +123,7 @@ def _medmcqa_match_fn(pred, ref):
                 .strip()
             )
 
-        ## Extract the single letter answer from the response
+        # Extract the single letter answer from the response
         if re.match(choices_patobj, hyp_unfilt) is not None:
             hyp_unfilt = hyp_unfilt[0]
         logger.debug(f"Hyp Unfilt: {hyp_unfilt}")
@@ -164,4 +168,3 @@ def get_rewards_funcs(reward_names: List[str]):
         list: List of reward functions.
     """
     return [reward_registry[name] for name in reward_names if name in reward_registry]
-

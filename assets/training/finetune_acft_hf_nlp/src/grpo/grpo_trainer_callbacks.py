@@ -108,4 +108,3 @@ class SaveMLflowModelCallback(TrainerCallback):
             # Copy tokenizer files to model folder
             copy_tokenizer_files_to_model_folder(full_path)
             logger.info(f"MLflow model saved at {full_path}")
-
