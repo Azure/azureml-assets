@@ -1,0 +1,322 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: group_relative_policy_optimization
+version: 0.0.1
+type: command
+
+is_deterministic: true
+
+display_name: Group Relative Policy Optimization
+description: Component to optimize group-relative policy using reinforcement learning. Supports PyTorch distributed training with DeepSpeed optimizations.
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-grpo/versions/1
+
+code: ../../../src/grpo
+
+distribution:
+  type: pytorch
+
+inputs:
+
+  dataset_train_split:
+    type: uri_file
+    optional: true
+    description: Path to the training dataset in JSONL format
+    mode: rw_mount
+
+  dataset_validation_split:
+    type: uri_file
+    optional: true
+    description: Path to the validation dataset in JSONL format
+    mode: rw_mount
+
+  model_name_or_path:
+    type: uri_folder
+    optional: false
+    description: output folder of model import component containing model artifacts and a metadata file.
+    mode: rw_mount
+
+  apply_lora:
+    type: string
+    enum:
+    - "true"
+    - "false"
+    default: "true"
+    optional: true
+    description: If "true" enables LoRA fine tuning.
+
+  beta:
+    type: number
+    default: 0.00
+    optional: true
+    description: The beta parameter controls the strength of the KL divergence penalty in the objective function
+
+  dataset_name:
+    type: string
+    default: ''
+    optional: true
+    description: Name of the Hugging Face dataset to pull in
+
+  dataset_prompt_column:
+    type: string
+    default: problem
+    optional: false
+    description: Column in the dataset containing the prompt for the chat completion template
+
+  deepspeed_config:
+    type: uri_file
+    optional: false
+    description: Path to a custom DeepSpeed configuration file in JSON format
+    mode: ro_mount
+
+  do_eval:
+    type: boolean
+    default: false
+    optional: true
+    description: Whether to run evaluation on the validation set or not. Will be set to True if eval_strategy is different from "no"
+
+  epsilon:
+    type: number
+    default: 0.5
+    optional: true
+    description: Epsilon value for clipping
+
+  eval_steps:
+    type: integer
+    default: 1
+    optional: true
+    description: Number of steps between evaluations
+
+  eval_strategy:
+    type: string
+    enum:
+    - "no"
+    - "steps"
+    - "epoch"
+    default: no
+    optional: true
+    description: Evaluation strategy to use during training. Options are 'no', 'steps', or 'epoch'.
+
+  gradient_accumulation_steps:
+    type: integer
+    default: 1
+    optional: true
+    description: Number of steps before performing a backward/update pass to accumulate gradients.
+
+  learning_rate:
+    type: number
+    default: 3e-06
+    optional: true
+    description: Learning rate for training.
+
+  logging_steps:
+    type: number
+    default: 5
+    optional: true
+    description: Number of steps between logging updates.
+
+  lr_scheduler_type:
+    type: string
+    enum:
+    - "linear"
+    - "cosine"
+    - "cosine_with_restarts"
+    - "polynomial"
+    - "constant"
+    - "constant_with_warmup"
+    - "inverse_sqrt"
+    - "reduce_lr_on_plateau"
+    default: "cosine"
+    optional: true
+    description: The scheduler type to use for learning rate scheduling.
+
+  max_completion_length:
+      type: integer
+      default: 256
+      optional: true
+      description: Maximum length of the generated completion.
+
+  max_grad_norm:
+    type: number
+    default: 1.0
+    optional: true
+    description: Maximum gradient norm for gradient clipping.
+
+  max_prompt_length:
+    type: integer
+    default: 512
+    optional: true
+    description: Maximum length of the prompt. If the prompt is longer than this value, it will be truncated left.
+
+  max_steps:
+    type: integer
+    default: -1
+    optional: true
+    description: If set to a positive number, this will override num_train_epochs and train for exactly this many steps. Set to -1 to disable (default).
+
+  num_generations:
+    type: integer
+    default: 4
+    optional: true
+    description: Number of generations to sample.The effective batch size (num_processes*per_device_batch_size*gradient_accumulation_steps) must be evenly divisible by this value.
+
+  num_iterations:
+    type: integer
+    default: 3
+    optional: true
+    description: Number of iterations per batch (denoted as μ in the algorithm).
+
+  num_train_epochs:
+    type: number
+    default: 4
+    optional: true
+    description: Number of training epochs.
+
+  optim:
+    type: string
+    enum:
+    - "adamw_torch"
+    - "adamw_torch_fused"
+    - "adafactor"
+    - "ademamix"
+    - "sgd"
+    - "adagrad"
+    - "rmsprop"
+    - "galore_adamw"
+    - "lomo"
+    - "adalomo"
+    - "grokadamw"
+    - "schedule_free_sgd"
+    default: "adamw_torch"
+    optional: true
+    description: The optimizer to use.
+
+  per_device_eval_batch_size:
+    type: integer
+    min: 1
+    default: 8
+    optional: true
+    description: Per device batch size used for evaluation.
+
+  per_device_train_batch_size:
+    type: integer
+    min: 1
+    default: 8
+    optional: true
+    description: Per device batch size used for training
+
+  save_steps:
+    type: integer
+    default: 100
+    optional: true
+    description: Number of steps between saving checkpoints.
+
+  save_total_limit:
+    type: integer
+    default: 20
+    optional: true
+    description: Maximum number of checkpoints to keep.
+
+  shuffle_dataset:
+    type: boolean
+    default: true
+    optional: true
+    description: Whether to shuffle the training dataset.
+
+  temperature:
+    type: number
+    default: 1.0
+    optional: true
+    description: Temperature for sampling. The higher the temperature, the more random the completions.
+
+  top_p:
+    type: number
+    default: 1.0
+    optional: true
+    description: Float that controls the cumulative probability of the top tokens to consider. Must be in (0, 1]. Set to `1.0` to consider all tokens.
+
+  use_liger_kernel:
+    type: boolean
+    default: false
+    optional: true
+    description: Whether to use the Liger kernel.
+
+  vllm_gpu_memory_utilization:
+    type: number
+    default: 0.3
+    optional: true
+    description: Control the GPU memory utilization for vLLM.
+
+  vllm_tensor_parallel_size:
+    type: integer
+    default: 1
+    optional: true
+    description: Control the tensor parallel size for vLLM.
+
+  warmup_ratio:
+    type: number
+    default: 0.1
+    optional: true
+    description: Ratio of total training steps used for a linear warmup from 0 to `learning_rate`.
+
+outputs:
+  #final_model_save_pat
+  mlflow_model_folder:
+    type: mlflow_model
+    description: output folder containing _best_ model as defined by _metric_for_best_model_. Along with the best model, output folder contains checkpoints saved after every evaluation which is defined by the _evaluation_strategy_. Each checkpoint contains the model weight(s), config, tokenizer, optimzer, scheduler and random number states.
+    mode: rw_mount
+  output_model_path:
+    type: uri_folder
+    description: Path to the output model folder containing the checkpoints
+    mode: rw_mount
+
+command: >-
+  python reasoning_train.py
+  $[[--dataset_train_split '${{inputs.dataset_train_split}}']]
+  $[[--dataset_validation_split '${{inputs.dataset_validation_split}}']]
+  --model_name_or_path '${{inputs.model_name_or_path}}'
+  --deepspeed '${{inputs.deepspeed_config}}'
+  --final_model_save_path '${{outputs.mlflow_model_folder}}'
+  --output_dir '${{outputs.output_model_path}}'
+  --dataset_prompt_column '${{inputs.dataset_prompt_column}}'
+  $[[--num_iterations '${{inputs.num_iterations}}']]
+  $[[--epsilon '${{inputs.epsilon}}']]
+  $[[--per_device_train_batch_size '${{inputs.per_device_train_batch_size}}']]
+  $[[--per_device_eval_batch_size '${{inputs.per_device_eval_batch_size}}']]
+  $[[--gradient_accumulation_steps '${{inputs.gradient_accumulation_steps}}']]
+  $[[--learning_rate '${{inputs.learning_rate}}']]
+  $[[--num_train_epochs '${{inputs.num_train_epochs}}']]
+  $[[--max_grad_norm '${{inputs.max_grad_norm}}']]
+  $[[--warmup_ratio '${{inputs.warmup_ratio}}']]
+  $[[--max_steps '${{inputs.max_steps}}']]
+  $[[--eval_steps '${{inputs.eval_steps}}']]
+  $[[--use_liger_kernel '${{inputs.use_liger_kernel}}']]
+  $[[--max_prompt_length '${{inputs.max_prompt_length}}']]
+  $[[--num_generations '${{inputs.num_generations}}']]
+  $[[--max_completion_length '${{inputs.max_completion_length}}']]
+  $[[--shuffle_dataset '${{inputs.shuffle_dataset}}']]
+  $[[--temperature '${{inputs.temperature}}']]
+  $[[--top_p '${{inputs.top_p}}']]
+  $[[--optim '${{inputs.optim}}']]
+  $[[--vllm_gpu_memory_utilization '${{inputs.vllm_gpu_memory_utilization}}']]
+  $[[--vllm_tensor_parallel_size '${{inputs.vllm_tensor_parallel_size}}']]
+  $[[--dataset_name '${{inputs.dataset_name}}']]
+  $[[--beta '${{inputs.beta}}']]
+  $[[--torch_dtype 'bfloat16']]
+  $[[--attn_implementation 'flash_attention_2']]
+  $[[--dataset_config 'default']]
+  $[[--bf16 'true']]
+  $[[--use_vllm 'true']]
+  $[[--gradient_checkpointing 'true']]
+  $[[--do_eval '${{inputs.do_eval}}']]
+  $[[--eval_on_start 'false']]
+  $[[--eval_strategy '${{inputs.eval_strategy}}']]
+  $[[--hub_private_repo 'false']]
+  $[[--log_level 'info']]
+  $[[--logging_first_step 'true']]
+  $[[--logging_steps '${{inputs.logging_steps}}']]
+  $[[--lr_scheduler_type '${{inputs.lr_scheduler_type}}']]
+  $[[--save_steps '${{inputs.save_steps}}']]
+  $[[--save_total_limit '${{inputs.save_total_limit}}']]
+  $[[--report_to 'azure_ml']]
+  $[[--use_peft ${{inputs.apply_lora}}]]
+
