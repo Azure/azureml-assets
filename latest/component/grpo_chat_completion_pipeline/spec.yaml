@@ -17,7 +17,7 @@ inputs:
   instance_type_finetune:
     type: string
     optional: true
-    default: STANDARD_ND96ISRF_H100_V5
+    default: Standard_ND96isr_H100_v5
     description: Instance type to be used for finetune component in case of serverless
       compute, eg. standard_nc24rs_v3. The parameter compute_finetune must be set
       to 'serverless' for instance_type to be used
