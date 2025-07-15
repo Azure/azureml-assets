@@ -54,7 +54,22 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 RUN pip install --no-cache-dir torch==2.7.1
 
 # flash-attn install
-RUN pip install flash-attn==2.7.4.post1
+# RUN pip install flash-attn==2.7.4.post1
+
+# Install minimal CUDA dev deps for flash-attn build
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    cuda-cudart-dev-12-1 \
+    libcublas-dev-12-1 \
+    libcusparse-dev-12-1 \
+    python3-dev
+
+# flash-attn install from source
+RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
+    cd flash-attention && \
+    pip install --no-build-isolation --no-cache-dir . && \
+    cd .. && rm -rf flash-attention
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
