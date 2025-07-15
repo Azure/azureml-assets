@@ -50,6 +50,9 @@ WORKDIR /
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
+# Uninstall existing torch and flash-attn
+RUN pip uninstall -y torch flash-attn || true
+
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
