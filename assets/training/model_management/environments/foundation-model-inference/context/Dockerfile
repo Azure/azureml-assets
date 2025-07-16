@@ -52,8 +52,6 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-RUN echo "Running nvidia-smi to check CUDA availability" && nvidia-smi
-
 RUN pip install flash-attn==2.7.4.post1 --no-cache-dir
 
 # failed
