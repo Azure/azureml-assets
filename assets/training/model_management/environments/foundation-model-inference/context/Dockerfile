@@ -45,17 +45,26 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
+# failed
 # RUN apt-get update && apt-get install -y build-essential ninja-build
 # ENV CUDA_HOME=/usr/local/cuda
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    ninja-build \
-    git \
-    libopenblas-dev \
-    && rm -rf /var/lib/apt/lists/*
+# failed
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#    build-essential \
+#    ninja-build \
+#    git \
+#    libopenblas-dev \
+#    && rm -rf /var/lib/apt/lists/*
+# ENV CUDA_HOME=/usr/local/cuda
 
-ENV CUDA_HOME=/usr/local/cuda
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    cuda-cudart-dev-12-1 \
+    libcublas-dev-12-1 \
+    libcusparse-dev-12-1 \
+    python3-dev
 
 RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
