@@ -8,16 +8,20 @@ RUN apt update && apt upgrade -y && apt install software-properties-common -y &&
 RUN apt install git -y
 
 ############ new 
-# Install basic dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    ninja-build \
-    libaio-dev \
-    python3-dev \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/*
-# Upgrade pip
-RUN pip install --upgrade pip
+    cuda-runtime-12-1 \
+    cuda-cudart-dev-12-1 \
+    libcublas-dev-12-1 \
+    libcusparse-dev-12-1
+
+RUN ln -s /usr/lib/x86_64-linux-gnu/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so.12 && \
+    ln -s /usr/local/cuda/lib64/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so
+
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=$CUDA_HOME/bin:$PATH
+ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+RUN apt-get install -y ninja-build
 ###########
     
 
@@ -58,10 +62,14 @@ WORKDIR /
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
 # Install PyTorch with CUDA 12.1 support
-RUN pip install --no-cache-dir torch==2.7.1+cu121 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install --no-cache-dir torch==2.7.1
 
-# Install flash-attn
-RUN pip install flash-attn==2.7.4.post1
+RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
+    cd flash-attention && \
+    git checkout v2.7.4.post1 && \
+    pip install packaging && \
+    pip install --use-pep517 --no-build-isolation --no-cache-dir . && \
+    cd .. && rm -rf flash-attention
 
 #########
 
