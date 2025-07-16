@@ -45,6 +45,9 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
+RUN apt-get update && apt-get install -y build-essential ninja-build
+ENV CUDA_HOME=/usr/local/cuda
+
 RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
     git checkout v2.7.4.post1 && \
