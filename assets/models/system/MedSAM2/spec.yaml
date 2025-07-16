@@ -13,9 +13,10 @@ tags:
   task: image-segmentation
   industry: health-and-life-sciences
   Preview: ""
+  licenseDescription: "This model is provided under the License Terms available at <https://github.com/bowang-lab/MedSAM2/blob/main/LICENSE>."
   inference_supported_envs:
     - hf
-  license: Apache2.0
+  license: apache-2.0
   author: Wanglab
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""

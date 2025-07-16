@@ -111,3 +111,19 @@ def _display_embeddings(pred):
             print(f"\nWarning: {embed_type} not found in predictions")
             print("Available keys:", list(pred.keys()) if isinstance(pred, dict) else "Not a dictionary")
 ```
+
+## Data and Resource Specification for Deployment
+* **Supported Data Input Format** 
+
+1. **Input Format**: The model accepts molecular structure data in PDB format, specifically processed as compressed JSONL files (.jsonl.gz). Each file contains molecular interaction complex graphs with atomic coordinates and structural information.
+
+2. **Input Methods**: The model supports:
+   - URLs pointing to remote .jsonl.gz files
+   - Base64-encoded molecular structure data
+
+3. **Output Format**: The model generates multi-scale molecular embeddings in three hierarchical levels:
+   - **Graph embedding**: Overall molecular complex representation
+   - **Block embedding**: Chemical block-level features  
+   - **Atom embedding**: Individual atomic-level representations
+
+4. **Data Sources and Technical Details**: For comprehensive information about training datasets, model architecture, and validation results, refer to the [official ATOMICA repository](https://github.com/mims-harvard/ATOMICA/tree/main)
