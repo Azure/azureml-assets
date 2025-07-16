@@ -34,14 +34,6 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# Needed for megablocks
-RUN pip install torch~=2.4.0 --index-url https://download.pytorch.org/whl/cu121
-
-# mixtral specific
-ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
-ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
-RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
-
 # For local testing
 # Need to copy src code and install in editable mode
 # COPY . .
