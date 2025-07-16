@@ -40,23 +40,8 @@ WORKDIR /
 # Install llm-optimized-inference after PyTorch, so it can leverage the CUDA-enabled torch.
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-# torch installation with CUDA 12.6 support
-# This command is crucial for installing the CUDA 12.6 compatible version.
-# Ensure torchvision and torchaudio versions are compatible with torch==2.7.1.
-RUN pip install --no-cache-dir \
-    torch==2.7.1+cu126 \
-    torchvision==0.18.1+cu126 \
-    torchaudio==2.7.1+cu126 \
-    --index-url https://download.pytorch.org/whl/cu126
-
-# Verify the PyTorch CUDA installation
-# This step helps confirm that CUDA is correctly detected by PyTorch inside the container.
-RUN python3 -c "import torch; \
-    print(f'PyTorch version: {torch.__version__}'); \
-    print(f'CUDA available: {torch.cuda.is_available()}'); \
-    if torch.cuda.is_available(): print(f'CUDA version: {torch.version.cuda}'); \
-    else: print('CUDA is NOT available. Check base image and installation.'); \
-    assert torch.cuda.is_available(), 'CUDA is not detected by PyTorch!'"
+# torch installation
+RUN pip install --no-cache-dir torch==2.7.1
 
 # flash-attn install
 # Building from source will typically link against the PyTorch installation in the environment,
