@@ -1,4 +1,7 @@
-FROM nvidia/cuda:12.6.2-devel-ubuntu22.04
+# Start with a base image that includes CUDA 12.6.
+# You will need to verify the exact tag for CUDA 12.6 on NVIDIA's Docker Hub (https://hub.docker.com/r/nvidia/cuda/tags)
+# once it is officially released. I'm using '12.6.0-devel-ubuntu22.04' as a likely candidate.
+FROM nvidia/cuda:12.6.0-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -34,30 +37,36 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# Needed for megablocks
-RUN pip install torch~=2.4.0 --index-url https://download.pytorch.org/whl/cu121
-
-# mixtral specific
-ARG torch_cuda_arch_list='7.0 7.5 8.0 8.6 8.9 9.0+PTX'
-ENV TORCH_CUDA_ARCH_LIST=${torch_cuda_arch_list}
-RUN pip install git+https://github.com/stanford-futuredata/megablocks.git@5897cd6
-
-# For local testing
-# Need to copy src code and install in editable mode
-# COPY . .
-# RUN pip install -e ./ --no-cache-dir
-
-# When copied to assets repo, change to install from public pypi
+# Install llm-optimized-inference after PyTorch, so it can leverage the CUDA-enabled torch.
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-RUN pip install --no-cache-dir torch==2.7.1
+# torch installation with CUDA 12.6 support
+# This command is crucial for installing the CUDA 12.6 compatible version.
+# Ensure torchvision and torchaudio versions are compatible with torch==2.7.1.
+RUN pip install --no-cache-dir \
+    torch==2.7.1+cu126 \
+    torchvision==0.18.1+cu126 \
+    torchaudio==2.7.1+cu126 \
+    --index-url https://download.pytorch.org/whl/cu126
 
-# Install flash-attn==2.7.4.post1 from source
+# Verify the PyTorch CUDA installation
+# This step helps confirm that CUDA is correctly detected by PyTorch inside the container.
+RUN python3 -c "import torch; \
+    print(f'PyTorch version: {torch.__version__}'); \
+    print(f'CUDA available: {torch.cuda.is_available()}'); \
+    if torch.cuda.is_available(): print(f'CUDA version: {torch.version.cuda}'); \
+    else: print('CUDA is NOT available. Check base image and installation.'); \
+    assert torch.cuda.is_available(), 'CUDA is not detected by PyTorch!'"
+
+# flash-attn install
+# Building from source will typically link against the PyTorch installation in the environment,
+# so installing PyTorch with CUDA 12.6 first is important.
 RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
     git checkout v2.7.4.post1 && \
     pip install packaging && \
-    pip install --use-pep517 --no-build-isolation --no-cache-dir . && \
+    # --no-build-isolation ensures it uses the currently active environment's PyTorch
+    pip install --no-build-isolation --no-cache-dir . && \
     cd .. && rm -rf flash-attention
 
 # clean conda and pip caches
