@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.1-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -59,28 +59,30 @@ RUN pip install --no-cache-dir torch==2.7.1
 # ENV CUDA_HOME=/usr/local/cuda
 
 # failed
-# RUN apt-get update && apt-get install -y \
-#    build-essential \
-#    git \
-#    cuda-cudart-dev-12-1 \
-#    libcublas-dev-12-1 \
-#    libcusparse-dev-12-1 \
-#    python3-dev
-
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
-    python3-dev \
     cuda-cudart-dev-12-1 \
     libcublas-dev-12-1 \
     libcusparse-dev-12-1 \
-    && rm -rf /var/lib/apt/lists/*
+    python3-dev
+
+####### Comment 
+# RUN apt-get update && apt-get install -y \
+#    build-essential \
+#    git \
+#    python3-dev \
+#    cuda-cudart-dev-12-1 \
+#    libcublas-dev-12-1 \
+#    libcusparse-dev-12-1 \
+#    && rm -rf /var/lib/apt/lists/*
 
 # Set CUDA environment variables (important for flash-attn build)
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=$CUDA_HOME/bin:$PATH
-ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
-ENV TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9;9.0"
+# ENV CUDA_HOME=/usr/local/cuda
+# ENV PATH=$CUDA_HOME/bin:$PATH
+# ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+# ENV TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9;9.0"
+####################
 
 RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
