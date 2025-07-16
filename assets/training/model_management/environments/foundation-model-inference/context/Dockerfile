@@ -73,13 +73,23 @@ RUN pip install --no-cache-dir torch==2.7.1
 #    pip install --no-build-isolation --no-cache-dir . && \
 #    cd .. && rm -rf flash-attention
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ninja-build \
+    git \
+    libopenblas-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CUDA_HOME=/usr/local/cuda
+
+RUN pip install flash-attn==2.7.4.post1 --no-cache-dir
 ################################
-RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
-    cd flash-attention && \
-    git checkout v2.7.4post1 && \
-    pip install packaging && \
-    pip install --no-build-isolation --no-cache-dir . && \
-    cd .. && rm -rf flash-attention
+# RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
+#    cd flash-attention && \
+#    git checkout v2.7.4post1 && \
+#    pip install packaging && \
+#    pip install --no-build-isolation --no-cache-dir . && \
+#    cd .. && rm -rf flash-attention
     
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
