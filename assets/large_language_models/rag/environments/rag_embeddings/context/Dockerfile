@@ -14,13 +14,19 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda clean -a -y
 
 # Sentence Transformers CPU only install
-RUN pip install --no-cache-dir torch==2.7.1-rc1 -f https://download.pytorch.org/whl/torch && \
-    pip install --no-cache-dir transformers && \
-    pip install --no-cache-dir tqdm numpy scikit-learn scipy nltk sentencepiece pillow && \
-    pip install --no-cache-dir sentence-transformers --no-deps
+RUN pip3 install torch==2.7.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cpu && \
+    pip3 install --no-cache-dir transformers && \
+    pip3 install --no-cache-dir tqdm numpy scikit-learn scipy nltk sentencepiece pillow && \
+    pip3 install --no-cache-dir sentence-transformers --no-deps
 
 RUN set -eux; \
     apt-get update; \
+    # Explicitly upgrade PAM packages to specific versions to fix vulnerability (USN-7580-1)
+    apt-get install -y --no-install-recommends \
+    libpam0g=1.4.0-11ubuntu2.6 \
+    libpam-modules-bin=1.4.0-11ubuntu2.6 \
+    libpam-modules=1.4.0-11ubuntu2.6 \
+    libpam-runtime=1.4.0-11ubuntu2.6; \
     apt-get install -y --no-install-recommends \
     # utilities for keeping Debian and OpenJDK CA certificates in sync
     ca-certificates p11-kit wget \
