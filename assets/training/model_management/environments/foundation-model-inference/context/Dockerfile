@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -6,31 +6,6 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
-
-############ new 
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        cuda-toolkit-12-1 \
-        cuda-cudart-dev-12-1 \
-        cuda-runtime-12-1 \
-        cuda-nvcc-12-1 \
-        libcublas-dev-12-1 \
-        libcusparse-dev-12-1 \
-        git \
-        python3-dev
-
-# RUN ln -s /usr/lib/x86_64-linux-gnu/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so.12 && \
-#    ln -s /usr/local/cuda/lib64/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so
-
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=$CUDA_HOME/bin:$PATH
-ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
-
-RUN apt-get install -y ninja-build
-###########
-    
 
 ENV MINICONDA_VERSION py310_23.10.0-1
 ENV PATH /opt/miniconda/bin:$PATH
@@ -64,21 +39,16 @@ WORKDIR /
 # COPY . .
 # RUN pip install -e ./ --no-cache-dir
 
-########## new
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-# Install PyTorch with CUDA 12.1 support
-RUN pip install --no-cache-dir torch==2.7.1
-
 RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
-    git checkout v2.7.4.post1 && \
     pip install packaging && \
-    pip install --use-pep517 --no-build-isolation --no-cache-dir . && \
+    pip install --no-build-isolation --no-cache-dir . && \
     cd .. && rm -rf flash-attention
 
-#########
+RUN pip install flash-attn==2.7.4.post1
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
