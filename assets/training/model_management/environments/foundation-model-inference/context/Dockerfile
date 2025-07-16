@@ -4,6 +4,12 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Etc/UTC \
     DEBIAN_FRONTEND=noninteractive
+
+ENV CUDA_HOME=/usr/local/cuda \
+    PATH=/usr/local/cuda/bin:$PATH \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH \
+    TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9;9.0"
+    
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
 
@@ -65,7 +71,8 @@ RUN apt-get update && apt-get install -y \
     cuda-cudart-dev-12-1 \
     libcublas-dev-12-1 \
     libcusparse-dev-12-1 \
-    python3-dev
+    python3-dev \
+    ninja-build
 
 ####### Comment 
 # RUN apt-get update && apt-get install -y \
