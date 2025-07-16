@@ -59,7 +59,9 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
 # Install PyTorch with CUDA 12.1 support
 # RUN pip install --no-cache-dir torch==2.7.1+cu121 -f https://download.pytorch.org/whl/torch_stable.html
-RUN pip install --no-cache-dir torch==2.7.1+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# RUN pip install --no-cache-dir torch==2.7.1+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+RUN pip install --no-cache-dir torch==2.7.1
 
 # Install flash-attn
 RUN pip install flash-attn==2.7.4.post1
