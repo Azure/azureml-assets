@@ -52,6 +52,8 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
+RUN echo "Running nvidia-smi to check CUDA availability" && nvidia-smi
+
 # failed
 # RUN apt-get update && apt-get install -y build-essential ninja-build
 # ENV CUDA_HOME=/usr/local/cuda
