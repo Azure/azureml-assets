@@ -5,6 +5,7 @@ ENV PYTHONUNBUFFERED=1 \
     TZ=Etc/UTC \
     DEBIAN_FRONTEND=noninteractive
 
+# Fail
 ENV CUDA_HOME=/usr/local/cuda \
     PATH=/usr/local/cuda/bin:$PATH \
     LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH \
@@ -68,6 +69,7 @@ RUN pip install --no-cache-dir torch==2.7.1
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
+    cuda-runtime-12-1 \
     cuda-cudart-dev-12-1 \
     libcublas-dev-12-1 \
     libcusparse-dev-12-1 \
