@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -42,28 +42,9 @@ WORKDIR /
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    ninja-build \
-    git \
-    libopenblas-dev \
-    python3-dev \
-    wget \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir torch==2.7.1
 
-# Ensure CUDA is set correctly
-ENV CUDA_HOME=/usr/local/cuda
-ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
-ENV PATH=$CUDA_HOME/bin:$PATH
-
-# Install flash-attn from source with specific version
-RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
-    cd flash-attention && \
-    git checkout v2.7.4.post1 && \
-    pip install packaging && \
-    pip install --use-pep517 --no-build-isolation --no-cache-dir . && \
-    cd .. && rm -rf flash-attention
+RUN pip install flash-attn==2.7.4.post1 --no-build-isolation
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
