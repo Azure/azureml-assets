@@ -44,7 +44,7 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
 RUN pip install --no-cache-dir torch==2.7.1
 
-RUN pip install flash-attn==2.7.4.post1 --no-build-isolation
+RUN pip install flash-attn==2.7.4.post1 --use-pep517 --no-build-isolation --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
