@@ -54,7 +54,7 @@ RUN pip install --no-cache-dir torch==2.7.1
 
 RUN echo "Running nvidia-smi to check CUDA availability" && nvidia-smi
 
-RUN pip install flash-attn==2.7.4.post1
+RUN pip install flash-attn==2.7.4.post1 --no-cache-dir
 
 # failed
 # RUN apt-get update && apt-get install -y build-essential ninja-build
