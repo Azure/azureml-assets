@@ -8,18 +8,25 @@ RUN apt update && apt upgrade -y && apt install software-properties-common -y &&
 RUN apt install git -y
 
 ############ new 
-RUN apt-get update && apt-get install -y \
-    cuda-runtime-12-1 \
-    cuda-cudart-dev-12-1 \
-    libcublas-dev-12-1 \
-    libcusparse-dev-12-1
 
-RUN ln -s /usr/lib/x86_64-linux-gnu/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so.12 && \
-    ln -s /usr/local/cuda/lib64/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cuda-toolkit-12-1 \
+        cuda-cudart-dev-12-1 \
+        cuda-runtime-12-1 \
+        cuda-nvcc-12-1 \
+        libcublas-dev-12-1 \
+        libcusparse-dev-12-1 \
+        git \
+        python3-dev
+
+# RUN ln -s /usr/lib/x86_64-linux-gnu/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so.12 && \
+#    ln -s /usr/local/cuda/lib64/libcudart.so.12 /usr/local/cuda/lib64/libcudart.so
 
 ENV CUDA_HOME=/usr/local/cuda
 ENV PATH=$CUDA_HOME/bin:$PATH
-ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 
 RUN apt-get install -y ninja-build
 ###########
