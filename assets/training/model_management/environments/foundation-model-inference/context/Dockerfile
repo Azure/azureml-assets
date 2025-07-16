@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.4.1-devel-ubuntu20.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -54,6 +54,8 @@ RUN pip install --no-cache-dir torch==2.7.1
 
 RUN echo "Running nvidia-smi to check CUDA availability" && nvidia-smi
 
+RUN pip install flash-attn==2.7.4.post1
+
 # failed
 # RUN apt-get update && apt-get install -y build-essential ninja-build
 # ENV CUDA_HOME=/usr/local/cuda
@@ -95,12 +97,12 @@ RUN echo "Running nvidia-smi to check CUDA availability" && nvidia-smi
 # ENV TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9;9.0"
 ####################
 
-RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
-    cd flash-attention && \
-#   git checkout v2.7.4.post1 && \
-    pip install packaging && \
-    pip install --no-build-isolation --no-cache-dir . && \
-    cd .. && rm -rf flash-attention
+# RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
+#    cd flash-attention && \
+#    git checkout v2.7.4.post1 && \
+#    pip install packaging && \
+#    pip install --no-build-isolation --no-cache-dir . && \
+#    cd .. && rm -rf flash-attention
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
