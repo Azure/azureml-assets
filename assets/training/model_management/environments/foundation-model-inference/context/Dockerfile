@@ -1,7 +1,8 @@
-# Start with a base image that includes CUDA 12.6.
-# You will need to verify the exact tag for CUDA 12.6 on NVIDIA's Docker Hub (https://hub.docker.com/r/nvidia/cuda/tags)
-# once it is officially released. I'm using '12.6.0-devel-ubuntu22.04' as a likely candidate.
-FROM nvidia/cuda:12.6.0-devel-ubuntu22.04
+FROM nvidia/cuda:12.6.2-devel-ubuntu22.04
+
+# System dependencies
+RUN apt update && apt install -y --no-install-recommends \
+    build-essential cmake ninja-build python3-dev libopenblas-dev git wget
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -37,22 +38,19 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# Install llm-optimized-inference after PyTorch, so it can leverage the CUDA-enabled torch.
+# When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-# torch installation
-RUN pip install --no-cache-dir torch==2.7.1
+# Python deps
+RUN pip install --upgrade pip
+RUN pip install torch==2.7.1+cu126 --index-url https://download.pytorch.org/whl/cu126
 
-# flash-attn install
-# Building from source will typically link against the PyTorch installation in the environment,
-# so installing PyTorch with CUDA 12.6 first is important.
+# Clone and build flash-attn
 RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
     git checkout v2.7.4.post1 && \
     pip install packaging && \
-    # --no-build-isolation ensures it uses the currently active environment's PyTorch
-    pip install --no-build-isolation --no-cache-dir . && \
-    cd .. && rm -rf flash-attention
+    pip install --no-build-isolation --no-cache-dir .
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
