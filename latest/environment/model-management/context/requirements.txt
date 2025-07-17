@@ -1,11 +1,11 @@
 azure-core==1.35.0
 azure-ai-ml==1.28.1
 azure-identity==1.23.1
-azureml-evaluate-mlflow==0.0.76
+azureml-evaluate-mlflow==0.0.77
 ffmpeg-python==0.2.0
 langcodes==3.5.0
 sentencepiece==0.2.0
-accelerate==1.8.1
+accelerate==1.9.0
 wget==3.2
 applicationinsights==0.11.10
 azureml-automl-core==1.60.0
