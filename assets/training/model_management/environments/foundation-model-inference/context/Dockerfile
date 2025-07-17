@@ -43,12 +43,21 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-# RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
-#    cd flash-attention && \
-#    git checkout v2.7.4.post1 && \
-#    pip install packaging && \
-#    pip install --no-build-isolation --no-cache-dir . && \
-#    cd .. && rm -rf flash-attention
+# Required for FlashAttention compilation
+RUN apt-get update && \
+    apt-get install -y ninja-build cmake
+
+# Set CUDA-related paths for FlashAttention build
+ENV CUDA_HOME=/usr/local/cuda
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+# FlashAttention from source (v2.7.4.post1)
+RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
+    cd flash-attention && \
+    git checkout v2.7.4.post1 && \
+    pip install packaging && \
+    pip install --no-build-isolation --no-cache-dir . && \
+    cd .. && rm -rf flash-attention
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
