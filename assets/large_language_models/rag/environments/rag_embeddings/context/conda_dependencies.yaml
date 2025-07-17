@@ -42,5 +42,3 @@ dependencies:
   - pymssql==2.2.7
   - sentence-transformers
   - sqlalchemy==1.4.46
-  - flask-cors==6.0.0 #explicitly adding to resolve vulnerability
-  - requests==2.32.4 # explicitly adding to resolve security vulnerabilities
