@@ -43,9 +43,11 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-# Required for FlashAttention compilation
+# Ensure required build tools and dependencies for flash-attn
 RUN apt-get update && \
-    apt-get install -y ninja-build cmake
+    apt-get install -y cmake build-essential && \
+    pip install --no-cache-dir packaging ninja && \
+    ninja --version || (pip uninstall -y ninja && pip install ninja)
 
 # Set CUDA-related paths for FlashAttention build
 ENV CUDA_HOME=/usr/local/cuda
