@@ -31,7 +31,7 @@ ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 # Install torch 2.7.1 with CUDA 12.1 (use correct index)
-RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu121 torch==2.7.1
+RUN pip install --no-cache-dir torch==2.7.1
 
 # Optional: install your package
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
