@@ -7,9 +7,9 @@ WORKDIR /
 
 COPY conda.yaml .
 
-# Accept Conda Terms of Service for required channels
-RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
-    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+# Remove channels with rejected Terms of Service
+RUN conda config --remove channels https://repo.anaconda.com/pkgs/main && \
+    conda config --remove channels https://repo.anaconda.com/pkgs/r
 
 ENV CONDA_PREFIX=/azureml-envs/model-evaluation
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
