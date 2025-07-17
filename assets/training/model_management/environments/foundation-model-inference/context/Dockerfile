@@ -37,17 +37,15 @@ WORKDIR /
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-# printing
-# CMD bash -c "echo 'checking CUDA info:' && nvidia-smi"
-
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-# Required for FlashAttention compilation
+# Required for FlashAttention build
 RUN apt-get update && \
-    apt-get install -y ninja-build cmake
+    apt-get install -y ninja-build cmake && \
+    pip install packaging ninja
 
-# Set CUDA-related paths for FlashAttention build
+# Set CUDA paths (even in GitHub Actions, doesn't hurt)
 ENV CUDA_HOME=/usr/local/cuda
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 
@@ -56,13 +54,13 @@ RUN echo "Checking CUDA libs:" && ls /usr/local/cuda/lib64/libcudart.so* && \
 
 RUN echo "nvidia-smi output:" && nvidia-smi || echo "nvidia-smi not available"
 
-# FlashAttention from source (v2.7.4.post1)
-RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
+# Conditionally install FlashAttention only if CUDA is available
+RUN python -c "import torch; exit(0) if torch.cuda.is_available() else exit(1)" && \
+    git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
     git checkout v2.7.4.post1 && \
-    pip install packaging && \
     pip install --no-build-isolation --no-cache-dir . && \
-    cd .. && rm -rf flash-attention
+    cd .. && rm -rf flash-attention || echo 'Skipping flash-attn install (no CUDA)'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
