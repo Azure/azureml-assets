@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Install essential packages
 RUN apt update && apt upgrade -y && \
-    apt install -y software-properties-common wget git runit libcusparse-dev libcurand-dev && \
+    apt install -y software-properties-common wget git runit && \
     add-apt-repository ppa:deadsnakes/ppa -y
 
 # Install Miniconda
