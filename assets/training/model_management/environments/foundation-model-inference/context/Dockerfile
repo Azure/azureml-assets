@@ -54,6 +54,8 @@ ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 RUN echo "Checking CUDA libs:" && ls /usr/local/cuda/lib64/libcudart.so* && \
     echo "Torch CUDA available:" && python -c "import torch; print(torch.version.cuda, torch.cuda.is_available())"
 
+RUN echo "nvidia-smi output:" && nvidia-smi || echo "nvidia-smi not available"
+
 # FlashAttention from source (v2.7.4.post1)
 RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     cd flash-attention && \
