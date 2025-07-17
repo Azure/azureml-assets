@@ -21,12 +21,8 @@ RUN pip3 install torch==2.7.1 torchvision torchaudio --index-url https://downloa
 
 RUN set -eux; \
     apt-get update; \
-    # Explicitly upgrade PAM packages to specific versions to fix vulnerability (USN-7580-1)
-    apt-get install -y --no-install-recommends \
-    libpam0g=1.4.0-11ubuntu2.6 \
-    libpam-modules-bin=1.4.0-11ubuntu2.6 \
-    libpam-modules=1.4.0-11ubuntu2.6 \
-    libpam-runtime=1.4.0-11ubuntu2.6; \
+    # Update system packages to fix PAM vulnerability (USN-7580-1)
+    apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
     # utilities for keeping Debian and OpenJDK CA certificates in sync
     ca-certificates p11-kit wget \
