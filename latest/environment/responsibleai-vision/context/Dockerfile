@@ -66,7 +66,7 @@ RUN pip install 'lightgbm>=4.6.0'
 # To resolve GHSA-53q9-r3pm-6pq6 vulnerability issue for torch < 2.6.0
 # and  urllib3 (GHSA-pq67-6m6q-mj2v) for urllib3 < 2.5.0
 # from azureml-automl-dnn-vision package
-RUN pip install 'torch>=2.6.0'
+RUN pip install 'torch>=2.7.1-rc1'
 RUN pip install 'urllib3>=2.5.0'
 # to resolve vulnerability mlflow (GHSA-wxj7-3fx5-pp9m) for mlflow < 3.1.0
 # from azureml-mlflow package
