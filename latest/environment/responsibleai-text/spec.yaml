@@ -4,7 +4,7 @@ description: >-
   AzureML Responsible AI Text environment.
 
 name: "responsibleai-text"
-version: "24"
+version: "25"
 
 build:
   path: "context"
