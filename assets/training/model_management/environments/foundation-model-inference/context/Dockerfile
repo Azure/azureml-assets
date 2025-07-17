@@ -40,27 +40,9 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-# Required for FlashAttention build
-RUN apt-get update && \
-    apt-get install -y ninja-build cmake && \
-    pip install packaging ninja
-
-# Set CUDA paths (even in GitHub Actions, doesn't hurt)
-ENV CUDA_HOME=/usr/local/cuda
-ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-
-RUN echo "Checking CUDA libs:" && ls /usr/local/cuda/lib64/libcudart.so* && \
-    echo "Torch CUDA available:" && python -c "import torch; print(torch.version.cuda, torch.cuda.is_available())"
-
-RUN echo "nvidia-smi output:" && nvidia-smi || echo "nvidia-smi not available"
-
-# Conditionally install FlashAttention only if CUDA is available
+# Conditionally install flash-attn==2.7.4.post1 from PyPI only if CUDA is available
 RUN python -c "import torch; exit(0) if torch.cuda.is_available() else exit(1)" && \
-    git clone https://github.com/Dao-AILab/flash-attention.git && \
-    cd flash-attention && \
-    git checkout v2.7.4.post1 && \
-    pip install --no-build-isolation --no-cache-dir . && \
-    cd .. && rm -rf flash-attention || echo 'Skipping flash-attn install (no CUDA)'
+    pip install --no-cache-dir flash-attn==2.7.4.post1 || echo 'Skipping flash-attn install (no CUDA)'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
