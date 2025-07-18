@@ -40,7 +40,7 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-RUN pip install flash-attn --no-build-isolation
+RUN pip install flash-attn==v2.7.4.post1 --no-build-isolation --no-cache-dir
 
 # RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
 #    cd flash-attention && \
