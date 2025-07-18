@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Group Relative Policy Optimization
 description: Component to optimize group-relative policy using reinforcement learning. Supports PyTorch distributed training with DeepSpeed optimizations.
 
-environment: azureml://registries/azureml/environments/acft-group-relative-policy-optimization/versions/1
+environment: azureml://registries/azureml/environments/acft-group-relative-policy-optimization/versions/3
 
 code: ../../../src/grpo
 
