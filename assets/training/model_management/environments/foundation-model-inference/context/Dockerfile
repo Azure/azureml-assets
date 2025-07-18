@@ -34,20 +34,18 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
+# For local testing
+# Need to copy src code and install in editable mode
+# COPY . .
+# RUN pip install -e ./ --no-cache-dir
+
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-# torch installation
+# Install required Python packages
 RUN pip install --no-cache-dir torch==2.7.1
 
-RUN pip install flash-attn==v2.7.4.post1 --no-build-isolation --no-cache-dir
-
-# RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
-#    cd flash-attention && \
-#    git checkout v2.7.4.post1 && \
-#    pip install packaging && \
-#    pip install --no-build-isolation --no-cache-dir . && \
-#    cd .. && rm -rf flash-attention
+RUN pip install --no-cache-dir --no-build-isolation flash-attn
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
