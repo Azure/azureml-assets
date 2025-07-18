@@ -14,13 +14,15 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda clean -a -y
 
 # Sentence Transformers CPU only install
-RUN pip install --no-cache-dir torch==2.7.1-rc1 -f https://download.pytorch.org/whl/torch && \
+RUN pip install torch==2.7.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cpu && \
     pip install --no-cache-dir transformers && \
     pip install --no-cache-dir tqdm numpy scikit-learn scipy nltk sentencepiece pillow && \
     pip install --no-cache-dir sentence-transformers --no-deps
 
 RUN set -eux; \
     apt-get update; \
+    # Update system packages to fix PAM vulnerability (USN-7580-1)
+    apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
     # utilities for keeping Debian and OpenJDK CA certificates in sync
     ca-certificates p11-kit wget \
@@ -104,8 +106,8 @@ RUN python3 -m nltk.downloader punkt && \
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
 # Install tika server
-RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/3.1.0/tika-server-standard-3.1.0.jar'; \
-    downloadMd5='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/3.1.0/tika-server-standard-3.1.0.jar.md5'; \
+RUN downloadUrl='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.1.0/tika-server-standard-3.1.0.jar'; \
+    downloadMd5='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.1.0/tika-server-standard-3.1.0.jar.md5'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
     # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
     wget -O tika-server.jar.md5 "$downloadMd5"; \
