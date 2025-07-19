@@ -3,7 +3,7 @@ type: pipeline
 
 tags:
   Preview: ""
-version: 0.0.88
+version: 0.0.89
 name: llm_ingest_dataset_to_acs_user_id
 display_name: LLM - Dataset to ACS Pipeline
 is_deterministic: false
@@ -121,7 +121,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.86'
+    component: 'azureml:llm_rag_validate_deployments:0.0.87'
     identity:
       type: user_identity
     inputs:
@@ -147,7 +147,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.83'
+    component: 'azureml:llm_rag_crack_and_chunk:0.0.84'
     identity:
       type: user_identity
     inputs:
@@ -172,7 +172,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_generate_embeddings:0.0.76'
+    component: 'azureml:llm_rag_generate_embeddings:0.0.77'
     identity:
       type: user_identity
     inputs:
@@ -226,7 +226,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_update_acs_index:0.0.80'
+    component: 'azureml:llm_rag_update_acs_index:0.0.81'
     identity:
       type: user_identity
     inputs:
@@ -248,7 +248,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_mlindex_asset:0.0.80'
+    component: 'azureml:llm_rag_register_mlindex_asset:0.0.81'
     identity:
       type: user_identity
     inputs:
