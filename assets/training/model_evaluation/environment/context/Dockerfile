@@ -4,10 +4,16 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest
 RUN apt-get update && apt-get -y upgrade
 
 WORKDIR /
+
+COPY conda.yaml .
+
+# Remove channels with rejected Terms of Service
+RUN conda config --remove channels https://repo.anaconda.com/pkgs/main && \
+    conda config --remove channels https://repo.anaconda.com/pkgs/r
+
 ENV CONDA_PREFIX=/azureml-envs/model-evaluation
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 
-COPY conda.yaml .
 # Create conda environment
 RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
     rm conda.yaml && \
@@ -24,4 +30,4 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Temp fix for env vuln
-RUN pip install mlflow
+RUN pip install mlflow=={{latest-pypi-version}}
