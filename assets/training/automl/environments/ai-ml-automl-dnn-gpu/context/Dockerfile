@@ -6,6 +6,12 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
+# Upgrade libarchive13 to fix security vulnerability
+RUN apt-get update && \
+    apt-get install -y --only-upgrade libarchive13 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
@@ -76,10 +82,11 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
                 'psutil>5.0.0,<6.0.0' \
-                'requests>=2.31.0' \
+                'requests>=2.32.4' \
                 'certifi>=2023.07.22' \
                 'cryptography>=42.0.5' \
-                'jinja2>=3.1.6'
+                'jinja2>=3.1.6'\
+                'pillow'>=11.3.0 \
                 # end pypi dependencies
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
