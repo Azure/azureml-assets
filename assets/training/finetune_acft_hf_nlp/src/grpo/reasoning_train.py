@@ -91,6 +91,7 @@ class GRPOScriptArguments(ScriptArguments):
 @dataclass
 class ExtendedGRPOConfig(GRPOConfig):
     """Extend the base GRPOConfig to add eval_strategy options."""
+
     eval_strategy: str = field(
         default="no",
         metadata={
@@ -99,6 +100,14 @@ class ExtendedGRPOConfig(GRPOConfig):
     )
 
     def __post_init__(self):
+        """Perform post-initialization tasks for training configuration.
+
+        Converts eval_strategy from "disable" to "no" to comply with
+        the ev2 release pipeline constraints. Then, attempts to invoke
+        the superclass’s __post_init__ method to complete any additional
+        initialization (e.g., setting up distributed_state), suppressing
+        errors if the method is not defined.
+        """
         # Convert 'disable' option to 'no'
         # Need this since ev2 release pipeline doesn't allow 'no' as option
         if self.eval_strategy == "disable":
