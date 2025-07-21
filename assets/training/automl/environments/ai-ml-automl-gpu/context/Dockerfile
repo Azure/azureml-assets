@@ -16,7 +16,34 @@ ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 RUN apt-get update && echo 'success updated apt-get!'
-RUN apt-get install -y --no-install-recommends cmake libboost-dev libboost-system-dev libboost-filesystem-dev
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        sudo=1.9.9-1ubuntu2.5 \
+        systemd=249.11-0ubuntu3.16 \
+        systemd-sysv=249.11-0ubuntu3.16 \
+        libudev1=249.11-0ubuntu3.16 \
+        libpam-systemd=249.11-0ubuntu3.16 \
+        systemd-timesyncd=249.11-0ubuntu3.16 \
+        libsystemd0=249.11-0ubuntu3.16 \
+        libnss-systemd=249.11-0ubuntu3.16 \
+        libpython3.10-stdlib=3.10.12-1~22.04.10 \
+        python3.10=3.10.12-1~22.04.10 \
+        libpython3.10-minimal=3.10.12-1~22.04.10 \
+        python3.10-minimal=3.10.12-1~22.04.10 \
+        libpam0g=1.4.0-11ubuntu2.6 \
+        libpam-modules-bin=1.4.0-11ubuntu2.6 \
+        libpam-modules=1.4.0-11ubuntu2.6 \
+        libpam-runtime=1.4.0-11ubuntu2.6 \
+        libarchive13=3.6.0-1ubuntu1.5
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cmake \
+        libboost-dev \
+        libboost-system-dev \
+        libboost-filesystem-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
@@ -74,8 +101,10 @@ RUN pip install \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
 
-# Fix vulnerabilities
-RUN pip install --upgrade urllib3
-# end pip install
+# Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
+RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' || true
+RUN /azureml-envs/azureml-automl-dnn-gpu/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' || true
+
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
