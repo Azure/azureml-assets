@@ -37,15 +37,6 @@ inputs:
       and a metadata file.
     mode: rw_mount
 
-  apply_lora:
-    type: string
-    enum:
-    - "true"
-    - "false"
-    default: "true"
-    optional: true
-    description: If "true" enables LoRA fine tuning.
-
   beta:
     type: number
     default: 0.00
@@ -72,13 +63,6 @@ inputs:
     description: Path to a custom DeepSpeed configuration file in JSON format
     mode: ro_mount
 
-  do_eval:
-    type: boolean
-    default: false
-    optional: true
-    description: Whether to run evaluation on the validation set or not. Will be set
-      to True if eval_strategy is different from "no"
-
   epsilon:
     type: number
     default: 0.5
@@ -94,13 +78,13 @@ inputs:
   eval_strategy:
     type: string
     enum:
-    - "no"
-    - "steps"
-    - "epoch"
-    default: no
+    - disable
+    - steps
+    - epoch
+    default: disable
     optional: true
-    description: Evaluation strategy to use during training. Options are 'no', 'steps',
-      or 'epoch'.
+    description: Evaluation strategy to use during training. Options are "disable",
+      "steps", or "epoch".
 
   gradient_accumulation_steps:
     type: integer
@@ -324,7 +308,6 @@ command: >-
   $[[--bf16 'true']]
   $[[--use_vllm 'true']]
   $[[--gradient_checkpointing 'true']]
-  $[[--do_eval '${{inputs.do_eval}}']]
   $[[--eval_on_start 'false']]
   $[[--eval_strategy '${{inputs.eval_strategy}}']]
   $[[--hub_private_repo 'false']]
@@ -335,5 +318,3 @@ command: >-
   $[[--save_steps '${{inputs.save_steps}}']]
   $[[--save_total_limit '${{inputs.save_total_limit}}']]
   $[[--report_to 'azure_ml']]
-  $[[--use_peft ${{inputs.apply_lora}}]]
-
