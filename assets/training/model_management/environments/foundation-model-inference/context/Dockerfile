@@ -43,7 +43,22 @@ WORKDIR /
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
 # Install required Python packages
-RUN pip install --no-cache-dir torch==2.7.1
+# RUN pip install --no-cache-dir torch==2.7.1
+# Set environment variables to skip CUDA and other GPU-specific builds
+ENV FLASH_ATTENTION_SKIP_CUDA_BUILD=TRUE \
+    FLASH_ATTENTION_FORCE_BUILD=FALSE \
+    FLASH_ATTENTION_FORCE_CXX11_ABI=FALSE \
+    FLASH_ATTENTION_TRITON_AMD_ENABLE=FALSE \
+    FLASH_ATTENTION_SKIP_CK_BUILD=TRUE
+
+# Install flash-attention using those variables
+RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
+    cd flash-attention && \
+    git checkout v2.7.4.post1 && \
+    pip install packaging && \
+    pip install --no-build-isolation --no-cache-dir . && \
+    cd .. && rm -rf flash-attention
+
 
 RUN pip install --no-cache-dir --no-build-isolation flash-attn
 
