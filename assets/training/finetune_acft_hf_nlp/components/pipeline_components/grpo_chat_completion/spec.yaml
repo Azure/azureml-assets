@@ -53,14 +53,6 @@ inputs:
     mode: rw_mount
 
   #Finetune parameters
-  # apply_lora:
-  #   type: string
-  #   enum:
-  #   - "true"
-  #   - "false"
-  #   default: "true"
-  #   optional: true
-  #   description: If "true" enables lora.
 
   dataset_name:
     type: string
@@ -214,12 +206,6 @@ inputs:
     description: Path to a custom DeepSpeed configuration file in JSON format
     mode: ro_mount
 
-  do_eval:
-    type: boolean
-    default: false
-    optional: true
-    description: Whether to run evaluation on the validation set or not. Will be set to True if eval_strategy is different from "disable"
-
   max_prompt_length:
     type: integer
     default: 512
@@ -340,7 +326,6 @@ jobs:
       dataset_train_split: '${{parent.inputs.dataset_train_split}}'
       dataset_validation_split: '${{parent.inputs.dataset_validation_split}}'
       deepspeed_config: '${{parent.inputs.deepspeed_config}}'
-      do_eval: '${{parent.inputs.do_eval}}'
       epsilon: '${{parent.inputs.epsilon}}'
       eval_steps: '${{parent.inputs.eval_steps}}'
       eval_strategy: '${{parent.inputs.eval_strategy}}'
