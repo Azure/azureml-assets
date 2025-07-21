@@ -22,6 +22,7 @@ RUN apt-get update && \
         libpam-modules-bin=1.4.0-11ubuntu2.6 \
         libpam-modules=1.4.0-11ubuntu2.6 \
         libpam-runtime=1.4.0-11ubuntu2.6 && \
+        sudo=1.9.9-1ubuntu2.5 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
