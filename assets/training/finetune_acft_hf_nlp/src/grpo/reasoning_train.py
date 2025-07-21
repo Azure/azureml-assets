@@ -110,7 +110,6 @@ class ExtendedGRPOConfig(GRPOConfig):
             pass
 
 
-
 def get_tokenizer(model_args: ModelConfig) -> PreTrainedTokenizer:
     """Return the tokenizer for the model.
 
