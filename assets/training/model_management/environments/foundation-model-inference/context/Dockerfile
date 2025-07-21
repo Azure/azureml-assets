@@ -42,21 +42,8 @@ RUN pip install --no-cache-dir torch==2.7.1
 
 # working
 # Conditionally install flash-attn==2.7.4.post1 from PyPI only if CUDA is available
-# RUN python -c "import torch; exit(0) if torch.cuda.is_available() else exit(1)" && \
-#    pip install --no-cache-dir flash-attn==2.7.4.post1 || echo 'Skipping flash-attn install (no CUDA)'
-
-ARG BUILD_CONTEXT=default  # 'ci' or 'default'
-
-# Conditional install of flash-attn
-RUN if [ "$BUILD_CONTEXT" != "ci" ]; then \
-    git clone https://github.com/Dao-AILab/flash-attention.git && \
-    cd flash-attention && \
-    git checkout v2.7.4.post1 && \
-    pip install packaging && \
-    pip install --no-build-isolation --no-cache-dir . && \
-    cd .. && rm -rf flash-attention; \
-    else echo "Skipping flash-attn install in CI context."; \
-    fi
+RUN python -c "import torch; exit(0) if torch.cuda.is_available() else exit(1)" && \
+    pip install --no-cache-dir flash-attn==2.7.4.post1 || echo 'Skipping flash-attn install (no CUDA)'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
