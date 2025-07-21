@@ -88,6 +88,29 @@ class GRPOScriptArguments(ScriptArguments):
     )
 
 
+@dataclass
+class ExtendedGRPOConfig(GRPOConfig):
+    """Extend the base GRPOConfig to add eval_strategy options."""
+    eval_strategy: str = field(
+        default="no",
+        metadata={
+            "help": "Evaluation strategy. Options: 'no', 'disable', 'steps', 'epoch'."
+        }
+    )
+
+    def __post_init__(self):
+        # Convert 'disable' option to 'no'
+        # Need this since ev2 release pipeline doesn't allow 'no' as option
+        if self.eval_strategy == "disable":
+            self.eval_strategy = "no"
+        # Ensure base class initialization runs (sets up distributed_state, etc.)
+        try:
+            super().__post_init__()  # type: ignore[attr-defined]
+        except AttributeError:
+            pass
+
+
+
 def get_tokenizer(model_args: ModelConfig) -> PreTrainedTokenizer:
     """Return the tokenizer for the model.
 
@@ -222,9 +245,7 @@ def main(script_args, training_args, model_args):
 
     log_level = training_args.get_process_log_level()
     logger.setLevel(log_level)
-
     datasets.utils.logging.set_verbosity(log_level)
-
     transformers.utils.logging.set_verbosity(log_level)
     transformers.utils.logging.enable_explicit_format()
 
@@ -302,7 +323,7 @@ def main(script_args, training_args, model_args):
     val_split = exist_splits[VALIDATION]
     if train_split or val_split:
         # If any split is provided, all must be provided
-        if not (train_split and val_split):
+        if not (train_split and val_split) and training_args.eval_strategy != "no":
             _log_user_error("When specifying dataset splits, you must provide train, and validation paths.")
             sys.exit(1)
     else:
@@ -315,7 +336,7 @@ def main(script_args, training_args, model_args):
             sys.exit(1)
     dataset_prompt_column = script_args.dataset_prompt_column or "prompt"
     # Load the dataset
-    if train_split and val_split:
+    if train_split:
         dataset = prepare_dataset(dataset_splits, dataset_prompt_column=dataset_prompt_column,
                                   system_prompt=system_prompt)
         logger.info("Prepared dataset from local splits.")
@@ -351,6 +372,7 @@ def main(script_args, training_args, model_args):
         else:
             eval_dataset = dataset[VALIDATION]
     else:
+        logger.warning("No validation set found. Evaluations Disabled.")
         eval_dataset = None
 
     # Create the GRPOTrainer (It does SAMPLING, GRADING and TRAINING)
@@ -377,7 +399,7 @@ def _main():
     import faulthandler
     import os
     faulthandler.enable()
-    parser = TrlParser((GRPOScriptArguments, GRPOConfig, ModelConfig))
+    parser = TrlParser((GRPOScriptArguments, ExtendedGRPOConfig, ModelConfig))
     script_args, training_args, model_args = parser.parse_args_and_config()
     SystemSettings.LOG_FILENAME = SystemSettings.LOG_FILENAME + f'.{os.environ["RANK"]}'
     set_logging_parameters(

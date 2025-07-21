@@ -35,14 +35,14 @@ inputs:
     description: output folder of model import component containing model artifacts and a metadata file.
     mode: rw_mount
 
-  apply_lora:
-    type: string
-    enum:
-    - "true"
-    - "false"
-    default: "true"
-    optional: true
-    description: If "true" enables LoRA fine tuning.
+  # apply_lora:
+  #   type: string
+  #   enum:
+  #   - "true"
+  #   - "false"
+  #   default: "true"
+  #   optional: true
+  #   description: If "true" enables LoRA fine tuning.
 
   beta:
     type: number
@@ -72,7 +72,7 @@ inputs:
     type: boolean
     default: false
     optional: true
-    description: Whether to run evaluation on the validation set or not. Will be set to True if eval_strategy is different from "no"
+    description: Whether to run evaluation on the validation set or not. Will be set to True if eval_strategy is different from "disable"
 
   epsilon:
     type: number
@@ -89,12 +89,12 @@ inputs:
   eval_strategy:
     type: string
     enum:
-    - "no"
-    - "steps"
-    - "epoch"
-    default: no
+    - disable
+    - steps
+    - epoch
+    default: disable
     optional: true
-    description: Evaluation strategy to use during training. Options are 'no', 'steps', or 'epoch'.
+    description: Evaluation strategy to use during training. Options are "disable", "steps", or "epoch".
 
   gradient_accumulation_steps:
     type: integer
@@ -318,5 +318,3 @@ command: >-
   $[[--save_steps '${{inputs.save_steps}}']]
   $[[--save_total_limit '${{inputs.save_total_limit}}']]
   $[[--report_to 'azure_ml']]
-  $[[--use_peft ${{inputs.apply_lora}}]]
-
