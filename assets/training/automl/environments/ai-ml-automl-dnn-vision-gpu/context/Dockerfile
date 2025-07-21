@@ -13,6 +13,18 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        libpython3.10-stdlib=3.10.12-1~22.04.10 \
+        python3.10=3.10.12-1~22.04.10 \
+        libpython3.10-minimal=3.10.12-1~22.04.10 \
+        python3.10-minimal=3.10.12-1~22.04.10 \
+        libpam0g=1.4.0-11ubuntu2.6 \
+        libpam-modules-bin=1.4.0-11ubuntu2.6 \
+        libpam-modules=1.4.0-11ubuntu2.6 \
+        libpam-runtime=1.4.0-11ubuntu2.6 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -72,6 +84,7 @@ RUN pip install \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-automl-dnn-vision=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
+                'requests>=2.32.4' \
                 'azure-identity>=1.16.1'
                 # end pypi dependencies
 
@@ -81,10 +94,13 @@ RUN pip install cryptography>=42.0.5 \
                 aiohttp>=3.9.4
 
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
-RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install torchvision==0.22.1 torch==2.7.1 || true
-RUN /opt/conda/envs/ptca/bin/pip install torchvision==0.22.1 torch==2.7.1
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
+
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
+
 
 # end pip install
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
