@@ -40,11 +40,6 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-# working
-# Conditionally install flash-attn==2.7.4.post1 from PyPI only if CUDA is available
-# RUN python -c "import torch; exit(0) if torch.cuda.is_available() else exit(1)" && \
-#    pip install --no-cache-dir flash-attn==2.7.4.post1 || echo 'Skipping flash-attn install (no CUDA)'
-
 # Set the env variable for the build
 ENV FLASH_ATTENTION_SKIP_CUDA_BUILD=TRUE
 
