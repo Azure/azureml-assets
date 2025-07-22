@@ -53,14 +53,6 @@ inputs:
     mode: rw_mount
 
   #Finetune parameters
-  apply_lora:
-    type: string
-    enum:
-    - "true"
-    - "false"
-    default: "true"
-    optional: true
-    description: If "true" enables lora.
 
   dataset_name:
     type: string
@@ -89,12 +81,12 @@ inputs:
   eval_strategy:
     type: string
     enum:
-    - "no"
-    - "steps"
-    - "epoch"
-    default: "no"
+    - disable
+    - steps
+    - epoch
+    default: disable
     optional: true
-    description: Evaluation strategy to use during training. Options are 'no', 'steps', or 'epoch'.
+    description: Evaluation strategy to use during training. Options are 'disable', 'steps', or 'epoch'.
 
   num_iterations:
     type: integer
@@ -214,12 +206,6 @@ inputs:
     description: Path to a custom DeepSpeed configuration file in JSON format
     mode: ro_mount
 
-  do_eval:
-    type: boolean
-    default: false
-    optional: true
-    description: Whether to run evaluation on the validation set or not. Will be set to True if eval_strategy is different from "no"
-
   max_prompt_length:
     type: integer
     default: 512
@@ -334,14 +320,12 @@ jobs:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
       shm_size: '${{parent.inputs.shm_size_finetune}}'
     inputs:
-      apply_lora: '${{parent.inputs.apply_lora}}'
       beta: '${{parent.inputs.beta}}'
       dataset_name: '${{parent.inputs.dataset_name}}'
       dataset_prompt_column: '${{parent.inputs.dataset_prompt_column}}'
       dataset_train_split: '${{parent.inputs.dataset_train_split}}'
       dataset_validation_split: '${{parent.inputs.dataset_validation_split}}'
       deepspeed_config: '${{parent.inputs.deepspeed_config}}'
-      do_eval: '${{parent.inputs.do_eval}}'
       epsilon: '${{parent.inputs.epsilon}}'
       eval_steps: '${{parent.inputs.eval_steps}}'
       eval_strategy: '${{parent.inputs.eval_strategy}}'
