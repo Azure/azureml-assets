@@ -41,7 +41,7 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 RUN pip install --no-cache-dir torch==2.7.1
 
 # Accept a build-time argument (default is FALSE = not in CI)
-ARG SKIP_FLASH_ATTN_BUILD=FALSE
+ARG SKIP_FLASH_ATTN_BUILD=TRUE
 ENV SKIP_FLASH_ATTN_BUILD=${SKIP_FLASH_ATTN_BUILD}
 
 # Clone flash-attention repo (so the source is still available)
