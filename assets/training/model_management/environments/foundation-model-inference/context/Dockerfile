@@ -56,7 +56,7 @@ RUN git clone https://github.com/Dao-AILab/flash-attention.git && \
     FLASH_ATTENTION_SKIP_CUDA_BUILD=$SKIP_CUDA_BUILD pip install --no-build-isolation --no-cache-dir . && \
     cd .. && rm -rf flash-attention
 
-RUN pip install --no-cache-dir --no-build-isolation flash-attn
+# RUN pip install --no-cache-dir --no-build-isolation flash-attn
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
