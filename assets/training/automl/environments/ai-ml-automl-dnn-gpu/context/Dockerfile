@@ -121,5 +121,9 @@ RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' || true
 # --- End Vulnerability Fixes ---
+# --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \
+    pip install 'numpy==1.26.4' --force-reinstall && \
+    /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
