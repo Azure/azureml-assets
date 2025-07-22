@@ -255,9 +255,6 @@ def create_model_target_and_data_mapping(command_line_args):
     api_key_env = get_key_from_dict(model_config, API_KEY, "")
     api_key_value = os.environ.get(api_key_env.upper(), "")
 
-    if not api_key_value:
-        raise RuntimeError(f"API key environment variable '{api_key_env.upper()}' is missing or empty!")
-
     model_config_type = str(get_key_from_dict(model_config, TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
 
