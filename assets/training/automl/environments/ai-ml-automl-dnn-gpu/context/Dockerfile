@@ -15,7 +15,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# --- Start Vulnerability Fixes ---
+# Add vulnerability fixes
 RUN apt-get update && \
     apt-get install -y --only-upgrade \
         systemd=249.11-0ubuntu3.16 \
@@ -121,6 +121,5 @@ RUN pip install --upgrade 'pillow==11.3.0'
 RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' || true
-# --- End Vulnerability Fixes ---
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
