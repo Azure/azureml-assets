@@ -1,0 +1,34 @@
+flavors:
+  python_function:
+    artifacts:
+      checkpoint:
+        path: artifacts/vae_8x_4c_2D.ckpt
+        uri: artifacts/vae_8x_4c_2D.ckpt
+      config:
+        path: artifacts/medvae_8x4.yaml
+        uri: artifacts/medvae_8x4.yaml
+      params:
+        path: artifacts/medvae_params.yaml
+        uri: medvae_params.yaml
+    cloudpickle_version: 3.1.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.18
+    streamable: false
+is_signature_from_type_hint: false
+mlflow_version: 3.1.3
+model_id: null
+model_size_bytes: 676038947
+model_uuid: b9e9d16b667841ad9e71db7ee63d178c
+prompts: null
+signature:
+  inputs: '[{"type": "string", "name": "image_path", "required": true}]'
+  outputs: '[{"type": "string", "name": "latent", "required": true}, {"type": "string",
+    "name": "decoded", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-07-22 22:30:51.862739'
