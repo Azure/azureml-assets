@@ -11,7 +11,7 @@ MedVAE is built on a Variational Autoencoder (VAE) architecture, consisting of a
 - **Stage 1**: The autoencoder is trained on a large-scale dataset of over one million medical images to learn a robust general representation.
 - **Stage 2**: The model is fine-tuned using a consistency loss guided by BiomedCLIP embeddings. This stage refines the latent space to ensure that critical, clinically-relevant features are accurately captured and preserved.
 
-The currently packaged model is the **2D MedVAE (f=64, C=4) variant** variant, which downsamples the input image by a factor of 8 in each spatial dimension and produces a four-channel latent representation.
+This model is the **2D MedVAE (f=64, C=4) variant** variant, which downsamples the input image by a factor of 8 in each spatial dimension and produces a four-channel latent representation.
 
 ### Sample inputs and outputs (for real time inference)
 Input:
