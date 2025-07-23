@@ -17,7 +17,7 @@ tags:
   inference_supported_envs:
     - hf
   license: mit
-  author: "Stanford MIMI"
+  author: "StanfordMIMI"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
