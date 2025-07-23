@@ -114,7 +114,7 @@ def process_medvae_output(result, output_path):
 
 3. **Input Schema Requirements**:
    - `image_path`: (string) A URL to an image or a base64-encoded image string.
-   - `decode`: (boolean, optional) If `True`, the model returns both the latent vector and the reconstructed image. If `False` or omitted, it returns only the latent vector.
+   - `decode`: (boolean, optional) If `true`, the model returns both the latent vector and the reconstructed image. If `false` or omitted, it returns only the latent vector.
 
 4. **Supported Medical Image Types and Processing Specifications**:
    - **Modalities**: Optimized for 2D images such as X-ray and full-field digital mammograms.
