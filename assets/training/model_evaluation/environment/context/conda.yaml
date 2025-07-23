@@ -1,7 +1,6 @@
 name: model-evaluation
 channels:
 - conda-forge
-- anaconda
 - pytorch
 - nvidia
 dependencies:
