@@ -5,15 +5,15 @@ USER root:root
 # Update system package index and upgrade Python 3.10 packages to required versions
 RUN apt-get update && \
     apt-get install -y --only-upgrade \
-        libpython3.10-stdlib=3.10.12-1~22.04.10 \
-        python3.10=3.10.12-1~22.04.10 \
-        libpython3.10-minimal=3.10.12-1~22.04.10 \
-        python3.10-minimal=3.10.12-1~22.04.10 \
-        libpam0g=1.4.0-11ubuntu2.6 \
-        libpam-modules-bin=1.4.0-11ubuntu2.6 \
-        libpam-modules=1.4.0-11ubuntu2.6 \
-        libpam-runtime=1.4.0-11ubuntu2.6 && \
-        sudo=1.9.9-1ubuntu2.5 && \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime \
+        sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}'

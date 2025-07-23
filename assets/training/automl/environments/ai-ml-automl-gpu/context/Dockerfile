@@ -18,23 +18,23 @@ RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/v
 RUN apt-get update && echo 'success updated apt-get!'
 RUN apt-get update && \
     apt-get install -y --only-upgrade \
-        sudo=1.9.9-1ubuntu2.5 \
-        systemd=249.11-0ubuntu3.16 \
-        systemd-sysv=249.11-0ubuntu3.16 \
-        libudev1=249.11-0ubuntu3.16 \
-        libpam-systemd=249.11-0ubuntu3.16 \
-        systemd-timesyncd=249.11-0ubuntu3.16 \
-        libsystemd0=249.11-0ubuntu3.16 \
-        libnss-systemd=249.11-0ubuntu3.16 \
-        libpython3.10-stdlib=3.10.12-1~22.04.10 \
-        python3.10=3.10.12-1~22.04.10 \
-        libpython3.10-minimal=3.10.12-1~22.04.10 \
-        python3.10-minimal=3.10.12-1~22.04.10 \
-        libpam0g=1.4.0-11ubuntu2.6 \
-        libpam-modules-bin=1.4.0-11ubuntu2.6 \
-        libpam-modules=1.4.0-11ubuntu2.6 \
-        libpam-runtime=1.4.0-11ubuntu2.6 \
-        libarchive13=3.6.0-1ubuntu1.5
+        sudo \
+        systemd \
+        systemd-sysv \
+        libudev1 \
+        libpam-systemd \
+        systemd-timesyncd \
+        libsystemd0 \
+        libnss-systemd \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime \
+        libarchive13
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
