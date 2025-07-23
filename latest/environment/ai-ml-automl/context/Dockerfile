@@ -12,6 +12,16 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# System package security upgrades
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -52,7 +62,8 @@ RUN pip install \
                 'xgboost==1.5.2' \
                 'prophet==1.1.4' \
                 'inference-schema' \
-                'mltable>=1.0.0'
+                'mltable>=1.0.0' \
+                'pillow==11.3.0'
                 # end pypi dependencies
 # end pip install
 

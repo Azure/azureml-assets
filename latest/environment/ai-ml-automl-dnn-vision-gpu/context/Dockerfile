@@ -13,6 +13,19 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime \
+        sudo && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -72,6 +85,7 @@ RUN pip install \
                 azureml-train-automl-runtime==1.60.0 \
                 azureml-automl-dnn-vision==1.60.0 \
                 'azureml-dataprep>=2.24.4' \
+                'requests>=2.32.4' \
                 'azure-identity>=1.16.1'
                 # end pypi dependencies
 
@@ -81,10 +95,13 @@ RUN pip install cryptography>=42.0.5 \
                 aiohttp>=3.9.4
 
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
-RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install torchvision==0.22.1 torch==2.7.1 || true
-RUN /opt/conda/envs/ptca/bin/pip install torchvision==0.22.1 torch==2.7.1
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
+
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
+
 
 # end pip install
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
