@@ -6,7 +6,7 @@ grpo_chat_completion_pipeline
 
 ### Version
 
-0.0.1.y93
+0.0.1
 
 ### Type
 
