@@ -21,16 +21,20 @@ The model endpoint expects a JSON payload containing the image path (as a URL/lo
 # Example with curl, sending an image URL
 API_KEY="YOUR_API_KEY"
 ENDPOINT_URL="YOUR_ENDPOINT_URL"
+DEPLOYMENT_NAME="DEPLOYMENT_NAME"
+IMAGE_URL="sample_chest_xray.png"
 
 curl -X POST "$ENDPOINT_URL" \
 -H "Authorization: Bearer $API_KEY" \
 -H "Content-Type: application/json" \
+-H "azureml-model-deployment: $DEPLOYMENT_NAME" \
 -d '{
   "input_data": {
-    "columns": ["image_path"],
+    "columns": ["image_path", "decode"],
     "data": [
       [
-        "sample_chest_xray.png"
+        "'"$IMAGE_URL"'",
+        true
       ]
     ]
   }
@@ -110,6 +114,7 @@ def process_medvae_output(result, output_path):
 
 3. **Input Schema Requirements**:
    - `image_path`: (string) A URL to an image or a base64-encoded image string.
+   - `decode`: (boolean, optional) If `True`, the model returns both the latent vector and the reconstructed image. If `False` or omitted, it returns only the latent vector.
 
 4. **Supported Medical Image Types and Processing Specifications**:
    - **Modalities**: Optimized for 2D images such as X-ray and full-field digital mammograms.
