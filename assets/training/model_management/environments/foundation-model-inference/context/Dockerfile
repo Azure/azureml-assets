@@ -34,17 +34,16 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# For local testing
-# Need to copy src code and install in editable mode
-# COPY . .
-# RUN pip install -e ./ --no-cache-dir
-
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 
-RUN pip install torch==2.6.0 --no-build-isolation --no-cache-dir
+# torch installation
+RUN pip install --no-cache-dir torch==2.7.1
 
-RUN pip install flash-attn==2.7.4.post1 --no-build-isolation --no-cache-dir
+# Copy the wheel file into the container
+RUN wget  https://automlcesdkdataresources.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl -O /tmp/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
+
+RUN pip install --no-cache-dir /tmp/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
