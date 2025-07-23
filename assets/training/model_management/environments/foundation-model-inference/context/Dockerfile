@@ -40,7 +40,10 @@ RUN pip install llm-optimized-inference==0.2.31 --no-cache-dir
 # torch installation
 RUN pip install --no-cache-dir torch==2.7.1
 
-RUN pip install flash-attn --no-build-isolation --no-cache-dir
+# Copy the wheel file into the container
+RUN wget  https://automlcesdkdataresources.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl -O /tmp/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
+
+RUN pip install --no-cache-dir /tmp/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
