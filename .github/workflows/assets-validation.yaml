@@ -74,13 +74,21 @@ jobs:
           subscription-id: ${{ env.subscription_id }}
 
       - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir
+        run: pip install -e $scripts_azureml_assets_dir -r azureml-registry-tools
 
       - name: Validate assets
         id: validate_assets
         run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" -n -I -C -b -t -e
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate models with model schema
+        id: validate-models
+        run: python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
+
+      - name: Validate models with model variant schema
+        id: validate-model-variants
+        run: python -u -m azureml.registry.data.validate_model_variant_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
 
       - name: Check PR labels for "mlflow noncompliant exception" label if MLFlow model was detected
         if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected || 'false') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
