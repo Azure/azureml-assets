@@ -47,7 +47,7 @@ jobs:
   validate:
     name: Validate
     needs: check-directory-file-changes
-    if: needs.check-directory-file-changes.outputs.files-changed != ''
+    # if: needs.check-directory-file-changes.outputs.files-changed != ''
     runs-on: ubuntu-latest
     environment: Testing
 
