@@ -74,7 +74,7 @@ jobs:
           subscription-id: ${{ env.subscription_id }}
 
       - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir -r azureml-registry-tools
+        run: pip install -e $scripts_azureml_assets_dir azureml-registry-tools
 
       - name: Validate assets
         id: validate_assets
