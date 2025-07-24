@@ -12,7 +12,7 @@ azureml-automl-core==1.60.0
 azureml-telemetry==1.60.0
 #azureml-automl-dnn-vision==None
 pyarrow==14.0.2
-GitPython==3.1.44
+GitPython==3.1.45
 paramiko==3.5.1
 cryptography==44.0.2
 ####
