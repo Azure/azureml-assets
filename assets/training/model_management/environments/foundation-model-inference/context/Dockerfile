@@ -4,7 +4,10 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Etc/UTC \
     DEBIAN_FRONTEND=noninteractive
-RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
+RUN rm -f /etc/apt/sources.list.d/cuda* && \
+    apt update && apt upgrade -y && \
+    apt install -y software-properties-common && \
+    add-apt-repository -y ppa:deadsnakes/ppa
 RUN apt install git -y
 
 ENV MINICONDA_VERSION py310_23.10.0-1
