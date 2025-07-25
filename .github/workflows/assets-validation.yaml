@@ -91,7 +91,7 @@ jobs:
         run: python -u -m azureml.registry.data.validate_model_variant_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
 
       - name: Check PR labels for "mlflow noncompliant exception" label if MLFlow model was detected
-        if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected || 'false') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
+        if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected == 'true') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
         run: |
           echo "::error::This PR contains an MLFlow model which is banned from the model catalog. Please reach out to System Registry Content team if you have any questions."
           exit 1
