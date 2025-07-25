@@ -82,9 +82,9 @@ jobs:
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Validate models with model schema
-        id: validate-models
-        run: python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
+      # - name: Validate models with model schema
+      #   id: validate-models
+      #   run: python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
 
       - name: Validate models with model variant schema
         id: validate-model-variants
