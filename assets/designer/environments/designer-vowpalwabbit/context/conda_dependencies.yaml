@@ -6,4 +6,4 @@ dependencies:
   - python=3.9.18
   - vowpalwabbit=8.8.1
   - pip:
-      - azureml-designer-vowpal-wabbit-modules==0.0.61
+      - azureml-designer-vowpal-wabbit-modules==0.0.62
