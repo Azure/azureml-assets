@@ -90,6 +90,9 @@ jobs:
         id: validate-model-variants
         run: python -u -m azureml.registry.data.validate_model_variant_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
 
+      - name: Debug mlflow_model_detected value
+        run: echo "mlflow_model_detected value is '${{ steps.validate_assets.outputs.mlflow_model_detected }}'"
+
       - name: Check PR labels for "mlflow noncompliant exception" label if MLFlow model was detected
         if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected == 'true') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
         run: |
