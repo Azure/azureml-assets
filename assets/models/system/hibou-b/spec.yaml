@@ -10,7 +10,7 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  task: embedding
+  task: embeddings
   industry: health-and-life-sciences
   Preview: ""
   licenseDescription: "This model is provided under the License Terms available at <https://github.com/HistAI/hibou/blob/main/LICENSE>."
