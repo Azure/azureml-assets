@@ -15,7 +15,7 @@ on:
         value: ${{ jobs.check-directory-file-changes.outputs.files-changed }}
       files-added:
         description: List of added files under given directory
-        value: ${{ jobs.check-directory-file-changes.outputs.added-files }}
+        value: ${{ jobs.check-directory-file-changes.outputs.files-added }}
 
 defaults:
   run:
