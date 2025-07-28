@@ -1003,7 +1003,8 @@ def validate_assets(input_dirs: List[Path],
                     check_categories: bool = False,
                     check_build_context: bool = False,
                     check_tests: bool = False,
-                    check_environment_version: bool = False) -> bool:
+                    check_environment_version: bool = False,
+                    added_files: List[Path] = None) -> bool:
     """Validate assets.
 
     Args:
@@ -1018,6 +1019,7 @@ def validate_assets(input_dirs: List[Path],
         check_build_context (bool, optional): Whether to check environment build context. Defaults to False.
         check_tests (bool, optional): Whether to check test references. Defaults to False.
         check_environment_version (bool, optional): Whether to check environment version. Defaults to False.
+        added_files (List[Path], optional): List of added files, used for validating new assets. Defaults to None.
 
     Raises:
         ValidationException: If validation fails.
@@ -1027,6 +1029,7 @@ def validate_assets(input_dirs: List[Path],
     """
     # Gather list of just changed assets, for later filtering
     changed_assets = util.find_asset_config_files(input_dirs, asset_config_filename, changed_files) if changed_files else None  # noqa: E501
+    added_assets = util.find_asset_config_files(input_dirs, asset_config_filename, added_files) if added_files else None
     validated_model_map = get_validated_models_assets_map(model_validation_results_dir)
 
     # Find assets under input dirs
@@ -1109,9 +1112,11 @@ def validate_assets(input_dirs: List[Path],
             if check_tests:
                 error_count += validate_tests(asset_config)
 
-            # Validate if MLFlow model
+            # Validate if MLFlow model if new asset
             if asset_config.type == assets.AssetType.MODEL:
-                validate_mlflow_model(asset_config)
+                if added_assets and asset_config_path in added_assets:
+                    logger.print(f"Validating type of new model: {asset_config.name}")
+                    validate_mlflow_model(asset_config)
 
             if asset_config.type == assets.AssetType.ENVIRONMENT:
                 # Validate Dockerfile
@@ -1223,11 +1228,14 @@ if __name__ == '__main__':
                         help="Check test references")
     parser.add_argument("-e", "--check-environment-version", action="store_true",
                         help="Check environment version")
+    parser.add_argument("-d", "--added-files",
+                        help="Comma-separated list of added files, used to validate new assets")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
+    added_files = [Path(f) for f in args.added_files.split(",")] if args.added_files else []
 
     # Share asset naming convention URL
     if args.check_names:
@@ -1248,6 +1256,7 @@ if __name__ == '__main__':
                               check_build_context=args.check_build_context,
                               model_validation_results_dir=args.model_validation_results_dir,
                               check_tests=args.check_tests,
-                              check_environment_version=args.check_environment_version)
+                              check_environment_version=args.check_environment_version,
+                              added_files=added_files)
     if not success:
         sys.exit(1)
