@@ -64,7 +64,6 @@ jobs:
           echo "files-changed=${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}" >> "$GITHUB_OUTPUT"
           echo "files-added=${{ steps.changed-scripts.outputs.added_files }}" >> "$GITHUB_OUTPUT"
 
-          cat "$GITHUB_OUTPUT"
     outputs:
       files-changed: ${{ steps.check-changed-files.outputs.files-changed }}
       files-added: ${{ steps.check-changed-files.outputs.files-added }}
