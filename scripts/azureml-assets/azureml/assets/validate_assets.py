@@ -1029,7 +1029,7 @@ def validate_assets(input_dirs: List[Path],
     """
     # Gather list of just changed assets, for later filtering
     changed_assets = util.find_asset_config_files(input_dirs, asset_config_filename, changed_files) if changed_files else None  # noqa: E501
-    added_assets = util.find_asset_config_files(input_dirs, asset_config_filename, added_files) if added_files else None
+    added_assets = util.find_asset_config_files(input_dirs, asset_config_filename, added_files) if added_files else None  # noqa: E501
     validated_model_map = get_validated_models_assets_map(model_validation_results_dir)
 
     # Find assets under input dirs
