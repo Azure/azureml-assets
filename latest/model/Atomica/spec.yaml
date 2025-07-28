@@ -14,7 +14,7 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  task: embedding
+  task: embeddings
   industry: health-and-life-sciences
   Preview: ""
   licenseDescription: "MIT License\n\nCopyright (c) 2024 Artificial Intelligence for\

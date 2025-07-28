@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by MMTracking Video Finetune components
 
 name: "acft-mmtracking-video-gpu"
-version: "59"
+version: "60"
 
 build:
   path: "context"
