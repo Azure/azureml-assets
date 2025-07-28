@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: Virchow
+name: VirchowTest
 path: ./
 
 properties:
@@ -32,4 +32,3 @@ tags:
       Standard_ND40rs_v2,
     ]
 version: 2
-# test update
