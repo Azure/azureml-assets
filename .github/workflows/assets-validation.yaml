@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   check-directory-file-changes:
-    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@main
+    uses: Azure/azureml-assets/.github/workflows/check-changed-files.yaml@mlflow-check-update
     with:
       folder_path: "assets/**"
       forked_pr_input: false
