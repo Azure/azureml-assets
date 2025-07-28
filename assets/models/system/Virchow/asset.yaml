@@ -2,4 +2,3 @@ extra_config: model.yaml
 spec: spec.yaml
 type: model
 categories: ["Foundation Models"]
-# test update
