@@ -176,7 +176,7 @@ EXIT_CODE=$?
 
 COPY_OUTPUTS="${COPY_OUTPUTS:-1}"
 if [[ "$COPY_OUTPUTS" == "1" ]]; then
-  rsync -av --delete \
+  rsync -av --delete --quiet \
     --exclude="__pycache__" \
     --exclude="azureml-logs" \
     --exclude="logs" \
