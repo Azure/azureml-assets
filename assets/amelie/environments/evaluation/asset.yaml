@@ -1,0 +1,6 @@
+name: amelie-evaluation
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["Amelie", "Python", "Models"]
