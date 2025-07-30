@@ -12,8 +12,9 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules-bin \
         libpam-modules \
-        libpam-runtime \
-        sudo && \
+        libpam-runtime && \
+    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
+    apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}'
