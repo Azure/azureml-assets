@@ -3,7 +3,7 @@ type: command
 
 tags:
   Preview: ""
-version: 0.0.81
+version: 0.0.82
 name: llm_rag_register_mlindex_asset
 display_name: LLM - Register Vector Index Asset
 is_deterministic: true
@@ -26,7 +26,7 @@ outputs:
     type: uri_file
     description: "Asset ID of the newly created data asset"
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings@76
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.register_mlindex

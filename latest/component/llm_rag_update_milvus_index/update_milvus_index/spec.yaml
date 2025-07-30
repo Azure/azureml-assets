@@ -3,7 +3,7 @@ type: command
 
 tags:
   Preview: ""
-version: 0.0.37
+version: 0.0.38
 name: llm_rag_update_milvus_index
 display_name: LLM - Update Milvus Index
 is_deterministic: true
@@ -41,7 +41,7 @@ outputs:
     description: "Uri folder containing the MLIndex yaml describing the newly created/updated\
       \ Milvus collection/index."
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings@76
 code: '../src/'
 
 command: >-
