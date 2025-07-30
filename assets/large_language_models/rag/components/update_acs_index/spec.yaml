@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.81
+version: 0.0.82
 name: llm_rag_update_acs_index
 display_name: LLM - Update ACS Index
 is_deterministic: true
@@ -41,7 +41,7 @@ outputs:
     type: uri_folder
     description: "Uri folder containing MLINdex yaml describing the newly created/updated ACS index"
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings@76
 code: '../src/'
 
 command: >-
