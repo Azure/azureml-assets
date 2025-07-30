@@ -14,7 +14,7 @@ os_type: linux
 
 tags:
   Preview: ""
-  Pytorch: 2.7.0-cuda12.6-cudnn9-runtime
+  PyTorch: 2.7.0-cuda12.6-cudnn9-runtime
   Python: 3.11
   Training: ""
   Amelie: ""
