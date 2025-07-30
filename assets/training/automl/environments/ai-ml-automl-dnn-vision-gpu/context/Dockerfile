@@ -94,6 +94,11 @@ RUN pip install cryptography>=42.0.5 \
                 pyarrow==14.0.2 \
                 aiohttp>=3.9.4
 
+# Patch for pillow vulnerability
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
+                
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true

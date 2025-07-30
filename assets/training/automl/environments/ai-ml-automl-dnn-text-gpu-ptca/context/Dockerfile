@@ -47,4 +47,8 @@ RUN pip install requests==2.32.4
 RUN pip install urllib3==2.5.0
 RUN opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 
+# Patch for Pillow vulnerability
+RUN pip install --upgrade 'pillow==11.3.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
+
 RUN pip list
