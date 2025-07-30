@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.86 (2025-07-28)
+### 🚀 New Features
+- [#4352](https://github.com/Azure/azureml-assets/pull/4352) Detect if MLFlow model is brand new
+
 ## 1.16.85 (2025-06-11)
 ### 🚀 New Features
 - [#4256](https://github.com/Azure/azureml-assets/pull/4256) Surface improved error message if job component version is None
