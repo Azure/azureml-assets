@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/amelie-evaluation
+  name: azureml/curated/amelie-training
   os: linux
   context:
     dir: context

@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  Python environment for running Amelie jobs.
+  (Private Preview) An environment used by Azure Amelie Agent for training models. This environment is part of a preview feature, and subject to the supplemental terms of use for Microsoft Azure Previews (https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"
@@ -16,3 +16,5 @@ tags:
   Preview: ""
   Pytorch: 2.7.0-cuda12.6-cudnn9-runtime
   Python: 3.11
+  Training: ""
+  Amelie: ""
