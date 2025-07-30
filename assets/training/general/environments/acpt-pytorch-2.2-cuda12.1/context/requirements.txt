@@ -15,6 +15,7 @@ urllib3==2.5.0
 requests==2.32.4
 pillow==11.3.0
 torch==2.7.1
+transformers==4.41.1
 cryptography>=42.0.4
 aiohttp>=3.8.5
 py-spy==0.3.12
