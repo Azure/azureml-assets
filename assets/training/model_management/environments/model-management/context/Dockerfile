@@ -4,21 +4,12 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
-# ✅ Fix Go stdlib CVEs by installing Go 1.24.4
-RUN rm -rf /usr/local/go && \
-    wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
+# Upgrade Go to 1.24.4 to fix CVE-2025-22874
+RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
     rm go1.24.4.linux-amd64.tar.gz
 
 ENV PATH="/usr/local/go/bin:$PATH"
-
-# ✅ Secure AzCopy install (built with Go >=1.24.4)
-RUN echo "Downloading secure AzCopy..." && \
-    wget https://azcopyvnext.azureedge.net/release20240702/azcopy_linux_amd64_10.24.0.tar.gz -O azcopy.tar.gz && \
-    tar -xzf azcopy.tar.gz && \
-    cp ./azcopy_linux_amd64_*/azcopy /usr/bin/azcopy && \
-    chmod +x /usr/bin/azcopy && \
-    rm -rf azcopy.tar.gz azcopy_linux_amd64_*
 
 COPY requirements.txt .
 
