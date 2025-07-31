@@ -14,6 +14,12 @@ RUN echo "Downloading azcopy to file azcopy.tar ....";\
     rm -rf ./azcopy_linux_amd64_*;\
     which azcopy | grep -o azcopy > /dev/null &&  echo "azcopy not installed" || echo "azcopy installed";
 
+RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
+    rm go1.24.4.linux-amd64.tar.gz
+
+ENV PATH="/usr/local/go/bin:$PATH"
+
 COPY requirements.txt .
 
 # This line is added because azureml-automl-dnn-vision depends on python 3.9.
