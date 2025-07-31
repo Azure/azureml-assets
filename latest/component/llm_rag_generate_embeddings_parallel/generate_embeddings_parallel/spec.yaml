@@ -69,7 +69,7 @@ task:
   type: run_function
   code: '../src'
   entry_script: embeddings/tasks/embed_prs.py
-  environment: azureml:llm-rag-embeddings@76
+  environment: azureml:llm-rag-embeddings:76
   program_arguments: >-
     --output_data ${{outputs.embeddings}}
     $[[--embeddings_container ${{inputs.embeddings_container}}]]

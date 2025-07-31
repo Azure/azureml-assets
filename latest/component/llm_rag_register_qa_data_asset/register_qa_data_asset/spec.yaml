@@ -34,7 +34,7 @@ inputs:
       \ AzureML Dataset"
 
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src/embeddings/'
 command: >-
   python register_qa_data.py

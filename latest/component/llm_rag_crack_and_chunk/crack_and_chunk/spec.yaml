@@ -85,7 +85,7 @@ outputs:
     description: "Uri Folder containing chunks. Each chunk will be a separate file\
       \ in the folder"
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.crack_and_chunk

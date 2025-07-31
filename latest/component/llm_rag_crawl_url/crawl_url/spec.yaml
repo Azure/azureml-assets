@@ -55,7 +55,7 @@ inputs:
     default: false
     description: Whether to support crawling http links.
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 
 command: >-

@@ -41,7 +41,7 @@ outputs:
     description: "Uri folder containing the MLIndex yaml describing the newly created/updated\
       \ Milvus collection/index."
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 
 command: >-
