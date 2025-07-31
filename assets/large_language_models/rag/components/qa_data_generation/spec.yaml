@@ -57,7 +57,7 @@ outputs:
     type: uri_folder
     description: "csv or jsonl file containing the question, answer, context, and metadata sets"
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src'  # nothing used from here
 
 command: >-

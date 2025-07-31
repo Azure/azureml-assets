@@ -27,7 +27,7 @@ outputs:
     type: uri_file
     description: "Asset ID of the newly created data asset"
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.register_mlindex

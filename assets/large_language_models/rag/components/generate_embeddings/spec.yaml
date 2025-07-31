@@ -53,7 +53,7 @@ outputs:
     description: "Where to save data with embeddings. This should be a subfolder of previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
     mode: rw_mount
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src'
 
 command: >-
