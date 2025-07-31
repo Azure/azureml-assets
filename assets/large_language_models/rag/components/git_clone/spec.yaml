@@ -35,7 +35,7 @@ outputs:
     description: "Uri folder containing all files from the git repo"
     mode: upload
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 
 command: >-

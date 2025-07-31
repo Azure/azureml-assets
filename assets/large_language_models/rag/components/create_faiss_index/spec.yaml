@@ -24,7 +24,7 @@ outputs:
     type: uri_folder
     description: "Uri Folder containing MLIndex yaml file and faiss/pickle files that hold data for the index"
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 
 command: >-

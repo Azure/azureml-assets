@@ -38,7 +38,7 @@ outputs:
     type: uri_folder
     description: "Uri folder containing an MLIndex yaml representing the ACS Index. Can be used with azureml-rag package"
 
-environment: azureml:llm-rag-embeddings@76
+environment: azureml:llm-rag-embeddings:76
 code: '../src/embeddings/'
 
 command: >-
