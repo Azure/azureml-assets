@@ -4,6 +4,13 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
+# Upgrade Go to 1.24.4 to fix CVE-2025-22874
+RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
+    rm go1.24.4.linux-amd64.tar.gz
+
+ENV PATH="/usr/local/go/bin:$PATH"
+
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
     wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar --no-verbose;\
