@@ -4,16 +4,6 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
-# azcopy install starts
-RUN echo "Downloading azcopy to file azcopy.tar ....";\
-    wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar --no-verbose;\
-    tar -xvf azcopy.tar;\
-    mkdir -p ./azcopy/bin/;\
-    cp ./azcopy_linux_amd64_*/azcopy ./bin/;\
-    rm azcopy.tar;\
-    rm -rf ./azcopy_linux_amd64_*;\
-    which azcopy | grep -o azcopy > /dev/null &&  echo "azcopy not installed" || echo "azcopy installed";
-
 RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
     rm go1.24.4.linux-amd64.tar.gz
