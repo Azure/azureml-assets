@@ -29,6 +29,12 @@ RUN apt-get update && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
+# Upgrade sudo to patch known vulnerability
+RUN apt-get update && \
+    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
+    apt-mark hold sudo && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
@@ -49,6 +55,11 @@ RUN opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
 RUN opt/conda/envs/ptca/bin/pip install --upgrade urllib3 || true
 RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
+# Patch pillow vulnerability
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade pillow==11.3.0 || true
+RUN /opt/conda/bin/pip install --upgrade pillow==11.3.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==11.3.0 || true
+
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 # dummy number to change when needing to force rebuild without changing the definition: 1

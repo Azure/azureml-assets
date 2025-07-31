@@ -27,3 +27,8 @@ dependencies:
   - debugpy~=1.6.3
   - cryptography>=41.0.4
   - idna>=3.7
+  - flask-cors==6.0.0
+  - requests==2.32.4
+  - urllib3==2.5.0
+  - protobuf==4.25.8
+  - pillow==11.3.0
