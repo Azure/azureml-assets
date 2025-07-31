@@ -13,15 +13,12 @@ RUN rm -rf /usr/local/go && \
 ENV PATH="/usr/local/go/bin:$PATH"
 
 # ✅ Secure AzCopy install (built with Go >=1.24.4)
-RUN echo "Downloading secure AzCopy (v10.24.0)..." && \
+RUN echo "Downloading secure AzCopy..." && \
     wget https://azcopyvnext.azureedge.net/release20240702/azcopy_linux_amd64_10.24.0.tar.gz -O azcopy.tar.gz && \
     tar -xzf azcopy.tar.gz && \
-    mkdir -p ./azcopy/bin/ && \
-    cp ./azcopy_linux_amd64_*/azcopy ./bin/azcopy && \
-    chmod +x ./bin/azcopy && \
-    rm azcopy.tar.gz && \
-    rm -rf ./azcopy_linux_amd64_* && \
-    ./bin/azcopy --version
+    cp ./azcopy_linux_amd64_*/azcopy /usr/bin/azcopy && \
+    chmod +x /usr/bin/azcopy && \
+    rm -rf azcopy.tar.gz azcopy_linux_amd64_*
 
 COPY requirements.txt .
 
