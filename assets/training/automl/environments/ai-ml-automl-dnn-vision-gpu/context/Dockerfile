@@ -93,7 +93,7 @@ RUN pip install \
 # Update cryptography and pyarow for fixing vulnerability. Doing it  separately from pip install to avoid conflict with other packages
 RUN pip install cryptography>=42.0.5 \
                 pyarrow==14.0.2 \
-                aiohttp>=3.9.4
+                aiohttp>=3.12.14
 
 # Patch for pillow vulnerability
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
