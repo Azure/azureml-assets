@@ -1,24 +1,21 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # Upgrade known vulnerable packages again just to be safe
 RUN pip install --upgrade \
-    torch==2.7.1 \
     requests==2.32.4 \
     urllib3==2.5.0 \
     pillow==11.3.0 || true
 
 # Repeat for other envs if applicable
 RUN /opt/conda/bin/pip install --upgrade \
-    torch==2.7.1 \
     requests==2.32.4 \
     urllib3==2.5.0 \
     pillow==11.3.0 || true
 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-    torch==2.7.1 \
     requests==2.32.4 \
     urllib3==2.5.0 \
     pillow==11.3.0 || true
