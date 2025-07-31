@@ -21,8 +21,9 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules-bin \
         libpam-modules \
-        libpam-runtime \
-        sudo && \
+        libpam-runtime && \
+    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
+    apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
@@ -103,4 +104,9 @@ RUN /opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || tru
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+
+# Patch for pillow vulnerability
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
 # end pip install
