@@ -12,15 +12,16 @@ RUN rm -rf /usr/local/go && \
 
 ENV PATH="/usr/local/go/bin:$PATH"
 
-# azcopy install starts
-RUN echo "Downloading azcopy to file azcopy.tar ....";\
-    wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar --no-verbose;\
-    tar -xvf azcopy.tar;\
-    mkdir -p ./azcopy/bin/;\
-    cp ./azcopy_linux_amd64_*/azcopy ./bin/;\
-    rm azcopy.tar;\
-    rm -rf ./azcopy_linux_amd64_*;\
-    which azcopy | grep -o azcopy > /dev/null &&  echo "azcopy not installed" || echo "azcopy installed";
+# ✅ Secure AzCopy install (built with Go >=1.24.4)
+RUN echo "Downloading secure AzCopy (v10.24.0)..." && \
+    wget https://azcopyvnext.azureedge.net/release20240702/azcopy_linux_amd64_10.24.0.tar.gz -O azcopy.tar.gz && \
+    tar -xzf azcopy.tar.gz && \
+    mkdir -p ./azcopy/bin/ && \
+    cp ./azcopy_linux_amd64_*/azcopy ./bin/azcopy && \
+    chmod +x ./bin/azcopy && \
+    rm azcopy.tar.gz && \
+    rm -rf ./azcopy_linux_amd64_* && \
+    ./bin/azcopy --version
 
 COPY requirements.txt .
 
@@ -39,5 +40,5 @@ RUN rm -rf /opt/conda/lib/python3.13 || true
 # List pip packages
 RUN pip list
 
-## Delete
+# Cleanup
 RUN rm requirements.txt
