@@ -34,14 +34,14 @@ RUN pip install torch-ort==1.18.0 && TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9
 
 RUN pip uninstall -y onnxruntime
 
-RUN pip install transformers==4.50.0
+RUN pip install transformers==4.52.1
 RUN pip install optimum==1.23.3
 RUN pip install accelerate==0.33.0
 RUN pip install deepspeed~=0.15.1
 
 # Address vulnerabilities
 RUN pip install pyarrow==14.0.1
-RUN pip install aiohttp==3.10.11
+RUN pip install aiohttp==3.12.14
 RUN pip install idna==3.7
 RUN pip install requests==2.32.4
 RUN pip install urllib3==2.5.0

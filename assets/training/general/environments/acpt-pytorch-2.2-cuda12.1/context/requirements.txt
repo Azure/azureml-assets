@@ -13,7 +13,7 @@ regex
 pybind11
 urllib3>=1.26.18
 cryptography>=42.0.4
-aiohttp>=3.8.5
+aiohttp>=3.12.14
 py-spy==0.3.12
 debugpy~=1.6.3
 ipykernel~=6.0

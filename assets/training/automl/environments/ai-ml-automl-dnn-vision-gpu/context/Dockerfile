@@ -92,7 +92,7 @@ RUN pip install \
 # Update cryptography and pyarow for fixing vulnerability. Doing it  separately from pip install to avoid conflict with other packages
 RUN pip install cryptography>=42.0.5 \
                 pyarrow==14.0.2 \
-                aiohttp>=3.9.4
+                aiohttp>=3.12.14
 
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
