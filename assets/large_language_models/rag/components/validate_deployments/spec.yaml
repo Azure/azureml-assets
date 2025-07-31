@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.87
+version: 0.0.88
 name: llm_rag_validate_deployments
 display_name: LLM - Validate Deployments
 is_deterministic: false
@@ -43,7 +43,7 @@ outputs:
   output_data:
     type: uri_file
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src'
 
 command: >-

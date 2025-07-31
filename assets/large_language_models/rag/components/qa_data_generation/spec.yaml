@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.82
+version: 0.0.83
 name: llm_rag_qa_data_generation
 display_name: LLM - Generate QnA Test Data
 is_deterministic: true
@@ -57,7 +57,7 @@ outputs:
     type: uri_folder
     description: "csv or jsonl file containing the question, answer, context, and metadata sets"
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src'  # nothing used from here
 
 command: >-
