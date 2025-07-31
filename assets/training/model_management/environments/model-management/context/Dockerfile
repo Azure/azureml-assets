@@ -22,6 +22,8 @@ RUN pip install --ignore-requires-python azureml-automl-dnn-vision
 
 RUN pip install -r requirements.txt --no-cache-dir
 
+RUN pip install --upgrade nltk==3.9
+
 # Adding this to exclude Python 3.13 packages from the setuptools library fix
 RUN rm -rf /opt/conda/lib/python3.13 || true
 
