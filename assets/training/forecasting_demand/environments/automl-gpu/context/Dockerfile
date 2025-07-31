@@ -41,10 +41,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # dummy number to change when needing to force rebuild without changing the definition: 2
 
 # Address vulnerabilities
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.7.1' 'torchvision==0.22.1' || true
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.7.1' 'torchvision==0.22.1' 'pillow==11.3.0' || true
 # If ptca env exists (for miniconda setups)
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.7.1' 'torchvision==0.22.1' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.7.1' 'torchvision==0.22.1' 'pillow==11.3.0' || true
 
 # Avoid ImportError: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.29' not found
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$AZUREML_CONDA_ENVIRONMENT_PATH/lib
