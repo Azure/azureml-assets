@@ -4,8 +4,9 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
-# Upgrade Go to 1.24.4 to fix CVE-2025-22874
-RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
+# ✅ Fix Go stdlib CVEs by installing Go 1.24.4
+RUN rm -rf /usr/local/go && \
+    wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
     rm go1.24.4.linux-amd64.tar.gz
 
