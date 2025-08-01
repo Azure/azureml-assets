@@ -26,7 +26,7 @@ tags:
     Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 12
+version: 13
 description: |
   Biomedical image analysis is fundamental for biomedical discovery in cell biology, pathology, radiology, and many other biomedical domains. MedImageParse is a biomedical foundation model for imaging parsing that can jointly conduct segmentation, detection, and recognition across 9 imaging modalities. Through joint learning, we can improve accuracy for individual tasks and enable novel applications such as segmenting all relevant objects in an image through a text prompt, rather than requiring users to laboriously specify the bounding box for each object. 
 
