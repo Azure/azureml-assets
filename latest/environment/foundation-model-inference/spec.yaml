@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used for deploying model to use DS-MII or vLLM for inference
 
 name: "foundation-model-inference"
-version: "77"
+version: "78"
 
 build:
   path: "context"
