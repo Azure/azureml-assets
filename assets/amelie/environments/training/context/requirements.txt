@@ -123,7 +123,7 @@ torchmetrics==1.2.0
 torchsnapshot==0.1.0
 torchvision==0.22.1+cu126
 tqdm==4.67.1
-transformers==4.50.0
+transformers==4.52.1
 triton==3.3.1
 tutel==0.3
 typing_extensions==4.14.1
