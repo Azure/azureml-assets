@@ -214,7 +214,7 @@ jsonpointer==3.0.0
 jsonschema==4.19.2
 jsonschema-specifications==2024.10.1
 jupyter-client==8.6.3
-jupyter-core==5.7.2
+jupyter-core==5.8.1
 kaggle==1.6.17
 kornia==0.6.10
 kornia-rs==0.1.8
