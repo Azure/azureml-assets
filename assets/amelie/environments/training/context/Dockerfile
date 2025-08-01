@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/curated/acpt-pytorch-2.2-cuda12.1:staging
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch27x:biweekly.202507.2
 
 WORKDIR /workspace
 
