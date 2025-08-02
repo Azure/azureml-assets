@@ -1,0 +1,6 @@
+name: amelie-training
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["Amelie", "Python", "Training"]

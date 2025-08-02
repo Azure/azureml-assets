@@ -1,0 +1,18 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  (Private Preview) An environment used by Azure Amelie Agent for training models. This environment is part of a preview feature, and subject to the supplemental terms of use for Microsoft Azure Previews (https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  Preview: ""
+  Python: 3.11
+  Training: ""
