@@ -16,7 +16,34 @@ ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 RUN apt-get update && echo 'success updated apt-get!'
-RUN apt-get install -y --no-install-recommends cmake libboost-dev libboost-system-dev libboost-filesystem-dev
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        sudo \
+        systemd \
+        systemd-sysv \
+        libudev1 \
+        libpam-systemd \
+        systemd-timesyncd \
+        libsystemd0 \
+        libnss-systemd \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime \
+        libarchive13
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cmake \
+        libboost-dev \
+        libboost-system-dev \
+        libboost-filesystem-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
@@ -73,6 +100,11 @@ RUN pip install \
                 'requests>=2.31.0' \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
-# end pip install
+
+# Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
+RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0'|| true
+RUN /azureml-envs/azureml-automl-dnn-gpu/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' || true
+
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

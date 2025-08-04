@@ -155,14 +155,14 @@ class BuiltInEvaluatorConstructor:
             if is_rai_evaluator:
                 logger.info(f"Evaluator id: {self.evaluator_configuration['Id']} provided. Adding credentials")
                 # Add project URL and credential if present
-                if self.evaluator_configuration.get("initParams") is None:
-                    logger.info("Evaluator configuration initParams is None. Create empty dictionary")
-                    self.evaluator_configuration["initParams"] = {}
+                if self.evaluator_configuration.get("InitParams") is None:
+                    logger.info("Evaluator configuration InitParams is None. Create empty dictionary")
+                    self.evaluator_configuration["InitParams"] = {}
 
-                self.evaluator_configuration["initParams"]["credential"] = AzureMLOnBehalfOfCredential()
+                self.evaluator_configuration["InitParams"]["credential"] = AzureMLOnBehalfOfCredential()
 
             evaluator_class = self.evaluator_classes[evaluator_name]
-            init_params = self.evaluator_configuration.get("initParams", {})
+            init_params = self.evaluator_configuration.get("InitParams", {})
 
             return evaluator_class(**init_params)
 
@@ -211,7 +211,8 @@ def initialize_evaluators(command_line_args):
     for evaluator_name, evaluator in evaluators_o.items():
         init_params = evaluator["InitParams"]
         update_value_in_dict(init_params, "AZURE_OPENAI_API_KEY", lambda x: os.environ[x.upper()])
-        if evaluator["Id"].startswith("aoai://"):
+        if evaluator["Id"].startswith("azureai://") and "azure-openai" in evaluator["Id"]:
+            logger.info(f"Found azure-openai built-in evaluator: {evaluator_name}")
             grader = _convert_remote_eval_params_to_grader(evaluator["Id"], init_params)
             evaluators[evaluator_name] = grader
         # check if evaluator id is new format
@@ -253,9 +254,6 @@ def create_model_target_and_data_mapping(command_line_args):
 
     api_key_env = get_key_from_dict(model_config, API_KEY, "")
     api_key_value = os.environ.get(api_key_env.upper(), "")
-
-    if not api_key_value:
-        raise RuntimeError(f"API key environment variable '{api_key_env.upper()}' is missing or empty!")
 
     model_config_type = str(get_key_from_dict(model_config, TYPE, ""))
     logger.info(f"  - Type: {model_config_type}")
