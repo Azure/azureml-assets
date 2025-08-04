@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:biweekly.202507.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:biweekly.202507.2
 
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
@@ -52,6 +52,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 RUN pip install pyarrow==14.0.2
 RUN pip install torch==2.7.1 torchvision==0.22.1
 RUN opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install 2.7.1 torchvision==0.22.1 || true
 RUN opt/conda/envs/ptca/bin/pip install --upgrade urllib3 || true
 RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true

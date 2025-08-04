@@ -4,7 +4,7 @@ description: >-
   Environment used by proxy AOAI components
 
 name: "aoai-data-upload-finetune"
-version: "33"
+version: "34"
 
 build:
   path: "context"
