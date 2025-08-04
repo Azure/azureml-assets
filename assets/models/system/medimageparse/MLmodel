@@ -14,8 +14,8 @@ flavors:
     python_version: 3.9.19
     streamable: false
 mlflow_version: 2.16.0
-model_size_bytes: 1802811987
-model_uuid: b06e9c81acff49e0990cd94799897046
+model_size_bytes: 2750247148
+model_uuid: 620bda70a9114bbda8a780ef590f4272
 signature:
   inputs: '[{"type": "binary", "name": "image", "required": true}, {"type": "string",
     "name": "text", "required": true}]'
@@ -24,7 +24,7 @@ signature:
   params: null
 utc_time_created: '2024-09-27 00:51:53.191138'
 metadata:
-  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
   base_model_name: MedImgeParse
   base_model_task: image-segmentation
   is_acft_model: true
