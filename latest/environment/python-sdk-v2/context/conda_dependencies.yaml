@@ -10,6 +10,6 @@ dependencies:
     - cryptography==45.0.5
     - certifi==2025.8.3
     - urllib3==2.5.0
-    - paramiko==3.5.1
+    - paramiko==4.0.0
     - idna==3.10
     - tqdm==4.67.1

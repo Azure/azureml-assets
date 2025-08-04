@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by Model Management components
 
 name: "model-management"
-version: "55"
+version: "56"
 
 build:
   path: "context"
