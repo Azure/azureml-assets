@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
@@ -105,8 +105,8 @@ RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
 
 
 # end pip install
