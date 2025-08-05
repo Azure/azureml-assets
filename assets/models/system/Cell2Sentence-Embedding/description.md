@@ -79,15 +79,15 @@ def preprocess_data(adata: anndata.AnnData, min_genes: int = 200, min_cells: int
     logger.info(f"Preprocessing complete. Final shape: {adata.shape}")
     return adata
 
-def validate_payload_size(payload_dict, max_size_mb=1.4):
-    """Validate payload size limits for Azure ML."""
+def validate_payload_size(payload_dict, max_size_mb=100):
+    """Validate payload size limits."""
     json_str = json.dumps(payload_dict)
     total_size_mb = len(json_str.encode('utf-8')) / 1024 / 1024
     
     logger.info(f"Payload size: {total_size_mb:.2f} MB")
     
     if total_size_mb > max_size_mb:
-        logger.warning(f"Payload size ({total_size_mb:.2f} MB) exceeds Azure ML limit ({max_size_mb} MB)")
+        logger.warning(f"Payload size ({total_size_mb:.2f} MB) exceeds limit ({max_size_mb} MB)")
         return False
     
     return True
@@ -426,105 +426,18 @@ python cell2sentence_inference.py -i /path/to/your/data.h5ad -o results_with_emb
 
 Adjust chunk size for very large datasets or network constraints
 ```bash
-python cell2sentence_inference.py -i data.h5ad --chunk-size 50
+python cell2sentence_inference.py -i data.h5ad --chunk-size 100
 ```
 
 **Output Sample**
-The model returns a JSON object containing the cell embeddings for each input cell. The sample script processes this response and saves the final embeddings back to an .h5ad file.
+The model returns a JSON object containing the cell embeddings for each input cell. 
 
 ```json
 {
   "predictions": [
-    {
-      "cell_embeddings": [-0.013, 0.045, ..., 0.021]
-    },
-    {
-      "cell_embeddings": [-0.025, 0.033, ..., 0.019]
-    }
+    "{\"cell_embeddings\": [[-0.013, 0.045, 0.021, ...], [-0.025, 0.033, 0.019, ...], [0.012, -0.008, 0.035, ...]]}"
   ]
 }
-```
-
-**Output Processing Example:**
-This Python function shows how to process the JSON response to get the embeddings as a numpy array.
-
-```python
-
-import numpy as np
-import json
-
-def process_cell2sentence_response(response_json):
-    """
-    Process Cell2Sentence model response to extract embeddings.
-    
-    Args:
-        response_json: The JSON response from the Cell2Sentence endpoint
-        
-    Returns:
-        numpy.ndarray: Cell embeddings with shape (n_cells, embedding_dim)
-    """
-    try:
-        # Handle different response formats from Azure ML/MLflow
-        if isinstance(response_json, list) and len(response_json) > 0:
-            if isinstance(response_json[0], dict) and "predictions" in response_json[0]:
-                # Azure ML format: [{"predictions": "json_string"}]
-                prediction_string = response_json[0]["predictions"]
-            else:
-                # Direct list format: ["json_string"]
-                prediction_string = response_json[0]
-        elif isinstance(response_json, dict) and "predictions" in response_json:
-            # Standard MLflow format: {"predictions": ["json_string"]}
-            prediction_string = response_json["predictions"][0]
-        else:
-            raise ValueError(f"Unexpected response format: {type(response_json)}")
-        
-        # Parse the prediction string (which is JSON)
-        output_data = json.loads(prediction_string)
-        
-        # Extract embeddings
-        if "cell_embeddings" in output_data:
-            embeddings = np.array(output_data["cell_embeddings"])
-            print(f"Extracted embeddings with shape: {embeddings.shape}")
-            return embeddings
-        else:
-            raise ValueError("No 'cell_embeddings' found in response")
-            
-    except Exception as e:
-        print(f"Error processing response: {e}")
-        print(f"Response preview: {str(response_json)[:200]}...")
-        raise
-
-def combine_chunked_embeddings(chunk_responses):
-    """
-    Combine embeddings from multiple chunked requests.
-    
-    Args:
-        chunk_responses: List of response JSONs from multiple requests
-        
-    Returns:
-        numpy.ndarray: Combined embeddings from all chunks
-    """
-    all_embeddings = []
-    
-    for i, response in enumerate(chunk_responses):
-        try:
-            chunk_embeddings = process_cell2sentence_response(response)
-            all_embeddings.append(chunk_embeddings)
-            print(f"Processed chunk {i+1}: {chunk_embeddings.shape}")
-        except Exception as e:
-            print(f"Error processing chunk {i+1}: {e}")
-            continue
-    
-    if all_embeddings:
-        combined_embeddings = np.concatenate(all_embeddings, axis=0)
-        print(f"Final combined embeddings shape: {combined_embeddings.shape}")
-        return combined_embeddings
-    else:
-        return np.array([])
-
-# Example usage:
-# responses = [response1, response2, response3]  # List of responses from chunks
-# final_embeddings = combine_chunked_embeddings(responses)
 ```
 
 ## Data and Resource Specification for Deployment
