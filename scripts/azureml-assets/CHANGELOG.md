@@ -1,6 +1,10 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
+## 1.16.87b1 (2025-08-05)
+### 🚀 New Features
+- [#4370](https://github.com/Azure/azureml-assets/pull/4370) Bump ruamel.yaml to 0.18.10
+
 ## 1.16.86 (2025-07-28)
 ### 🚀 New Features
 - [#4352](https://github.com/Azure/azureml-assets/pull/4352) Detect if MLFlow model is brand new
