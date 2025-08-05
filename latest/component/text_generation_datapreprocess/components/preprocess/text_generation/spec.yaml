@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_datapreprocess
 version: 0.0.76
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: Text Generation DataPreProcess
 description: Component to preprocess data for text generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/preprocess
 
@@ -17,26 +19,28 @@ inputs:
   text_key:
     type: string
     optional: false
-    description: key for text in an example. format your data keeping in mind that
-      text is concatenated with ground_truth while finetuning in the form - text +
-      groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's there"; will
-      be treated as "knock knock\nwho's there"
+    description: key for text in an example. format your data keeping in mind 
+      that text is concatenated with ground_truth while finetuning in the form -
+      text + groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's 
+      there"; will be treated as "knock knock\nwho's there"
 
   ground_truth_key:
     type: string
     optional: true
-    description: key for ground_truth in an example. we take separate column for ground_truth
-      to enable use cases like summarization, translation, question_answering, etc.
-      which can be repurposed in form of text-generation where both text and ground_truth
-      are needed. This separation is useful for calculating metrics. for eg. "text"="Summarize
-      this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the
-      dialogue}"
+    description: key for ground_truth in an example. we take separate column for
+      ground_truth to enable use cases like summarization, translation, 
+      question_answering, etc. which can be repurposed in form of 
+      text-generation where both text and ground_truth are needed. This 
+      separation is useful for calculating metrics. for eg. "text"="Summarize 
+      this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of 
+      the dialogue}"
 
   batch_size:
     type: integer
     optional: true
     default: 1000
-    description: Number of examples to batch before calling the tokenization function
+    description: Number of examples to batch before calling the tokenization 
+      function
 
   # Tokenization params
   pad_to_max_length:
@@ -46,37 +50,37 @@ inputs:
     - "false"
     default: "false"
     optional: true
-    description: If set to True, the returned sequences will be padded according to
-      the model's padding side and padding index, up to their `max_seq_length`. If
-      no `max_seq_length` is specified, the padding is done up to the model's max
-      length.
+    description: If set to True, the returned sequences will be padded according
+      to the model's padding side and padding index, up to their 
+      `max_seq_length`. If no `max_seq_length` is specified, the padding is done
+      up to the model's max length.
 
   max_seq_length:
     type: integer
     optional: true
     default: -1
-    description: Default is -1 which means the padding is done up to the model's max
-      length. Else will be padded to `max_seq_length`.
+    description: Default is -1 which means the padding is done up to the model's
+      max length. Else will be padded to `max_seq_length`.
   # Inputs
   train_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   test_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered test data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered test data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   train_mltable_path:
@@ -87,7 +91,8 @@ inputs:
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered validation data asset in `mltable` format.
+    description: Path to the registered validation data asset in `mltable` 
+      format.
 
   test_mltable_path:
     type: mltable
@@ -98,8 +103,8 @@ inputs:
   model_selector_output:
     type: uri_folder
     optional: false
-    description: output folder of model selector containing model metadata like config,
-      checkpoints, tokenizer config
+    description: output folder of model selector containing model metadata like 
+      config, checkpoints, tokenizer config
     mode: rw_mount
 
   # Validation parameters
@@ -111,8 +116,9 @@ inputs:
 outputs:
   output_dir:
     type: uri_folder
-    description: The folder contains the tokenized output of the train, validation
-      and test data along with the tokenizer files used to tokenize the data
+    description: The folder contains the tokenized output of the train, 
+      validation and test data along with the tokenizer files used to tokenize 
+      the data
     mode: rw_mount
 
 command: >-

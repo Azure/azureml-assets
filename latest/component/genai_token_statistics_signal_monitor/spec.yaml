@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: genai_token_statistics_signal_monitor
@@ -30,7 +31,8 @@ outputs:
 jobs:
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/genai_token_statistics_compute_metrics/versions/0.0.22
+    component: 
+      azureml://registries/azureml/components/genai_token_statistics_compute_metrics/versions/0.0.22
     inputs:
       production_dataset:
         type: mltable
@@ -49,7 +51,8 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
+    component: 
+      azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
     inputs:
       signal_metrics:
         type: mltable

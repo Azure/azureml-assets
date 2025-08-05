@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: model_performance_signal_monitor
@@ -54,17 +55,24 @@ outputs:
 jobs:
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.27
+    component: 
+      azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.27
     inputs:
       task: ${{parent.inputs.task}}
-      baseline_data_target_column: ${{parent.inputs.baseline_data_target_column}}
+      baseline_data_target_column: 
+        ${{parent.inputs.baseline_data_target_column}}
       production_data: ${{parent.inputs.production_data}}
-      production_data_target_column: ${{parent.inputs.production_data_target_column}}
+      production_data_target_column: 
+        ${{parent.inputs.production_data_target_column}}
       regression_rmse_threshold: ${{parent.inputs.regression_rmse_threshold}}
-      regression_meanabserror_threshold: ${{parent.inputs.regression_meanabserror_threshold}}
-      classification_accuracy_threshold: ${{parent.inputs.classification_accuracy_threshold}}
-      classification_precision_threshold: ${{parent.inputs.classification_accuracy_threshold}}
-      classification_recall_threshold: ${{parent.inputs.classification_recall_threshold}}
+      regression_meanabserror_threshold: 
+        ${{parent.inputs.regression_meanabserror_threshold}}
+      classification_accuracy_threshold: 
+        ${{parent.inputs.classification_accuracy_threshold}}
+      classification_precision_threshold: 
+        ${{parent.inputs.classification_accuracy_threshold}}
+      classification_recall_threshold: 
+        ${{parent.inputs.classification_recall_threshold}}
     outputs:
       signal_metrics:
         type: mltable
@@ -75,7 +83,8 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
+    component: 
+      azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
     inputs:
       signal_metrics:
         type: mltable
@@ -96,7 +105,8 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
+    component: 
+      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
     inputs:
       signal_metrics:
         type: mltable

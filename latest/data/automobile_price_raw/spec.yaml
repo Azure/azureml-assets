@@ -5,7 +5,7 @@ tags:
   azureml.Designer: true
   azureml.Designer.name: Automobile price data (Raw)
   azureml.Designer.dataTypeId: DataFrameDirectory
-description: Clean missing data module required. Prices of various automobiles against
-  make, model and technical specifications
+description: Clean missing data module required. Prices of various automobiles 
+  against make, model and technical specifications
 type: uri_folder
 path: sample_data/

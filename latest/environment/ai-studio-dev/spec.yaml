@@ -1,12 +1,13 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
-description: (Public Preview) Environment for Generative AI on Azure containing the
-  Prompt flow SDK with the latest compatible versions of Debian Linux and Python.
-  This environment is part of a preview feature, and subject to the supplemental terms
-  of use for [Microsoft Azure Previews](https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).
+description: (Public Preview) Environment for Generative AI on Azure containing 
+  the Prompt flow SDK with the latest compatible versions of Debian Linux and 
+  Python. This environment is part of a preview feature, and subject to the 
+  supplemental terms of use for [Microsoft Azure 
+  Previews](https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).
 
 name: "ai-studio-dev"
-version: "14"
+version: "15"
 
 build:
   path: "context"

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -26,16 +27,16 @@ inputs:
     type: uri_folder
     optional: true
     mode: direct
-    description: "Folder containing previously generated embeddings. Should be parent\
-      \ folder of the 'embeddings' output path used for for this component. Will compare\
-      \ input data to existing embeddings and only embed changed/new data, reusing\
-      \ existing chunks."
+    description: "Folder containing previously generated embeddings. Should be parent
+      folder of the 'embeddings' output path used for for this component. Will compare
+      input data to existing embeddings and only embed changed/new data, reusing existing
+      chunks."
   # Embeddings settings
   embeddings_model:
     type: string
     optional: true
-    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'\
-      \ or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
+    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'
+      or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
   batch_size:
     type: integer
     default: 100
@@ -43,20 +44,20 @@ inputs:
   num_workers:
     type: integer
     default: -1
-    description: "Number of workers to use when embedding data. -1 means use half\
-      \ all available CPUs"
+    description: "Number of workers to use when embedding data. -1 means use half
+      all available CPUs"
 
   deployment_validation:
     type: uri_file
-    description: "Uri file containing information on if the Azure OpenAI deployments,\
-      \ if used, have been validated"
+    description: "Uri file containing information on if the Azure OpenAI deployments,
+      if used, have been validated"
     optional: true
 
 outputs:
   embeddings:
     type: uri_folder
-    description: "Where to save data with embeddings. This should be a subfolder of\
-      \ previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
+    description: "Where to save data with embeddings. This should be a subfolder of
+      previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
     mode: rw_mount
 
 environment: azureml:llm-rag-embeddings:76

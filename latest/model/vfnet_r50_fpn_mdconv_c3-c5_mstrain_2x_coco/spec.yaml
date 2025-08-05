@@ -6,24 +6,29 @@ properties:
   SHA: abb9a8751a5273780160a7cb8121e6146e2fc7ee
   finetuning-tasks: image-object-detection
   finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   evaluation-min-sku-spec: 4|1|28|176
-  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   inference-min-sku-spec: 4|0|14|28
-  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
-    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
-    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
-    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2,
-    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2,
-    Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3,
-    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
+    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, 
+    Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, 
+    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, 
+    Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2, 
+    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, 
+    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, 
+    Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, 
+    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, 
+    Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, 
+    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, 
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2
 tags:
   Deprecated: ''
@@ -35,23 +40,28 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: object-detection
-  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
-    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
-    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
-    Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds,
-    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
-    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
-    Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3,
-    Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  evaluation_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, 
+      Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, 
+      Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, 
+      Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, 
+      Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, 
+      Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, 
+      Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, 
+      Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, 
+      Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, 
+      Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, 
+      Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, 
+      Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
+      Standard_ND40rs_v2]
+  evaluation_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+      Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+      Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 version: 11
 description: |
   `vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v2.28.2" target="_blank">OpenMMLab's MMDetection library</a>. This model is reported to obtain <a href="https://github.com/open-mmlab/mmdetection/blob/e9cae2d0787cd5c2fc6165a6061f92fa09e48fb1/configs/vfnet/metafile.yml#L55" target="_blank">box AP of 48.0 for object-detection task on COCO dataset</a>. To understand the naming style used, please refer to <a href="https://mmdetection.readthedocs.io/en/v2.28.2/tutorials/config.html#config-name-style" target="_blank">MMDetection's Config Name Style</a>.

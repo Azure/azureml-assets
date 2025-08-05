@@ -5,7 +5,7 @@ tags:
   azureml.Designer: true
   azureml.Designer.name: Restaurant Customer Data
   azureml.Designer.dataTypeId: DataFrameDirectory
-description: Contains customer features, such as drink_level, dress_preference and
-  marital_status.
+description: Contains customer features, such as drink_level, dress_preference 
+  and marital_status.
 type: uri_folder
 path: sample_data/

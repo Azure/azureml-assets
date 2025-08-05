@@ -6,24 +6,29 @@ properties:
   SHA: 787136395d17f54db4265d71143193d68107bf49
   finetuning-tasks: image-classification
   finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   evaluation-min-sku-spec: 4|1|28|176
-  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   inference-min-sku-spec: 4|0|14|28
-  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
-    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
-    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
-    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2,
-    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2,
-    Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3,
-    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
+    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, 
+    Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, 
+    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, 
+    Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2, 
+    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, 
+    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, 
+    Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, 
+    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, 
+    Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, 
+    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, 
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2
 tags:
   huggingface_model_id: microsoft/swinv2-base-patch4-window12-192-22k
@@ -36,23 +41,28 @@ tags:
     apply_ort: 'true'
   task: image-classification
   hiddenlayerscanned: ""
-  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
-    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
-    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
-    Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds,
-    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
-    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
-    Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3,
-    Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  evaluation_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, 
+      Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, 
+      Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, 
+      Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, 
+      Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, 
+      Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, 
+      Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, 
+      Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, 
+      Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, 
+      Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, 
+      Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, 
+      Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
+      Standard_ND40rs_v2]
+  evaluation_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+      Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+      Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 version: 21
 description: |-
   The Swin Transformer V2 model is a type of Vision Transformer, pre-trained on ImageNet-21k with a resolution of 192x192, is introduced in the <a href="https://arxiv.org/abs/2111.09883" target="_blank">research-paper</a> titled "Swin Transformer V2: Scaling Up Capacity and Resolution" authored by Liu et al. This model tries to resolve training instability, resolution gaps between pre-training and fine-tuning, and large labelled data issues in training and application of large vision models. This model generates hierarchical feature maps by merging image patches and computes self attention within a local window resulting in a linear computational complexity relative to input image size which is a significant improvement over vision transformers that take quadratic computational complexity.

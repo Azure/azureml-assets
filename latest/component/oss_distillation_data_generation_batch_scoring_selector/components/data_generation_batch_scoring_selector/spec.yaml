@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_data_generation_batch_scoring_selector
 version: 0.0.1
 type: command
@@ -6,9 +7,11 @@ type: command
 is_deterministic: true
 
 display_name: OSS Distillation Batch Scoring Selector Component
-description: Component to select the Batch Scoring Selector based on the task type
+description: Component to select the Batch Scoring Selector based on the task 
+  type
 
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: 
+  azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 inputs:
   # Inputs

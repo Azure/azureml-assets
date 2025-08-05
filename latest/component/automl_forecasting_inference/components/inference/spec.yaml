@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_forecasting_inference
 display_name: AutoML Forecasting Inference
 description: Inference component for AutoML Forecasting.
@@ -21,19 +22,19 @@ inputs:
     - "recursive"
     - "rolling"
     default: "recursive"
-    description: "The forecast mode used for inference, possible values are `recursive`\
-      \ and `rolling`."
+    description: "The forecast mode used for inference, possible values are `recursive`
+      and `rolling`."
   forecast_step:
     type: integer
     default: 1
     optional: true
-    description: "The forecast step used for rolling forecast. See more details here:\
-      \ https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-forecast?view=azureml-api-2#evaluating-model-accuracy-with-a-rolling-forecast"
+    description: "The forecast step used for rolling forecast. See more details here:
+      https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-forecast?view=azureml-api-2#evaluating-model-accuracy-with-a-rolling-forecast"
   forecast_quantiles:
     type: string
     optional: true
-    description: "The quantiles for forecasting, comma separated string of float values,\
-      \ e.g. '0.1,0.5,0.9'."
+    description: "The quantiles for forecasting, comma separated string of float values,
+      e.g. '0.1,0.5,0.9'."
 
 outputs:
   inference_output_file:
@@ -41,8 +42,8 @@ outputs:
     description: "Inference output data file."
   evaluation_config_output_file:
     type: uri_file
-    description: "The evaluation config file which can be consumed by the compute\
-      \ metrics component."
+    description: "The evaluation config file which can be consumed by the compute
+      metrics component."
 
 code: ../../src
 environment: azureml://registries/azureml/environments/automl-gpu/versions/48

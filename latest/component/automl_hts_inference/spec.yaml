@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: automl_hts_inference
@@ -90,7 +91,8 @@ jobs:
       enable_event_logger: true
       instance_count: ${{parent.inputs.max_nodes}}
       max_concurrency_per_instance: ${{parent.inputs.max_concurrency_per_node}}
-      parallel_step_timeout_in_seconds: ${{parent.inputs.parallel_step_timeout_in_seconds}}
+      parallel_step_timeout_in_seconds: 
+        ${{parent.inputs.parallel_step_timeout_in_seconds}}
       train_run_id: ${{parent.inputs.train_run_id}}
       train_experiment_name: ${{parent.inputs.train_experiment_name}}
       forecast_mode: ${{parent.inputs.forecast_mode}}
@@ -109,12 +111,14 @@ jobs:
     type: parallel
     component: azureml:automl_hts_prs_inference_step:0.0.9
     inputs:
-      partitioned_data: ${{parent.jobs.automl_hts_inference_setup.outputs.processed_data}}
+      partitioned_data: 
+        ${{parent.jobs.automl_hts_inference_setup.outputs.processed_data}}
       metadata: ${{parent.jobs.automl_hts_inference_setup.outputs.metadata}}
       enable_event_logger: true
       instance_count: ${{parent.inputs.max_nodes}}
       max_concurrency_per_instance: ${{parent.inputs.max_concurrency_per_node}}
-      parallel_step_timeout_in_seconds: ${{parent.inputs.parallel_step_timeout_in_seconds}}
+      parallel_step_timeout_in_seconds: 
+        ${{parent.inputs.parallel_step_timeout_in_seconds}}
     outputs:
       output_metadata:
         type: uri_folder
@@ -133,9 +137,12 @@ jobs:
     type: command
     component: azureml:automl_hts_inference_collect_step:0.0.9
     inputs:
-      setup_metadata: ${{parent.jobs.automl_hts_inference_setup.outputs.metadata}}
-      input_metadata: ${{parent.jobs.automl_hts_model_inference.outputs.output_metadata}}
-      input_prediction: ${{parent.jobs.automl_hts_model_inference.outputs.prediction}}
+      setup_metadata: 
+        ${{parent.jobs.automl_hts_inference_setup.outputs.metadata}}
+      input_metadata: 
+        ${{parent.jobs.automl_hts_model_inference.outputs.output_metadata}}
+      input_prediction: 
+        ${{parent.jobs.automl_hts_model_inference.outputs.prediction}}
       enable_event_logger: true
     outputs:
       metadata:

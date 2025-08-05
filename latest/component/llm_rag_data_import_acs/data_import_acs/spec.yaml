@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -20,13 +21,13 @@ inputs:
     default: 50
   acs_config:
     type: string
-    description: "Values for connecting to ACS instance. Required keys: 'endpoint',\
-      \ 'endpoint_key_name', 'index_name', 'content_key', 'title_key'. 'content_key'\
-      \ defaults to 'content' and 'title_key' defaults to 'title'"
+    description: "Values for connecting to ACS instance. Required keys: 'endpoint',
+      'endpoint_key_name', 'index_name', 'content_key', 'title_key'. 'content_key'
+      defaults to 'content' and 'title_key' defaults to 'title'"
   use_existing:
     type: string
-    description: "Use an existing ACS which is already embedded - directly output\
-      \ MLIndex config"
+    description: "Use an existing ACS which is already embedded - directly output
+      MLIndex config"
     default: "False"
     enum:
     - "True"
@@ -38,8 +39,8 @@ outputs:
     description: "Uri folder containing the documents' content saved as md files"
   ml_index:
     type: uri_folder
-    description: "Uri folder containing an MLIndex yaml representing the ACS Index.\
-      \ Can be used with azureml-rag package"
+    description: "Uri folder containing an MLIndex yaml representing the ACS Index.
+      Can be used with azureml-rag package"
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src/embeddings/'

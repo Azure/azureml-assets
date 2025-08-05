@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: medimageinsight_adapter_finetune
 version: 0.0.1
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: MedImageInsight Adapter Finetune
 description: Component to finetune the model using the medical image data
 
-environment: azureml://registries/azureml/environments/acft-medimageinsight-adapter-finetune/versions/8
+environment: 
+  azureml://registries/azureml/environments/acft-medimageinsight-adapter-finetune/versions/8
 
 code: ../../../src/medimage_insight_adapter_finetune
 
@@ -105,7 +107,8 @@ inputs:
     type: string
     default: "acc"
     optional: true
-    description: Metric to track when calculating best model. acc or auc supported.
+    description: Metric to track when calculating best model. acc or auc 
+      supported.
 
 outputs:
   output_model_path:

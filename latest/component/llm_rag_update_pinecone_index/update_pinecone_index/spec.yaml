@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -33,13 +34,13 @@ inputs:
   connection_id:
     type: string
     optional: true
-    description: "The id of the connection to the Pinecone project where the index\
-      \ lives."
+    description: "The id of the connection to the Pinecone project where the index
+      lives."
 outputs:
   index:
     type: uri_folder
-    description: "Uri folder containing the MLIndex yaml describing the newly created/updated\
-      \ Pinecone index."
+    description: "Uri folder containing the MLIndex yaml describing the newly created/updated
+      Pinecone index."
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src/'

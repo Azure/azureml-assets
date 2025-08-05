@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: medimageinsight_embedding_finetune
 version: 0.0.1
@@ -11,7 +12,8 @@ is_deterministic: true
 display_name: MedImageInsight Embedding Finetune
 description: Component to finetune the model using the medical image data
 
-environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/8
+environment: 
+  azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/8
 
 code: ../../../src/medimage_insight_embedding_finetune
 
@@ -40,15 +42,15 @@ inputs:
   eval_train_image_tsv:
     type: uri_file
     optional: true
-    description: Optional path used for the evaluation task. If not specified, will
-      use the training path.
+    description: Optional path used for the evaluation task. If not specified, 
+      will use the training path.
     mode: ro_mount
 
   eval_train_text_tsv:
     type: uri_file
     optional: true
-    description: Optional path used for the evaluation task. If not specified, will
-      use the training path.
+    description: Optional path used for the evaluation task. If not specified, 
+      will use the training path.
     mode: ro_mount
 
   image_tsv:

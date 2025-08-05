@@ -5,8 +5,9 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: 2539ff53e6baa4cc603774ad5a2d646f4041ea4e
   inference-min-sku-spec: 24|1|220|64
-  inference-recommended-sku: Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
+  inference-recommended-sku: Standard_NC24s_v3, Standard_NC64as_T4_v3, 
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2
   languages: en
 tags:
@@ -16,9 +17,10 @@ tags:
   hiddenlayerscanned: ""
   author: Microsoft
   huggingface_model_id: microsoft/Orca-2-13b
-  inference_compute_allow_list: [Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_ND40rs_v2]
+  inference_compute_allow_list: [Standard_NC24s_v3, Standard_NC64as_T4_v3, 
+      Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
+      Standard_ND40rs_v2]
 
 version: 4
 description: |

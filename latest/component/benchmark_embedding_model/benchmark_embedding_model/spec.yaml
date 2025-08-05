@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 name: benchmark_embedding_model
@@ -10,8 +11,8 @@ inputs:
   endpoint_url:
     type: string
     optional: true
-    description: For AOAI, the base endpoint url. For OAI, this will be ignored. For
-      OSS_MaaS, the target url.
+    description: For AOAI, the base endpoint url. For OAI, this will be ignored.
+      For OSS_MaaS, the target url.
   deployment_type:
     type: string
     optional: false
@@ -23,8 +24,8 @@ inputs:
   deployment_name:
     type: string
     optional: true
-    description: For AOAI, the deployment name. For OAI, the model name. For OSS_MaaS,
-      this wil be ignored.
+    description: For AOAI, the deployment name. For OAI, the model name. For 
+      OSS_MaaS, this wil be ignored.
   connections_name:
     type: string
     optional: false
@@ -32,8 +33,8 @@ inputs:
   tasks:
     type: string
     optional: true
-    description: Comma separated string denoting the tasks to benchmark the model
-      on.
+    description: Comma separated string denoting the tasks to benchmark the 
+      model on.
   task_types:
     type: string
     optional: true
@@ -46,8 +47,8 @@ inputs:
   task_langs:
     type: string
     optional: true
-    description: Comma separated string denoting the task languages to benchmark the
-      model on.
+    description: Comma separated string denoting the task languages to benchmark
+      the model on.
   preset:
     type: string
     optional: false
@@ -63,7 +64,8 @@ outputs:
     description: Directory where the benchmark metrics will be saved.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: 
+  azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
   python -m aml_benchmark.benchmark_embedding_model.main
   $[[--endpoint_url ${{inputs.endpoint_url}}]]

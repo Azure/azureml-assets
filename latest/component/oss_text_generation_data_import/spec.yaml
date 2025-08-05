@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_data_import
 version: 0.0.29
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: OSS Text Generation Data Import
 description: FTaaS component to copy user training data to output
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-data-import/versions/12
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-data-import/versions/12
 
 inputs:
   task_name:
@@ -22,15 +24,15 @@ inputs:
   # Inputs
   train_file_path:
     type: uri_file
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   # Validation parameters

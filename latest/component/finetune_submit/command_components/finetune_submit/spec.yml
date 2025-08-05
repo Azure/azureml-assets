@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: finetune_submit
 version: 0.0.3
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: Submit AOAI FT Job
 description: Component to submit FT job to Azure OpenAI resource
 
-environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
+environment: 
+  azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
 
 code: ../../src
 
@@ -51,15 +53,15 @@ inputs:
     type: integer
     optional: false
     default: -1
-    description: Number of training epochs. If set to -1, number of epochs will be
-      determined dynamically based on the input data.
+    description: Number of training epochs. If set to -1, number of epochs will 
+      be determined dynamically based on the input data.
 
   batch_size:
     type: integer
     optional: false
     default: -1
-    description: Global batch size. If set to -1, batch size will be determined dynamically
-      based on the input data.
+    description: Global batch size. If set to -1, batch size will be determined 
+      dynamically based on the input data.
 
   learning_rate_multiplier:
     type: number
@@ -75,7 +77,8 @@ inputs:
 outputs:
   finetune_submit_output:
     type: uri_file
-    description: Contains finetune submit output file in JSON/custom class format
+    description: Contains finetune submit output file in JSON/custom class 
+      format
 
 command: >-
   python finetune_submit.py

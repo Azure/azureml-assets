@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -21,8 +22,8 @@ inputs:
 outputs:
   index:
     type: uri_folder
-    description: "Uri Folder containing MLIndex yaml file and faiss/pickle files that\
-      \ hold data for the index"
+    description: "Uri Folder containing MLIndex yaml file and faiss/pickle files that
+      hold data for the index"
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src/'

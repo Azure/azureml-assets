@@ -4,7 +4,8 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: true
   inference-min-sku-spec: 40|8|672|2900
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+    Standard_ND96asr_v4
 tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail++-m
@@ -13,7 +14,8 @@ tags:
   huggingface_model_id: stabilityai/stable-diffusion-xl-base-1.0
   author: "Stability AI"
   training_dataset: LAION-5B
-  inference_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+  inference_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+      Standard_ND96asr_v4]
 version: 7
 description: |
   [SDXL](https://arxiv.org/abs/2307.01952) consists of an [ensemble of experts](https://arxiv.org/abs/2211.01324) pipeline for latent diffusion: 

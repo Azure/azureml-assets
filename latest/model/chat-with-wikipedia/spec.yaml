@@ -6,8 +6,8 @@ properties:
   azureml.promptflow.section: gallery
   azureml.promptflow.type: chat
   azureml.promptflow.name: Chat with Wikipedia
-  azureml.promptflow.description: Create a chatbot that leverages Wikipedia data to
-    ground the responses.
+  azureml.promptflow.description: Create a chatbot that leverages Wikipedia data
+    to ground the responses.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 version: 11

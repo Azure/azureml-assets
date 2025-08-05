@@ -26,10 +26,10 @@ inputs:
   embeddings_container:
     type: uri_folder
     optional: true
-    description: Folder containing previously generated embeddings. Should be parent
-      folder of the 'embeddings' output path used for for this component. Will compare
-      input data to existing embeddings and only embed changed/new data, reusing existing
-      chunks.
+    description: Folder containing previously generated embeddings. Should be 
+      parent folder of the 'embeddings' output path used for for this component.
+      Will compare input data to existing embeddings and only embed changed/new 
+      data, reusing existing chunks.
   asset_uri:
     type: uri_folder
     optional: true
@@ -57,26 +57,27 @@ inputs:
   citation_url:
     type: string
     optional: true
-    description: Base URL to join with file paths to create full source file URL for
-      chunk metadata.
+    description: Base URL to join with file paths to create full source file URL
+      for chunk metadata.
   citation_replacement_regex:
     type: string
     optional: true
-    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'\
-      \ to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)\"\
-      , \"replacement_pattern\": \"\\1/\\2\"}' would remove '/articles' from the middle\
-      \ of the url."
+    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'
+      to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)\"\
+      , \"replacement_pattern\": \"\\1/\\2\"}' would remove '/articles' from the middle
+      of the url."
   doc_intel_connection_id:
     type: string
     optional: true
-    description: AzureML Connection ID for Custom Workspace Connection containing
-      the `endpoint` key and `api_key` secret for an Azure AI Document Intelligence
-      Service.
+    description: AzureML Connection ID for Custom Workspace Connection 
+      containing the `endpoint` key and `api_key` secret for an Azure AI 
+      Document Intelligence Service.
   embeddings_model:
     type: string
     optional: true
-    description: The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'
-      or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'
+    description: The model to use to embed data. E.g. 
+      'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 
+      'azure_open_ai://deployment/{deployment_name}/model/{model_name}'
   embeddings_connection_id:
     type: string
     optional: false

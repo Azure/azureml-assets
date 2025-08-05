@@ -1,42 +1,44 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_seq_scoring_pipeline
 version: 0.0.1
 type: pipeline
 
 
 display_name: OSS Distillation Sequence Scoring Pipeline
-description: Component to generate data from teacher model enpoint(sequentially) and
-  finetune student model on generated dataset
+description: Component to generate data from teacher model enpoint(sequentially)
+  and finetune student model on generated dataset
 
 inputs:
   # Compute parameters
   instance_type_pipeline_validation:
     type: string
     optional: true
-    description: Instance type to be used for validation component. The parameter
-      compute_pipeline_validation must be set to 'serverless' for instance_type to
-      be used.
+    description: Instance type to be used for validation component. The 
+      parameter compute_pipeline_validation must be set to 'serverless' for 
+      instance_type to be used.
   instance_type_data_generation:
     type: string
     optional: true
     default: Standard_D4as_v4
-    description: Instance type to be used for finetune component in case of virtual
-      cluster compute, eg. Singularity.ND40_v2. The parameter compute_finetune must
-      be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for finetune component in case of 
+      virtual cluster compute, eg. Singularity.ND40_v2. The parameter 
+      compute_finetune must be set to 'serverless' for instance_type to be used
   instance_type_data_import:
     type: string
     optional: true
     default: Singularity.ND96amrs_A100_v4
-    description: Instance type to be used for data_import component in case of virtual
-      cluster compute, eg. Singularity.D8_v3. The parameter compute_data_import must
-      be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for data_import component in case of 
+      virtual cluster compute, eg. Singularity.D8_v3. The parameter 
+      compute_data_import must be set to 'serverless' for instance_type to be 
+      used
   instance_type_finetune:
     type: string
     optional: true
     default: Singularity.ND96amrs_A100_v4
-    description: Instance type to be used for finetune component in case of virtual
-      cluster compute, eg. Singularity.ND40_v2. The parameter compute_finetune must
-      be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for finetune component in case of 
+      virtual cluster compute, eg. Singularity.ND40_v2. The parameter 
+      compute_finetune must be set to 'serverless' for instance_type to be used
 
   compute_pipeline_validation:
     type: string
@@ -79,15 +81,15 @@ inputs:
 
   train_file_path:
     type: uri_file
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
 

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_text_generation_finetune
 version: 0.0.29
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: OSS Text Generation Finetune
 description: FTaaS component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/94
 
 inputs:
   task_name:
@@ -21,8 +23,8 @@ inputs:
   mlflow_model_path:
     type: mlflow_model
     optional: true
-    description: Input folder path containing mlflow model for further finetuning.
-      Proper model/huggingface id must be passed.
+    description: Input folder path containing mlflow model for further 
+      finetuning. Proper model/huggingface id must be passed.
     mode: download
   model_asset_id:
     type: string
@@ -31,38 +33,40 @@ inputs:
   dataset_input:
     type: uri_folder
     optional: false
-    description: Output of data import component. The folder contains train and validation
-      data.
+    description: Output of data import component. The folder contains train and 
+      validation data.
     mode: download
   text_key:
     type: string
     optional: false
-    description: key for text in an example. format your data keeping in mind that
-      text is concatenated with ground_truth while finetuning in the form - text +
-      groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's there"; will
-      be treated as "knock knock\nwho's there"
+    description: key for text in an example. format your data keeping in mind 
+      that text is concatenated with ground_truth while finetuning in the form -
+      text + groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's 
+      there"; will be treated as "knock knock\nwho's there"
   ground_truth_key:
     type: string
     optional: true
-    description: key for ground_truth in an example. we take separate column for ground_truth
-      to enable use cases like summarization, translation, question_answering, etc.
-      which can be repurposed in form of text-generation where both text and ground_truth
-      are needed. This separation is useful for calculating metrics. for eg. "text"="Summarize
-      this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the
-      dialogue}"
+    description: key for ground_truth in an example. we take separate column for
+      ground_truth to enable use cases like summarization, translation, 
+      question_answering, etc. which can be repurposed in form of 
+      text-generation where both text and ground_truth are needed. This 
+      separation is useful for calculating metrics. for eg. "text"="Summarize 
+      this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of 
+      the dialogue}"
   batch_size:
     type: integer
     optional: true
     default: 1000
-    description: Number of examples to batch before calling the tokenization function
+    description: Number of examples to batch before calling the tokenization 
+      function
   pad_to_max_length:
     type: string
     optional: true
     default: "false"
-    description: If set to True, the returned sequences will be padded according to
-      the model's padding side and padding index, up to their `max_seq_length`. If
-      no `max_seq_length` is specified, the padding is done up to the model's max
-      length.
+    description: If set to True, the returned sequences will be padded according
+      to the model's padding side and padding index, up to their 
+      `max_seq_length`. If no `max_seq_length` is specified, the padding is done
+      up to the model's max length.
     enum:
     - "true"
     - "false"
@@ -70,14 +74,14 @@ inputs:
     type: integer
     optional: true
     default: -1
-    description: Default is -1 which means the padding is done up to the model's max
-      length. Else will be padded to `max_seq_length`.
+    description: Default is -1 which means the padding is done up to the model's
+      max length. Else will be padded to `max_seq_length`.
   number_of_gpu_to_use_finetuning:
     type: integer
     optional: false
     default: 1
-    description: number of gpus to be used per node for finetuning, should be equal
-      to number of gpu per node in the compute SKU used for finetune
+    description: number of gpus to be used per node for finetuning, should be 
+      equal to number of gpu per node in the compute SKU used for finetune
     min: 1
   apply_lora:
     type: string
@@ -91,8 +95,8 @@ inputs:
     type: string
     optional: true
     default: "true"
-    description: if set to true, the lora trained weights will be merged to base model
-      before saving
+    description: if set to true, the lora trained weights will be merged to base
+      model before saving
     enum:
     - "true"
     - "false"
@@ -120,9 +124,10 @@ inputs:
     type: integer
     optional: true
     default: -1
-    description: If set to a positive number, the total number of training steps to
-      perform. Overrides 'epochs'. In case of using a finite iterable dataset the
-      training may stop before reaching the set number of steps when all data is exhausted.
+    description: If set to a positive number, the total number of training steps
+      to perform. Overrides 'epochs'. In case of using a finite iterable dataset
+      the training may stop before reaching the set number of steps when all 
+      data is exhausted.
   per_device_train_batch_size:
     type: integer
     optional: true
@@ -137,10 +142,11 @@ inputs:
     type: string
     optional: true
     default: "false"
-    description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size'
-      goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct
-      batch size by iteratively reducing 'per_device_train_batch_size' by a factor
-      of 2 till the OOM is fixed
+    description: Flag to enable auto finding of batch size. If the provided 
+      'per_device_train_batch_size' goes into Out Of Memory (OOM) enabling 
+      auto_find_batch_size will find the correct batch size by iteratively 
+      reducing 'per_device_train_batch_size' by a factor of 2 till the OOM is 
+      fixed
     enum:
     - "true"
     - "false"
@@ -161,13 +167,14 @@ inputs:
     type: integer
     optional: true
     default: 0
-    description: Number of steps used for a linear warmup from 0 to learning_rate
+    description: Number of steps used for a linear warmup from 0 to 
+      learning_rate
   weight_decay:
     type: number
     optional: true
     default: 0.0
-    description: The weight decay to apply (if not zero) to all layers except all
-      bias and LayerNorm weights in AdamW optimizer
+    description: The weight decay to apply (if not zero) to all layers except 
+      all bias and LayerNorm weights in AdamW optimizer
   adam_beta1:
     type: number
     optional: true
@@ -187,14 +194,14 @@ inputs:
     type: integer
     optional: true
     default: 1
-    description: Number of updates steps to accumulate the gradients for, before performing
-      a backward/update pass
+    description: Number of updates steps to accumulate the gradients for, before
+      performing a backward/update pass
   eval_accumulation_steps:
     type: integer
     optional: true
     default: -1
-    description: Number of predictions steps to accumulate before moving the tensors
-      to the CPU, will be passed as None if set to -1
+    description: Number of predictions steps to accumulate before moving the 
+      tensors to the CPU, will be passed as None if set to -1
   lr_scheduler_type:
     type: string
     optional: true
@@ -211,8 +218,8 @@ inputs:
     type: string
     optional: true
     default: "32"
-    description: Apply mixed precision training. This can reduce memory footprint
-      by performing operations in half-precision.
+    description: Apply mixed precision training. This can reduce memory 
+      footprint by performing operations in half-precision.
     enum:
     - "32"
     - "16"
@@ -233,14 +240,14 @@ inputs:
     type: integer
     optional: true
     default: 0
-    description: Number of subprocesses to use for data loading. 0 means that the
-      data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading. 0 means that 
+      the data will be loaded in the main process.
   ignore_mismatched_sizes:
     type: string
     optional: true
     default: "false"
-    description: Whether or not to raise an error if some of the weights from the
-      checkpoint do not have the same size as the weights of the model
+    description: Whether or not to raise an error if some of the weights from 
+      the checkpoint do not have the same size as the weights of the model
     enum:
     - "true"
     - "false"
@@ -261,13 +268,14 @@ inputs:
     type: number
     optional: true
     default: 0.0
-    description: The evaluation steps in fraction of an epoch steps to adopt during
-      training. Overwrites evaluation_steps if not 0.
+    description: The evaluation steps in fraction of an epoch steps to adopt 
+      during training. Overwrites evaluation_steps if not 0.
   eval_steps:
     type: integer
     optional: true
     default: 500
-    description: Number of update steps between two evals if evaluation_strategy='steps'
+    description: Number of update steps between two evals if 
+      evaluation_strategy='steps'
   logging_strategy:
     type: string
     optional: true
@@ -280,7 +288,8 @@ inputs:
     type: integer
     optional: true
     default: 500
-    description: Number of update steps between two logs if logging_strategy='steps'
+    description: Number of update steps between two logs if 
+      logging_strategy='steps'
   metric_for_best_model:
     type: string
     optional: true
@@ -292,7 +301,8 @@ inputs:
     type: string
     optional: true
     default: "false"
-    description: Loads Optimizer, Scheduler and Trainer state for finetuning if true
+    description: Loads Optimizer, Scheduler and Trainer state for finetuning if 
+      true
     enum:
     - "true"
     - "false"
@@ -309,13 +319,15 @@ inputs:
     type: integer
     optional: true
     default: 100
-    description: Number of update steps between two checkpoint saves if save_strategy='steps'
+    description: Number of update steps between two checkpoint saves if 
+      save_strategy='steps'
   save_total_limit:
     type: integer
     optional: true
     default: 1
-    description: If a value is passed, will limit the total amount of checkpoints.
-      Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints"
+    description: If a value is passed, will limit the total amount of 
+      checkpoints. Deletes the older checkpoints in output_dir. If the value is 
+      -1 saves all checkpoints"
   apply_early_stopping:
     type: string
     optional: true
@@ -328,14 +340,14 @@ inputs:
     type: integer
     optional: true
     default: 1
-    description: Stop training when the specified metric worsens for early_stopping_patience
-      evaluation calls
+    description: Stop training when the specified metric worsens for 
+      early_stopping_patience evaluation calls
   early_stopping_threshold:
     type: number
     optional: true
     default: 0.0
-    description: Denotes how much the specified metric must improve to satisfy early
-      stopping conditions
+    description: Denotes how much the specified metric must improve to satisfy 
+      early stopping conditions
   apply_deepspeed:
     type: string
     optional: true
@@ -348,10 +360,10 @@ inputs:
     type: string
     optional: true
     default: "2"
-    description: This parameter configures which DEFAULT deepspeed config to be used
-      - stage2 or stage3. The default choice is stage2. Note that, this parameter
-      is ONLY applicable when user doesn't pass any config information via deepspeed
-      port.
+    description: This parameter configures which DEFAULT deepspeed config to be 
+      used - stage2 or stage3. The default choice is stage2. Note that, this 
+      parameter is ONLY applicable when user doesn't pass any config information
+      via deepspeed port.
     enum:
     - "2"
     - "3"
@@ -378,8 +390,9 @@ outputs:
     mode: rw_mount
   intermediate_folder:
     type: uri_folder
-    description: Folder to store intermediate outputs like model selector output,
-      preprocess output, checkpoints, etc. to preserve them across Singularity preemptions.
+    description: Folder to store intermediate outputs like model selector 
+      output, preprocess output, checkpoints, etc. to preserve them across 
+      Singularity preemptions.
     mode: rw_mount
 
 command: >-

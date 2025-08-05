@@ -6,24 +6,29 @@ properties:
   SHA: fff646d3dda72d8c794471bfaa75b4db0adb7610
   finetuning-tasks: image-object-detection
   finetune-min-sku-spec: 4|1|28|176
-  finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  finetune-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   evaluation-min-sku-spec: 4|1|28|176
-  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   inference-min-sku-spec: 4|0|14|28
-  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
-    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
-    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
-    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2,
-    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2,
-    Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3,
-    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3,
-    Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,
-    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
+    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, 
+    Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, 
+    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, 
+    Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_F8s_v2, 
+    Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, 
+    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, 
+    Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, 
+    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, 
+    Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, 
+    Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, 
+    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2
 tags:
   SharedComputeCapacityEnabled: ''
@@ -35,23 +40,28 @@ tags:
     apply_ort: 'false'
   task: object-detection
   hiddenlayerscanned: ''
-  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
-    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
-    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
-    Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds,
-    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
-    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
-    Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3,
-    Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  evaluation_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, 
+      Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, 
+      Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, 
+      Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, 
+      Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, 
+      Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, 
+      Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, 
+      Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, 
+      Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, 
+      Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, 
+      Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, 
+      Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
+      Standard_ND40rs_v2]
+  evaluation_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+      Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  finetune_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC96ads_A100_v4, 
+      Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 version: 13
 description: |
   `vfnet_r50-mdconv-c3-c5_fpn_ms-2x_coco` model is from <a href="https://github.com/open-mmlab/mmdetection/tree/v3.1.0" target="_blank">OpenMMLab's MMDetection library</a>. Accurately ranking the vast number of candidate detections is crucial for dense object detectors to achieve high performance. Prior work uses the classification score or a combination of classification and predicted localization scores to rank candidates. However, neither option results in a reliable ranking, thus degrading detection performance. In this paper, we propose to learn an Iou-aware Classification Score (IACS) as a joint representation of object presence confidence and localization accuracy. We show that dense object detectors can achieve a more accurate ranking of candidate detections based on the IACS. We design a new loss function, named Varifocal Loss, to train a dense object detector to predict the IACS, and propose a new star-shaped bounding box feature representation for IACS prediction and bounding box refinement. Combining these two new components and a bounding box refinement branch, we build an IoU-aware dense object detector based on the FCOS+ATSS architecture, that we call VarifocalNet or VFNet for short. Extensive experiments on MS COCO show that our VFNet consistently surpasses the strong baseline by ∼2.0 AP with different backbones. Our best model VFNet-X-1200 with Res2Net-101-DCN achieves a single-model single-scale AP of 55.1 on COCO test-dev, which is state-of-the-art among various object detectors.

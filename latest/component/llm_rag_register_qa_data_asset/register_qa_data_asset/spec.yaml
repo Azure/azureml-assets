@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -30,8 +31,8 @@ inputs:
     - "True"
     - "False"
     default: "False"
-    description: "Boolean to determine whether generated data should be saved as an\
-      \ AzureML Dataset"
+    description: "Boolean to determine whether generated data should be saved as an
+      AzureML Dataset"
 
 
 environment: azureml:llm-rag-embeddings:76

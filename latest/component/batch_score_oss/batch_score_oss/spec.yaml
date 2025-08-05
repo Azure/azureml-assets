@@ -18,8 +18,8 @@ inputs:
     type: boolean
     optional: true
     default: false
-    description: Whether to use PRS mini-batch streaming feature, which allows each
-      PRS processor to process multiple mini-batches at a time.
+    description: Whether to use PRS mini-batch streaming feature, which allows 
+      each PRS processor to process multiple mini-batches at a time.
 
   # Custom arguments
   configuration_file:
@@ -62,5 +62,6 @@ task:
     --configuration_file ${{inputs.configuration_file}}
     --partitioned_scoring_results ${{outputs.mini_batch_results_output_directory}}
     $[[--resume_from ${{inputs.resume_from}}]]
-  environment: azureml://registries/azureml/environments/model-evaluation/versions/44
+  environment: 
+    azureml://registries/azureml/environments/model-evaluation/versions/44
   append_row_to: ${{outputs.job_output_path}}

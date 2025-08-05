@@ -12,7 +12,8 @@ tags:
   SharedComputeCapacityEnabled: ''
   hiddenlayerscanned: ""
   disable-batch: 'true'
-  huggingface_model_id: mistralai/Mixtral-8x7B-Instruct-v0.1mistral-community/Mixtral-8x22B-v0.1
+  huggingface_model_id: 
+    mistralai/Mixtral-8x7B-Instruct-v0.1mistral-community/Mixtral-8x22B-v0.1
   inference_compute_allow_list: [Standard_ND96amsr_A100_v4]
   inference_supported_envs:
   - vllm

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 tags:
@@ -8,8 +9,8 @@ name: llm_ingest_dataset_to_acs_basic
 display_name: LLM - Dataset to ACS Pipeline
 is_deterministic: false
 
-description: Single job pipeline to chunk data from AzureML data asset, and create
-  ACS embeddings index
+description: Single job pipeline to chunk data from AzureML data asset, and 
+  create ACS embeddings index
 
 settings:
   default_compute: serverless
@@ -20,8 +21,8 @@ inputs:
     type: string
     default: '{"type": "azure_open_ai", "model_name": "gpt-35-turbo", "deployment_name":
       "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}'
-    description: "JSON describing the LLM provider and model details to use for prompt\
-      \ generation."
+    description: "JSON describing the LLM provider and model details to use for prompt
+      generation."
   llm_connection:
     type: string
     optional: true
@@ -59,8 +60,8 @@ inputs:
   chunk_size:
     type: integer
     default: 1024
-    description: "Chunk size (by token) to pass into the text splitter before performing\
-      \ embeddings"
+    description: "Chunk size (by token) to pass into the text splitter before performing
+      embeddings"
   chunk_overlap:
     type: integer
     default: 0
@@ -76,29 +77,29 @@ inputs:
     description: "Number of files read in during QA test data generation"
   data_source_url:
     type: string
-    description: "The url which can be appended to file names to form citation links\
-      \ for documents"
+    description: "The url which can be appended to file names to form citation links
+      for documents"
   document_path_replacement_regex:
     type: string
     optional: true
-    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'\
-      \ to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\
-      \\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles'\
-      \ from the middle of the url."
+    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'
+      to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\
+      \\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles'
+      from the middle of the url."
   # Embeddings components
   embeddings_container:
     type: uri_folder
     optional: true
     mode: direct
-    description: "Folder to contain generated embeddings. Should be parent folder\
-      \ of the 'embeddings' output path used for for this component. Will compare\
-      \ input data to existing embeddings and only embed changed/new data, reusing\
-      \ existing chunks."
+    description: "Folder to contain generated embeddings. Should be parent folder
+      of the 'embeddings' output path used for for this component. Will compare input
+      data to existing embeddings and only embed changed/new data, reusing existing
+      chunks."
   embeddings_model:
     type: string
     default: "azure_open_ai://deployment/text-embedding-ada-002/model/text-embedding-ada-002"
-    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'\
-      \ or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
+    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'
+      or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
   embedding_connection:
     type: string
     optional: true
@@ -135,8 +136,10 @@ jobs:
       output_data:
         type: uri_file
     environment_variables:
-      AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
-      AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION: ${{parent.inputs.llm_connection}}
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: 
+        ${{parent.inputs.embedding_connection}}
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION: 
+        ${{parent.inputs.llm_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_ACS: ${{parent.inputs.acs_connection}}
   ############
   data_chunking_job:
@@ -154,7 +157,8 @@ jobs:
       chunk_size: ${{parent.inputs.chunk_size}}
       chunk_overlap: ${{parent.inputs.chunk_overlap}}
       data_source_url: ${{parent.inputs.data_source_url}}
-      document_path_replacement_regex: ${{parent.inputs.document_path_replacement_regex}}
+      document_path_replacement_regex: 
+        ${{parent.inputs.document_path_replacement_regex}}
       max_sample_files: ${{parent.inputs.max_sample_files}}
     outputs:
       output_chunks:
@@ -177,12 +181,14 @@ jobs:
         path: ${{parent.jobs.data_chunking_job.outputs.output_chunks}}
       embeddings_container: ${{parent.inputs.embeddings_container}}
       embeddings_model: ${{parent.inputs.embeddings_model}}
-      deployment_validation: ${{parent.jobs.validate_deployments_job.outputs.output_data}}
+      deployment_validation: 
+        ${{parent.jobs.validate_deployments_job.outputs.output_data}}
     outputs:
       embeddings:
         type: uri_folder
     environment_variables:
-      AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI: 
+        ${{parent.inputs.embedding_connection}}
   ############
   # embeddings_parallel_job:
   #   type: command
@@ -229,7 +235,8 @@ jobs:
     outputs:
       index: ${{parent.outputs.acs_index}}
     environment_variables:
-      AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI: 
+        ${{parent.inputs.embedding_connection}}
       AZUREML_WORKSPACE_CONNECTION_ID_ACS: ${{parent.inputs.acs_connection}}
   ############
   register_mlindex_asset_job:

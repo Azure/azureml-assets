@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: summarization_finetune
 version: 0.0.76
 type: command
@@ -6,12 +7,14 @@ type: command
 is_deterministic: true
 
 display_name: Summarization Finetune
-description: Component to finetune Hugging Face pretrained models for summarization
-  task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime
-  for performance enhancement. See [docs](https://aka.ms/azureml/components/summarization_finetune)
-  to learn more.
+description: Component to finetune Hugging Face pretrained models for 
+  summarization task. The component supports optimizations such as LoRA, 
+  Deepspeed and ONNXRuntime for performance enhancement. See 
+  [docs](https://aka.ms/azureml/components/summarization_finetune) to learn 
+  more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/finetune
 
@@ -37,8 +40,8 @@ inputs:
     - "false"
     default: "true"
     optional: true
-    description: If "true", the lora weights are merged with the base Hugging Face
-      model weights before saving.
+    description: If "true", the lora weights are merged with the base Hugging 
+      Face model weights before saving.
 
   lora_alpha:
     type: integer
@@ -70,26 +73,27 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: If set to a positive number, the total number of training steps to
-      perform. Overrides 'epochs'. In case of using a finite iterable dataset the
-      training may stop before reaching the set number of steps when all data is exhausted.
+    description: If set to a positive number, the total number of training steps
+      to perform. Overrides 'epochs'. In case of using a finite iterable dataset
+      the training may stop before reaching the set number of steps when all 
+      data is exhausted.
 
   per_device_train_batch_size:
     type: integer
     min: 1
     default: 1
     optional: true
-    description: Per gpu batch size used for training. The effective training batch
-      size is _per_device_train_batch_size_ * _num_gpus_ * _num_nodes_.
+    description: Per gpu batch size used for training. The effective training 
+      batch size is _per_device_train_batch_size_ * _num_gpus_ * _num_nodes_.
 
   per_device_eval_batch_size:
     type: integer
     min: 1
     default: 1
     optional: true
-    description: Per gpu batch size used for validation. The default value is 1. The
-      effective validation batch size is _per_device_eval_batch_size_ * _num_gpus_
-      * _num_nodes_.
+    description: Per gpu batch size used for validation. The default value is 1.
+      The effective validation batch size is _per_device_eval_batch_size_ * 
+      _num_gpus_ * _num_nodes_.
 
   auto_find_batch_size:
     type: string
@@ -98,9 +102,10 @@ inputs:
     - "false"
     default: "false"
     optional: true
-    description: If set to "true" and if the provided 'per_device_train_batch_size'
-      goes into Out Of Memory (OOM) auto_find_batch_size will find the correct batch
-      size by iteratively reducing batch size by a factor of 2 till the OOM is fixed
+    description: If set to "true" and if the provided 
+      'per_device_train_batch_size' goes into Out Of Memory (OOM) 
+      auto_find_batch_size will find the correct batch size by iteratively 
+      reducing batch size by a factor of 2 till the OOM is fixed
 
   optim:
     type: string
@@ -127,8 +132,8 @@ inputs:
     type: number
     default: 0.0
     optional: true
-    description: Weight decay to apply (if not zero) to all layers except all bias
-      and LayerNorm weights in AdamW optimizer
+    description: Weight decay to apply (if not zero) to all layers except all 
+      bias and LayerNorm weights in AdamW optimizer
 
   adam_beta1:
     type: number
@@ -152,15 +157,15 @@ inputs:
     type: integer
     default: 1
     optional: true
-    description: Number of updates steps to accumulate the gradients for, before performing
-      a backward/update pass
+    description: Number of updates steps to accumulate the gradients for, before
+      performing a backward/update pass
 
   eval_accumulation_steps:
     type: integer
     default: -1
     optional: true
-    description: Number of predictions steps to accumulate before moving the tensors
-      to the CPU, will be passed as None if set to -1
+    description: Number of predictions steps to accumulate before moving the 
+      tensors to the CPU, will be passed as None if set to -1
 
   lr_scheduler_type:
     type: string
@@ -182,8 +187,8 @@ inputs:
     - "16"
     default: "32"
     optional: true
-    description: Apply mixed precision training. This can reduce memory footprint
-      by performing operations in half-precision.
+    description: Apply mixed precision training. This can reduce memory 
+      footprint by performing operations in half-precision.
 
   seed:
     type: integer
@@ -198,15 +203,16 @@ inputs:
     - "false"
     default: "false"
     optional: true
-    description: Ensure reproducible behavior during distributed training. Check this
-      link https://pytorch.org/docs/stable/notes/randomness.html for more details.
+    description: Ensure reproducible behavior during distributed training. Check
+      this link https://pytorch.org/docs/stable/notes/randomness.html for more 
+      details.
 
   dataloader_num_workers:
     type: integer
     default: 0
     optional: true
-    description: Number of subprocesses to use for data loading. 0 means that the
-      data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading. 0 means that 
+      the data will be loaded in the main process.
 
   ignore_mismatched_sizes:
     type: string
@@ -215,8 +221,9 @@ inputs:
     - "false"
     default: "true"
     optional: true
-    description: Not setting this flag will raise an error if some of the weights
-      from the checkpoint do not have the same size as the weights of the model.
+    description: Not setting this flag will raise an error if some of the 
+      weights from the checkpoint do not have the same size as the weights of 
+      the model.
 
   max_grad_norm:
     type: number
@@ -231,23 +238,25 @@ inputs:
     enum:
     - epoch
     - steps
-    description: The evaluation strategy to adopt during training. If set to "steps",
-      either the `evaluation_steps_interval` or `eval_steps` needs to be specified,
-      which helps to determine the step at which the model evaluation needs to be
-      computed else evaluation happens at end of each epoch.
+    description: The evaluation strategy to adopt during training. If set to 
+      "steps", either the `evaluation_steps_interval` or `eval_steps` needs to 
+      be specified, which helps to determine the step at which the model 
+      evaluation needs to be computed else evaluation happens at end of each 
+      epoch.
 
   evaluation_steps_interval:
     type: number
     default: 0.0
     optional: true
-    description: The evaluation steps in fraction of an epoch steps to adopt during
-      training. Overwrites eval_steps if not 0.
+    description: The evaluation steps in fraction of an epoch steps to adopt 
+      during training. Overwrites eval_steps if not 0.
 
   eval_steps:
     type: integer
     default: 500
     optional: true
-    description: Number of update steps between two evals if evaluation_strategy='steps'
+    description: Number of update steps between two evals if 
+      evaluation_strategy='steps'
 
   logging_strategy:
     type: string
@@ -256,15 +265,16 @@ inputs:
     enum:
     - epoch
     - steps
-    description: The logging strategy to adopt during training. If set to "steps",
-      the `logging_steps` will decide the frequency of logging else logging happens
-      at the end of epoch.
+    description: The logging strategy to adopt during training. If set to 
+      "steps", the `logging_steps` will decide the frequency of logging else 
+      logging happens at the end of epoch.
 
   logging_steps:
     type: integer
     default: 10
     optional: true
-    description: Number of update steps between two logs if logging_strategy='steps'
+    description: Number of update steps between two logs if 
+      logging_strategy='steps'
 
   metric_for_best_model:
     type: string
@@ -285,18 +295,19 @@ inputs:
     enum:
     - "true"
     - "false"
-    description: If set to "true", resumes the training from last saved checkpoint.
-      Along with loading the saved weights, saved optimizer, scheduler and random
-      states will be loaded if exist. The default value is "false"
+    description: If set to "true", resumes the training from last saved 
+      checkpoint. Along with loading the saved weights, saved optimizer, 
+      scheduler and random states will be loaded if exist. The default value is 
+      "false"
 
   save_total_limit:
     type: integer
     default: -1
     optional: true
-    description: If a positive value is passed, it will limit the total number of
-      checkpoints saved. The value of -1 saves all the checkpoints, otherwise if the
-      number of checkpoints exceed the _save_total_limit_, the older checkpoints gets
-      deleted.
+    description: If a positive value is passed, it will limit the total number 
+      of checkpoints saved. The value of -1 saves all the checkpoints, otherwise
+      if the number of checkpoints exceed the _save_total_limit_, the older 
+      checkpoints gets deleted.
 
   # Early Stopping Parameters
   apply_early_stopping:
@@ -312,17 +323,17 @@ inputs:
     type: integer
     default: 1
     optional: true
-    description: Stop training when the metric specified through _metric_for_best_model_
-      worsens for _early_stopping_patience_ evaluation calls.This value is only valid
-      if _apply_early_stopping_ is set to true.
+    description: Stop training when the metric specified through 
+      _metric_for_best_model_ worsens for _early_stopping_patience_ evaluation 
+      calls.This value is only valid if _apply_early_stopping_ is set to true.
 
   early_stopping_threshold:
     type: number
     default: 0.0
     optional: true
-    description: Denotes how much the specified metric must improve to satisfy early
-      stopping conditions. This value is only valid if _apply_early_stopping_ is set
-      to true.
+    description: Denotes how much the specified metric must improve to satisfy 
+      early stopping conditions. This value is only valid if 
+      _apply_early_stopping_ is set to true.
 
   # Deepspeed Parameters
   # Deepspeed config is a JSON file that can be used to configure optimizer, scheduler, batch size and other training related parameters. A default deepspeed config is used when _apply_deepspeed_ is set to `true`. Alternatively, you can pass your custom deepspeed config. Please follow the [deepspeed docs](https://www.deepspeed.ai/docs/config-json/) to create the custom config.
@@ -349,10 +360,10 @@ inputs:
     enum:
     - "2"
     - "3"
-    description: This parameter configures which DEFAULT deepspeed config to be used
-      - stage2 or stage3. The default choice is stage2. Note that, this parameter
-      is ONLY applicable when user doesn't pass any config information via deepspeed
-      port.
+    description: This parameter configures which DEFAULT deepspeed config to be 
+      used - stage2 or stage3. The default choice is stage2. Note that, this 
+      parameter is ONLY applicable when user doesn't pass any config information
+      via deepspeed port.
 
   # ORT Parameters
   # ONNX Runtime is a cross-platform machine-learning model accelerator, with a flexible interface to integrate hardware-specific libraries.
@@ -369,25 +380,26 @@ inputs:
   preprocess_output:
     type: uri_folder
     optional: false
-    description: output folder of preprocess component containing encoded train, valid
-      and test data. The tokenizer is also saved as part of preprocess output
+    description: output folder of preprocess component containing encoded train,
+      valid and test data. The tokenizer is also saved as part of preprocess 
+      output
     mode: rw_mount
 
   model_selector_output:
     type: uri_folder
     optional: false
-    description: output folder of model import component containing model artifacts
-      and a metadata file.
+    description: output folder of model import component containing model 
+      artifacts and a metadata file.
     mode: rw_mount
 
 outputs:
   pytorch_model_folder:
     type: uri_folder
-    description: output folder containing _best_ model as defined by _metric_for_best_model_.
-      Along with the best model, output folder contains checkpoints saved after every
-      evaluation which is defined by the _evaluation_strategy_. Each checkpoint contains
-      the model weight(s), config, tokenizer, optimzer, scheduler and random number
-      states.
+    description: output folder containing _best_ model as defined by 
+      _metric_for_best_model_. Along with the best model, output folder contains
+      checkpoints saved after every evaluation which is defined by the 
+      _evaluation_strategy_. Each checkpoint contains the model weight(s), 
+      config, tokenizer, optimzer, scheduler and random number states.
     mode: rw_mount
 
 command: >-

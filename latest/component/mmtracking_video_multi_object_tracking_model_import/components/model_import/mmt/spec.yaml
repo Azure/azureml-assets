@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 version: 0.0.10
@@ -8,7 +9,8 @@ description: Import PyTorch / MLflow model
 
 is_deterministic: true
 
-environment: azureml://registries/azureml/environments/acft-mmtracking-video-gpu/versions/33
+environment: 
+  azureml://registries/azureml/environments/acft-mmtracking-video-gpu/versions/33
 
 code: ../../../src/model_selector
 
@@ -27,11 +29,13 @@ inputs:
   model_name:
     type: string
     optional: true
-    description: Please select models from AzureML Model Assets for all supported
-      models. For MMTracking, provide the model's config name here, same as its specified
-      in MMTracking Model Zoo. To find the correct model name, go to https://github.com/open-mmlab/mmtracking/tree/v0.14.0/configs/mot
-      click on the model type and you will find the model name in the metafile.yml
-      file which is present at configs/<MODEL_TYPE>/metafile.yml location. It is the
+    description: Please select models from AzureML Model Assets for all 
+      supported models. For MMTracking, provide the model's config name here, 
+      same as its specified in MMTracking Model Zoo. To find the correct model 
+      name, go to 
+      https://github.com/open-mmlab/mmtracking/tree/v0.14.0/configs/mot click on
+      the model type and you will find the model name in the metafile.yml file 
+      which is present at configs/<MODEL_TYPE>/metafile.yml location. It is the 
       user responsibility to comply with the model's license terms.
 
   # Continual-Finetuning model path
@@ -55,7 +59,8 @@ inputs:
     type: boolean
     optional: true
     default: false
-    description: Download model directly from MMTracking instead of system registry
+    description: Download model directly from MMTracking instead of system 
+      registry
 
 outputs:
   output_dir:

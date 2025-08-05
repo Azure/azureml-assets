@@ -4,8 +4,8 @@ type: prompt
 version: 0.0.4
 name: advertising_summary
 display_name: Advertising Summary
-description: Summarize an advertisement and identify issues (i.e. not showing logo
-  early, etc.)
+description: Summarize an advertisement and identify issues (i.e. not showing 
+  logo early, etc.)
 
 tags:
   modality: video

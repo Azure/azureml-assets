@@ -6,27 +6,33 @@ properties:
   SHA: a4f8f3ea906ed274767e9906dbaede7531d660ff
   evaluation-min-sku-spec: 4|0|28|56
   inference-min-sku-spec: 2|0|8|28
-  evaluation-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
-    Standard_DS5_v2, Standard_DS12_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4,
-    Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4,
-    Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_FX12mds, Standard_F16s_v2,
-    Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds,
-    Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3,
-    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
-    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
-    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
-  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2,
-    Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
-    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
-    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds,
-    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2,
-    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
-    Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3,
-    Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  evaluation-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, 
+    Standard_D8as_v4, Standard_DS5_v2, Standard_DS12_v2, Standard_D16a_v4, 
+    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, 
+    Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, 
+    Standard_D96as_v4, Standard_FX4mds, Standard_FX12mds, Standard_F16s_v2, 
+    Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, 
+    Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, 
+    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, 
+    Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
+    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  inference-recommended-sku: Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
+    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, 
+    Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, 
+    Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, 
+    Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2, Standard_FX4mds, 
+    Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, 
+    Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, 
+    Standard_FX36mds, Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3, 
+    Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, 
+    Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
+    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en
 tags:
   license: apache-2.0
@@ -35,27 +41,33 @@ tags:
   SharedComputeCapacityEnabled: ""
   huggingface_model_id: sshleifer/distilbart-cnn-12-6
   hiddenlayerscanned: ""
-  evaluation_compute_allow_list: [Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
-    Standard_DS5_v2, Standard_DS12_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4,
-    Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4,
-    Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_FX12mds, Standard_F16s_v2,
-    Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds,
-    Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3,
-    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
-    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
-    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
-  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, Standard_D4as_v4,
-    Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_D16a_v4,
-    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4,
-    Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2,
-    Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2,
-    Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds,
-    Standard_FX48mds, Standard_E2s_v3, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3,
-    Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
-    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3,
-    Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  evaluation_compute_allow_list: [Standard_DS4_v2, Standard_D8a_v4, 
+      Standard_D8as_v4, Standard_DS5_v2, Standard_DS12_v2, Standard_D16a_v4, 
+      Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, 
+      Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, 
+      Standard_D96as_v4, Standard_FX4mds, Standard_FX12mds, Standard_F16s_v2, 
+      Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, 
+      Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, 
+      Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, 
+      Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  inference_compute_allow_list: [Standard_DS3_v2, Standard_D4a_v4, 
+      Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, 
+      Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, 
+      Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, 
+      Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F4s_v2, 
+      Standard_FX4mds, Standard_F8s_v2, Standard_FX12mds, Standard_F16s_v2, 
+      Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, 
+      Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E2s_v3, 
+      Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, 
+      Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3,
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
 version: 13
 description: |
   The RoBERTa Large model is a large transformer-based language model that was developed by the Hugging Face team. It is pre-trained on masked language modeling and can be used for tasks such as sequence classification, token classification, or question answering. Its primary usage is as a fine-tuning tool and is case-sensitive. Additionally, there are metrics provided for DistilBART models, including the number of parameters, inference time, speedup, Rouge 2, and Rouge-L. The distilbart-xsum-12-6 model is recommended with 306 million parameters, 137 milliseconds inference time, 1.68 speedup, 22.12 Rouge 2, and 36.99 Rouge-L.

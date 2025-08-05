@@ -5,7 +5,8 @@ properties:
   is-promptflow: true
   is-evaluator: true
   show-artifact: true
-  _default-display-file: ./GroundednessEvaluator/groundedness_without_query.prompty
+  _default-display-file: 
+    ./GroundednessEvaluator/groundedness_without_query.prompty
 tags:
   hiddenlayerscanned: ""
 version: 6

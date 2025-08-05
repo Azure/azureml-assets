@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
 version: 0.0.12
 type: command
@@ -6,7 +7,8 @@ type: command
 is_deterministic: true
 
 display_name: Deploy model
-description: Deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python)
+description: Deploy a model to a workspace. The component works on compute with 
+  [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python)
   attached.
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
@@ -41,8 +43,8 @@ inputs:
   registration_details_folder:
     type: uri_folder
     optional: true
-    description: Folder containing model registration details in a JSON file named
-      model_registration_details.json
+    description: Folder containing model registration details in a JSON file 
+      named model_registration_details.json
 
   model_id:
     type: string
@@ -110,15 +112,15 @@ inputs:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     default: Standard_NC24s_v3
-    description: Compute instance type to deploy model. Make sure that instance type
-      is available and have enough quota available.
+    description: Compute instance type to deploy model. Make sure that instance 
+      type is available and have enough quota available.
 
   instance_count:
     type: integer
     optional: true
     default: 1
-    description: Number of instances you want to use for deployment. Make sure instance
-      type have enough quota available.
+    description: Number of instances you want to use for deployment. Make sure 
+      instance type have enough quota available.
 
   max_concurrent_requests_per_instance:
     type: integer
@@ -142,14 +144,15 @@ inputs:
     type: integer
     default: 10
     optional: true
-    description: The number of times system will try after failing the readiness probe
+    description: The number of times system will try after failing the readiness
+      probe
 
   success_threshold_readiness_probe:
     type: integer
     default: 1
     optional: true
-    description: The minimum consecutive successes for the readiness probe to be considered
-      successful after having failed
+    description: The minimum consecutive successes for the readiness probe to be
+      considered successful after having failed
 
   timeout_readiness_probe:
     type: integer
@@ -167,14 +170,15 @@ inputs:
     type: integer
     default: 10
     optional: true
-    description: The number of seconds after the container has started before the
-      readiness probe is initiated
+    description: The number of seconds after the container has started before 
+      the readiness probe is initiated
 
   failure_threshold_liveness_probe:
     type: integer
     default: 30
     optional: true
-    description: The number of times system will try after failing the liveness probe
+    description: The number of times system will try after failing the liveness 
+      probe
 
   timeout_liveness_probe:
     type: integer
@@ -192,8 +196,8 @@ inputs:
     type: integer
     default: 10
     optional: true
-    description: The number of seconds after the container has started before the
-      liveness probe is initiated
+    description: The number of seconds after the container has started before 
+      the liveness probe is initiated
 
   egress_public_network_access:
     type: string
@@ -202,8 +206,8 @@ inputs:
     enum:
     - enabled
     - disabled
-    description: Setting it to disabled secures the deployment by restricting communication
-      between the deployment and the Azure resources used by it
+    description: Setting it to disabled secures the deployment by restricting 
+      communication between the deployment and the Azure resources used by it
 
 outputs:
   model_deployment_details:

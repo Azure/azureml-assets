@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/parallelComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/parallelComponent.schema.json
 type: parallel
 version: 0.0.9
 

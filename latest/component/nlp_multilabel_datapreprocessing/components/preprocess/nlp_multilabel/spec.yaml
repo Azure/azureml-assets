@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: nlp_multilabel_datapreprocessing
 version: 0.0.76
 type: command
@@ -6,10 +7,11 @@ type: command
 is_deterministic: true
 
 display_name: DataPreProcessing for AutoMLNLPMultilabel
-description: Component to preprocess data for automl nlp multilabel classification
-  task
+description: Component to preprocess data for automl nlp multilabel 
+  classification task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/preprocess
 
@@ -24,7 +26,8 @@ inputs:
     type: integer
     optional: true
     default: 32
-    description: Number of examples to batch before calling the tokenization function
+    description: Number of examples to batch before calling the tokenization 
+      function
 
   # Inputs
   train_file_path:
@@ -41,8 +44,8 @@ inputs:
   model_selector_output:
     type: uri_folder
     optional: false
-    description: output folder of model selector containing model metadata like config,
-      checkpoints, tokenizer config
+    description: output folder of model selector containing model metadata like 
+      config, checkpoints, tokenizer config
 
   # AutoML NLP parameters
   enable_long_range_text:

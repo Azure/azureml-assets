@@ -6,8 +6,8 @@ properties:
   azureml.promptflow.section: gallery
   azureml.promptflow.type: evaluate
   azureml.promptflow.name: QnA F1 Score Evaluation
-  azureml.promptflow.description: Compute the F1 Score based on words in answer and
-    ground truth.
+  azureml.promptflow.description: Compute the F1 Score based on words in answer 
+    and ground truth.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 version: 3

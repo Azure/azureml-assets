@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
@@ -13,10 +14,11 @@ inputs:
     type: string
     optional: false
     default: tabular-classification
-    enum: [tabular-classification, tabular-classification-multilabel, tabular-regression,
-      text-classification, text-classification-multilabel, text-named-entity-recognition,
-      text-summarization, question-answering, text-translation, text-generation, fill-mask,
-      image-classification, image-classification-multilabel, chat-completion, image-object-detection,
+    enum: [tabular-classification, tabular-classification-multilabel, 
+        tabular-regression, text-classification, text-classification-multilabel, 
+        text-named-entity-recognition, text-summarization, question-answering, 
+        text-translation, text-generation, fill-mask, image-classification, 
+        image-classification-multilabel, chat-completion, image-object-detection,
       image-instance-segmentation, image-generation]
     description: "Task type"
   test_data:
@@ -28,8 +30,8 @@ inputs:
     type: mlflow_model
     optional: false
     mode: ro_mount
-    description: "Mlflow Model - registered model or output of a job with type mlflow_model\
-      \ in a pipeline"
+    description: "Mlflow Model - registered model or output of a job with type mlflow_model
+      in a pipeline"
   label_column_name:
     type: string
     optional: true
@@ -37,8 +39,8 @@ inputs:
   input_column_names:
     type: string
     optional: true
-    description: "Input column names in provided test dataset (Ex : column1). Add\
-      \ comma delimited values in case of multiple input columns (Ex : column1,column2)"
+    description: "Input column names in provided test dataset (Ex : column1). Add
+      comma delimited values in case of multiple input columns (Ex : column1,column2)"
   evaluation_config:
     type: uri_file
     optional: true
@@ -69,7 +71,8 @@ outputs:
 
 is_deterministic: true
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: 
+  azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 command: >-
   python download_dependencies.py

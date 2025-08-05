@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 version: 0.0.24
@@ -13,32 +14,33 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: Compute to be used for framework_selector eg. provide 'cpu-cluster'
-      if your compute is named 'cpu-cluster'.
+    description: Compute to be used for framework_selector eg. provide 
+      'cpu-cluster' if your compute is named 'cpu-cluster'.
 
   compute_finetune:
     type: string
     optional: false
-    description: Compute to be used for running the selected framework eg. provide
-      'gpu-cluster' if your compute is named 'gpu-cluster'.
+    description: Compute to be used for running the selected framework eg. 
+      provide 'gpu-cluster' if your compute is named 'gpu-cluster'.
 
   instance_count:
     type: integer
     default: 1
     optional: true
-    description: Number of nodes to be used for finetuning (used for distributed training)
+    description: Number of nodes to be used for finetuning (used for distributed
+      training)
 
   process_count_per_instance:
     type: integer
     default: 1
     optional: true
-    description: Number of gpus to be used per node for finetuning, should be equal
-      to number of gpu per node in the compute SKU used for finetune.
+    description: Number of gpus to be used per node for finetuning, should be 
+      equal to number of gpu per node in the compute SKU used for finetune.
 
   # ------------------- Model Framework Selector -------------------
   model_name:
-    description: Name of the model. Based on this model name, a framework will be
-      selected (Hugging Face, MM Detection).
+    description: Name of the model. Based on this model name, a framework will 
+      be selected (Hugging Face, MM Detection).
     type: string
     optional: true
 
@@ -46,7 +48,8 @@ inputs:
     type: boolean
     optional: true
     default: false
-    description: Download model directly from HuggingFace instead of system registry
+    description: Download model directly from HuggingFace instead of system 
+      registry
 
   # ------------------- Data Inputs ------------------
   training_data:
@@ -79,30 +82,31 @@ inputs:
     optional: true
 
   beta1:
-    description: Value of beta1 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta1 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
 
   beta2:
-    description: Value of beta2 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta2 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
 
   checkpoint_frequency:
-    description: Frequency to store model checkpoints. Must be a positive integer.
+    description: Frequency to store model checkpoints. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 0
 
   checkpoint_run_id:
-    description: The run ID of the experiment that has a pretrained checkpoint for
-      incremental training.
+    description: The run ID of the experiment that has a pretrained checkpoint 
+      for incremental training.
     type: string
     optional: true
 
@@ -112,39 +116,41 @@ inputs:
     optional: true
 
   early_stopping_patience:
-    description: Minimum number of epochs or validation evaluations with no primary
-      metric improvement before the run is stopped. Must be a positive integer.
-    type: integer
-    optional: true
-    min: 1
-
-  early_stopping_delay:
-    description: Minimum number of epochs or validation evaluations to wait before
-      primary metric improvement is tracked for early stopping. Must be a positive
+    description: Minimum number of epochs or validation evaluations with no 
+      primary metric improvement before the run is stopped. Must be a positive 
       integer.
     type: integer
     optional: true
     min: 1
 
+  early_stopping_delay:
+    description: Minimum number of epochs or validation evaluations to wait 
+      before primary metric improvement is tracked for early stopping. Must be a
+      positive integer.
+    type: integer
+    optional: true
+    min: 1
+
   evaluation_frequency:
-    description: Frequency to evaluate validation dataset to get metric scores. Must
-      be a positive integer.
+    description: Frequency to evaluate validation dataset to get metric scores. 
+      Must be a positive integer.
     type: integer
     optional: true
     min: 1
 
   gradient_accumulation_step:
-    description: Number of forward passes without updating the model weights while
-      accumulating the gradients of those steps, and then using the accumulated gradients
-      to compute the weight updates. Must be a positive integer.
+    description: Number of forward passes without updating the model weights 
+      while accumulating the gradients of those steps, and then using the 
+      accumulated gradients to compute the weight updates. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 1
 
   layers_to_freeze:
-    description: How many layers to freeze for your model. For instance, passing 2
-      as value for seresnext means freezing layer0 and layer1 referring to the below
-      supported model layer info. Must be a positive integer.
+    description: How many layers to freeze for your model. For instance, passing
+      2 as value for seresnext means freezing layer0 and layer1 referring to the
+      below supported model layer info. Must be a positive integer.
     type: integer
     optional: true
     min: 1
@@ -163,8 +169,8 @@ inputs:
     enum: ['warmup_cosine', 'step']
 
   momentum:
-    description: Value of momentum when optimizer is sgd. Must be a float in the range
-      [0, 1].
+    description: Value of momentum when optimizer is sgd. Must be a float in the
+      range [0, 1].
     type: number
     optional: true
     min: 0
@@ -182,8 +188,8 @@ inputs:
     min: 1
 
   number_of_workers:
-    description: Number of subprocesses to use for data loading (PyTorch only). 0
-      means that the data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading (PyTorch only). 
+      0 means that the data will be loaded in the main process.
     type: integer
     optional: true
 
@@ -199,15 +205,17 @@ inputs:
     optional: true
 
   step_lr_gamma:
-    description: Value of gamma when learning rate scheduler is step. Please check
-      for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of gamma when learning rate scheduler is step. Please 
+      check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: number
     optional: true
 
   step_lr_step_size:
-    description: Value of step size when learning rate scheduler is step. Please check
-      for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of step size when learning rate scheduler is step. Please
+      check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: integer
     optional: true
@@ -219,9 +227,10 @@ inputs:
     min: 1
 
   training_crop_size:
-    description: Image crop size that's input to your neural network for training
-      dataset. Notes - seresnext doesn't take an arbitrary size. ViT-variants should
-      have the same validation_crop_size and training_crop_size.
+    description: Image crop size that's input to your neural network for 
+      training dataset. Notes - seresnext doesn't take an arbitrary size. 
+      ViT-variants should have the same validation_crop_size and 
+      training_crop_size.
     type: integer
     optional: true
     min: 1
@@ -233,30 +242,33 @@ inputs:
     min: 1
 
   validation_crop_size:
-    description: Image crop size that's input to your neural network for validation
-      dataset. Note - seresnext doesn't take an arbitrary size. ViT-variants should
-      have the same validation_crop_size and training_crop_size.
+    description: Image crop size that's input to your neural network for 
+      validation dataset. Note - seresnext doesn't take an arbitrary size. 
+      ViT-variants should have the same validation_crop_size and 
+      training_crop_size.
     type: integer
     optional: true
     min: 1
 
   validation_resize_size:
-    description: Image size to which to resize before cropping for validation dataset.
-      Note - seresnext doesn't take an arbitrary size.
+    description: Image size to which to resize before cropping for validation 
+      dataset. Note - seresnext doesn't take an arbitrary size.
     type: integer
     optional: true
     min: 1
 
   warmup_cosine_lr_cycles:
-    description: Value of cosine cycle when learning rate scheduler is warmup_cosine.
-      Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of cosine cycle when learning rate scheduler is 
+      warmup_cosine. Please check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: number
     optional: true
 
   warmup_cosine_lr_warmup_epochs:
-    description: Value of warmup epochs when learning rate scheduler is warmup_cosine.
-      Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of warmup epochs when learning rate scheduler is 
+      warmup_cosine. Please check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: integer
     optional: true
@@ -304,7 +316,8 @@ jobs:
     inputs:
       task_type: 'image-classification'
       model_name: ${{parent.inputs.model_name}}
-      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
+      validation_output: 
+        ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
 
   image_classification_runtime_component:
     type: command
@@ -344,7 +357,8 @@ jobs:
       validation_crop_size: ${{parent.inputs.validation_crop_size}}
       validation_resize_size: ${{parent.inputs.validation_resize_size}}
       warmup_cosine_lr_cycles: ${{parent.inputs.warmup_cosine_lr_cycles}}
-      warmup_cosine_lr_warmup_epochs: ${{parent.inputs.warmup_cosine_lr_warmup_epochs}}
+      warmup_cosine_lr_warmup_epochs: 
+        ${{parent.inputs.warmup_cosine_lr_warmup_epochs}}
       weight_decay: ${{parent.inputs.weight_decay}}
       weighted_loss: ${{parent.inputs.weighted_loss}}
 
@@ -356,7 +370,8 @@ jobs:
       model_family: 'HuggingFaceImage'
       model_name: ${{parent.inputs.model_name}}
       download_from_source: ${{parent.inputs.download_from_source}}
-      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
+      validation_output: 
+        ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
 
   hugging_face_finetune:
     type: command
@@ -405,11 +420,15 @@ jobs:
     component: azureml:image_model_output_selector:0.0.20
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
-      mlflow_model_t: ${{parent.jobs.image_classification_runtime_component.outputs.mlflow_model_folder}}
-      pytorch_model_t: ${{parent.jobs.image_classification_runtime_component.outputs.pytorch_model_folder}}
+      mlflow_model_t: 
+        ${{parent.jobs.image_classification_runtime_component.outputs.mlflow_model_folder}}
+      pytorch_model_t: 
+        ${{parent.jobs.image_classification_runtime_component.outputs.pytorch_model_folder}}
       condition: ${{parent.jobs.framework_selector.outputs.output}}
-      mlflow_model_f: ${{parent.jobs.hugging_face_finetune.outputs.mlflow_model_folder}}
-      pytorch_model_f: ${{parent.jobs.hugging_face_finetune.outputs.pytorch_model_folder}}
+      mlflow_model_f: 
+        ${{parent.jobs.hugging_face_finetune.outputs.mlflow_model_folder}}
+      pytorch_model_f: 
+        ${{parent.jobs.hugging_face_finetune.outputs.pytorch_model_folder}}
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}

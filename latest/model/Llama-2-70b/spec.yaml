@@ -8,10 +8,10 @@ properties:
   evaluation-min-sku-spec: 24|4|448|2900
   inference-min-sku-spec: 40|4|672|256
   finetune-min-sku-spec: 96|8|900|2900
-  evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
-    Standard_ND96amsr_A100_v4
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_NC96ads_A100_v4
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   finetune-recommended-sku: Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification, text-generation
   azureml.copyRegistryFilesToWorkspace: true

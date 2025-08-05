@@ -5,30 +5,35 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: ""
   inference-min-sku-spec: 6|0|56|112
-  inference-recommended-sku: Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
-    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
-    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F32s_v2, Standard_F48s_v2,
-    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
-    Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC6s_v3,
-    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
+  inference-recommended-sku: Standard_DS5_v2, Standard_D16a_v4, 
+    Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, 
+    Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, 
+    Standard_D96as_v4, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, 
+    Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, 
+    Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, 
+    Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, 
+    Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2
-  languages: en, zh, de, es, ru, ko, fr, ja, pt, tr, pl, ca, nl, ar, sv, it, id, hi,
-    fi, vi, he, uk, el, ms, cs, ro, da, hu, ta, no, th, ur, hr, bg, lt, la, mi, ml,
-    cy, sk, te, fa, lv, bn, sr, az, sl, kn, et, mk, br, eu, is, hy, ne, mn, bs, kk,
-    sq, sw, gl, mr, pa, si, km, sn, yo, so, af, oc, ka, be, tg, sd, gu, am, yi, lo,
-    uz, fo, ht, ps, tk, nn, mt, sa, lb, my, bo, tl, mg, as, tt, ln, ha, ba, jw, su
+  languages: en, zh, de, es, ru, ko, fr, ja, pt, tr, pl, ca, nl, ar, sv, it, id,
+    hi, fi, vi, he, uk, el, ms, cs, ro, da, hu, ta, no, th, ur, hr, bg, lt, la, 
+    mi, ml, cy, sk, te, fa, lv, bn, sr, az, sl, kn, et, mk, br, eu, is, hy, ne, 
+    mn, bs, kk, sq, sw, gl, mr, pa, si, km, sn, yo, so, af, oc, ka, be, tg, sd, 
+    gu, am, yi, lo, uz, fo, ht, ps, tk, nn, mt, sa, lb, my, bo, tl, mg, as, tt, 
+    ln, ha, ba, jw, su
 tags:
   huggingface_model_id: openai/whisper-large-v3
   hiddenlayerscanned: ""
-  inference_compute_allow_list: [Standard_DS5_v2, Standard_D16a_v4, Standard_D16as_v4,
-    Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4,
-    Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_F32s_v2, Standard_F48s_v2,
-    Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds,
-    Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC6s_v3,
-    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3,
-    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_ND40rs_v2]
+  inference_compute_allow_list: [Standard_DS5_v2, Standard_D16a_v4, 
+      Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, 
+      Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, 
+      Standard_D96as_v4, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, 
+      Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, 
+      Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, 
+      Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, 
+      Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC48ads_A100_v4, 
+      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
+      Standard_ND40rs_v2]
   license: mit
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition

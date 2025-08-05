@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 version: 0.0.9
@@ -8,7 +9,8 @@ description: Component to validate the finetune job against Validation Service
 
 is_deterministic: true
 
-environment: azureml://registries/azureml/environments/acpt-pytorch-2.2-cuda12.1/labels/latest
+environment: 
+  azureml://registries/azureml/environments/acpt-pytorch-2.2-cuda12.1/labels/latest
 
 code: ../../src/validation
 
@@ -18,8 +20,8 @@ inputs:
   mlflow_model_path:
     type: mlflow_model
     optional: true
-    description: MLflow model asset path. Special characters like \ and ' are invalid
-      in the parameter value.
+    description: MLflow model asset path. Special characters like \ and ' are 
+      invalid in the parameter value.
 
   # ###################################### Data validation ###################################### #
   # component input: training mltable
@@ -49,71 +51,76 @@ inputs:
   compute_preprocess:
     type: string
     optional: true
-    description: Compute to be used for preprocess eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in
-      the parameter value. If compute cluster name is provided, instance_type field
-      will be ignored and the respective cluster will be used.
+    description: Compute to be used for preprocess eg. provide 'FT-Cluster' if 
+      your compute is named 'FT-Cluster'. Special characters like \ and ' are 
+      invalid in the parameter value. If compute cluster name is provided, 
+      instance_type field will be ignored and the respective cluster will be 
+      used.
 
   instance_type_preprocess:
     type: string
     optional: true
-    description: Instance type to be used for preprocess component in case of serverless
-      compute, eg. standard_d12_v2. The parameter compute_preprocess must be set to
-      'serverless' for instance_type to be used
+    description: Instance type to be used for preprocess component in case of 
+      serverless compute, eg. standard_d12_v2. The parameter compute_preprocess 
+      must be set to 'serverless' for instance_type to be used
 
   compute_model_import:
     type: string
     optional: true
-    description: Compute to be used for model_import eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+    description: Compute to be used for model_import eg. provide 'FT-Cluster' if
+      your compute is named 'FT-Cluster'
 
   instance_type_model_import:
     type: string
     optional: true
-    description: Instance type to be used for model_import component in case of serverless
-      compute, eg. standard_d12_v2. The parameter compute_model_import must be set
-      to 'serverless' for instance_type to be used
+    description: Instance type to be used for model_import component in case of 
+      serverless compute, eg. standard_d12_v2. The parameter 
+      compute_model_import must be set to 'serverless' for instance_type to be 
+      used
 
   compute_finetune:
     type: string
     optional: true
-    description: Compute to be used for finetuning  eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in
-      the parameter value. If compute cluster name is provided, instance_type field
-      will be ignored and the respective cluster will be used
+    description: Compute to be used for finetuning  eg. provide 'FT-Cluster' if 
+      your compute is named 'FT-Cluster'. Special characters like \ and ' are 
+      invalid in the parameter value. If compute cluster name is provided, 
+      instance_type field will be ignored and the respective cluster will be 
+      used
 
   instance_type_finetune:
     type: string
     optional: true
-    description: Instance type to be used for finetune component in case of serverless
-      compute, eg. standard_nc24rs_v3. The parameter compute_finetune must be set
-      to 'serverless' for instance_type to be used
+    description: Instance type to be used for finetune component in case of 
+      serverless compute, eg. standard_nc24rs_v3. The parameter compute_finetune
+      must be set to 'serverless' for instance_type to be used
 
   instance_count:
     type: integer
     default: 1
     optional: true
-    description: Number of nodes to be used for finetuning (used for distributed training)
+    description: Number of nodes to be used for finetuning (used for distributed
+      training)
 
   process_count_per_instance:
     type: integer
     default: 1
     optional: true
-    description: Number of gpus to be used per node for finetuning, should be equal
-      to number of gpu per node in the compute SKU used for finetune
+    description: Number of gpus to be used per node for finetuning, should be 
+      equal to number of gpu per node in the compute SKU used for finetune
 
   compute_model_evaluation:
     type: string
     optional: true
-    description: Compute to be used for model evaluation eg. provide 'FT-Cluster'
-      if your compute is named 'FT-Cluster'
+    description: Compute to be used for model evaluation eg. provide 
+      'FT-Cluster' if your compute is named 'FT-Cluster'
 
   instance_type_model_evaluation:
     type: string
     optional: true
-    description: Instance type to be used for model_evaluation components in case
-      of serverless compute, eg. standard_nc24rs_v3. The parameter compute_model_evaluation
-      must be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for model_evaluation components in 
+      case of serverless compute, eg. standard_nc24rs_v3. The parameter 
+      compute_model_evaluation must be set to 'serverless' for instance_type to 
+      be used
 
 
   task_name:
@@ -148,7 +155,8 @@ inputs:
     type: string
     default: label
     optional: true
-    description: Label column name in provided test dataset, for example "label".
+    description: Label column name in provided test dataset, for example 
+      "label".
 
   device:
     type: string
@@ -173,8 +181,8 @@ inputs:
   task_specific_extra_params:
     type: string
     optional: true
-    description: All extra params. The values should be key values pairs separated
-      by semi-colon. For example "param1=value1;param2=value2"
+    description: All extra params. The values should be key values pairs 
+      separated by semi-colon. For example "param1=value1;param2=value2"
 
 outputs:
   validation_info:

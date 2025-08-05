@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -22,8 +23,8 @@ inputs:
   openai_api_type:
     type: string
     default: "azure"
-    description: "Type of OpenAI endpoint hosting model. Defaults to azure for AOAI\
-      \ endpoints."
+    description: "Type of OpenAI endpoint hosting model. Defaults to azure for AOAI
+      endpoints."
   input_data:
     type: uri_folder
     description: "Uri folder of documents containing chunks of data."
@@ -31,11 +32,11 @@ inputs:
     type: string
     default: '{"type": "azure_open_ai", "model_name": "gpt-35-turbo", "deployment_name":
       "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}'
-    description: "JSON Configuration for what model to use for question generation.\
-      \ Must contain following keys: 'type' (value must be 'azure_open_ai' or 'azure'),\
-      \ 'model_name' (name of model to use for summary), 'deployment_name' (name of\
-      \ deployment for model), 'temperature' (randomness in response, float from 0\
-      \ to 1), 'max_tokens' (number of tokens for response)."
+    description: "JSON Configuration for what model to use for question generation.
+      Must contain following keys: 'type' (value must be 'azure_open_ai' or 'azure'),
+      'model_name' (name of model to use for summary), 'deployment_name' (name of
+      deployment for model), 'temperature' (randomness in response, float from 0 to
+      1), 'max_tokens' (number of tokens for response)."
   llm_connection:
     type: string
     optional: false
@@ -54,15 +55,15 @@ inputs:
     description: "File type to save the dataset as. Options are 'csv' and 'json'"
   deployment_validation:
     type: uri_file
-    description: "Uri file containing information on if the Azure OpenAI deployments,\
-      \ if used, have been validated"
+    description: "Uri file containing information on if the Azure OpenAI deployments,
+      if used, have been validated"
     optional: true
 
 outputs:
   output_data:
     type: uri_folder
-    description: "csv or jsonl file containing the question, answer, context, and\
-      \ metadata sets"
+    description: "csv or jsonl file containing the question, answer, context, and
+      metadata sets"
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src'  # nothing used from here

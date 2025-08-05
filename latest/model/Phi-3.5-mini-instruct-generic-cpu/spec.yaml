@@ -5,8 +5,8 @@ path: ./
 tags:
   foundryLocal: ""
   license: "MIT"
-  licenseDescription: "This model is provided under the License Terms available at\
-    \ <https://huggingface.co/microsoft/Phi-3.5-mini-instruct/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://huggingface.co/microsoft/Phi-3.5-mini-instruct/blob/main/LICENSE>."
   author: Microsoft
   inputModalities: "text"
   outputModalities: "text"
@@ -20,7 +20,8 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/Phi-3.5-mini-instruct/versions/6
+  - assetId: 
+      azureml://registries/azureml/models/Phi-3.5-mini-instruct/versions/6
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']

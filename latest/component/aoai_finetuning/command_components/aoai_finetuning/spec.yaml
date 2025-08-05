@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: aoai_finetuning
 version: 0.0.12
 type: command
@@ -6,9 +7,11 @@ type: command
 is_deterministic: true
 
 display_name: AOAI Finetuning Job
-description: Upload data to Azure OpenAI resource, finetune model and delete data
+description: Upload data to Azure OpenAI resource, finetune model and delete 
+  data
 
-environment: azureml://registries/azureml-1p-preview/environments/aoai-data-upload-finetune/versions/5
+environment: 
+  azureml://registries/azureml-1p-preview/environments/aoai-data-upload-finetune/versions/5
 
 code: ../../src
 
@@ -41,13 +44,14 @@ inputs:
   training_import_path:
     type: uri_file
     optional: true
-    description: json file containing training data uri or key for stored uri in keyvault.
+    description: json file containing training data uri or key for stored uri in
+      keyvault.
 
   validation_import_path:
     type: uri_file
     optional: true
-    description: json file containing validation data uri or key for stored uri in
-      keyvault.
+    description: json file containing validation data uri or key for stored uri 
+      in keyvault.
 
   model:
     type: string
@@ -66,44 +70,44 @@ inputs:
   n_epochs:
     type: integer
     optional: true
-    description: Number of training epochs. If not provided, it will be determined
-      dynamically based on the input data.
+    description: Number of training epochs. If not provided, it will be 
+      determined dynamically based on the input data.
 
   batch_size:
     type: integer
     optional: true
-    description: Global batch size. If not provided, it will be determined dynamically
-      based on the input data.
+    description: Global batch size. If not provided, it will be determined 
+      dynamically based on the input data.
 
   learning_rate_multiplier:
     type: number
     optional: true
-    description: The learning rate multiplier to use for training. If not provided,
-      it will be determined dynamically based on the input data.
+    description: The learning rate multiplier to use for training. If not 
+      provided, it will be determined dynamically based on the input data.
 
   suffix:
     type: string
     optional: true
-    description: A string of up to 18 characters that will be added to your fine-tuned
-      model name
+    description: A string of up to 18 characters that will be added to your 
+      fine-tuned model name
 
   lora_dim:
     type: integer
     optional: true
-    description: The size of LoRA dimensions in self attention layer. If not provided,
-      it will be determined dynamically.
+    description: The size of LoRA dimensions in self attention layer. If not 
+      provided, it will be determined dynamically.
 
   n_ctx:
     type: integer
     optional: true
-    description: Context length of the model. If not provided, context window will
-      be determined dynamically.
+    description: Context length of the model. If not provided, context window 
+      will be determined dynamically.
 
   weight_decay_multiplier:
     type: number
     optional: true
-    description: Weight Decay Multiplier for training. Not applicable for embedding
-      finetuning
+    description: Weight Decay Multiplier for training. Not applicable for 
+      embedding finetuning
 
   completion_override:
     type: boolean
@@ -113,7 +117,8 @@ inputs:
 outputs:
   aoai_finetuning_output:
     type: uri_file
-    description: Contains finetuned model id in output file in JSON/custom class format
+    description: Contains finetuned model id in output file in JSON/custom class
+      format
 
 command: >-
   python finetuning.py

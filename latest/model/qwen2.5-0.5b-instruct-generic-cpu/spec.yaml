@@ -5,8 +5,8 @@ path: ./
 tags:
   foundryLocal: ""
   license: "apache-2.0"
-  licenseDescription: "This model is provided under the License Terms available at\
-    \ <https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/blob/main/LICENSE>."
   author: Microsoft
   inputModalities: "text"
   outputModalities: "text"
@@ -18,9 +18,9 @@ tags:
     : \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\\
     n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\\
     n<|im_start|>assistant\"}"
-  parameterSchema: "{\"enabled\": [{\"name\": \"temperature\", \"default\": 0.7},\
-    \ {\"name\": \"top_p\", \"default\": 0.8}, {\"name\": \"top_k\", \"default\":\
-    \ 40}, {\"name\": \"presence_penalty\", \"default\": 1.1}]}"
+  parameterSchema: "{\"enabled\": [{\"name\": \"temperature\", \"default\": 0.7},
+    {\"name\": \"top_p\", \"default\": 0.8}, {\"name\": \"top_k\", \"default\": 40},
+    {\"name\": \"presence_penalty\", \"default\": 1.1}]}"
   supportsToolCalling: ""
   toolCallStart: "<tool_call>"
   toolCallEnd: "</tool_call>"
@@ -29,7 +29,8 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/qwen2.5-0.5b-instruct/versions/1
+  - assetId: 
+      azureml://registries/azureml/models/qwen2.5-0.5b-instruct/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']

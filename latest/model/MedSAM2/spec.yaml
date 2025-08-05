@@ -5,10 +5,11 @@ path: ./
 
 properties:
   inference-min-sku-spec: 4|1|28|64
-  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3,
-    Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
+  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 
+    Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, 
+    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
   languages: en
   SharedComputeCapacityEnabled: true
@@ -17,19 +18,20 @@ tags:
   task: image-segmentation
   industry: health-and-life-sciences
   Preview: ""
-  licenseDescription: "This model is provided under the License Terms available at\
-    \ <https://github.com/bowang-lab/MedSAM2/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://github.com/bowang-lab/MedSAM2/blob/main/LICENSE>."
   inference_supported_envs:
   - hf
   license: apache-2.0
   author: Wanglab
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
-  inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3,
-    Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5,
-    Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
+  inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 
+      Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
+      Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
 version: 3
 description: |
   <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_hts_training_collect_step
 version: 0.0.9
 display_name: AutoML HTS - Collection Training Results

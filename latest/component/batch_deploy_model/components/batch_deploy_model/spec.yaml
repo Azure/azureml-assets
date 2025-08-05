@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: batch_deploy_model
 version: 0.0.6
 type: command
@@ -6,7 +7,8 @@ type: command
 is_deterministic: true
 
 display_name: Batch deploy model
-description: Batch deploy a model to a workspace. The component works on compute with
+description: Batch deploy a model to a workspace. The component works on compute
+  with 
   [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python)
   attached.
 
@@ -41,8 +43,8 @@ inputs:
   registration_details_folder:
     type: uri_folder
     optional: true
-    description: Folder containing model registration details in a JSON file named
-      model_registration_details.json
+    description: Folder containing model registration details in a JSON file 
+      named model_registration_details.json
 
   model_id:
     type: string
@@ -77,8 +79,8 @@ inputs:
     type: string
     optional: true
     default: cpu-cluster
-    description: Name of the compute cluster to execute the batch scoring jobs on.
-      New compute will be created if the compute cluster is not present.
+    description: Name of the compute cluster to execute the batch scoring jobs 
+      on. New compute will be created if the compute cluster is not present.
 
   size:
     type: string
@@ -122,26 +124,29 @@ inputs:
     - Standard_ND96asr_v4
     - Standard_ND96amsr_A100_v4
     default: Standard_NC24s_v3
-    description: Compute instance size to deploy model. Make sure that instance type
-      is available and have enough quota available.
+    description: Compute instance size to deploy model. Make sure that instance 
+      type is available and have enough quota available.
 
   min_instances:
     type: integer
     optional: true
     default: 0
-    description: Minimum number of instances of the compute cluster to be created.
+    description: Minimum number of instances of the compute cluster to be 
+      created.
 
   max_instances:
     type: integer
     optional: true
     default: 1
-    description: Maximum number of instances of the compute cluster to be created.
+    description: Maximum number of instances of the compute cluster to be 
+      created.
 
   idle_time_before_scale_down:
     type: integer
     optional: true
     default: 120
-    description: Node Idle Time before scaling down the compute cluster to be created.
+    description: Node Idle Time before scaling down the compute cluster to be 
+      created.
 
   output_file_name:
     type: string
@@ -153,7 +158,8 @@ inputs:
     type: integer
     optional: true
     default: 1
-    description: The maximum number of parallel scoring_script runs per instance.
+    description: The maximum number of parallel scoring_script runs per 
+      instance.
 
   error_threshold:
     type: integer
@@ -165,7 +171,8 @@ inputs:
     type: integer
     optional: true
     default: 3
-    description: The maximum number of retries for a failed or timed-out mini batch.
+    description: The maximum number of retries for a failed or timed-out mini 
+      batch.
 
   timeout:
     type: integer
@@ -183,8 +190,8 @@ inputs:
     type: integer
     optional: true
     default: 10
-    description: The number of files the code_configuration.scoring_script can process
-      in one run() call.
+    description: The number of files the code_configuration.scoring_script can 
+      process in one run() call.
 
   instance_count:
     type: integer

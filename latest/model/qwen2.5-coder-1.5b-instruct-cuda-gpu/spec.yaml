@@ -5,8 +5,8 @@ path: ./
 tags:
   foundryLocal: ""
   license: "apache-2.0"
-  licenseDescription: "This model is provided under the License Terms available at\
-    \ <https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct/blob/main/LICENSE>."
   author: Microsoft
   inputModalities: "text"
   outputModalities: "text"
@@ -26,7 +26,8 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/qwen2.5-coder-1.5b-instruct/versions/1
+  - assetId: 
+      azureml://registries/azureml/models/qwen2.5-coder-1.5b-instruct/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']

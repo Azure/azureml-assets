@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: nlp_textclassification_multilabel
 version: 0.0.6
 type: pipeline
@@ -8,29 +9,30 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: compute to be used for model_selector eg. provide 'FT-Cluster' if
-      your compute is named 'FT-Cluster'
+    description: compute to be used for model_selector eg. provide 'FT-Cluster' 
+      if your compute is named 'FT-Cluster'
   compute_preprocess:
     type: string
     optional: false
-    description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+    description: compute to be used for preprocess eg. provide 'FT-Cluster' if 
+      your compute is named 'FT-Cluster'
   compute_finetune:
     type: string
     optional: false
-    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if 
+      your compute is named 'FT-Cluster'
   num_nodes_finetune:
     type: integer
     default: 1
     optional: true
-    description: number of nodes to be used for finetuning (used for distributed training)
+    description: number of nodes to be used for finetuning (used for distributed
+      training)
   process_count_per_instance_finetune:
     type: integer
     default: 1
     optional: true
-    description: number of gpus to be used per node for finetuning, should be equal
-      to number of gpu per node in the compute SKU used for finetune
+    description: number of gpus to be used per node for finetuning, should be 
+      equal to number of gpu per node in the compute SKU used for finetune
   model_name:
     type: string
     default: bert-base-uncased
@@ -88,14 +90,15 @@ inputs:
     type: integer
     default: 0
     optional: true
-    description: Number of steps used for a linear warmup from 0 to learning_rate
+    description: Number of steps used for a linear warmup from 0 to 
+      learning_rate
 
   weight_decay:
     type: number
     default: 0.0
     optional: true
-    description: The weight decay to apply (if not zero) to all layers except all
-      bias and LayerNorm weights in AdamW optimizer
+    description: The weight decay to apply (if not zero) to all layers except 
+      all bias and LayerNorm weights in AdamW optimizer
 
   learning_rate_scheduler:
     type: string
@@ -124,8 +127,8 @@ inputs:
     - '16'
     default: '16'
     optional: true
-    description: Apply mixed precision training. This can reduce memory footprint
-      by performing operations in half-precision.
+    description: Apply mixed precision training. This can reduce memory 
+      footprint by performing operations in half-precision.
 
   # MLFlow Parameters
   enable_full_determinism:
@@ -150,14 +153,15 @@ inputs:
     type: number
     default: 0.0
     optional: true
-    description: The evaluation steps in fraction of an epoch steps to adopt during
-      training. Overwrites evaluation_steps if not 0.
+    description: The evaluation steps in fraction of an epoch steps to adopt 
+      during training. Overwrites evaluation_steps if not 0.
 
   evaluation_steps:
     type: integer
     default: 500
     optional: true
-    description: Number of update steps between two evals if evaluation_strategy='steps'
+    description: Number of update steps between two evals if 
+      evaluation_strategy='steps'
 
   logging_strategy:
     type: string
@@ -172,7 +176,8 @@ inputs:
     type: integer
     default: 500
     optional: true
-    description: Number of update steps between two logs if logging_strategy='steps'
+    description: Number of update steps between two logs if 
+      logging_strategy='steps'
 
   primary_metric:
     type: string
@@ -244,14 +249,16 @@ jobs:
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
-      process_count_per_instance: ${{parent.inputs.process_count_per_instance_finetune}}
+      process_count_per_instance: 
+        ${{parent.inputs.process_count_per_instance_finetune}}
     resources:
       instance_count: ${{parent.inputs.num_nodes_finetune}}
     inputs:
       per_device_train_batch_size: ${{parent.inputs.training_batch_size}}
       per_device_eval_batch_size: ${{parent.inputs.validation_batch_size}}
       num_train_epochs: ${{parent.inputs.number_of_epochs}}
-      gradient_accumulation_steps: ${{parent.inputs.gradient_accumulation_steps}}
+      gradient_accumulation_steps: 
+        ${{parent.inputs.gradient_accumulation_steps}}
       learning_rate: ${{parent.inputs.learning_rate}}
       warmup_steps: ${{parent.inputs.warmup_steps}}
       weight_decay: ${{parent.inputs.weight_decay}}

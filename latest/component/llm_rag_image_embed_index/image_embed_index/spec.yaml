@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -8,8 +9,8 @@ name: llm_rag_image_embed_index
 display_name: LLM - Embedding images with Florence
 is_deterministic: true
 
-description: "Embeds input images and stores it in Azure Cognitive Search index with\
-  \ metadata using Florence embedding resource. MLIndex is stored to `output_path`."
+description: "Embeds input images and stores it in Azure Cognitive Search index with
+  metadata using Florence embedding resource. MLIndex is stored to `output_path`."
 outputs:
   output_path:
     type: uri_folder
@@ -19,12 +20,13 @@ inputs:
     type: uri_folder
     mode: rw_mount
     optional: false
-    description: The input uri_folder containing a set of images and json metadata.
+    description: The input uri_folder containing a set of images and json 
+      metadata.
   embedding_connection_id:
     type: string
     optional: false
-    description: The input connection id to the Azure cognitive vision resource for
-      florence embedding.
+    description: The input connection id to the Azure cognitive vision resource 
+      for florence embedding.
   acs_connection_id:
     type: string
     optional: false

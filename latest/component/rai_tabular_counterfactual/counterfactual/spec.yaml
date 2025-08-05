@@ -1,7 +1,8 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_tabular_counterfactual
 display_name: Add Counterfactuals to RAI Insights Dashboard
-description: Add Counterfactuals to RAI Insights Dashboard [Learn More](https://aka.ms/RAIComponents)
+description: Add Counterfactuals to RAI Insights Dashboard [Learn 
+  More](https://aka.ms/RAIComponents)
 version: 0.19.0
 type: command
 
@@ -38,7 +39,8 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/19
+environment: 
+  azureml://registries/azureml/environments/responsibleai-tabular/versions/19
 
 command: >-
   python create_counterfactual.py

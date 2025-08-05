@@ -5,7 +5,7 @@ tags:
   azureml.Designer: true
   azureml.Designer.name: Animal Images Dataset
   azureml.Designer.dataTypeId: AnyDirectory
-description: This sample dataset is derived from Open Image Dataset and includes 3
-  animal categories (cat, dog, frog). Each category contains 10 images.
+description: This sample dataset is derived from Open Image Dataset and includes
+  3 animal categories (cat, dog, frog). Each category contains 10 images.
 type: uri_folder
 path: sample_data/

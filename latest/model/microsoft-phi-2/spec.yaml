@@ -6,34 +6,38 @@ properties:
   SHA: b10c3eba545ad279e7208ee3a5d644566f001670
   datasets: StackOverflow, Stackv1.2, CodeContests, gpt-3.5-turbo-0301
   inference-min-sku-spec: 4|1|28|64
-  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+    Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+    Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
+    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en
   evaluation-min-sku-spec: 6|0|56|112
-  evaluation-recommended-sku: Standard_DS5_v2, Standard_NC6s_v3, Standard_NC12s_v3,
-    Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
-    Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_DS5_v2, Standard_NC6s_v3, 
+    Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, 
+    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: text-generation
   finetune-min-sku-spec: 24|1|220|64
-  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, 
+    Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4
 tags:
   SharedComputeCapacityEnabled: ""
   license: mit
   author: Microsoft
   task: text-generation
   hiddenlayerscanned: ""
-  evaluation_compute_allow_list: [Standard_DS5_v2, Standard_NC6s_v3, Standard_NC12s_v3,
-    Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
-    Standard_ND96amsr_A100_v4]
-  finetune_compute_allow_list: [Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
-  inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3,
-    Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  evaluation_compute_allow_list: [Standard_DS5_v2, Standard_NC6s_v3, 
+      Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, 
+      Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
+  finetune_compute_allow_list: [Standard_ND40rs_v2, Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4]
+  inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC6s_v3, 
+      Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, 
+      Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
   inference_supported_envs:
   - vllm
   model_specific_defaults:

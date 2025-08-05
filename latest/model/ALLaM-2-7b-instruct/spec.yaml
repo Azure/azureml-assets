@@ -5,13 +5,13 @@ properties:
   SharedComputeCapacityEnabled: true
   languages: AR, EN
   inference-min-sku-spec: 12|1|220|64
-  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_NC96ads_A100_v4
+  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, 
+    Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
 tags:
   displayName: "ALLaM-2-7b-instruct"
-  summary: "ALLaM is a series of powerful language models designed to advance Arabic\
-    \ Language Technology."
+  summary: "ALLaM is a series of powerful language models designed to advance Arabic
+    Language Technology."
   disable-batch: "true"
   maxOutputTokens: 4096
   hiddenlayerscanned: "true"
@@ -25,9 +25,9 @@ tags:
   author: SDAIA
   inference_supported_envs:
   - vllm
-  inference_compute_allow_list: [Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4,
-    Standard_NC96ads_A100_v4]
+  inference_compute_allow_list: [Standard_NC12s_v3, Standard_NC24s_v3, 
+      Standard_ND40rs_v2, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+      Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
 version: 2
 description: |-
   # Description

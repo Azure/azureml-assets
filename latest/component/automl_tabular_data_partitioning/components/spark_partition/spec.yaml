@@ -2,8 +2,8 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 name: automl_tabular_data_partitioning
 type: spark
 display_name: AutoML - Tabular Data Partitioning
-description: Enables dataset partitioning for AutoML many models and hierarchical
-  timeseries solution accelerators using spark.
+description: Enables dataset partitioning for AutoML many models and 
+  hierarchical timeseries solution accelerators using spark.
 version: 0.0.9
 is_deterministic: false
 

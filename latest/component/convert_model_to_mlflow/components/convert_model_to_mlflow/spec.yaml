@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
 version: 0.0.37
@@ -7,10 +8,11 @@ type: command
 is_deterministic: true
 
 display_name: Convert models to MLflow
-description: Component converts models from supported frameworks to MLflow model packaging
-  format
+description: Component converts models from supported frameworks to MLflow model
+  packaging format
 
-environment: azureml://registries/azureml/environments/model-management/versions/41
+environment: 
+  azureml://registries/azureml/environments/model-management/versions/41
 
 code: ../../src/
 command: |
@@ -26,9 +28,9 @@ command: |
 inputs:
   model_id:
     type: string
-    description: Huggingface model id (https://huggingface.co/<model_id>). A required
-      parameter for Huggingface model framework. Can be provided as input here or
-      in model_download_metadata JSON file.
+    description: Huggingface model id (https://huggingface.co/<model_id>). A 
+      required parameter for Huggingface model framework. Can be provided as 
+      input here or in model_download_metadata JSON file.
     optional: true
 
   model_flavor:
@@ -84,9 +86,9 @@ inputs:
     - visual-question-answering
     - image-feature-extraction
     - feature-extraction
-    description: A Hugging face task on which model was trained on. A required parameter
-      for transformers MLflow flavor. Can be provided as input here or in model_download_metadata
-      JSON file.
+    description: A Hugging face task on which model was trained on. A required 
+      parameter for transformers MLflow flavor. Can be provided as input here or
+      in model_download_metadata JSON file.
     optional: true
 
   hf_config_args:
@@ -120,25 +122,28 @@ inputs:
 
   hf_config_class:
     type: string
-    description: AutoConfig class may not be sufficient to load config for some of
-      the models. You can use this parameter to send Config class name as it is
+    description: AutoConfig class may not be sufficient to load config for some 
+      of the models. You can use this parameter to send Config class name as it 
+      is
     optional: true
 
   hf_model_class:
     type: string
-    description: AutoModel classes may not be sufficient to load some of the models.
-      You can use this parameter to send Model class name as it is
+    description: AutoModel classes may not be sufficient to load some of the 
+      models. You can use this parameter to send Model class name as it is
     optional: true
 
   hf_tokenizer_class:
     type: string
-    description: AutoTokenizer class may not be sufficient to load tokenizer for some
-      of the models. You can use this parameter to send Config class name as it is
+    description: AutoTokenizer class may not be sufficient to load tokenizer for
+      some of the models. You can use this parameter to send Config class name 
+      as it is
     optional: true
 
   hf_use_experimental_features:
     type: boolean
-    description: Enable experimental features for hugging face MLflow model conversion
+    description: Enable experimental features for hugging face MLflow model 
+      conversion
     default: false
     optional: true
 

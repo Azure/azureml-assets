@@ -4,8 +4,9 @@ type: prompt
 version: 0.0.4
 name: social_media_post_analysis
 display_name: Social Media Post Analysis
-description: Analyze short videos to generate tags, content summaries, and targeted
-  promotions while ensuring better content moderation and risk management
+description: Analyze short videos to generate tags, content summaries, and 
+  targeted promotions while ensuring better content moderation and risk 
+  management
 
 tags:
   modality: video

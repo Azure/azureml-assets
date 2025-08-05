@@ -1,10 +1,11 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: feature_attribution_drift_signal_monitor
 display_name: Feature Attribution Drift - Signal Monitor
-description: Computes the feature attribution between a baseline and production data
-  assets.
+description: Computes the feature attribution between a baseline and production 
+  data assets.
 version: 0.3.45
 is_deterministic: true
 
@@ -45,15 +46,18 @@ outputs:
 jobs:
   compute_baseline_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.32
+    component: 
+      azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.32
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
-      override_numerical_features: ${{parent.inputs.override_numerical_features}}
-      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+      override_numerical_features: 
+        ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: 
+        ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -64,15 +68,18 @@ jobs:
       type: aml_token
   compute_production_explanations:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.32
+    component: 
+      azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.32
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.target_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
-      override_numerical_features: ${{parent.inputs.override_numerical_features}}
-      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+      override_numerical_features: 
+        ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: 
+        ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -83,14 +90,17 @@ jobs:
       type: aml_token
   compute_feature_attribution:
     type: spark
-    component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics/versions/0.3.29
+    component: 
+      azureml://registries/azureml/components/feature_attribution_drift_compute_metrics/versions/0.3.29
     inputs:
       production_data:
         type: mltable
-        path: ${{parent.jobs.compute_production_explanations.outputs.signal_metrics}}
+        path: 
+          ${{parent.jobs.compute_production_explanations.outputs.signal_metrics}}
       baseline_data:
         type: mltable
-        path: ${{parent.jobs.compute_baseline_explanations.outputs.signal_metrics}}
+        path: 
+          ${{parent.jobs.compute_baseline_explanations.outputs.signal_metrics}}
       target_column: ${{parent.inputs.target_column}}
     outputs:
       signal_metrics:
@@ -102,11 +112,13 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.33
+    component: 
+      azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.33
     inputs:
       signal_metrics:
         type: mltable
-        path: ${{parent.jobs.compute_feature_attribution.outputs.signal_metrics}}
+        path: 
+          ${{parent.jobs.compute_feature_attribution.outputs.signal_metrics}}
       signal_type: "FeatureAttributionDrift"
       signal_name: ${{parent.inputs.signal_name}}
       monitor_name: ${{parent.inputs.monitor_name}}
@@ -123,11 +135,13 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
+    component: 
+      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
     inputs:
       signal_metrics:
         type: mltable
-        path: ${{parent.jobs.compute_feature_attribution.outputs.signal_metrics}}
+        path: 
+          ${{parent.jobs.compute_feature_attribution.outputs.signal_metrics}}
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
     resources:

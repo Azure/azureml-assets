@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data
 version: 0.0.9
 type: command
@@ -8,21 +9,22 @@ is_deterministic: true
 display_name: OSS Distillation Generate Data
 description: Component to generate data from teacher model enpoint
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
 
 inputs:
   # Inputs
   train_file_path:
     type: uri_file
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   teacher_model_endpoint_name:

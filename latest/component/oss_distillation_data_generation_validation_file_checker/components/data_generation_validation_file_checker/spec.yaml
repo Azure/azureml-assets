@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_data_generation_validation_file_checker
 version: 0.0.1
 type: command
@@ -8,15 +9,16 @@ is_deterministic: true
 display_name: OSS Distillation Validation File Checker Component
 description: Component to Check if the validation file is present or not
 
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: 
+  azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 inputs:
   # Inputs
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
 outputs:

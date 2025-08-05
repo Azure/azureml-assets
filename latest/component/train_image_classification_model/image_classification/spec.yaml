@@ -1,7 +1,9 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-description: Component to finetune AutoML legacy models for image classification.
+description: Component to finetune AutoML legacy models for image 
+  classification.
 
 name: train_image_classification_model
 display_name: Image Classification AutoML Legacy Model Finetune
@@ -26,27 +28,28 @@ inputs:
     type: boolean
     optional: true
   beta1:
-    description: Value of beta1 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta1 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
   beta2:
-    description: Value of beta2 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta2 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
   checkpoint_frequency:
-    description: Frequency to store model checkpoints. Must be a positive integer.
+    description: Frequency to store model checkpoints. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 0
   checkpoint_run_id:
-    description: The run ID of the experiment that has a pretrained checkpoint for
-      incremental training.
+    description: The run ID of the experiment that has a pretrained checkpoint 
+      for incremental training.
     type: string
     optional: true
   early_stopping:
@@ -54,35 +57,37 @@ inputs:
     type: boolean
     optional: true
   early_stopping_patience:
-    description: Minimum number of epochs or validation evaluations with no primary
-      metric improvement before the run is stopped. Must be a positive integer.
-    type: integer
-    optional: true
-    min: 1
-  early_stopping_delay:
-    description: Minimum number of epochs or validation evaluations to wait before
-      primary metric improvement is tracked for early stopping. Must be a positive
+    description: Minimum number of epochs or validation evaluations with no 
+      primary metric improvement before the run is stopped. Must be a positive 
       integer.
     type: integer
     optional: true
     min: 1
+  early_stopping_delay:
+    description: Minimum number of epochs or validation evaluations to wait 
+      before primary metric improvement is tracked for early stopping. Must be a
+      positive integer.
+    type: integer
+    optional: true
+    min: 1
   evaluation_frequency:
-    description: Frequency to evaluate validation dataset to get metric scores. Must
-      be a positive integer.
+    description: Frequency to evaluate validation dataset to get metric scores. 
+      Must be a positive integer.
     type: integer
     optional: true
     min: 1
   gradient_accumulation_step:
-    description: Number of forward passes without updating the model weights while
-      accumulating the gradients of those steps, and then using the accumulated gradients
-      to compute the weight updates. Must be a positive integer.
+    description: Number of forward passes without updating the model weights 
+      while accumulating the gradients of those steps, and then using the 
+      accumulated gradients to compute the weight updates. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 1
   layers_to_freeze:
-    description: How many layers to freeze for your model. For instance, passing 2
-      as value for seresnext means freezing layer0 and layer1 referring to the below
-      supported model layer info. Must be a positive integer.
+    description: How many layers to freeze for your model. For instance, passing
+      2 as value for seresnext means freezing layer0 and layer1 referring to the
+      below supported model layer info. Must be a positive integer.
     type: integer
     optional: true
     min: 1
@@ -103,8 +108,8 @@ inputs:
     description: Model name
     optional: true
   momentum:
-    description: Value of momentum when optimizer is sgd. Must be a float in the range
-      [0, 1].
+    description: Value of momentum when optimizer is sgd. Must be a float in the
+      range [0, 1].
     type: number
     optional: true
     min: 0
@@ -119,8 +124,8 @@ inputs:
     optional: true
     min: 1
   number_of_workers:
-    description: Number of subprocesses to use for data loading (PyTorch only). 0
-      means that the data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading (PyTorch only). 
+      0 means that the data will be loaded in the main process.
     type: integer
     optional: true
   optimizer:
@@ -134,16 +139,18 @@ inputs:
     type: integer
     optional: true
   step_lr_gamma:
-    description: Value of gamma when learning rate scheduler is step. Please check
-      for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of gamma when learning rate scheduler is step. Please 
+      check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: number
     optional: true
     min: 0
     max: 1
   step_lr_step_size:
-    description: Value of step size when learning rate scheduler is step. Please check
-      for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of step size when learning rate scheduler is step. Please
+      check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: integer
     optional: true
@@ -154,9 +161,10 @@ inputs:
     optional: true
     min: 1
   training_crop_size:
-    description: Image crop size that's input to your neural network for training
-      dataset. Notes - seresnext doesn't take an arbitrary size. ViT-variants should
-      have the same validation_crop_size and training_crop_size.
+    description: Image crop size that's input to your neural network for 
+      training dataset. Notes - seresnext doesn't take an arbitrary size. 
+      ViT-variants should have the same validation_crop_size and 
+      training_crop_size.
     type: integer
     optional: true
     min: 1
@@ -166,29 +174,32 @@ inputs:
     optional: true
     min: 1
   validation_crop_size:
-    description: Image crop size that's input to your neural network for validation
-      dataset. Note - seresnext doesn't take an arbitrary size. ViT-variants should
-      have the same validation_crop_size and training_crop_size.
+    description: Image crop size that's input to your neural network for 
+      validation dataset. Note - seresnext doesn't take an arbitrary size. 
+      ViT-variants should have the same validation_crop_size and 
+      training_crop_size.
     type: integer
     optional: true
     min: 1
   validation_resize_size:
-    description: Image size to which to resize before cropping for validation dataset.
-      Note - seresnext doesn't take an arbitrary size.
+    description: Image size to which to resize before cropping for validation 
+      dataset. Note - seresnext doesn't take an arbitrary size.
     type: integer
     optional: true
     min: 1
   warmup_cosine_lr_cycles:
-    description: Value of cosine cycle when learning rate scheduler is warmup_cosine.
-      Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of cosine cycle when learning rate scheduler is 
+      warmup_cosine. Please check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: number
     optional: true
     min: 0
     max: 1
   warmup_cosine_lr_warmup_epochs:
-    description: Value of warmup epochs when learning rate scheduler is warmup_cosine.
-      Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of warmup epochs when learning rate scheduler is 
+      warmup_cosine. Please check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: integer
     optional: true
@@ -200,8 +211,8 @@ inputs:
     min: 0
     max: 1
   weighted_loss:
-    description: 0 for no weighted loss, 1 for weighted loss with sqrt (class_weights),
-      2 for weighted loss with class_weights.
+    description: 0 for no weighted loss, 1 for weighted loss with sqrt 
+      (class_weights), 2 for weighted loss with class_weights.
     type: integer
     optional: true
 
@@ -215,7 +226,8 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/59
+environment: 
+  azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/59
 
 command: >-
   python -m image_classification.run

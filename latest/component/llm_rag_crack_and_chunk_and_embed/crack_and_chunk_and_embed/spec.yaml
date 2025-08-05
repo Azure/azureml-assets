@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -43,43 +44,43 @@ inputs:
   doc_intel_connection_id:
     type: string
     optional: true
-    description: "Connection id for Document Intelligence service. If provided, will\
-      \ be used to extract content from .pdf document."
+    description: "Connection id for Document Intelligence service. If provided, will
+      be used to extract content from .pdf document."
   citation_url:
     type: string
     optional: true
-    description: "Base URL to join with file paths to create full source file URL\
-      \ for chunk metadata."
+    description: "Base URL to join with file paths to create full source file URL
+      for chunk metadata."
   citation_replacement_regex:
     type: string
     optional: true
-    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'\
-      \ to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\
-      \\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles'\
-      \ from the middle of the url."
+    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'
+      to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\
+      \\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles'
+      from the middle of the url."
   use_rcts:
     type: string
     default: "True"
     enum:
     - "True"
     - "False"
-    description: "Whether to use RecursiveCharacterTextSplitter to split documents\
-      \ into chunks"
+    description: "Whether to use RecursiveCharacterTextSplitter to split documents
+      into chunks"
   # If adding to previously generated Embeddings
   embeddings_container:
     type: uri_folder
     optional: true
     mode: direct
-    description: "Folder containing previously generated embeddings. Should be parent\
-      \ folder of the 'embeddings' output path used for for this component. Will compare\
-      \ input data to existing embeddings and only embed changed/new data, reusing\
-      \ existing chunks."
+    description: "Folder containing previously generated embeddings. Should be parent
+      folder of the 'embeddings' output path used for for this component. Will compare
+      input data to existing embeddings and only embed changed/new data, reusing existing
+      chunks."
   # Embeddings settings
   embeddings_model:
     type: string
     optional: true
-    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'\
-      \ or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
+    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'
+      or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
   embeddings_connection_id:
     type: string
     optional: true
@@ -91,19 +92,19 @@ inputs:
   num_workers:
     type: integer
     default: -1
-    description: "Number of workers to use when embedding data. -1 defaults to CPUs\
-      \ / 2."
+    description: "Number of workers to use when embedding data. -1 defaults to CPUs
+      / 2."
   verbosity:
     type: integer
     default: 0
-    description: "Verbosity level for embedding process, specific to document processing\
-      \ information. 0: Aggregate Source/Document Info, 1: Source Ids logged as processed,\
-      \ 2: Document Ids logged as processed."
+    description: "Verbosity level for embedding process, specific to document processing
+      information. 0: Aggregate Source/Document Info, 1: Source Ids logged as processed,
+      2: Document Ids logged as processed."
 outputs:
   embeddings:
     type: uri_folder
-    description: "Where to save data with embeddings. This should be a subfolder of\
-      \ previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
+    description: "Where to save data with embeddings. This should be a subfolder of
+      previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src/'

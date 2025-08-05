@@ -6,8 +6,8 @@ properties:
   azureml.promptflow.section: gallery
   azureml.promptflow.type: standard
   azureml.promptflow.name: Q&A on Your Data
-  azureml.promptflow.description: Use LLM and data from your own indexed files to
-    ground multi-round question and answering capabilities.
+  azureml.promptflow.description: Use LLM and data from your own indexed files 
+    to ground multi-round question and answering capabilities.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 version: 9

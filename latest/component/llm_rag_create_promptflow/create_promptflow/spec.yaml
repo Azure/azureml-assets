@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -15,13 +16,13 @@ inputs:
   best_prompts:
     type: uri_file
     optional: true
-    description: "JSON file containing prompt options to create variants from. Must\
-      \ either have single key of 'best_prompt' with a value of a list of prompt strings\
-      \ or have best prompts specific to certain metrics."
+    description: "JSON file containing prompt options to create variants from. Must
+      either have single key of 'best_prompt' with a value of a list of prompt strings
+      or have best prompts specific to certain metrics."
   mlindex_asset_id:
     type: uri_file
-    description: "Asset ID for MLIndex file that contains information about index\
-      \ to use for document lookup in promptflow"
+    description: "Asset ID for MLIndex file that contains information about index
+      to use for document lookup in promptflow"
   mlindex_name:
     type: string
     optional: true
@@ -37,8 +38,8 @@ inputs:
   llm_config:
     type: string
     optional: true
-    description: "JSON describing the llm provider and model details to use for completion\
-      \ generation."
+    description: "JSON describing the llm provider and model details to use for completion
+      generation."
   embedding_connection:
     type: string
     optional: true
@@ -46,8 +47,8 @@ inputs:
   embeddings_model:
     type: string
     optional: true
-    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'\
-      \ or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
+    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2'
+      or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src'

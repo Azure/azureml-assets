@@ -5,8 +5,8 @@ version: 1.1.1
 type: spark
 
 display_name: Feature Retrieval
-description: Retrieval component to be used to retrieve offline features from feature
-  store.
+description: Retrieval component to be used to retrieve offline features from 
+  feature store.
 is_deterministic: false
 
 code: ../src
@@ -33,8 +33,8 @@ inputs:
 
   timestamp_column:
     type: string
-    description: Name of the timestamp column in the observation data for point-in-time
-      feature retrieval.
+    description: Name of the timestamp column in the observation data for 
+      point-in-time feature retrieval.
 
   observation_data_format:
     type: string
@@ -48,7 +48,8 @@ outputs:
   output_data:
     type: uri_folder
     mode: direct
-    description: Observation data with retrieved features written in parquet format.
+    description: Observation data with retrieved features written in parquet 
+      format.
 
 args: >-
   $[[--input_model ${{inputs.input_model}}]]

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: generation_safety_quality_signal_monitor
@@ -24,8 +25,8 @@ inputs:
   sample_rate:
     type: number
     optional: true
-    description: sample rate for the input dataset, should be greater than 0 and at
-      most 1
+    description: sample rate for the input dataset, should be greater than 0 and
+      at most 1
   prompt_column_name:
     type: string
     optional: true
@@ -110,7 +111,8 @@ outputs:
 jobs:
   input_schema_adaptor:
     type: spark
-    component: azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.25
+    component: 
+      azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.25
     inputs:
       production_dataset:
         type: mltable
@@ -125,17 +127,22 @@ jobs:
       type: aml_token
   compute_histogram:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.37
+    component: 
+      azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.37
     inputs:
       production_dataset:
         type: mltable
-        path: ${{parent.jobs.input_schema_adaptor.outputs.adapted_production_data}}
+        path: 
+          ${{parent.jobs.input_schema_adaptor.outputs.adapted_production_data}}
       metric_names: ${{parent.inputs.metric_names}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
       sample_rate: ${{parent.inputs.sample_rate}}
-      workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
-      groundedness_rating_threshold: ${{parent.inputs.groundedness_rating_threshold}}
-      similarity_rating_threshold: ${{parent.inputs.similarity_rating_threshold}}
+      workspace_connection_arm_id: 
+        ${{parent.inputs.workspace_connection_arm_id}}
+      groundedness_rating_threshold: 
+        ${{parent.inputs.groundedness_rating_threshold}}
+      similarity_rating_threshold: 
+        ${{parent.inputs.similarity_rating_threshold}}
       relevance_rating_threshold: ${{parent.inputs.relevance_rating_threshold}}
       fluency_rating_threshold: ${{parent.inputs.fluency_rating_threshold}}
       coherence_rating_threshold: ${{parent.inputs.coherence_rating_threshold}}
@@ -168,18 +175,23 @@ jobs:
       type: aml_token
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.30
+    component: 
+      azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.30
     inputs:
       annotation_histogram:
         type: mltable
         path: ${{parent.jobs.compute_histogram.outputs.histogram}}
       metric_names: ${{parent.inputs.metric_names}}
       thresholds: ${{parent.inputs.thresholds}}
-      groundedness_passrate_threshold: ${{parent.inputs.groundedness_passrate_threshold}}
-      similarity_passrate_threshold: ${{parent.inputs.similarity_passrate_threshold}}
-      relevance_passrate_threshold: ${{parent.inputs.relevance_passrate_threshold}}
+      groundedness_passrate_threshold: 
+        ${{parent.inputs.groundedness_passrate_threshold}}
+      similarity_passrate_threshold: 
+        ${{parent.inputs.similarity_passrate_threshold}}
+      relevance_passrate_threshold: 
+        ${{parent.inputs.relevance_passrate_threshold}}
       fluency_passrate_threshold: ${{parent.inputs.fluency_passrate_threshold}}
-      coherence_passrate_threshold: ${{parent.inputs.coherence_passrate_threshold}}
+      coherence_passrate_threshold: 
+        ${{parent.inputs.coherence_passrate_threshold}}
     outputs:
       signal_metrics:
         type: mltable
@@ -190,7 +202,8 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
+    component: 
+      azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
     inputs:
       signal_metrics:
         type: mltable
@@ -212,7 +225,8 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
+    component: 
+      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
     inputs:
       signal_metrics:
         type: mltable

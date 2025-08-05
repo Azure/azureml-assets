@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: mlflow_model_local_validation
 version: 0.0.18
@@ -7,8 +8,8 @@ type: command
 is_deterministic: true
 
 display_name: MLFlow model local validation
-description: Validates if a MLFLow model can be loaded on a compute and is usable
-  for inferencing.
+description: Validates if a MLFLow model can be loaded on a compute and is 
+  usable for inferencing.
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
 
@@ -71,8 +72,8 @@ outputs:
   mlflow_model_folder:
     type: uri_folder
     mode: rw_mount
-    description: Validated input model. Here input model is used to block further
-      steps in pipeline job if local validation fails
+    description: Validated input model. Here input model is used to block 
+      further steps in pipeline job if local validation fails
 
 tags:
   Preview: ""

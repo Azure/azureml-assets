@@ -6,11 +6,13 @@ properties:
   SHA: 133a221b8aa7292a167afc5127cb63fb5005638b
   finetuning-tasks: text-to-image
   finetune-min-sku-spec: 6|1|112|736
-  finetune-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  finetune-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
+    Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+    Standard_ND96asr_v4
   inference-min-sku-spec: 6|1|112|736
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
+    Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+    Standard_ND96asr_v4
 tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail-m
@@ -21,10 +23,12 @@ tags:
   training_dataset: LAION-5B
   inference_supported_envs:
   - ds-mii
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
-  finetune_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
+      Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+      Standard_ND96asr_v4]
+  finetune_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
+      Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+      Standard_ND96asr_v4]
 version: 11
 description: |
   Stable Diffusion is a latent text-to-image diffusion model capable of generating photo-realistic images given any text input. The **Stable-Diffusion-v1-4** checkpoint was initialized with the weights of the Stable-Diffusion-v1-2 checkpoint and subsequently fine-tuned on 225k steps at resolution 512x512 on "laion-aesthetics v2 5+" and 10% dropping of the text-conditioning to improve [classifier-free guidance sampling](https://arxiv.org/abs/2207.12598).

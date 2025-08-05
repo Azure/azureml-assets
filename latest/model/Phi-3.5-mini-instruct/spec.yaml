@@ -5,12 +5,12 @@ properties:
   SharedComputeCapacityEnabled: true
   languages: en
   inference-min-sku-spec: 24|1|220|64
-  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96amsr_A100_v4
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: chat-completion
   finetune-min-sku-spec: 24|1|220|64
-  finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96amsr_A100_v4
+  finetune-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
 tags:
   InferenceLegacyDate: '2025-06-09'
   InferenceDeprecationDate: '2025-06-30'
@@ -148,16 +148,16 @@ tags:
     \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
     of this software and associated documentation files (the \"Software\"), to deal\n\
     in the Software without restriction, including without limitation the rights\n\
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies\
-    \ of the Software, and to permit persons to whom the Software is\nfurnished to\
-    \ do so, subject to the following conditions:\n\nThe above copyright notice and\
-    \ this permission notice shall be included in all\ncopies or substantial portions\
-    \ of the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY\
-    \ KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n\
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies
+    of the Software, and to permit persons to whom the Software is\nfurnished to do
+    so, subject to the following conditions:\n\nThe above copyright notice and this
+    permission notice shall be included in all\ncopies or substantial portions of
+    the Software.\n\nTHE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n\
     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n\
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY,\
-    \ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR\
-    \ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR
+    IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
   playgroundRateLimitTier: "low"
   Featured: ""
   huggingface_model_id: ""
@@ -176,10 +176,12 @@ tags:
   - westus3
   - westus
   - southcentralus
-  inference_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4]
-  finetune_compute_allow_list: [Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
-    Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4]
+  inference_compute_allow_list: [Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_ND96amsr_A100_v4, 
+      Standard_NC96ads_A100_v4]
+  finetune_compute_allow_list: [Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, 
+      Standard_ND96amsr_A100_v4]
   inference_supported_envs:
   - vllm
   model_specific_defaults:

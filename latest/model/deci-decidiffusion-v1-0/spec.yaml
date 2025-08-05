@@ -6,9 +6,10 @@ properties:
   SHA: 10c31ce02b006ae5ceb774dcafdc3a0bcba992ef
   datasets: LAION-v2
   inference-min-sku-spec: 4|1|28|176
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC16as_T4_v3, Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
+    Standard_NC24s_v3, Standard_NC16as_T4_v3, Standard_NC4as_T4_v3, 
+    Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4, 
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   SharedComputeCapacityEnabled: ''
   license: creativeml-openrail++-m
@@ -16,9 +17,10 @@ tags:
   hiddenlayerscanned: ""
   author: "Deci AI"
   huggingface_model_id: Deci/DeciDiffusion-v1-0
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC16as_T4_v3, Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3,
-    Standard_NC96ads_A100_v4, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
+      Standard_NC24s_v3, Standard_NC16as_T4_v3, Standard_NC4as_T4_v3, 
+      Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4, 
+      Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
 
 version: 7
 description: |-

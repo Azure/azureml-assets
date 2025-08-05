@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_generate_data_batch_postprocess
 version: 0.0.1
 type: command
@@ -6,23 +7,25 @@ type: command
 is_deterministic: false
 
 display_name: OSS Distillation Generate Data Postprocess Batch Scoring
-description: Component to prepare data returned from teacher model enpoint in batch
+description: Component to prepare data returned from teacher model enpoint in 
+  batch
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/76
 
 inputs:
   # Inputs
   train_file_path:
     type: uri_file
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   hash_train_data:
@@ -37,14 +40,14 @@ inputs:
 
   batch_score_train_result:
     type: uri_folder
-    description: Path to the directory containing jsonl file(s) that have the result
-      for each payload.
+    description: Path to the directory containing jsonl file(s) that have the 
+      result for each payload.
 
   batch_score_validation_result:
     type: uri_folder
     optional: true
-    description: Path to the directory containing jsonl file(s) that have the result
-      for each payload.
+    description: Path to the directory containing jsonl file(s) that have the 
+      result for each payload.
 
   min_endpoint_success_ratio:
     type: number

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: model_monitor_action_analyzer
@@ -52,7 +53,8 @@ outputs:
 jobs:
   identify_problem_traffic:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.25
+    component: 
+      azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.25
     inputs:
       signal_output:
         type: uri_folder
@@ -61,7 +63,8 @@ jobs:
         type: mltable
         path: ${{parent.inputs.signal_scored_data}}
       signal_name: ${{parent.inputs.signal_name}}
-      workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
+      workspace_connection_arm_id: 
+        ${{parent.inputs.workspace_connection_arm_id}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
       llm_summary_enabled: ${{parent.inputs.llm_summary_enabled}}
     outputs:
@@ -74,12 +77,14 @@ jobs:
       type: aml_token
   metrics_calculation:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.22
+    component: 
+      azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.22
     inputs:
       data_with_groups:
         type: mltable
         path: ${{parent.jobs.identify_problem_traffic.outputs.data_with_groups}}
-      workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
+      workspace_connection_arm_id: 
+        ${{parent.inputs.workspace_connection_arm_id}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
     outputs:
       data_with_action_metric_score:
@@ -91,11 +96,13 @@ jobs:
       type: aml_token
   correlation_test:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.22
+    component: 
+      azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.22
     inputs:
       data_with_action_metric_score:
         type: mltable
-        path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
+        path: 
+          ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
     outputs:
       action_data:
         type: mltable
@@ -106,14 +113,16 @@ jobs:
       type: aml_token
   output_actions:
     type: spark
-    component: azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.25
+    component: 
+      azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.25
     inputs:
       action_data:
         type: mltable
         path: ${{parent.jobs.correlation_test.outputs.action_data}}
       data_with_action_metric_score:
         type: mltable
-        path: ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
+        path: 
+          ${{parent.jobs.metrics_calculation.outputs.data_with_action_metric_score}}
       signal_name: ${{parent.inputs.signal_name}}
       aml_deployment_id: ${{parent.inputs.aml_deployment_id}}
     outputs:

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_finetune
 version: 0.0.76
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: Text Generation Finetune
 description: Component to finetune model for Text Generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/finetune
 
@@ -33,8 +35,8 @@ inputs:
     - "false"
     default: "true"
     optional: true
-    description: if set to true, the lora trained weights will be merged to base model
-      before saving
+    description: if set to true, the lora trained weights will be merged to base
+      model before saving
 
   lora_alpha:
     type: integer
@@ -65,9 +67,10 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: If set to a positive number, the total number of training steps to
-      perform. Overrides 'epochs'. In case of using a finite iterable dataset the
-      training may stop before reaching the set number of steps when all data is exhausted.
+    description: If set to a positive number, the total number of training steps
+      to perform. Overrides 'epochs'. In case of using a finite iterable dataset
+      the training may stop before reaching the set number of steps when all 
+      data is exhausted.
 
   per_device_train_batch_size:
     type: integer
@@ -88,10 +91,11 @@ inputs:
     - "false"
     default: "false"
     optional: true
-    description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size'
-      goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct
-      batch size by iteratively reducing 'per_device_train_batch_size' by a factor
-      of 2 till the OOM is fixed
+    description: Flag to enable auto finding of batch size. If the provided 
+      'per_device_train_batch_size' goes into Out Of Memory (OOM) enabling 
+      auto_find_batch_size will find the correct batch size by iteratively 
+      reducing 'per_device_train_batch_size' by a factor of 2 till the OOM is 
+      fixed
 
   optim:
     type: string
@@ -112,14 +116,15 @@ inputs:
     type: integer
     default: 0
     optional: true
-    description: Number of steps used for a linear warmup from 0 to learning_rate
+    description: Number of steps used for a linear warmup from 0 to 
+      learning_rate
 
   weight_decay:
     type: number
     default: 0.0
     optional: true
-    description: The weight decay to apply (if not zero) to all layers except all
-      bias and LayerNorm weights in AdamW optimizer
+    description: The weight decay to apply (if not zero) to all layers except 
+      all bias and LayerNorm weights in AdamW optimizer
 
   adam_beta1:
     type: number
@@ -143,15 +148,15 @@ inputs:
     type: integer
     default: 1
     optional: true
-    description: Number of updates steps to accumulate the gradients for, before performing
-      a backward/update pass
+    description: Number of updates steps to accumulate the gradients for, before
+      performing a backward/update pass
 
   eval_accumulation_steps:
     type: integer
     default: -1
     optional: true
-    description: Number of predictions steps to accumulate before moving the tensors
-      to the CPU, will be passed as None if set to -1
+    description: Number of predictions steps to accumulate before moving the 
+      tensors to the CPU, will be passed as None if set to -1
 
   lr_scheduler_type:
     type: string
@@ -173,8 +178,8 @@ inputs:
     - "16"
     default: "32"
     optional: true
-    description: Apply mixed precision training. This can reduce memory footprint
-      by performing operations in half-precision.
+    description: Apply mixed precision training. This can reduce memory 
+      footprint by performing operations in half-precision.
 
   seed:
     type: integer
@@ -195,8 +200,8 @@ inputs:
     type: integer
     default: 0
     optional: true
-    description: Number of subprocesses to use for data loading. 0 means that the
-      data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading. 0 means that 
+      the data will be loaded in the main process.
 
   ignore_mismatched_sizes:
     type: string
@@ -205,8 +210,8 @@ inputs:
     - "false"
     default: "true"
     optional: true
-    description: Whether or not to raise an error if some of the weights from the
-      checkpoint do not have the same size as the weights of the model
+    description: Whether or not to raise an error if some of the weights from 
+      the checkpoint do not have the same size as the weights of the model
 
   max_grad_norm:
     type: number
@@ -227,14 +232,15 @@ inputs:
     type: number
     default: 0.0
     optional: true
-    description: The evaluation steps in fraction of an epoch steps to adopt during
-      training. Overwrites evaluation_steps if not 0.
+    description: The evaluation steps in fraction of an epoch steps to adopt 
+      during training. Overwrites evaluation_steps if not 0.
 
   eval_steps:
     type: integer
     default: 500
     optional: true
-    description: Number of update steps between two evals if evaluation_strategy='steps'
+    description: Number of update steps between two evals if 
+      evaluation_strategy='steps'
 
   logging_strategy:
     type: string
@@ -249,7 +255,8 @@ inputs:
     type: integer
     default: 10
     optional: true
-    description: Number of update steps between two logs if logging_strategy='steps'
+    description: Number of update steps between two logs if 
+      logging_strategy='steps'
 
   metric_for_best_model:
     type: string
@@ -266,14 +273,16 @@ inputs:
     enum:
     - "true"
     - "false"
-    description: Loads Optimizer, Scheduler and Trainer state for finetuning if true
+    description: Loads Optimizer, Scheduler and Trainer state for finetuning if 
+      true
 
   save_total_limit:
     type: integer
     default: -1
     optional: true
-    description: If a value is passed, will limit the total amount of checkpoints.
-      Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints"
+    description: If a value is passed, will limit the total amount of 
+      checkpoints. Deletes the older checkpoints in output_dir. If the value is 
+      -1 saves all checkpoints"
 
   # Early Stopping Parameters
   apply_early_stopping:
@@ -289,15 +298,15 @@ inputs:
     type: integer
     default: 1
     optional: true
-    description: Stop training when the specified metric worsens for early_stopping_patience
-      evaluation calls
+    description: Stop training when the specified metric worsens for 
+      early_stopping_patience evaluation calls
 
   early_stopping_threshold:
     type: number
     default: 0.0
     optional: true
-    description: Denotes how much the specified metric must improve to satisfy early
-      stopping conditions
+    description: Denotes how much the specified metric must improve to satisfy 
+      early stopping conditions
 
   # Deepspeed Parameters
   apply_deepspeed:
@@ -322,10 +331,10 @@ inputs:
     enum:
     - "2"
     - "3"
-    description: This parameter configures which DEFAULT deepspeed config to be used
-      - stage2 or stage3. The default choice is stage2. Note that, this parameter
-      is ONLY applicable when user doesn't pass any config information via deepspeed
-      port.
+    description: This parameter configures which DEFAULT deepspeed config to be 
+      used - stage2 or stage3. The default choice is stage2. Note that, this 
+      parameter is ONLY applicable when user doesn't pass any config information
+      via deepspeed port.
 
   # ORT Parameters
   apply_ort:
@@ -341,15 +350,15 @@ inputs:
   preprocess_output:
     type: uri_folder
     optional: false
-    description: output folder of preprocessor containing encoded train.jsonl valid.jsonl
-      and the model pretrained info
+    description: output folder of preprocessor containing encoded train.jsonl 
+      valid.jsonl and the model pretrained info
     mode: rw_mount
 
   model_selector_output:
     type: uri_folder
     optional: false
-    description: output folder of model selector containing model metadata like config,
-      checkpoints, tokenizer config
+    description: output folder of model selector containing model metadata like 
+      config, checkpoints, tokenizer config
     mode: rw_mount
 
   # Validation parameters

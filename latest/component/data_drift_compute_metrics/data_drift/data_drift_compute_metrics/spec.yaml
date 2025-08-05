@@ -3,8 +3,8 @@ type: spark
 
 name: data_drift_compute_metrics
 display_name: Data Drift - Compute Metrics
-description: Compute data drift metrics given a baseline and a deployment's model
-  data input.
+description: Compute data drift metrics given a baseline and a deployment's 
+  model data input.
 version: 0.3.34
 is_deterministic: true
 
@@ -50,9 +50,11 @@ conf:
   spark.dynamicAllocation.enabled: true
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 4
-  spark.jars.packages: com.microsoft.azure:synapseml_2.12:0.11.0-26-52919ce4-SNAPSHOT,org.apache.spark:spark-avro_2.12:3.3.1
+  spark.jars.packages: 
+    com.microsoft.azure:synapseml_2.12:0.11.0-26-52919ce4-SNAPSHOT,org.apache.spark:spark-avro_2.12:3.3.1
   spark.jars.repositories: https://mmlspark.azureedge.net/maven
-  spark.jars.excludes: org.scala-lang:scala-reflect,org.apache.spark:spark-tags_2.12,org.scalactic:scalactic_2.12,org.scalatest:scalatest_2.12,com.fasterxml.jackson.core:jackson-databind
+  spark.jars.excludes: 
+    org.scala-lang:scala-reflect,org.apache.spark:spark-tags_2.12,org.scalactic:scalactic_2.12,org.scalatest:scalatest_2.12,com.fasterxml.jackson.core:jackson-databind
   spark.yarn.user.classpath.first: true
   spark.sql.parquet.enableVectorizedReader: false
   spark.sql.legacy.replaceDatabricksSparkAvro.enabled: true

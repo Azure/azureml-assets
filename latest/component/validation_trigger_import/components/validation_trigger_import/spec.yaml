@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 name: validation_trigger_import
@@ -13,18 +14,19 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: Common compute for model download, MLflow conversion and registration.
-      eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters
-      like \ and ' are invalid in the parameter value. If compute name is provided,
-      instance_type field will be ignored and the respective cluster will be used
+    description: Common compute for model download, MLflow conversion and 
+      registration. eg. provide 'FT-Cluster' if your compute is named 
+      'FT-Cluster'. Special characters like \ and ' are invalid in the parameter
+      value. If compute name is provided, instance_type field will be ignored 
+      and the respective cluster will be used
 
   instance_type:
     type: string
     optional: true
     default: Standard_DS12_v2
-    description: Instance type to be used for the component in case of serverless
-      compute, eg. STANDARD_NC6s_v3. The parameter compute must be set to 'serverless'
-      for instance_type to be used
+    description: Instance type to be used for the component in case of 
+      serverless compute, eg. STANDARD_NC6s_v3. The parameter compute must be 
+      set to 'serverless' for instance_type to be used
 
   ## Inputs for download model
   model_source:
@@ -38,9 +40,10 @@ inputs:
 
   model_id:
     type: string
-    description: A valid model id for the model source selected. For example you can
-      specify `bert-base-uncased` for importing HuggingFace bert base uncased model.
-      Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+    description: A valid model id for the model source selected. For example you
+      can specify `bert-base-uncased` for importing HuggingFace bert base 
+      uncased model. Please specify the complete URL if **GIT** or **AzureBlob**
+      is selected in `model_source`
 
   model_flavor:
     type: string
@@ -106,25 +109,28 @@ inputs:
 
   hf_config_class:
     type: string
-    description: AutoConfig class may not be sufficient to load config for some of
-      the models. You can use this parameter to send Config class name as it is
+    description: AutoConfig class may not be sufficient to load config for some 
+      of the models. You can use this parameter to send Config class name as it 
+      is
     optional: true
 
   hf_model_class:
     type: string
-    description: AutoModel classes may not be sufficient to load some of the models.
-      You can use this parameter to send Model class name as it is
+    description: AutoModel classes may not be sufficient to load some of the 
+      models. You can use this parameter to send Model class name as it is
     optional: true
 
   hf_tokenizer_class:
     type: string
-    description: AutoTokenizer class may not be sufficient to load tokenizer for some
-      of the models. You can use this parameter to send Config class name as it is
+    description: AutoTokenizer class may not be sufficient to load tokenizer for
+      some of the models. You can use this parameter to send Config class name 
+      as it is
     optional: true
 
   hf_use_experimental_features:
     type: boolean
-    description: Enable experimental features for hugging face MLflow model conversion
+    description: Enable experimental features for hugging face MLflow model 
+      conversion
     default: false
     optional: true
 
@@ -140,8 +146,8 @@ inputs:
   local_validation_test_data:
     type: uri_file
     optional: true
-    description: Test data for MLflow local validation. Validation will be skipped
-      if test data is not provided
+    description: Test data for MLflow local validation. Validation will be 
+      skipped if test data is not provided
 
   local_validation_column_rename_map:
     type: string
@@ -154,38 +160,40 @@ inputs:
   custom_model_name:
     type: string
     optional: true
-    description: Model name to use in the registration. If name already exists, the
-      version will be auto incremented
+    description: Model name to use in the registration. If name already exists, 
+      the version will be auto incremented
 
   model_version:
     type: string
     optional: true
-    description: Model version in workspace/registry. If the same model name and version
-      exists, the version will be auto incremented
+    description: Model version in workspace/registry. If the same model name and
+      version exists, the version will be auto incremented
 
   model_description:
     type: string
     optional: true
-    description: Description of the model that will be shown in AzureML registry or
-      workspace
+    description: Description of the model that will be shown in AzureML registry
+      or workspace
 
   registry_name:
     type: string
     optional: true
-    description: Name of the AzureML asset registry where the model will be registered.
-      Model will be registered in a workspace if this is unspecified
+    description: Name of the AzureML asset registry where the model will be 
+      registered. Model will be registered in a workspace if this is unspecified
 
   model_metadata:
     type: uri_file
     optional: true
-    description: A JSON or a YAML file that contains model metadata confirming to
-      Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+    description: A JSON or a YAML file that contains model metadata confirming 
+      to Model V2 
+      [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
   update_existing_model:
     type: boolean
     default: false
-    description: If set to true, will update the already existing model in the registry.
-      If set to false, will create a new model in the provided registry.
+    description: If set to true, will update the already existing model in the 
+      registry. If set to false, will create a new model in the provided 
+      registry.
     optional: true
 
 outputs:
@@ -197,7 +205,8 @@ is_deterministic: true
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/31
 code: ../../src
-command: python run_model_validate.py --validation-info ${{outputs.validation_info}}
+command: python run_model_validate.py --validation-info 
+  ${{outputs.validation_info}}
 
 tags:
   Preview: ""

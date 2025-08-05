@@ -1,9 +1,10 @@
 $schema: http://azureml/sdk-2-0/AutoMLComponent.json
 name: automl_image_classification_multilabel
 display_name: AutoML Image Classification Multilabel (Preview)
-description: Component that kicks off an AutoML job to train an multilabel image classification
-  model within an Azure Machine Learning pipeline. For more details, you can look
-  at the component documentation [here](https://aka.ms/automl_components) (Preview).
+description: Component that kicks off an AutoML job to train an multilabel image
+  classification model within an Azure Machine Learning pipeline. For more 
+  details, you can look at the component documentation 
+  [here](https://aka.ms/automl_components) (Preview).
 version: 0.0.2
 type: automl
 task: image_classification_multilabel

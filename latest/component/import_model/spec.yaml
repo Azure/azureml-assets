@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: import_model
@@ -13,18 +14,19 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: Common compute for model download, MLflow conversion and registration.
-      eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters
-      like \ and ' are invalid in the parameter value. If compute name is provided,
-      instance_type field will be ignored and the respective cluster will be used
+    description: Common compute for model download, MLflow conversion and 
+      registration. eg. provide 'FT-Cluster' if your compute is named 
+      'FT-Cluster'. Special characters like \ and ' are invalid in the parameter
+      value. If compute name is provided, instance_type field will be ignored 
+      and the respective cluster will be used
 
   instance_type:
     type: string
     optional: true
     default: STANDARD_NC6s_v3
-    description: Instance type to be used for the component in case of serverless
-      compute, eg. STANDARD_NC6s_v3. The parameter compute must be set to 'serverless'
-      for instance_type to be used
+    description: Instance type to be used for the component in case of 
+      serverless compute, eg. STANDARD_NC6s_v3. The parameter compute must be 
+      set to 'serverless' for instance_type to be used
 
   ## Inputs for download model
   model_source:
@@ -38,9 +40,10 @@ inputs:
 
   model_id:
     type: string
-    description: A valid model id for the model source selected. For example you can
-      specify `bert-base-uncased` for importing HuggingFace bert base uncased model.
-      Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+    description: A valid model id for the model source selected. For example you
+      can specify `bert-base-uncased` for importing HuggingFace bert base 
+      uncased model. Please specify the complete URL if **GIT** or **AzureBlob**
+      is selected in `model_source`
 
   model_flavor:
     type: string
@@ -70,10 +73,11 @@ inputs:
 
   token:
     type: string
-    description: If set use it to access the private models or authenticate the user.
-      For example, user can get the token for HF private model by creating account
-      in Huggingface, accept the condition for models that needs to be downloaded
-      and create access token from browser. For more details please visit - https://huggingface.co/docs/hub/security-tokens
+    description: If set use it to access the private models or authenticate the 
+      user. For example, user can get the token for HF private model by creating
+      account in Huggingface, accept the condition for models that needs to be 
+      downloaded and create access token from browser. For more details please 
+      visit - https://huggingface.co/docs/hub/security-tokens
     optional: true
 
   ## Inputs for the MlFLow conversion
@@ -142,25 +146,28 @@ inputs:
 
   hf_config_class:
     type: string
-    description: AutoConfig class may not be sufficient to load config for some of
-      the models. You can use this parameter to send Config class name as it is
+    description: AutoConfig class may not be sufficient to load config for some 
+      of the models. You can use this parameter to send Config class name as it 
+      is
     optional: true
 
   hf_model_class:
     type: string
-    description: AutoModel classes may not be sufficient to load some of the models.
-      You can use this parameter to send Model class name as it is
+    description: AutoModel classes may not be sufficient to load some of the 
+      models. You can use this parameter to send Model class name as it is
     optional: true
 
   hf_tokenizer_class:
     type: string
-    description: AutoTokenizer class may not be sufficient to load tokenizer for some
-      of the models. You can use this parameter to send Config class name as it is
+    description: AutoTokenizer class may not be sufficient to load tokenizer for
+      some of the models. You can use this parameter to send Config class name 
+      as it is
     optional: true
 
   hf_use_experimental_features:
     type: boolean
-    description: Enable experimental features for hugging face MLflow model conversion
+    description: Enable experimental features for hugging face MLflow model 
+      conversion
     default: false
     optional: true
 
@@ -176,8 +183,8 @@ inputs:
   local_validation_test_data:
     type: uri_file
     optional: true
-    description: Test data for MLflow local validation. Validation will be skipped
-      if test data is not provided
+    description: Test data for MLflow local validation. Validation will be 
+      skipped if test data is not provided
 
   local_validation_column_rename_map:
     type: string
@@ -190,38 +197,39 @@ inputs:
   custom_model_name:
     type: string
     optional: true
-    description: Model name to use in the registration. If name already exists, the
-      version will be auto incremented
+    description: Model name to use in the registration. If name already exists, 
+      the version will be auto incremented
 
   model_version:
     type: string
     optional: true
-    description: Model version in workspace/registry. If the same model name and version
-      exists, the version will be auto incremented
+    description: Model version in workspace/registry. If the same model name and
+      version exists, the version will be auto incremented
 
   model_description:
     type: string
     optional: true
-    description: Description of the model that will be shown in AzureML registry or
-      workspace
+    description: Description of the model that will be shown in AzureML registry
+      or workspace
 
   registry_name:
     type: string
     optional: true
-    description: Name of the AzureML asset registry where the model will be registered.
-      Model will be registered in a workspace if this is unspecified
+    description: Name of the AzureML asset registry where the model will be 
+      registered. Model will be registered in a workspace if this is unspecified
 
   model_metadata:
     type: uri_file
     optional: true
-    description: A JSON or a YAML file that contains model metadata confirming to
-      Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+    description: A JSON or a YAML file that contains model metadata confirming 
+      to Model V2 
+      [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
   update_existing_model:
     type: boolean
     default: false
-    description: If set to true, will update the existing model. If set to false,
-      will create a new model.
+    description: If set to true, will update the existing model. If set to 
+      false, will create a new model.
     optional: true
 
 # Pipeline outputs
@@ -231,8 +239,8 @@ outputs:
     type: mlflow_model
 
   model_registration_details:
-    description: Output folder with a file which captures transformations applied
-      above and registration details in JSON file
+    description: Output folder with a file which captures transformations 
+      applied above and registration details in JSON file
     type: uri_folder
 
 jobs:
@@ -255,7 +263,8 @@ jobs:
       registry_name: ${{parent.inputs.registry_name}}
       custom_model_name: ${{parent.inputs.custom_model_name}}
       local_validation_test_data: ${{parent.inputs.local_validation_test_data}}
-      local_validation_column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
+      local_validation_column_rename_map: 
+        ${{parent.inputs.local_validation_column_rename_map}}
       extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
       hf_config_args: ${{parent.inputs.hf_config_args}}
       hf_tokenizer_args: ${{parent.inputs.hf_tokenizer_args}}
@@ -264,7 +273,8 @@ jobs:
       hf_config_class: ${{parent.inputs.hf_config_class}}
       hf_model_class: ${{parent.inputs.hf_model_class}}
       hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
-      hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
+      hf_use_experimental_features: 
+        ${{parent.inputs.hf_use_experimental_features}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
       validation_info:
@@ -280,7 +290,8 @@ jobs:
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
-      validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
+      validation_info: 
+        ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
       update_existing_model: ${{parent.inputs.update_existing_model}}
       token: ${{parent.inputs.token}}
     outputs:
@@ -302,7 +313,8 @@ jobs:
       vllm_enabled: ${{parent.inputs.vllm_enabled}}
       license_file_path: ${{parent.inputs.license_file_path}}
       model_framework: ${{parent.inputs.model_framework}}
-      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
+      model_download_metadata: 
+        ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
       hf_config_args: ${{parent.inputs.hf_config_args}}
       hf_tokenizer_args: ${{parent.inputs.hf_tokenizer_args}}
@@ -311,7 +323,8 @@ jobs:
       hf_config_class: ${{parent.inputs.hf_config_class}}
       hf_model_class: ${{parent.inputs.hf_model_class}}
       hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
-      hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
+      hf_use_experimental_features: 
+        ${{parent.inputs.hf_use_experimental_features}}
       extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
     outputs:
       mlflow_model_folder:
@@ -323,7 +336,8 @@ jobs:
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
     inputs:
-      model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
+      model_path: 
+        ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
       test_data_path: ${{parent.inputs.local_validation_test_data}}
       column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
       task_name: ${{parent.inputs.task_name}}
@@ -344,10 +358,13 @@ jobs:
       registry_name: ${{parent.inputs.registry_name}}
       model_metadata: ${{parent.inputs.model_metadata}}
       model_type: mlflow_model
-      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-      model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
+      model_download_metadata: 
+        ${{parent.jobs.download_model.outputs.model_download_metadata}}
+      model_path: 
+        ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
     outputs:
-      registration_details_folder: ${{parent.outputs.model_registration_details}}
+      registration_details_folder: 
+        ${{parent.outputs.model_registration_details}}
 
 tags:
   Preview: ""

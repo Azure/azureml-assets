@@ -5,9 +5,10 @@ path: ./
 
 properties:
   inference-min-sku-spec: 6|1|112|64
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
+    Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
+    Standard_ND40rs_v2
   languages: en
   SharedComputeCapacityEnabled: true
 
@@ -22,9 +23,10 @@ tags:
   task: image-text-to-text
   hiddenlayerscanned: ""
   huggingface_model_id: microsoft/llava-med-v1.5-mistral-7b
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2]
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
+      Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
+      Standard_ND40rs_v2]
 
 version: 3
 description: |-

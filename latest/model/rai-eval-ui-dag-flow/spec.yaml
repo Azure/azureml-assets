@@ -6,8 +6,8 @@ properties:
   azureml.promptflow.section: gallery
   azureml.promptflow.type: evaluate
   azureml.promptflow.name: Quality & Safety Evaluation
-  azureml.promptflow.description: Compute the quality and safety of the answer for
-    the given question based on the ground_truth and the context
+  azureml.promptflow.description: Compute the quality and safety of the answer 
+    for the given question based on the ground_truth and the context
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 version: 12

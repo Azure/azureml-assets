@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: data_delete
 version: 0.0.2
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: Data Delete
 description: Delete data file from Azure OpenAI resource
 
-environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
+environment: 
+  azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
 
 code: ../../src
 

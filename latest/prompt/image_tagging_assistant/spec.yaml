@@ -4,7 +4,8 @@ type: prompt
 version: 0.0.13
 name: image_tagging_assistant
 display_name: Image Tagging Assistant
-description: Identify and list prevalent tags associated with the content of images
+description: Identify and list prevalent tags associated with the content of 
+  images
 
 tags:
   modality: image

@@ -1,9 +1,11 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 name: data_drift_signal_monitor
 display_name: Data Drift - Signal Monitor
-description: Computes the data drift between a baseline and production data assets.
+description: Computes the data drift between a baseline and production data 
+  assets.
 version: 0.3.55
 is_deterministic: true
 
@@ -63,15 +65,18 @@ outputs:
 jobs:
   compute_feature_importances:
     type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.32
+    component: 
+      azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.32
     inputs:
       baseline_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
       task_type: ${{parent.inputs.task_type}}
       target_column: ${{parent.inputs.target_column}}
-      override_numerical_features: ${{parent.inputs.override_numerical_features}}
-      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+      override_numerical_features: 
+        ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: 
+        ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -82,7 +87,8 @@ jobs:
       type: aml_token
   feature_selection:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.29
+    component: 
+      azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.29
     inputs:
       input_data_1:
         type: mltable
@@ -92,7 +98,8 @@ jobs:
         path: ${{parent.inputs.baseline_data}}
       filter_type: ${{parent.inputs.filter_type}}
       filter_value: ${{parent.inputs.filter_value}}
-      feature_importance: ${{parent.jobs.compute_feature_importances.outputs.signal_metrics}}
+      feature_importance: 
+        ${{parent.jobs.compute_feature_importances.outputs.signal_metrics}}
     outputs:
       feature_names:
         type: mltable
@@ -103,7 +110,8 @@ jobs:
       type: aml_token
   compute_drift_metrics:
     type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.34
+    component: 
+      azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.34
     inputs:
       production_dataset:
         type: mltable
@@ -118,8 +126,10 @@ jobs:
       categorical_metric: ${{parent.inputs.categorical_metric}}
       numerical_threshold: ${{parent.inputs.numerical_threshold}}
       categorical_threshold: ${{parent.inputs.categorical_threshold}}
-      override_numerical_features: ${{parent.inputs.override_numerical_features}}
-      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+      override_numerical_features: 
+        ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: 
+        ${{parent.inputs.override_categorical_features}}
     outputs:
       signal_metrics:
         type: mltable
@@ -130,7 +140,8 @@ jobs:
       type: aml_token
   compute_histogram_buckets:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.28
+    component: 
+      azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.28
     inputs:
       input_data_1:
         type: mltable
@@ -138,8 +149,10 @@ jobs:
       input_data_2:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
-      override_numerical_features: ${{parent.inputs.override_numerical_features}}
-      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+      override_numerical_features: 
+        ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: 
+        ${{parent.inputs.override_categorical_features}}
     outputs:
       histogram_buckets:
         type: mltable
@@ -150,16 +163,20 @@ jobs:
       type: aml_token
   compute_baseline_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.28
+    component: 
+      azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.28
     inputs:
       input_data:
         type: mltable
         path: ${{parent.inputs.baseline_data}}
       histogram_buckets:
         type: mltable
-        path: ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
-      override_numerical_features: ${{parent.inputs.override_numerical_features}}
-      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+        path: 
+          ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
+      override_numerical_features: 
+        ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: 
+        ${{parent.inputs.override_categorical_features}}
     outputs:
       histogram:
         type: mltable
@@ -170,16 +187,20 @@ jobs:
       type: aml_token
   compute_target_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.28
+    component: 
+      azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.28
     inputs:
       input_data:
         type: mltable
         path: ${{parent.inputs.target_data}}
       histogram_buckets:
         type: mltable
-        path: ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
-      override_numerical_features: ${{parent.inputs.override_numerical_features}}
-      override_categorical_features: ${{parent.inputs.override_categorical_features}}
+        path: 
+          ${{parent.jobs.compute_histogram_buckets.outputs.histogram_buckets}}
+      override_numerical_features: 
+        ${{parent.inputs.override_numerical_features}}
+      override_categorical_features: 
+        ${{parent.inputs.override_categorical_features}}
     outputs:
       histogram:
         type: mltable
@@ -190,12 +211,14 @@ jobs:
       type: aml_token
   output_signal_metrics:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.33
+    component: 
+      azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.33
     inputs:
       signal_metrics:
         type: mltable
         path: ${{parent.jobs.compute_drift_metrics.outputs.signal_metrics}}
-      feature_importance_all: ${{parent.jobs.compute_feature_importances.outputs.signal_metrics}}
+      feature_importance_all: 
+        ${{parent.jobs.compute_feature_importances.outputs.signal_metrics}}
       signal_type: "DataDrift"
       signal_name: ${{parent.inputs.signal_name}}
       monitor_name: ${{parent.inputs.monitor_name}}
@@ -218,7 +241,8 @@ jobs:
       type: aml_token
   evaluate_metric_thresholds:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
+    component: 
+      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
     inputs:
       signal_metrics:
         type: mltable

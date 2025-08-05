@@ -6,8 +6,8 @@ properties:
   azureml.promptflow.section: gallery
   azureml.promptflow.type: standard
   azureml.promptflow.name: Detect Defects
-  azureml.promptflow.description: Identify inconsistencies by comparing images with
-    GPT-4 Turbo with Vision to ensure stringent quality control.
+  azureml.promptflow.description: Identify inconsistencies by comparing images 
+    with GPT-4 Turbo with Vision to ensure stringent quality control.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 tags:

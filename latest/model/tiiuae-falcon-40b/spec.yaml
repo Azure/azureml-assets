@@ -7,13 +7,15 @@ properties:
   datasets: tiiuae/falcon-refinedweb
   languages: en, de, es, fr
   evaluation-min-sku-spec: 24|4|448|2900
-  evaluation-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, 
+    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetune-min-sku-spec: 40|8|672|2900
-  finetune-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification
   inference-min-sku-spec: 40|8|672|2900
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4
 tags:
   Featured: ''
   license: apache-2.0
@@ -22,10 +24,12 @@ tags:
   author: tiiuae
   hiddenlayerscanned: ''
   huggingface_model_id: tiiuae/falcon-40b
-  evaluation_compute_allow_list: [Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
-  inference_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
-  finetune_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
+  evaluation_compute_allow_list: [Standard_NC24s_v3, Standard_NC24rs_v3, 
+      Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4]
+  inference_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4]
+  finetune_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4]
   model_specific_defaults:
     apply_lora: 'true'
     precision: '4'

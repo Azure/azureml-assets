@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: summarization_datapreprocess
 version: 0.0.76
 type: command
@@ -6,10 +7,12 @@ type: command
 is_deterministic: true
 
 display_name: Summarization DataPreProcess
-description: Component to preprocess data for summarization task. See [docs](https://aka.ms/azureml/components/summarization_datapreprocess)
-  to learn more.
+description: Component to preprocess data for summarization task. See 
+  [docs](https://aka.ms/azureml/components/summarization_datapreprocess) to 
+  learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/preprocess
 
@@ -37,16 +40,17 @@ inputs:
   summarization_lang:
     type: string
     optional: true
-    description: The parameter should be an abbreviated/coded form of the language
-      as understood by tokenizer. Please check the respective model's language codes
-      while updating this information
+    description: The parameter should be an abbreviated/coded form of the 
+      language as understood by tokenizer. Please check the respective model's 
+      language codes while updating this information
 
   batch_size:
     type: integer
     min: 1
     optional: true
     default: 1000
-    description: Number of examples to batch before calling the tokenization function
+    description: Number of examples to batch before calling the tokenization 
+      function
 
   # Tokenization params
   pad_to_max_length:
@@ -56,18 +60,18 @@ inputs:
     - "false"
     default: "false"
     optional: true
-    description: If set to True, the returned sequences will be padded according to
-      the model's padding side and padding index, up to their `max_seq_length`. If
-      no `max_seq_length` is specified, the padding is done up to the model's max
-      length.
+    description: If set to True, the returned sequences will be padded according
+      to the model's padding side and padding index, up to their 
+      `max_seq_length`. If no `max_seq_length` is specified, the padding is done
+      up to the model's max length.
 
   max_seq_length:
     type: integer
     optional: true
     default: -1
-    description: Controls the maximum length to use when pad_to_max_length parameter
-      is set to `true`. Default is -1 which means the padding is done up to the model's
-      max length. Else will be padded to `max_seq_length`.
+    description: Controls the maximum length to use when pad_to_max_length 
+      parameter is set to `true`. Default is -1 which means the padding is done 
+      up to the model's max length. Else will be padded to `max_seq_length`.
 
   # Data inputs
   # Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
@@ -76,22 +80,22 @@ inputs:
   train_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   test_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered test data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered test data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   train_mltable_path:
@@ -102,7 +106,8 @@ inputs:
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered validation data asset in `mltable` format.
+    description: Path to the registered validation data asset in `mltable` 
+      format.
 
   test_mltable_path:
     type: mltable
@@ -113,15 +118,16 @@ inputs:
   model_selector_output:
     type: uri_folder
     optional: false
-    description: output folder of model selector containing model metadata like config,
-      checkpoints, tokenizer config
+    description: output folder of model selector containing model metadata like 
+      config, checkpoints, tokenizer config
     mode: rw_mount
 
 outputs:
   output_dir:
     type: uri_folder
-    description: The folder contains the tokenized output of the train, validation
-      and test data along with the tokenizer files used to tokenize the data
+    description: The folder contains the tokenized output of the train, 
+      validation and test data along with the tokenizer files used to tokenize 
+      the data
     mode: rw_mount
 
 command: >-

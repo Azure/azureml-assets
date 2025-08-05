@@ -1,14 +1,17 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 version: 0.0.22
 name: transformers_image_classification_finetune
 display_name: Image Classification HuggingFace Transformers Model Finetune
-description: Component to finetune HuggingFace transformers models for image classification.
+description: Component to finetune HuggingFace transformers models for image 
+  classification.
 
 is_deterministic: false
 
-environment: azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/58
+environment: 
+  azureml://registries/azureml/environments/acft-transformers-image-gpu/versions/58
 
 code: ../../../src/finetune
 
@@ -21,8 +24,8 @@ inputs:
   model_path:
     type: uri_folder
     optional: false
-    description: Output folder of model selector containing model metadata like config,
-      checkpoints, tokenizer config.
+    description: Output folder of model selector containing model metadata like 
+      config, checkpoints, tokenizer config.
 
   # component input: training mltable
   training_data:
@@ -40,19 +43,21 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: Final Image width after augmentation that is input to the network.
-      Default value is -1 which means it would be overwritten by default image width
-      in Hugging Face feature extractor. If either image_width or image_height is
-      set to -1, default value would be used for both width and height.
+    description: Final Image width after augmentation that is input to the 
+      network. Default value is -1 which means it would be overwritten by 
+      default image width in Hugging Face feature extractor. If either 
+      image_width or image_height is set to -1, default value would be used for 
+      both width and height.
 
   image_height:
     type: integer
     default: -1
     optional: true
-    description: Final Image height after augmentation that is input to the network.
-      Default value is -1 which means it would be overwritten by default image height
-      in Hugging Face feature extractor. If either image_width or image_height is
-      set to -1, default value would be used for both width and height.
+    description: Final Image height after augmentation that is input to the 
+      network. Default value is -1 which means it would be overwritten by 
+      default image height in Hugging Face feature extractor. If either 
+      image_width or image_height is set to -1, default value would be used for 
+      both width and height.
 
   task_name:
     type: string
@@ -75,8 +80,9 @@ inputs:
     - iou_macro
     - iou_micro
     - iou_weighted
-    description: Specify the metric to use to compare two different models. If left
-      empty, will be chosen automatically based on the task type and model selected.
+    description: Specify the metric to use to compare two different models. If 
+      left empty, will be chosen automatically based on the task type and model 
+      selected.
 
   # Augmentation parameters
   apply_augmentations:
@@ -89,15 +95,16 @@ inputs:
     type: integer
     default: 8
     optional: true
-    description: Number of subprocesses to use for data loading (PyTorch only). 0
-      means that the data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading (PyTorch only). 
+      0 means that the data will be loaded in the main process.
 
   # Deepspeed Parameters
   apply_deepspeed:
     type: boolean
     optional: true
-    description: If set to true, will enable deepspeed for training. If left empty,
-      will be chosen automatically based on the task type and model selected.
+    description: If set to true, will enable deepspeed for training. If left 
+      empty, will be chosen automatically based on the task type and model 
+      selected.
 
   # optional component input: deepspeed config
   deepspeed_config:
@@ -108,52 +115,55 @@ inputs:
   apply_ort:
     type: boolean
     optional: true
-    description: If set to true, will use the ONNXRunTime training. If left empty,
-      will be chosen automatically based on the task type and model selected.
+    description: If set to true, will use the ONNXRunTime training. If left 
+      empty, will be chosen automatically based on the task type and model 
+      selected.
 
   # Training parameters
   number_of_epochs:
     type: integer
     optional: true
-    description: Number of training epochs. If left empty, will be chosen automatically
-      based on the task type and model selected.
+    description: Number of training epochs. If left empty, will be chosen 
+      automatically based on the task type and model selected.
 
   max_steps:
     type: integer
     optional: true
-    description: If set to a positive number, the total number of training steps to
-      perform. Overrides 'number_of_epochs'. In case of using a finite iterable dataset
-      the training may stop before reaching the set number of steps when all data
-      is exhausted. If left empty, will be chosen automatically based on the task
-      type and model selected.
+    description: If set to a positive number, the total number of training steps
+      to perform. Overrides 'number_of_epochs'. In case of using a finite 
+      iterable dataset the training may stop before reaching the set number of 
+      steps when all data is exhausted. If left empty, will be chosen 
+      automatically based on the task type and model selected.
 
   training_batch_size:
     type: integer
     optional: true
-    description: Train batch size. If left empty, will be chosen automatically based
-      on the task type and model selected.
+    description: Train batch size. If left empty, will be chosen automatically 
+      based on the task type and model selected.
 
   validation_batch_size:
     type: integer
     optional: true
-    description: Validation batch size. If left empty, will be chosen automatically
-      based on the task type and model selected.
+    description: Validation batch size. If left empty, will be chosen 
+      automatically based on the task type and model selected.
 
   auto_find_batch_size:
     type: boolean
     default: false
     optional: true
-    description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size'
-      goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct
-      batch size by iteratively reducing 'per_device_train_batch_size' by a factor
-      of 2 till the OOM is fixed.
+    description: Flag to enable auto finding of batch size. If the provided 
+      'per_device_train_batch_size' goes into Out Of Memory (OOM) enabling 
+      auto_find_batch_size will find the correct batch size by iteratively 
+      reducing 'per_device_train_batch_size' by a factor of 2 till the OOM is 
+      fixed.
 
   # learning rate and learning rate scheduler
   learning_rate:
     type: number
     optional: true
-    description: Start learning rate. Defaults to linear scheduler. If left empty,
-      will be chosen automatically based on the task type and model selected.
+    description: Start learning rate. Defaults to linear scheduler. If left 
+      empty, will be chosen automatically based on the task type and model 
+      selected.
 
   learning_rate_scheduler:
     type: string
@@ -165,15 +175,15 @@ inputs:
     - warmup_polynomial
     - constant
     - warmup_constant
-    description: The scheduler type to use. If left empty, will be chosen automatically
-      based on the task type and model selected.
+    description: The scheduler type to use. If left empty, will be chosen 
+      automatically based on the task type and model selected.
 
   warmup_steps:
     type: integer
     optional: true
-    description: Number of steps used for a linear warmup from 0 to learning_rate.
-      If left empty, will be chosen automatically based on the task type and model
-      selected.
+    description: Number of steps used for a linear warmup from 0 to 
+      learning_rate. If left empty, will be chosen automatically based on the 
+      task type and model selected.
 
   # optimizer
   optimizer:
@@ -190,39 +200,40 @@ inputs:
     - adafactor
     - adagrad
     - adamw_ort_fused
-    description: optimizer to be used while training. 'adamw_ort_fused' optimizer
-      is only supported for ORT training. If left empty, will be chosen automatically
-      based on the task type and model selected.
+    description: optimizer to be used while training. 'adamw_ort_fused' 
+      optimizer is only supported for ORT training. If left empty, will be 
+      chosen automatically based on the task type and model selected.
 
   weight_decay:
     type: number
     optional: true
-    description: The weight decay to apply (if not zero) to all layers except all
-      bias and LayerNorm weights in AdamW and sgd optimizer. If left empty, will be
-      chosen automatically based on the task type and model selected.
+    description: The weight decay to apply (if not zero) to all layers except 
+      all bias and LayerNorm weights in AdamW and sgd optimizer. If left empty, 
+      will be chosen automatically based on the task type and model selected.
 
   extra_optim_args:
     type: string
     default: ""
     optional: true
-    description: Optional additional arguments that are supplied to SGD Optimizer.
-      The arguments should be semi-colon separated key value pairs and should be enclosed
-      in double quotes. For example, "momentum=0.5; nesterov=True" for sgd. Please
-      make sure to use a valid parameter names for the chosen optimizer. For exact
-      parameter names, please refer https://pytorch.org/docs/1.13/generated/torch.optim.SGD.html#torch.optim.SGD
-      for SGD. Parameters supplied in extra_optim_args will take precedence over the
-      parameter supplied via other arguments such as weight_decay. If weight_decay
-      is provided via "weight_decay" parameter and via extra_optim_args both, values
-      specified in extra_optim_args will be used.
+    description: Optional additional arguments that are supplied to SGD 
+      Optimizer. The arguments should be semi-colon separated key value pairs 
+      and should be enclosed in double quotes. For example, "momentum=0.5; 
+      nesterov=True" for sgd. Please make sure to use a valid parameter names 
+      for the chosen optimizer. For exact parameter names, please refer 
+      https://pytorch.org/docs/1.13/generated/torch.optim.SGD.html#torch.optim.SGD
+      for SGD. Parameters supplied in extra_optim_args will take precedence over
+      the parameter supplied via other arguments such as weight_decay. If 
+      weight_decay is provided via "weight_decay" parameter and via 
+      extra_optim_args both, values specified in extra_optim_args will be used.
 
 
   # gradient accumulation
   gradient_accumulation_step:
     type: integer
     optional: true
-    description: Number of update steps to accumulate the gradients for, before performing
-      a backward/update pass. If left empty, will be chosen automatically based on
-      the task type and model selected.
+    description: Number of update steps to accumulate the gradients for, before 
+      performing a backward/update pass. If left empty, will be chosen 
+      automatically based on the task type and model selected.
 
   # mixed precision training
   precision:
@@ -232,19 +243,19 @@ inputs:
     - "16"
     default: "32"
     optional: true
-    description: Apply mixed precision training. This can reduce memory footprint
-      by performing operations in half-precision.
+    description: Apply mixed precision training. This can reduce memory 
+      footprint by performing operations in half-precision.
 
   # label smoothing factor
   label_smoothing_factor:
     type: number
     optional: true
-    description: The label smoothing factor to use in range [0.0, 1,0). Zero means
-      no label smoothing, otherwise the underlying onehot-encoded labels are changed
-      from 0s and 1s to label_smoothing_factor/num_labels and 1 - label_smoothing_factor
-      + label_smoothing_factor/num_labels respectively. Not applicable to multi-label
-      classification. If left empty, will be chosen automatically based on the task
-      type and model selected.
+    description: The label smoothing factor to use in range [0.0, 1,0). Zero 
+      means no label smoothing, otherwise the underlying onehot-encoded labels 
+      are changed from 0s and 1s to label_smoothing_factor/num_labels and 1 - 
+      label_smoothing_factor + label_smoothing_factor/num_labels respectively. 
+      Not applicable to multi-label classification. If left empty, will be 
+      chosen automatically based on the task type and model selected.
 
   # random seed
   random_seed:
@@ -261,15 +272,16 @@ inputs:
     enum:
     - epoch
     - steps
-    description: The evaluation strategy to adopt during training. Please note that
-      the save_strategy and evaluation_strategy should match.
+    description: The evaluation strategy to adopt during training. Please note 
+      that the save_strategy and evaluation_strategy should match.
 
   evaluation_steps:
     type: integer
     default: 500
     optional: true
-    description: Number of update steps between two evals if evaluation_strategy='steps'.
-      Please note that the saving steps should be a multiple of the evaluation steps.
+    description: Number of update steps between two evals if 
+      evaluation_strategy='steps'. Please note that the saving steps should be a
+      multiple of the evaluation steps.
 
   # logging strategy parameters
   logging_strategy:
@@ -285,7 +297,8 @@ inputs:
     type: integer
     default: 500
     optional: true
-    description: Number of update steps between two logs if logging_strategy='steps'.
+    description: Number of update steps between two logs if 
+      logging_strategy='steps'.
 
   # Save strategy
   save_strategy:
@@ -295,23 +308,25 @@ inputs:
     enum:
     - epoch
     - steps
-    description: The checkpoint save strategy to adopt during training. Please note
-      that the save_strategy and evaluation_strategy should match.
+    description: The checkpoint save strategy to adopt during training. Please 
+      note that the save_strategy and evaluation_strategy should match.
 
   save_steps:
     type: integer
     default: 500
     optional: true
-    description: Number of updates steps before two checkpoint saves if save_strategy="steps".
-      Please note that the saving steps should be a multiple of the evaluation steps.
+    description: Number of updates steps before two checkpoint saves if 
+      save_strategy="steps". Please note that the saving steps should be a 
+      multiple of the evaluation steps.
 
   # model checkpointing limit
   save_total_limit:
     type: integer
     default: 5
     optional: true
-    description: If a value is passed, will limit the total amount of checkpoints.
-      Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints".
+    description: If a value is passed, will limit the total amount of 
+      checkpoints. Deletes the older checkpoints in output_dir. If the value is 
+      -1 saves all checkpoints".
 
   # Early Stopping Parameters
   early_stopping:
@@ -324,22 +339,23 @@ inputs:
     type: integer
     default: 1
     optional: true
-    description: Stop training when the specified metric worsens for early_stopping_patience
-      evaluation calls.
+    description: Stop training when the specified metric worsens for 
+      early_stopping_patience evaluation calls.
 
   # Grad Norm
   max_grad_norm:
     type: number
     optional: true
-    description: Maximum gradient norm (for gradient clipping). If left empty, will
-      be chosen automatically based on the task type and model selected.
+    description: Maximum gradient norm (for gradient clipping). If left empty, 
+      will be chosen automatically based on the task type and model selected.
 
   # resume from the input model
   resume_from_checkpoint:
     type: boolean
     default: false
     optional: true
-    description: Loads optimizer, Scheduler and Trainer state for finetuning if true.
+    description: Loads optimizer, Scheduler and Trainer state for finetuning if 
+      true.
 
   # save mlflow model
   save_as_mlflow_model:

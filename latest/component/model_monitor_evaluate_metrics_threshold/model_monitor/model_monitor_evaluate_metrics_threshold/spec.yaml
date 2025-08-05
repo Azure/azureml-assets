@@ -3,8 +3,8 @@ type: spark
 
 name: model_monitor_evaluate_metrics_threshold
 display_name: Model Monitor - Evaluate Metrics Threshold
-description: Evaluate signal metrics against the threshold provided in the monitoring
-  signal.
+description: Evaluate signal metrics against the threshold provided in the 
+  monitoring signal.
 version: 0.3.33
 is_deterministic: true
 

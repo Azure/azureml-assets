@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 
 name: medimageinsight_ft_pipeline
 version: 0.0.1
@@ -29,15 +30,15 @@ inputs:
   eval_train_image_tsv:
     type: uri_file
     optional: true
-    description: Optional path used for the evaluation task. If not specified, will
-      use the training path.
+    description: Optional path used for the evaluation task. If not specified, 
+      will use the training path.
     mode: ro_mount
 
   eval_train_text_tsv:
     type: uri_file
     optional: true
-    description: Optional path used for the evaluation task. If not specified, will
-      use the training path.
+    description: Optional path used for the evaluation task. If not specified, 
+      will use the training path.
     mode: ro_mount
 
   image_tsv:
@@ -68,26 +69,27 @@ inputs:
     type: string
     optional: true
     default: Standard_nc24rs_v3
-    description: Instance type to be used for finetune component in case of serverless
-      compute, eg. standard_nc24rs_v3. The parameter compute_finetune must be set
-      to 'serverless' for instance_type to be used
+    description: Instance type to be used for finetune component in case of 
+      serverless compute, eg. standard_nc24rs_v3. The parameter compute_finetune
+      must be set to 'serverless' for instance_type to be used
 
   compute_finetune:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in
-      the parameter value. If compute cluster name is provided, instance_type field
-      will be ignored and the respective cluster will be used
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if 
+      your compute is named 'FT-Cluster'. Special characters like \ and ' are 
+      invalid in the parameter value. If compute cluster name is provided, 
+      instance_type field will be ignored and the respective cluster will be 
+      used
 
   process_count_per_instance:
     type: integer
     min: 1
     default: 1
     optional: true
-    description: Number of processes to run per instance. This is used to set the
-      number of GPUs to use for training.
+    description: Number of processes to run per instance. This is used to set 
+      the number of GPUs to use for training.
 
   instance_count:
     type: integer
@@ -98,8 +100,8 @@ inputs:
 outputs:
   save_dir:
     type: uri_folder
-    description: Directory to save the model and checkpoints, used for pipeline's
-      internal operations.
+    description: Directory to save the model and checkpoints, used for 
+      pipeline's internal operations.
     mode: rw_mount
 
   embedding_mlflow_model:

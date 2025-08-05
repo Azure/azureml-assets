@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -30,8 +31,8 @@ inputs:
   allowed_extensions:
     type: string
     optional: true
-    description: "Comma separated list of extensions to include, if not provided the\
-      \ default list of supported extensions will be used. e.g. '.md,.txt,.html,.py,.pdf.'"
+    description: "Comma separated list of extensions to include, if not provided the
+      default list of supported extensions will be used. e.g. '.md,.txt,.html,.py,.pdf.'"
   # Chunking options
   chunk_size:
     type: integer
@@ -44,33 +45,33 @@ inputs:
   doc_intel_connection_id:
     type: string
     optional: true
-    description: "Connection id for Document Intelligence service. If provided, will\
-      \ be used to extract content from .pdf document."
+    description: "Connection id for Document Intelligence service. If provided, will
+      be used to extract content from .pdf document."
   data_source_url:
     type: string
     optional: true
-    description: "Base URL to join with file paths to create full source file URL\
-      \ for chunk metadata."
+    description: "Base URL to join with file paths to create full source file URL
+      for chunk metadata."
   document_path_replacement_regex:
     type: string
     optional: true
-    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'\
-      \ to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\
-      \\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles'\
-      \ from the middle of the url."
+    description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'
+      to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\
+      \\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles'
+      from the middle of the url."
   max_sample_files:
     type: integer
     default: -1
-    description: "Number of files to chunk. Specify -1 to chunk all documents in input\
-      \ path."
+    description: "Number of files to chunk. Specify -1 to chunk all documents in input
+      path."
   use_rcts:
     type: string
     default: "True"
     enum:
     - "True"
     - "False"
-    description: "Whether to use RecursiveCharacterTextSplitter to split documents\
-      \ into chunks"
+    description: "Whether to use RecursiveCharacterTextSplitter to split documents
+      into chunks"
   output_format:
     type: string
     default: "jsonl"
@@ -82,8 +83,8 @@ inputs:
 outputs:
   output_chunks:
     type: uri_folder
-    description: "Uri Folder containing chunks. Each chunk will be a separate file\
-      \ in the folder"
+    description: "Uri Folder containing chunks. Each chunk will be a separate file
+      in the folder"
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src'

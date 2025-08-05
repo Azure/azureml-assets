@@ -56,23 +56,25 @@ inputs:
   use_model_dependency:
     type: boolean
     default: false
-    description: Whether to install the MLFlow model's dependencies in the RAI environment
+    description: Whether to install the MLFlow model's dependencies in the RAI 
+      environment
   use_conda:
     type: boolean
     default: false
-    description: Whether to use conda or pip to install the MLFlow model's dependencies
-      in the RAI environment
+    description: Whether to use conda or pip to install the MLFlow model's 
+      dependencies in the RAI environment
 outputs:
   dashboard:
     type: path
-    description: Path to which RAITextInsights is serialized to for connecting to
-      compute instance
+    description: Path to which RAITextInsights is serialized to for connecting 
+      to compute instance
   ux_json:
     type: path
-    description: Json file to which UX is serialized to for viewing in static AzureML
-      Studio UI
+    description: Json file to which UX is serialized to for viewing in static 
+      AzureML Studio UI
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-text/versions/19
+environment: 
+  azureml://registries/azureml/environments/responsibleai-text/versions/19
 command: >-
   python ./rai_text_insights.py
   --task_type ${{inputs.task_type}}

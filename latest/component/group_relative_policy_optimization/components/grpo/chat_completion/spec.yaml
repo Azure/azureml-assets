@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: group_relative_policy_optimization
 version: 0.0.1
 type: command
@@ -6,10 +7,11 @@ type: command
 is_deterministic: true
 
 display_name: Group Relative Policy Optimization
-description: Component to optimize group-relative policy using reinforcement learning.
-  Supports PyTorch distributed training with DeepSpeed optimizations.
+description: Component to optimize group-relative policy using reinforcement 
+  learning. Supports PyTorch distributed training with DeepSpeed optimizations.
 
-environment: azureml://registries/azureml/environments/acft-group-relative-policy-optimization/versions/3
+environment: 
+  azureml://registries/azureml/environments/acft-group-relative-policy-optimization/versions/3
 
 code: ../../../src/grpo
 
@@ -33,16 +35,16 @@ inputs:
   model_name_or_path:
     type: uri_folder
     optional: false
-    description: output folder of model import component containing model artifacts
-      and a metadata file.
+    description: output folder of model import component containing model 
+      artifacts and a metadata file.
     mode: rw_mount
 
   beta:
     type: number
     default: 0.00
     optional: true
-    description: The beta parameter controls the strength of the KL divergence penalty
-      in the objective function
+    description: The beta parameter controls the strength of the KL divergence 
+      penalty in the objective function
 
   dataset_name:
     type: string
@@ -54,8 +56,8 @@ inputs:
     type: string
     default: problem
     optional: false
-    description: Column in the dataset containing the prompt for the chat completion
-      template
+    description: Column in the dataset containing the prompt for the chat 
+      completion template
 
   deepspeed_config:
     type: uri_file
@@ -83,15 +85,15 @@ inputs:
     - epoch
     default: disable
     optional: true
-    description: Evaluation strategy to use during training. Options are "disable",
-      "steps", or "epoch".
+    description: Evaluation strategy to use during training. Options are 
+      "disable", "steps", or "epoch".
 
   gradient_accumulation_steps:
     type: integer
     default: 1
     optional: true
-    description: Number of steps before performing a backward/update pass to accumulate
-      gradients.
+    description: Number of steps before performing a backward/update pass to 
+      accumulate gradients.
 
   learning_rate:
     type: number
@@ -136,22 +138,24 @@ inputs:
     type: integer
     default: 512
     optional: true
-    description: Maximum length of the prompt. If the prompt is longer than this value,
-      it will be truncated left.
+    description: Maximum length of the prompt. If the prompt is longer than this
+      value, it will be truncated left.
 
   max_steps:
     type: integer
     default: -1
     optional: true
-    description: If set to a positive number, this will override num_train_epochs
-      and train for exactly this many steps. Set to -1 to disable (default).
+    description: If set to a positive number, this will override 
+      num_train_epochs and train for exactly this many steps. Set to -1 to 
+      disable (default).
 
   num_generations:
     type: integer
     default: 4
     optional: true
-    description: Number of generations to sample.The effective batch size (num_processes*per_device_batch_size*gradient_accumulation_steps)
-      must be evenly divisible by this value.
+    description: Number of generations to sample.The effective batch size 
+      (num_processes*per_device_batch_size*gradient_accumulation_steps) must be 
+      evenly divisible by this value.
 
   num_iterations:
     type: integer
@@ -220,15 +224,16 @@ inputs:
     type: number
     default: 1.0
     optional: true
-    description: Temperature for sampling. The higher the temperature, the more random
-      the completions.
+    description: Temperature for sampling. The higher the temperature, the more 
+      random the completions.
 
   top_p:
     type: number
     default: 1.0
     optional: true
-    description: Float that controls the cumulative probability of the top tokens
-      to consider. Must be in (0, 1]. Set to `1.0` to consider all tokens.
+    description: Float that controls the cumulative probability of the top 
+      tokens to consider. Must be in (0, 1]. Set to `1.0` to consider all 
+      tokens.
 
   use_liger_kernel:
     type: boolean
@@ -252,18 +257,18 @@ inputs:
     type: number
     default: 0.1
     optional: true
-    description: Ratio of total training steps used for a linear warmup from 0 to
-      `learning_rate`.
+    description: Ratio of total training steps used for a linear warmup from 0 
+      to `learning_rate`.
 
 outputs:
   #final_model_save_pat
   mlflow_model_folder:
     type: mlflow_model
-    description: output folder containing _best_ model as defined by _metric_for_best_model_.
-      Along with the best model, output folder contains checkpoints saved after every
-      evaluation which is defined by the _evaluation_strategy_. Each checkpoint contains
-      the model weight(s), config, tokenizer, optimzer, scheduler and random number
-      states.
+    description: output folder containing _best_ model as defined by 
+      _metric_for_best_model_. Along with the best model, output folder contains
+      checkpoints saved after every evaluation which is defined by the 
+      _evaluation_strategy_. Each checkpoint contains the model weight(s), 
+      config, tokenizer, optimzer, scheduler and random number states.
     mode: rw_mount
   output_model_path:
     type: uri_folder

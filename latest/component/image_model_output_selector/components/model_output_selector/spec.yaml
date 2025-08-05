@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 version: 0.0.20
@@ -8,7 +9,8 @@ description: Model output selector control flow component for image tasks
 
 is_deterministic: true
 
-environment: azureml://registries/azureml/environments/acpt-automl-image-framework-selector-gpu/labels/latest
+environment: 
+  azureml://registries/azureml/environments/acpt-automl-image-framework-selector-gpu/labels/latest
 
 code: ../../src/model_output_selector
 

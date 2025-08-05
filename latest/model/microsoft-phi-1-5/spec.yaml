@@ -6,13 +6,15 @@ properties:
   SHA: 92557d03bb12543040c8bb5f0475cbdd9968f05f
   datasets: StackOverflow, Stackv1.2, CodeContests, gpt-3.5-turbo-0301
   inference-min-sku-spec: 4|0|14|28
-  inference-recommended-sku: Standard_DS3_v2, Standard_DS4_v2, Standard_NC6s_v3, Standard_NC12s_v3,
-    Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4
+  inference-recommended-sku: Standard_DS3_v2, Standard_DS4_v2, Standard_NC6s_v3,
+    Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, 
+    Standard_ND96asr_v4
   languages: en
   evaluation-min-sku-spec: 4|0|28|56
-  evaluation-recommended-sku: Standard_DS4_v2, Standard_DS5_v2, Standard_DS12_v2,
-    Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
-    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_DS4_v2, Standard_DS5_v2, 
+    Standard_DS12_v2, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, 
+    Standard_NC24rs_v3, Standard_ND40rs_v2, Standard_ND96asr_v4, 
+    Standard_ND96amsr_A100_v4
 tags:
   SharedComputeCapacityEnabled: ''
   license: other

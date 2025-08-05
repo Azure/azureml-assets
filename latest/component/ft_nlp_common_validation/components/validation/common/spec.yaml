@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
 version: 0.0.76
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/validation
 
@@ -16,36 +18,39 @@ inputs:
   mlflow_model_path:
     type: mlflow_model
     optional: true
-    description: MLflow model asset path. Special characters like \ and ' are invalid
-      in the parameter value.
+    description: MLflow model asset path. Special characters like \ and ' are 
+      invalid in the parameter value.
     mode: rw_mount
 
   compute_finetune:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for finetune component eg. provide 'FT-Cluster'
-      if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
-      in the parameter value. If compute cluster name is provided, instance_type field
-      will be ignored and the respective cluster will be used
+    description: compute to be used for finetune component eg. provide 
+      'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters 
+      like \ and ' are invalid in the parameter value. If compute cluster name 
+      is provided, instance_type field will be ignored and the respective 
+      cluster will be used
 
   compute_model_import:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model import component eg. provide 'FT-Cluster'
-      if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
-      in the parameter value. If compute cluster name is provided, instance_type field
-      will be ignored and the respective cluster will be used
+    description: compute to be used for model import component eg. provide 
+      'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters 
+      like \ and ' are invalid in the parameter value. If compute cluster name 
+      is provided, instance_type field will be ignored and the respective 
+      cluster will be used
 
   compute_data_preprocess:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for data preprocess component eg. provide 'FT-Cluster'
-      if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
-      in the parameter value. If compute cluster name is provided, instance_type field
-      will be ignored and the respective cluster will be used
+    description: compute to be used for data preprocess component eg. provide 
+      'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters 
+      like \ and ' are invalid in the parameter value. If compute cluster name 
+      is provided, instance_type field will be ignored and the respective 
+      cluster will be used
 
   task_name:
     type: string
@@ -58,7 +63,8 @@ inputs:
     min: 1
     default: 1
     optional: true
-    description: number of nodes to be used for finetuning (used for distributed training)
+    description: number of nodes to be used for finetuning (used for distributed
+      training)
 
   number_of_gpu_to_use_finetuning:
     type: integer
@@ -69,44 +75,45 @@ inputs:
   train_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
-      ' are invalid in the parameter value.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special 
+      characters like \ and ' are invalid in the parameter value.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters
-      like \ and ' are invalid in the parameter value.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special 
+      characters like \ and ' are invalid in the parameter value.
     mode: rw_mount
 
   test_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered test data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
-      ' are invalid in the parameter value.
+    description: Path to the registered test data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special 
+      characters like \ and ' are invalid in the parameter value.
     mode: rw_mount
 
   train_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered training data asset in `mltable` format. Special
-      characters like \ and ' are invalid in the parameter value.
+    description: Path to the registered training data asset in `mltable` format.
+      Special characters like \ and ' are invalid in the parameter value.
 
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered validation data asset in `mltable` format.
-      Special characters like \ and ' are invalid in the parameter value.
+    description: Path to the registered validation data asset in `mltable` 
+      format. Special characters like \ and ' are invalid in the parameter 
+      value.
 
   test_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered test data asset in `mltable` format. Special
-      characters like \ and ' are invalid in the parameter value.
+    description: Path to the registered test data asset in `mltable` format. 
+      Special characters like \ and ' are invalid in the parameter value.
 
   user_column_names:
     type: string
@@ -184,8 +191,8 @@ inputs:
     - "16"
     default: "32"
     optional: true
-    description: Apply mixed precision training. This can reduce memory footprint
-      by performing operations in half-precision.
+    description: Apply mixed precision training. This can reduce memory 
+      footprint by performing operations in half-precision.
 
   apply_lora:
     type: string
@@ -212,10 +219,10 @@ inputs:
     enum:
     - "2"
     - "3"
-    description: This parameter configures which DEFAULT deepspeed config to be used
-      - stage2 or stage3. The default choice is stage2. Note that, this parameter
-      is ONLY applicable when user doesn't pass any config information via deepspeed
-      port.
+    description: This parameter configures which DEFAULT deepspeed config to be 
+      used - stage2 or stage3. The default choice is stage2. Note that, this 
+      parameter is ONLY applicable when user doesn't pass any config information
+      via deepspeed port.
 
   ignore_mismatched_sizes:
     type: string
@@ -224,16 +231,17 @@ inputs:
     - "false"
     default: "true"
     optional: true
-    description: Not setting this flag will raise an error if some of the weights
-      from the checkpoint do not have the same size as the weights of the model.
+    description: Not setting this flag will raise an error if some of the 
+      weights from the checkpoint do not have the same size as the weights of 
+      the model.
 
   max_seq_length:
     type: integer
     optional: true
     default: -1
-    description: Controls the maximum length to use when pad_to_max_length parameter
-      is set to `true`. Default is -1 which means the padding is done up to the model's
-      max length. Else will be padded to `max_seq_length`.
+    description: Controls the maximum length to use when pad_to_max_length 
+      parameter is set to `true`. Default is -1 which means the padding is done 
+      up to the model's max length. Else will be padded to `max_seq_length`.
 
 outputs:
   validation_info:

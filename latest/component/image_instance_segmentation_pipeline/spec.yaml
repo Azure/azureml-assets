@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
 version: 0.0.26
@@ -13,32 +14,33 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: Compute to be used for framework_selector eg. provide 'gpu-cluster'
-      if your compute is named 'gpu-cluster'.
+    description: Compute to be used for framework_selector eg. provide 
+      'gpu-cluster' if your compute is named 'gpu-cluster'.
 
   compute_finetune:
     type: string
     optional: false
-    description: Compute to be used for running the selected framework eg. provide
-      'gpu-cluster' if your compute is named 'gpu-cluster'.
+    description: Compute to be used for running the selected framework eg. 
+      provide 'gpu-cluster' if your compute is named 'gpu-cluster'.
 
   instance_count:
     type: integer
     default: 1
     optional: true
-    description: Number of nodes to be used for finetuning (used for distributed training).
+    description: Number of nodes to be used for finetuning (used for distributed
+      training).
 
   process_count_per_instance:
     type: integer
     default: 1
     optional: true
-    description: Number of gpus to be used per node for finetuning, should be equal
-      to number of gpu per node in the compute SKU used for finetune.
+    description: Number of gpus to be used per node for finetuning, should be 
+      equal to number of gpu per node in the compute SKU used for finetune.
 
   # ------------------- Model Framework Selector -------------------
   model_name:
-    description: Name of the model. Based on this model name, a framework will be
-      selected (Hugging Face, MM Detection).
+    description: Name of the model. Based on this model name, a framework will 
+      be selected (Hugging Face, MM Detection).
     type: string
     optional: true
 
@@ -46,7 +48,8 @@ inputs:
     type: boolean
     optional: true
     default: false
-    description: Download model directly from MMDetection instead of system registry
+    description: Download model directly from MMDetection instead of system 
+      registry
 
   # ------------------- Data Inputs ------------------
   training_data:
@@ -82,45 +85,47 @@ inputs:
     optional: true
 
   beta1:
-    description: Value of beta1 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta1 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
 
   beta2:
-    description: Value of beta2 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta2 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
 
   box_detections_per_image:
-    description: Maximum number of detections per image, for all classes. Must be
-      a positive integer.
+    description: Maximum number of detections per image, for all classes. Must 
+      be a positive integer.
     type: integer
     optional: true
     min: 1
 
   box_score_threshold:
-    description: During inference, only return proposals with a classification score
-      greater than box_score_threshold. Must be a float in the range [0, 1].
+    description: During inference, only return proposals with a classification 
+      score greater than box_score_threshold. Must be a float in the range [0, 
+      1].
     type: number
     optional: true
     min: 0
     max: 1
 
   checkpoint_frequency:
-    description: Frequency to store model checkpoints. Must be a positive integer.
+    description: Frequency to store model checkpoints. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 0
 
   checkpoint_run_id:
-    description: The run ID of the experiment that has a pretrained checkpoint for
-      incremental training.
+    description: The run ID of the experiment that has a pretrained checkpoint 
+      for incremental training.
     type: string
     optional: true
 
@@ -130,39 +135,41 @@ inputs:
     optional: true
 
   early_stopping_patience:
-    description: Minimum number of epochs or validation evaluations with no primary
-      metric improvement before the run is stopped. Must be a positive integer.
-    type: integer
-    optional: true
-    min: 1
-
-  early_stopping_delay:
-    description: Minimum number of epochs or validation evaluations to wait before
-      primary metric improvement is tracked for early stopping. Must be a positive
+    description: Minimum number of epochs or validation evaluations with no 
+      primary metric improvement before the run is stopped. Must be a positive 
       integer.
     type: integer
     optional: true
     min: 1
 
+  early_stopping_delay:
+    description: Minimum number of epochs or validation evaluations to wait 
+      before primary metric improvement is tracked for early stopping. Must be a
+      positive integer.
+    type: integer
+    optional: true
+    min: 1
+
   evaluation_frequency:
-    description: Frequency to evaluate validation dataset to get metric scores. Must
-      be a positive integer.
+    description: Frequency to evaluate validation dataset to get metric scores. 
+      Must be a positive integer.
     type: integer
     optional: true
     min: 1
 
   gradient_accumulation_step:
-    description: Number of forward passes without updating the model weights while
-      accumulating the gradients of those steps, and then using the accumulated gradients
-      to compute the weight updates. Must be a positive integer.
+    description: Number of forward passes without updating the model weights 
+      while accumulating the gradients of those steps, and then using the 
+      accumulated gradients to compute the weight updates. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 1
 
   layers_to_freeze:
-    description: How many layers to freeze for your model. For instance, passing 2
-      as value for seresnext means freezing layer0 and layer1 referring to the below
-      supported model layer info. Must be a positive integer.
+    description: How many layers to freeze for your model. For instance, passing
+      2 as value for seresnext means freezing layer0 and layer1 referring to the
+      below supported model layer info. Must be a positive integer.
     type: integer
     optional: true
     min: 1
@@ -175,29 +182,30 @@ inputs:
     max: 1
 
   learning_rate_scheduler:
-    description: Type of learning rate scheduler. Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Type of learning rate scheduler. Please check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: string
     optional: true
     enum: ['warmup_cosine', 'step']
 
   max_size:
-    description: Maximum size of the image to be rescaled before feeding it to the
-      backbone.
+    description: Maximum size of the image to be rescaled before feeding it to 
+      the backbone.
     type: integer
     optional: true
     min: 1
 
   min_size:
-    description: Minimum size of the image to be rescaled before feeding it to the
-      backbone. Must be a positive integer.
+    description: Minimum size of the image to be rescaled before feeding it to 
+      the backbone. Must be a positive integer.
     type: integer
     optional: true
     min: 1
 
   momentum:
-    description: Value of momentum when optimizer is sgd. Must be a float in the range
-      [0, 1].
+    description: Value of momentum when optimizer is sgd. Must be a float in the
+      range [0, 1].
     type: number
     optional: true
     min: 0
@@ -209,8 +217,8 @@ inputs:
     optional: true
 
   nms_iou_threshold:
-    description: IOU threshold used during inference in non-maximum suppression post
-      processing. Must be a float in the range [0, 1].
+    description: IOU threshold used during inference in non-maximum suppression 
+      post processing. Must be a float in the range [0, 1].
     type: number
     optional: true
     min: 0
@@ -223,8 +231,8 @@ inputs:
     min: 1
 
   number_of_workers:
-    description: Number of subprocesses to use for data loading (PyTorch only). 0
-      means that the data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading (PyTorch only). 
+      0 means that the data will be loaded in the main process.
     type: integer
     optional: true
 
@@ -240,37 +248,39 @@ inputs:
     optional: true
 
   step_lr_gamma:
-    description: Value of gamma when learning rate scheduler is step. Please check
-      for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of gamma when learning rate scheduler is step. Please 
+      check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: number
     optional: true
 
   step_lr_step_size:
-    description: Value of step size when learning rate scheduler is step. Please check
-      for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of step size when learning rate scheduler is step. Please
+      check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: integer
     optional: true
 
   tile_grid_size:
-    description: The grid size to use for tiling each image. Should be passed as a
-      string in '3x2' format. Example --tile_grid_size '3x2'
+    description: The grid size to use for tiling each image. Should be passed as
+      a string in '3x2' format. Example --tile_grid_size '3x2'
     type: string
     optional: true
 
   tile_overlap_ratio:
-    description: Overlap ratio between adjacent tiles in each dimension. Must be float
-      in the range of [0, 1).
+    description: Overlap ratio between adjacent tiles in each dimension. Must be
+      float in the range of [0, 1).
     type: number
     optional: true
     min: 0
     max: 1
 
   tile_predictions_nms_threshold:
-    description: The IOU threshold to use to perform NMS while merging predictions
-      from tiles and image. Used in validation/ inference. Must be float in the range
-      of [0, 1].
+    description: The IOU threshold to use to perform NMS while merging 
+      predictions from tiles and image. Used in validation/ inference. Must be 
+      float in the range of [0, 1].
     type: number
     optional: true
     min: 0
@@ -289,31 +299,33 @@ inputs:
     min: 1
 
   validation_iou_threshold:
-    description: IOU threshold for box matching when computing validation metrics.
-      Must be a float in the range [0.1, 1].
+    description: IOU threshold for box matching when computing validation 
+      metrics. Must be a float in the range [0.1, 1].
     type: number
     optional: true
     min: 0.1
     max: 1
 
   validation_metric_type:
-    description: Metric computation method to use for validation metrics. Must be
-      none, coco, voc, or coco_voc.
+    description: Metric computation method to use for validation metrics. Must 
+      be none, coco, voc, or coco_voc.
     type: string
     optional: true
     default: 'voc'
     enum: ['none', 'coco', 'voc', 'coco_voc']
 
   warmup_cosine_lr_cycles:
-    description: Value of cosine cycle when learning rate scheduler is warmup_cosine.
-      Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of cosine cycle when learning rate scheduler is 
+      warmup_cosine. Please check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: number
     optional: true
 
   warmup_cosine_lr_warmup_epochs:
-    description: Value of warmup epochs when learning rate scheduler is warmup_cosine.
-      Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
+    description: Value of warmup epochs when learning rate scheduler is 
+      warmup_cosine. Please check for 
+      https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters
       more information.
     type: integer
     optional: true
@@ -356,7 +368,8 @@ jobs:
     inputs:
       task_type: ${{parent.inputs.task_type}}
       model_name: ${{parent.inputs.model_name}}
-      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
+      validation_output: 
+        ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
 
   image_instance_segmentation_runtime_component:
     type: command
@@ -396,28 +409,33 @@ jobs:
       step_lr_step_size: ${{parent.inputs.step_lr_step_size}}
       tile_grid_size: ${{parent.inputs.tile_grid_size}}
       tile_overlap_ratio: ${{parent.inputs.tile_overlap_ratio}}
-      tile_predictions_nms_threshold: ${{parent.inputs.tile_predictions_nms_threshold}}
+      tile_predictions_nms_threshold: 
+        ${{parent.inputs.tile_predictions_nms_threshold}}
       training_batch_size: ${{parent.inputs.training_batch_size}}
       validation_batch_size: ${{parent.inputs.validation_batch_size}}
       validation_iou_threshold: ${{parent.inputs.validation_iou_threshold}}
       validation_metric_type: ${{parent.inputs.validation_metric_type}}
       warmup_cosine_lr_cycles: ${{parent.inputs.warmup_cosine_lr_cycles}}
-      warmup_cosine_lr_warmup_epochs: ${{parent.inputs.warmup_cosine_lr_warmup_epochs}}
+      warmup_cosine_lr_warmup_epochs: 
+        ${{parent.inputs.warmup_cosine_lr_warmup_epochs}}
       weight_decay: ${{parent.inputs.weight_decay}}
 
   mm_detection_model_import:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.21
+    component: 
+      azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.21
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'MmDetectionImage'
       model_name: ${{parent.inputs.model_name}}
       download_from_source: ${{parent.inputs.download_from_source}}
-      validation_output: ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
+      validation_output: 
+        ${{parent.jobs.finetune_common_validation.outputs.validation_info}}
 
   mm_detection_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.23
+    component: 
+      azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.23
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -464,11 +482,15 @@ jobs:
     component: azureml:image_model_output_selector:0.0.20
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
-      mlflow_model_t: ${{parent.jobs.image_instance_segmentation_runtime_component.outputs.mlflow_model_folder}}
-      pytorch_model_t: ${{parent.jobs.image_instance_segmentation_runtime_component.outputs.pytorch_model_folder}}
+      mlflow_model_t: 
+        ${{parent.jobs.image_instance_segmentation_runtime_component.outputs.mlflow_model_folder}}
+      pytorch_model_t: 
+        ${{parent.jobs.image_instance_segmentation_runtime_component.outputs.pytorch_model_folder}}
       condition: ${{parent.jobs.framework_selector.outputs.output}}
-      mlflow_model_f: ${{parent.jobs.mm_detection_finetune.outputs.mlflow_model_folder}}
-      pytorch_model_f: ${{parent.jobs.mm_detection_finetune.outputs.pytorch_model_folder}}
+      mlflow_model_f: 
+        ${{parent.jobs.mm_detection_finetune.outputs.mlflow_model_folder}}
+      pytorch_model_f: 
+        ${{parent.jobs.mm_detection_finetune.outputs.pytorch_model_folder}}
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 name: batch_benchmark_config_generator
@@ -11,13 +12,13 @@ inputs:
   configuration_file:
     type: uri_file
     optional: true
-    description: An optional configuration file to use for deployment settings. This
-      overrides passed in parameters.
+    description: An optional configuration file to use for deployment settings. 
+      This overrides passed in parameters.
   scoring_url:
     type: string
     optional: true
-    description: The URL of the endpoint. Optional only if this field is provided
-      in the configuration_file.
+    description: The URL of the endpoint. Optional only if this field is 
+      provided in the configuration_file.
   model_type:
     type: string
     description: Type of model. Can be one of ('oai', 'oss', 'vision_oss')
@@ -29,8 +30,8 @@ inputs:
   authentication_type:
     type: string
     optional: false
-    description: Authentication type for endpoint. Can be one of ('azureml_workspace_connection'
-      or 'managed_identity')
+    description: Authentication type for endpoint. Can be one of 
+      ('azureml_workspace_connection' or 'managed_identity')
     default: azureml_workspace_connection
     enum:
     - azureml_workspace_connection
@@ -38,8 +39,8 @@ inputs:
   connection_name:
     type: string
     optional: true
-    description: The name of the connection to fetch the API_KEY for the endpoint
-      authentication.
+    description: The name of the connection to fetch the API_KEY for the 
+      endpoint authentication.
   deployment_name:
     type: string
     optional: true
@@ -48,24 +49,26 @@ inputs:
     type: boolean
     optional: false
     default: false
-    description: Enable debug mode will print all the debug logs in the score step.
+    description: Enable debug mode will print all the debug logs in the score 
+      step.
   additional_headers:
     type: string
     optional: true
-    description: A stringified json expressing additional headers to be added to each
-      request.
+    description: A stringified json expressing additional headers to be added to
+      each request.
   ensure_ascii:
     type: boolean
     optional: false
     default: false
-    description: If ensure_ascii is true, the output is guaranteed to have all incoming
-      non-ASCII characters escaped. If ensure_ascii is false, these characters will
-      be output as-is. More detailed information can be found at https://docs.python.org/3/library/json.html
+    description: If ensure_ascii is true, the output is guaranteed to have all 
+      incoming non-ASCII characters escaped. If ensure_ascii is false, these 
+      characters will be output as-is. More detailed information can be found at
+      https://docs.python.org/3/library/json.html
   max_retry_time_interval:
     type: integer
     optional: true
-    description: The maximum time (in seconds) spent retrying a payload. If unspecified,
-      payloads are retried unlimited times.
+    description: The maximum time (in seconds) spent retrying a payload. If 
+      unspecified, payloads are retried unlimited times.
   initial_worker_count:
     type: integer
     optional: false
@@ -83,16 +86,17 @@ inputs:
     optional: false
     default: 0
     min: 0
-    description: The maximum number of tokens to generate at a time. 0 is default.
-      If set to 0, the full response is generated all at once. If greater than 0,
-      tokens are generated incrementally in segments. During each increment, the request
-      and the previous partial response are sent to the model to generate the next
-      segment. Segments are stitched together to form the full response.
+    description: The maximum number of tokens to generate at a time. 0 is 
+      default. If set to 0, the full response is generated all at once. If 
+      greater than 0, tokens are generated incrementally in segments. During 
+      each increment, the request and the previous partial response are sent to 
+      the model to generate the next segment. Segments are stitched together to 
+      form the full response.
   app_insights_connection_string:
     type: string
     optional: true
-    description: Application insights connection string where the batch score component
-      will log metrics and logs.
+    description: Application insights connection string where the batch score 
+      component will log metrics and logs.
 outputs:
   batch_score_config:
     type: uri_file

@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 description: Component to finetune AutoML legacy models for object detection.
@@ -22,40 +23,42 @@ inputs:
     type: boolean
     optional: true
   beta1:
-    description: Value of beta1 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta1 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
   beta2:
-    description: Value of beta2 when optimizer is adam or adamw. Must be a float in
-      the range [0, 1].
+    description: Value of beta2 when optimizer is adam or adamw. Must be a float
+      in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
   box_detections_per_image:
-    description: Maximum number of detections per image, for all classes. Must be
-      a positive integer.
+    description: Maximum number of detections per image, for all classes. Must 
+      be a positive integer.
     type: integer
     optional: true
     min: 1
   box_score_threshold:
-    description: During inference, only return proposals with a classification score
-      greater than box_score_threshold. Must be a float in the range [0, 1].
+    description: During inference, only return proposals with a classification 
+      score greater than box_score_threshold. Must be a float in the range [0, 
+      1].
     type: number
     optional: true
     min: 0
     max: 1
   checkpoint_frequency:
-    description: Frequency to store model checkpoints. Must be a positive integer.
+    description: Frequency to store model checkpoints. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 0
   checkpoint_run_id:
-    description: The run ID of the experiment that has a pretrained checkpoint for
-      incremental training.
+    description: The run ID of the experiment that has a pretrained checkpoint 
+      for incremental training.
     type: string
     optional: true
   early_stopping:
@@ -63,35 +66,37 @@ inputs:
     type: boolean
     optional: true
   early_stopping_patience:
-    description: Minimum number of epochs or validation evaluations with no primary
-      metric improvement before the run is stopped. Must be a positive integer.
-    type: integer
-    optional: true
-    min: 1
-  early_stopping_delay:
-    description: Minimum number of epochs or validation evaluations to wait before
-      primary metric improvement is tracked for early stopping. Must be a positive
+    description: Minimum number of epochs or validation evaluations with no 
+      primary metric improvement before the run is stopped. Must be a positive 
       integer.
     type: integer
     optional: true
     min: 1
+  early_stopping_delay:
+    description: Minimum number of epochs or validation evaluations to wait 
+      before primary metric improvement is tracked for early stopping. Must be a
+      positive integer.
+    type: integer
+    optional: true
+    min: 1
   evaluation_frequency:
-    description: Frequency to evaluate validation dataset to get metric scores. Must
-      be a positive integer.
+    description: Frequency to evaluate validation dataset to get metric scores. 
+      Must be a positive integer.
     type: integer
     optional: true
     min: 1
   gradient_accumulation_step:
-    description: Number of forward passes without updating the model weights while
-      accumulating the gradients of those steps, and then using the accumulated gradients
-      to compute the weight updates. Must be a positive integer.
+    description: Number of forward passes without updating the model weights 
+      while accumulating the gradients of those steps, and then using the 
+      accumulated gradients to compute the weight updates. Must be a positive 
+      integer.
     type: integer
     optional: true
     min: 1
   layers_to_freeze:
-    description: How many layers to freeze for your model. For instance, passing 2
-      as value for seresnext means freezing layer0 and layer1 referring to the below
-      supported model layer info. Must be a positive integer.
+    description: How many layers to freeze for your model. For instance, passing
+      2 as value for seresnext means freezing layer0 and layer1 referring to the
+      below supported model layer info. Must be a positive integer.
     type: integer
     optional: true
     min: 1
@@ -108,14 +113,14 @@ inputs:
     default: warmup_cosine
     enum: ['warmup_cosine', 'step']
   max_size:
-    description: Maximum size of the image to be rescaled before feeding it to the
-      backbone.
+    description: Maximum size of the image to be rescaled before feeding it to 
+      the backbone.
     type: integer
     optional: true
     min: 1
   min_size:
-    description: Minimum size of the image to be rescaled before feeding it to the
-      backbone. Must be a positive integer.
+    description: Minimum size of the image to be rescaled before feeding it to 
+      the backbone. Must be a positive integer.
     type: integer
     optional: true
     min: 1
@@ -124,8 +129,8 @@ inputs:
     type: string
     optional: true
   momentum:
-    description: Value of momentum when optimizer is sgd. Must be a float in the range
-      [0, 1].
+    description: Value of momentum when optimizer is sgd. Must be a float in the
+      range [0, 1].
     type: number
     optional: true
     min: 0
@@ -145,8 +150,8 @@ inputs:
     type: boolean
     optional: true
   nms_iou_threshold:
-    description: IOU threshold used during inference in non-maximum suppression post
-      processing. Must be a float in the range [0, 1].
+    description: IOU threshold used during inference in non-maximum suppression 
+      post processing. Must be a float in the range [0, 1].
     type: number
     optional: true
     min: 0
@@ -157,8 +162,8 @@ inputs:
     optional: true
     min: 1
   number_of_workers:
-    description: Number of subprocesses to use for data loading (PyTorch only). 0
-      means that the data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading (PyTorch only). 
+      0 means that the data will be loaded in the main process.
     type: integer
     optional: true
   optimizer:
@@ -172,35 +177,36 @@ inputs:
     type: integer
     optional: true
   step_lr_gamma:
-    description: Value of gamma when learning rate scheduler is step. Must be a float
-      in the range [0, 1].
+    description: Value of gamma when learning rate scheduler is step. Must be a 
+      float in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
   step_lr_step_size:
-    description: Value of step size when learning rate scheduler is step. Must be
-      a positive integer.
+    description: Value of step size when learning rate scheduler is step. Must 
+      be a positive integer.
     type: integer
     optional: true
     min: 0
   tile_grid_size:
-    description: The grid size to use for tiling each image. Should be passed as a
-      string in '3x2' format. Example --tile_grid_size '3x2'. For more information
-      please visit https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-automl-small-object-detect?tabs=CLI-v2.
+    description: The grid size to use for tiling each image. Should be passed as
+      a string in '3x2' format. Example --tile_grid_size '3x2'. For more 
+      information please visit 
+      https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-automl-small-object-detect?tabs=CLI-v2.
     type: string
     optional: true
   tile_overlap_ratio:
-    description: Overlap ratio between adjacent tiles in each dimension. Must be float
-      in the range of [0, 1).
+    description: Overlap ratio between adjacent tiles in each dimension. Must be
+      float in the range of [0, 1).
     type: number
     optional: true
     min: 0
     max: 1
   tile_predictions_nms_threshold:
-    description: The IOU threshold to use to perform NMS while merging predictions
-      from tiles and image. Used in validation/ inference. Must be float in the range
-      of [0, 1].
+    description: The IOU threshold to use to perform NMS while merging 
+      predictions from tiles and image. Used in validation/ inference. Must be 
+      float in the range of [0, 1].
     type: number
     optional: true
     min: 0
@@ -216,29 +222,29 @@ inputs:
     optional: true
     min: 1
   validation_iou_threshold:
-    description: IOU threshold for box matching when computing validation metrics.
-      Must be a float in the range [0.1, 1].
+    description: IOU threshold for box matching when computing validation 
+      metrics. Must be a float in the range [0.1, 1].
     type: number
     optional: true
     min: 0.1
     max: 1
   validation_metric_type:
-    description: Metric computation method to use for validation metrics. Must be
-      none, coco, voc, or coco_voc.
+    description: Metric computation method to use for validation metrics. Must 
+      be none, coco, voc, or coco_voc.
     type: string
     optional: true
     default: 'voc'
     enum: ['none', 'coco', 'voc', 'coco_voc']
   warmup_cosine_lr_cycles:
-    description: Value of cosine cycle when learning rate scheduler is warmup_cosine.
-      Must be a float in the range [0, 1].
+    description: Value of cosine cycle when learning rate scheduler is 
+      warmup_cosine. Must be a float in the range [0, 1].
     type: number
     optional: true
     min: 0
     max: 1
   warmup_cosine_lr_warmup_epochs:
-    description: Value of warmup epochs when learning rate scheduler is warmup_cosine.
-      Must be a positive integer.
+    description: Value of warmup epochs when learning rate scheduler is 
+      warmup_cosine. Must be a positive integer.
     type: integer
     optional: true
     min: 0
@@ -259,7 +265,8 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/59
+environment: 
+  azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/59
 
 command: >-
   python -m object_detection.run

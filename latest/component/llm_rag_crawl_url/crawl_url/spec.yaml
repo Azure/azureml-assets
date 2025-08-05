@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -8,8 +9,8 @@ name: llm_rag_crawl_url
 display_name: LLM - Crawl URL to Retrieve Data
 is_deterministic: true
 
-description: "Crawls the given URL and nested links to `max_crawl_depth`. Data is\
-  \ stored to `output_path`."
+description: "Crawls the given URL and nested links to `max_crawl_depth`. Data is
+  stored to `output_path`."
 outputs:
   output_path:
     type: uri_folder

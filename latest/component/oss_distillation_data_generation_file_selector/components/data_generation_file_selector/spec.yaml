@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: oss_distillation_data_generation_file_selector
 version: 0.0.1
 type: command
@@ -7,9 +8,11 @@ is_deterministic: true
 tags:
   codegenBy: dsl.condition_output
 display_name: OSS Distillation Data Generation Input File Selector
-description: Component to select the Batch Scoring Selector based on the task type
+description: Component to select the Batch Scoring Selector based on the task 
+  type
 
-environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+environment: 
+  azureml://registries/azureml/environments/model-evaluation/labels/latest
 
 inputs:
   generated_batch_train_file_path:

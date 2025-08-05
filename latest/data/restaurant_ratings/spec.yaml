@@ -5,7 +5,7 @@ tags:
   azureml.Designer: true
   azureml.Designer.name: Restaurant Ratings
   azureml.Designer.dataTypeId: DataFrameDirectory
-description: Contains ratings given by customers to restaurants on scale from 0 to
-  2.
+description: Contains ratings given by customers to restaurants on scale from 0 
+  to 2.
 type: uri_folder
 path: sample_data/

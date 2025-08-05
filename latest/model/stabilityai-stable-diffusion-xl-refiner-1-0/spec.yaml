@@ -5,8 +5,9 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: 5d4cfe854c9a9a87939ff3653551c2b3c99a4356
   inference-min-sku-spec: 6|1|112|736
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
+    Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+    Standard_ND96asr_v4
 tags:
   SharedComputeCapacityEnabled: ""
   license: creativeml-openrail++-m
@@ -15,8 +16,9 @@ tags:
   author: "Stability AI"
   training_dataset: LAION-5B
   huggingface_model_id: stabilityai/stable-diffusion-xl-refiner-1.0
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
-    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
+      Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+      Standard_ND96asr_v4]
 version: 7
 description: |
   [SDXL](https://arxiv.org/abs/2307.01952) consists of an [ensemble of experts](https://arxiv.org/abs/2211.01324) pipeline for latent diffusion: 

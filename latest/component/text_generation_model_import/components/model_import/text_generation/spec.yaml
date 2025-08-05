@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_model_import
 version: 0.0.76
 type: command
@@ -8,7 +9,8 @@ is_deterministic: true
 display_name: Text Generation Model Import
 description: Import PyTorch / MLFlow model
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: 
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
 
 code: ../../../src/model_selector
 
@@ -16,25 +18,25 @@ inputs:
   # Model and task name
   huggingface_id:
     type: string
-    description: Input HuggingFace model id. Incase of continual finetuning provide
-      proper id. Models from Hugging Face are subject to third party license terms
-      available on the Hugging Face model details page. It is your responsibility
-      to comply with the model's license terms.
+    description: Input HuggingFace model id. Incase of continual finetuning 
+      provide proper id. Models from Hugging Face are subject to third party 
+      license terms available on the Hugging Face model details page. It is your
+      responsibility to comply with the model's license terms.
     optional: true
 
   # Continual-Finetuning model path
   pytorch_model_path:
     type: custom_model
     optional: true
-    description: Input folder path containing pytorch model for further finetuning.
-      Proper model/huggingface id must be passed.
+    description: Input folder path containing pytorch model for further 
+      finetuning. Proper model/huggingface id must be passed.
     mode: rw_mount
 
   mlflow_model_path:
     type: mlflow_model
     optional: true
-    description: Input folder path containing mlflow model for further finetuning.
-      Proper model/huggingface id must be passed.
+    description: Input folder path containing mlflow model for further 
+      finetuning. Proper model/huggingface id must be passed.
     mode: rw_mount
 
   # Output of validation component

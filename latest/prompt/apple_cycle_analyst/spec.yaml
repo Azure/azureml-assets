@@ -4,8 +4,8 @@ type: prompt
 version: 0.0.3
 name: apple_cycle_analyst
 display_name: Apple Cycle Analyst
-description: Examine the test image to determine the specific stage of the apple's
-  growth or lifecycle it represents.
+description: Examine the test image to determine the specific stage of the 
+  apple's growth or lifecycle it represents.
 
 tags:
   modality: image

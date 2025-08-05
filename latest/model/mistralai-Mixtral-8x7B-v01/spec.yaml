@@ -5,10 +5,11 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: 985aa055896a8f943d4a9f2572e6ea1341823841
   inference-min-sku-spec: 40|8|672|2900
-  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+    Standard_ND96asr_v4
   finetune-min-sku-spec: 40|2|440|128
-  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4,
-    Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, 
+    Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
   finetuning-tasks: text-generation
   languages: EN
 tags:
@@ -17,7 +18,8 @@ tags:
   hiddenlayerscanned: ""
   disable-batch: 'true'
   huggingface_model_id: mistralai/Mixtral-8x7B-v0.1
-  inference_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4]
+  inference_compute_allow_list: [Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, 
+      Standard_ND96asr_v4]
   inference_supported_envs:
   - vllm
   finetune_compute_allow_list:

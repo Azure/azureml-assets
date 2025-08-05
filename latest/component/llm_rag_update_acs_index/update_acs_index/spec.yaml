@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
 tags:
@@ -40,8 +41,8 @@ inputs:
 outputs:
   index:
     type: uri_folder
-    description: "Uri folder containing MLINdex yaml describing the newly created/updated\
-      \ ACS index"
+    description: "Uri folder containing MLINdex yaml describing the newly created/updated
+      ACS index"
 
 environment: azureml:llm-rag-embeddings:76
 code: '../src/'

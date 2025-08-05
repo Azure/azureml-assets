@@ -1,42 +1,44 @@
-$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_batchscoring_datagen_pipeline
 version: 0.0.1
 type: pipeline
 
 
 display_name: OSS Distillation Batch Score Data Generation Pipeline
-description: Component to generate data from teacher model endpoint by invoking it
-  in batch.
+description: Component to generate data from teacher model endpoint by invoking 
+  it in batch.
 
 inputs:
   # Compute parameters
   instance_type_pipeline_validation:
     type: string
     optional: true
-    description: Instance type to be used for validation component. The parameter
-      compute_pipeline_validation must be set to 'serverless' for instance_type to
-      be used.
+    description: Instance type to be used for validation component. The 
+      parameter compute_pipeline_validation must be set to 'serverless' for 
+      instance_type to be used.
   instance_type_data_generation:
     type: string
     optional: true
     default: Standard_D4as_v4
-    description: Instance type to be used for finetune component in case of virtual
-      cluster compute, eg. Singularity.ND40_v2. The parameter compute_finetune must
-      be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for finetune component in case of 
+      virtual cluster compute, eg. Singularity.ND40_v2. The parameter 
+      compute_finetune must be set to 'serverless' for instance_type to be used
   instance_type_data_import:
     type: string
     optional: true
     default: Singularity.ND96amrs_A100_v4
-    description: Instance type to be used for data_import component in case of virtual
-      cluster compute, eg. Singularity.D8_v3. The parameter compute_data_import must
-      be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for data_import component in case of 
+      virtual cluster compute, eg. Singularity.D8_v3. The parameter 
+      compute_data_import must be set to 'serverless' for instance_type to be 
+      used
   instance_type_finetune:
     type: string
     optional: true
     default: Singularity.ND96amrs_A100_v4
-    description: Instance type to be used for finetune component in case of virtual
-      cluster compute, eg. Singularity.ND40_v2. The parameter compute_finetune must
-      be set to 'serverless' for instance_type to be used
+    description: Instance type to be used for finetune component in case of 
+      virtual cluster compute, eg. Singularity.ND40_v2. The parameter 
+      compute_finetune must be set to 'serverless' for instance_type to be used
 
   compute_pipeline_validation:
     type: string
@@ -79,15 +81,15 @@ inputs:
 
   train_file_path:
     type: uri_file
-    description: Path to the registered training data asset. The supported data formats
-      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data 
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data
-      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported 
+      data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
     mode: rw_mount
 
   teacher_model_endpoint_url:
@@ -209,8 +211,8 @@ inputs:
   authentication_type:
     type: string
     optional: false
-    description: Authentication type for endpoint. Either `azureml_workspace_connection`
-      or `managed_identity`.
+    description: Authentication type for endpoint. Either 
+      `azureml_workspace_connection` or `managed_identity`.
     default: azureml_workspace_connection
     enum:
     - azureml_workspace_connection
@@ -222,25 +224,27 @@ inputs:
   additional_headers:
     type: string
     optional: true
-    description: JSON serialized string expressing additional headers to be added
-      to each request.
+    description: JSON serialized string expressing additional headers to be 
+      added to each request.
   debug_mode:
     type: boolean
     optional: false
     default: false
-    description: Enable debug mode to print all the debug logs in the score step.
+    description: Enable debug mode to print all the debug logs in the score 
+      step.
   ensure_ascii:
     type: boolean
     optional: false
     default: false
-    description: If set to true, the output is guaranteed to have all incoming non-ASCII
-      characters escaped. If set to false, these characters will be output as-is.
-      More detailed information can be found at https://docs.python.org/3/library/json.html
+    description: If set to true, the output is guaranteed to have all incoming 
+      non-ASCII characters escaped. If set to false, these characters will be 
+      output as-is. More detailed information can be found at 
+      https://docs.python.org/3/library/json.html
   max_retry_time_interval:
     type: integer
     optional: true
-    description: The maximum time (in seconds) spent retrying a payload. If unspecified,
-      payloads are retried for unlimited time.
+    description: The maximum time (in seconds) spent retrying a payload. If 
+      unspecified, payloads are retried for unlimited time.
   initial_worker_count:
     type: integer
     optional: false
@@ -254,14 +258,14 @@ inputs:
   instance_count:
     type: integer
     default: 1
-    description: Number of nodes in a compute cluster we will run the batch score
-      step on.
+    description: Number of nodes in a compute cluster we will run the batch 
+      score step on.
   max_concurrency_per_instance:
     type: integer
     default: 1
-    description: Number of processes that will be run concurrently on any given node.
-      This number should not be larger than 1/2 of the number of cores in an individual
-      node in the specified cluster.
+    description: Number of processes that will be run concurrently on any given 
+      node. This number should not be larger than 1/2 of the number of cores in 
+      an individual node in the specified cluster.
   mini_batch_size:
     type: string
     optional: true
@@ -312,13 +316,16 @@ jobs:
         type: mltable
       hash_train_data:
         type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+        path: 
+          azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
       hash_validation_data:
         type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+        path: 
+          azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
       batch_config_connection:
         type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+        path: 
+          azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
 
   # Config generator job
   oss_distillation_generate_data_config_generator:
@@ -333,7 +340,8 @@ jobs:
       scoring_url: ${{parent.inputs.teacher_model_endpoint_url}}
       deployment_name: ${{parent.inputs.teacher_model_endpoint_name}}
       authentication_type: ${{parent.inputs.authentication_type}}
-      configuration_file: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
+      configuration_file: 
+        ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
       additional_headers: ${{parent.inputs.additional_headers}}
       debug_mode: ${{parent.inputs.debug_mode}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
@@ -344,7 +352,8 @@ jobs:
     outputs:
       batch_score_config:
         type: uri_file
-        path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
+        path: 
+          azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.json
 
   # Batch score job
   oss_distillation_train_data_batch_score:
@@ -355,8 +364,10 @@ jobs:
       type: user_identity
     inputs:
       async_mode: false
-      data_input_table: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.generated_train_payload_path}}
-      configuration_file: ${{parent.jobs.oss_distillation_generate_data_config_generator.outputs.batch_score_config}}
+      data_input_table: 
+        ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.generated_train_payload_path}}
+      configuration_file: 
+        ${{parent.jobs.oss_distillation_generate_data_config_generator.outputs.batch_score_config}}
     outputs:
       job_output_path:
         type: uri_file
@@ -364,7 +375,8 @@ jobs:
         type: uri_folder
     resources:
       instance_count: ${{parent.inputs.instance_count}}
-    max_concurrency_per_instance: ${{parent.inputs.max_concurrency_per_instance}}
+    max_concurrency_per_instance: 
+      ${{parent.inputs.max_concurrency_per_instance}}
     mini_batch_size: ${{parent.inputs.mini_batch_size}}
     retry_settings:
       timeout: 6000
@@ -376,7 +388,8 @@ jobs:
 
   validation_file_path_exists:
     type: command
-    component: azureml:oss_distillation_data_generation_validation_file_checker:0.0.1
+    component: 
+      azureml:oss_distillation_data_generation_validation_file_checker:0.0.1
     compute: '${{parent.inputs.compute_pipeline_validation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
@@ -399,8 +412,10 @@ jobs:
       type: user_identity
     inputs:
       async_mode: false
-      data_input_table: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.generated_validation_payload_path}}
-      configuration_file: ${{parent.jobs.oss_distillation_generate_data_config_generator.outputs.batch_score_config}}
+      data_input_table: 
+        ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.generated_validation_payload_path}}
+      configuration_file: 
+        ${{parent.jobs.oss_distillation_generate_data_config_generator.outputs.batch_score_config}}
     outputs:
       job_output_path:
         type: uri_file
@@ -408,7 +423,8 @@ jobs:
         type: uri_folder
     resources:
       instance_count: ${{parent.inputs.instance_count}}
-    max_concurrency_per_instance: ${{parent.inputs.max_concurrency_per_instance}}
+    max_concurrency_per_instance: 
+      ${{parent.inputs.max_concurrency_per_instance}}
     mini_batch_size: ${{parent.inputs.mini_batch_size}}
     retry_settings:
       timeout: 6000
@@ -437,7 +453,8 @@ jobs:
       enable_chain_of_density: '${{parent.inputs.enable_chain_of_density}}'
       data_generation_task_type: '${{parent.inputs.data_generation_task_type}}'
       min_endpoint_success_ratio: '${{parent.inputs.min_endpoint_success_ratio}}'
-      connection_config_file: ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
+      connection_config_file: 
+        ${{parent.jobs.oss_distillation_generate_data_batch_preprocess.outputs.batch_config_connection}}
     outputs:
       generated_batch_train_file_path: '${{parent.outputs.generated_batch_train_file_path}}'
       generated_batch_validation_file_path: '${{parent.outputs.generated_batch_validation_file_path}}'

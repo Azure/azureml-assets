@@ -1,4 +1,5 @@
-$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: data_upload
 version: 0.0.3
 type: command
@@ -6,10 +7,11 @@ type: command
 is_deterministic: true
 
 display_name: Data Upload
-description: Component to upload user's data from AzureML workspace to Azure OpenAI
-  resource
+description: Component to upload user's data from AzureML workspace to Azure 
+  OpenAI resource
 
-environment: azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
+environment: 
+  azureml://registries/azureml-staging/environments/aoai-data-upload-finetune/versions/1
 
 code: ../../src
 
@@ -42,8 +44,8 @@ inputs:
 outputs:
   dataset_upload_output:
     type: uri_file
-    description: Contains train and validation data upload output file in JSON/custom
-      class format
+    description: Contains train and validation data upload output file in 
+      JSON/custom class format
 
 command: >-
   python upload.py
