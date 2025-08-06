@@ -1,0 +1,42 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+name: Cell2Sentence-Embedding
+path: ./
+
+properties:
+  inference-min-sku-spec: 4|1|28|64
+  inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
+  languages: en
+  SharedComputeCapacityEnabled: true
+
+tags:
+  task: embedding
+  industry: health-and-life-sciences
+  Preview: ""
+  licenseDescription: "This model is provided under the License Terms available at <https://github.com/vandijklab/cell2sentence/blob/master/LICENSE>."
+  inference_supported_envs:
+    - hf
+  license: cc-by-nc-nd-4.0
+  author: "vandijklab"
+  hiddenlayerscanned: ""
+  SharedComputeCapacityEnabled: ""
+  inference_compute_allow_list:
+    [
+      Standard_NC4as_T4_v3,
+      Standard_NC8as_T4_v3,
+      Standard_NC16as_T4_v3,
+      Standard_NC64as_T4_v3,
+      Standard_NC6s_v3,
+      Standard_NC12s_v3,
+      Standard_NC24s_v3,
+      Standard_NC24ads_A100_v4,
+      Standard_NC48ads_A100_v4,
+      Standard_NC96ads_A100_v4,
+      Standard_ND96asr_v4,
+      Standard_ND96amsr_A100_v4,
+      Standard_ND40rs_v2,
+      Standard_NC40ads_H100_v5,
+      Standard_NC80adis_H100_v5,
+      Standard_ND96isr_H100_v5,
+    ]
+version: 1
