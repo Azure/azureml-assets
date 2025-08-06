@@ -1,6 +1,0 @@
-name: responsibleai-vision
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml
-categories: ["Responsible AI"]
