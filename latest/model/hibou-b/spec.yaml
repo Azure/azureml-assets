@@ -34,10 +34,6 @@ tags:
       Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
 version: 1
 description: |-
-  <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
-
-  <!-- `description.md` is required. -->
-
   Hibou-B is a foundational vision transformer developed for digital pathology, designed to generate high-quality feature representations from histology image patches. These representations can be leveraged for a range of downstream tasks, including classification, segmentation, and detection.
 
   Built on the ViT-B/14 architecture, Hibou-B processes 224 × 224 input patches and was trained on 512 million tissue patches extracted from a diverse dataset of 1.3 million whole slide images. The model was trained using self-supervised learning with DINOv2, incorporating stain normalization and extensive geometric augmentations to enable robust generalization across varied histopathological domains.
