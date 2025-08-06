@@ -18,7 +18,7 @@ metadata:
   base_model_task: image-text-to-text
   is_acft_model: true
   is_finetuned_model: false
-  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
 mlflow_version: 2.19.0
 model_size_bytes: 15761478249
 model_uuid: 7b77fbf3853c4d52a76bc09a021dcc87
