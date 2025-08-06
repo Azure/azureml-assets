@@ -1,7 +1,3 @@
-<!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
-
-<!-- `description.md` is required. -->
-
 MedVAE is a family of large-scale, generalizable 2D and 3D variational autoencoders (VAEs) designed to address critical efficiency and storage challenges in medical imaging. Trained on over one million images across multiple modalities and anatomical regions, MedVAE excels at encoding high-resolution medical images into compact, feature-rich latent representations. This process allows downstream computer-aided diagnosis (CAD) models to operate on these small vectors instead of large image files, leading to significant performance benefits—up to a 70x improvement in model throughput and a 512x reduction in data storage requirements.
 
 The core value of MedVAE lies in its ability to preserve clinically-relevant features within these downsized latent representations. This ensures that the efficiency gains do not come at the cost of diagnostic accuracy. By providing a powerful feature extraction mechanism, MedVAE enables the development of faster, more scalable, and cost-effective medical AI solutions, from rapid image retrieval systems to complex diagnostic classifiers, making it an essential tool for both clinical research and healthcare environments.

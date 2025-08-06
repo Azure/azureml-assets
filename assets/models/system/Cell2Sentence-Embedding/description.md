@@ -1,7 +1,3 @@
-<!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
-
-<!-- `description.md` is required. -->
-
 Cell2Sentence (C2S) is a framework designed to apply Large Language Models (LLMs) to single-cell transcriptomics. It transforms single-cell RNA sequencing (scRNA-seq) data into a format that LLMs can natively understand. The core idea is to convert the gene expression vector of each cell into a "cell sentence"—a string of gene names ordered by their expression levels. This allows powerful LLMs to process, analyze, and generate insights from vast amounts of transcriptomic data.
 
 The primary function of this model is to generate compact and informative "cell embeddings." These embeddings are vector representations that capture the essential biological features of each cell. They can be used for a wide range of downstream tasks, including cell clustering, data visualization, classification, perturbation response prediction, and complex biological reasoning. By bridging the gap between single-cell genomics and natural language processing, Cell2Sentence enables deeper analysis and the development of "virtual cells" for advanced biological research.
