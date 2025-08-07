@@ -4,7 +4,7 @@
 
 ## 1.16.87 (2025-08-07)
 ### 🚀 New Features
-- [#4370](https://github.com/Azure/azureml-assets/pull/4370) Release version 1.16.87
+- [#4378](https://github.com/Azure/azureml-assets/pull/4378) Release version 1.16.87
 
 ## 1.16.87b1 (2025-08-05)
 ### 🚀 New Features
