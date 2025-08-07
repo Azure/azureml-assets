@@ -1,0 +1,31 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/artifacts
+        uri: artifacts
+    cloudpickle_version: 3.1.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.12.9
+    streamable: false
+is_signature_from_type_hint: false
+mlflow_version: 2.22.0
+model_size_bytes: 6489321256
+model_uuid: 390523dff8a24d95a37760ffd80f316f
+prompts: null
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "string", "name": "payload", "required": true}]'
+  outputs: '[{"type": "string", "name": "predictions", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-08-01 23:30:46.930197'
