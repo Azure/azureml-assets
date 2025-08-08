@@ -32,7 +32,7 @@ tags:
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
       Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
       Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 1
+version: 2
 description: |-
   Hibou-L is a foundational vision transformer developed for digital pathology, designed to generate high-quality feature representations from histology image patches. These representations can be leveraged for a range of downstream tasks, including classification, segmentation, and detection.
 
