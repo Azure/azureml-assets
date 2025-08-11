@@ -4,7 +4,7 @@ description: >-
   Environment configuration for AzureML-Designer.
 
 name: "designer"
-version: "107"
+version: "108"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
