@@ -129,5 +129,3 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 USER dockeruser
 
 CMD [ "runsvdir", "/var/runit" ]
-
-

@@ -1,12 +1,13 @@
 image:
-  name: azureml/curated/responsibleai-vision
+  name: azureml/curated/amelie-training
   os: linux
   context:
     dir: context
     dockerfile: Dockerfile
     template_files:
     - Dockerfile
-    - conda_dependencies.yaml
+    - requirements.txt
+    - startup.sh
   publish:
     location: mcr
     visibility: public

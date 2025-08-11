@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 
-name: hibou-l
+name: Cell2Sentence-Embedding
 path: ./
 
 properties:
@@ -10,14 +10,14 @@ properties:
   SharedComputeCapacityEnabled: true
 
 tags:
-  task: embeddings
+  task: embedding
   industry: health-and-life-sciences
   Preview: ""
-  licenseDescription: "This model is provided under the License Terms available at <https://github.com/HistAI/hibou/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at <https://github.com/vandijklab/cell2sentence/blob/master/LICENSE>."
   inference_supported_envs:
     - hf
-  license: apache-2.0
-  author: HistAI
+  license: cc-by-nc-nd-4.0
+  author: "vandijklab"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
@@ -39,4 +39,4 @@ tags:
       Standard_NC80adis_H100_v5,
       Standard_ND96isr_H100_v5,
     ]
-version: 2
+version: 1
