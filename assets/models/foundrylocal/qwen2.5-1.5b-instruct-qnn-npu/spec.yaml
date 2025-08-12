@@ -28,3 +28,5 @@ variantInfo:
     quantization: ['PTQ']
     device: 'npu'
     executionProvider: 'QNNExecutionProvider'
+    fileSizeBytes: 325137751
+    vRamFootprintBytes: 998877199

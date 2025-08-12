@@ -28,3 +28,5 @@ variantInfo:
     quantization: ['PTQ']
     device: 'npu'
     executionProvider: 'OpenVINOExecutionProvider'
+    fileSizeBytes: 864
+    vRamFootprintBytes: 917643791

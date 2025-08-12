@@ -28,3 +28,5 @@ variantInfo:
     quantization: ['PTQ']
     device: 'npu'
     executionProvider: 'VitisAIExecutionProvider'
+    fileSizeBytes: 293141524
+    vRamFootprintBytes: 967991316
