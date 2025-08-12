@@ -4,7 +4,7 @@ azure-identity==1.24.0
 azureml-evaluate-mlflow==0.0.77
 ffmpeg-python==0.2.0
 langcodes==3.5.0
-sentencepiece==0.2.0
+sentencepiece==0.2.1
 accelerate==1.10.0
 wget==3.2
 applicationinsights==0.11.10

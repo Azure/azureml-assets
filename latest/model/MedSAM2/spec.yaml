@@ -32,7 +32,7 @@ tags:
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
       Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
       Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 3
+version: 4
 description: |
   MedSAM2 is a breakthrough medical image segmentation foundation model that addresses the critical need for efficient and accurate segmentation in precision medicine. Built upon the Segment Anything Model (SAM) 2.1 architecture, it uniquely bridges the gap between 2D and 3D medical image segmentation, offering a unified solution for both volumetric scans and video data. The model stands out for its ability to reduce manual annotation costs by over 85% while maintaining high accuracy across diverse medical imaging applications.
 
