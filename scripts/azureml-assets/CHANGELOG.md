@@ -4,7 +4,8 @@
 
 ## 1.16.88 (2025-08-12)
 ### 🚀 New Features
-- Add ACR task post-push Trivy SBOM scan and SBOM attachment steps
+
+- [#4383](https://github.com/Azure/azureml-assets/pull/4383) Add ACR task post-push Trivy SBOM scan and SBOM attachment steps
 
 ## 1.16.87 (2025-08-08)
 ### 🚀 New Features
