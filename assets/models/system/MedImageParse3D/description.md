@@ -22,14 +22,13 @@ MedImageParse 3D is built upon BiomedParse with the BoltzFormer architecture, op
 import base64
 data = {
     "input_data": {
-        "columns": ["image", "text"],
-        "index": [0],
+        "columns": [ "image", "text" ],
+        "index": [ 0 ],
         "data": [
             [
-                # Base64-encoded .nii.gz data:
-                base64.b64encode(open("./examples/example.nii.gz", "rb").read()).decode("utf-8"),
-                # Example text/string input:
-                "pancreas"
+                base64_image,
+                "CT imaging of the spleen within the abdomen & Presence of the right kidney detected in abdominal CT images & Abdominal CT showing the left kidney & CT scan of the gallbladder in the abdominal region & CT scan of the esophagus in the abdominal region & Visualization of the liver in abdominal CT imaging & CT imaging of the stomach in the abdomen & Abdominal CT showing aortic structures & Inferior vena cava in abdominal CT & CT scan of the pancreas in the abdominal region & CT imaging of the right adrenal gland in the abdomen & CT imaging of the left adrenal gland in the abdomen & Visualization of the duodenum in abdominal CT imaging & Bladder observed in abdominal CT scans & CT scan of the prostate/uterus in the abdominal region"
+
             ]
         ]
     }
@@ -37,7 +36,7 @@ data = {
 ```
 
 - `"columns"` describes the types of inputs your model expects (in this case, `"image"` and `"text"`).
-- `"data"` is where you actually provide the values: the first element is the Base64-encoded NIfTI, and the second is a text parameter (e.g., `"pancreas"`).
+- `"data"` is where you actually provide the values: the first element is the Base64-encoded NIfTI, and the second is a text parameter (e.g., `"CT imaging of the spleen within the abdomen & Presence of the right kidney detected in abdominal CT images ..." where '&' seperates multiple prompts `).
 
 **Output**
 
@@ -94,25 +93,27 @@ nifti_file_str = response_data[0]["nifti_file"]
 
 # Decode to get the NIfTI volume as a Numpy array
 segmentation_array = decode_base64_to_nifti(nifti_file_str)
-print(segmentation_array.shape)  # e.g., (512, 512, 128)
+print(segmentation_array.shape)  
 ```
 
-Optionally, the `plot_segmentation_masks` helper function shows slices of the 3D array if they contain non-zero content:
+Optionally, to visualize the output:
 
 ```python
-import matplotlib.pyplot as plt 
+# --- Quick visualization of one axial slice ---
+import matplotlib.pyplot as plt
+import numpy as np
 
-def plot_segmentation_masks(segmentation_masks):
-    """
-    Plot each axial slice (z-slice) of the segmentation if it contains a non-zero mask.
-    """
-    index = 1
-    plt.figure(figsize=(15, 15))
-    for i in range(segmentation_masks.shape[2]):
-        if segmentation_masks[:, :, i].sum() > 0:
-            plt.subplot(4, 4, index)
-            plt.imshow(segmentation_masks[:, :, i], cmap='gray')
-            plt.axis('off')
-            index += 1
-    plt.show()
+slice_id = 40  # choose an in-bounds slice index along the third axis (H, W, Z)
+slice_ = segmentation_array[:, :, slice_id]
+
+# Exclude background (0) when listing labels
+labels = np.unique(slice_)
+labels = labels[labels != 0]
+
+plt.figure(figsize=(6, 6))
+plt.imshow(slice_, cmap="gray")
+plt.title(f"Masks @ slice {slice_id} | labels: {labels.tolist()}")
+plt.axis("off")
+plt.show()
+
 ```
