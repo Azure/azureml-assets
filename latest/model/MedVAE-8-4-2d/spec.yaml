@@ -32,7 +32,7 @@ tags:
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
       Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
       Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 1
+version: 2
 description: |-
   MedVAE is a family of large-scale, generalizable 2D and 3D variational autoencoders (VAEs) designed to address critical efficiency and storage challenges in medical imaging. Trained on over one million images across multiple modalities and anatomical regions, MedVAE excels at encoding high-resolution medical images into compact, feature-rich latent representations. This process allows downstream computer-aided diagnosis (CAD) models to operate on these small vectors instead of large image files, leading to significant performance benefits—up to a 70x improvement in model throughput and a 512x reduction in data storage requirements.
 
