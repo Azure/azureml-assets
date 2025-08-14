@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/fl-perf-improvements/qwen2.5-1.5b-instruct/onnx/npu/qwen2.5-1.5b-instruct-qnn-npu/model
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
