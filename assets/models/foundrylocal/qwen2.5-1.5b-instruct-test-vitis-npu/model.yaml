@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/fl-perf-improvements/qwen2.5-1.5b-instruct/onnx/npu/qwen2.5-1.5b-instruct-vitis-npu
+  container_path: foundrylocal/fl-perf-improvements/qwen2.5-1.5b-instruct/onnx/npu/qwen2.5-1.5b-instruct-vitis-npu/model
 
   storage_name: automlcesdkdataresources
   type: azureblob

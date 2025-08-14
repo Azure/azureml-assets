@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: qwen2.5-1.5b-instruct-openvino-npu
+name: qwen2.5-1.5b-instruct-test-qnn-npu
 version: 1
 path: ./
 tags:
@@ -11,8 +11,8 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  alias: qwen2.5-1.5b
-  directoryPath: qwen2.5-1.5b-instruct-openvino-npu
+  alias: 
+  directoryPath: model
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
   supportsToolCalling: ""
   toolCallStart: "<tool_call>"
@@ -25,8 +25,8 @@ variantInfo:
   - assetId: azureml://registries/azureml/models/qwen2.5-1.5b-instruct/versions/1
   variantMetadata:
     modelType: 'ONNX'
-    quantization: ['PTQ']
+    quantization: ['GPTQ']
     device: 'npu'
-    executionProvider: 'OpenVINOExecutionProvider'
-    fileSizeBytes: 864
-    vRamFootprintBytes: 917643791
+    executionProvider: 'QNNExecutionProvider'
+    fileSizeBytes: 673731051
+    vRamFootprintBytes: 999104184
