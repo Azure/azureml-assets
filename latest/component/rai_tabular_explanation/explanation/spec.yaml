@@ -3,7 +3,7 @@ name: rai_tabular_explanation
 display_name: Add Explanation to RAI Insights Dashboard
 description: Add Explanation to RAI Insights Dashboard [Learn 
   More](https://aka.ms/RAIComponents)
-version: 0.19.0
+version: 0.20.0
 type: command
 
 inputs:
@@ -19,7 +19,7 @@ outputs:
 code: ../src/
 
 environment: 
-  azureml://registries/azureml/environments/responsibleai-tabular/versions/19
+  azureml://registries/azureml/environments/responsibleai-tabular/versions/24
 
 command: >-
   python create_explanation.py
