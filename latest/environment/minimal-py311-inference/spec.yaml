@@ -4,7 +4,7 @@ description: >-
   AzureML minimal/Ubuntu 22.04/Python 3.11 cpu environment.
 
 name: "minimal-py311-inference"
-version: "31"
+version: "32"
 
 build:
   path: "context"
