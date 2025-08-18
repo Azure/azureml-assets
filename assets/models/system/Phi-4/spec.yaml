@@ -38,6 +38,7 @@ tags:
   notes: "notes.md"
   hiddenlayerscanned: ""
   maas-inference: "true"
+  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   inference_compute_allow_list:
     [
       Standard_NC24ads_A100_v4,
