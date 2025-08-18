@@ -141,6 +141,7 @@ tags:
     * **Misuse:** Other forms of misuse such as fraud, spam, or malware production may be possible, and developers should ensure that their applications do not violate applicable laws and regulations.
   hiddenlayerscanned: ""
   maas-inference: "true"
+  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   inference_compute_allow_list: [Standard_NC24ads_A100_v4, 
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
       Standard_ND96amsr_A100_v4, Standard_ND96isr_H100_v5, 

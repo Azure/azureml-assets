@@ -17,6 +17,7 @@ tags:
   huggingface_model_id: ""
   license: mit
   disable-batch: "true"
+  deploymentOptions: "UnifiedEndpointMaaS, MaaP"
   task: chat-completion
   hiddenlayerscanned: ""
   author: Microsoft

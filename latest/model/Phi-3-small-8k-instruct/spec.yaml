@@ -139,6 +139,7 @@ tags:
   playgroundRateLimitTier: "low"
   Featured: ""
   maas-inference: true
+  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   huggingface_model_id: ""
   license: mit
   disable-batch: "true"
