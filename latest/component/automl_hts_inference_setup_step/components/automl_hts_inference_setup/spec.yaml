@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_hts_inference_setup_step
-version: 0.0.9
+version: 0.0.10
 display_name: AutoML HTS - Inference Setup
 type: command
 
@@ -77,7 +77,7 @@ outputs:
 
 
 code: ../../src/setup
-environment: azureml://registries/azureml/environments/automl-gpu/versions/48
+environment: azureml://registries/azureml/environments/automl-gpu/versions/54
 
 command: >-
   python setup.py  --raw-data ${{inputs.raw_data}}

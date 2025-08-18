@@ -5,7 +5,7 @@ type: pipeline
 name: automl_many_models_inference
 display_name: AutoML Many Models - Inference
 description: Inference components for AutoML many model.
-version: 0.0.9
+version: 0.0.10
 is_deterministic: false
 
 inputs:
@@ -104,7 +104,7 @@ outputs:
 jobs:
   automl_many_models_inference_setup_step:
     type: command
-    component: azureml:automl_many_models_inference_setup_step:0.0.9
+    component: azureml:automl_many_models_inference_setup_step:0.0.10
     inputs:
       raw_Data: ${{parent.inputs.raw_data}}
       enable_event_logger: true
@@ -132,7 +132,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_many_models_inferencing_step:
     type: parallel
-    component: azureml:automl_many_models_inference_step:0.0.9
+    component: azureml:automl_many_models_inference_step:0.0.10
     inputs:
       partitioned_data: 
         ${{parent.jobs.automl_many_models_inference_setup_step.outputs.processed_data}}
@@ -160,7 +160,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_many_models_inference_collect_step:
     type: command
-    component: azureml:automl_many_models_inference_collect_step:0.0.9
+    component: azureml:automl_many_models_inference_collect_step:0.0.10
     inputs:
       setup_metadata: 
         ${{parent.jobs.automl_many_models_inference_setup_step.outputs.metadata}}

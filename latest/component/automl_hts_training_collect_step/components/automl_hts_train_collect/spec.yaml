@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_hts_training_collect_step
-version: 0.0.9
+version: 0.0.10
 display_name: AutoML HTS - Collection Training Results
 type: command
 
@@ -24,7 +24,7 @@ outputs:
     description: 'Output metadata that contains train status.'
 
 code: ../../src/collect
-environment: azureml://registries/azureml/environments/automl-gpu/versions/48
+environment: azureml://registries/azureml/environments/automl-gpu/versions/54
 
 command: >-
   python collect.py  --input-metadata ${{inputs.input_metadata}}

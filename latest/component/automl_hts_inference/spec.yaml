@@ -5,7 +5,7 @@ type: pipeline
 name: automl_hts_inference
 display_name: AutoML Hierarchical Timeseries Forecasting - Inference
 description: Enables inference for hts components.
-version: 0.0.9
+version: 0.0.10
 is_deterministic: false
 
 inputs:
@@ -85,7 +85,7 @@ outputs:
 jobs:
   automl_hts_inference_setup:
     type: command
-    component: azureml:automl_hts_inference_setup_step:0.0.9
+    component: azureml:automl_hts_inference_setup_step:0.0.10
     inputs:
       raw_Data: ${{parent.inputs.raw_data}}
       enable_event_logger: true
@@ -109,7 +109,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_hts_model_inference:
     type: parallel
-    component: azureml:automl_hts_prs_inference_step:0.0.9
+    component: azureml:automl_hts_prs_inference_step:0.0.10
     inputs:
       partitioned_data: 
         ${{parent.jobs.automl_hts_inference_setup.outputs.processed_data}}
@@ -135,7 +135,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_hts_inference_collect_step:
     type: command
-    component: azureml:automl_hts_inference_collect_step:0.0.9
+    component: azureml:automl_hts_inference_collect_step:0.0.10
     inputs:
       setup_metadata: 
         ${{parent.jobs.automl_hts_inference_setup.outputs.metadata}}
