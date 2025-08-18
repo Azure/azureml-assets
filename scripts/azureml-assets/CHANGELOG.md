@@ -2,6 +2,10 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.89 (2025-08-18)
+### 🐛 Bugs Fixed
+- [#4391](https://github.com/Azure/azureml-assets/pull/4391) Pass in correct uri to LocalAssetPath from ModelConfig
+
 ## 1.16.88 (2025-08-12)
 ### 🚀 New Features
 - [#4383](https://github.com/Azure/azureml-assets/pull/4383) Add ACR task post-push Trivy SBOM scan and SBOM attachment steps
