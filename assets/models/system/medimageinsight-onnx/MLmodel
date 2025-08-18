@@ -22,7 +22,7 @@ metadata:
   is_finetuned_model: false
 mlflow_version: 2.21.3
 model_size_bytes: 1234541360
-model_uuid: e77047e85b42430e8a009c5992f2ceb9
+model_uuid: f15d20b767d542d499477fde5482c80b
 prompts: null
 signature:
   inputs: '[{"type": "binary", "name": "image", "required": false}, {"type": "string",
@@ -35,4 +35,4 @@ signature:
     "default": 512, "shape": null, "type": "integer"}, {"name": "get_scaling_factor",
     "default": true, "shape": null, "type": "boolean"}]'
 type_hint_from_example: false
-utc_time_created: '2025-08-18 14:37:19.944913'
+utc_time_created: '2025-08-18 15:59:12.689063'
