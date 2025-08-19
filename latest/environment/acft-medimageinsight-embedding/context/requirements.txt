@@ -1,6 +1,6 @@
-azureml-acft-common-components==0.0.77
-azureml-acft-contrib-hf-nlp==0.0.77
-azureml-acft-image-components[hls]==0.0.77
+azureml-acft-common-components==0.0.78
+azureml-acft-contrib-hf-nlp==0.0.78
+azureml-acft-image-components[hls]==0.0.78
 opencv-python==4.11.0.86
 pyyaml==6.0.2
 json_tricks==3.17.3
