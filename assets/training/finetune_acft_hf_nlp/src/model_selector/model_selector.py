@@ -359,9 +359,13 @@ def main():
 
     if args.pytorch_model_path:
         logger.info(f"Using PyTorch model path: {args.pytorch_model_path}")
-        # add /model to the pytorch_model_path to support new model path
-        args.pytorch_model_path = str(Path(args.pytorch_model_path) / "model")
-        logger.info(f"Updated PyTorch model path: {args.pytorch_model_path}")
+        model_subdir = Path(args.pytorch_model_path) / "model"
+        if model_subdir.is_dir():
+            args.pytorch_model_path = str(model_subdir)
+            # To support the latest pytorch artifact path
+            logger.info(f"Updated PyTorch model path: {args.pytorch_model_path}")
+        else:
+            logger.info(f"'model' subfolder does not exist, using original path: {args.pytorch_model_path}")
 
     # run model selector
     model_selector_args = model_selector(args)
