@@ -63,6 +63,7 @@ DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.j
 REFINED_WEB = "RefinedWeb"
 MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 MISTRAL = "mistral"
+GPT_OSS = "gpt_oss"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -162,7 +163,7 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     REFINED_WEB,
     HfModelTypes.MIXTRAL,
-    "gpt_oss"
+    GPT_OSS,
 ]
 
 
