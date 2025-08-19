@@ -3,7 +3,7 @@ name: automl_tabular_data_partitioning
 type: spark
 display_name: AutoML - Tabular Data Partitioning
 description: Enables dataset partitioning for AutoML many models and hierarchical timeseries solution accelerators using spark.
-version: 0.0.9
+version: 0.0.10
 is_deterministic: false
 
 code: ../../src/spark_partition/

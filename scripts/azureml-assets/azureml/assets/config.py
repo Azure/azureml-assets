@@ -784,7 +784,7 @@ class ModelConfig(Config):
             elif path_type == PathType.GIT.value:
                 self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
             elif path_type == PathType.LOCAL.value:
-                self._path = LocalAssetPath(local_path=path['uri'])
+                self._path = LocalAssetPath(uri=str(self._file_path / path['uri']))
             elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
                 raise NotImplementedError("Support for HTTP and FTP is being added.")
         else:

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
@@ -96,18 +96,18 @@ RUN pip install cryptography>=42.0.5 \
                 aiohttp>=3.12.14
 
 # Patch for pillow vulnerability
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'pillow==11.3.0'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0'
                 
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1rc1' torchvision==0.22.1 || true
-
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 # end pip install
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
