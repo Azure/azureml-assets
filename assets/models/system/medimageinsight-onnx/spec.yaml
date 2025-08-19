@@ -25,7 +25,7 @@ tags:
   outputModalities: "text embedding, image embedding"
   keywords: [
     "Multimodal",
-    "Low latency",
+    "Low latency"
   ]
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
