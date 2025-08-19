@@ -17,6 +17,16 @@ tags:
     - hf
   license: mit
   author: Microsoft
+  displayName: "MedImageInsight ONNX"
+  languages: "en"
+  evaluation: "evaluation.md"
+  notes: "notes.md"
+  inputModalities: "image, text"
+  outputModalities: "text embedding, image embedding"
+  keywords: [
+    "Multimodal",
+    "Low latency",
+  ]
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
