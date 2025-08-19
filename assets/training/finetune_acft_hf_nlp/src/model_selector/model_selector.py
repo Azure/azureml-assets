@@ -357,6 +357,12 @@ def main():
     # Adding flavor map to args
     setattr(args, "flavor_map", FLAVOR_MAP)
 
+    if args.pytorch_model_path:
+        logger.info(f"Using PyTorch model path: {args.pytorch_model_path}")
+        # add /model to the pytorch_model_path to support new model path
+        args.pytorch_model_path = str(Path(args.pytorch_model_path) / "model")
+        logger.info(f"Updated PyTorch model path: {args.pytorch_model_path}")
+
     # run model selector
     model_selector_args = model_selector(args)
     model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
