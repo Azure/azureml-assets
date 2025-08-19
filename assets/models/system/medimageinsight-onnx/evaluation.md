@@ -12,8 +12,6 @@ The model is optimized for inference speed using ONNX Runtime.
 ## Metrics
 - **Latency**: The time taken for the model to process a single input sample in milliseconds.
 - **Speed-up**: The percentage reduction in latency compared to the baseline model.
-- **Accuracy**: The percentage of correct predictions made by the model.
-- **BACC**: Balanced Accuracy, which accounts for class imbalance in the dataset.
 - **mAUC**: Mean Area Under the Curve, a measure of the model's ability to distinguish between classes.
 
 ## Results
