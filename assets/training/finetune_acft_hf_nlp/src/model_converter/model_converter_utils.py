@@ -109,6 +109,7 @@ def load_model(
         load_model_kwargs.update(ft_config.get("load_model_kwargs", {}))
         # pop any optimizations related parameters
         load_model_kwargs.pop("attn_implementation", None)
+        load_model_kwargs.pop("use_flash_attention_2", None)
         logger.info(f"Loading model with kwargs: {load_model_kwargs}")
         model_type = getattr(component_args, "model_type", "")
         if model_type == "llama4":
