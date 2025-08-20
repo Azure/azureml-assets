@@ -76,7 +76,6 @@ onnxruntime-training==1.19.2
 opencv-python==4.11.0.86
 opt_einsum==3.4.0
 optree==0.17.0
-ort_moe==0.2.0.dev202507281003
 packaging==25.0
 pandas==2.1.4
 pillow==11.3.0
