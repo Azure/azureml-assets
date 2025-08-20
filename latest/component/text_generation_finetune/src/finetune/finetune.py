@@ -63,6 +63,7 @@ DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.j
 REFINED_WEB = "RefinedWeb"
 MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 MISTRAL = "mistral"
+GPT_OSS = "gpt_oss"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -162,6 +163,7 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     REFINED_WEB,
     HfModelTypes.MIXTRAL,
+    GPT_OSS,
 ]
 
 
@@ -1147,6 +1149,9 @@ def finetune(args: Namespace):
             if "lora_target_modules" in ft_config:
                 logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
                 setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
+            if "lora_target_parameters" in ft_config:
+                logger.info(f'Setting lora_target_parameters to: {ft_config.get("lora_target_parameters")}')
+                setattr(args, "lora_target_parameters", ft_config.get("lora_target_parameters"))
             # Read leaf modules for MoE models from finetune config
             if "leaf_modules_of_moe_models" in ft_config:
                 logger.info(f'Setting leaf_modules_of_moe_models to: {ft_config.get("leaf_modules_of_moe_models")}')

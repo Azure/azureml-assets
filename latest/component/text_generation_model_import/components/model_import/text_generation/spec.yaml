@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_model_import
-version: 0.0.76
+version: 0.0.77
 type: command
 
 is_deterministic: true
@@ -10,7 +10,7 @@ display_name: Text Generation Model Import
 description: Import PyTorch / MLFlow model
 
 environment: 
-  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/model_selector
 

@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: translation_datapreprocess
-version: 0.0.76
+version: 0.0.77
 type: command
 
 is_deterministic: true
@@ -12,7 +12,7 @@ description: Component to preprocess data for translation task. See
   more.
 
 environment: 
-  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/preprocess
 
