@@ -87,7 +87,7 @@ jobs:
 
       - name: Validate models with model schema
         id: validate_models
-        run: python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -c "${{ needs.check-directory-file-changes.outputs.files-changed }}" --allow-additional-properties
+        run: python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" --allow-additional-properties
 
       - name: Validate models with model variant schema
         id: validate_model_variants
