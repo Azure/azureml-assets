@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: grpo_chat_completion_pipeline
-version: 0.0.2
+version: 0.0.3
 type: pipeline
 display_name: GRPO Chat Completion Pipeline
 description: Pipeline component for fine-tuning Hugging Face chat completion models with Group Relative Policy Optimization(GRPO)
@@ -298,7 +298,7 @@ outputs:
 jobs:
   chat_completion_model_import:
     type: command
-    component: azureml:chat_completion_model_import:0.0.78
+    component: azureml:chat_completion_model_import:0.0.79
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
