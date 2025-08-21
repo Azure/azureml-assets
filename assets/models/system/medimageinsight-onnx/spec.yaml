@@ -21,7 +21,7 @@ tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
   inputModalities: "image, text"
-  outputModalities: "text embedding, image embedding"
+  outputModalities: "embeddings"
   keywords: "Multimodal,Low latency"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
