@@ -68,8 +68,8 @@ tags:
 
     Please see Microsoft's Responsible AI Principles and approach available at [https://www.microsoft.com/en-us/ai/principles-and-approach/](https://www.microsoft.com/en-us/ai/principles-and-approach/)
   inputModalities: "image, text"
-  outputModalities: "text embedding, image embedding"
-  keywords: ["Multimodal", "Low latency"]
+  outputModalities: "embeddings"
+  keywords: "Multimodal,Low latency"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 
