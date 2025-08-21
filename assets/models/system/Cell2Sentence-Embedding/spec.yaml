@@ -17,7 +17,7 @@ tags:
   inference_supported_envs:
     - hf
   license: cc-by-nc-nd-4.0
-  author: "vandijklab"
+  author: "Van Dijk Lab"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
@@ -39,4 +39,4 @@ tags:
       Standard_NC80adis_H100_v5,
       Standard_ND96isr_H100_v5,
     ]
-version: 1
+version: 2

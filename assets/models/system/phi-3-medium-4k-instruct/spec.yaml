@@ -33,6 +33,7 @@ tags:
   huggingface_model_id: ""
   SharedComputeCapacityEnabled: ''
   maas-inference: true
+  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   hiddenlayerscanned : ""
   license: mit
   disable-batch: "true"
