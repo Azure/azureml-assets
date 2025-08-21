@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_prediction_with_container 
-version: 0.0.8
+version: 0.0.7
 type: command
 display_name: Distributed Model Prediction
 description: "Optimized Distributed inference component for LLMs."
@@ -9,6 +9,7 @@ tags:
   type: evaluation
   sub_type: subgraph
   Preview: ""
+
 
 
 distribution:
