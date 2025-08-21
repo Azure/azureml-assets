@@ -21,11 +21,8 @@ tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
   inputModalities: "image, text"
-  outputModalities: "text embedding, image embedding"
-  keywords: [
-    "Multimodal",
-    "Low latency"
-  ]
+  outputModalities: "embeddings"
+  keywords: "Multimodal,Low latency"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
