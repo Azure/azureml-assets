@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: summarization_datapreprocess
-version: 0.0.77
+version: 0.0.78
 type: command
 
 is_deterministic: true

@@ -359,9 +359,9 @@ def main():
 
     if args.pytorch_model_path:
         logger.info(f"Using PyTorch model path: {args.pytorch_model_path}")
-        model_subdir = Path(args.pytorch_model_path) / "model"
-        if model_subdir.is_dir():
-            args.pytorch_model_path = str(model_subdir)
+        model_artifact_dir = Path(args.pytorch_model_path) / "model_artifact" / "model"
+        if model_artifact_dir.is_dir():
+            args.pytorch_model_path = str(model_artifact_dir)
             # To support the latest pytorch artifact path
             logger.info(f"Updated PyTorch model path: {args.pytorch_model_path}")
         else:
