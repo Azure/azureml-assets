@@ -485,9 +485,9 @@ outputs:
     description: output folder containing _best_ finetuned model in mlflow format.
     mode: rw_mount
 
-  evaluation_result:
-    type: uri_folder
-    description: Test Data Evaluation Results
+  # evaluation_result:
+  #   type: uri_folder
+  #   description: Test Data Evaluation Results
 
 jobs:
   ft_nlp_common_validation:
@@ -624,33 +624,33 @@ jobs:
       model_path: '${{parent.jobs.token_classification_finetune.outputs.pytorch_model_folder}}'
     outputs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
-  model_prediction:
-    type: command
-    component: azureml:model_prediction_with_container:0.0.8
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
-    inputs:
-      task: text-named-entity-recognition
-      test_data: '${{parent.jobs.token_classification_datapreprocess.outputs.output_dir}}'
-      label_column_name: '${{parent.inputs.tag_key}}'
-      input_column_names: '${{parent.inputs.token_key}}'
-      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-  compute_metrics:
-    type: command
-    component: azureml:compute_metrics:0.0.37
-    compute: '${{parent.inputs.compute_model_evaluation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
-    inputs:
-      task: text-named-entity-recognition
-      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
-      ground_truth_column_name: '${{parent.inputs.tag_key}}'
-      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
-      prediction_column_name: predictions
-      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
-      evaluation_config: '${{parent.inputs.evaluation_config}}'
-      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-    outputs:
-      evaluation_result: '${{parent.outputs.evaluation_result}}'
+  # model_prediction:
+  #   type: command
+  #   component: azureml:model_prediction_with_container:0.0.8
+  #   compute: '${{parent.inputs.compute_model_evaluation}}'
+  #   resources:
+  #     instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+  #   inputs:
+  #     task: text-named-entity-recognition
+  #     test_data: '${{parent.jobs.token_classification_datapreprocess.outputs.output_dir}}'
+  #     label_column_name: '${{parent.inputs.tag_key}}'
+  #     input_column_names: '${{parent.inputs.token_key}}'
+  #     mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.mlflow_model_folder}}'
+  #     evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+  # compute_metrics:
+  #   type: command
+  #   component: azureml:compute_metrics:0.0.37
+  #   compute: '${{parent.inputs.compute_model_evaluation}}'
+  #   resources:
+  #     instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+  #   inputs:
+  #     task: text-named-entity-recognition
+  #     ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
+  #     ground_truth_column_name: '${{parent.inputs.tag_key}}'
+  #     prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
+  #     prediction_column_name: predictions
+  #     prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
+  #     evaluation_config: '${{parent.inputs.evaluation_config}}'
+  #     evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+  #   outputs:
+  #     evaluation_result: '${{parent.outputs.evaluation_result}}'
