@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: grpo_chat_completion_pipeline
-version: 0.0.3
+version: 0.0.4
 type: pipeline
 display_name: GRPO Chat Completion Pipeline
 description: Pipeline component for fine-tuning Hugging Face chat completion 
@@ -340,7 +340,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   group_relative_policy_optimization:
     type: command
-    component: azureml:group_relative_policy_optimization:0.0.1
+    component: azureml:group_relative_policy_optimization:0.0.2
     compute: '${{parent.inputs.compute_finetune}}'
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"

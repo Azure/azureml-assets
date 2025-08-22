@@ -301,7 +301,7 @@ def main(script_args, training_args, model_args):
 
     # Auto Pipeline Parallel setting :
     config = get_hf_model_config_and_attributes(current_policy)
-    os.environ[VLLM_PP_LAYER_PARTITION] = str(config.num_attention_heads)
+    os.environ[VLLM_PP_LAYER_PARTITION] = str(config.num_hidden_layers)
     os.environ[VLLM_PP_NUM_PARTITIONS] = str(config.num_key_value_heads)
 
     # Load tokenizer
