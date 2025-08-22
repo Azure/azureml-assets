@@ -2,14 +2,13 @@
 # Licensed under the MIT License.
 
 import argparse
-import json
 import os
 
 from dotenv import load_dotenv
-load_dotenv()
-
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
+
+load_dotenv()
 
 # Retrieve the PAT from the environment variable
 personal_access_token = os.getenv("AZURE_DEVOPS_PAT")
@@ -23,16 +22,22 @@ Project_Name = "Vienna"
 
 AzureML_Assets_Release_Definition_ID = 37560
 AzureML_Assets_Build_Definition_ID = 37266
-Last_N_Releases = None
+DEFAULT_LAST_RELEASES = 10
 
 if not AzureML_Assets_Release_Definition_ID:
-    AzureML_Assets_Release_Definition_ID = int(input("Enter Release Pipeline Definition ID: "))
+    AzureML_Assets_Release_Definition_ID = int(
+        input("Enter Release Pipeline Definition ID: ")
+    )
 
 if not AzureML_Assets_Build_Definition_ID:
-    AzureML_Assets_Build_Definition_ID = int(input("Enter Build Pipeline Definition ID: "))
+    AzureML_Assets_Build_Definition_ID = int(
+        input("Enter Build Pipeline Definition ID: ")
+    )
 
-if not Last_N_Releases:
-    Last_N_Releases = int(input("Enter the number of last releases to retrieve: "))
+# Allow overriding default via environment variable
+DEFAULT_LAST_RELEASES = int(
+    os.getenv("ASSET_RELEASE_COUNT", DEFAULT_LAST_RELEASES)
+)
 
 # Create a connection to the org
 credentials = BasicAuthentication("", personal_access_token)
@@ -44,7 +49,7 @@ def get_last_n_releases(args):
 
     # Get a release client
     release_client = connection.clients.get_pipelines_client()
-    max_created_time = None
+    # NOTE: could filter by created time; left for future enhancement
 
     # Get a build client
     build_client = connection.clients.get_pipelines_client()
@@ -57,7 +62,13 @@ def get_last_n_releases(args):
             pipeline_id=AzureML_Assets_Release_Definition_ID,
         )
 
-        print('Pipeline Name: ', release_client.get_pipeline(project=Project_Name, pipeline_id=AzureML_Assets_Release_Definition_ID).name)
+        print(
+            "Pipeline Name: ",
+            release_client.get_pipeline(
+                project=Project_Name,
+                pipeline_id=AzureML_Assets_Release_Definition_ID,
+            ).name,
+        )
 
         builds = build_client.list_runs(
             project=Project_Name,
@@ -67,28 +78,50 @@ def get_last_n_releases(args):
         if releases:
             for release in releases:
                 rls_item = {}
-            
+
                 rls_item["release_name"] = release.name
                 rls_item["release_status"] = release.result
                 rls_item["release_version"] = release.id
                 rls_item["release_url"] = release.url
-                rls_item["build_version"] = release.additional_properties.get("templateParameters").get("sourceVersion")
-                rls_item["release_description"] = release.additional_properties.get("templateParameters").get("description")
+                template_params = release.additional_properties.get(
+                    "templateParameters", {}
+                )
+                rls_item["build_version"] = template_params.get(
+                    "sourceVersion"
+                )
+                rls_item["release_description"] = template_params.get(
+                    "description"
+                )
 
-                build = next((b for b in builds if rls_item["build_version"] in b.name), None)  
-                rls_item["build_name"] = build.name if build else "Unknown Build"
-                rls_item["build_url"] = build.url if build else "Unknown Build URL"
+                build = next(
+                    (
+                        b
+                        for b in builds
+                        if rls_item["build_version"]
+                        and rls_item["build_version"] in b.name
+                    ),
+                    None,
+                )
+                rls_item["build_name"] = (
+                    build.name if build else "Unknown Build"
+                )
+                rls_item["build_url"] = (
+                    build.url if build else "Unknown Build URL"
+                )
 
                 try:
                     queue_time_variables = build.variables
-                    rls_item["build_pattern"] = queue_time_variables["pattern"].value
-                except Exception as e:
+                    rls_item["build_pattern"] = queue_time_variables[
+                        "pattern"
+                    ].value
+                except Exception:
                     rls_item["build_pattern"] = None
 
                 if rls_item["build_pattern"]:
                     if (
                         args.pattern is None
-                        or args.pattern.lower() in rls_item["build_pattern"].lower()
+                        or args.pattern.lower()
+                        in rls_item["build_pattern"].lower()
                     ):
                         asset_releases.append(rls_item)
                 if len(asset_releases) >= args.number:
@@ -101,10 +134,11 @@ def get_last_n_releases(args):
 
 
 def main():
-    global Last_N_Releases
     # Initialize parser
     parser = argparse.ArgumentParser(
-        description="This is quick script to get the latest release of AzureML Assets."
+        description=(
+            "Quick script to list recent AzureML Asset releases."
+        )
     )
 
     # Adding optional argument
@@ -115,8 +149,10 @@ def main():
         "-n",
         "--number",
         type=int,
-        default=Last_N_Releases,
-        help=f"Last n releases, default is {Last_N_Releases}",
+        default=DEFAULT_LAST_RELEASES,
+        help=(
+            f"Last n releases, default is {DEFAULT_LAST_RELEASES}"
+        ),
     )
 
     parser.add_argument(
@@ -149,7 +185,7 @@ def main():
         print(f"Build Pattern: {rls['build_pattern']}")
         print(f"Build Name: {rls['build_name']}")
         print(f"Build URL: {rls['build_url']}")
-        print("-"*30)
+        print("-" * 30)
 
 
 if __name__ == "__main__":

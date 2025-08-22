@@ -6,10 +6,10 @@ import json
 import os
 
 from dotenv import load_dotenv
-load_dotenv()
-
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
+
+load_dotenv()
 
 # Retrieve the PAT from the environment variable
 personal_access_token = os.getenv("AZURE_DEVOPS_PAT")
@@ -52,20 +52,23 @@ def get_last_n_build(args):
             continue
         build_item["build_status"] = build.status
         build_item["build_url"] = (
-            f"https://dev.azure.com/msdata/Vienna/_build/results?buildId={build.id}&view=results"
+            "https://dev.azure.com/msdata/Vienna/_build/results?buildId="
+            f"{build.id}&view=results"
         )
 
-        if (args.pattern is None or args.pattern.lower() in build_item["build_pattern"].lower()):
+        if (
+            args.pattern is None
+            or args.pattern.lower() in build_item["build_pattern"].lower()
+        ):
             asset_builds.append(build_item)
 
     return asset_builds[:args.number]
 
 
 def main():
-    global Last_N_Build
     # Initialize parser
     parser = argparse.ArgumentParser(
-        description="This is quick script to get the latest release of AzureML Assets."
+        description="Quick script to list recent AzureML Asset builds."
     )
 
     # Adding optional argument
@@ -86,9 +89,14 @@ def main():
         type=str,
         help="Filter by build pattern, default is None.",
     )
-    
-    parser.add_argument( "-s", "--succeeded", help="Show only succeeded builds", action="store_true", default=True)
 
+    parser.add_argument(
+        "-s",
+        "--succeeded",
+        help="Show only succeeded builds",
+        action="store_true",
+        default=True,
+    )
     # Read arguments from command line
     args = parser.parse_args()
 
@@ -108,12 +116,17 @@ def main():
         print(f"Build Pattern: {build['build_pattern']}")
         print(f"Build Status: {build['build_status']}")
         print(f"Build Result: {build['build_result']}")
-        print(f"Create Time: {build['build_time'].strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Created By: {build['build_created_by']} ({build['build_requested_by']})")
-        print(f"Build URL: {build['build_url']}")
-        
-        # if args.verbose: I'd like to print out the version of environment created by the build
-        print("")
+        print(
+            "Create Time: "
+            f"{build['build_time'].strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        print(
+            f"Created By: {build['build_created_by']} "
+            f"({build['build_requested_by']})"
+        )
+    print(f"Build URL: {build['build_url']}")
+    # TODO: if verbose, also print environment version (future enhancement)
+    print("")
 
 
 if __name__ == "__main__":
