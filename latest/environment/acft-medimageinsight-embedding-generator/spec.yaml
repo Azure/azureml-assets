@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by MedImageInsight Embedding Generation component
 
 name: "acft-medimageinsight-embedding-generator"
-version: "17"
+version: "18"
 
 build:
   path: "context"
