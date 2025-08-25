@@ -1,3 +1,4 @@
+"""List recent AzureML asset builds from Azure DevOps."""
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -31,6 +32,7 @@ connection = Connection(base_url=organization_url, creds=credentials)
 
 
 def get_last_n_build(args):
+    """Return metadata for the last N builds filtered by args."""
     asset_builds = []
     build_client = connection.clients.get_build_client()
     builds = build_client.get_builds(
@@ -66,6 +68,7 @@ def get_last_n_build(args):
 
 
 def main():
+    """Parse arguments and print build information."""
     # Initialize parser
     parser = argparse.ArgumentParser(
         description="Quick script to list recent AzureML Asset builds."
