@@ -1,6 +1,24 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Utilities for listing recent AzureML asset releases from Azure DevOps.
+
+This script queries Azure DevOps pipelines to retrieve the most recent
+AzureML Asset release runs and their associated build information, with
+optional filtering by a provided build pattern.
+
+Environment Variables
+---------------------
+AZURE_DEVOPS_PAT : Personal Access Token used for authenticating to
+    Azure DevOps (required).
+ASSET_RELEASE_COUNT : Default number of recent releases to display when
+    the ``--number`` argument is not supplied (optional).
+
+Typical usage (from repo root):
+    python assets/large_language_models/utils/asset_release/ \
+        list_assets_release.py --number 5 --pattern nightly --verbose
+"""
+
 import argparse
 import os
 
@@ -45,6 +63,26 @@ connection = Connection(base_url=organization_url, creds=credentials)
 
 
 def get_last_n_releases(args):
+    """Return metadata for the last N asset releases.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Parsed command-line arguments containing:
+          * number (int): maximum number of releases to return.
+          * pattern (str|None): optional substring filter applied to the
+            build pattern captured at queue time.
+          * verbose (bool): whether verbose output was requested (only
+            impacts printing in ``main``; not used here for logic).
+
+    Returns
+    -------
+    list[dict]
+        A list (up to ``args.number`` elements) of dictionaries with keys:
+        ``release_name``, ``release_status``, ``release_version``,
+        ``release_url``, ``build_version``, ``release_description``,
+        ``build_name``, ``build_url``, and ``build_pattern``.
+    """
     asset_releases = []
 
     # Get a release client
@@ -134,6 +172,12 @@ def get_last_n_releases(args):
 
 
 def main():
+    """Parse command-line arguments and print recent asset releases.
+
+    This is the script entry point. It gathers CLI options, invokes
+    :func:`get_last_n_releases`, and prints a human-readable summary of each
+    retrieved release, respecting the ``--verbose`` flag.
+    """
     # Initialize parser
     parser = argparse.ArgumentParser(
         description=(
