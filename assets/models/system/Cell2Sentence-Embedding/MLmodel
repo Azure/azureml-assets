@@ -14,6 +14,8 @@ flavors:
     python_version: 3.12.9
     streamable: false
 is_signature_from_type_hint: false
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
 mlflow_version: 2.22.0
 model_size_bytes: 6489321256
 model_uuid: 390523dff8a24d95a37760ffd80f316f

@@ -97,7 +97,7 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 # by fixing dependencies in the base packages
 RUN pip list && \
     pip install pyarrow==14.0.2 \
-                'transformers[sentencepiece,torch]==4.52.1' \
+                'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
 RUN pip install torch==2.7.1 torchvision==0.22.1
 RUN /opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true

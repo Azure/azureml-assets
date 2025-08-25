@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: group_relative_policy_optimization
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: true

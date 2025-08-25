@@ -357,6 +357,16 @@ def main():
     # Adding flavor map to args
     setattr(args, "flavor_map", FLAVOR_MAP)
 
+    if args.pytorch_model_path:
+        logger.info(f"Using PyTorch model path: {args.pytorch_model_path}")
+        model_artifact_dir = Path(args.pytorch_model_path) / "model_artifact" / "model"
+        if model_artifact_dir.is_dir():
+            args.pytorch_model_path = str(model_artifact_dir)
+            # To support the latest pytorch artifact path
+            logger.info(f"Updated PyTorch model path: {args.pytorch_model_path}")
+        else:
+            logger.info(f"'model' subfolder does not exist, using original path: {args.pytorch_model_path}")
+
     # run model selector
     model_selector_args = model_selector(args)
     model_name = model_selector_args.get("model_name", ModelSelectorConstants.MODEL_NAME_NOT_FOUND)
