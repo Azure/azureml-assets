@@ -5,7 +5,7 @@ azureml-evaluate-mlflow=={{latest-pypi-version}}
 ffmpeg-python=={{latest-pypi-version}}
 langcodes=={{latest-pypi-version}}
 sentencepiece=={{latest-pypi-version}}
-accelerate=={{latest-pypi-version}}
+accelerate
 wget=={{latest-pypi-version}}
 applicationinsights=={{latest-pypi-version}}
 azureml-automl-core=={{latest-pypi-version}}
@@ -32,4 +32,4 @@ scikit-learn==1.5.1
 mlflow==3.1.0
 mlflow-skinny==3.1.0
 marshmallow==3.23.2
-transformers==4.52.1
+transformers==4.53.0
