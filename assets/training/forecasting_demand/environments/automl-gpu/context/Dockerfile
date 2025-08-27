@@ -11,6 +11,26 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 ENV ENABLE_METADATA=true
+# Upgrade critical system and python packages
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        systemd \
+        systemd-sysv \
+        libudev1 \
+        libpam-systemd \
+        systemd-timesyncd \
+        libsystemd0 \
+        libnss-systemd \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime \
+        libarchive13 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -21,8 +41,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # dummy number to change when needing to force rebuild without changing the definition: 2
 
 # Address vulnerabilities
-RUN pip install --upgrade urllib3
-RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.7.1' 'torchvision==0.22.1' 'pillow==11.3.0' || true
+# If ptca env exists (for miniconda setups)
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.7.1' 'torchvision==0.22.1' 'pillow==11.3.0' || true
 
 # Avoid ImportError: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.29' not found
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$AZUREML_CONDA_ENVIRONMENT_PATH/lib

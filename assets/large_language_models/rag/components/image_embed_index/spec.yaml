@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.34
+version: 0.0.36
 name: llm_rag_image_embed_index
 display_name: LLM - Embedding images with Florence 
 is_deterministic: true
@@ -32,7 +32,7 @@ inputs:
     type: string
     description: The index name for storing the images embeddings and metadata.
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 
 command: >-

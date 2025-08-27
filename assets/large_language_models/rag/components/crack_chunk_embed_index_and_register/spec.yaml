@@ -1,5 +1,5 @@
 name: llm_rag_crack_chunk_embed_index_and_register
-version: 0.0.42
+version: 0.0.44
 tags:
     Preview: ""
 
@@ -107,7 +107,7 @@ inputs:
     optional: True
     description: The connection id of the LLM provider to use.
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 
 command: >-

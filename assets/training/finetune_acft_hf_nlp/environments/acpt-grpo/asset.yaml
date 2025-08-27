@@ -1,4 +1,4 @@
-name: acft-hf-nlp-grpo
+name: acft-group-relative-policy-optimization
 version: auto
 type: environment
 spec: spec.yaml
