@@ -1,11 +1,11 @@
 azure-core==1.35.0
 azure-ai-ml==1.28.1
-azure-identity==1.24.0
-azureml-evaluate-mlflow==0.0.79
+azure-identity==1.23.1
+azureml-evaluate-mlflow==0.0.77
 ffmpeg-python==0.2.0
 langcodes==3.5.0
-sentencepiece==0.2.1
-accelerate==1.10.1
+sentencepiece==0.2.0
+accelerate==1.9.0
 wget==3.2
 applicationinsights==0.11.10
 azureml-automl-core==1.60.0
@@ -13,7 +13,7 @@ azureml-telemetry==1.60.0
 #azureml-automl-dnn-vision==None
 pyarrow==14.0.2
 GitPython==3.1.45
-paramiko==4.0.0
+paramiko==3.5.1
 cryptography==44.0.2
 ####
 torch==2.7.1
@@ -32,4 +32,4 @@ scikit-learn==1.5.1
 mlflow==3.1.0
 mlflow-skinny==3.1.0
 marshmallow==3.23.2
-transformers==4.52.1
+transformers==4.53.0
