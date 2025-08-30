@@ -378,6 +378,9 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
     logger.info(f"Running the evaluators: {list(evaluators.keys())}")
     logger.info(f"With the model target {model_target} and dataMapping {data_mapping}")
 
+    user_agent = command_line_args.user_agent
+    logger.info(f"With the user agent {user_agent}")
+
     data = command_line_args.eval_data
     logger.info(f"Evaluation Data filename: {data}")
     if model_target:
@@ -392,6 +395,7 @@ def run_evaluation(command_line_args, evaluators, evaluator_config, model_target
         data=data,
         evaluators=evaluators,
         evaluator_config=evaluator_config if evaluator_config else None,
+        user_agent=user_agent
     )
     metrics = {}
     for metric_name, metric_value in results["metrics"].items():
@@ -432,6 +436,7 @@ parser.add_argument("--evaluators", type=str)
 parser.add_argument("--evaluator_name_id_map", type=str)
 parser.add_argument("--rai_evaluators", type=str, help="Comma-separated list of RAI evaluators", required=False)
 parser.add_argument("--eval_target", type=str, help="Optional evaluation target", required=False)
+parser.add_argument("--user_agent", type=str, help="User agent")
 
 args = parser.parse_args()
 
