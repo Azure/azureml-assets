@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment containing Azure SDK for Python v2
 
 name: "python-sdk-v2"
-version: "35"
+version: "36"
 
 build:
   path: "context"

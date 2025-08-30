@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20250810.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20250828.v1
 
 # Add Docker's official GPG key:
 RUN apt-get update && \

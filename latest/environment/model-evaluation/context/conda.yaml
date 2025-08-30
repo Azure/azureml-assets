@@ -26,7 +26,7 @@ dependencies:
   - statsmodels>=0.11.0,<0.14.1
   - lightgbm==4.6.0
   - msrest>=0.6.21,<0.7.1
-  - mltable==1.6.1
+  - mltable==1.6.2
   - openai==1.102.0
   - mldesigner==0.1.0b20
   - tiktoken
