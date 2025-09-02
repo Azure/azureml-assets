@@ -30,10 +30,13 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
 
 # Install azureml packages
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
-                'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-telemetry=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.6'
+
+RUN pip install 'azureml-telemetry' --no-deps \
+                'applicationinsights'
+
+RUN pip install 'https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai_tabular_automl/responsibleai_tabular_automl-0.15.2-py3-none-any.whl'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
