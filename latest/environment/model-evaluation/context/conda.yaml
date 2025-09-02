@@ -32,9 +32,9 @@ dependencies:
   - tiktoken
   - idna==3.7
   - pydantic
-  - mteb==1.38.49
+  - mteb==1.38.52
   - setuptools>=70.0.0
-  - cryptography==45.0.6
+  - cryptography==45.0.7
   # batch score dependencies
   - opencensus-ext-azure==1.1.15
   - StrEnum==0.4.15
