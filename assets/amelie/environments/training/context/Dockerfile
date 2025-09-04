@@ -11,7 +11,8 @@ RUN apt update && \
         libfuse3-3 \
         dos2unix \
         ca-certificates \
-        rsync && \
+        rsync \
+        strace && \
     wget -q https://github.com/Azure/azure-storage-fuse/releases/download/blobfuse2-2.5.0/blobfuse2-2.5.0-Ubuntu-22.04.x86_64.deb && \
     dpkg -i blobfuse2-2.5.0-Ubuntu-22.04.x86_64.deb || apt install -f -y && \
     rm -f blobfuse2-2.5.0-Ubuntu-22.04.x86_64.deb && \

@@ -124,7 +124,8 @@ if [[ -n "$SYMLINK_PAIRS" ]]; then
       continue
     fi
 
-    source="${source//\$AZUREML_CR_DATA_CAPABILITY_PATH/$AZUREML_CR_DATA_CAPABILITY_PATH}"
+    source="${source//\$AZUREML_CR_EXECUTION_WORKING_DIR_PATH/$AZUREML_CR_EXECUTION_WORKING_DIR_PATH}"
+    target="${target//\$AZUREML_CR_EXECUTION_WORKING_DIR_PATH/$AZUREML_CR_EXECUTION_WORKING_DIR_PATH}"
     
     if [[ ! -e "$source" ]]; then
       echo "Creating source directory $source"
@@ -152,8 +153,8 @@ touch "$MARKER_FILE"
 
 # Determine output directory
 OUTPUT_DIR="${OUTPUT_DIR:-outputs}"
-if [[ -n "$AZUREML_CR_DATA_CAPABILITY_PATH" ]]; then
-  OUTPUT_DIR="${OUTPUT_DIR//\$AZUREML_CR_DATA_CAPABILITY_PATH/$AZUREML_CR_DATA_CAPABILITY_PATH}"
+if [[ -n "$AZUREML_CR_EXECUTION_WORKING_DIR_PATH" ]]; then
+  OUTPUT_DIR="${OUTPUT_DIR//\$AZUREML_CR_EXECUTION_WORKING_DIR_PATH/$AZUREML_CR_EXECUTION_WORKING_DIR_PATH}"
 fi
 
 echo "Ouput directory: $OUTPUT_DIR"
@@ -176,11 +177,24 @@ EXIT_CODE=$?
 
 COPY_OUTPUTS="${COPY_OUTPUTS:-1}"
 if [[ "$COPY_OUTPUTS" == "1" ]]; then
+  # Default excludes
+  RSYNC_EXCLUDES=(
+    --exclude="__pycache__"
+    --exclude="azureml-logs"
+    --exclude="logs"
+    --exclude="user_logs"
+  )
+
+  # If COPY_EXCLUDES is set
+  if [[ -n "$COPY_EXCLUDES" ]]; then
+    IFS=';' read -ra EXCLUDES <<< "$COPY_EXCLUDES"
+    for e in "${EXCLUDES[@]}"; do
+      RSYNC_EXCLUDES+=(--exclude="$e")
+    done
+  fi
+
   rsync -av --delete --quiet \
-    --exclude="__pycache__" \
-    --exclude="azureml-logs" \
-    --exclude="logs" \
-    --exclude="user_logs" ./ /ws/ || true
+    "${RSYNC_EXCLUDES[@]}" ./ /ws/ || true
 fi
 
 mkdir -p "$OUTPUT_DIR"
