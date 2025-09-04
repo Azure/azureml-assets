@@ -1,0 +1,39 @@
+flavors:
+  python_function:
+    artifacts:
+      model_dir:
+        path: artifacts/boltz1_model_dir
+        uri: ./boltz1_model_dir
+    cloudpickle_version: 3.1.1
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.10.18
+    streamable: false
+is_signature_from_type_hint: false
+metadata:
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
+metadata:
+  conda_env_file: conda.yaml
+  disable_input_validation: true
+  model_version: boltz1
+  packaging_timestamp: '2025-09-02T21:16:58.786719'
+mlflow_version: 3.3.2
+model_id: null
+model_size_bytes: 3941212656
+model_uuid: ba5fb3f65f8143fcbe61ae988b268d12
+prompts: null
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "string", "name": "payload", "required": true}]'
+  outputs: '[{"type": "string", "name": "predictions", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-09-02 21:16:58.938165'
