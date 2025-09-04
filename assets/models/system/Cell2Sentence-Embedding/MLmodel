@@ -1,9 +1,24 @@
 flavors:
   python_function:
     artifacts:
-      model_dir:
-        path: artifacts/artifacts
-        uri: artifacts
+      config.json:
+        path: artifacts/config.json
+        uri: artifacts/config.json
+      generation_config.json:
+        path: artifacts/generation_config.json
+        uri: artifacts/generation_config.json
+      model.safetensors:
+        path: artifacts/model.safetensors
+        uri: artifacts/model.safetensors
+      special_tokens_map.json:
+        path: artifacts/special_tokens_map.json
+        uri: artifacts/special_tokens_map.json
+      tokenizer.json:
+        path: artifacts/tokenizer.json
+        uri: artifacts/tokenizer.json
+      tokenizer_config.json:
+        path: artifacts/tokenizer_config.json
+        uri: artifacts/tokenizer_config.json
     cloudpickle_version: 3.1.1
     code: code
     env:
@@ -11,14 +26,15 @@ flavors:
       virtualenv: python_env.yaml
     loader_module: mlflow.pyfunc.model
     python_model: python_model.pkl
-    python_version: 3.12.9
+    python_version: 3.12.11
     streamable: false
 is_signature_from_type_hint: false
 metadata:
   azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
-mlflow_version: 2.22.0
-model_size_bytes: 6489321256
-model_uuid: 390523dff8a24d95a37760ffd80f316f
+mlflow_version: 3.3.2
+model_id: null
+model_size_bytes: 1623492509
+model_uuid: 3f27bb255f0641ed8fc870d9f1952d98
 prompts: null
 saved_input_example_info:
   artifact_path: input_example.json
@@ -30,4 +46,4 @@ signature:
   outputs: '[{"type": "string", "name": "predictions", "required": true}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2025-08-01 23:30:46.930197'
+utc_time_created: '2025-09-03 18:37:25.395662'
