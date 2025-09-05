@@ -516,7 +516,7 @@ def confirm_model_validation_results(
 
     Args:
         latest_asset_config (assets.AssetConfig): asset config for latest model
-        validated_asset_config (assets.AssetConfig): asset cofig for validated model
+        validated_asset_config (assets.AssetConfig): asset config for validated model
 
     Returns:
         int: Number of errors.
@@ -1260,3 +1260,4 @@ if __name__ == '__main__':
                               added_files=added_files)
     if not success:
         sys.exit(1)
+
