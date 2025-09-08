@@ -16,7 +16,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-    - assetId: azureml://registries/azureml/models/openai-whisper-tiny-generic-cpu/versions/1
+    - assetId: azureml://registries/azure-openai/models/whisper/versions/001
   variantMetadata:
     modelType: ONNX
     quantization:
