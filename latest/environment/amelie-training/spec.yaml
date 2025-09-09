@@ -6,7 +6,7 @@ description: >-
   of use for Microsoft Azure Previews (https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).
 
 name: "amelie-training"
-version: "3"
+version: "4"
 
 build:
   path: "context"

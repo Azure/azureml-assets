@@ -10,7 +10,7 @@ dependencies:
   - azure-ai-ml==1.29.0
   - azureml-core==1.60.0.post1
   - azureml-telemetry==1.60.0
-  - mltable==1.6.2
+  - mltable==1.6.3
   - azureml-automl-core==1.60.0
   - rouge-score>=0.1.2
   - nltk>=3.9.1
