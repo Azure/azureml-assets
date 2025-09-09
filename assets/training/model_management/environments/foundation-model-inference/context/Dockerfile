@@ -55,6 +55,3 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
 EXPOSE 5001
 CMD [ "runsvdir", "/var/runit" ]
-
-
-
