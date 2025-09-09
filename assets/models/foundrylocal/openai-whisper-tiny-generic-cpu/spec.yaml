@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-tiny-generic-cpu
 path: ./
 tags:
-  foundryLocal: ""
+  foundryLocal: "test"
   license: apache-2.0
   licenseDescription: "This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html."
   author: Microsoft
