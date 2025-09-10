@@ -3,6 +3,7 @@
 
 """Tests running a sample job in the responsibleai 0.22 environment."""
 import os
+import pytest
 import time
 from pathlib import Path
 from azure.ai.ml import MLClient
@@ -30,7 +31,8 @@ def verify_if_command_job_completed(ml_client, command_job):
         current_status = ml_client.jobs.get(command_job.name).status
         if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
             break
-        time.sleep(30)  # sleep 30 seconds
+        # sleep 30 seconds
+        time.sleep(30)
 
     if current_status == JobStatus.FAILED:
         ml_client.jobs.download(command_job.name)
@@ -68,7 +70,8 @@ def test_responsibleai():
 
     # create the command
     job = command(
-        code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
+        # local path where the code is stored
+        code=this_dir / JOB_SOURCE_CODE,
         command="python main.py --diabetes-csv ${{inputs.diabetes}}",
         inputs={
             "diabetes": Input(
@@ -88,6 +91,7 @@ def test_responsibleai():
     verify_if_command_job_completed(ml_client, returned_job)
 
 
+@pytest.mark.skip('Disabled until automl.regression() is fixed from sdk.')
 def test_responsibleai_automl_regression():
     """Tests a sample automl job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent
@@ -130,7 +134,7 @@ def test_responsibleai_automl_regression():
     # Submit the AutoML job
     returned_job = ml_client.jobs.create_or_update(
         regression_job
-    )  # submit the job to the backend
+    )
 
     print(f"Created job: {returned_job}")
     assert returned_job is not None
@@ -148,7 +152,8 @@ def test_responsibleai_automl_regression():
 
     # create the command
     job = command(
-        code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
+        # local path where the code is stored
+        code=this_dir / JOB_SOURCE_CODE,
         command="python automl_submit_rai_run.py --automl_parent_run_id {0} --automl_child_run_id {1}".format(
             returned_job.name, returned_job.name + "_0"),
         environment=f"{env_name}@latest",
@@ -163,6 +168,7 @@ def test_responsibleai_automl_regression():
     verify_if_command_job_completed(ml_client, returned_job)
 
 
+@pytest.mark.skip('Disabled until automl.classification() is fixed from sdk.')
 def test_responsibleai_automl_classification():
     """Tests a sample automl job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent
@@ -205,7 +211,7 @@ def test_responsibleai_automl_classification():
     # Submit the AutoML job
     returned_job = ml_client.jobs.create_or_update(
         classification_job
-    )  # submit the job to the backend
+    )
 
     print(f"Created job: {returned_job}")
     assert returned_job is not None
