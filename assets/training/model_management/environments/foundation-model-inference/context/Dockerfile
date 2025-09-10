@@ -42,7 +42,9 @@ RUN pip install llm-optimized-inference==0.2.38 --no-cache-dir
 RUN pip install --no-cache-dir torch==2.7.1
 
 # Direct pip install from URL; avoids temporary file
-RUN pip install --no-cache-dir https://automlsamplenotebookdata.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
+# RUN pip install --no-cache-dir https://automlsamplenotebookdata.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
+
+RUN pip install --no-cache-dir flash-attn==2.7.4.post1
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
