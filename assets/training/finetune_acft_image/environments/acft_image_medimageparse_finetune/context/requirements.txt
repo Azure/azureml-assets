@@ -2,7 +2,6 @@ numpy==1.26.4
 pandas==2.2.2
 hydra-core==1.3.2
 marshmallow==3.14.0
-azure-ai-ml==1.16.1
 azure-identity==1.16.1
 mlflow-skinny==2.13.2
 azureml-mlflow==1.56.0
