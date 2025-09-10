@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/inference-base-2204@sha256:f4a7182eb16a0c71dfbad3c8de484af8e70fece00743761431d17e207b0af721
+FROM mcr.microsoft.com/azureml/inference-base-2204:20250908.v1
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/mlflow
