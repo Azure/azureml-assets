@@ -1,0 +1,17 @@
+Whisper is an OpenAI pre-trained speech recognition model with potential applications for ASR solutions for developers. However, due to weak supervision and large-scale noisy data, it should be used with caution in high-risk domains. The model has been trained on 680k hours of audio data representing 98 different languages, leading to improved robustness and accuracy compared to existing ASR systems. However, there are disparities in performance across languages and the model is prone to generating repetitive texts, which may increase in low-resource languages. There are dual-use concerns and real economic implications with such performance disparities, and the model may also have the capacity to recognize specific individuals. The affordable cost of automatic transcription and translation of large volumes of audio communication is a potential benefit, but the cost of transcription may limit the expansion of surveillance projects.
+
+The tiny model is the smallest variant in the Whisper family, offering faster inference times with reduced accuracy compared to larger models, making it suitable for resource-constrained environments and real-time applications where speed is prioritized over precision.
+
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/openai/whisper-tiny" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+This model is an optimized version of OpenAI-whisper-tiny to enable local inference on CPUs. This model uses RTN quantization.
+
+# Model Description
+- **Developed by:** OpenAI
+- **Model type:** apache-2.0
+- **License:** Apache license 2.0
+- **Model Description:** This is a conversion of the OpenAI-whisper-tiny for local inference on CPUs.
+- **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+# Base Model Information
+See Hugging Face model [OpenAI-whisper-tiny](https://huggingface.co/openai/whisper-tiny) for details.
