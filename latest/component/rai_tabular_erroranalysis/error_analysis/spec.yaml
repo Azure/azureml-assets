@@ -3,7 +3,7 @@ name: rai_tabular_erroranalysis
 display_name: Add Error Analysis to RAI Insights Dashboard
 description: Add Error Analysis to RAI Insights Dashboard [Learn 
   More](https://aka.ms/RAIComponents)
-version: 0.20.0
+version: 0.21.0
 type: command
 
 inputs:
@@ -29,7 +29,7 @@ outputs:
 code: ../src/
 
 environment: 
-  azureml://registries/azureml/environments/responsibleai-tabular/versions/24
+  azureml://registries/azureml/environments/responsibleai-tabular/versions/26
 
 command: >-
   python create_error_analysis.py
@@ -39,3 +39,5 @@ command: >-
   --min_child_samples ${{inputs.min_child_samples}}
   --filter_features '${{inputs.filter_features}}'
   --error_analysis_path ${{outputs.error_analysis}}
+  --component_name rai_tabular_erroranalysis
+  --component_version 0.21.0

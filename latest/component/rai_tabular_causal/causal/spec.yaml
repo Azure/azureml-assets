@@ -3,7 +3,7 @@ name: rai_tabular_causal
 display_name: Add Causal to RAI Insights Dashboard
 description: Add Causal to RAI Insights Dashboard [Learn 
   More](https://aka.ms/RAIComponents)
-version: 0.20.0
+version: 0.21.0
 type: command
 
 inputs:
@@ -60,7 +60,7 @@ outputs:
 code: ../src/
 
 environment: 
-  azureml://registries/azureml/environments/responsibleai-tabular/versions/24
+  azureml://registries/azureml/environments/responsibleai-tabular/versions/26
 
 command: >-
   python create_causal.py
@@ -79,3 +79,5 @@ command: >-
   --verbose ${{inputs.verbose}}
   --random_state '${{inputs.random_state}}'
   --causal_path ${{outputs.causal}}
+  --component_name rai_tabular_causal
+  --component_version 0.21.0

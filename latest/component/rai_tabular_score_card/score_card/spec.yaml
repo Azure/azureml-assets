@@ -3,7 +3,7 @@ name: rai_tabular_score_card
 display_name: Generate rai insight score card (Public preview)
 description: Generate rai insight score card [Learn 
   More](https://aka.ms/RAIComponents)
-version: 0.20.0
+version: 0.21.0
 type: command
 
 inputs:
@@ -19,7 +19,7 @@ outputs:
     type: path
 
 environment: 
-  azureml://registries/azureml/environments/responsibleai-tabular/versions/24
+  azureml://registries/azureml/environments/responsibleai-tabular/versions/26
 
 code: ../src/
 
@@ -29,3 +29,5 @@ command: >-
   --pdf_generation_config ${{inputs.pdf_generation_config}}
   $[[--predefined_cohorts_json ${{inputs.predefined_cohorts_json}}]]
   --pdf_output_path ${{outputs.scorecard}}
+  --component_name rai_tabular_score_card
+  --component_version 0.21.0

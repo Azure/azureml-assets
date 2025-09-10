@@ -3,7 +3,7 @@ name: rai_tabular_insight_constructor
 display_name: RAI Insights Dashboard Constructor
 description: RAI Insights Dashboard Constructor [Learn 
   More](https://aka.ms/RAIComponents)
-version: 0.20.0
+version: 0.21.0
 type: command
 inputs:
   title:
@@ -46,7 +46,7 @@ outputs:
     type: path
 code: ../src/
 environment: 
-  azureml://registries/azureml/environments/responsibleai-tabular/versions/24
+  azureml://registries/azureml/environments/responsibleai-tabular/versions/26
 command: >-
   python create_rai_insights.py
   --title '${{inputs.title}}'
@@ -63,3 +63,5 @@ command: >-
   --feature_metadata '${{inputs.feature_metadata}}'
   --use_model_dependency ${{inputs.use_model_dependency}}
   --output_path ${{outputs.rai_insights_dashboard}}
+  --component_name rai_tabular_insight_constructor
+  --component_version 0.21.0
