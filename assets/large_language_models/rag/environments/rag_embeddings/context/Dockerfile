@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu24.04:latest
 
 # Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/rag-embeddings
@@ -24,6 +24,24 @@ RUN set -eux; \
     # Update system packages to fix PAM vulnerability (USN-7580-1)
     apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
+    cpp-11=11.4.0-1ubuntu1~22.04.2 \
+    libtsan0=11.4.0-1ubuntu1~22.04.2 \
+    libstdc++-11-dev=11.4.0-1ubuntu1~22.04.2 \
+    gcc-11=11.4.0-1ubuntu1~22.04.2 \
+    libgcc-11-dev=11.4.0-1ubuntu1~22.04.2 \
+    g++-11=11.4.0-1ubuntu1~22.04.2 \
+    libasan6=11.4.0-1ubuntu1~22.04.2 \
+    gcc-11-base=11.4.0-1ubuntu1~22.04.2 \
+    libquadmath0=12.3.0-1ubuntu1~22.04.2 \
+    libstdc++6=12.3.0-1ubuntu1~22.04.2 \
+    libatomic1=12.3.0-1ubuntu1~22.04.2 \
+    liblsan0=12.3.0-1ubuntu1~22.04.2 \
+    libubsan1=12.3.0-1ubuntu1~22.04.2 \
+    libcc1-0=12.3.0-1ubuntu1~22.04.2 \
+    libgcc-s1=12.3.0-1ubuntu1~22.04.2 \
+    libgomp1=12.3.0-1ubuntu1~22.04.2 \
+    gcc-12-base=12.3.0-1ubuntu1~22.04.2 \
+    libitm1=12.3.0-1ubuntu1~22.04.2 \
     # utilities for keeping Debian and OpenJDK CA certificates in sync
     ca-certificates p11-kit wget \
     ; \
