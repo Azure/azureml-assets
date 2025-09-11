@@ -1,0 +1,12 @@
+image:
+  name: azureml/curated/amelie-inference
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
