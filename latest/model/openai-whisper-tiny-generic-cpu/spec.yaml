@@ -9,7 +9,7 @@ tags:
   author: Microsoft
   inputModalities: text
   outputModalities: text
-  task: automatic speech recognition
+  task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-tiny
   directoryPath: openai-whisper-tiny-generic-cpu
