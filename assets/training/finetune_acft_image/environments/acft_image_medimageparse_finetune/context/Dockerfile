@@ -7,4 +7,4 @@ COPY requirements.txt .
 RUN pip install azureml_acft_common_components
 RUN pip install azureml_acft_image_components[mip] --no-dependencies
 RUN pip install -r requirements.txt --no-cache-dir
-RUN python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
+RUN python -m pip install 'git+https://github.com/facebookresearch/detectron2.git@a1ce2f9'
