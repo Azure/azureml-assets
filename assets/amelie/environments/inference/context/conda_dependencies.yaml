@@ -1,0 +1,29 @@
+name: minimal
+channels:
+- conda-forge
+- anaconda
+dependencies:
+- python=3.11
+- pip=24.0
+- pip:
+  - azureml-defaults==1.60.0
+  - azureml-inference-server-http==1.5.0
+  - azure-storage-blob==12.26.0
+  - azure-identity==1.24.0
+  - numpy
+  - joblib==1.5.2
+  - transformers==4.44.2
+  - accelerate==0.33.0
+  - torch==2.2.0
+  - tensorflow==2.17.0
+  - pandas==2.1.4
+  - numpy
+  - scikit-learn==1.2.2
+  - scipy==1.11.4
+  - lightgbm==4.5.0
+  - opencv-python==4.10.0.84
+  - keras==3.5.0
+  - matplotlib==3.9.2
+  - pydicom==2.4.4
+  - xgboost==2.1.1
+  - ansible-core~=2.17.0
