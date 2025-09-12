@@ -4,7 +4,11 @@ USER root
 RUN apt-get -y update
 
 COPY requirements.txt .
-RUN pip install azureml_acft_common_components
-RUN pip install azureml_acft_image_components[mip] --no-dependencies
-RUN pip install -r requirements.txt --no-cache-dir
-RUN python -m pip install 'git+https://github.com/facebookresearch/detectron2.git@a1ce2f9'
+
+# Seed modern numpy
+RUN pip install numpy==1.26.4
+
+# Install azureml-automl-core without build isolation so it uses already-installed numpy
+RUN pip install --no-build-isolation azureml-automl-core==1.60.0 
+
+RUN pip install -r requirements.txt
