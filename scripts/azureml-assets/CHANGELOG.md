@@ -2,6 +2,10 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.90 (2025-09-12)
+### 🚀 New Features
+- [#4434](https://github.com/Azure/azureml-assets/pull/4434) Support system_metadata by using the SDK for model create and update
+
 ## 1.16.89 (2025-08-18)
 ### 🐛 Bugs Fixed
 - [#4391](https://github.com/Azure/azureml-assets/pull/4391) Pass in correct uri to LocalAssetPath from ModelConfig

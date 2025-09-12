@@ -459,6 +459,11 @@ class Spec(Config):
         """Asset properties."""
         return self._yaml.get('properties', {})
 
+    @property
+    def system_metadata(self) -> Dict[str, str]:
+        """Asset system metadata."""
+        return self._yaml.get('system_metadata', {})
+
 
 class AssetPath:
     """Asset path."""
