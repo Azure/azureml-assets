@@ -31,6 +31,8 @@ _ai_logger = None
 _module_name = DEFAULT_MODULE_NAME
 _module_version = DEFAULT_MODULE_VERSION
 
+# dummy change to trigger component test pipeline
+
 
 def _get_logger():
     global _ai_logger
