@@ -464,6 +464,7 @@ class Spec(Config):
         """Asset system metadata."""
         return self._yaml.get('system_metadata', {})
 
+
 class AssetPath:
     """Asset path."""
 

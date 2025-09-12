@@ -406,6 +406,7 @@ def create_asset_cli(
         return False
     return True
 
+
 def create_asset_sdk(
     ml_client: MLClient,
     asset: AssetConfig
@@ -414,12 +415,12 @@ def create_asset_sdk(
     try:
         model = load_model(source=asset.spec_with_path)
         ml_client.models.create_or_update(model)
-
     except Exception as e:
         redacted_err = sanitize_output(str(e))
         logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
         return False
     return True
+
 
 def get_asset_versions(
     asset_type: str,
