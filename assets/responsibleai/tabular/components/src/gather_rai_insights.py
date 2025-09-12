@@ -9,43 +9,69 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
+import mlflow
 import numpy as np
-from azureml.core import Run
-from azureml.rai.utils.telemetry import LoggerFactory, track
-from constants import (COMPONENT_NAME, MLFLOW_MODEL_SERVER_PORT, DashboardInfo,
-                       RAIToolType)
-from rai_component_utilities import (add_properties_to_gather_run,
-                                     copy_insight_to_raiinsights,
-                                     create_rai_insights_from_port_path,
-                                     create_rai_tool_directories,
-                                     default_json_handler,
-                                     load_dashboard_info_file, print_dir_tree)
-from responsibleai.serialization_utilities import serialize_json_safe
+from rai_component_utilities import ensure_shim
 
-from responsibleai import RAIInsights
+ensure_shim()
+from azureml.rai.utils.telemetry import LoggerFactory, track  # noqa: E402
+from constants import (COMPONENT_NAME, MLFLOW_MODEL_SERVER_PORT,  # noqa: E402
+                       DashboardInfo, PropertyKeyValues, RAIToolType)
+from rai_component_utilities import add_properties_to_gather_run  # noqa: E402
+from rai_component_utilities import copy_insight_to_raiinsights  # noqa: E402
+from rai_component_utilities import \
+    create_rai_insights_from_port_path  # noqa: E402
+from rai_component_utilities import create_rai_tool_directories  # noqa: E402
+from rai_component_utilities import default_json_handler  # noqa: E402
+from rai_component_utilities import load_dashboard_info_file  # noqa: E402
+from rai_component_utilities import print_dir_tree  # noqa: E402
+from responsibleai.serialization_utilities import \
+    serialize_json_safe  # noqa: E402
+
+from responsibleai import RAIInsights  # noqa: E402
+from responsibleai import __version__ as responsibleai_version  # noqa: E402
 
 _DASHBOARD_CONSTRUCTOR_MISMATCH = (
     "Insight {0} was not " "computed from the constructor specified"
 )
 _DUPLICATE_TOOL = "Insight {0} is of type {1} which is already present"
 
+DEFAULT_MODULE_NAME = "rai_gather_insights"
+DEFAULT_MODULE_VERSION = "0.0.0"
 
 _logger = logging.getLogger(__file__)
 _ai_logger = None
+_module_name = DEFAULT_MODULE_NAME
+_module_version = DEFAULT_MODULE_VERSION
 
 
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        run = Run.get_context()
-        module_name = run.properties["azureml.moduleName"]
-        module_version = run.properties["azureml.moduleid"]
         _ai_logger = LoggerFactory.get_logger(
-            __file__, module_name, module_version, COMPONENT_NAME)
+            __file__, _module_name, _module_version, COMPONENT_NAME)
     return _ai_logger
 
 
-_get_logger()
+def add_properties_to_gather_run_rai_insights(
+    dashboard_info: Dict[str, str], tool_present_dict: Dict[str, str]
+):
+    """Local wrapper for the common add_properties_to_gather_run function."""
+    run_properties = {
+        PropertyKeyValues.RAI_INSIGHTS_TYPE_KEY: PropertyKeyValues.RAI_INSIGHTS_TYPE_GATHER,
+        PropertyKeyValues.RAI_INSIGHTS_RESPONSIBLEAI_VERSION_KEY: responsibleai_version,
+        PropertyKeyValues.RAI_INSIGHTS_MODEL_ID_KEY: dashboard_info[
+            DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY
+        ],
+        PropertyKeyValues.RAI_INSIGHTS_DASHBOARD_ID_KEY: dashboard_info[
+            DashboardInfo.RAI_INSIGHTS_RUN_ID_KEY
+        ],
+    }
+
+    # Call the common function
+    add_properties_to_gather_run(
+        dashboard_info, run_properties, tool_present_dict, _module_name, _module_version
+    )
 
 
 def parse_args():
@@ -59,6 +85,10 @@ def parse_args():
     parser.add_argument("--insight_4", type=str, default=None)
     parser.add_argument("--dashboard", type=str, required=True)
     parser.add_argument("--ux_json", type=str, required=True)
+
+    # Component info
+    parser.add_argument("--component_name", type=str, required=True)
+    parser.add_argument("--component_version", type=str, required=True)
 
     # parse args
     args = parser.parse_args()
@@ -74,9 +104,7 @@ def main(args):
 
     with tempfile.TemporaryDirectory() as incoming_temp_dir:
         incoming_dir = Path(incoming_temp_dir)
-
-        my_run = Run.get_context()
-        rai_temp = create_rai_insights_from_port_path(my_run, args.constructor)
+        rai_temp = create_rai_insights_from_port_path(args.constructor)
 
         # We need to fix the following issue in RAIInsights.
         # When using the served model wrapper, predictions (currently
@@ -155,8 +183,17 @@ def main(args):
 
         rai_i.save(args.dashboard)
 
+        # Get MLflow run ID
+        current_run = mlflow.active_run()
+        if current_run is not None:
+            run_id = current_run.info.run_id
+        else:
+            # Fallback to starting a new run if no active run
+            with mlflow.start_run() as run:
+                run_id = run.info.run_id
+
         # update dashboard info with gather job run id and write
-        dashboard_info[DashboardInfo.RAI_INSIGHTS_GATHER_RUN_ID_KEY] = str(my_run.id)
+        dashboard_info[DashboardInfo.RAI_INSIGHTS_GATHER_RUN_ID_KEY] = run_id
         output_file = os.path.join(
             args.dashboard, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
         )
@@ -173,7 +210,7 @@ def main(args):
             json.dump(rai_dict, json_file)
         _logger.info("Dashboard JSON written")
 
-        add_properties_to_gather_run(dashboard_info, included_tools)
+        add_properties_to_gather_run_rai_insights(dashboard_info, included_tools)
         _logger.info("Processing completed")
 
 
@@ -185,6 +222,11 @@ if __name__ == "__main__":
 
     # parse args
     args = parse_args()
+    print("Arguments parsed successfully")
+    print(args)
+    _module_name = args.component_name
+    _module_version = args.component_version
+    _get_logger()
 
     # run main function
     main(args)
