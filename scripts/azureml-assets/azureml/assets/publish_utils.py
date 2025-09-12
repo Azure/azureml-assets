@@ -51,7 +51,7 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
-        # Preserve system_metadata due to SDK bug
+        # Preserve system_metadata due to SDK bug (_to_dict() doesn't include it)
         if asset._system_metadata:
             asset_dict["system_metadata"] = asset._system_metadata
         util.dump_yaml(asset_dict, spec_path)
