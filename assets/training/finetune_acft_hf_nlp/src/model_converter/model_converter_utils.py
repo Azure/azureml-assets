@@ -167,6 +167,7 @@ def load_and_merge_peft_lora_model(
     load_model_kwargs.update(ft_config.get("load_model_kwargs", {}))
     # pop any optimizations related parameters
     load_model_kwargs.pop("attn_implementation", None)
+    load_model_kwargs.pop("use_flash_attention_2", None)
     logger.info(f"Loading model with kwargs: {load_model_kwargs}")
     logger.info(f"Loading model from {model_path.lower()}")
     model_type = getattr(component_args, "model_type", "")
