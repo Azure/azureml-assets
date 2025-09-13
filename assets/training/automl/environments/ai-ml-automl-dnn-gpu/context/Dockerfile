@@ -125,5 +125,7 @@ RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' |
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \
     pip install 'numpy==1.26.4' --force-reinstall && \
     /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
