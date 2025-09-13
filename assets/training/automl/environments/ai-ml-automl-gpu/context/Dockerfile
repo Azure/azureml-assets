@@ -101,9 +101,12 @@ RUN pip install \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
 
+RUN pip install --upgrade 'h2>=4.3.0'
 # Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0'
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0'|| true
-RUN /azureml-envs/azureml-automl-dnn-gpu/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' || true
+RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'|| true
+RUN /azureml-envs/azureml-automl-dnn-gpu/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0' || true
+RUN conda clean --all -y
+RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
