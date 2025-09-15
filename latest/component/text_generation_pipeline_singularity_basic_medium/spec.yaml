@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline_singularity_basic_medium
-version: 0.0.79
+version: 0.0.80
 type: pipeline
 display_name: Text Generation Pipeline Singularity Basic Medium
 description: Pipeline component for text generation
@@ -587,7 +587,7 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.78
+    component: azureml:ft_nlp_common_validation:0.0.79
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -630,7 +630,7 @@ jobs:
       auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
   text_generation_model_import:
     type: command
-    component: azureml:text_generation_model_import:0.0.78
+    component: azureml:text_generation_model_import:0.0.79
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -647,7 +647,7 @@ jobs:
       system_properties: '${{parent.inputs.system_properties}}'
   text_generation_datapreprocess:
     type: command
-    component: azureml:text_generation_datapreprocess:0.0.78
+    component: azureml:text_generation_datapreprocess:0.0.79
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -672,7 +672,7 @@ jobs:
       system_properties: '${{parent.inputs.system_properties}}'
   text_generation_finetune:
     type: command
-    component: azureml:text_generation_finetune:0.0.78
+    component: azureml:text_generation_finetune:0.0.79
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -734,7 +734,7 @@ jobs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:ft_nlp_model_converter:0.0.78
+    component: azureml:ft_nlp_model_converter:0.0.79
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'

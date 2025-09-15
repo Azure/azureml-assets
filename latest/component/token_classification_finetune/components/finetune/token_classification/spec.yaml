@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: token_classification_finetune
-version: 0.0.78
+version: 0.0.79
 type: command
 
 is_deterministic: false
