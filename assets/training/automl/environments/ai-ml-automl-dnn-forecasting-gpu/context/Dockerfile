@@ -95,3 +95,5 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 # Fix vulnerabilities
 RUN pip install --upgrade urllib3
 RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN rm -rf /opt/miniconda/pkgs/
