@@ -109,4 +109,6 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN rm -rf /opt/conda/pkgs/
 # end pip install
