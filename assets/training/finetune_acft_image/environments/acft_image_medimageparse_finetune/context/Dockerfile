@@ -5,10 +5,4 @@ RUN apt-get -y update
 
 COPY requirements.txt .
 
-# Seed modern numpy
-RUN pip install numpy==1.26.4
-
-# Install azureml-automl-core without build isolation so it uses already-installed numpy
-RUN pip install --no-build-isolation azureml-automl-core==1.60.0 
-
 RUN pip install -r requirements.txt
