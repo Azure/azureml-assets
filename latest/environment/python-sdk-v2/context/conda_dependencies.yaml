@@ -7,7 +7,7 @@ dependencies:
   - pip:
     - azure-ai-ml==1.29.0
     - azure-identity==1.25.0
-    - cryptography==45.0.7
+    - cryptography==46.0.0
     - certifi==2025.8.3
     - urllib3==2.5.0
     - paramiko==4.0.0

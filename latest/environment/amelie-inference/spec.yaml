@@ -6,7 +6,7 @@ description: >-
   terms of use for Microsoft Azure Previews (https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).
 
 name: "amelie-inference"
-version: "1"
+version: "2"
 
 build:
   path: "context"
