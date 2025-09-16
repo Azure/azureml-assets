@@ -1,5 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-0.5b-instruct-amd-npu
+version: 1
 path: ./
 tags:
   foundryLocal: "test"
