@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: qwen2.5-0.5b-instruct-amd-npu
+name: qwen2.5-0.5b-instruct-vitis-npu
 version: 1
 path: ./
 tags:
