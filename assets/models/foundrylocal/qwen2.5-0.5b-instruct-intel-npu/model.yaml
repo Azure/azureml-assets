@@ -1,6 +1,6 @@
 path:
-  container_name: amd-npu-models
-  container_path: AMD_NPU_LLM_Models/Qwen2.5-0.5B-Instruct-vai
+  container_name: intel-npu-models
+  container_path: Qwen2.5-0.5B-Instruct_context_ov_dynamic_sym_bkp_int8_sym_r1/model
   storage_name: sunghchostorageaccount
   type: azureblob
 publish:
