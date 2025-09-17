@@ -34,7 +34,7 @@ dependencies:
   - pydantic
   - mteb==1.38.54
   - setuptools>=70.0.0
-  - cryptography==46.0.0
+  - cryptography==46.0.1
   # batch score dependencies
   - opencensus-ext-azure==1.1.15
   - StrEnum==0.4.15
