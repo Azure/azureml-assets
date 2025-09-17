@@ -3,7 +3,6 @@
 
 """Tests running a sample job in the responsibleai 0.22 environment."""
 import os
-import pytest
 import time
 from pathlib import Path
 from azure.ai.ml import MLClient
@@ -91,7 +90,6 @@ def test_responsibleai():
     verify_if_command_job_completed(ml_client, returned_job)
 
 
-@pytest.mark.skip('Disabled until automl.regression() is fixed from sdk.')
 def test_responsibleai_automl_regression():
     """Tests a sample automl job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent
@@ -168,7 +166,6 @@ def test_responsibleai_automl_regression():
     verify_if_command_job_completed(ml_client, returned_job)
 
 
-@pytest.mark.skip('Disabled until automl.classification() is fixed from sdk.')
 def test_responsibleai_automl_classification():
     """Tests a sample automl job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent

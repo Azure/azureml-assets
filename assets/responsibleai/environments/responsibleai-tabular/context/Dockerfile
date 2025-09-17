@@ -47,6 +47,7 @@ RUN pip install 'cryptography>=43.0.1'
 RUN pip install 'rai-core-flask==0.7.6'
 
 # To resolve vulnerability issue
+RUN pip install 'mlflow>=3.1.0,<3.1.2'
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
