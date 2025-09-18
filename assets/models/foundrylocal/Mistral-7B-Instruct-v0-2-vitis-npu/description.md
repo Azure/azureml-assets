@@ -1,4 +1,4 @@
-This model is an optimized version of Mistral-7B-Instruct-v0.2 to enable local inference on AMD NPUs. This model uses RTN quantization.
+This model is an optimized version of Mistral-7B-Instruct-v0.2 to enable local inference on AMD NPUs.
 
 # Model Description
 - **Developed by:** Microsoft
