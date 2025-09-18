@@ -29,9 +29,16 @@ apt-get install -y --only-upgrade \
     libpam0g \
     libpam-modules \
     libpam-modules-bin \
-    libpam-runtime && \
-apt-get clean && \
-rm -rf /var/lib/apt/lists/*
+    libpam-runtime
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cmake \
+        libboost-dev \
+        libboost-system-dev \
+        libboost-filesystem-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 
 # begin conda create
@@ -97,3 +104,4 @@ RUN pip install --upgrade urllib3
 RUN pip install torch==2.7.1 torchvision==0.22.1
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/
+
