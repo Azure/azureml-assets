@@ -1,8 +1,0 @@
-path:
-  container_name: amd-npu-models
-  container_path: AMD_NPU_LLM_Models/DeepSeek-R1-Distill-Llama-8B-vai
-  storage_name: sunghchostorageaccount
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model
