@@ -10,7 +10,7 @@ FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 AS inferencin
 
 # DisableDockerDetector "Preferred to use nvidia registry over MCR mirror"
 
-FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+FROM nvcr.io/nvidia/cuda:13.0.1-cudnn-devel-ubuntu22.04
 
 USER root:root
 
