@@ -207,12 +207,14 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
 RUN pip install --upgrade \
         requests==2.32.4 \
         urllib3==2.5.0 && \
+		h2>=4.3.0 \
     $CONDA_PREFIX/bin/pip install --upgrade \
         requests==2.32.4 \
         urllib3==2.5.0 \
         protobuf==4.25.8 \
         pillow==11.3.0 \
-        flask-cors==6.0.0
+        flask-cors==6.0.0 \
+		h2>=4.3.0
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
