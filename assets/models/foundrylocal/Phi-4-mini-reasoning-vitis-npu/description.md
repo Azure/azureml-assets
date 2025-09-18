@@ -1,5 +1,4 @@
-This model is an optimized version of Phi-4-mini-reasoning to enable local inference on AMD NPUs. This model uses QuaRot and GPTQ quantization.
-
+This model is an optimized version of Phi-4-mini-reasoning to enable local inference on AMD NPUs.
 # Model Description
 - **Developed by:** Microsoft
 - **Model type:** ONNX

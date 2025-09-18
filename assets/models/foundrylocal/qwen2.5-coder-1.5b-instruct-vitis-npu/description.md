@@ -1,4 +1,4 @@
-This model is an optimized version of Qwen2.5-Coder-1.5B-Instruct to enable local inference on AMD NPUs. This model uses RTN quantization.
+This model is an optimized version of Qwen2.5-Coder-1.5B-Instruct to enable local inference on AMD NPUs.
 
 # Model Description
 - **Developed by:** Microsoft
