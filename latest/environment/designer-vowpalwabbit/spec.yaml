@@ -4,7 +4,7 @@ description: >-
   AzureML Designer VowpalWabbit image
 
 name: "designer-vowpalwabbit"
-version: "88"
+version: "89"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"

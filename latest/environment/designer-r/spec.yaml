@@ -4,7 +4,7 @@ description: >-
   AzureML Designer R image
 
 name: "designer-r"
-version: "109"
+version: "110"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
