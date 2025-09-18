@@ -1,2 +1,2 @@
-azureml_acft_common_components==0.0.79
-azureml-acft-contrib-hf-nlp==0.0.79
+azureml_acft_common_components==0.0.80
+azureml-acft-contrib-hf-nlp==0.0.80
