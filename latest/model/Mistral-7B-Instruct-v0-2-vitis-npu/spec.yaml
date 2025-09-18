@@ -1,0 +1,43 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Mistral-7B-Instruct-v0-2-vitis-npu
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+  license: "apache-2.0"
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://www.apache.org/licenses/LICENSE-2.0.html>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+  alias: mistral-7b-v0.2
+  directoryPath: mistralai_Mistral-7B-Instruct-v0.2
+  promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\"\
+    , \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"\
+    }"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: 
+      azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/6
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'npu'
+    executionProvider: 'VitisAIExecutionProvider'
+    fileSizeBytes: 4370129223
+    vRamFootprintBytes: 4382250762
+description: |
+  This model is an optimized version of Mistral-7B-Instruct-v0.2 to enable local inference on AMD NPUs.
+
+  # Model Description
+  - **Developed by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** apache-2.0
+  - **Model Description:** This is a conversion of the Mistral-7B-Instruct-v0.2 for local inference on AMD NPUs.
+  - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+  # Base Model Information
+  See Hugging Face model [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) for details.

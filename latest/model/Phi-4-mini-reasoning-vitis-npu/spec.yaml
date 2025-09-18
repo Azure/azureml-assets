@@ -1,0 +1,42 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: Phi-4-mini-reasoning-vitis-npu
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+  license: "MIT"
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://huggingface.co/microsoft/Phi-4-mini-reasoning/blob/main/LICENSE>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+  alias: phi-4-mini-reasoning
+  directoryPath: Phi-4-mini-reasoning-vai
+  promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed
+    by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\"\
+    : \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
+    }"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/Phi-4-mini-reasoning/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['QuaRot', 'GPTQ']
+    device: 'npu'
+    executionProvider: 'VitisAIExecutionProvider'
+    fileSizeBytes: 2982936576
+    vRamFootprintBytes: 1749486141
+description: |-
+  This model is an optimized version of Phi-4-mini-reasoning to enable local inference on AMD NPUs.
+  # Model Description
+  - **Developed by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** MIT
+  - **Model Description:** This is a conversion of the Phi-4-mini-reasoning for local inference on AMD NPUs.
+  - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+  # Base Model Information
+  See Hugging Face model [Phi-4-mini-reasoning](https://huggingface.co/microsoft/Phi-4-mini-reasoning) for details.
