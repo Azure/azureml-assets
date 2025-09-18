@@ -207,7 +207,6 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
 RUN pip install --upgrade \
         requests==2.32.4 \
         urllib3==2.5.0 && \
-		h2>=4.3.0 \
     $CONDA_PREFIX/bin/pip install --upgrade \
         requests==2.32.4 \
         urllib3==2.5.0 \
