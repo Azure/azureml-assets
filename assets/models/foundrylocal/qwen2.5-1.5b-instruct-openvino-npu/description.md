@@ -1,4 +1,4 @@
-This model is an optimized version of Qwen2.5-1.5B-Instruct to enable local inference on Intel NPUs. This model uses RTN quantization.
+This model is an optimized version of Qwen2.5-1.5B-Instruct to enable local inference on Intel NPUs.
 
 # Model Description
 - **Developed by:** Microsoft
