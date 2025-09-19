@@ -29,9 +29,16 @@ apt-get install -y --only-upgrade \
     libpam0g \
     libpam-modules \
     libpam-modules-bin \
-    libpam-runtime && \
-apt-get clean && \
-rm -rf /var/lib/apt/lists/*
+    libpam-runtime
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cmake \
+        libboost-dev \
+        libboost-system-dev \
+        libboost-filesystem-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 
 # begin conda create
