@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
 # Prepend path to AzureML conda environment
@@ -29,9 +29,16 @@ apt-get install -y --only-upgrade \
     libpam0g \
     libpam-modules \
     libpam-modules-bin \
-    libpam-runtime && \
-apt-get clean && \
-rm -rf /var/lib/apt/lists/*
+    libpam-runtime
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cmake \
+        libboost-dev \
+        libboost-system-dev \
+        libboost-filesystem-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 
 # begin conda create
