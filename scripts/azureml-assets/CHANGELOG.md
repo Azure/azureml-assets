@@ -4,7 +4,7 @@
 
 ## 1.16.91 (2025-09-19)
 ### 🚀 New Features
-- [](https://github.com/Azure/azureml-assets/pull/) Add EVALUATOR to AssetType
+- [#4448](https://github.com/Azure/azureml-assets/pull/4448) Add EVALUATOR to AssetType
 
 ## 1.16.90 (2025-09-12)
 ### 🚀 New Features
