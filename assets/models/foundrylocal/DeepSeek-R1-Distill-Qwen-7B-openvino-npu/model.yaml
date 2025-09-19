@@ -1,0 +1,8 @@
+path:
+  container_name: intel-npu-models
+  container_path: DeepSeek-R1-Distill-Qwen-7B_context_ov_dynamic_sym_gs128_bkp_int8_sym_r1/model
+  storage_name: sunghchostorageaccount
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
