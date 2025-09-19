@@ -45,6 +45,7 @@ class AssetType(Enum):
     AGENTBLUEPRINT = 'agentblueprint'
     EVALUATOR = 'evaluator'
 
+
 class ComponentType(Enum):
     """Enum for component types."""
 
