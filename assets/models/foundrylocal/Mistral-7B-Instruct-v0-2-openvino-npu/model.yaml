@@ -1,0 +1,8 @@
+path:
+  container_name: intel-npu-models
+  container_path: Mistral-7B-Instruct-v0.2-npu-context-ov-dyn-sym-gs128-bkp-int8-sym/model
+  storage_name: sunghchostorageaccount
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

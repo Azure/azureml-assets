@@ -1,0 +1,8 @@
+path:
+  container_name: intel-npu-models
+  container_path: Phi-3-mini-4k-instruct_context_ov_dynamic_sym_gs128_bkp_int8_sym/model
+  storage_name: sunghchostorageaccount
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
