@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:biweekly.202509.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:biweekly.202509.2
 
 RUN apt-get -y update && apt-get install -y expat
 
