@@ -1,7 +1,7 @@
 path:
-  container_name: intel-npu-models
-  container_path: DeepSeek-R1-Distill-Qwen-7B_context_ov_dynamic_sym_gs128_bkp_int8_sym_r1/model
-  storage_name: sunghchostorageaccount
+  container_name: models
+  container_path: foundrylocal/intel-npu-models/WMLGA_Sep23_NPU/DeepSeek-R1-Distill-Qwen-7B_context_ov_dynamic_sym_gs128_bkp_int8_sym_r1/DeepSeek-R1-Distill-Qwen-7B_context_ov_dynamic_sym_gs128_bkp_int8_sym_r1/model
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md
