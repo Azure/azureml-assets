@@ -111,7 +111,8 @@ RUN pip install \
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # Fix vulnerabilities
-RUN pip install --force-reinstall torch==2.7.1 torchvision==0.22.1
+RUN pip install --force-reinstall torch==2.7.1 --no-cache-dir
+RUN pip install --force-reinstall torchvision==0.22.1 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.4'
 RUN pip install --upgrade 'urllib3==2.5.0'
 RUN pip install --upgrade 'pillow==11.3.0'
@@ -127,5 +128,6 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --f
     /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/
+
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
