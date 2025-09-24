@@ -30,5 +30,5 @@ appdirs==1.4.4
 ffmpeg==1.4
 wheel==0.41.2
 lightning==2.5.5
-azureml_acft_image_components[mip]=={{latest-pypi-version}}
+azureml-acft-image-components[mip]=={{latest-pypi-version}}
 git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
