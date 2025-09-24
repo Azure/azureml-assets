@@ -32,3 +32,4 @@ dependencies:
   - urllib3==2.5.0
   - protobuf==4.25.8
   - pillow==11.3.0
+  - h2>=4.3.0

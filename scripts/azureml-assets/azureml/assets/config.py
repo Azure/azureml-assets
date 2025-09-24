@@ -43,6 +43,7 @@ class AssetType(Enum):
     MODEL = 'model'
     PROMPT = 'prompt'
     AGENTBLUEPRINT = 'agentblueprint'
+    EVALUATOR = 'evaluator'
 
 
 class ComponentType(Enum):
@@ -458,6 +459,11 @@ class Spec(Config):
     def properties(self) -> Dict[str, str]:
         """Asset properties."""
         return self._yaml.get('properties', {})
+
+    @property
+    def system_metadata(self) -> Dict[str, str]:
+        """Asset system metadata."""
+        return self._yaml.get('system_metadata', {})
 
 
 class AssetPath:

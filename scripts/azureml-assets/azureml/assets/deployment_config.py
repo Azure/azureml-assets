@@ -63,6 +63,21 @@ class AssetTags:
 
 
 @dataclass
+class AssetSystemMetadata:
+    """Asset system metadata class.
+
+    Args:
+        add (Dict[str, str]): System metadata to add.
+        replace (Dict[str, str]): Replace any existing system metadata with these.
+        delete (List[str]): System metadata to delete.
+    """
+
+    add: Dict[str, str] = None
+    replace: Dict[str, str] = None
+    delete: List[str] = None
+
+
+@dataclass
 class AssetProperties:
     """Asset properties class.
 
@@ -93,13 +108,16 @@ class AssetVersionUpdate(Versions):
     Args:
         description (str): New description.
         tags (AssetTags): Tag updates.
+        properties (AssetProperties): Property updates.
         stage (str): New stage.
+        system_metadata (AssetSystemMetadata): System metadata updates.
     """
 
     description: str = None
     tags: AssetTags = None
     properties: AssetProperties = None
     stage: str = None
+    system_metadata: AssetSystemMetadata = None
 
     def __post_init__(self):
         """Convert field values to objects."""
@@ -108,6 +126,9 @@ class AssetVersionUpdate(Versions):
 
         if self.properties:
             self.properties = AssetProperties(**self.properties)
+
+        if self.system_metadata:
+            self.system_metadata = AssetSystemMetadata(**self.system_metadata)
 
 
 @dataclass
@@ -236,6 +257,29 @@ class TagsSchema(Schema):
             raise ValueError("replace can't be used with add or delete")
 
 
+class SystemMetadataSchema(Schema):
+    """System metadata schema."""
+
+    add = fields.Dict(fields.Str(), fields.Str())
+    replace = fields.Dict(fields.Str(), fields.Str())
+    delete = fields.List(fields.Str())
+
+    @validates('add')
+    def _validate_add(self, value: Dict[str, str]):
+        if value is not None and not value:
+            raise ValueError("add must be non-empty")
+
+    @validates('delete')
+    def _validate_delete(self, value: List[str]):
+        if value is not None and not value:
+            raise ValueError("delete must be non-empty")
+
+    @validates_schema
+    def _validate_schema(self, data: Dict[str, object], **kwargs):
+        if data.get('replace') and (data.get('add') or data.get('delete')):
+            raise ValueError("replace can't be used with add or delete")
+
+
 class PropertiesSchema(Schema):
     """Properties schema."""
 
@@ -271,6 +315,7 @@ class AssetVersionUpdateSchema(VersionsSchema):
     tags = fields.Nested(TagsSchema)
     properties = fields.Nested(PropertiesSchema)
     stage = fields.Str()
+    system_metadata = fields.Nested(SystemMetadataSchema)
 
 
 class AssetVersionDeleteSchema(VersionsSchema):
