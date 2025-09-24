@@ -317,6 +317,25 @@ def update_metadata(
                 asset.tags = updated_tags
                 need_update = True
 
+        # Update system_metadata
+        if update.system_metadata:
+            updated_system_metadata = copy.deepcopy(asset._system_metadata)
+
+            if update.system_metadata.replace is not None:
+                updated_system_metadata = update.system_metadata.replace
+            else:
+                if update.system_metadata.add is not None:
+                    for k, v in update.system_metadata.add.items():
+                        updated_system_metadata[k] = v
+                if update.system_metadata.delete is not None:
+                    for k in update.system_metadata.delete:
+                        updated_system_metadata.pop(k, None)
+
+            if updated_system_metadata != asset._system_metadata:
+                logger.print("system_metadata has been updated.")
+                asset._system_metadata = updated_system_metadata
+                need_update = True
+
         # Update properties
         if update.properties:
             updated_properties = copy.deepcopy(asset.properties)
