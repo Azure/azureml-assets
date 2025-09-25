@@ -57,10 +57,7 @@ def parse_arguments():
 
 
 def _is_heavy_model_file(rel_path: Path) -> bool:
-    """
-    Return True if the suffix is .safetensors (heavy file). Return False otherwise
-    We always KEEP the index JSON (model.safetensors.index.json) even though it sits next to weight shards.
-    """
+    """Return True if the suffix is .safetensors."""
     _HEAVY_EXTS = {".safetensors"}
 
     name = rel_path.name
@@ -74,12 +71,7 @@ def _is_heavy_model_file(rel_path: Path) -> bool:
 
 
 def copy_catalog_except_weights(src_model_dir: str, dst_model_dir: str):
-    """
-    Recursively copy the MLflow model directory from src to dst, skipping heavy
-    weight files by extension (safetensors).
-
-    Skips .safetensors files but keeps the model.safetensors.index.json file.
-    """
+    """Recursively copy the MLflow model directory from src to dst, skipping .safetensors."""
     src = Path(src_model_dir)
     dst = Path(dst_model_dir)
 
