@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 Script to execute olympus_core training with command line arguments
 """
