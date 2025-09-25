@@ -216,7 +216,7 @@ def execute_training(args):
 
 
 def main():
-    """Main function"""
+    """Run the MedImageParse fine-tuning script."""
     logger.info("MedImageParse Fine-tuning Script")
     logger.info("=" * 40)
 
