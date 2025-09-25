@@ -196,7 +196,7 @@ def execute_training(args):
         logger.error(f"Error during olympus training: {e}")
         logger.error(f"Error type: {type(e).__name__}")
         return 1
-        
+
     finally:
         # Restore original sys.argv
         sys.argv = original_argv
@@ -206,16 +206,16 @@ def main():
     """Main function"""
     logger.info("MedImageParse Fine-tuning Script")
     logger.info("=" * 40)
-    
+
     # Parse arguments
     args = parse_arguments()
-    
+
     # Validate paths exist
     paths_to_check = [
         ("data", args.data),
         ("mlflow_model_folder", args.mlflow_model_folder),
     ]
-    
+
     # For config, check if it exists (can be file or directory)
     if not os.path.exists(args.config):
         logger.error(f"Config path does not exist: {args.config}")
