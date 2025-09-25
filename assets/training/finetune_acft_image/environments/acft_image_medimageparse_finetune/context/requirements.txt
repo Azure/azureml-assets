@@ -10,7 +10,7 @@ azureml-dataprep==5.4.1
 timm==0.9.16
 opencv-python-headless==4.11.0.86
 deepspeed==0.15.1
-transformers==4.40.0
+transformers==4.53.0
 open-clip-torch==2.26.1
 sentencepiece==0.2.0
 peft==0.17.1
@@ -30,5 +30,5 @@ appdirs==1.4.4
 ffmpeg==1.4
 wheel==0.41.2
 lightning==2.5.5
-azureml_acft_image_components[mip]=={{latest-pypi-version}}
+azureml-acft-image-components[mip]=={{latest-pypi-version}}
 git+https://github.com/facebookresearch/detectron2.git@a1ce2f9

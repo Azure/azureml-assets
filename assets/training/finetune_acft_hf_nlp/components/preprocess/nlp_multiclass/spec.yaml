@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: nlp_multiclass_datapreprocessing
-version: 0.0.78
+version: 0.0.79
 type: command
 
 is_deterministic: True
