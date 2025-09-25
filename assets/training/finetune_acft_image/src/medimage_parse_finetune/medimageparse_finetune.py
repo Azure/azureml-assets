@@ -77,6 +77,8 @@ def copy_catalog_except_weights(src_model_dir: str, dst_model_dir: str):
     """
     Recursively copy the MLflow model directory from src to dst, skipping heavy
     weight files by extension (safetensors).
+
+    Skips .safetensors files but keeps the model.safetensors.index.json file.
     """
     src = Path(src_model_dir)
     dst = Path(dst_model_dir)
