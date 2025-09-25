@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-Script to execute olympus_core training with command line arguments
-"""
+"""Script to execute olympus_core training with command line arguments."""
 
 import argparse
 import os
