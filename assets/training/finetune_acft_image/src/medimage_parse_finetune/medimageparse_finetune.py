@@ -58,6 +58,7 @@ def parse_arguments():
     
     return parser.parse_args()
 
+
 def _is_heavy_model_file(rel_path: Path) -> bool:
     """
     Return True if the suffix is .safetensors (heavy file). Return False otherwise
@@ -73,6 +74,7 @@ def _is_heavy_model_file(rel_path: Path) -> bool:
         return True
 
     return False
+
 
 def copy_catalog_except_weights(src_model_dir: str, dst_model_dir: str):
     """
@@ -120,6 +122,7 @@ def copy_catalog_except_weights(src_model_dir: str, dst_model_dir: str):
 
     logger.info(f"Catalog copy complete. Processed {file_count} files total.")
     logger.info("=== COPY CATALOG FINISHED ===")
+
 
 def execute_training(args):
     """Execute the olympus_core training command directly"""
@@ -198,6 +201,7 @@ def execute_training(args):
         # Restore original sys.argv
         sys.argv = original_argv
 
+
 def main():
     """Main function"""
     logger.info("MedImageParse Fine-tuning Script")
@@ -216,7 +220,7 @@ def main():
     if not os.path.exists(args.config):
         logger.error(f"Config path does not exist: {args.config}")
         return 1
-    
+
     for name, path in paths_to_check:
         if not os.path.exists(path):
             logger.error(f"{name} path does not exist: {path}")
@@ -224,7 +228,7 @@ def main():
         if not os.path.isdir(path):
             logger.error(f"{name} path is not a directory: {path}")
             return 1
-    
+
     # Create output directory if it doesn't exist
     if not os.path.exists(args.out):
         logger.info(f"Creating output directory: {args.out}")
@@ -235,6 +239,7 @@ def main():
 
     # Execute training
     return execute_training(args)
+
 
 if __name__ == "__main__":
     sys.exit(main())
