@@ -21,7 +21,7 @@ logger = _LoggerFactory.get_logger(__name__)
 
 
 def parse_arguments():
-    """Parse command line arguments"""
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Execute MedImageParse fine-tuning")
 
     parser.add_argument(
@@ -122,8 +122,7 @@ def copy_catalog_except_weights(src_model_dir: str, dst_model_dir: str):
 
 
 def execute_training(args):
-    """Execute the olympus_core training command directly"""
-
+    """Execute the olympus_core training command directly."""
     logger.info("Received arguments:")
     logger.info(f"  --pretrained_mlflow_model: {args.pretrained_mlflow_model}")
     logger.info(f"  --data: {args.data}")
