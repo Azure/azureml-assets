@@ -32,7 +32,7 @@ inputs:
     mode: ro_mount
 
   config:
-    type: uri_folder
+    type: uri_file
     optional: false
     description: Path to the test.json file.
     mode: ro_mount
@@ -56,4 +56,3 @@ command: >-
   --config ${{inputs.config}}
   --out ${{outputs.out}}
   --mlflow_model_folder ${{outputs.mlflow_model_folder}}
-

@@ -10,9 +10,10 @@ import shutil
 from pathlib import Path
 from azureml.acft.image.components.olympus.app.main import main as olympus_main
 from azureml.acft.image.components.olympus_biomed_parse.checkpoint_loaders.safetensors_loader import convert_ckpt_to_safetensor
-from azureml.acft.common_components import get_logger_app
+from azureml.dataprep.api._loggerfactory import _LoggerFactory
+import importlib.resources
 
-logger = get_logger_app("medimageparse_finetune")
+logger = _LoggerFactory.get_logger(__name__)
 
 def parse_arguments():
     """Parse command line arguments"""
@@ -29,21 +30,21 @@ def parse_arguments():
         "--data",
         type=str,
         required=True,
-        help="Path to the data directory (replaces EXTERNAL env var)"
+        help="Path to the finetune data directory"
     )
     
     parser.add_argument(
         "--config",
         type=str,
         required=True,
-        help="Path to the config directory (used for -cp parameter)"
+        help="Path to the parameters.yaml config file"
     )
     
     parser.add_argument(
         "--out",
         type=str,
         required=True,
-        help="Path to the output directory (replaces OUTPUT env var)"
+        help="Path to the output directory"
     )
 
     parser.add_argument(
@@ -127,12 +128,12 @@ def execute_training(args):
     logger.info(f"  --config: {args.config}")
     logger.info(f"  --out: {args.out}")
     logger.info(f"  --mlflow_model_folder: {args.mlflow_model_folder}")
-    
+
     # Set up environment variables
     os.environ["OUTPUT"] = args.out
     os.environ["EXTERNAL"] = args.data
     os.environ["AMLT_EXPERIMENT_NAME"] = "MIP_finetune"
-    os.environ["AMLT_JOB_NAME"] = "MIP_testing_job"
+    os.environ["AMLT_JOB_NAME"] = "MIP_finetune_job"
     os.environ["MODEL_PATH"] = args.pretrained_mlflow_model
     os.environ["FINETUNED_MODEL_PATH"] = args.mlflow_model_folder
 
@@ -155,12 +156,9 @@ def execute_training(args):
     
     # Prepare arguments for olympus_core
     olympus_args = [
-        "-cp", args.config,
-        "-cn", "MIP_finetune",
-        "trainer.devices=1",
-        "trainer.num_nodes=1",
-        "hydra.job.chdir=True",
-        "mode=train"
+        "-cp", str(importlib.resources.files('azureml.acft.image.components.olympus_biomed_parse') / "configs"),
+        "-cn", os.environ['AMLT_EXPERIMENT_NAME'],
+        "-cd", str(Path(args.config).parent)
     ]
     
     logger.info("Calling olympus_core with arguments:")
@@ -176,8 +174,8 @@ def execute_training(args):
         # Call olympus_core main function directly
         result = olympus_main()
 
-        ckpt_path = args.out + '/MIP_finetune/MIP_testing_job/checkpoints/last.ckpt'
-        output_path = args.mlflow_model_folder + '/artifacts/checkpoints/boltzformer_focal_all.safetensors'
+        ckpt_path = args.out + f"/{os.environ['AMLT_EXPERIMENT_NAME']}/{os.environ['AMLT_JOB_NAME']}/checkpoints/last.ckpt"
+        output_path = args.mlflow_model_folder + "/artifacts/checkpoints/boltzformer_focal_all.safetensors"
 
         convert_ckpt_to_safetensor(ckpt_path, output_path)
         
@@ -209,9 +207,13 @@ def main():
     # Validate paths exist
     paths_to_check = [
         ("data", args.data),
-        ("config", args.config),
         ("mlflow_model_folder", args.mlflow_model_folder),
     ]
+    
+    # For config, check if it exists (can be file or directory)
+    if not os.path.exists(args.config):
+        logger.error(f"Config path does not exist: {args.config}")
+        return 1
     
     for name, path in paths_to_check:
         if not os.path.exists(path):
