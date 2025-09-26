@@ -2,6 +2,10 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.92 (2025-09-19)
+### 🚀 New Features
+- [#4460](https://github.com/Azure/azureml-assets/pull/4460) Skip validation for unsupported SDK fields
+
 ## 1.16.91 (2025-09-19)
 ### 🚀 New Features
 - [#4448](https://github.com/Azure/azureml-assets/pull/4448) Add EVALUATOR to AssetType
