@@ -2,7 +2,7 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
-## 1.16.92 (2025-09-19)
+## 1.16.92 (2025-09-26)
 ### 🚀 New Features
 - [#4460](https://github.com/Azure/azureml-assets/pull/4460) Skip validation for unsupported SDK fields
 
