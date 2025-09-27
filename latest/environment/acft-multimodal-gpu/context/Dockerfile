@@ -19,7 +19,7 @@ RUN pip install gunicorn==23.0.0
 RUN pip install onnxruntime==1.17.3
 RUN pip install onnx==1.17.0
 RUN pip install scikit-learn==1.5.0
-RUN pip install azureml-acft-common-components==0.0.80
-RUN pip install azureml-acft-accelerator==0.0.80
+RUN pip install azureml-acft-common-components==0.0.81
+RUN pip install azureml-acft-accelerator==0.0.81
 # Upgrade requests in the system Python (3.13) for fixing vulnerability
 RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests urllib3 || true
