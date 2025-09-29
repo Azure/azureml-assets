@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: openai-whisper-large-v3-turbo-cuda-gpu
+name: openai-whisper-large-v3-turbo-generic-cpu
 version: 1
 path: ./
 tags:
