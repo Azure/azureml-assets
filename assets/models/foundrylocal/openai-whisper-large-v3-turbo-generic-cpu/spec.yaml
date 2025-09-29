@@ -12,13 +12,16 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-large-v3-turbo
-  directoryPath: whisper-large-v3-turbo-generic-cpu
+  directoryPath: cpu-fp32
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
 type: custom_model
 variantInfo:
   parents:
-    - assetId: azureml://registries/azure-openai/models/whisper-large-v3-turbo/versions/001
+  - assetId: azureml://registries/azure-openai/models/whisper-large-v3-turbo/versions/1
   variantMetadata:
-    modelType: ONNX
-    device: generic-cpu
-    executionProvider: CPUExecutionProvider
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'cpu'
+    executionProvider: 'CPUExecutionProvider'
+    fileSizeBytes: 9438190632
+    vRamFootprintBytes: 9438528266

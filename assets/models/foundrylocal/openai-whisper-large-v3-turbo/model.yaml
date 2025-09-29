@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/foundry-local/whisper-large-v3-turbo/onnx/cpu_and_mobile/cpu-fp32
+  container_path: foundrylocal/onnx-models/whisper-large-v3-turbo/onnx
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
