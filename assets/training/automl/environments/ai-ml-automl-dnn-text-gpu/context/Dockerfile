@@ -69,24 +69,25 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 
 # begin pip install
 # Install pip dependencies
-# Here, we pin sentencepiece since 0.1.98 breaks training. Earlier versions of horovod contain a sev2 vulnerability,
-# and earlier versions of tokenizers cause log spam with transformers==4.16.0.
+# Install core packages first without conflicting dependencies
 RUN pip install \
                 # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-dnn-nlp=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-defaults=={{latest-pypi-version}} \
                 'azure-identity>=1.16.1' \
                 'sentencepiece==0.1.97' \
                 'cryptography>=42.0.5'\
                 'requests>=2.32.4' \
                 'certifi>=2023.07.22' 
                 # end pypi dependencies
+
+# Install conflicting packages separately with --no-deps
+RUN pip install 'azureml-defaults=={{latest-pypi-version}}' --no-deps --force-reinstall
+RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}' --no-deps --force-reinstall
 
 # Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
@@ -112,5 +113,10 @@ RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow=
 RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+# Final security override - force install secure versions to override any downgrades
+RUN pip install urllib3==2.5.0 --force-reinstall --no-deps
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install urllib3==2.5.0 --force-reinstall --no-deps || true
+
 RUN rm -rf /opt/conda/pkgs/
 # end pip install

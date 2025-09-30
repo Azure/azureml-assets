@@ -23,11 +23,13 @@ RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
 # Install/upgrade torch in ptca env if it exists (fixes vulnerability)
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 || true
 
-# Install azureml packages with --no-deps to avoid version conflicts, then install dependencies manually
-RUN pip install 'azureml-defaults=={{latest-pypi-version}}'
-RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}' --no-deps
-# Install the required dependencies manually with compatible versions
-RUN pip install transformers==4.53.0 --force-reinstall
+# Install core dependencies first with secure versions
+RUN pip install sentencepiece==0.1.97 tokenizers>=0.19.0 huggingface-hub>=0.16.0 --force-reinstall
+RUN pip install 'transformers[sentencepiece,torch]==4.53.0' --no-deps --force-reinstall
+
+# Install azureml packages with --no-deps to avoid version conflicts
+RUN pip install 'azureml-defaults=={{latest-pypi-version}}' --no-deps --force-reinstall
+RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}' --no-deps --force-reinstall
 
 # Install compatible onnx and onnxruntime versions
 RUN pip install onnx==1.17.0
@@ -42,13 +44,14 @@ RUN pip install optimum==1.23.3
 RUN pip install accelerate==0.33.0
 RUN pip install deepspeed~=0.15.1
 
-# Address vulnerabilities
-RUN pip install pyarrow==14.0.2
-RUN pip install aiohttp==3.12.14
-RUN pip install idna==3.7
-RUN pip install requests==2.32.4
-RUN pip install urllib3==2.5.0
-RUN opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
+# Address vulnerabilities - install these after all other packages to override conflicts
+RUN pip install pyarrow==14.0.2 --force-reinstall
+RUN pip install aiohttp==3.12.14 --force-reinstall
+RUN pip install idna==3.7 --force-reinstall
+RUN pip install requests==2.32.4 --force-reinstall
+# Force install urllib3 last to override any downgrade attempts
+RUN pip install urllib3==2.5.0 --force-reinstall --no-deps
+RUN opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' --force-reinstall || true
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==11.3.0'

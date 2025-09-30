@@ -105,4 +105,9 @@ RUN pip install --upgrade urllib3
 RUN pip uninstall -y torchaudio || true
 RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+# Final security override - force install secure urllib3 version
+RUN pip install urllib3==2.5.0 --force-reinstall --no-deps
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install urllib3==2.5.0 --force-reinstall --no-deps || true
+
 RUN rm -rf /opt/miniconda/pkgs/

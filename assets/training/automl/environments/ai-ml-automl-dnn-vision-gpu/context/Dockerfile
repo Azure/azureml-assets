@@ -111,6 +111,11 @@ RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchv
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+# Final security override - force install secure urllib3 version
+RUN pip install urllib3==2.5.0 --force-reinstall --no-deps
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install urllib3==2.5.0 --force-reinstall --no-deps || true
+
 RUN rm -rf /opt/conda/pkgs/
 
 # end pip install
