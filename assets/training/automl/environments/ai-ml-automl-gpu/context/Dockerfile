@@ -103,11 +103,11 @@ RUN pip install \
 
 RUN pip install --upgrade 'h2>=4.3.0'
 # Install PyTorch and fix vulnerabilities
-RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1
 # Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'|| true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0' || true
+RUN pip install --upgrade 'requests==2.32.4' 'urllib3==1.26.20' 'pillow==11.3.0' 'h2>=4.3.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==1.26.20' 'pillow==11.3.0' 'h2>=4.3.0'|| true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==1.26.20' 'pillow==11.3.0' 'h2>=4.3.0' || true
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

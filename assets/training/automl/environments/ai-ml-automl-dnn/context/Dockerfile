@@ -89,8 +89,8 @@ RUN pip install \
 # end pip install
 
 # Fix vulnerabilities
-RUN pip install --upgrade urllib3
-RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0
+RUN pip install --upgrade urllib3==1.26.20
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/
 

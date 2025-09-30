@@ -2,7 +2,12 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-ta
 
 USER root
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
+ENV AZUREML_CONDA# Fix vulnerabilities
+RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
+RUN pip install --force-reinstall torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1 --no-cache-dir
+RUN pip install --upgrade 'requests==2.32.4'
+RUN pip install --upgrade 'urllib3==1.26.20'
+RUN pip install --upgrade 'pillow==11.3.0'ONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -123,9 +128,9 @@ RUN pip install --upgrade 'urllib3==2.5.0'
 RUN pip install --upgrade 'pillow==11.3.0'
 
 # If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==1.26.20' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==1.26.20' || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==1.26.20' || true
 # --- End Vulnerability Fixes ---
 # --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \

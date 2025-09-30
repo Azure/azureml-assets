@@ -102,12 +102,12 @@ RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0'
                 
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==1.26.20'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==1.26.20'
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==1.26.20'
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0 
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1 
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'

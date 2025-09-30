@@ -1,6 +1,10 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
+ENV AZUREML_CO# Fix vulnerabilities and update PyTorch
+RUN pip install --upgrade urllib3==1.26.20
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN rm -rf /opt/miniconda/pkgs/NVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
