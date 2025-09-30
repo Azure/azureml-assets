@@ -25,7 +25,7 @@ RUN apt-get update && \
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip \
     py-cpuinfo=5.0.0 \
@@ -34,6 +34,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools=78.1.1 \
     'psutil>5.0.0,<6.0.0' \
     pytorch=2.8.0 \
+    pytorch-cuda=12.4 \
     # end conda dependencies
     -c conda-forge -c pytorch -c anaconda -c nvidia && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \

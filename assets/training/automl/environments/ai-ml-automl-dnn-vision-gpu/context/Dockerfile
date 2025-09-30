@@ -51,7 +51,7 @@ ENV ENABLE_METADATA=true
 # Create conda environment
 # begin conda create
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=21.3.1 \
     numpy~=1.23.5 \
