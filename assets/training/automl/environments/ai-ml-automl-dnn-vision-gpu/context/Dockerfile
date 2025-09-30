@@ -105,8 +105,9 @@ RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip uninstall -y torchaudio || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 || true 
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'

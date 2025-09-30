@@ -115,8 +115,10 @@ RUN pip install \
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # Fix vulnerabilities
+RUN pip uninstall -y torchaudio || true
 RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
 RUN pip install --force-reinstall torchvision==0.23.0 --no-cache-dir
+RUN pip install --force-reinstall torchaudio==2.8.0 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.4'
 RUN pip install --upgrade 'urllib3==2.5.0'
 RUN pip install --upgrade 'pillow==11.3.0'
