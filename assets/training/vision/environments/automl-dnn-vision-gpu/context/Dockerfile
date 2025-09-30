@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch280:{{latest-image-tag}}
 
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
@@ -50,9 +50,9 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 # vulnearbility fix
 RUN pip install pyarrow==14.0.2
-RUN pip install torch==2.7.1 torchvision==0.22.1
-RUN opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install 2.7.1 torchvision==0.22.1 || true
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 pytorch-cuda=12.4 -c pytorch -c nvidia
+RUN opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 || true
 RUN opt/conda/envs/ptca/bin/pip install --upgrade urllib3 || true
 RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
