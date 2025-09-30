@@ -44,7 +44,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -70,9 +70,12 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     wheel=0.44.0 \
     scipy=1.10.1 \
     'psutil>5.0.0,<6.0.0' \
-    cudatoolkit=10.0.130 \
+    pytorch=2.8.0 \
+    torchvision=0.23.0 \
+    torchaudio=2.8.0 \
+    pytorch-cuda=12.4 \
     # end conda dependencies
-    -c conda-forge -c pytorch -c anaconda
+    -c conda-forge -c pytorch -c nvidia -c anaconda
 # end conda create
 
 # begin pip install
