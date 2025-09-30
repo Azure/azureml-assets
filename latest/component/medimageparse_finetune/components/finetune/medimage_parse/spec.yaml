@@ -13,7 +13,7 @@ display_name: MedImageParse Finetune
 description: Component to finetune the model using the medical image data
 
 environment: 
-  azureml://registries/azureml/environments/acft-medimageparse-finetune/versions/1
+  azureml://registries/azureml/environments/acft-medimageparse-finetune/versions/2
 
 code: ../../../src/medimage_parse_finetune
 
