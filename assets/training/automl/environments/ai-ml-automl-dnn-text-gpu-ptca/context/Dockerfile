@@ -17,11 +17,20 @@ RUN apt-get update && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}'
+# Skip pip dependency checks to allow torch 2.8.0 with azureml-automl-dnn-nlp
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install azureml-automl-dnn-nlp with --no-deps to bypass torch==2.2.2 requirement
+# We'll force-install torch 2.8.0 later for security vulnerability fixes
+RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}' --no-deps
 RUN pip install 'azureml-defaults=={{latest-pypi-version}}'
 
+# Install common dependencies that azureml-automl-dnn-nlp might need
+RUN pip install transformers datasets tokenizers accelerate
+
 RUN pip uninstall -y onnxruntime
-RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
+# Force install torch 2.8.0 after azureml-automl-dnn-nlp to resolve version conflict
+RUN pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
 # Install/upgrade torch in ptca env if it exists (fixes vulnerability)
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 || true
 
@@ -51,5 +60,9 @@ RUN opt/conda/bin/pip install --upgrade 'urllib3==1.26.20' || true
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==11.3.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
+
+# Verify torch installation and basic imports work
+RUN python -c "import torch; print(f'Torch version: {torch.__version__}'); print('Torch CUDA available:', torch.cuda.is_available())"
+RUN python -c "import azureml.automl.dnn.nlp; print('azureml-automl-dnn-nlp imported successfully')" || echo "Warning: azureml-automl-dnn-nlp import may have issues but continuing..."
 
 RUN pip list

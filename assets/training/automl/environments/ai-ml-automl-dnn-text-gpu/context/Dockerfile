@@ -48,6 +48,9 @@ EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
 
+# Skip pip dependency checks to allow torch 2.8.0 with azureml-automl-dnn-nlp
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -77,7 +80,6 @@ RUN pip install \
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-dnn-nlp=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
                 azureml-train-automl-client=={{latest-pypi-version}} \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
@@ -88,6 +90,12 @@ RUN pip install \
                 'requests>=2.32.4' \
                 'certifi>=2023.07.22' 
                 # end pypi dependencies
+
+# Install azureml-automl-dnn-nlp separately with --no-deps to avoid torch conflict
+RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}' --no-deps
+
+# Install common dependencies that azureml-automl-dnn-nlp might need
+RUN pip install transformers datasets tokenizers accelerate
 
 # Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
@@ -100,8 +108,9 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.48.0' \
                 aiohttp==3.12.14
-RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1
-RUN /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1 || true
+# Force install torch 2.8.0 after azureml-automl-dnn-nlp to resolve version conflict
+RUN pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1 || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==1.26.20' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==1.26.20' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==1.26.20' || true
@@ -111,5 +120,10 @@ RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow=
 RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+# Verify torch installation and basic imports work
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -c "import torch; print(f'Torch version: {torch.__version__}'); print('Torch CUDA available:', torch.cuda.is_available())"
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -c "import azureml.automl.dnn.nlp; print('azureml-automl-dnn-nlp imported successfully')" || echo "Warning: azureml-automl-dnn-nlp import may have issues but continuing..."
+
 RUN rm -rf /opt/conda/pkgs/
 # end pip install

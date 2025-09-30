@@ -7,7 +7,6 @@ dependencies:
 - pip=22.1.2
 - numpy~=1.26.4
 - pandas~=1.5.3
-- py-xgboost=1.3.3
 - 'psutil>=5.2.2,<6.0.0'
 - tqdm
 - setuptools=78.1.1
@@ -33,6 +32,7 @@ dependencies:
   - prophet==1.1.4
   - GitPython>=3.1.41
   - py-cpuinfo==5.0.0
+  - xgboost==1.5.2
   - torch==2.8.0
   - torchvision==0.23.0
   - torchaudio==2.8.0
