@@ -44,10 +44,10 @@ RUN apt-get update && \
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=22.1.2 \
-    numpy~=1.23.5 \
+    numpy~=1.26.4 \
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
     scipy=1.10.1 \
@@ -58,7 +58,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
     conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.7.1 \
+    pytorch=2.8.0 pytorch-cuda=12.4 \
     -c pytorch -c nvidia -c conda-forge -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -99,8 +99,8 @@ RUN pip install \
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
 
-# Fix vulnerabilities
+# Fix vulnerabilities and update PyTorch
 RUN pip install --upgrade urllib3
-RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.17.0
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/

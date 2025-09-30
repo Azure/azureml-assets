@@ -44,7 +44,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -62,7 +62,7 @@ RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 # Create conda environment
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
-    numpy~=1.23.5 \
+    numpy~=1.26.4 \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
@@ -70,9 +70,9 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     wheel=0.44.0 \
     scipy=1.10.1 \
     'psutil>5.0.0,<6.0.0' \
-    cudatoolkit=10.0.130 \
+    pytorch=2.8.0 pytorch-cuda=12.4 \
     # end conda dependencies
-    -c conda-forge -c pytorch -c anaconda
+    -c conda-forge -c pytorch -c anaconda -c nvidia
 # end conda create
 
 # begin pip install
@@ -102,6 +102,8 @@ RUN pip install \
                 # end pypi dependencies
 
 RUN pip install --upgrade 'h2>=4.3.0'
+# Install PyTorch and fix vulnerabilities
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0
 # Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
 RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'
 RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'|| true

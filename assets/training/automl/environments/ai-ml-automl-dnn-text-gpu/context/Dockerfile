@@ -51,18 +51,19 @@ ENV ENABLE_METADATA=true
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=22.1.2 \
-    numpy~=1.23.5 \
+    numpy~=1.26.4 \
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
     setuptools=78.1.1 \
     wheel=0.44.0 \
     scipy=1.10.1 \
     pybind11=2.10.1 \
+    pytorch=2.8.0 pytorch-cuda=12.4 \
     # end conda dependencies
-    -c conda-forge -c anaconda
+    -c conda-forge -c anaconda -c pytorch -c nvidia
 
 # Ensure additional conda and pip install commands apply to our conda env of interest.
 SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c"]
@@ -99,8 +100,8 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-RUN pip install torch==2.7.1 torchvision==0.22.1
-RUN /opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0
+RUN /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0 || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true

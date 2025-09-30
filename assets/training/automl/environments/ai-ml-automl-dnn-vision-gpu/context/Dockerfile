@@ -51,10 +51,10 @@ ENV ENABLE_METADATA=true
 # Create conda environment
 # begin conda create
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=21.3.1 \
-    numpy~=1.23.5 \
+    numpy~=1.26.4 \
     libffi=3.3 \
     pycocotools=2.0.4 \
     shap=0.39.0 \
@@ -63,8 +63,9 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools=78.1.1 \
     wheel=0.44.0 \
     tbb=2021.1.1 \
+    pytorch=2.8.0 pytorch-cuda=12.4 \
     # end conda dependencies
-    -c conda-forge -c cerebis && \
+    -c conda-forge -c cerebis -c pytorch -c nvidia && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
 # end conda create
@@ -105,8 +106,8 @@ RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 onnx==1.18.0 
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
