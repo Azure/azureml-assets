@@ -1,0 +1,43 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: DeepSeek-R1-Distill-Qwen-7B-trtrtx-gpu
+version: 1
+path: ./
+tags:
+  foundryLocal: "test"
+  license: "MIT"
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B/blob/main/LICENSE>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+  alias: deepseek-r1-7b
+  directoryPath: deepseek-ai-DeepSeek-R1-Distill-Qwen-7B
+  promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\\
+    n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\"\
+    : \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: 
+      azureml://registries/azureml/models/DeepSeek-R1-Distill-Qwen-7B/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'gpu'
+    executionProvider: 'NvTensorRTRTXExecutionProvider'
+    fileSizeBytes: 5669356830
+    vRamFootprintBytes: 5669577287
+description: |-
+  This model is an optimized version of DeepSeek-R1-Distill-Qwen-7B to enable local inference on TensorRT-RTX GPUs.
+
+  # Model Description
+  - **Developed by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** MIT
+  - **Model Description:** This is a conversion of the DeepSeek-R1-Distill-Qwen-7B for local inference on TensorRT-RTX GPUs.
+  - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+  # Base Model Information
+  See Hugging Face model [DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B) for details.

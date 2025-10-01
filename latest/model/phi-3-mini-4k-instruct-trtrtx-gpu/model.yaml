@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/olive-trt-models/microsoft-Phi-3-mini-4k-instruct
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
