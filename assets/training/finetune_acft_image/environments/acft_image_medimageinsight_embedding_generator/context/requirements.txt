@@ -1,6 +1,6 @@
 azureml-acft-common-components=={{latest-pypi-version}}
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-mlflow==2.20.3
+mlflow==3.1.0
 cloudpickle==2.2.1
 colorama==0.4.6
 einops==0.8.0
@@ -20,5 +20,5 @@ sentencepiece==0.2.0
 tenacity==9.0.0
 timm==1.0.13
 tornado==6.5.0
-transformers==4.50.0
+transformers==4.53.0
 setuptools==78.1.1

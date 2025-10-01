@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.54
+version: 0.0.56
 name: llm_rag_crack_and_chunk_and_embed
 display_name: LLM - Crack, Chunk and Embed Data
 is_deterministic: true
@@ -92,7 +92,7 @@ outputs:
     type: uri_folder
     description: "Where to save data with embeddings. This should be a subfolder of previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 command: >-
   python -m azureml.rag.tasks.crack_and_chunk_and_embed

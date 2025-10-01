@@ -10,6 +10,8 @@ RUN apt-get -y install unzip
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install azureml-mlflow=={{latest-pypi-version}}
+RUN pip install mlflow==3.1.0
 
 # Upgrade requests in the system Python (3.13) for fixing vulnerability
-RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests || true
+RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests urllib3 || true

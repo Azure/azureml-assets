@@ -1,7 +1,6 @@
 name: model-evaluation
 channels:
 - conda-forge
-- anaconda
 - pytorch
 - nvidia
 dependencies:
@@ -12,7 +11,7 @@ dependencies:
 - pip:
   - aiohttp>=3.10.2
   - matplotlib>=3.7,<3.8
-  - protobuf<4.0.0
+  - protobuf<7.0.0
   - psutil>=5.8,<5.9
   - pandas>=2.0.2,<2.1.0
   - azureml-core=={{latest-pypi-version}}

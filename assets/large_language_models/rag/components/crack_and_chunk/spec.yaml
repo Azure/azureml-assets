@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.83
+version: 0.0.85
 name: llm_rag_crack_and_chunk
 display_name: LLM - Crack and Chunk Data
 is_deterministic: true
@@ -77,7 +77,7 @@ outputs:
       type: uri_folder
       description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src'
 command: >-
   python -m azureml.rag.tasks.crack_and_chunk

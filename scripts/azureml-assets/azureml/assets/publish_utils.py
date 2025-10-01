@@ -19,7 +19,7 @@ from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, upda
     prepare_data, RegistryUtils
 from azureml.assets.util import logger
 from azureml.assets.util.util import resolve_from_file_for_asset
-from azure.ai.ml import MLClient
+from azure.ai.ml import MLClient, load_model
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
 
@@ -51,6 +51,9 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
+        # Preserve system_metadata due to SDK bug (_to_dict() doesn't include it)
+        if asset._system_metadata:
+            asset_dict["system_metadata"] = asset._system_metadata
         util.dump_yaml(asset_dict, spec_path)
         return True
     except Exception as e:
@@ -404,6 +407,21 @@ def create_asset_cli(
     return True
 
 
+def create_asset_sdk(
+    ml_client: MLClient,
+    asset: AssetConfig
+) -> bool:
+    """Create asset in registry."""
+    try:
+        model = load_model(source=asset.spec_with_path)
+        ml_client.models.create_or_update(model)
+    except Exception as e:
+        redacted_err = sanitize_output(str(e))
+        logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
+        return False
+    return True
+
+
 def get_asset_versions(
     asset_type: str,
     asset_name: str,
@@ -490,6 +508,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 asset_spec = YAML().load(f)
                 tags = asset_spec.get("tags", {})
                 properties = asset_spec.get("properties", {})
+                system_metadata = asset_spec.get("system_metadata", {})
 
                 if asset.type == AssetType.MODEL:
                     model_config = asset.extra_config_as_object()
@@ -499,8 +518,10 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 # convert tags, properties value to string
                 tags = stringify_dictionary(tags)
                 properties = stringify_dictionary(properties)
+                system_metadata = stringify_dictionary(system_metadata)
                 tags_to_update = {"replace": tags}
                 properties_to_update = {"add": properties}
+                system_metadata_to_update = {"replace": system_metadata}
 
                 if asset.type in [AssetType.COMPONENT, AssetType.DATA]:
                     description = asset_spec.get("description", None)
@@ -514,7 +535,8 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 versions=[asset_version],
                 tags=tags_to_update,
                 properties=properties_to_update,
-                description=description
+                description=description,
+                system_metadata=system_metadata_to_update
             ),
             ml_client=ml_client,
             asset_type=asset.type,
@@ -580,6 +602,13 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
                                                  copy_updater, output_level):
                 logger.log_error("Failed to prepare data asset")
                 return False
+
+        # Create asset using SDK (Models only)
+        if asset.type == AssetType.MODEL:
+            return create_asset_sdk(
+                ml_client=ml_client,
+                asset=asset
+            )
 
         # Create asset
         return create_asset_cli(

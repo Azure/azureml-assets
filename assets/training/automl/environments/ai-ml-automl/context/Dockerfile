@@ -12,6 +12,16 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# System package security upgrades
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        libpam0g \
+        libpam-modules \
+        libpam-modules-bin \
+        libpam-runtime && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -23,7 +33,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools-git \
     setuptools=78.1.1 \
     'psutil>5.0.0,<6.0.0' \
-    pytorch=2.6.0 \
+    pytorch=2.7.1 \
     # end conda dependencies
     -c conda-forge -c pytorch -c anaconda -c nvidia && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -52,12 +62,15 @@ RUN pip install \
                 'xgboost==1.5.2' \
                 'prophet==1.1.4' \
                 'inference-schema' \
-                'mltable>=1.0.0'
+                'mltable>=1.0.0' \
+                'pillow==11.3.0'
                 # end pypi dependencies
 # end pip install
 
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
 RUN pip install --upgrade 'pyarrow==14.0.2'
+RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN pip install urllib3==2.5.0
 # end pip ad-hoc
 

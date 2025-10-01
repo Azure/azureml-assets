@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.48
+version: 0.0.50
 name: llm_rag_update_pinecone_index
 display_name: LLM - Update Pinecone Index
 is_deterministic: true
@@ -39,7 +39,7 @@ outputs:
     type: uri_folder
     description: "Uri folder containing the MLIndex yaml describing the newly created/updated Pinecone index."
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src/'
 
 command: >-

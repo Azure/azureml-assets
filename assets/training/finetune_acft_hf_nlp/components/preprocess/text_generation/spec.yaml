@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_datapreprocess
-version: 0.0.76
+version: 0.0.79
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Generation DataPreProcess
 description: Component to preprocess data for text generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/preprocess
 

@@ -22,8 +22,14 @@ dependencies:
   - tensorboard~=2.16.0
   - tensorflow[and-cuda]==2.16.2
   - tensorflow-datasets~=4.9.0
-  - keras==3.9.0
+  - keras==3.11.0
   - tf-keras==2.16.0
   - debugpy~=1.6.3
   - cryptography>=41.0.4
   - idna>=3.7
+  - flask-cors==6.0.0
+  - requests==2.32.4
+  - urllib3==2.5.0
+  - protobuf==4.25.8
+  - pillow==11.3.0
+  - h2>=4.3.0

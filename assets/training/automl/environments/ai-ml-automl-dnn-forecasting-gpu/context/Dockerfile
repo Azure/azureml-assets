@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
 # Prepend path to AzureML conda environment
@@ -11,6 +11,35 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 ENV ENABLE_METADATA=true
+
+RUN apt-get update && \
+apt-get install -y --only-upgrade \
+    systemd \
+    libsystemd0 \
+    libnss-systemd \
+    libpam-systemd \
+    libudev1 \
+    systemd-sysv \
+    systemd-timesyncd \
+    python3.10 \
+    python3.10-minimal \
+    libarchive13 \
+    libpython3.10-minimal \
+    libpython3.10-stdlib \
+    libpam0g \
+    libpam-modules \
+    libpam-modules-bin \
+    libpam-runtime
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cmake \
+        libboost-dev \
+        libboost-system-dev \
+        libboost-filesystem-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # begin conda create
 # Create conda environment
@@ -29,7 +58,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
     conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.6.0 \
+    pytorch=2.7.1 \
     -c pytorch -c nvidia -c conda-forge -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -58,13 +87,20 @@ RUN pip install \
                 'inference-schema' \
                 'xgboost==1.5.2' \
                 'cryptography>=42.0.5' \
-                'requests>=2.31.0' \
+                'requests>=2.32.4' \
                 'certifi>=2023.07.22' \
                 'spacy==3.7.4' \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
-                'py-cpuinfo==5.0.0'
+                'py-cpuinfo==5.0.0' \
+                "pillow>=11.3.0"
                 # end pypi dependencies
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
+
+# Fix vulnerabilities
+RUN pip install --upgrade urllib3
+RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN rm -rf /opt/miniconda/pkgs/

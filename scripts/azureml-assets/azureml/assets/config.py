@@ -43,6 +43,7 @@ class AssetType(Enum):
     MODEL = 'model'
     PROMPT = 'prompt'
     AGENTBLUEPRINT = 'agentblueprint'
+    EVALUATOR = 'evaluator'
 
 
 class ComponentType(Enum):
@@ -459,6 +460,11 @@ class Spec(Config):
         """Asset properties."""
         return self._yaml.get('properties', {})
 
+    @property
+    def system_metadata(self) -> Dict[str, str]:
+        """Asset system metadata."""
+        return self._yaml.get('system_metadata', {})
+
 
 class AssetPath:
     """Asset path."""
@@ -784,7 +790,7 @@ class ModelConfig(Config):
             elif path_type == PathType.GIT.value:
                 self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
             elif path_type == PathType.LOCAL.value:
-                self._path = LocalAssetPath(local_path=path['uri'])
+                self._path = LocalAssetPath(uri=str(self._file_path / path['uri']))
             elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
                 raise NotImplementedError("Support for HTTP and FTP is being added.")
         else:

@@ -22,4 +22,4 @@ RUN pip install scikit-learn==1.5.0
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 # Upgrade requests in the system Python (3.13) for fixing vulnerability
-RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests || true
+RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests urllib3 || true

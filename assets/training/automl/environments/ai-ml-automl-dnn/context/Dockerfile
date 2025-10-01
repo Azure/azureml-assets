@@ -12,6 +12,27 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Upgrade system-level packages to fix known vulnerabilities (systemd, python3.12, pam)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        systemd-dev \
+        libudev1 \
+        systemd-timesyncd \
+        systemd \
+        systemd-resolved \
+        libsystemd0 \
+        libsystemd-shared \
+        libpython3.12-minimal \
+        python3.12-minimal \
+        libpython3.12-stdlib \
+        python3.12 \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -28,7 +49,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools-git \
     setuptools=78.1.1 \
     wheel=0.44.0 \
-    pytorch=2.6.0 \
+    pytorch=2.7.1 \
     scipy=1.10.1 \
     cudatoolkit=10.0.130 \
     'psutil>5.0.0,<6.0.0' \
@@ -63,9 +84,15 @@ RUN pip install \
                 'pytorch-transformers==1.0.0' \
                 'GitPython>=3.1.41' \
                 'spacy==3.7.4' \
+                'pillow>=11.3.0' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
                 # end pypi dependencies
 # end pip install
+
+# Fix vulnerabilities
+RUN pip install --upgrade urllib3
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 

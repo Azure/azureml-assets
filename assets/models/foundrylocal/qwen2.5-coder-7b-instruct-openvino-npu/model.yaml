@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/intel-npu-models/WMLGA_Sep23_NPU/Qwen2.5-Coder-7B-Instruct_context_ov_dynamic_sym_bkp_int8_sym_r1/Qwen2.5-Coder-7B-Instruct_context_ov_dynamic_sym_bkp_int8_sym_r1/model
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: token_classification_model_import
-version: 0.0.76
+version: 0.0.79
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Token Classification Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/token_classification_model_import) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/model_selector
 

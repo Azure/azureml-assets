@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.92
+version: 0.0.94
 name: llm_rag_create_promptflow
 display_name: LLM - Create Prompt Flow
 is_deterministic: true
@@ -45,7 +45,7 @@ inputs:
     optional: true
     description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src'
 
 command: >-
