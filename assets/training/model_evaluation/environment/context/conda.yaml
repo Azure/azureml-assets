@@ -27,7 +27,7 @@ dependencies:
   - lightgbm=={{latest-pypi-version}}
   - msrest>=0.6.21,<0.7.1
   - mltable=={{latest-pypi-version}}
-  - openai=={{latest-pypi-version}}
+  - openai<2.0.0
   - mldesigner=={{latest-pypi-version:pre}}
   - tiktoken
   - idna==3.7
