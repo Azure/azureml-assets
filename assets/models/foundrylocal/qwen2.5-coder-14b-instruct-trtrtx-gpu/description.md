@@ -1,4 +1,4 @@
-This model is an optimized version of Qwen2.5-Coder-14B-Instruct to enable local inference on TensorRT-RTX GPUs. This model uses RTN quantization.
+This model is an optimized version of Qwen2.5-Coder-14B-Instruct to enable local inference on TensorRT-RTX GPUs.
 
 # Model Description
 - **Developed by:** Microsoft
