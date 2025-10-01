@@ -3,7 +3,7 @@ name: qwen2.5-coder-7b-instruct-trtrtx-gpu
 version: 1
 path: ./
 tags:
-  foundryLocal: ""
+  foundryLocal: "test"
   license: "MIT"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/>."
   author: Microsoft
@@ -11,7 +11,7 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  alias: qwen2.5-coder-7b-instruct
+  alias: qwen2.5-coder-7b
   directoryPath: cuda-int4-rtn-block-32
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\": \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
 type: custom_model
@@ -22,6 +22,6 @@ variantInfo:
     modelType: 'ONNX'
     quantization: ['RTN']
     device: 'gpu'
-    executionProvider: 'CUDAExecutionProvider'
+  executionProvider: 'NvTensorRTRTXExecutionProvider'
     fileSizeBytes: 0
     vRamFootprintBytes: 0
