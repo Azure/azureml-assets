@@ -4,7 +4,7 @@
 
 ## 1.16.93 (2025-10-01)
 ### 🚀 New Features
-- [#TBD](https://github.com/Azure/azureml-assets/pull/[TBD]) Onboard AgentManifest asset type
+- [#4477](https://github.com/Azure/azureml-assets/pull/4477) Onboard AgentManifest asset type
 
 ## 1.16.92 (2025-09-26)
 ### 🚀 New Features
