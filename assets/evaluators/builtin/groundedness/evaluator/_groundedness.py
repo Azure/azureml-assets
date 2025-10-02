@@ -37,7 +37,8 @@ logger = logging.getLogger(__name__)
 
 class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
-    Evaluate groundedness score for a given query (optional), response, and context or a multi-turn conversation, including reasoning.
+    Evaluate groundedness score for a given query (optional), response, and context or a multi-turn conversation,
+    including reasoning.
 
     The groundedness measure assesses the correspondence between claims in an AI-generated answer and the source
     context, making sure that these claims are substantiated by the context. Even if the responses from LLM are
@@ -101,7 +102,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Initialize the Groundedness evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
-        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration, ~azure.ai.evaluation.OpenAIModelConfiguration]
+        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
+            ~azure.ai.evaluation.OpenAIModelConfiguration]
         :param threshold: The threshold for evaluation.
         :type threshold: int
         :param credential: The credential for authentication.

@@ -17,7 +17,8 @@ from azure.ai.evaluation._common._experimental import experimental
 @experimental
 class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
-    Evaluate the extent to which a given response contains all necessary and relevant information with respect to the provided ground truth.
+    Evaluate the extent to which a given response contains all necessary and relevant information with respect to
+    the provided ground truth.
 
     The completeness measure assesses how thoroughly an AI model's generated response aligns with the key information,
     claims, and statements established in the ground truth. This evaluation considers the presence, accuracy,
@@ -78,7 +79,8 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Initialize the Response Completeness evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
-        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration, ~azure.ai.evaluation.OpenAIModelConfiguration]
+        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
+            ~azure.ai.evaluation.OpenAIModelConfiguration]
         :param threshold: The threshold for evaluation.
         :type threshold: Optional[float]
         :param credential: The credential for authentication.

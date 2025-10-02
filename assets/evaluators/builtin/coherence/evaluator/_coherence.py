@@ -70,7 +70,8 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Initialize the Coherence evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
-        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration, ~azure.ai.evaluation.OpenAIModelConfiguration]
+        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
+            ~azure.ai.evaluation.OpenAIModelConfiguration]
         :param threshold: The threshold for evaluation.
         :type threshold: int
         :param credential: The credential for authentication.

@@ -71,7 +71,8 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Initialize the Fluency evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
-        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration, ~azure.ai.evaluation.OpenAIModelConfiguration]
+        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
+            ~azure.ai.evaluation.OpenAIModelConfiguration]
         :param credential: The credential for authentication.
         :type credential: Optional[Any]
         :param threshold: The threshold for evaluation.

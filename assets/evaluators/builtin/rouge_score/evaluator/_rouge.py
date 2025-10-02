@@ -52,9 +52,11 @@ class RougeScoreEvaluator(EvaluatorBase):
     ROUGE scores range from 0 to 1, with higher scores indicating better quality.
     :param rouge_type: The type of ROUGE score to calculate. Default is "rouge1".
     :type rouge_type: str
-    :param precision_threshold: The threshold value to determine if the precision evaluation passes or fails. Default is 0.5.
+    :param precision_threshold: The threshold value to determine if the precision evaluation passes or fails.
+        Default is 0.5.
     :type precision_threshold: float
-    :param recall_threshold: The threshold value to determine if the recall evaluation passes or fails. Default is 0.5.
+    :param recall_threshold: The threshold value to determine if the recall evaluation passes or fails.
+        Default is 0.5.
     :type recall_threshold: float
     :param f1_score_threshold: The threshold value to determine if the F1 score evaluation passes or fails. Default is 0.5.
     :type f1_score_threshold: float
