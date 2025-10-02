@@ -1,0 +1,100 @@
+type: "evaluator"
+name: "builtin.document_retrieval"
+version: 1
+displayName: "Document-Retrieval-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Integer [1-5]: higher means better retrieval accuracy. |\n| What is this metric? | Document Retrieval evaluates how effectively relevant documents are identified and returned in response to a query. It measures the system's ability to locate and surface the most pertinent content from a corpus. |\n| How does it work? | This metric uses precision and recall scored based on whether the retrieved documents match a predefined set of relevant documents. |\n| When to use it? | Use this metric when assessing search engines, recommendation systems, or any system tasked with retrieving documents from a large dataset. |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    ground_truth_label_min:
+      type: "integer"
+    ground_truth_label_max:
+      type: "integer"
+    ndcg_threshold:
+      type: "number"
+    xdcg_threshold:
+      type: "number"
+    fidelity_threshold:
+      type: "number"
+    top1_relevance_threshold:
+      type: "number"
+    top3_max_relevance_threshold:
+      type: "number"
+    total_retrieved_documents_threshold:
+      type: "integer"
+    total_ground_truth_documents_threshold:
+      type: "integer"
+  required: ["ground_truth_label_min", "ground_truth_label_max"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    retrieval_ground_truth:
+      type: "array"
+      items:
+        type: "object"
+        properties:
+          document_id:
+            type: "string"
+          query_relevance_label:
+            type: "integer"
+        required: ["document_id", "query_relevance_label"]
+    retrieved_documents:
+      type: "array"
+      items:
+        type: "object"
+        properties:
+          document_id:
+            type: "string"
+          relevance_score:
+            type: "number"
+        required: ["document_id", "relevance_score"]
+  required: ["retrieval_ground_truth", "retrieved_documents"]
+outputSchema:
+  ndcg@3:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  xdcg@3:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  fidelity:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  top1_relevance:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  top3_max_relevance:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  holes:
+    type: "ordinal"
+    desirable_direction: "decrease"
+    min_value: 0
+  holes_ratio:
+    type: "continuous"
+    desirable_direction: "decrease"
+    min_value: 0
+    max_value: 1
+  total_retrieved_documents:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 0
+  total_ground_truth_documents:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 0
+path: ./evaluator
