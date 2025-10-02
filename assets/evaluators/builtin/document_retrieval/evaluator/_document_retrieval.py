@@ -438,9 +438,7 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
         retrieval_ground_truth: List[RetrievalGroundTruthDocument],
         retrieved_documents: List[RetrievedDocument],
     ) -> Dict[str, float]:
-        """
-        Compute document retrieval metrics for documents retrieved from a search algorithm against a known set of
-        ground truth documents.
+        """Compute document retrieval metrics for documents retrieved from a search algorithm against ground truth.
 
         Evaluation metrics calculated include NDCG@3, XDCG@3, Fidelity, Top K Relevance and Holes.
 
