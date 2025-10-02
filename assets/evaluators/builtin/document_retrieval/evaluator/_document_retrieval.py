@@ -191,7 +191,8 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
     ) -> float:
         """Fidelity calculated over all documents retrieved from a search query.
 
-        Fidelity measures how objectively good are all of the documents retrieved compared with all known good documents in the underlying data store.
+        Fidelity measures how objectively good are all of the documents retrieved compared with all known good
+        documents in the underlying data store.
 
         :param result_docs_groundtruth_labels: A list of retrieved documents' ground truth labels.
         :type result_docs_groundtruth_labels: List[int]
@@ -260,7 +261,8 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
         :param eval_input: The input to the evaluation function.
         :type eval_input: Dict
         :return: The evaluation result.
-        :rtype: Tuple[List[azure.ai.evaluation.RetrievalGroundTruthDocument], List[azure.ai.evaluation.RetrievedDocument]]
+        :rtype: Tuple[List[azure.ai.evaluation.RetrievalGroundTruthDocument],
+                      List[azure.ai.evaluation.RetrievedDocument]]
         """
         retrieval_ground_truth = eval_input.get("retrieval_ground_truth")
         retrieved_documents = eval_input.get("retrieved_documents")
@@ -296,18 +298,18 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
             if query_relevance_label < self.ground_truth_label_min:
                 raise EvaluationException(
                     (
-                        "A query relevance label less than the configured minimum value was detected in the evaluation input data. "
-                        "Check the range of ground truth label values in the input data and set the value of ground_truth_label_min to "
-                        "the appropriate value for your data."
+                        "A query relevance label less than the configured minimum value was detected in the "
+                        "evaluation input data. Check the range of ground truth label values in the input data and "
+                        "set the value of ground_truth_label_min to the appropriate value for your data."
                     )
                 )
 
             if query_relevance_label > self.ground_truth_label_max:
                 raise EvaluationException(
                     (
-                        "A query relevance label greater than the configured maximum value was detected in the evaluation input data. "
-                        "Check the range of ground truth label values in the input data and set the value of ground_truth_label_max to "
-                        "the appropriate value for your data."
+                        "A query relevance label greater than the configured maximum value was detected in the "
+                        "evaluation input data. Check the range of ground truth label values in the input data and "
+                        "set the value of ground_truth_label_max to the appropriate value for your data."
                     )
                 )
 
@@ -452,13 +454,16 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
     @override
     def __call__(self, *args, **kwargs):
         """
-        Compute document retrieval metrics for documents retrieved from a search algorithm against a known set of ground truth documents.
+        Compute document retrieval metrics for documents retrieved from a search algorithm against a known set of
+        ground truth documents.
 
         Evaluation metrics calculated include NDCG@3, XDCG@3, Fidelity, Top K Relevance and Holes.
 
-        :keyword retrieval_ground_truth: a list of ground-truth document judgements for a query, where each item in the list contains a unique document identifier and a query relevance label.
+        :keyword retrieval_ground_truth: a list of ground-truth document judgements for a query, where each item in
+            the list contains a unique document identifier and a query relevance label.
         :paramtype retrieval_ground_truth: List[azure.ai.evaluation.RetrievalGroundTruthDocument]
-        :keyword retrieved_documents: a list of documents scored by a search algorithm for a query, where each item in the list contains a unique document identifier and a relevance score.
+        :keyword retrieved_documents: a list of documents scored by a search algorithm for a query, where each item
+            in the list contains a unique document identifier and a relevance score.
         :paramtype retrieved_documents: List[azure.ai.evaluation.RetrievedDocument]
         :return: The document retrieval metrics.
         :rtype: Dict[str, float]

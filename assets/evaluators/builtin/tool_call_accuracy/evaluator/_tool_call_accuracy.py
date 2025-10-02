@@ -260,7 +260,8 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE,
             ):
                 raise EvaluationException(
-                    message=f"Invalid score value: {score}. Expected a number in range [{ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE}, {ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE}].",
+                    message=f"Invalid score value: {score}. Expected a number in range "
+                            f"[{ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE}, {ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE}].",
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
@@ -403,13 +404,15 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :paramtype query: Union[str, List[dict]]
         :keyword tool_definitions: List of tool definitions whose calls are being evaluated.
         :paramtype tool_definitions: Union[dict, List[dict]]
-        :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided and should have
-            tool call(s) in it.
+        :keyword tool_calls: Optional List of tool calls to evaluate. If not provided response should be provided
+            and should have tool call(s) in it.
         :paramtype tool_calls: Union[dict, List[dict]]
         :keyword response: Optional response to be evaluated alongside the tool calls.
             If provided all tool calls in response will be evaluated when tool_calls parameter is not provided.
-            If provided and tool_calls parameter is provided, only the tool calls in tool_calls parameter will be evaluated.
-                If response has extra tool calls they will not be evaluated, response will be used to extract any tool calls that are needed for evaluating a certain tool call.
+            If provided and tool_calls parameter is provided, only the tool calls in tool_calls parameter
+            will be evaluated.
+                If response has extra tool calls they will not be evaluated, response will be used to extract
+                any tool calls that are needed for evaluating a certain tool call.
             Recommended to provide it when there are tool calls that depend on output of a previous tool call.
         :paramtype response: Union[str, List[dict]]
         :return: The tool selection evaluation results.

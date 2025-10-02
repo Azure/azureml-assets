@@ -242,7 +242,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     f"{self._result_key}_result": "pass",
                     f"{self._result_key}_threshold": self.threshold,
                     f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness are "
-                                                   f"{self._SUPPORTED_TOOLS}.",
+                                                  f"{self._SUPPORTED_TOOLS}.",
                 }
             else:
                 raise ex
@@ -268,7 +268,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         context = self._get_context_from_agent_response(response, tool_definitions)
         if not context:
             raise EvaluationException(
-                message=f"Context could not be extracted from agent response. Supported tools for groundedness are {self._SUPPORTED_TOOLS}. If supported tools are not used groundedness is not calculated.",
+                message=f"Context could not be extracted from agent response. Supported tools for groundedness are "
+                        f"{self._SUPPORTED_TOOLS}. If supported tools are not used groundedness is not calculated.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.NOT_APPLICABLE,
                 target=ErrorTarget.GROUNDEDNESS_EVALUATOR,

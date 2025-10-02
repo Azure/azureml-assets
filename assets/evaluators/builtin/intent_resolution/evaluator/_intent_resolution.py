@@ -111,22 +111,24 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             evaluator = IntentResolutionEvaluator(model_config)
             query: [
                 {'role': 'system', 'content': 'You are a friendly and helpful customer service agent.'},
-                {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text', 'text':
-                 'Hi, I need help with the last 2 orders on my account #888. Could you please update me on their status?'}]}
+                {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text',
+                 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me on their status?'}]}
             ]
             response: [
                 {'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant',
                  'content': [{'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}]},
                 {'createdAt': 1700000075, 'run_id': '0', 'role': 'assistant',
                  'content': [{'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_001', 'type': 'function',
-                 'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}}}]},
+                              'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}}}]},
                 {'createdAt': 1700000080, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_001', 'role': 'tool',
-                 'content': [{'type': 'tool_result', 'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]},
+                 'content': [{'type': 'tool_result',
+                              'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]},
                 {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant',
-                 'content': [{'type': 'text', 'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}]},
+                 'content': [{'type': 'text',
+                              'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}]},
                 {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [
                     {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function',
-                     'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}},
+                                                         'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}},
                     {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_003', 'type': 'function',
                      'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}}}
                 ]},
@@ -135,7 +137,9 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool',
                  'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]},
                 {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text',
-                 'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. However, the order with ID 124 is delayed and should now arrive by March 20, 2025. Is there anything else I can help you with?'}]}
+                 'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. '
+                         'However, the order with ID 124 is delayed and should now arrive by March 20, 2025. '
+                         'Is there anything else I can help you with?'}]}
             ]
             tool_definitions: [
                 {'name': 'get_orders', 'description': 'Get the list of orders for a given account number.',
@@ -212,7 +216,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE,
             ):
                 raise EvaluationException(
-                    message=f"Invalid score value: {score}. Expected a number in range [{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, {IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
+                    message=f"Invalid score value: {score}. Expected a number in range "
+                            f"[{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, {IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,

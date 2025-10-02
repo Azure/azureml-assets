@@ -122,7 +122,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             query = [
                 {'role': 'system', 'content': 'You are a friendly and helpful customer service agent.'},
                 {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text',
-                 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me on their status?'}]}
+                 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me '
+                         'on their status?'}]}
             ]
             response = [
                 {'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant',
@@ -143,11 +144,15 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                      'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}}}
                 ]},
                 {'createdAt': 1700000095, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_002', 'role': 'tool',
-                 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "123", "status": "shipped", "delivery_date": "2025-03-15" } }'}]},
+                 'content': [{'type': 'tool_result',
+                              'tool_result': '{ "order": { "id": "123", "status": "shipped", "delivery_date": "2025-03-15" } }'}]},
                 {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool',
-                 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]},
+                 'content': [{'type': 'tool_result',
+                              'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]},
                 {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text',
-                 'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. However, the order with ID 124 is delayed and should now arrive by March 20, 2025. Is there anything else I can help you with?'}]}
+                 'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. '
+                         'However, the order with ID 124 is delayed and should now arrive by March 20, 2025. '
+                         'Is there anything else I can help you with?'}]}
             ]
             tool_definitions = [
                 {'name': 'get_orders', 'description': 'Get the list of orders for a given account number.',

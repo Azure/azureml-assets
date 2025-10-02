@@ -159,7 +159,8 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do completeness evaluation.
 
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the
+            _flow method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
@@ -169,7 +170,8 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if "ground_truth" not in eval_input or "response" not in eval_input:
             raise EvaluationException(
                 message="Both ground_truth and response must be provided as input to the completeness evaluator.",
-                internal_message="Both ground_truth and response must be provided as input to the completeness evaluator.",
+                internal_message="Both ground_truth and response must be provided as input to the completeness "
+                                "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.COMPLETENESS_EVALUATOR,
