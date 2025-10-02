@@ -1,0 +1,43 @@
+type: "evaluator"
+name: "builtin.groundedness_pro"
+version: 1
+displayName: "Service-Groundedness-Evaluator"
+description: "|   | |\n| -- | -- |\n| Score range | Boolean: [true, false]: false if response is ungrounded and true if it's grounded.  |\n| What is this metric? | Groundedness Pro (powered by Azure AI Content Safety) detects whether the generated text response is consistent or accurate with respect to the given context in a retrieval-augmented generation question and answering scenario. It checks whether the response adheres closely to the context in order to answer the query, avoiding speculation or fabrication, and outputs a true/false label. |\n| How does it work? | Groundedness Pro leverages an Azure AI Content Safety Service custom language model fine-tuned to a natural language processing task called Natural Language Inference (NLI), which evaluates claims in response to a query as being entailed or not entailed by the given context. |\n| When to use it? | The recommended scenario is retrieval-augmented generation question and answering (RAG QA). Use the Groundedness Pro metric when you need to verify that AI-generated responses align with and are validated by the provided context. It's essential for applications where contextual accuracy is key, like information retrieval and question and answering. This metric ensures that the AI-generated answers are well-supported by the context. |\n| What does it need as input? | Query, Context, Response |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "service"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    credential:
+      type: "object"
+    azure_ai_project:
+      type: "object"
+      properties:
+        project_name:
+          type: "string"
+        resource_group_name:
+          type: "string"
+        subscription_id:
+          type: "string"
+      required: ["project_name", "resource_group_name", "subscription_id"]
+    threshold:
+      type: "integer"
+  required: ["credential", "azure_ai_project"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    context:
+      type: "string"
+    response:
+      type: "string"
+    query:
+      type: "string"
+    conversation:
+      type: "object"
+outputSchema:
+  groundedness_pro:
+    type: "boolean"
+    desirable_direction: "increase"

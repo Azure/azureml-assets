@@ -1,0 +1,45 @@
+type: "evaluator"
+name: "builtin.label_grader"
+version: 1
+displayName: "Label-Grader-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: 0 is False and 1 is True |\n| What is this metric? | LABEL_GRADER classifies outputs based on defined labels. It returns structured results with explanations for why each label was chosen. |\n| How does it work? | It uses classification metrics like accuracy, precision, recall, and F1 score to compare predicted labels against ground truth. |\n| When to use it? | Use this metric in classification tasks, tagging systems, and intent detection. |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "openai_graders"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    model:
+      type: "string"
+    name:
+      type: "string"
+    input:
+      type: "array"
+      items:
+        type: "object"
+        properties:
+          content:
+            type: "string"
+          role:
+            type: "string"
+        required: ["content", "role"]
+    type:
+      type: "string"
+    labels:
+      type: "array"
+      items:
+        type: "string"
+    passing_labels:
+      type: "array"
+      items:
+        type: "string"
+  required: ["deployment_name", "model", "name", "input", "type", "labels", "passing_labels"]
+dataMappingSchema: {}
+outputSchema:
+  label_model:
+    type: "boolean"
+    desirable_direction: "increase"
