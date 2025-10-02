@@ -143,7 +143,9 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                               'tool_result': '{ "order": { "id": "123", "status": "shipped", '
                                              '"delivery_date": "2025-03-15" } }'}]},
                 {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool',
-                 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]},
+                 'content': [{'type': 'tool_result',
+                              'tool_result': '{ "order": { "id": "124", "status": "delayed", '
+                                             '"expected_delivery": "2025-03-20" } }'}]},
                 {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text',
                  'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. '
                          'However, the order with ID 124 is delayed and should now arrive by March 20, 2025. '
@@ -209,7 +211,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             raise EvaluationException(
                 message="Both query and response must be provided as input to the intent resolution evaluator.",
                 internal_message="Both query and response must be provided as input to the intent resolution "
-                                "evaluator.",
+                                 "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
