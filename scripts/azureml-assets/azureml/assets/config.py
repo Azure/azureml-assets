@@ -44,6 +44,7 @@ class AssetType(Enum):
     PROMPT = 'prompt'
     AGENTBLUEPRINT = 'agentblueprint'
     EVALUATOR = 'evaluator'
+    AGENTMANIFEST = 'agentmanifest'
 
 
 class ComponentType(Enum):
