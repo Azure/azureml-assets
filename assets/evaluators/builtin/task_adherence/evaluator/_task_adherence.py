@@ -22,8 +22,7 @@ logger = logging.getLogger(__name__)
 
 @experimental
 class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Task Adherence evaluator assesses how well an AI-generated response follows the assigned task based on
-    the following criteria.
+    """The Task Adherence evaluator assesses how well an AI-generated response follows the assigned task based on criteria.
 
         - Alignment with instructions and definitions
         - Accuracy and clarity of the response

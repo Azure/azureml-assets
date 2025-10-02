@@ -16,9 +16,7 @@ from azure.ai.evaluation._common._experimental import experimental
 
 @experimental
 class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """
-    Evaluate the extent to which a given response contains all necessary and relevant information with respect to
-    the provided ground truth.
+    """Evaluate the extent to which a given response contains all necessary and relevant information with respect to ground truth.
 
     The completeness measure assesses how thoroughly an AI model's generated response aligns with the key information,
     claims, and statements established in the ground truth. This evaluation considers the presence, accuracy,

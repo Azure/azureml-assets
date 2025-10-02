@@ -138,8 +138,7 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
         result_docs_groundtruth_labels: List[int],
         ideal_docs_groundtruth_labels: List[int],
     ) -> float:
-        """NDCG (Normalized Discounted Cumulative Gain) calculated for the top K documents retrieved from a
-        search query.
+        """Calculate NDCG (Normalized Discounted Cumulative Gain) for the top K documents retrieved from a search query.
 
         NDCG measures how well a document ranking compares to an ideal document ranking given a list of
         ground-truth documents.
@@ -457,9 +456,7 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
 
     @override
     def __call__(self, *args, **kwargs):
-        """
-        Compute document retrieval metrics for documents retrieved from a search algorithm against a known set of
-        ground truth documents.
+        """Compute document retrieval metrics for documents retrieved from a search algorithm against a known set of ground truth documents.
 
         Evaluation metrics calculated include NDCG@3, XDCG@3, Fidelity, Top K Relevance and Holes.
 

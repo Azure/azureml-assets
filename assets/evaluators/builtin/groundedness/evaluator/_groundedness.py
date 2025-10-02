@@ -36,9 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """
-    Evaluate groundedness score for a given query (optional), response, and context or a multi-turn conversation,
-    including reasoning.
+    """Evaluate groundedness score for a given query (optional), response, and context or a multi-turn conversation.
 
     The groundedness measure assesses the correspondence between claims in an AI-generated answer and the source
     context, making sure that these claims are substantiated by the context. Even if the responses from LLM are
