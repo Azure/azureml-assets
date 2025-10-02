@@ -8,6 +8,7 @@ evaluatorSubType: "code"
 categories: ["agents"]
 tags:
   provider: "Microsoft"
+  scenario: "red_team"
 initParameterSchema:
   type: "object"
   properties:
