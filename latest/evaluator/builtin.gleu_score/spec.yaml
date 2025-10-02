@@ -1,0 +1,47 @@
+type: "evaluator"
+name: "builtin.gleu_score"
+version: 1
+displayName: "Gleu-Score-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Float [0-1]: higher means better
+  quality. |\n| What is this metric? | The GLEU (Google-BLEU) score measures the similarity
+  by shared n-grams between the generated text and ground truth, similar to the BLEU
+  score, focusing on both precision and recall. But it addresses the drawbacks of
+  the BLEU score using a per-sentence reward objective. |\n| How does it work? | The
+  GLEU score is computed by averaging the precision and recall of n-grams between
+  the generated text and both the reference text and source text. It considers both
+  the overlap of n-grams with the reference (similar to BLEU) and penalizes for over-generation.
+  The score provides a balanced metric, where a value of 1 represents perfect overlap,
+  and 0 represents no overlap. |\n| When to use it? | The recommended scenario is
+  Natural Language Processing (NLP) tasks. This balanced evaluation, designed for
+  sentence-level assessment, makes it ideal for detailed analysis of translation quality.
+  GLEU is well-suited for use cases such as machine translation, text summarization,
+  and text generation. |\n| What does it need as input? | Response, Ground Truth |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 0.1
+  required: ["threshold"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    ground_truth:
+      type: "string"
+    response:
+      type: "string"
+  required: ["ground_truth", "response"]
+outputSchema:
+  gleu:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator

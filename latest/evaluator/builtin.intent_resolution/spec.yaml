@@ -1,0 +1,55 @@
+type: "evaluator"
+name: "builtin.intent_resolution"
+version: 1
+displayName: "Intent-Resolution-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: higher means better
+  intent understanding. |\n| What is this metric? | Intent Resolution assesses how
+  accurately a system identifies and acts upon the user's underlying intent. |\n|
+  How does it work? | It compares predicted intent labels against ground truth using
+  classification metrics like accuracy, precision, and recall. |\n| When to use it?
+  | Use this metric in conversational AI, voice assistants, and customer support bots
+  where understanding user intent is essential. |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+    credential:
+      type: "object"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+      - type: "string"
+      - type: "array"
+        items:
+          type: "object"
+    response:
+      anyOf:
+      - type: "string"
+      - type: "array"
+        items:
+          type: "object"
+    tool_definitions:
+      anyOf:
+      - type: "object"
+      - type: "array"
+        items:
+          type: "object"
+  required: ["query", "response"]
+outputSchema:
+  intent_resolution:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator

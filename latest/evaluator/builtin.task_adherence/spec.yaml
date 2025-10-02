@@ -1,0 +1,57 @@
+type: "evaluator"
+name: "builtin.task_adherence"
+version: 1
+displayName: "Task-Adherence-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: higher means better
+  alignment with task requirements. |\n| What is this metric? | Task Adherence evaluates
+  whether the system's output conforms to the specified task constraints, such as
+  format, scope, and required actions. |\n| How does it work? | This metric uses rule-based
+  or model-based validation to check compliance with task instructions. It may include
+  binary checks or graded scoring based on deviation severity. |\n| When to use it?
+  | Useful for workflow automation, form filling, and structured response generation.
+  |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents"]
+tags:
+  provider: "Microsoft"
+  scenario: "red_team"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+    credential:
+      type: "object"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+      - type: "string"
+      - type: "array"
+        items:
+          type: "object"
+    response:
+      anyOf:
+      - type: "string"
+      - type: "array"
+        items:
+          type: "object"
+    tool_definitions:
+      anyOf:
+      - type: "object"
+      - type: "array"
+        items:
+          type: "object"
+  required: ["query", "response"]
+outputSchema:
+  task_adherence:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator

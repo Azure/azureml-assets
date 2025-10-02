@@ -1,0 +1,41 @@
+type: "evaluator"
+name: "builtin.response_completeness"
+version: 1
+displayName: "Response-Completeness-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Integer [1–5]: 1 is the lowest quality
+  and 5 is the highest quality. |\n| What is this metric? | Response Completeness
+  measures how thoroughly a system answers a user's query. It evaluates whether all
+  relevant aspects of the question are addressed. |\n| How does it work? | This metric
+  compares the generated response against a comprehensive reference answer using coverage-based
+  scoring. |\n| When to use it? | Ideal for evaluating chatbots, virtual assistants,
+  and QA systems where full and informative responses are critical. |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+    credential:
+      type: "object"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    ground_truth:
+      type: "string"
+    response:
+      type: "string"
+  required: ["ground_truth", "response"]
+outputSchema:
+  response_completeness:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator

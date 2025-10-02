@@ -1,0 +1,50 @@
+type: "evaluator"
+name: "builtin.similarity"
+version: 1
+displayName: "Similarity-Evaluator"
+description: "| \t| |\n| -- | -- |\n| Score range |\tInteger [1-5]: 1 is the lowest
+  quality and 5 is the highest quality. |\n| What is this metric? | Similarity measures
+  the degrees of similarity between the generated text and its ground truth with respect
+  to a query. |\n| How does it work? | The similarity metric is calculated by instructing
+  a language model to follow the definition (in the description) and a set of grading
+  rubrics, evaluate the user inputs, and output a score on a 5-point scale (higher
+  means better quality). Learn more about our [definition and grading rubrics](https://learn.microsoft.com/azure/ai-studio/concepts/evaluation-metrics-built-in?tabs=warning#ai-assisted-similarity).
+  |\n| When to use it? |\tThe recommended scenario is NLP tasks with a user query.
+  Use it when you want an objective evaluation of an AI model's performance, particularly
+  in text generation tasks where you have access to ground truth responses. Similarity
+  enables you to assess the generated text's semantic alignment with the desired content,
+  helping to gauge the model's quality and accuracy.|\n| What does it need as input?
+  |\tResponse, Ground Truth |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+  required: ["deployment_name", "threshold"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+    response:
+      type: "string"
+    ground_truth:
+      type: "string"
+  required: ["query", "response", "ground_truth"]
+outputSchema:
+  similarity:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator

@@ -1,0 +1,54 @@
+type: "evaluator"
+name: "builtin.groundedness"
+version: 1
+displayName: "Groundedness-Evaluator"
+description: "| \t| |\n| -- | -- |\n| Score range |\tInteger [1-5]: 1 is the lowest
+  quality and 5 is the highest quality. |\n| What is this metric? | Groundedness measures
+  how well the generated response aligns with the given context in a retrieval-augmented
+  generation scenario, focusing on its relevance and accuracy with respect to the
+  context. If a query is present in the input, the recommended scenario is question
+  and answering. Otherwise, the recommended scenario is summarization. |\n| How does
+  it work? | The groundedness metric is calculated by instructing a language model
+  to follow the definition and a set of grading rubrics, evaluate the user inputs,
+  and output a score on a 5-point scale (higher means better quality). Learn more
+  about our [definition and grading rubrics](https://learn.microsoft.com/azure/ai-studio/concepts/evaluation-metrics-built-in?tabs=warning#groundedness).
+  |\n| When to use it? |\tThe recommended scenario is retrieval-augmented generation
+  (RAG) scenarios, including question and answering and summarization. Use the groundedness
+  metric when you need to verify that AI-generated responses align with and are validated
+  by the provided context. It's essential for applications where contextual accuracy
+  is key, like information retrieval, question and answering, and summarization. This
+  metric ensures that the AI-generated answers are well-supported by the context.|\n\
+  | What does it need as input? |\tQuery (Optional), Context, Response |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+  required: ["deployment_name", "threshold"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    context:
+      type: "string"
+    query:
+      type: "string"
+    response:
+      type: "string"
+  required: ["context", "response"]
+outputSchema:
+  groundedness:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator
