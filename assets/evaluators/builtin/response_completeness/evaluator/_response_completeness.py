@@ -171,7 +171,7 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             raise EvaluationException(
                 message="Both ground_truth and response must be provided as input to the completeness evaluator.",
                 internal_message="Both ground_truth and response must be provided as input to the completeness "
-                                "evaluator.",
+                                 "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.COMPLETENESS_EVALUATOR,

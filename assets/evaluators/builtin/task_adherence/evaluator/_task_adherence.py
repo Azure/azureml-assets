@@ -133,9 +133,11 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                      'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}}}
                 ]},
                 {'createdAt': 1700000080, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_001', 'role': 'tool',
-                 'content': [{'type': 'tool_result', 'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]},
+                 'content': [{'type': 'tool_result',
+                              'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]},
                 {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant', 'content': [
-                    {'type': 'text', 'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}
+                    {'type': 'text',
+                     'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}
                 ]},
                 {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [
                     {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function',
@@ -145,10 +147,12 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 ]},
                 {'createdAt': 1700000095, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_002', 'role': 'tool',
                  'content': [{'type': 'tool_result',
-                              'tool_result': '{ "order": { "id": "123", "status": "shipped", "delivery_date": "2025-03-15" } }'}]},
+                              'tool_result': '{ "order": { "id": "123", "status": "shipped", '
+                                             '"delivery_date": "2025-03-15" } }'}]},
                 {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool',
                  'content': [{'type': 'tool_result',
-                              'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]},
+                              'tool_result': '{ "order": { "id": "124", "status": "delayed", '
+                                             '"expected_delivery": "2025-03-20" } }'}]},
                 {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text',
                  'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. '
                          'However, the order with ID 124 is delayed and should now arrive by March 20, 2025. '

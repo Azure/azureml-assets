@@ -138,7 +138,8 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
         result_docs_groundtruth_labels: List[int],
         ideal_docs_groundtruth_labels: List[int],
     ) -> float:
-        """NDCG (Normalized Discounted Cumulative Gain) calculated for the top K documents retrieved from a search query.
+        """NDCG (Normalized Discounted Cumulative Gain) calculated for the top K documents retrieved from a
+        search query.
 
         NDCG measures how well a document ranking compares to an ideal document ranking given a list of
         ground-truth documents.
@@ -439,13 +440,16 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
         retrieved_documents: List[RetrievedDocument],
     ) -> Dict[str, float]:
         """
-        Compute document retrieval metrics for documents retrieved from a search algorithm against a known set of ground truth documents.
+        Compute document retrieval metrics for documents retrieved from a search algorithm against a known set of
+        ground truth documents.
 
         Evaluation metrics calculated include NDCG@3, XDCG@3, Fidelity, Top K Relevance and Holes.
 
-        :keyword retrieval_ground_truth: a list of ground-truth document judgements for a query, where each item in the list contains a unique document identifier and a query relevance label.
+        :keyword retrieval_ground_truth: a list of ground-truth document judgements for a query, where each item in
+            the list contains a unique document identifier and a query relevance label.
         :paramtype retrieval_ground_truth: List[azure.ai.evaluation.RetrievalGroundTruthDocument]
-        :keyword retrieved_documents: a list of documents scored by a search algorithm for a query, where each item in the list contains a unique document identifier and a relevance score.
+        :keyword retrieved_documents: a list of documents scored by a search algorithm for a query, where each item
+            in the list contains a unique document identifier and a relevance score.
         :paramtype retrieved_documents: List[azure.ai.evaluation.RetrievedDocument]
         :return: The document retrieval metrics.
         :rtype: Dict[str, float]

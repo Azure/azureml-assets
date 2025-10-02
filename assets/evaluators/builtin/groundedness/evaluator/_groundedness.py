@@ -241,8 +241,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     self._result_key: self._NOT_APPLICABLE_RESULT,
                     f"{self._result_key}_result": "pass",
                     f"{self._result_key}_threshold": self.threshold,
-                    f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness are "
-                                                  f"{self._SUPPORTED_TOOLS}.",
+                    f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness "
+                                                  f"are {self._SUPPORTED_TOOLS}.",
                 }
             else:
                 raise ex

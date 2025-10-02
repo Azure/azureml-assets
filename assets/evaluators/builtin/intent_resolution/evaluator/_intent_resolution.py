@@ -112,13 +112,15 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             query: [
                 {'role': 'system', 'content': 'You are a friendly and helpful customer service agent.'},
                 {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text',
-                 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me on their status?'}]}
+                 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me '
+                         'on their status?'}]}
             ]
             response: [
                 {'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant',
                  'content': [{'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}]},
                 {'createdAt': 1700000075, 'run_id': '0', 'role': 'assistant',
-                 'content': [{'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_001', 'type': 'function',
+                 'content': [{'type': 'tool_call',
+                              'tool_call': {'id': 'tool_call_20250310_001', 'type': 'function',
                               'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}}}]},
                 {'createdAt': 1700000080, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_001', 'role': 'tool',
                  'content': [{'type': 'tool_result',
@@ -127,8 +129,9 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                  'content': [{'type': 'text',
                               'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}]},
                 {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [
-                    {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function',
-                                                         'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}},
+                    {'type': 'tool_call',
+                     'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function',
+                                   'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}},
                     {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_003', 'type': 'function',
                      'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}}}
                 ]},
@@ -160,7 +163,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             result = evaluator(query=query, response=response, tool_definitions=tool_definitions)
 
         :keyword query: The query to be evaluated which is either a string or a list of messages.
-            The list of messages is the previous conversation history of the user and agent, including system messages and tool calls.
+            The list of messages is the previous conversation history of the user and agent, including system
+            messages and tool calls.
         :paramtype query: Union[str, List[dict]]
         :keyword response: The response to be evaluated, which is either a string or a list of messages
             (full agent response potentially including tool calls)
@@ -188,12 +192,14 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do intent resolution evaluation.
 
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the
+            _flow method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
         """
-        # we override the _do_eval method as we want the output to be a dictionary, which is a different schema than _base_prompty_eval.py
+        # we override the _do_eval method as we want the output to be a dictionary, which is a different schema
+        # than _base_prompty_eval.py
         if "query" not in eval_input and "response" not in eval_input:
             raise EvaluationException(
                 message="Both query and response must be provided as input to the intent resolution evaluator.",
@@ -217,7 +223,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             ):
                 raise EvaluationException(
                     message=f"Invalid score value: {score}. Expected a number in range "
-                            f"[{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, {IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
+                            f"[{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, "
+                            f"{IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
