@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/olive-trt-models/Qwen-Qwen2.5-Coder-1.5B-Instruct
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
