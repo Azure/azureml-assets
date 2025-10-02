@@ -58,7 +58,8 @@ class RougeScoreEvaluator(EvaluatorBase):
     :param recall_threshold: The threshold value to determine if the recall evaluation passes or fails.
         Default is 0.5.
     :type recall_threshold: float
-    :param f1_score_threshold: The threshold value to determine if the F1 score evaluation passes or fails. Default is 0.5.
+    :param f1_score_threshold: The threshold value to determine if the F1 score evaluation passes or fails.
+        Default is 0.5.
     :type f1_score_threshold: float
 
     .. admonition:: Example:

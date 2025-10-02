@@ -241,7 +241,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     self._result_key: self._NOT_APPLICABLE_RESULT,
                     f"{self._result_key}_result": "pass",
                     f"{self._result_key}_threshold": self.threshold,
-                    f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness are {self._SUPPORTED_TOOLS}.",
+                    f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness are "
+                                                   f"{self._SUPPORTED_TOOLS}.",
                 }
             else:
                 raise ex
@@ -255,7 +256,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         tool_definitions = kwargs.get("tool_definitions")
 
         if not query or not response or not tool_definitions:
-            msg = f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. For Agent groundedness 'query', 'response' and 'tool_definitions' are required."
+            msg = (f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. "
+                   f"For Agent groundedness 'query', 'response' and 'tool_definitions' are required.")
             raise EvaluationException(
                 message=msg,
                 blame=ErrorBlame.USER_ERROR,

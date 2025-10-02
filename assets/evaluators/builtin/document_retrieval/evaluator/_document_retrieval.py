@@ -121,7 +121,7 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
     def _compute_holes(self, actual_docs: List[str], labeled_docs: List[str]) -> int:
         """Compute the number of documents retrieved from a search query which have no provided ground-truth label.
 
-        This metric is helpful for determining the accuracy of other metrics that are highly sensitive to 
+        This metric is helpful for determining the accuracy of other metrics that are highly sensitive to
         missing ground-truth knowledge, such as NDCG, XDCG, and Fidelity.
 
         :param actual_docs: A list of retrieved documents' IDs.
@@ -140,7 +140,7 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
     ) -> float:
         """NDCG (Normalized Discounted Cumulative Gain) calculated for the top K documents retrieved from a search query.
 
-        NDCG measures how well a document ranking compares to an ideal document ranking given a list of 
+        NDCG measures how well a document ranking compares to an ideal document ranking given a list of
         ground-truth documents.
 
         :param result_docs_groundtruth_labels: A list of retrieved documents' ground truth labels.
