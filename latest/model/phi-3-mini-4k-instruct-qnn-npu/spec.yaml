@@ -22,7 +22,7 @@ type: custom_model
 variantInfo:
   parents:
   - assetId: 
-      azureml://registries/azureml/models/phi-3-mini-4k-instruct/versions/1
+      azureml://registries/azureml/models/Phi-3-mini-4k-instruct/versions/15
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['QuaRot', 'GPTQ']

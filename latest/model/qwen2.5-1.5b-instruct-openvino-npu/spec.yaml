@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-1.5b-instruct-openvino-npu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
