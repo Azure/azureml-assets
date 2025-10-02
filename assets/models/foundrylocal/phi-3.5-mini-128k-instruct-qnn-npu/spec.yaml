@@ -17,7 +17,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/phi-3.5-mini-128k-instruct/versions/1
+  - assetId: azureml://registries/azureml/models/Phi-3.5-mini-instruct/versions/6
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['QuaRot', 'GPTQ']
