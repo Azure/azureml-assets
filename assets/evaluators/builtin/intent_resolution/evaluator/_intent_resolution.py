@@ -127,16 +127,21 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                               'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]},
                 {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant',
                  'content': [{'type': 'text',
-                              'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}]},
+                              'text': 'Thanks for your patience. I see two orders on your account. '
+                                      'Let me fetch the details for both.'}]},
                 {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [
                     {'type': 'tool_call',
                      'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function',
                                    'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}},
-                    {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_003', 'type': 'function',
-                     'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}}}
+                    {'type': 'tool_call',
+                     'tool_call': {'id': 'tool_call_20250310_003', 'type': 'function',
+                                   'function': {'name': 'get_order',
+                                               'arguments': {'order_id': '124'}}}}
                 ]},
                 {'createdAt': 1700000095, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_002', 'role': 'tool',
-                 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "123", "status": "shipped", "delivery_date": "2025-03-15" } }'}]},
+                 'content': [{'type': 'tool_result',
+                              'tool_result': '{ "order": { "id": "123", "status": "shipped", '
+                                             '"delivery_date": "2025-03-15" } }'}]},
                 {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool',
                  'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]},
                 {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text',
@@ -203,7 +208,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if "query" not in eval_input and "response" not in eval_input:
             raise EvaluationException(
                 message="Both query and response must be provided as input to the intent resolution evaluator.",
-                internal_message="Both query and response must be provided as input to the intent resolution evaluator.",
+                internal_message="Both query and response must be provided as input to the intent resolution "
+                                "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
@@ -213,7 +219,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         eval_input["response"] = reformat_agent_response(eval_input["response"], logger)
 
         llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        # llm_output should always be a dictionary because the response_format of prompty is set to json_object, but checking anyway
+        # llm_output should always be a dictionary because the response_format of prompty is set to json_object,
+        # but checking anyway
         if isinstance(llm_output, dict):
             score = llm_output.get("score", math.nan)
             if not check_score_is_valid(

@@ -137,7 +137,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                               'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]},
                 {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant', 'content': [
                     {'type': 'text',
-                     'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}
+                     'text': 'Thanks for your patience. I see two orders on your account. '
+                             'Let me fetch the details for both.'}
                 ]},
                 {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [
                     {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function',
@@ -178,7 +179,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         :keyword query: The query being evaluated, either a string or a list of messages.
         :paramtype query: Union[str, List[dict]]
-        :keyword response: The response being evaluated, either a string or a list of messages (full agent response potentially including tool calls)
+        :keyword response: The response being evaluated, either a string or a list of messages (full agent
+            response potentially including tool calls)
         :paramtype response: Union[str, List[dict]]
         :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
         :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
@@ -203,7 +205,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do Task Adherence evaluation.
 
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for
+            the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
