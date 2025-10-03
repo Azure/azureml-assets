@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20250917.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04@sha256:42d89a0409f76aab4b23eb0d78a4917eb6ed9c9eeab44d5292e69650ae05e8ba
 
 # Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/rag-embeddings
