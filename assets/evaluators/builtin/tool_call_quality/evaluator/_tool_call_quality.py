@@ -56,8 +56,8 @@ def _get_needed_built_in_definitions(tool_calls: List[Dict]) -> List[Dict]:
 
 
 @experimental
-class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Tool Call Accuracy evaluator assesses how accurately an AI uses tools by examining the following criteria.
+class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+    """The Tool Call Quality evaluator assesses how well an AI uses tools by examining the following criteria.
 
         - Relevance to the conversation.
         - Parameter correctness according to tool definitions.
@@ -87,7 +87,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             :end-before: [END tool_call_accuracy_evaluator]
             :language: python
             :dedent: 8
-            :caption: Initialize and call a ToolCallAccuracyEvaluator.
+            :caption: Initialize and call a ToolCallQualityEvaluator.
 
     .. admonition:: Example using Azure AI Project URL:
 
@@ -96,7 +96,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             :end-before: [END tool_call_accuracy_evaluator]
             :language: python
             :dedent: 8
-            :caption: Initialize and call ToolCallAccuracyEvaluator using Azure AI Project URL in the following format
+            :caption: Initialize and call ToolCallQualityEvaluator using Azure AI Project URL in the following format
                 https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
 
     .. note::
@@ -106,12 +106,12 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         however, it is recommended to use the new key moving forward as the old key will be deprecated in the future.
     """
 
-    _PROMPTY_FILE = "tool_call_accuracy.prompty"
-    _RESULT_KEY = "tool_call_accuracy"
+    _PROMPTY_FILE = "tool_call_quality.prompty"
+    _RESULT_KEY = "tool_call_quality"
 
-    _MAX_TOOL_CALL_ACCURACY_SCORE = 5
-    _MIN_TOOL_CALL_ACCURACY_SCORE = 1
-    _DEFAULT_TOOL_CALL_ACCURACY_SCORE = 3
+    _MAX_TOOL_CALL_QUALITY_SCORE = 5
+    _MIN_TOOL_CALL_QUALITY_SCORE = 1
+    _DEFAULT_TOOL_CALL_QUALITY_SCORE = 3
 
     _NO_TOOL_CALLS_MESSAGE = "No tool calls found in response or provided tool_calls."
     _NO_TOOL_DEFINITIONS_MESSAGE = "Tool definitions must be provided."
@@ -124,8 +124,8 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, threshold=_DEFAULT_TOOL_CALL_ACCURACY_SCORE, credential=None, **kwargs):
-        """Initialize the Tool Call Accuracy evaluator.
+    def __init__(self, model_config, *, threshold=_DEFAULT_TOOL_CALL_QUALITY_SCORE, credential=None, **kwargs):
+        """Initialize the Tool Call Quality evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
         :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
@@ -242,7 +242,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
-        """Do a tool call accuracy evaluation.
+        """Do a tool call quality evaluation.
 
         :param eval_input: The input to the evaluator. Expected to contain
         whatever inputs are needed for the _flow method, including context
@@ -258,13 +258,13 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             score = llm_output.get(self._LLM_SCORE_KEY, None)
             if not score or not check_score_is_valid(
                 score,
-                ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE,
-                ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE,
+                ToolCallQualityEvaluator._MIN_TOOL_CALL_QUALITY_SCORE,
+                ToolCallQualityEvaluator._MAX_TOOL_CALL_QUALITY_SCORE,
             ):
                 raise EvaluationException(
                     message=f"Invalid score value: {score}. Expected a number in range "
-                            f"[{ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE}, "
-                            f"{ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE}].",
+                            f"[{ToolCallQualityEvaluator._MIN_TOOL_CALL_QUALITY_SCORE}, "
+                            f"{ToolCallQualityEvaluator._MAX_TOOL_CALL_QUALITY_SCORE}].",
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
