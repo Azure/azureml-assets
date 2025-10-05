@@ -36,7 +36,11 @@ dataMappingSchema:
     response:
       type: "string"
     tool_calls:
-      type: "object"
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
   required: ["query", "response", "tool_calls"]
 outputSchema:
   prohibited_actions:
