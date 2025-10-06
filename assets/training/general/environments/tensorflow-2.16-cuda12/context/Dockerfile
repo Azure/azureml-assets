@@ -80,7 +80,7 @@ RUN apt-get update && \
         python3.10 \
         libpython3.10-minimal \
         python3.10-minimal \
-        libarchive13 && \
+        libarchive13 \
         # Vulnerabiltiy fixes
         cpp-11 \
         libtsan0 \
@@ -99,7 +99,7 @@ RUN apt-get update && \
         libgcc-s1 \
         libgomp1 \
         gcc-12-base \
-        libitm1 \
+        libitm1 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
                
