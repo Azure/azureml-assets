@@ -14,6 +14,48 @@ FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 
 USER root:root
 
+# --- Security Vulnerability Fixes ---
+# Fix dpkg vulnerability (USN-7768-1)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+    dpkg-dev=1.21.1ubuntu2.6 \
+    dpkg=1.21.1ubuntu2.6 \
+    libdpkg-perl=1.21.1ubuntu2.6
+
+# Fix GNU C Library vulnerability (USN-7760-1)
+RUN apt-get install -y --only-upgrade \
+    libc-bin=2.35-0ubuntu3.11 \
+    libc6-dev=2.35-0ubuntu3.11 \
+    libc-dev-bin=2.35-0ubuntu3.11 \
+    locales=2.35-0ubuntu3.11 \
+    libc6=2.35-0ubuntu3.11
+
+# Fix libxml2 vulnerability (USN-7743-1)
+RUN apt-get install -y --only-upgrade \
+    libxml2=2.9.13+dfsg-1ubuntu0.9
+
+# Fix GCC vulnerability (USN-7700-1)
+RUN apt-get install -y --only-upgrade \
+    cpp-11=11.4.0-1ubuntu1~22.04.2 \
+    libtsan0=11.4.0-1ubuntu1~22.04.2 \
+    libstdc++-11-dev=11.4.0-1ubuntu1~22.04.2 \
+    gcc-11=11.4.0-1ubuntu1~22.04.2 \
+    libgcc-11-dev=11.4.0-1ubuntu1~22.04.2 \
+    g++-11=11.4.0-1ubuntu1~22.04.2 \
+    libasan6=11.4.0-1ubuntu1~22.04.2 \
+    gcc-11-base=11.4.0-1ubuntu1~22.04.2 \
+    libquadmath0=12.3.0-1ubuntu1~22.04.2 \
+    libstdc++6=12.3.0-1ubuntu1~22.04.2 \
+    libatomic1=12.3.0-1ubuntu1~22.04.2 \
+    liblsan0=12.3.0-1ubuntu1~22.04.2 \
+    libubsan1=12.3.0-1ubuntu1~22.04.2 \
+    libcc1-0=12.3.0-1ubuntu1~22.04.2 \
+    libgcc-s1=12.3.0-1ubuntu1~22.04.2 \
+    libgomp1=12.3.0-1ubuntu1~22.04.2 \
+    gcc-12-base=12.3.0-1ubuntu1~22.04.2 \
+    libitm1=12.3.0-1ubuntu1~22.04.2
+
+
 ARG IMAGE_NAME=None
 ARG BUILD_NUMBER=None
 

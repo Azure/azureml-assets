@@ -22,6 +22,27 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
+
+# --- Security Vulnerability Fixes ---
+# Fix dpkg vulnerability (USN-7768-1)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+    dpkg-dev=1.21.1ubuntu2.6 \
+    dpkg=1.21.1ubuntu2.6 \
+    libdpkg-perl=1.21.1ubuntu2.6
+
+# Fix GNU C Library vulnerability (USN-7760-1)
+RUN apt-get install -y --only-upgrade \
+    libc-bin=2.35-0ubuntu3.11 \
+    libc6-dev=2.35-0ubuntu3.11 \
+    libc-dev-bin=2.35-0ubuntu3.11 \
+    locales=2.35-0ubuntu3.11 \
+    libc6=2.35-0ubuntu3.11
+
+# Fix libxml2 vulnerability (USN-7743-1)
+RUN apt-get install -y --only-upgrade \
+    libxml2=2.9.13+dfsg-1ubuntu0.9
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
