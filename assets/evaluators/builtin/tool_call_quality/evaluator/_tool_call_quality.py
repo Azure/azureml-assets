@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 T_EvalValue = TypeVar("T_EvalValue")
 
+# Extend ErrorTarget enum if needed
+if not hasattr(ErrorTarget, 'TOOL_CALL_QUALITY_EVALUATOR'):
+    ErrorTarget.TOOL_CALL_QUALITY_EVALUATOR = 'ToolCallQualityEvaluator'
 
 def _get_built_in_definition(tool_name: str):
     """Get the definition for the built-in tool."""
@@ -83,8 +86,8 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     .. admonition:: Example:
 
         .. literalinclude:: ../samples/evaluation_samples_evaluate.py
-            :start-after: [START tool_call_accuracy_evaluator]
-            :end-before: [END tool_call_accuracy_evaluator]
+            :start-after: [START tool_call_quality_evaluator]
+            :end-before: [END tool_call_quality_evaluator]
             :language: python
             :dedent: 8
             :caption: Initialize and call a ToolCallQualityEvaluator.
@@ -92,8 +95,8 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     .. admonition:: Example using Azure AI Project URL:
 
         .. literalinclude:: ../samples/evaluation_samples_evaluate_fdp.py
-            :start-after: [START tool_call_accuracy_evaluator]
-            :end-before: [END tool_call_accuracy_evaluator]
+            :start-after: [START tool_call_quality_evaluator]
+            :end-before: [END tool_call_quality_evaluator]
             :language: python
             :dedent: 8
             :caption: Initialize and call ToolCallQualityEvaluator using Azure AI Project URL in the following format
@@ -116,11 +119,11 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     _NO_TOOL_CALLS_MESSAGE = "No tool calls found in response or provided tool_calls."
     _NO_TOOL_DEFINITIONS_MESSAGE = "Tool definitions must be provided."
     _TOOL_DEFINITIONS_MISSING_MESSAGE = "Tool definitions for all tool calls must be provided."
-    _INVALID_SCORE_MESSAGE = "Tool call accuracy score must be between 1 and 5."
+    _INVALID_SCORE_MESSAGE = "Tool call quality score must be between 1 and 5."
 
     _LLM_SCORE_KEY = "tool_calls_success_level"
 
-    id = "azureai://built-in/evaluators/tool_call_accuracy"
+    id = "azureai://built-in/evaluators/tool_call_quality"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
@@ -158,7 +161,7 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         response: Union[str, List[dict]] = None,
     ) -> Dict[str, Union[str, float]]:
         """
-        Evaluate tool call accuracy. Accepts a query, tool definitions, and tool calls for evaluation.
+        Evaluate tool call quality. Accepts a query, tool definitions, and tool calls for evaluation.
 
         :keyword query: Query or Chat history up to the message that has the tool call being evaluated.
         :paramtype query: Union[str, List[dict]]
@@ -285,10 +288,10 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         else:
             raise EvaluationException(
-                message="Tool call accuracy evaluator returned invalid output.",
+                message="Tool call quality evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
-                target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                target=ErrorTarget.TOOL_CALL_QUALITY_EVALUATOR,
             )
 
     async def _real_call(self, **kwargs):
@@ -366,14 +369,14 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                                 message=f"Tool definition for {tool_name} not found",
                                 blame=ErrorBlame.USER_ERROR,
                                 category=ErrorCategory.INVALID_VALUE,
-                                target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                                target=ErrorTarget.TOOL_CALL_QUALITY_EVALUATOR,
                             )
                     else:
                         raise EvaluationException(
                             message=f"Tool call missing name: {tool_call}",
                             blame=ErrorBlame.USER_ERROR,
                             category=ErrorCategory.INVALID_VALUE,
-                            target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                            target=ErrorTarget.TOOL_CALL_QUALITY_EVALUATOR,
                         )
                 else:
                     # Unsupported tool format - only converter format is supported
@@ -381,7 +384,7 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                         message=f"Unsupported tool call format. Only converter format is supported: {tool_call}",
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
-                        target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                        target=ErrorTarget.TOOL_CALL_QUALITY_EVALUATOR,
                     )
             else:
                 # Tool call is not a dictionary
@@ -389,7 +392,7 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     message=f"Tool call is not a dictionary: {tool_call}",
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
-                    target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+                    target=ErrorTarget.TOOL_CALL_QUALITY_EVALUATOR,
                 )
 
         return needed_tool_definitions
@@ -401,7 +404,7 @@ class ToolCallQualityEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         **kwargs,
     ):
         """
-        Evaluate tool call accuracy. Accepts a query, tool definitions, and tool calls for evaluation.
+        Evaluate tool call quality. Accepts a query, tool definitions, and tool calls for evaluation.
 
         :keyword query: Query or Chat history up to the message that has the tool call being evaluated.
         :paramtype query: Union[str, List[dict]]
