@@ -28,7 +28,7 @@ dependencies:
   - msrest>=0.6.21,<0.7.1
   - mltable==1.6.3
   - openai<2.0.0
-  - mldesigner==0.1.0b20
+  - mldesigner==0.1.0b21
   - tiktoken
   - idna==3.7
   - pydantic
