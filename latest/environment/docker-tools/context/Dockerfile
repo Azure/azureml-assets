@@ -35,8 +35,8 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/image-build
 
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
-    pip=24.* -c conda-forge
+    python=3.11 \
+    pip=25.* -c conda-forge
 
 # Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
