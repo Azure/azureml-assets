@@ -2,6 +2,10 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.93 (2025-10-03)
+### 🚀 New Features
+- [#4483](https://github.com/Azure/azureml-assets/pull/4483) Add APPTEMPLATE to AssetType
+
 ## 1.16.93 (2025-10-01)
 ### 🚀 New Features
 - [#4477](https://github.com/Azure/azureml-assets/pull/4477) Onboard AgentManifest asset type
