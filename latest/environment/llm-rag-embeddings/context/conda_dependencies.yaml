@@ -16,7 +16,6 @@ dependencies:
   - azure-search-documents>=11.4.0 # explicitly install for [cognitive_search]
     # Azure ML packages
   - azureml-contrib-services
-  - azureml-dataset-runtime==1.60.0
   - azureml-inference-server-http>=1.4.1 #Upgrading version to ensure flask-cors>=6.0.0 is installed
   - azureml-mlflow==1.60.0.post1
   - azureml-telemetry==1.60.0

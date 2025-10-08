@@ -32,7 +32,7 @@ dependencies:
   - tiktoken
   - idna==3.7
   - pydantic
-  - mteb==1.39.5
+  - mteb==1.39.6
   - setuptools>=70.0.0
   - cryptography==46.0.2
   # batch score dependencies
