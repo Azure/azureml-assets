@@ -13,18 +13,229 @@ from azure.ai.evaluation._exceptions import (
     ErrorBlame,
     ErrorCategory,
     ErrorTarget,
+    ErrorMessage
 )
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from ..._common.utils import (
-    reformat_conversation_history,
-    reformat_agent_response,
-    reformat_tool_definitions,
-    filter_to_used_tools,
+from azure.ai.evaluation._common.utils import (
+    _extract_text_from_content
 )
-from azure.ai.evaluation._model_configurations import Message
 from azure.ai.evaluation._common._experimental import experimental
 
 logger = logging.getLogger(__name__)
+
+
+# ``` updated _exceptions.py
+# Extend ErrorTarget enum if needed
+if not hasattr(ErrorTarget, 'TOOL_OUTPUT_UTILIZATION_EVALUATOR'):
+    ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR = 'ToolOutputUtilizationEvaluator'
+# ```
+
+# ``` updated utils.py
+def filter_to_used_tools(tool_definitions, msgs_lists, logger=None):
+    """Filters the tool definitions to only include those that were actually used in the messages lists."""
+    try:
+        used_tool_names = set()
+        any_tools_used = False
+        for msgs in msgs_lists:
+            for msg in msgs:
+                if msg.get("role") == "assistant" and "content" in msg:
+                    for content in msg.get("content", []):
+                        if content.get("type") == "tool_call":
+                            any_tools_used = True
+                            if "tool_call" in content and "function" in content["tool_call"]:
+                                used_tool_names.add(content["tool_call"]["function"])
+                            elif "name" in content:
+                                used_tool_names.add(content["name"])
+
+        filtered_tools = [tool for tool in tool_definitions if tool.get("name") in used_tool_names]
+        if any_tools_used and not filtered_tools:
+            if logger:
+                logger.warning("No tool definitions matched the tools used in the messages. Returning original list.")
+            filtered_tools = tool_definitions
+
+        return filtered_tools
+    except Exception as e:
+        if logger:
+            logger.warning(f"Failed to filter tool definitions, returning original list. Error: {e}")
+        return tool_definitions
+
+
+def _get_conversation_history(query, include_system_messages=False, include_tool_messages=False):
+    all_user_queries, all_agent_responses = [], []
+    cur_user_query, cur_agent_response = [], []
+    system_message = None
+
+    for msg in query:
+        role = msg.get("role")
+        if not role:
+            continue
+        if include_system_messages and role == "system":
+            system_message = msg.get("content", "")
+
+        elif role == "user" and "content" in msg:
+            if cur_agent_response:
+                formatted_agent_response = _get_agent_response(
+                    cur_agent_response, include_tool_messages=include_tool_messages
+                )
+                all_agent_responses.append([formatted_agent_response])
+                cur_agent_response = []
+            text_in_msg = _extract_text_from_content(msg["content"])
+            if text_in_msg:
+                cur_user_query.append(text_in_msg)
+
+        elif role in ("assistant", "tool"):
+            if cur_user_query:
+                all_user_queries.append(cur_user_query)
+                cur_user_query = []
+            cur_agent_response.append(msg)
+
+    if cur_user_query:
+        all_user_queries.append(cur_user_query)
+    if cur_agent_response:
+        formatted_agent_response = _get_agent_response(cur_agent_response, include_tool_messages=include_tool_messages)
+        all_agent_responses.append([formatted_agent_response])
+
+    if len(all_user_queries) != len(all_agent_responses) + 1:
+        raise EvaluationException(
+            message=ErrorMessage.MALFORMED_CONVERSATION_HISTORY,
+            internal_message=ErrorMessage.MALFORMED_CONVERSATION_HISTORY,
+            target=ErrorTarget.CONVERSATION_HISTORY_PARSING,
+            category=ErrorCategory.INVALID_VALUE,
+            blame=ErrorBlame.USER_ERROR,
+        )
+
+    result = {"user_queries": all_user_queries, "agent_responses": all_agent_responses}
+    if include_system_messages and system_message:
+        result["system_message"] = system_message
+    return result
+
+
+def _pretty_format_conversation_history(conversation_history):
+    """Formats the conversation history for better readability."""
+    formatted_history = ""
+    if conversation_history.get("system_message"):
+        formatted_history += "SYSTEM_PROMPT:\n"
+        formatted_history += "  " + conversation_history["system_message"] + "\n\n"
+    for i, (user_query, agent_response) in enumerate(
+        zip(conversation_history["user_queries"], conversation_history["agent_responses"] + [None])
+    ):
+        formatted_history += f"User turn {i+1}:\n"
+        for msg in user_query:
+            formatted_history += "  " + "\n  ".join(msg)
+        formatted_history += "\n\n"
+        if agent_response:
+            formatted_history += f"Agent turn {i+1}:\n"
+            for msg in agent_response:
+                formatted_history += "  " + "\n  ".join(msg)
+            formatted_history += "\n\n"
+    return formatted_history
+
+
+def reformat_conversation_history(query, logger=None, include_system_messages=False, include_tool_messages=False):
+    """Reformats the conversation history to a more compact representation."""
+    try:
+        conversation_history = _get_conversation_history(
+            query,
+            include_system_messages=include_system_messages,
+            include_tool_messages=include_tool_messages,
+        )
+        return _pretty_format_conversation_history(conversation_history)
+    except Exception as e:
+        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
+        # From our tests the negative impact on IntentResolution is:
+        #   Higher intra model variance (0.142 vs 0.046)
+        #   Higher inter model variance (0.345 vs 0.607)
+        #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
+        #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
+        if logger:
+            logger.warning(f"Conversation history could not be parsed, falling back to original query: {query}")
+            print(e)
+        return query
+
+
+def _get_agent_response(agent_response_msgs, include_tool_messages=False):
+    """Extracts formatted agent response including text, and optionally tool calls/results."""
+    agent_response_text = []
+    tool_results = {}
+
+    # First pass: collect tool results
+    if include_tool_messages:
+        for msg in agent_response_msgs:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
+
+    # Second pass: parse assistant messages and tool calls
+    for msg in agent_response_msgs:
+        if "role" in msg and msg.get("role") == "assistant" and "content" in msg:
+            text = _extract_text_from_content(msg["content"])
+            if text:
+                agent_response_text.extend(text)
+            if include_tool_messages:
+                for content in msg.get("content", []):
+                    # Todo: Verify if this is the correct way to handle tool calls
+                    if content.get("type") == "tool_call":
+                        if "tool_call" in content and "function" in content.get("tool_call", {}):
+                            tc = content.get("tool_call", {})
+                            func_name = tc.get("function", {}).get("name", "")
+                            args = tc.get("function", {}).get("arguments", {})
+                            tool_call_id = tc.get("id")
+                        else:
+                            tool_call_id = content.get("tool_call_id")
+                            func_name = content.get("name", "")
+                            args = content.get("arguments", {})
+                        args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                        call_line = f"[TOOL_CALL] {func_name}({args_str})"
+                        agent_response_text.append(call_line)
+                        if tool_call_id in tool_results:
+                            agent_response_text.append(tool_results[tool_call_id])
+
+    return agent_response_text
+
+
+def reformat_agent_response(response, logger=None, include_tool_messages=False):
+    try:
+        if response is None or response == []:
+            return ""
+        agent_response = _get_agent_response(response, include_tool_messages=include_tool_messages)
+        if agent_response == []:
+            # If no message could be extracted, likely the format changed, fallback to the original response in that case
+            if logger:
+                logger.warning(
+                    f"Empty agent response extracted, likely due to input schema change. Falling back to using the original response: {response}"
+                )
+            return response
+        return "\n".join(agent_response)
+    except:
+        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed), the original response is returned
+        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        if logger:
+            logger.warning(f"Agent response could not be parsed, falling back to original response: {response}")
+        return response
+
+
+def reformat_tool_definitions(tool_definitions, logger=None):
+    try:
+        output_lines = ["TOOL_DEFINITIONS:"]
+        for tool in tool_definitions:
+            name = tool.get("name", "unnamed_tool")
+            desc = tool.get("description", "").strip()
+            params = tool.get("parameters", {}).get("properties", {})
+            param_names = ", ".join(params.keys()) if params else "no parameters"
+            output_lines.append(f"- {name}: {desc} (inputs: {param_names})")
+        return "\n".join(output_lines)
+    except Exception as e:
+        # If the tool definitions cannot be parsed for whatever reason, the original tool definitions are returned
+        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        if logger:
+            logger.warning(
+                f"Tool definitions could not be parsed, falling back to original definitions: {tool_definitions}"
+            )
+        return tool_definitions
+### ````
 
 
 @experimental
