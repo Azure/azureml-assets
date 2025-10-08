@@ -58,7 +58,7 @@ def _get_needed_built_in_tool_definitions(tool_calls: List[Dict]) -> List[Dict]:
     return needed_definitions
 
 def _extract_needed_tool_definitions(
-        tool_calls: List[Dict], tool_definitions: List[Dict]
+        tool_calls: List[Dict], tool_definitions: List[Dict], error_target: ErrorTarget
     ) -> List[Dict]:
         """Extract the tool definitions that are needed for the provided tool calls.
 
@@ -108,14 +108,14 @@ def _extract_needed_tool_definitions(
                                 message=f"Tool definition for {tool_name} not found",
                                 blame=ErrorBlame.USER_ERROR,
                                 category=ErrorCategory.INVALID_VALUE,
-                                target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                                target=error_target,
                             )
                     else:
                         raise EvaluationException(
                             message=f"Tool call missing name: {tool_call}",
                             blame=ErrorBlame.USER_ERROR,
                             category=ErrorCategory.INVALID_VALUE,
-                            target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                            target=error_target,
                         )
                 else:
                     # Unsupported tool format - only converter format is supported
@@ -123,7 +123,7 @@ def _extract_needed_tool_definitions(
                         message=f"Unsupported tool call format. Only converter format is supported: {tool_call}",
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
-                        target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                        target=error_target,
                     )
             else:
                 # Tool call is not a dictionary
@@ -131,7 +131,7 @@ def _extract_needed_tool_definitions(
                     message=f"Tool call is not a dictionary: {tool_call}",
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
-                    target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                    target=error_target,
                 )
 
         return needed_tool_definitions
@@ -143,7 +143,8 @@ def _extract_text_from_content(content):
             text.append(msg["text"])
     return text
 
-def _get_conversation_history(query):
+
+def _get_conversation_history(query, include_system_messages=False, include_tool_calls=False):
     all_user_queries = []
     cur_user_query = []
     all_agent_responses = []
@@ -153,22 +154,22 @@ def _get_conversation_history(query):
     # Track tool calls and results for grouping with assistant messages
     tool_results = {}
 
-    # First pass: collect all tool results (always included)
-    for msg in query:
-        if msg.get("role") == "tool" and "tool_call_id" in msg:
-            tool_call_id = msg["tool_call_id"]
-            for content in msg.get("content", []):
-                if content.get("type") == "tool_result":
-                    result = content.get("tool_result")
-                    tool_results[tool_call_id] = f"[TOOL_RESULT] {result}"
+    # First pass: collect all tool results if include_tool_calls is True
+    if include_tool_calls:
+        for msg in query:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                tool_call_id = msg["tool_call_id"]
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[tool_call_id] = f"[TOOL_RESULT] {result}"
 
     # Second pass: process messages and build conversation history
     for msg in query:
         if not "role" in msg:
             continue
 
-        # Always include system messages
-        if msg["role"] == "system" and "content" in msg:
+        if include_system_messages and msg["role"] == "system" and "content" in msg:
             system_message = msg.get("content", "")
 
         if msg["role"] == "user" and "content" in msg:
@@ -191,28 +192,29 @@ def _get_conversation_history(query):
             if text_in_msg:
                 cur_agent_response.append(text_in_msg)
 
-            # Handle tool calls in assistant messages (always included)
-            for content in msg.get("content", []):
-                if content.get("type") == "tool_call":
-                    # Handle the format from your sample data
-                    tool_call_id = content.get("tool_call_id")
-                    func_name = content.get("name", "")
-                    args = content.get("arguments", {})
+            # Handle tool calls in assistant messages
+            if include_tool_calls:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_call":
+                        # Handle the format from your sample data
+                        tool_call_id = content.get("tool_call_id")
+                        func_name = content.get("name", "")
+                        args = content.get("arguments", {})
 
-                    # Also handle the nested tool_call format
-                    if "tool_call" in content and "function" in content.get("tool_call", {}):
-                        tc = content.get("tool_call", {})
-                        func_name = tc.get("function", {}).get("name", "")
-                        args = tc.get("function", {}).get("arguments", {})
-                        tool_call_id = tc.get("id")
+                        # Also handle the nested tool_call format
+                        if "tool_call" in content and "function" in content.get("tool_call", {}):
+                            tc = content.get("tool_call", {})
+                            func_name = tc.get("function", {}).get("name", "")
+                            args = tc.get("function", {}).get("arguments", {})
+                            tool_call_id = tc.get("id")
 
-                    args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
-                    tool_call_text = f"[TOOL_CALL] {func_name}({args_str})"
-                    cur_agent_response.append(tool_call_text)
+                        args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                        tool_call_text = f"[TOOL_CALL] {func_name}({args_str})"
+                        cur_agent_response.append(tool_call_text)
 
-                    # Immediately add tool result if available
-                    if tool_call_id and tool_call_id in tool_results:
-                        cur_agent_response.append(tool_results[tool_call_id])
+                        # Immediately add tool result if available
+                        if tool_call_id and tool_call_id in tool_results:
+                            cur_agent_response.append(tool_results[tool_call_id])
 
     # Close any remaining open queries/responses
     if cur_user_query != []:
@@ -229,9 +231,10 @@ def _get_conversation_history(query):
             blame=ErrorBlame.USER_ERROR,
         )
     result = {"user_queries": all_user_queries, "agent_responses": all_agent_responses}
-    # Always include system message
-    result["system_message"] = system_message
+    if include_system_messages:
+        result["system_message"] = system_message
     return result
+
 
 def _pretty_format_conversation_history(conversation_history):
     """Formats the conversation history for better readability."""
@@ -261,19 +264,40 @@ def _pretty_format_conversation_history(conversation_history):
             formatted_history += "\n"
     return formatted_history
 
-def _get_agent_response(agent_response_msgs):
-    """Extracts formatted agent response including text, tool calls, and results."""
+
+def reformat_conversation_history(query, logger=None, include_system_messages=False, include_tool_calls=False):
+    """Reformats the conversation history to a more compact representation."""
+    try:
+        conversation_history = _get_conversation_history(
+            query, include_system_messages=include_system_messages, include_tool_calls=include_tool_calls
+        )
+        return _pretty_format_conversation_history(conversation_history)
+    except:
+        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
+        # From our tests the negative impact on IntentResolution is:
+        #   Higher intra model variance (0.142 vs 0.046)
+        #   Higher inter model variance (0.345 vs 0.607)
+        #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
+        #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
+        if logger:
+            logger.warning(f"Conversation history could not be parsed, falling back to original query: {query}")
+        return query
+
+
+def _get_agent_response(agent_response_msgs, include_tool_messages=False):
+    """Extracts formatted agent response including text, and optionally tool calls/results."""
     agent_response_text = []
     tool_results = {}
 
     # First pass: collect tool results
-    # Always include tool messages
-    for msg in agent_response_msgs:
-        if msg.get("role") == "tool" and "tool_call_id" in msg:
-            for content in msg.get("content", []):
-                if content.get("type") == "tool_result":
-                    result = content.get("tool_result")
-                    tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
+    if include_tool_messages:
+        for msg in agent_response_msgs:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
 
     # Second pass: parse assistant messages and tool calls
     for msg in agent_response_msgs:
@@ -281,10 +305,10 @@ def _get_agent_response(agent_response_msgs):
             text = _extract_text_from_content(msg["content"])
             if text:
                 agent_response_text.extend(text)
-            # Always include tool calls and messages
-            for content in msg.get("content", []):
-                # Todo: Verify if this is the correct way to handle tool calls
-                if content.get("type") == "tool_call":
+            if include_tool_messages:
+                for content in msg.get("content", []):
+                    # Todo: Verify if this is the correct way to handle tool calls
+                    if content.get("type") == "tool_call":
                         if "tool_call" in content and "function" in content.get("tool_call", {}):
                             tc = content.get("tool_call", {})
                             func_name = tc.get("function", {}).get("name", "")
@@ -301,23 +325,6 @@ def _get_agent_response(agent_response_msgs):
                             agent_response_text.append(tool_results[tool_call_id])
 
     return agent_response_text
-
-def reformat_conversation_history(query, logger=None):
-    """Reformats the conversation history to a more compact representation, always including system messages and tool calls."""
-    try:
-        conversation_history = _get_conversation_history(query)
-        return _pretty_format_conversation_history(conversation_history)
-    except:
-        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
-        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
-        # From our tests the negative impact on IntentResolution is:
-        #   Higher intra model variance (0.142 vs 0.046)
-        #   Higher inter model variance (0.345 vs 0.607)
-        #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
-        #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
-        if logger:
-            logger.warning(f"Conversation history could not be parsed, falling back to original query: {query}")
-        return query
 
 
 
@@ -423,7 +430,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             # Type cast to satisfy static type checker
             tool_calls_typed = cast(List[Dict], tool_calls)
             needed_tool_definitions = _extract_needed_tool_definitions(
-                tool_calls_typed, tool_definitions
+                tool_calls_typed, tool_definitions, ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
             )
         except EvaluationException as e:
             # Check if this is because no tool definitions were provided at all
@@ -436,7 +443,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
         # Get agent response with tool calls and results using _get_agent_response
-        agent_response_with_tools = _get_agent_response(response)
+        agent_response_with_tools = _get_agent_response(response, include_tool_messages=True)
 
         return {
             "query": query,
@@ -456,7 +463,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Format conversation history for cleaner evaluation
         if "query" in eval_input:
             eval_input["query"] = reformat_conversation_history(
-                eval_input["query"], logger
+                eval_input["query"], logger, include_system_messages=True, include_tool_calls=True
             )
 
         # Call the LLM to evaluate
