@@ -426,9 +426,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         try:
-            needed_tool_definitions = _extract_needed_tool_definitions(
-                tool_calls, tool_definitions, ErrorTarget.TOOL_SELECTION_EVALUATOR
-            )
+            needed_tool_definitions = _extract_needed_tool_definitions(tool_calls, tool_definitions)
         except EvaluationException as e:
             # Check if this is because no tool definitions were provided at all
             if len(tool_definitions) == 0:
@@ -462,7 +460,9 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["query"] = reformat_conversation_history(
                 eval_input["query"], logger, include_system_messages=True, include_tool_calls=True
             )
-
+        print("QUERY:", eval_input["query"], "\n")
+        print("TOOL CALLS:", eval_input["tool_calls"], "\n")
+        print("TOOL DEFINITIONS:", eval_input["tool_definitions"], "\n")
         # Call the LLM to evaluate
         llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
 
