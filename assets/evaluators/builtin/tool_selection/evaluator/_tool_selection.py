@@ -77,7 +77,7 @@ def _get_needed_built_in_tool_definitions(tool_calls: List[Dict]) -> List[Dict]:
     return needed_definitions
 
 def _extract_needed_tool_definitions(
-        tool_calls: List[Dict], tool_definitions: List[Dict]
+        tool_calls: List[Dict], tool_definitions: List[Dict], error_target: ErrorTarget
     ) -> List[Dict]:
         """Extract the tool definitions that are needed for the provided tool calls.
 
@@ -127,14 +127,14 @@ def _extract_needed_tool_definitions(
                                 message=f"Tool definition for {tool_name} not found",
                                 blame=ErrorBlame.USER_ERROR,
                                 category=ErrorCategory.INVALID_VALUE,
-                                target=ErrorTarget.TOOL_SELECTION_EVALUATOR,
+                                target=error_target,
                             )
                     else:
                         raise EvaluationException(
                             message=f"Tool call missing name: {tool_call}",
                             blame=ErrorBlame.USER_ERROR,
                             category=ErrorCategory.INVALID_VALUE,
-                            target=ErrorTarget.TOOL_SELECTION_EVALUATOR,
+                            target=error_target,
                         )
                 else:
                     # Unsupported tool format - only converter format is supported
@@ -142,7 +142,7 @@ def _extract_needed_tool_definitions(
                         message=f"Unsupported tool call format. Only converter format is supported: {tool_call}",
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
-                        target=ErrorTarget.TOOL_SELECTION_EVALUATOR,
+                        target=error_target,
                     )
             else:
                 # Tool call is not a dictionary
@@ -150,7 +150,7 @@ def _extract_needed_tool_definitions(
                     message=f"Tool call is not a dictionary: {tool_call}",
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
-                    target=ErrorTarget.TOOL_SELECTION_EVALUATOR,
+                    target=error_target,
                 )
 
         return needed_tool_definitions
@@ -426,7 +426,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         try:
-            needed_tool_definitions = _extract_needed_tool_definitions(tool_calls, tool_definitions)
+            needed_tool_definitions = _extract_needed_tool_definitions(tool_calls, tool_definitions, ErrorTarget.TOOL_SELECTION_EVALUATOR)
         except EvaluationException as e:
             # Check if this is because no tool definitions were provided at all
             if len(tool_definitions) == 0:
