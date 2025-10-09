@@ -48,11 +48,11 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
 
-# vulnearbility fix
+# Security vulnerability fix - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
 RUN pip install pyarrow==14.0.2
-RUN pip install torch==2.7.1 torchvision==0.22.1
-RUN opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install 2.7.1 torchvision==0.22.1 || true
+RUN pip install torch==2.8.0 torchvision==0.22.1
+RUN opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.22.1 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install torch==2.8.0 torchvision==0.22.1 || true
 RUN opt/conda/envs/ptca/bin/pip install --upgrade urllib3 || true
 RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
@@ -64,3 +64,11 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==11.3.0 || true
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 # dummy number to change when needing to force rebuild without changing the definition: 1
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
+

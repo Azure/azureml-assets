@@ -58,7 +58,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
     conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.7.1 \
+    pytorch=2.8.0 \
     -c pytorch -c nvidia -c conda-forge -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -99,8 +99,16 @@ RUN pip install \
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
 
-# Fix vulnerabilities
+# Fix vulnerabilities - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
 RUN pip install --upgrade urllib3
-RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN pip install torch==2.8.0 torchvision==0.22.1
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
+

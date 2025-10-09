@@ -74,3 +74,11 @@ RUN pip install torch==2.7.1 torchvision==0.22.1
 RUN pip install urllib3==2.5.0
 # end pip ad-hoc
 
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
+

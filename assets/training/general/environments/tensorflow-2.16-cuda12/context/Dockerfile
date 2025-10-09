@@ -223,9 +223,12 @@ RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
 # Reinstall OpenSSL inside Conda
 RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
 
-RUN pip install --upgrade \
+# Security vulnerability fixes
+RUN pip install --upgrade pip && \
+    pip install --upgrade \
         requests==2.32.4 \
         urllib3==2.5.0 && \
+    $CONDA_PREFIX/bin/pip install --upgrade pip && \
     $CONDA_PREFIX/bin/pip install --upgrade \
         requests==2.32.4 \
         urllib3==2.5.0 \

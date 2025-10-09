@@ -101,6 +101,17 @@ RUN pip install \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
 
+# Security vulnerability fixes
+# Fix GHSA-4xh5-x5gv-qwph: Upgrade pip to latest secure version
+RUN pip install --upgrade pip
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade pip || true
+
+# Fix GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0 
+RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
+RUN /opt/miniconda/bin/pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
+
 RUN pip install --upgrade 'h2>=4.3.0'
 # Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
 RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'

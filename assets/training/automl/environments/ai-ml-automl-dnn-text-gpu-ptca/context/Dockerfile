@@ -53,3 +53,10 @@ RUN pip install --upgrade 'pillow==11.3.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
 
 RUN pip list
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
+

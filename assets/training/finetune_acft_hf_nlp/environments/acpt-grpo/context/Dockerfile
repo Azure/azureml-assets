@@ -14,6 +14,15 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install mlflow==3.1.0
 RUN pip install transformers==4.53.0
 
+# Security vulnerability fixes
+# Fix GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
+RUN pip install --force-reinstall torch==2.8.0 torchvision --no-cache-dir
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision || true
+# Fix GHSA-4xh5-x5gv-qwph: Upgrade pip to latest secure version
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+
 # Upgrade requests in the system Python (3.13) for fixing vulnerability
 RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests urllib3 || true
 

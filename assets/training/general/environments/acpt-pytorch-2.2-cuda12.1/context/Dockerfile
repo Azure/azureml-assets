@@ -59,3 +59,11 @@ EXPOSE 5001 8883 8888
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
+
