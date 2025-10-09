@@ -16,8 +16,8 @@ RUN pip install transformers==4.53.0
 
 # Security vulnerability fixes
 # Fix GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
-RUN pip install --force-reinstall torch==2.8.0 torchvision --no-cache-dir
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision || true
+RUN pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 --no-cache-dir
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 || true
 # Fix GHSA-4xh5-x5gv-qwph: Upgrade pip to latest secure version
 RUN pip install --upgrade pip
 RUN /opt/conda/bin/pip install --upgrade pip || true

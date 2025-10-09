@@ -50,9 +50,9 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 # Security vulnerability fix - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
 RUN pip install pyarrow==14.0.2
-RUN pip install torch==2.8.0 torchvision==0.22.1
-RUN opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.22.1 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install torch==2.8.0 torchvision==0.22.1 || true
+RUN pip install torch==2.8.0 torchvision==0.23.0
+RUN opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
 RUN opt/conda/envs/ptca/bin/pip install --upgrade urllib3 || true
 RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true

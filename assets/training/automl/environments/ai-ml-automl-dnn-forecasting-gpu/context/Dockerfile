@@ -101,7 +101,7 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 
 # Fix vulnerabilities - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
 RUN pip install --upgrade urllib3
-RUN pip install torch==2.8.0 torchvision==0.22.1
+RUN pip install torch==2.8.0 torchvision==0.23.0
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/
 
