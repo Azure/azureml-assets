@@ -44,7 +44,7 @@ RUN apt-get update && \
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=22.1.2 \
     numpy~=1.23.5 \
