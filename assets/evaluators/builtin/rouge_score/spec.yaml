@@ -30,8 +30,6 @@ initParameterSchema:
       maximum: 1
       multipleOf: 0.1
   required: ["rouge_type", "f1_score_threshold", "precision_threshold", "recall_threshold"]
-  requiresDeployment: false
-  requiresProject: false
 dataMappingSchema:
   type: "object"
   properties:

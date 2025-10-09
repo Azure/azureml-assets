@@ -11,6 +11,8 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
+    azureai.deployment_name:
+      type: "string"
     input:
       type: "string"
     reference:
@@ -27,9 +29,7 @@ initParameterSchema:
       minimum: 0
       maximum: 1
       multipleOf: 0.1
-  required: ["name", "input", "reference", "type", "evaluation_metric", "pass_threshold"]
-  requiresDeployment: true
-  requiresProject: false
+  required: ["azureai.deployment_name", "name", "input", "reference", "type", "evaluation_metric", "pass_threshold"]
 dataMappingSchema: {}
 outputSchema:
   similarity:

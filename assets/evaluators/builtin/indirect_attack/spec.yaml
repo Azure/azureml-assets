@@ -10,9 +10,10 @@ tags:
   provider: "Microsoft"
 initParameterSchema:
   type: "object"
-  required: []
-  requiresDeployment: false
-  requiresProject: true
+  properties:
+    azureai.projectEndpoint:
+      type: "string"
+  required: ["azureai.projectEndpoint"]
 dataMappingSchema:
   type: "object"
   properties:

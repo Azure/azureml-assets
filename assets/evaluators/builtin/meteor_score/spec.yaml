@@ -17,8 +17,6 @@ initParameterSchema:
       maximum: 1
       multipleOf: 0.1
   required: []
-  requiresDeployment: false
-  requiresProject: false
 dataMappingSchema:
   type: "object"
   properties:

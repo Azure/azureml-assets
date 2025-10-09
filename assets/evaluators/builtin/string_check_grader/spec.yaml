@@ -11,6 +11,8 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
+    azureai.deployment_name:
+      type: "string"
     input:
       type: "string"
     reference:
@@ -22,9 +24,7 @@ initParameterSchema:
     operation:
       type: "string"
       enum: ["eq", "ne", "like", "ilike"]
-  required: ["name", "input", "reference", "type", "operation"]
-  requiresDeployment: true
-  requiresProject: false
+  required: ["azureai.deployment_name", "name", "input", "reference", "type", "operation"]
 dataMappingSchema: {}
 outputSchema:
   string_check:
