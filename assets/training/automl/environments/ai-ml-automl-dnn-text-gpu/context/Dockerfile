@@ -99,9 +99,9 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-# Security vulnerability fix - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
-RUN pip install --upgrade pip && pip install torch==2.8.0 torchvision==0.23.0
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip && /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip only (torch upgrade moved to separate fix)
+RUN pip install --upgrade pip
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true

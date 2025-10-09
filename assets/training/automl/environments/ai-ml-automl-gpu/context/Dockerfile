@@ -107,12 +107,7 @@ RUN pip install --upgrade pip
 RUN /opt/miniconda/bin/pip install --upgrade pip || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade pip || true
 
-# Fix GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0 
-RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
-RUN /opt/miniconda/bin/pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
-
-RUN pip install --upgrade 'h2>=4.3.0'
+# Note: torch upgrade removed due to azureml-automl-runtime conflicts - will be handled separatelyRUN pip install --upgrade 'h2>=4.3.0'
 # Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
 RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'
 RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'|| true

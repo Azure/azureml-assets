@@ -105,9 +105,7 @@ RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
 
-# Security fix - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 
+# Note: torch upgrade removed due to azureml-automl-runtime conflicts - will be handled separately 
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
