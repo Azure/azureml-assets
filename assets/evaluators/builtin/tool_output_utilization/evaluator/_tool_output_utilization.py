@@ -31,7 +31,7 @@ if not hasattr(ErrorTarget, 'TOOL_OUTPUT_UTILIZATION_EVALUATOR'):
 # ```
 
 # ``` updated utils.py
-def filter_to_used_tools(tool_definitions, msgs_lists, logger=None):
+def _filter_to_used_tools(tool_definitions, msgs_lists, logger=None):
     """Filters the tool definitions to only include those that were actually used in the messages lists."""
     try:
         used_tool_names = set()
@@ -376,7 +376,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
         tool_definitions = eval_input["tool_definitions"]
-        filtered_tool_definitions = filter_to_used_tools(
+        filtered_tool_definitions = _filter_to_used_tools(
             tool_definitions=tool_definitions,
             msgs_lists=[eval_input["query"], eval_input["response"]],
             logger=logger,
