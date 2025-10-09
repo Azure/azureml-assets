@@ -11,8 +11,6 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    deployment_name:
-      type: "string"
     model:
       type: "string"
     name:
@@ -26,6 +24,7 @@ initParameterSchema:
             type: "string"
           role:
             type: "string"
+            enum: ["system", "user", "assistant"]
         required: ["content", "role"]
     type:
       type: "string"
@@ -37,7 +36,9 @@ initParameterSchema:
       type: "array"
       items:
         type: "string"
-  required: ["deployment_name", "model", "name", "input", "type", "labels", "passing_labels"]
+  required: ["model", "name", "input", "type", "labels", "passing_labels"]
+  requiresDeployment: true
+  requiresProject: false
 dataMappingSchema: {}
 outputSchema:
   label_model:

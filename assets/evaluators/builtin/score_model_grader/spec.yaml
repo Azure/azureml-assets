@@ -11,8 +11,6 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    deployment_name:
-      type: "string"
     model:
       type: "string"
     name:
@@ -26,6 +24,7 @@ initParameterSchema:
             type: "string"
           role:
             type: "string"
+            enum: ["system", "user", "assistant"]
         required: ["content", "role"]
       minItems: 2
     type:
@@ -39,7 +38,9 @@ initParameterSchema:
     pass_threshold:
       type: "number"
       minimum: 0
-  required: ["deployment_name", "model", "name", "input", "type", "range", "pass_threshold"]
+  required: ["model", "name", "input", "type", "range", "pass_threshold"]
+  requiresDeployment: true
+  requiresProject: false
 dataMappingSchema: {}
 outputSchema:
   score_model:

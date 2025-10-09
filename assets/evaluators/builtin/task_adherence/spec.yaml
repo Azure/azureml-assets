@@ -12,13 +12,14 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    deployment_name:
-      type: "string"
     threshold:
       type: "number"
-    credential:
-      type: "object"
-  required: ["deployment_name"]
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+  required: []
+  requiresDeployment: true
+  requiresProject: false
 dataMappingSchema:
   type: "object"
   properties:

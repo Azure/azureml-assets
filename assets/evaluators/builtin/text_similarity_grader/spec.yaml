@@ -11,8 +11,6 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    deployment_name:
-      type: "string"
     input:
       type: "string"
     reference:
@@ -23,13 +21,15 @@ initParameterSchema:
       type: "string"
     evaluation_metric:
       type: "string"
-      enum: ["fuzzy_match"]
+      enum: ["fuzzy_match", "cosine"]
     pass_threshold:
       type: "number"
       minimum: 0
       maximum: 1
       multipleOf: 0.1
-  required: ["deployment_name", "name", "input", "reference", "type", "evaluation_metric", "pass_threshold"]
+  required: ["name", "input", "reference", "type", "evaluation_metric", "pass_threshold"]
+  requiresDeployment: true
+  requiresProject: false
 dataMappingSchema: {}
 outputSchema:
   similarity:
