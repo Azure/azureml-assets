@@ -97,14 +97,19 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 # by fixing dependencies in the base packages
 RUN pip list && \
     pip install pyarrow==14.0.2 \
-                'transformers[sentencepiece,torch]==4.53.0' \
+                'transformers[sentencepiece,torch]==4.48.0' \
                 aiohttp==3.12.14
-# Security vulnerability fix - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
-RUN pip install --upgrade pip && pip install torch==2.8.0 torchvision==0.23.0
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip && /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+# Dependency compatibility fixes for azureml-automl-dnn-nlp
+# GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+# Use torch==2.2.2 as required by azureml-automl-dnn-nlp (instead of 2.8.0 due to conflicts)
+RUN pip install torch==2.2.2 torchvision==0.17.2
+RUN /opt/conda/envs/ptca/bin/pip install torch==2.2.2 torchvision==0.17.2 || true
+# Use urllib3<2.0.0 as required by azureml-automl-runtime  
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==1.26.18' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==1.26.18' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==1.26.18' || true
 
 # Patch for pillow vulnerability
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
