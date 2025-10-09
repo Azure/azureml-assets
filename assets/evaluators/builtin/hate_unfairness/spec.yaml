@@ -12,14 +12,14 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    azureai.projectEndpoint:
+    azureai.azure_ai_project:
       type: "string"
     threshold:
       type: "number"
       minimum: 0
       maximum: 7
       multipleOf: 1
-  required: ["azureai.projectEndpoint"]
+  required: ["azureai.azure_ai_project"]
 dataMappingSchema:
   type: "object"
   properties:
