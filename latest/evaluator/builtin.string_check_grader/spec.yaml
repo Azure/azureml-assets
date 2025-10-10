@@ -29,7 +29,7 @@ initParameterSchema:
     operation:
       type: "string"
       enum: ["eq", "ne", "like", "ilike"]
-  required: ["name", "input", "reference", "type", "operation"]
+  required: ["deployment_name", "name", "input", "reference", "type", "operation"]
 dataMappingSchema: {}
 outputSchema:
   string_check:

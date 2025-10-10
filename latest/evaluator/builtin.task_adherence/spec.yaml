@@ -23,8 +23,9 @@ initParameterSchema:
       type: "string"
     threshold:
       type: "number"
-    credential:
-      type: "object"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"

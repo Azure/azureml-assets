@@ -27,7 +27,7 @@ initParameterSchema:
       minimum: 0
       maximum: 1
       multipleOf: 0.1
-  required: ["threshold"]
+  required: []
 dataMappingSchema:
   type: "object"
   properties:

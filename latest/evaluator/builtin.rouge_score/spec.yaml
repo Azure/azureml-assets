@@ -45,7 +45,7 @@ initParameterSchema:
       minimum: 0
       maximum: 1
       multipleOf: 0.1
-  required: ["f1_score_threshold", "precision_threshold", "recall_threshold"]
+  required: ["rouge_type", "f1_score_threshold", "precision_threshold", "recall_threshold"]
 dataMappingSchema:
   type: "object"
   properties:
