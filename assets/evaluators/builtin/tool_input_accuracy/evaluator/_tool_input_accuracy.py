@@ -4,7 +4,7 @@
 import os
 import logging
 from itertools import chain
-from typing import Dict, List, Union, TypeVar, Optional, cast
+from typing import Dict, List, Union, TypeVar, cast
 from typing_extensions import override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import (
@@ -24,6 +24,7 @@ if not hasattr(ErrorTarget, 'TOOL_INPUT_ACCURACY_EVALUATOR'):
 
 T_EvalValue = TypeVar("T_EvalValue")
 
+
 def _get_built_in_tool_definition(tool_name: str):
     """Get the definition for the built-in tool."""
     try:
@@ -39,6 +40,7 @@ def _get_built_in_tool_definition(tool_name: str):
     except ImportError:
         pass
     return None
+
 
 def _get_needed_built_in_tool_definitions(tool_calls: List[Dict]) -> List[Dict]:
     """Extract tool definitions needed for the given built-in tool calls."""
@@ -57,8 +59,11 @@ def _get_needed_built_in_tool_definitions(tool_calls: List[Dict]) -> List[Dict]:
 
     return needed_definitions
 
+
 def _extract_needed_tool_definitions(
-        tool_calls: List[Dict], tool_definitions: List[Dict], error_target: ErrorTarget
+        tool_calls: List[Dict], 
+        tool_definitions: List[Dict], 
+        error_target: ErrorTarget
     ) -> List[Dict]:
         """Extract the tool definitions that are needed for the provided tool calls.
 
@@ -135,6 +140,7 @@ def _extract_needed_tool_definitions(
                 )
 
         return needed_tool_definitions
+
 
 def _extract_text_from_content(content):
     text = []
@@ -243,7 +249,10 @@ def _pretty_format_conversation_history(conversation_history):
         formatted_history += "SYSTEM_PROMPT:\n"
         formatted_history += "  " + conversation_history["system_message"] + "\n\n"
     for i, (user_query, agent_response) in enumerate(
-        zip(conversation_history["user_queries"], conversation_history["agent_responses"] + [None])
+        zip(
+            conversation_history["user_queries"],
+            conversation_history["agent_responses"] + [None],
+        )
     ):
         formatted_history += f"User turn {i+1}:\n"
         for msg in user_query:
@@ -325,7 +334,6 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
                             agent_response_text.append(tool_results[tool_call_id])
 
     return agent_response_text
-
 
 
 @experimental
