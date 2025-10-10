@@ -12,18 +12,8 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    credential:
-      type: "object"
     azure_ai_project:
-      type: "object"
-      properties:
-        project_name:
-          type: "string"
-        resource_group_name:
-          type: "string"
-        subscription_id:
-          type: "string"
-      required: ["project_name", "resource_group_name", "subscription_id"]
+      type: "string"
   required: ["azure_ai_project"]
 dataMappingSchema:
   type: "object"
