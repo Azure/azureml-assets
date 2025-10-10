@@ -12,9 +12,9 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    azureai.azure_ai_project:
+    azure_ai_project:
       type: "string"
-  required: ["azureai.azure_ai_project"]
+  required: ["azure_ai_project"]
 dataMappingSchema:
   type: "object"
   properties:

@@ -11,7 +11,7 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    azureai.deployment_name:
+    deployment_name:
       type: "string"
     model:
       type: "string"
@@ -38,7 +38,7 @@ initParameterSchema:
       type: "array"
       items:
         type: "string"
-  required: ["azureai.deployment_name", "model", "name", "input", "type", "labels", "passing_labels"]
+  required: ["deployment_name", "model", "name", "input", "type", "labels", "passing_labels"]
 dataMappingSchema: {}
 outputSchema:
   label_model:

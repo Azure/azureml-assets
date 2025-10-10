@@ -11,7 +11,7 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    azureai.deployment_name:
+    deployment_name:
       type: "string"
     model:
       type: "string"
@@ -40,7 +40,7 @@ initParameterSchema:
     pass_threshold:
       type: "number"
       minimum: 0
-  required: ["azureai.deployment_name", "model", "name", "input", "type", "range", "pass_threshold"]
+  required: ["deployment_name", "model", "name", "input", "type", "range", "pass_threshold"]
   requiresDeployment: true
   requiresProject: false
 dataMappingSchema: {}

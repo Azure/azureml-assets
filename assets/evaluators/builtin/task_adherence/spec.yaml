@@ -12,14 +12,14 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    azureai.deployment_name:
+    deployment_name:
       type: "string"
     threshold:
       type: "number"
       minimum: 1
       maximum: 5
       multipleOf: 1
-  required: ["azureai.deployment_name"]
+  required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
   properties:
