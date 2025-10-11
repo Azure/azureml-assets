@@ -3,7 +3,7 @@
 
 import os
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 
 from typing_extensions import overload, override
 from azure.ai.evaluation._legacy._adapters._flows import AsyncPrompty
@@ -17,6 +17,7 @@ from azure.ai.evaluation._common.utils import (
     ErrorCategory,
     construct_prompty_model_config,
     validate_model_config,
+    _extract_text_from_content,
 )
 
 try:
@@ -35,8 +36,79 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+# ```utils.py
+def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=None):
+    """
+    Simplify a list of conversation messages by keeping only role and content.
+    Optionally filter out system messages and/or tool calls.
+
+    :param messages: List of message dicts (e.g., from query or response)
+    :param drop_system: If True, remove system role messages
+    :param drop_tool_calls: If True, remove tool_call items from assistant content
+    :return: New simplified list of messages
+    """
+    if isinstance(messages, str):
+        return messages
+    try:
+        # Validate input is a list
+        if not isinstance(messages, list):
+            return messages
+
+        simplified_msgs = []
+        for msg in messages:
+            # Ensure msg is a dict
+            if not isinstance(msg, dict):
+                simplified_msgs.append(msg)
+                continue
+
+            role = msg.get("role")
+            content = msg.get("content", [])
+
+            # Drop system message (if should)
+            if drop_system and role == "system":
+                continue
+
+            # Simplify user messages
+            if role == "user":
+                simplified_msg = {
+                    "role": role,
+                    "content": _extract_text_from_content(content),
+                }
+                simplified_msgs.append(simplified_msg)
+                continue
+
+            # Drop tool results (if should)
+            if drop_tool_calls and role == "tool":
+                continue
+
+            # Simplify assistant messages
+            if role == "assistant":
+                simplified_content = _extract_text_from_content(content)
+                # Check if message has content
+                if simplified_content:
+                    simplified_msg = {"role": role, "content": simplified_content}
+                    simplified_msgs.append(simplified_msg)
+                    continue
+
+                # Drop tool calls (if should)
+                if drop_tool_calls and any(c.get("type") == "tool_call" for c in content if isinstance(c, dict)):
+                    continue
+
+            # If we reach here, it means we want to keep the message
+            simplified_msgs.append(msg)
+
+        return simplified_msgs
+
+    except Exception as ex:
+        if logger:
+            logger.debug(f"Error simplifying messages: {str(ex)}. Returning original messages.")
+        return messages
+# ```
+
 class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """Evaluate groundedness score for a given query (optional), response, and context or a multi-turn conversation.
+    """
+    Evaluates groundedness score for a given query (optional), response, and context or a multi-turn conversation,
+    including reasoning.
 
     The groundedness measure assesses the correspondence between claims in an AI-generated answer and the source
     context, making sure that these claims are substantiated by the context. Even if the responses from LLM are
@@ -51,6 +123,11 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the groundedness evaluator. Default is 3.
     :type threshold: int
+    :param credential: The credential for authenticating to Azure AI service.
+    :type credential: ~azure.core.credentials.TokenCredential
+    :keyword is_reasoning_model: If True, the evaluator will use reasoning model configuration (o1/o3 models).
+        This will adjust parameters like max_completion_tokens and remove unsupported parameters. Default is False.
+    :paramtype is_reasoning_model: bool
 
     .. admonition:: Example:
 
@@ -97,18 +174,6 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     def __init__(self, model_config, *, threshold=3, credential=None, **kwargs):
-        """Initialize the Groundedness evaluator.
-
-        :param model_config: Configuration for the Azure OpenAI model.
-        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
-            ~azure.ai.evaluation.OpenAIModelConfiguration]
-        :param threshold: The threshold for evaluation.
-        :type threshold: int
-        :param credential: The credential for authentication.
-        :type credential: Optional[Any]
-        :param kwargs: Additional keyword arguments.
-        :type kwargs: Any
-        """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_NO_QUERY)  # Default to no query
 
@@ -120,6 +185,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             threshold=threshold,
             credential=credential,
             _higher_is_better=self._higher_is_better,
+            **kwargs,
         )
         self._model_config = model_config
         self.threshold = threshold
@@ -133,7 +199,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         context: str,
         query: Optional[str] = None,
     ) -> Dict[str, Union[str, float]]:
-        """Evaluate groundedness for given input of response, context.
+        """Evaluate groundedness for given input of response, context
 
         :keyword response: The response to be evaluated.
         :paramtype response: str
@@ -172,7 +238,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *,
         conversation: Conversation,
     ) -> Dict[str, Union[float, Dict[str, List[Union[str, float]]]]]:
-        """Evaluate groundedness for a conversation.
+        """Evaluate groundedness for a conversation
 
         :keyword conversation: The conversation to evaluate. Expected to contain a list of conversation turns under the
             key "messages", and potentially a global context under the key "context". Conversation turns are expected
@@ -188,9 +254,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *args,
         **kwargs,
     ):
-        """Evaluate groundedness.
-
-        Accepts either a query, response, and context for a single evaluation,
+        """Evaluate groundedness. Accepts either a query, response, and context for a single evaluation,
         or a conversation for a multi-turn evaluation. If the conversation has more than one turn,
         the evaluator will aggregate the results of each turn.
 
@@ -209,6 +273,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The relevance score.
         :rtype: Union[Dict[str, Union[str, float]], Dict[str, Union[float, Dict[str, List[Union[str, float]]]]]]
         """
+
         if kwargs.get("query", None):
             current_dir = os.path.dirname(__file__)
             prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_WITH_QUERY)
@@ -222,8 +287,44 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         return super().__call__(*args, **kwargs)
 
+    def has_context(self, eval_input: dict) -> bool:
+        """
+        Return True if eval_input contains a non-empty 'context' field.
+        Treats None, empty strings, empty lists, and lists of empty strings as no context.
+        """
+        context = eval_input.get("context", None)
+        if not context:
+            return False
+        if context == "<>":  # Special marker for no context
+            return False
+        if isinstance(context, list):
+            return any(str(c).strip() for c in context)
+        if isinstance(context, str):
+            return bool(context.strip())
+        return True
+
+    @override
+    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
+        if "query" not in eval_input:
+            return await super()._do_eval(eval_input)
+
+        contains_context = self.has_context(eval_input)
+
+        simplified_query = simplify_messages(eval_input["query"], drop_tool_calls=contains_context)
+        simplified_response = simplify_messages(eval_input["response"], drop_tool_calls=False)
+
+        # Build simplified input
+        simplified_eval_input = {
+            "query": simplified_query,
+            "response": simplified_response,
+            "context": eval_input["context"],
+        }
+
+        # Replace and call the parent method
+        return await super()._do_eval(simplified_eval_input)
+
     async def _real_call(self, **kwargs):
-        """Perform the asynchronous call where real end-to-end evaluation logic is executed.
+        """The asynchronous call where real end-to-end evaluation logic is performed.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
@@ -239,66 +340,79 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     self._result_key: self._NOT_APPLICABLE_RESULT,
                     f"{self._result_key}_result": "pass",
                     f"{self._result_key}_threshold": self.threshold,
-                    f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness "
-                                                  f"are {self._SUPPORTED_TOOLS}.",
+                    f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness are {self._SUPPORTED_TOOLS}.",
                 }
             else:
                 raise ex
 
     def _convert_kwargs_to_eval_input(self, **kwargs):
-        if "context" in kwargs or "conversation" in kwargs:
+        if kwargs.get("context") or kwargs.get("conversation"):
             return super()._convert_kwargs_to_eval_input(**kwargs)
-
         query = kwargs.get("query")
         response = kwargs.get("response")
         tool_definitions = kwargs.get("tool_definitions")
 
-        if not query or not response or not tool_definitions:
-            msg = (f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. "
-                   f"For Agent groundedness 'query', 'response' and 'tool_definitions' are required.")
+        if (not query) or (not response):  # or not tool_definitions:
+            msg = f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. For Agent groundedness 'query' and 'response' are required."
             raise EvaluationException(
                 message=msg,
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             )
-
         context = self._get_context_from_agent_response(response, tool_definitions)
-        if not context:
-            raise EvaluationException(
-                message=f"Context could not be extracted from agent response. Supported tools for groundedness are "
-                        f"{self._SUPPORTED_TOOLS}. If supported tools are not used groundedness is not calculated.",
-                blame=ErrorBlame.USER_ERROR,
-                category=ErrorCategory.NOT_APPLICABLE,
-                target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
-            )
 
-        return super()._convert_kwargs_to_eval_input(response=response[-1], context=context, query=query)
+        filtered_response = self._filter_file_search_results(response)
+        return super()._convert_kwargs_to_eval_input(response=filtered_response, context=context, query=query)
+
+    def _filter_file_search_results(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Filter out file_search tool results from the messages."""
+        file_search_ids = self._get_file_search_tool_call_ids(messages)
+        return [
+            msg for msg in messages if not (msg.get("role") == "tool" and msg.get("tool_call_id") in file_search_ids)
+        ]
 
     def _get_context_from_agent_response(self, response, tool_definitions):
+        """Extract context text from file_search tool results in the agent response."""
+        NO_CONTEXT = "<>"
         context = ""
         try:
             logger.debug("Extracting context from response")
             tool_calls = self._parse_tools_from_response(response=response)
-            logger.debug(f"Tool Calls parsed successfully : {tool_calls}")
-            if tool_calls:
-                for tool_call in tool_calls:
-                    if isinstance(tool_call, dict) and tool_call.get("type") == "tool_call":
-                        tool_name = tool_call.get("name")
-                        for tool in tool_definitions:
-                            if tool.get("name") == tool_name and tool.get("type") in self._SUPPORTED_TOOLS:
-                                if tool_name == "file_search":
-                                    tool_result = tool_call.get("tool_result")
-                                    if tool_result:
-                                        for result in tool_result:
-                                            content_list = result.get("content")
-                                            if content_list:
-                                                for content in content_list:
-                                                    text = content.get("text")
-                                                    if text:
-                                                        context = context + "\n" + str(text)
+            logger.debug(f"Tool Calls parsed successfully: {tool_calls}")
+
+            if not tool_calls:
+                return NO_CONTEXT
+
+            context_lines = []
+            for tool_call in tool_calls:
+                if not isinstance(tool_call, dict) or tool_call.get("type") != "tool_call":
+                    continue
+
+                tool_name = tool_call.get("name")
+                if tool_name != "file_search":
+                    continue
+
+                # Extract tool results
+                for result in tool_call.get("tool_result", []):
+                    results = result if isinstance(result, list) else [result]
+                    for r in results:
+                        file_name = r.get("file_name", "Unknown file name")
+                        for content in r.get("content", []):
+                            text = content.get("text")
+                            if text:
+                                context_lines.append(f"{file_name}:\n- {text}---\n\n")
+
+            context = "\n".join(context_lines) if len(context_lines) > 0 else None
+
         except Exception as ex:
             logger.debug(f"Error extracting context from agent response : {str(ex)}")
-            context = ""
+            context = None
 
-        return context if context else None
+        context = context if context else NO_CONTEXT
+        return context
+
+    def _get_file_search_tool_call_ids(self, query_or_response):
+        """Return a list of tool_call_ids for file search tool calls."""
+        tool_calls = self._parse_tools_from_response(query_or_response)
+        return [tc.get("tool_call_id") for tc in tool_calls if tc.get("name") == "file_search"]
