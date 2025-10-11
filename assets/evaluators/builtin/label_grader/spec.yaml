@@ -26,6 +26,7 @@ initParameterSchema:
             type: "string"
           role:
             type: "string"
+            enum: ["system", "user", "assistant"]
         required: ["content", "role"]
     type:
       type: "string"
