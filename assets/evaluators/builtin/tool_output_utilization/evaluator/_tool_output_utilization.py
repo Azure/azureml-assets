@@ -4,7 +4,7 @@
 import os
 import math
 import logging
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List
 
 from typing_extensions import overload, override
 
@@ -223,14 +223,14 @@ def reformat_agent_response(response, logger=None, include_tool_messages=False):
                 )
             return response
         return "\n".join(agent_response)
-    except:
+    except Exception as e:
         # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed),
         # the original response is returned. This is a fallback to ensure that the evaluation can still
         # proceed. See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
                 "Agent response could not be parsed, falling back to original response: "
-                f"{response}"
+                f"{response}. Error: {e}"
             )
         return response
 
@@ -252,10 +252,10 @@ def reformat_tool_definitions(tool_definitions, logger=None):
         if logger:
             logger.warning(
                 "Tool definitions could not be parsed, falling back to original definitions: "
-                f"{tool_definitions}"
+                f"{tool_definitions}. Error: {e}"
             )
         return tool_definitions
-### ````
+# ```
 
 
 @experimental
