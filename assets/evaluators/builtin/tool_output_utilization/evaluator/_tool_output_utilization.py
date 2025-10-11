@@ -13,12 +13,10 @@ from azure.ai.evaluation._exceptions import (
     ErrorBlame,
     ErrorCategory,
     ErrorTarget,
-    ErrorMessage
+    ErrorMessage,
 )
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._common.utils import (
-    _extract_text_from_content
-)
+from azure.ai.evaluation._common.utils import (_extract_text_from_content,)
 from azure.ai.evaluation._common._experimental import experimental
 
 logger = logging.getLogger(__name__)
@@ -26,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 # ``` updated _exceptions.py
 # Extend ErrorTarget enum if needed
-if not hasattr(ErrorTarget, 'TOOL_OUTPUT_UTILIZATION_EVALUATOR'):
-    ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR = 'ToolOutputUtilizationEvaluator'
+if not hasattr(ErrorTarget, "TOOL_OUTPUT_UTILIZATION_EVALUATOR"):
+    ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR = "ToolOutputUtilizationEvaluator"
 # ```
 
 # ``` updated utils.py
@@ -47,16 +45,23 @@ def _filter_to_used_tools(tool_definitions, msgs_lists, logger=None):
                             elif "name" in content:
                                 used_tool_names.add(content["name"])
 
-        filtered_tools = [tool for tool in tool_definitions if tool.get("name") in used_tool_names]
+        filtered_tools = [
+            tool for tool in tool_definitions if tool.get("name") in used_tool_names
+        ]
         if any_tools_used and not filtered_tools:
             if logger:
-                logger.warning("No tool definitions matched the tools used in the messages. Returning original list.")
+                logger.warning(
+                    "No tool definitions matched the tools used in the messages. "
+                    "Returning original list."
+                )
             filtered_tools = tool_definitions
 
         return filtered_tools
     except Exception as e:
         if logger:
-            logger.warning(f"Failed to filter tool definitions, returning original list. Error: {e}")
+            logger.warning(
+                f"Failed to filter tool definitions, returning original list. Error: {e}"
+            )
         return tool_definitions
 
 
@@ -92,7 +97,9 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
     if cur_user_query:
         all_user_queries.append(cur_user_query)
     if cur_agent_response:
-        formatted_agent_response = _get_agent_response(cur_agent_response, include_tool_messages=include_tool_messages)
+        formatted_agent_response = _get_agent_response(
+            cur_agent_response, include_tool_messages=include_tool_messages
+        )
         all_agent_responses.append([formatted_agent_response])
 
     if len(all_user_queries) != len(all_agent_responses) + 1:
@@ -141,15 +148,19 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         )
         return _pretty_format_conversation_history(conversation_history)
     except Exception as e:
-        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
-        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
+        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed),
+        # the original query is returned. This is a fallback to ensure that the evaluation can still proceed.
+        # However the accuracy of the evaluation will be affected.
         # From our tests the negative impact on IntentResolution is:
         #   Higher intra model variance (0.142 vs 0.046)
         #   Higher inter model variance (0.345 vs 0.607)
         #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
         #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
         if logger:
-            logger.warning(f"Conversation history could not be parsed, falling back to original query: {query}")
+            logger.warning(
+                "Conversation history could not be parsed, falling back to original query: "
+                f"{query}"
+            )
             print(e)
         return query
 
@@ -202,18 +213,25 @@ def reformat_agent_response(response, logger=None, include_tool_messages=False):
             return ""
         agent_response = _get_agent_response(response, include_tool_messages=include_tool_messages)
         if agent_response == []:
-            # If no message could be extracted, likely the format changed, fallback to the original response in that case
+            # If no message could be extracted, likely the format changed, fallback to the original response
+            # in that case.
             if logger:
                 logger.warning(
-                    f"Empty agent response extracted, likely due to input schema change. Falling back to using the original response: {response}"
+                    "Empty agent response extracted, likely due to input schema change. Falling back to "
+                    "using the original response: "
+                    f"{response}"
                 )
             return response
         return "\n".join(agent_response)
     except:
-        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed), the original response is returned
-        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed),
+        # the original response is returned. This is a fallback to ensure that the evaluation can still
+        # proceed. See comments on reformat_conversation_history for more details.
         if logger:
-            logger.warning(f"Agent response could not be parsed, falling back to original response: {response}")
+            logger.warning(
+                "Agent response could not be parsed, falling back to original response: "
+                f"{response}"
+            )
         return response
 
 
@@ -228,11 +246,13 @@ def reformat_tool_definitions(tool_definitions, logger=None):
             output_lines.append(f"- {name}: {desc} (inputs: {param_names})")
         return "\n".join(output_lines)
     except Exception as e:
-        # If the tool definitions cannot be parsed for whatever reason, the original tool definitions are returned
-        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        # If the tool definitions cannot be parsed for whatever reason, the original tool
+        # definitions are returned. This is a fallback to ensure that the evaluation can still
+        # proceed. See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                f"Tool definitions could not be parsed, falling back to original definitions: {tool_definitions}"
+                "Tool definitions could not be parsed, falling back to original definitions: "
+                f"{tool_definitions}"
             )
         return tool_definitions
 ### ````
@@ -240,14 +260,16 @@ def reformat_tool_definitions(tool_definitions, logger=None):
 
 @experimental
 class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Tool Output Utilization Evaluator assesses how effectively an AI agent utilizes the outputs from tools and whether it accurately incorporates this information into its responses.
+    """The Tool Output Utilization Evaluator assesses how effectively an AI agent utilizes the
+    outputs from tools and whether it accurately incorporates this information into its responses.
 
     Scoring is based on two levels:
-    1. Pass - The agent effectively utilizes tool outputs and accurately incorporates the information into its response.
-    2. Fail - The agent fails to properly utilize tool outputs or incorrectly incorporates the information into its response.
+    1. Pass - The agent effectively utilizes tool outputs and accurately incorporates the
+       information into its response.
+    2. Fail - The agent fails to properly utilize tool outputs or incorrectly incorporates the
+       information into its response.
 
     The evaluation includes the score, a brief explanation, and a final pass/fail result.
-
 
     :param model_config: Configuration for the Azure OpenAI model.
     :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
@@ -268,7 +290,8 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             :end-before: [END tool_output_utilization_evaluator]
             :language: python
             :dedent: 8
-            :caption: Initialize and call ToolOutputUtilizationEvaluator using Azure AI Project URL in the following format
+            :caption: Initialize and call ToolOutputUtilizationEvaluator using Azure AI Project URL in the
+                following format
                 https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
 
     """
@@ -313,7 +336,6 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Evaluate tool output utilization for a given query, response, and optional tool defintions.
         The query and response can be either a string or a list of messages.
 
-
         Example with string inputs and no tools:
             evaluator = ToolOutputUtilizationEvaluator(model_config)
             query = "What is the weather today?"
@@ -323,17 +345,90 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         Example with list of messages:
             evaluator = ToolOutputUtilizationEvaluator(model_config)
-            query = [{'role': 'system', 'content': 'You are a friendly and helpful customer service agent.'}, {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text', 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me on their status?'}]}]
-            response = [{'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}]}, {'createdAt': 1700000075, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_001', 'type': 'function', 'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}}}]}, {'createdAt': 1700000080, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_001', 'role': 'tool', 'content': [{'type': 'tool_result', 'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]}, {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}]}, {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function', 'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}}, {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_003', 'type': 'function', 'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}}}]}, {'createdAt': 1700000095, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_002', 'role': 'tool', 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "123", "status": "shipped", "delivery_date": "2025-03-15" } }'}]}, {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool', 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]}, {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. However, the order with ID 124 is delayed and should now arrive by March 20, 2025. Is there anything else I can help you with?'}]}]
-            tool_definitions = [{'name': 'get_orders', 'description': 'Get the list of orders for a given account number.', 'parameters': {'type': 'object', 'properties': {'account_number': {'type': 'string', 'description': 'The account number to get the orders for.'}}}}, {'name': 'get_order', 'description': 'Get the details of a specific order.', 'parameters': {'type': 'object', 'properties': {'order_id': {'type': 'string', 'description': 'The order ID to get the details for.'}}}}, {'name': 'initiate_return', 'description': 'Initiate the return process for an order.', 'parameters': {'type': 'object', 'properties': {'order_id': {'type': 'string', 'description': 'The order ID for the return process.'}}}}, {'name': 'update_shipping_address', 'description': 'Update the shipping address for a given account.', 'parameters': {'type': 'object', 'properties': {'account_number': {'type': 'string', 'description': 'The account number to update.'}, 'new_address': {'type': 'string', 'description': 'The new shipping address.'}}}}]
+            query = [
+                {'role': 'system', 'content': 'You are a friendly and helpful customer service '
+                 'agent.'},
+                {'createdAt': 1700000060, 'role': 'user', 'content': [
+                    {'type': 'text', 'text': 'Hi, I need help with the last 2 orders on my '
+                     'account #888. Could you please update me on their status?'}
+                ]},
+            ]
+            response = [
+                {'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant', 'content': [
+                    {'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}
+                ]},
+                {'createdAt': 1700000075, 'run_id': '0', 'role': 'assistant', 'content': [
+                    {'type': 'tool_call', 'tool_call': {
+                        'id': 'tool_call_20250310_001',
+                        'type': 'function',
+                        'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}
+                    }}
+                ]},
+                {'createdAt': 1700000080, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_001',
+                 'role': 'tool', 'content': [
+                    {'type': 'tool_result', 'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}
+                ]},
+                {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant', 'content': [
+                    {'type': 'text', 'text': 'Thanks for your patience. I see two orders on your account. '
+                     'Let me fetch the details for both.'}
+                ]},
+                {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [
+                    {'type': 'tool_call', 'tool_call': {
+                        'id': 'tool_call_20250310_002',
+                        'type': 'function',
+                        'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}
+                    }},
+                    {'type': 'tool_call', 'tool_call': {
+                        'id': 'tool_call_20250310_003',
+                        'type': 'function',
+                        'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}
+                    }},
+                ]},
+                {'createdAt': 1700000095, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_002',
+                 'role': 'tool', 'content': [
+                    {'type': 'tool_result', 'tool_result': '{ "order": { "id": "123", "status": "shipped", '
+                     '"delivery_date": "2025-03-15" } }'}
+                ]},
+                {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003',
+                 'role': 'tool', 'content': [
+                    {'type': 'tool_result', 'tool_result': '{ "order": { "id": "124", "status": "delayed", '
+                     '"expected_delivery": "2025-03-20" } }'}
+                ]},
+                {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [
+                    {'type': 'text', 'text': 'The order with ID 123 has been shipped and is expected to '
+                     'be delivered on March 15, 2025. However, the order with ID 124 is delayed and '
+                     'should now arrive by March 20, 2025. Is there anything else I can help you with?'}
+                ]},
+            ]
+            tool_definitions = [
+                {'name': 'get_orders', 'description': 'Get the list of orders for a given account number.',
+                 'parameters': {'type': 'object', 'properties': {
+                     'account_number': {'type': 'string', 'description': 'The account number to get the orders for.'}
+                 }}},
+                {'name': 'get_order', 'description': 'Get the details of a specific order.',
+                 'parameters': {'type': 'object', 'properties': {
+                     'order_id': {'type': 'string', 'description': 'The order ID to get the details for.'}
+                 }}},
+                {'name': 'initiate_return', 'description': 'Initiate the return process for an order.',
+                 'parameters': {'type': 'object', 'properties': {
+                     'order_id': {'type': 'string', 'description': 'The order ID for the return process.'}
+                 }}},
+                {'name': 'update_shipping_address', 'description': 'Update the shipping address for a given account.',
+                 'parameters': {'type': 'object', 'properties': {
+                     'account_number': {'type': 'string', 'description': 'The account number to update.'},
+                     'new_address': {'type': 'string', 'description': 'The new shipping address.'}
+                 }}},
+            ]
 
             result = evaluator(query=query, response=response, tool_definitions=tool_definitions)
 
         :keyword query: The query being evaluated, either a string or a list of messages.
         :paramtype query: Union[str, List[dict]]
-        :keyword response: The response being evaluated, either a string or a list of messages (full agent response potentially including tool calls)
+        :keyword response: The response being evaluated, either a string or a list of messages
+            (full agent response potentially including tool calls)
         :paramtype response: Union[str, List[dict]]
-        :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
+        :keyword tool_definitions: An optional list of messages containing the tool definitions
+            the agent is aware of.
         :paramtype tool_definitions: Union[dict, List[dict]]
         :return: A dictionary with the tool output utilization evaluation results.
         :rtype: Dict[str, Union[str, float]]
@@ -348,14 +443,16 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         Invokes the instance using the overloaded __call__ signature.
 
-        For detailed parameter types and return value documentation, see the overloaded __call__ definition.
+        For detailed parameter types and return value documentation, see the overloaded __call__
+        definition.
         """
         return super().__call__(*args, **kwargs)
 
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do Tool Output Utilization evaluation.
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed
+            for the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
@@ -368,8 +465,14 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             and ("tool_definitions" not in eval_input)
         ):
             raise EvaluationException(
-                message="Query, response, and tool_definitions are required inputs to the Tool Output Utilization evaluator.",
-                internal_message="Query, response, and tool_definitions are required inputs to the Tool Output Utilization evaluator.",
+                message=(
+                    "Query, response, and tool_definitions are required inputs to the Tool Output "
+                    "Utilization evaluator."
+                ),
+                internal_message=(
+                    "Query, response, and tool_definitions are required inputs to the Tool Output "
+                    "Utilization evaluator."
+                ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
@@ -409,7 +512,8 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             if output_label not in ["pass", "fail"]:
                 if logger:
                     logger.warning(
-                        f"LLM output label is not 'pass' or 'fail' (got '{output_label}'), returning NaN for the score."
+                        f"LLM output label is not 'pass' or 'fail' (got '{output_label}'), "
+                        "returning NaN for the score."
                     )
 
             score = 1.0 if output_label == "pass" else 0.0
@@ -426,7 +530,5 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_reason": reason,
             }
         if logger:
-            logger.warning(
-                "LLM output is not a dictionary, returning NaN for the score."
-            )
+            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
         return {self._result_key: math.nan}
