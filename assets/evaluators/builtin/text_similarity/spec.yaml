@@ -1,7 +1,7 @@
 type: "evaluator"
-name: "builtin.text_similarity_grader"
+name: "builtin.text_similarity"
 version: 1
-displayName: "Text-Similarity-Grader-Evaluator"
+displayName: "Text-Similarity-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: 0 is False and 1 is True |\n| What is this metric? | TEXT_SIMILARITY_GRADER evaluates how closely two pieces of text resemble each other in meaning and structure. |\n| How does it work? | It uses metrics like cosine similarity, BERTScore, or ROUGE to assess semantic and lexical overlap. |\n| When to use it? | Use this metric in paraphrase detection, translation evaluation, and response comparison. |\n"
 evaluatorType: "builtin"
 evaluatorSubType: "openai_graders"

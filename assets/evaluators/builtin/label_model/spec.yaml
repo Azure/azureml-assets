@@ -1,7 +1,7 @@
 type: "evaluator"
-name: "builtin.label_grader"
+name: "builtin.label_model"
 version: 1
-displayName: "Label-Grader-Evaluator"
+displayName: "Label-Model-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: 0 is False and 1 is True |\n| What is this metric? | LABEL_GRADER classifies outputs based on defined labels. It returns structured results with explanations for why each label was chosen. |\n| How does it work? | It uses classification metrics like accuracy, precision, recall, and F1 score to compare predicted labels against ground truth. |\n| When to use it? | Use this metric in classification tasks, tagging systems, and intent detection. |\n"
 evaluatorType: "builtin"
 evaluatorSubType: "openai_graders"

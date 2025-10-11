@@ -1,7 +1,7 @@
 type: "evaluator"
-name: "builtin.string_check_grader"
+name: "builtin.string_check"
 version: 1
-displayName: "String-Check-Grader-Evaluator"
+displayName: "String-Check-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: 0 is False and 1 is True |\n| What is this metric? | STRING_CHECK_GRADER assesses whether generated strings match expected patterns or values. |\n| How does it work? | It performs exact or regex-based matching to validate string outputs. Partial matches may be scored using edit distance or similarity metrics. |\n| When to use it? | Use this metric in form validation, structured output generation, and data extraction. |\n"
 evaluatorType: "builtin"
 evaluatorSubType: "openai_graders"
