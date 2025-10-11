@@ -19,8 +19,8 @@ from azure.ai.evaluation._common._experimental import experimental
 logger = logging.getLogger(__name__)
 
 # Extend ErrorTarget enum if needed
-if not hasattr(ErrorTarget, 'TOOL_INPUT_ACCURACY_EVALUATOR'):
-    ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR = 'ToolInputAccuracyEvaluator'
+if not hasattr(ErrorTarget, "TOOL_INPUT_ACCURACY_EVALUATOR"):
+    ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR = "ToolInputAccuracyEvaluator"
 
 T_EvalValue = TypeVar("T_EvalValue")
 
@@ -28,7 +28,10 @@ T_EvalValue = TypeVar("T_EvalValue")
 def _get_built_in_tool_definition(tool_name: str):
     """Get the definition for the built-in tool."""
     try:
-        from azure.ai.evaluation._converters._models import _BUILT_IN_DESCRIPTIONS, _BUILT_IN_PARAMS
+        from azure.ai.evaluation._converters._models import (
+            _BUILT_IN_DESCRIPTIONS,
+            _BUILT_IN_PARAMS,
+        )
 
         if tool_name in _BUILT_IN_DESCRIPTIONS:
             return {
@@ -61,85 +64,85 @@ def _get_needed_built_in_tool_definitions(tool_calls: List[Dict]) -> List[Dict]:
 
 
 def _extract_needed_tool_definitions(
-        tool_calls: List[Dict], 
-        tool_definitions: List[Dict], 
-        error_target: ErrorTarget
-    ) -> List[Dict]:
-        """Extract the tool definitions that are needed for the provided tool calls.
+    tool_calls: List[Dict],
+    tool_definitions: List[Dict],
+    error_target: ErrorTarget,
+) -> List[Dict]:
+    """Extract the tool definitions that are needed for the provided tool calls.
 
-        :param tool_calls: The tool calls that need definitions
-        :type tool_calls: List[Dict]
-        :param tool_definitions: User-provided tool definitions
-        :type tool_definitions: List[Dict]
-        :return: List of needed tool definitions
-        :rtype: List[Dict]
-        :raises EvaluationException: If validation fails
-        """
-        needed_tool_definitions = []
+    :param tool_calls: The tool calls that need definitions
+    :type tool_calls: List[Dict]
+    :param tool_definitions: User-provided tool definitions
+    :type tool_definitions: List[Dict]
+    :return: List of needed tool definitions
+    :rtype: List[Dict]
+    :raises EvaluationException: If validation fails
+    """
+    needed_tool_definitions = []
 
-        # Add all user-provided tool definitions
-        needed_tool_definitions.extend(tool_definitions)
+    # Add all user-provided tool definitions
+    needed_tool_definitions.extend(tool_definitions)
 
-        # Add the needed built-in tool definitions (if they are called)
-        built_in_definitions = _get_needed_built_in_tool_definitions(tool_calls)
-        needed_tool_definitions.extend(built_in_definitions)
+    # Add the needed built-in tool definitions (if they are called)
+    built_in_definitions = _get_needed_built_in_tool_definitions(tool_calls)
+    needed_tool_definitions.extend(built_in_definitions)
 
-        # OpenAPI tool is a collection of functions, so we need to expand it
-        tool_definitions_expanded = list(
-            chain.from_iterable(
-                tool.get("functions", []) if tool.get("type") == "openapi" else [tool]
-                for tool in needed_tool_definitions
-            )
+    # OpenAPI tool is a collection of functions, so we need to expand it
+    tool_definitions_expanded = list(
+        chain.from_iterable(
+            tool.get("functions", []) if tool.get("type") == "openapi" else [tool]
+            for tool in needed_tool_definitions
         )
+    )
 
-        # Validate that all tool calls have corresponding definitions
-        for tool_call in tool_calls:
-            if isinstance(tool_call, dict):
-                tool_type = tool_call.get("type")
+    # Validate that all tool calls have corresponding definitions
+    for tool_call in tool_calls:
+        if isinstance(tool_call, dict):
+            tool_type = tool_call.get("type")
 
-                if tool_type == "tool_call":
-                    tool_name = tool_call.get("name")
-                    if tool_name and _get_built_in_tool_definition(tool_name):
-                        # This is a built-in tool from converter, already handled above
-                        continue
-                    elif tool_name:
-                        # This is a regular function tool from converter
-                        tool_definition_exists = any(
-                            tool.get("name") == tool_name and tool.get("type", "function") == "function"
-                            for tool in tool_definitions_expanded
-                        )
-                        if not tool_definition_exists:
-                            raise EvaluationException(
-                                message=f"Tool definition for {tool_name} not found",
-                                blame=ErrorBlame.USER_ERROR,
-                                category=ErrorCategory.INVALID_VALUE,
-                                target=error_target,
-                            )
-                    else:
+            if tool_type == "tool_call":
+                tool_name = tool_call.get("name")
+                if tool_name and _get_built_in_tool_definition(tool_name):
+                    # This is a built-in tool from converter, already handled above
+                    continue
+                elif tool_name:
+                    # This is a regular function tool from converter
+                    tool_definition_exists = any(
+                        tool.get("name") == tool_name and tool.get("type", "function") == "function"
+                        for tool in tool_definitions_expanded
+                    )
+                    if not tool_definition_exists:
                         raise EvaluationException(
-                            message=f"Tool call missing name: {tool_call}",
+                            message=f"Tool definition for {tool_name} not found",
                             blame=ErrorBlame.USER_ERROR,
                             category=ErrorCategory.INVALID_VALUE,
                             target=error_target,
                         )
                 else:
-                    # Unsupported tool format - only converter format is supported
                     raise EvaluationException(
-                        message=f"Unsupported tool call format. Only converter format is supported: {tool_call}",
+                        message=f"Tool call missing name: {tool_call}",
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=error_target,
                     )
             else:
-                # Tool call is not a dictionary
+                # Unsupported tool format - only converter format is supported
                 raise EvaluationException(
-                    message=f"Tool call is not a dictionary: {tool_call}",
+                    message=f"Unsupported tool call format. Only converter format is supported: {tool_call}",
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=error_target,
                 )
+        else:
+            # Tool call is not a dictionary
+            raise EvaluationException(
+                message=f"Tool call is not a dictionary: {tool_call}",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=error_target,
+            )
 
-        return needed_tool_definitions
+    return needed_tool_definitions
 
 
 def _extract_text_from_content(content):
@@ -172,7 +175,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
 
     # Second pass: process messages and build conversation history
     for msg in query:
-        if not "role" in msg:
+        if "role" not in msg:
             continue
 
         if include_system_messages and msg["role"] == "system" and "content" in msg:
@@ -180,7 +183,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
 
         if msg["role"] == "user" and "content" in msg:
             # Start new user turn, close previous agent response if exists
-            if cur_agent_response != []:
+            if cur_agent_response:
                 all_agent_responses.append(cur_agent_response)
                 cur_agent_response = []
             text_in_msg = _extract_text_from_content(msg["content"])
@@ -189,7 +192,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
 
         if msg["role"] == "assistant" and "content" in msg:
             # Start new agent response, close previous user query if exists
-            if cur_user_query != []:
+            if cur_user_query:
                 all_user_queries.append(cur_user_query)
                 cur_user_query = []
 
@@ -223,9 +226,9 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
                             cur_agent_response.append(tool_results[tool_call_id])
 
     # Close any remaining open queries/responses
-    if cur_user_query != []:
+    if cur_user_query:
         all_user_queries.append(cur_user_query)
-    if cur_agent_response != []:
+    if cur_agent_response:
         all_agent_responses.append(cur_agent_response)
 
     if len(all_user_queries) != len(all_agent_responses) + 1:
@@ -281,7 +284,7 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
             query, include_system_messages=include_system_messages, include_tool_calls=include_tool_calls
         )
         return _pretty_format_conversation_history(conversation_history)
-    except:
+    except Exception:
         # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
         # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
         # From our tests the negative impact on IntentResolution is:
@@ -440,7 +443,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             needed_tool_definitions = _extract_needed_tool_definitions(
                 tool_calls_typed, tool_definitions, ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
             )
-        except EvaluationException as e:
+        except EvaluationException:
             # Check if this is because no tool definitions were provided at all
             if len(tool_definitions) == 0:
                 return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
