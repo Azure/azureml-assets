@@ -285,8 +285,10 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         )
         return _pretty_format_conversation_history(conversation_history)
     except Exception:
-        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
-        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
+        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), 
+        # the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the 
+        # evaluation will be affected.
         # From our tests the negative impact on IntentResolution is:
         #   Higher intra model variance (0.142 vs 0.046)
         #   Higher inter model variance (0.345 vs 0.607)
