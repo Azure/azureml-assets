@@ -21,3 +21,7 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip to latest secure version  
+RUN pip install --upgrade pip && \
+    $CONDA_PREFIX/bin/pip install --upgrade pip

@@ -25,7 +25,7 @@ RUN apt-get update && \
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip \
     py-cpuinfo=5.0.0 \
@@ -73,4 +73,12 @@ RUN pip install --upgrade 'pyarrow==14.0.2'
 RUN pip install torch==2.7.1 torchvision==0.22.1
 RUN pip install urllib3==2.5.0
 # end pip ad-hoc
+
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
 

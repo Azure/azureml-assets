@@ -15,3 +15,11 @@ RUN pip install mlflow==3.1.0
 
 # Upgrade requests in the system Python (3.13) for fixing vulnerability
 RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests urllib3 || true
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
+
