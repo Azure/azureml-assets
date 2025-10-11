@@ -43,7 +43,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=22.1.2 -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -114,9 +114,9 @@ RUN pip install \
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
-# Fix vulnerabilities
-RUN pip install --force-reinstall torch==2.7.1 --no-cache-dir
-RUN pip install --force-reinstall torchvision==0.22.1 --no-cache-dir
+# Fix vulnerabilities - GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0
+RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
+RUN pip install --force-reinstall torchvision==0.23.0 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.4'
 RUN pip install --upgrade 'urllib3==2.5.0'
 RUN pip install --upgrade 'pillow==11.3.0'
@@ -135,4 +135,12 @@ RUN rm -rf /opt/miniconda/pkgs/
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+
+
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip
+RUN pip install --upgrade pip
+RUN /opt/conda/bin/pip install --upgrade pip || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+
 
