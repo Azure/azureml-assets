@@ -19,8 +19,16 @@ from azure.ai.evaluation._exceptions import (
 
 
 # Extend ErrorTarget enum if needed
-if not hasattr(ErrorTarget, 'TASK_NAVIGATION_EFFICIENCY_EVALUATOR'):
-    ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR = 'TaskNavigationEfficiencyEvaluator'
+def _create_extended_error_target(ErrorTarget):
+    """Create an extended ErrorTarget enum that includes TOOL_INPUT_ACCURACY_EVALUATOR."""
+    existing_members = {member.name: member.value for member in ErrorTarget}
+    existing_members['TOOL_INPUT_ACCURACY_EVALUATOR'] = 'ToolInputAccuracyEvaluator'
+
+    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    return ExtendedErrorTarget
+
+
+ErrorTarget = _create_extended_error_target(ErrorTarget)
 
 
 class TaskNavigationEfficiencyMatchingMode(str, Enum):
