@@ -11,8 +11,22 @@ from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, Err
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response, reformat_tool_definitions
 from azure.ai.evaluation._common._experimental import experimental
+from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+# Create extended ErrorTarget enum with the new member
+def _create_extended_error_target():
+    """Create an extended ErrorTarget enum that includes TASK_COMPLETION_EVALUATOR."""
+    existing_members = {member.name: member.value for member in ErrorTarget}
+    existing_members['TASK_COMPLETION_EVALUATOR'] = 'TaskCompletionEvaluator'
+
+    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    return ExtendedErrorTarget
+
+
+ExtendedErrorTarget = _create_extended_error_target()
 
 
 @experimental
@@ -150,7 +164,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
                 internal_message="Both query and response must be provided as input to the Task Completion evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ErrorTarget.TASK_COMPLETION_EVALUATOR,
+                target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             )
         eval_input["query"] = reformat_conversation_history(eval_input["query"], logger, include_system_messages=True)
         eval_input["response"] = reformat_agent_response(eval_input["response"], logger, include_tool_messages=True)
