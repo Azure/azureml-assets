@@ -13,21 +13,13 @@ initParameterSchema:
   type: "object"
   properties:
     azure_ai_project:
-      type: "object"
-      properties:
-        project_name:
-          type: "string"
-        resource_group_name:
-          type: "string"
-        subscription_id:
-          type: "string"
-      required: ["project_name", "resource_group_name", "subscription_id"]
+      type: "string"
     threshold:
       type: "number"
       minimum: 0
       maximum: 5
       multipleOf: 1
-  required: ["azure_ai_project", "threshold"]
+  required: ["azure_ai_project"]
 dataMappingSchema:
   type: "object"
   properties:
@@ -36,7 +28,11 @@ dataMappingSchema:
     response:
       type: "string"
     tool_calls:
-      type: "object"
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
   required: ["query", "response", "tool_calls"]
 outputSchema:
   prohibited_actions:
