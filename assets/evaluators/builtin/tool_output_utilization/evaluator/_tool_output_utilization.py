@@ -4,7 +4,7 @@
 import os
 import math
 import logging
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List
 
 from typing_extensions import overload, override
 
@@ -30,9 +30,10 @@ if not hasattr(ErrorTarget, 'TOOL_OUTPUT_UTILIZATION_EVALUATOR'):
     ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR = 'ToolOutputUtilizationEvaluator'
 # ```
 
+
 # ``` updated utils.py
 def _filter_to_used_tools(tool_definitions, msgs_lists, logger=None):
-    """Filters the tool definitions to only include those that were actually used in the messages lists."""
+    """Filter the tool definitions to only include those that were actually used in the messages lists."""
     try:
         used_tool_names = set()
         any_tools_used = False
@@ -61,6 +62,18 @@ def _filter_to_used_tools(tool_definitions, msgs_lists, logger=None):
 
 
 def _get_conversation_history(query, include_system_messages=False, include_tool_messages=False):
+    """Parse conversation history from a list of messages into structured format.
+    
+    :param query: List of message dictionaries containing the conversation history
+    :type query: List[dict]
+    :param include_system_messages: Whether to include system messages in the output
+    :type include_system_messages: bool
+    :param include_tool_messages: Whether to include tool-related messages in agent responses
+    :type include_tool_messages: bool
+    :return: Dict containing parsed user_queries, agent_responses, and optionally system_message
+    :rtype: Dict[str, Union[List[List[str]], str]]
+    :raises EvaluationException: If conversation history is malformed (mismatched user/agent turns
+    """
     all_user_queries, all_agent_responses = [], []
     cur_user_query, cur_agent_response = [], []
     system_message = None
@@ -111,7 +124,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
 
 
 def _pretty_format_conversation_history(conversation_history):
-    """Formats the conversation history for better readability."""
+    """Format the conversation history for better readability."""
     formatted_history = ""
     if conversation_history.get("system_message"):
         formatted_history += "SYSTEM_PROMPT:\n"
@@ -155,7 +168,7 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
 
 
 def _get_agent_response(agent_response_msgs, include_tool_messages=False):
-    """Extracts formatted agent response including text, and optionally tool calls/results."""
+    """Extract formatted agent response including text, and optionally tool calls/results."""
     agent_response_text = []
     tool_results = {}
 
@@ -197,6 +210,17 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
 
 
 def reformat_agent_response(response, logger=None, include_tool_messages=False):
+    """Reformat agent response to a standardized string format.
+    
+    :param response: The agent response to reformat, can be None, empty list, or list of messages
+    :type response: Union[None, List[dict], str]
+    :param logger: Optional logger for warning messages
+    :type logger: Optional[logging.Logger]
+    :param include_tool_messages: Whether to include tool call and result information
+    :type include_tool_messages: bool
+    :return: Formatted agent response as a string, or original response if parsing fails
+    :rtype: str
+    """
     try:
         if response is None or response == []:
             return ""
@@ -209,15 +233,24 @@ def reformat_agent_response(response, logger=None, include_tool_messages=False):
                 )
             return response
         return "\n".join(agent_response)
-    except:
+    except Exception as e:
         # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed), the original response is returned
         # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
         if logger:
-            logger.warning(f"Agent response could not be parsed, falling back to original response: {response}")
+            logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
         return response
 
 
 def reformat_tool_definitions(tool_definitions, logger=None):
+    """Reformat tool definitions into a human-readable string format.
+    
+    :param tool_definitions: List of tool definition dictionaries containing name, description, and parameters
+    :type tool_definitions: List[dict]
+    :param logger: Optional logger for warning messages
+    :type logger: Optional[logging.Logger]
+    :return: Formatted tool definitions as a string, or original definitions if parsing fails
+    :rtype: str
+    """
     try:
         output_lines = ["TOOL_DEFINITIONS:"]
         for tool in tool_definitions:
@@ -232,10 +265,10 @@ def reformat_tool_definitions(tool_definitions, logger=None):
         # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                f"Tool definitions could not be parsed, falling back to original definitions: {tool_definitions}"
+                f"Tool definitions could not be parsed, falling back to original definitions: {tool_definitions}. Error: {e}"
             )
         return tool_definitions
-### ````
+# ```
 
 
 @experimental
@@ -291,6 +324,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         credential=None,
         **kwargs,
     ):
+        """Initialize the Tool Output Utilization Evaluator."""
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         self.threshold = threshold
@@ -311,9 +345,10 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         tool_definitions: Union[dict, List[dict]],
     ) -> Dict[str, Union[str, float]]:
         """Evaluate tool output utilization for a given query, response, and optional tool defintions.
+        
         The query and response can be either a string or a list of messages.
 
-
+        
         Example with string inputs and no tools:
             evaluator = ToolOutputUtilizationEvaluator(model_config)
             query = "What is the weather today?"
@@ -339,6 +374,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Dict[str, Union[str, float]]
         """
 
+
     @override
     def __call__(  # pylint: disable=docstring-missing-param
         self,
@@ -346,7 +382,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         **kwargs,
     ):
         """
-        Invokes the instance using the overloaded __call__ signature.
+        Invoke the instance using the overloaded __call__ signature.
 
         For detailed parameter types and return value documentation, see the overloaded __call__ definition.
         """
@@ -355,6 +391,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do Tool Output Utilization evaluation.
+
         :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
