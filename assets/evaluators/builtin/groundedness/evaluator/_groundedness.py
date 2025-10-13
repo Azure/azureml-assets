@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=None):
     """
     Simplify a list of conversation messages by keeping only role and content.
+    
     Optionally filter out system messages and/or tool calls.
 
     :param messages: List of message dicts (e.g., from query or response)
@@ -105,10 +106,10 @@ def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=
         return messages
 # ```
 
+
 class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
-    Evaluates groundedness score for a given query (optional), response, and context or a multi-turn conversation,
-    including reasoning.
+    Evaluates groundedness score for a given query (optional), response, and context or a multi-turn conversation, including reasoning.
 
     The groundedness measure assesses the correspondence between claims in an AI-generated answer and the source
     context, making sure that these claims are substantiated by the context. Even if the responses from LLM are
@@ -174,6 +175,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     def __init__(self, model_config, *, threshold=3, credential=None, **kwargs):
+        """Initialize a GroundednessEvaluator instance."""
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_NO_QUERY)  # Default to no query
 
@@ -199,7 +201,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         context: str,
         query: Optional[str] = None,
     ) -> Dict[str, Union[str, float]]:
-        """Evaluate groundedness for given input of response, context
+        """Evaluate groundedness for given input of response, context, and optional query.
 
         :keyword response: The response to be evaluated.
         :paramtype response: str
@@ -238,7 +240,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *,
         conversation: Conversation,
     ) -> Dict[str, Union[float, Dict[str, List[Union[str, float]]]]]:
-        """Evaluate groundedness for a conversation
+        """Evaluate groundedness for a conversation.
 
         :keyword conversation: The conversation to evaluate. Expected to contain a list of conversation turns under the
             key "messages", and potentially a global context under the key "context". Conversation turns are expected
@@ -254,9 +256,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *args,
         **kwargs,
     ):
-        """Evaluate groundedness. Accepts either a query, response, and context for a single evaluation,
-        or a conversation for a multi-turn evaluation. If the conversation has more than one turn,
-        the evaluator will aggregate the results of each turn.
+        """Evaluate groundedness. Accepts either a query, response, and context for a single evaluation, or a conversation for a multi-turn evaluation. If the conversation has more than one turn, the evaluator will aggregate the results of each turn.
 
         :keyword query: The query to be evaluated. Mutually exclusive with `conversation`. Optional parameter for use
             with the `response` and `context` parameters. If provided, a different prompt template will be used for
@@ -273,7 +273,6 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The relevance score.
         :rtype: Union[Dict[str, Union[str, float]], Dict[str, Union[float, Dict[str, List[Union[str, float]]]]]]
         """
-
         if kwargs.get("query", None):
             current_dir = os.path.dirname(__file__)
             prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_WITH_QUERY)
@@ -290,6 +289,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def has_context(self, eval_input: dict) -> bool:
         """
         Return True if eval_input contains a non-empty 'context' field.
+
         Treats None, empty strings, empty lists, and lists of empty strings as no context.
         """
         context = eval_input.get("context", None)
@@ -324,7 +324,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return await super()._do_eval(simplified_eval_input)
 
     async def _real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Asynchronous call where real end-to-end evaluation logic is performed.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
