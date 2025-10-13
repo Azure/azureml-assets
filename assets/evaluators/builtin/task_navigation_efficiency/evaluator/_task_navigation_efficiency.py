@@ -18,6 +18,11 @@ from azure.ai.evaluation._exceptions import (
 )
 
 
+# Extend ErrorTarget enum if needed
+if not hasattr(ErrorTarget, 'TASK_NAVIGATION_EFFICIENCY_EVALUATOR'):
+    ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR = 'TaskNavigationEfficiencyEvaluator'
+
+
 class TaskNavigationEfficiencyMatchingMode(str, Enum):
     """
     Enumeration of task navigation efficiency matching mode.
@@ -133,7 +138,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             raise EvaluationException(
                 f"matching_mode must be a string with one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]} or TaskNavigationEfficiencyMatchingMode enum, got {type(matching_mode)}",
                 internal_message=str(matching_mode),
-                target="TaskNavigationEfficiencyEvaluator",  # ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
             )
 
@@ -435,7 +440,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             raise EvaluationException(
                 f"Unsupported matching_mode '{self.matching_mode}'",
                 internal_message=str(self.matching_mode),
-                target="TaskNavigationEfficiencyEvaluator",  # ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
             )
 
