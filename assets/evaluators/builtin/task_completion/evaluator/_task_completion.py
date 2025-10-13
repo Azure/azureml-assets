@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @experimental
 class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
     """The Task Completion evaluator determines whether an AI agent successfully completed the requested task.
+
     This evaluator assesses task completion based on:
         - Final outcome and deliverable of the task
         - Completeness of task requirements
@@ -91,8 +92,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, bool]]:
         """Evaluate task completion for a given query, response, and optionally tool definitions.
-        The query and response can be either a string or a list of messages.
 
+        The query and response can be either a string or a list of messages.
 
         Example with string inputs and no tools:
             evaluator = TaskCompletionEvaluator(model_config)
@@ -135,6 +136,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[bool, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
+
         :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
