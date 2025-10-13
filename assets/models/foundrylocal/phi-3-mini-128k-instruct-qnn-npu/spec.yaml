@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-3-mini-128k-instruct-qnn-npu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
