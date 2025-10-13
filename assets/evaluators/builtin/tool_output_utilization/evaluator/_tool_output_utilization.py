@@ -252,7 +252,7 @@ def reformat_agent_response(response, logger=None, include_tool_messages=False):
 
 def reformat_tool_definitions(tool_definitions, logger=None):
     """Reformat tool definitions into a human-readable string format.
-                    
+
     :param tool_definitions: List of tool definition dictionaries containing name, description, and parameters
     :type tool_definitions: List[dict]
     :param logger: Optional logger for warning messages
