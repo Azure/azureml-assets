@@ -1,13 +1,14 @@
 type: "evaluator"
-name: "builtin.score_model_grader"
+name: "builtin.label_model"
 version: 1
-displayName: "Score-Model-Grader-Evaluator"
+displayName: "Label-Model-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: 0 is False and 1 is
-  True |\n| What is this metric? | SCORE_MODEL_GRADER evaluates how well a model assigns
-  scores to outputs based on quality or relevance. |\n| How does it work? | It compares
-  model-assigned scores to human-annotated scores using correlation metrics like Pearson
-  or Spearman. |\n| When to use it? | Use this metric in ranking systems, evaluation
-  pipelines, and model calibration. |\n"
+  True |\n| What is this metric? | LABEL_GRADER classifies outputs based on defined
+  labels. It returns structured results with explanations for why each label was chosen.
+  |\n| How does it work? | It uses classification metrics like accuracy, precision,
+  recall, and F1 score to compare predicted labels against ground truth. |\n| When
+  to use it? | Use this metric in classification tasks, tagging systems, and intent
+  detection. |\n"
 evaluatorType: "builtin"
 evaluatorSubType: "openai_graders"
 categories: ["quality"]
@@ -33,23 +34,19 @@ initParameterSchema:
             type: "string"
             enum: ["system", "user", "assistant"]
         required: ["content", "role"]
-      minItems: 2
     type:
       type: "string"
-    range:
+    labels:
       type: "array"
       items:
-        type: "number"
-      minItems: 2
-      maxItems: 2
-    pass_threshold:
-      type: "number"
-      minimum: 0
-  required: ["deployment_name", "model", "name", "input", "type", "range", "pass_threshold"]
+        type: "string"
+    passing_labels:
+      type: "array"
+      items:
+        type: "string"
+  required: ["deployment_name", "model", "name", "input", "type", "labels", "passing_labels"]
 dataMappingSchema: {}
 outputSchema:
-  score_model:
-    type: "continuous"
+  label_model:
+    type: "boolean"
     desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
