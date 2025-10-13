@@ -28,12 +28,12 @@ logger = logging.getLogger(__name__)
 # ``` updated _exceptions.py
 # Extend ErrorTarget enum if needed
 def _create_extended_error_target(ErrorTarget):
-    """Create an extended ErrorTarget enum that includes TOOL_INPUT_ACCURACY_EVALUATOR."""
+    """Create an extended ErrorTarget enum that includes TOOL_OUTPUT_UTILIZATION_EVALUATOR."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members['TOOL_INPUT_ACCURACY_EVALUATOR'] = 'ToolInputAccuracyEvaluator'
-   
-    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
-    return ExtendedErrorTarget
+    existing_members['TOOL_OUTPUT_UTILIZATION_EVALUATOR'] = 'ToolOutputUtilizationEvaluator'
+
+    ErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    return ErrorTarget
 
 ErrorTarget = _create_extended_error_target(ErrorTarget)
 # ```
