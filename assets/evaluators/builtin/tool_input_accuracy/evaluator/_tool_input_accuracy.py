@@ -15,14 +15,24 @@ from azure.ai.evaluation._exceptions import (
     EvaluationException,
 )
 from azure.ai.evaluation._common._experimental import experimental
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
-# Extend ErrorTarget enum if needed
-if not hasattr(ErrorTarget, 'TOOL_INPUT_ACCURACY_EVALUATOR'):
-    ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR = 'ToolInputAccuracyEvaluator'
-
 T_EvalValue = TypeVar("T_EvalValue")
+
+
+# Create extended ErrorTarget enum with the new member
+def _create_extended_error_target():
+    """Create an extended ErrorTarget enum that includes TOOL_INPUT_ACCURACY_EVALUATOR."""
+    existing_members = {member.name: member.value for member in ErrorTarget}
+    existing_members['TOOL_INPUT_ACCURACY_EVALUATOR'] = 'ToolInputAccuracyEvaluator'
+
+    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    return ExtendedErrorTarget
+
+
+ExtendedErrorTarget = _create_extended_error_target()
 
 
 def _get_built_in_tool_definition(tool_name: str):
@@ -443,7 +453,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             # Type cast to satisfy static type checker
             tool_calls_typed = cast(List[Dict], tool_calls)
             needed_tool_definitions = _extract_needed_tool_definitions(
-                tool_calls_typed, tool_definitions, ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
+                tool_calls_typed, tool_definitions, ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
             )
         except EvaluationException:
             # Check if this is because no tool definitions were provided at all
@@ -514,7 +524,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 message="Tool input accuracy evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
-                target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
             )
 
     async def _real_call(self, **kwargs):
