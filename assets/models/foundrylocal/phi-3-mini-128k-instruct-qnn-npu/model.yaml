@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/olive-qnn-models/phi-3-mini-128k
-  storage_name: automlcesdkdataresources
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md
