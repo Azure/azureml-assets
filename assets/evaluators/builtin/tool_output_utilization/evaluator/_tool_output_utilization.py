@@ -35,6 +35,7 @@ def _create_extended_error_target(ErrorTarget):
     ErrorTarget = Enum('ExtendedErrorTarget', existing_members)
     return ErrorTarget
 
+
 ErrorTarget = _create_extended_error_target(ErrorTarget)
 # ```
 
@@ -71,7 +72,7 @@ def _filter_to_used_tools(tool_definitions, msgs_lists, logger=None):
 
 def _get_conversation_history(query, include_system_messages=False, include_tool_messages=False):
     """Parse conversation history from a list of messages into structured format.
-    
+
     :param query: List of message dictionaries containing the conversation history
     :type query: List[dict]
     :param include_system_messages: Whether to include system messages in the output
@@ -219,7 +220,7 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
 
 def reformat_agent_response(response, logger=None, include_tool_messages=False):
     """Reformat agent response to a standardized string format.
-    
+
     :param response: The agent response to reformat, can be None, empty list, or list of messages
     :type response: Union[None, List[dict], str]
     :param logger: Optional logger for warning messages
@@ -251,7 +252,7 @@ def reformat_agent_response(response, logger=None, include_tool_messages=False):
 
 def reformat_tool_definitions(tool_definitions, logger=None):
     """Reformat tool definitions into a human-readable string format.
-    
+                    
     :param tool_definitions: List of tool definition dictionaries containing name, description, and parameters
     :type tool_definitions: List[dict]
     :param logger: Optional logger for warning messages
@@ -353,10 +354,8 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         tool_definitions: Union[dict, List[dict]],
     ) -> Dict[str, Union[str, float]]:
         """Evaluate tool output utilization for a given query, response, and optional tool defintions.
-        
-        The query and response can be either a string or a list of messages.
 
-        
+        The query and response can be either a string or a list of messages.
         Example with string inputs and no tools:
             evaluator = ToolOutputUtilizationEvaluator(model_config)
             query = "What is the weather today?"
@@ -381,7 +380,6 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary with the tool output utilization evaluation results.
         :rtype: Dict[str, Union[str, float]]
         """
-
 
     @override
     def __call__(  # pylint: disable=docstring-missing-param
