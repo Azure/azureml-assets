@@ -13,4 +13,4 @@ os_type: linux
 tags:
     Preview: ""
     DS-MII: ""
-    VLLM: ""
+    VLLM: "0.10.2"
