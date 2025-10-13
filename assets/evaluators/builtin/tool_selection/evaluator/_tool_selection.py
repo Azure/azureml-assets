@@ -15,14 +15,24 @@ from azure.ai.evaluation._exceptions import (
     EvaluationException,
 )
 from azure.ai.evaluation._common._experimental import experimental
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
 T_EvalValue = TypeVar("T_EvalValue")
 
-# Extend ErrorTarget enum if needed
-if not hasattr(ErrorTarget, 'TOOL_SELECTION_EVALUATOR'):
-    ErrorTarget.TOOL_SELECTION_EVALUATOR = 'ToolSelectionEvaluator'
+
+# Create extended ErrorTarget enum with the new member
+def _create_extended_error_target():
+    """Create an extended ErrorTarget enum that includes TOOL_SELECTION_EVALUATOR."""
+    existing_members = {member.name: member.value for member in ErrorTarget}
+    existing_members['TOOL_SELECTION_EVALUATOR'] = 'ToolSelectionEvaluator'
+
+    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    return ExtendedErrorTarget
+
+
+ExtendedErrorTarget = _create_extended_error_target()
 
 
 def _extract_tool_names_from_calls(tool_calls: List[Dict]) -> List[str]:
@@ -446,7 +456,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         try:
-            needed_tool_definitions = _extract_needed_tool_definitions(tool_calls, tool_definitions, ErrorTarget.TOOL_SELECTION_EVALUATOR)
+            needed_tool_definitions = _extract_needed_tool_definitions(tool_calls, tool_definitions, ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
         except EvaluationException:
             # Check if this is because no tool definitions were provided at all
             if len(tool_definitions) == 0:
@@ -520,7 +530,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 message="Tool selection evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
-                target=ErrorTarget.TOOL_SELECTION_EVALUATOR,
+                target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
             )
 
     async def _real_call(self, **kwargs):
