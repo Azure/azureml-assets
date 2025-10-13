@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: summarization_finetune
-version: 0.0.76
+version: 0.0.79
 type: command
 
 is_deterministic: true
@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Summarization Finetune
 description: Component to finetune Hugging Face pretrained models for summarization task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/summarization_finetune) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/99
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/finetune
 

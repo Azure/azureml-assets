@@ -1,7 +1,3 @@
-<!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
-
-<!-- `description.md` is required. -->
-
 Hibou-L is a foundational vision transformer developed for digital pathology, designed to generate high-quality feature representations from histology image patches. These representations can be leveraged for a range of downstream tasks, including classification, segmentation, and detection.
 
 Built on the ViT-B/14 architecture, Hibou-L is a digital pathology foundation model pretrained on a 1.2B image private dataset using the DINOv2 framework. The model processes 224 × 224 input patches and generates high-quality feature representations for downstream histopathological tasks.

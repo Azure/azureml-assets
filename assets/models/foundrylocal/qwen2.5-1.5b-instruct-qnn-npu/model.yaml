@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/olive-qnn-models/qwen2.5-1.5b
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

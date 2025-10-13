@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.8-cudnn8-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
 USER root
 
@@ -94,10 +94,14 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'azure-identity>=1.16.1' \
+                'azure-identity>=1.16.1' --no-cache-dir
+
+RUN pip install \
                 'inference-schema' \
                 'prophet==1.1.4' \
-                'pytorch-transformers==1.0.0' \
+                'pytorch-transformers==1.0.0' --no-cache-dir
+
+RUN pip install \
                 'spacy==3.7.4' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
@@ -105,13 +109,14 @@ RUN pip install \
                 'requests>=2.32.4' \
                 'certifi>=2023.07.22' \
                 'cryptography>=42.0.5' \
-                'jinja2>=3.1.6'
+                'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # Fix vulnerabilities
-RUN pip install --force-reinstall torch==2.7.1 torchvision==0.22.1
+RUN pip install --force-reinstall torch==2.7.1 --no-cache-dir
+RUN pip install --force-reinstall torchvision==0.22.1 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.4'
 RUN pip install --upgrade 'urllib3==2.5.0'
 RUN pip install --upgrade 'pillow==11.3.0'
@@ -125,5 +130,9 @@ RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' |
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \
     pip install 'numpy==1.26.4' --force-reinstall && \
     /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN rm -rf /opt/miniconda/pkgs/
+
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+

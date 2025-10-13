@@ -1,0 +1,38 @@
+type: "evaluator"
+name: "builtin.fluency"
+version: 1
+displayName: "Fluency-Evaluator"
+description: "| \t| |\n| -- | -- |\n| Score range |\tInteger [1-5]: 1 is the lowest quality and 5 is the highest quality. |\n| What is this metric? | Fluency measures the effectiveness and clarity of written communication, focusing on grammatical accuracy, vocabulary range, sentence complexity, coherence, and overall readability. It assesses how smoothly ideas are conveyed and how easily the text can be understood by the reader.|\n| How does it work? | The fluency metric is calculated by instructing a language model to follow the definition (in the description) and a set of grading rubrics, evaluate the user inputs, and output a score on a 5-point scale (higher means better quality). Learn more about our [definition and grading rubrics](https://learn.microsoft.com/azure/ai-studio/concepts/evaluation-metrics-built-in?tabs=warning#ai-assisted-fluency). |\n| When to use it? |\tThe recommended scenario is generative business writing such as summarizing meeting notes, creating marketing materials, and drafting email. |\n| What does it need as input? | Response |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+    response:
+      type: "string"
+    conversation:
+      type: "object"
+  required: ["query", "response"]
+outputSchema:
+  fluency:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator

@@ -1,0 +1,58 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: medimageparse_finetune
+version: 0.0.1
+
+
+type: command
+
+is_deterministic: True
+
+display_name: MedImageParse Finetune
+description: Component to finetune the model using the medical image data
+
+environment: azureml://registries/azureml/environments/acft-medimageparse-finetune/versions/2
+
+code: ../../../src/medimage_parse_finetune
+
+distribution:
+  type: mpi
+
+inputs:
+  pretrained_mlflow_model:
+    type: uri_folder
+    optional: false
+    description: Path to the MLflow model to be imported.
+    mode: ro_mount
+
+  data:
+    type: uri_folder
+    optional: false
+    description: Path to the test.json file.
+    mode: ro_mount
+
+  config:
+    type: uri_file
+    optional: false
+    description: Path to the test.json file.
+    mode: ro_mount
+
+outputs: 
+  out:
+    type: uri_folder
+    description: Path to the output folder where results will be stored.
+    mode: rw_mount
+  
+  mlflow_model_folder:
+    type: mlflow_model
+    description: Path to save the output model after fine-tuning.
+    mode: rw_mount
+
+
+command: >-
+  python medimageparse_finetune.py
+  --pretrained_mlflow_model ${{inputs.pretrained_mlflow_model}}
+  --data ${{inputs.data}}
+  --config ${{inputs.config}}
+  --out ${{outputs.out}}
+  --mlflow_model_folder ${{outputs.mlflow_model_folder}}

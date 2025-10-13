@@ -1,0 +1,34 @@
+type: "evaluator"
+name: "builtin.f1_score"
+version: 1
+displayName: "F1Score-Evaluator"
+description: "| \t| |\n| -- | -- |\n| Score range |\tFloat [0-1]: higher means better quality. |\n| What is this metric? | F1 score measures the similarity by shared tokens between the generated text and the ground truth, focusing on both precision and recall. |\n| How does it work? | The F1-score computes the ratio of the number of shared words between the model generation and the ground truth. Ratio is computed over the individual words in the generated response against those in the ground truth answer. The number of shared words between the generation and the truth is the basis of the F1 score: precision is the ratio of the number of shared words to the total number of words in the generation, and recall is the ratio of the number of shared words to the total number of words in the ground truth. |\n| When to use it? |\tThe recommended scenario is Natural Language Processing (NLP) tasks. Use the F1 score when you want a single comprehensive metric that combines both recall and precision in your model's responses. It provides a balanced evaluation of your model's performance in terms of capturing accurate information in the response. |\n| What does it need as input? | Response, Ground Truth |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 0.1
+  required: []
+dataMappingSchema:
+  type: "object"
+  properties:
+    ground_truth:
+      type: "string"
+    response:
+      type: "string"
+  required: ["ground_truth", "response"]
+outputSchema:
+  f1_score:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator

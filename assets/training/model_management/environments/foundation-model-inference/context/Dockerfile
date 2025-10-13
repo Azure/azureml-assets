@@ -36,13 +36,13 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 WORKDIR /
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.32 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.41 --no-cache-dir
 
 # torch installation
-RUN pip install --no-cache-dir torch==2.7.1
+RUN pip install --no-cache-dir torch==2.8.0
 
 # Direct pip install from URL; avoids temporary file
-RUN pip install --no-cache-dir https://automlsamplenotebookdata.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
+# RUN pip install --no-cache-dir https://automlsamplenotebookdata.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

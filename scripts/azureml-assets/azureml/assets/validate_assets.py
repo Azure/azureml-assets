@@ -1053,18 +1053,22 @@ def validate_assets(input_dirs: List[Path],
                 _log_warning(asset_config_path, e)
             continue
 
-        # Extract model variant info from spec
-        variant_info = None
+        # Extract model variant info and defaultDeploymentTemplate from spec (not supported in SDK)
+        unsupported_fields = ["variantInfo", "defaultDeploymentTemplate"]
+        unsupported_fields_mapping = {}
+
         if asset_config.type == assets.AssetType.MODEL:
             with open(asset_config.spec_with_path, "r") as f:
                 spec_config = yaml.safe_load(f)
-                variant_info = spec_config.get("variantInfo")
-                if variant_info is not None:
-                    spec_config.pop("variantInfo")
 
-            if variant_info is not None:
-                logger.print(f"Found variantInfo in spec, popping out info and rewriting spec. "
-                             f"variantInfo: {variant_info}")
+                for field in unsupported_fields:
+                    if field in spec_config:
+                        logger.print(f"Found unsupported SDK field '{field}' in spec for asset {asset_config.name}")
+                        unsupported_fields_mapping[field] = spec_config.pop(field)
+
+            if unsupported_fields_mapping:
+                logger.print(f"Found unsupported fields in spec, popping out info and rewriting spec. "
+                             f"unsupported fields: {unsupported_fields_mapping}")
                 with open(asset_config.spec_with_path, "w") as f:
                     yaml.dump(spec_config, f)
 
@@ -1179,9 +1183,9 @@ def validate_assets(input_dirs: List[Path],
                 _log_error(asset_config.spec_with_path, e)
                 error_count += 1
 
-        # Write variantInfo back to spec
-        if variant_info is not None:
-            spec_config["variantInfo"] = variant_info
+        # Write unsupported fields back to spec
+        if unsupported_fields_mapping:
+            spec_config.update(unsupported_fields_mapping)
             with open(asset_config.spec_with_path, "w") as f:
                 yaml.dump(spec_config, f)
 

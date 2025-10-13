@@ -1,0 +1,50 @@
+type: "evaluator"
+name: "builtin.score_model_grader"
+version: 1
+displayName: "Score-Model-Grader-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: 0 is False and 1 is True |\n| What is this metric? | SCORE_MODEL_GRADER evaluates how well a model assigns scores to outputs based on quality or relevance. |\n| How does it work? | It compares model-assigned scores to human-annotated scores using correlation metrics like Pearson or Spearman. |\n| When to use it? | Use this metric in ranking systems, evaluation pipelines, and model calibration. |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "openai_graders"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    model:
+      type: "string"
+    name:
+      type: "string"
+    input:
+      type: "array"
+      items:
+        type: "object"
+        properties:
+          content:
+            type: "string"
+          role:
+            type: "string"
+            enum: ["system", "user", "assistant"]
+        required: ["content", "role"]
+      minItems: 2
+    type:
+      type: "string"
+    range:
+      type: "array"
+      items:
+        type: "number"
+      minItems: 2
+      maxItems: 2
+    pass_threshold:
+      type: "number"
+      minimum: 0
+  required: ["deployment_name", "model", "name", "input", "type", "range", "pass_threshold"]
+dataMappingSchema: {}
+outputSchema:
+  score_model:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1

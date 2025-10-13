@@ -1,0 +1,34 @@
+type: "evaluator"
+name: "builtin.meteor_score"
+version: 1
+displayName: "Meteor-Score-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Float [0-1]: higher means better quality. |\n| What is this metric? | METEOR score measures the similarity by shared n-grams between the generated text and the ground truth, similar to the BLEU score, focusing on precision and recall. But it addresses limitations of other metrics like the BLEU score by considering synonyms, stemming, and paraphrasing for content alignment. |\n| How does it work? | The METEOR score is calculated based on the harmonic mean of unigram precision and recall, with higher weight given to recall. It also incorporates additional features such as stemming (matching word roots), synonym matching, and a penalty for incorrect word order. The final score ranges from 0 to 1, where 1 indicates a perfect match. |\n| When to use it? | The recommended scenario is Natural Language Processing (NLP) tasks. It addresses limitations of other metrics like BLEU by considering synonyms, stemming, and paraphrasing. METEOR score considers synonyms and word stems to more accurately capture meaning and language variations. In addition to machine translation and text summarization, paraphrase detection is a recommended use case for the METEOR score.  |\n| What does it need as input? | Response, Ground Truth |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 0.1
+  required: []
+dataMappingSchema:
+  type: "object"
+  properties:
+    ground_truth:
+      type: "string"
+    response:
+      type: "string"
+  required: ["ground_truth", "response"]
+outputSchema:
+  meteor:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator
