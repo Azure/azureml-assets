@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=None):
     """
     Simplify a list of conversation messages by keeping only role and content.
-    
+
     Optionally filter out system messages and/or tool calls.
 
     :param messages: List of message dicts (e.g., from query or response)
