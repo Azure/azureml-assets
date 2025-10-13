@@ -37,7 +37,7 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     IN_ORDER_MATCH = "in_order_match"
     """
     Binary metric allowing extra steps but requiring correct order of required tool calls.
-    
+
     Returns True if all ground truth steps appear in the agent's sequence in the correct
     order, even if there are additional steps interspersed.
     """
@@ -45,7 +45,7 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     ANY_ORDER_MATCH = "any_order_match"
     """
     Binary metric allowing both extra steps and different ordering.
-    
+
     Returns True if all ground truth steps appear in the agent's sequence with sufficient
     frequency, regardless of order. Most lenient matching criterion.
     """
@@ -114,6 +114,11 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             str, TaskNavigationEfficiencyMatchingMode
         ] = TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
     ):
+        """Initialize a TaskNavigationEfficiencyEvaluator instance.
+
+        :param matching_mode: The matching mode to use. Default is "exact_match".
+        :type matching_mode: enum[str, TaskNavigationEfficiencyMatchingMode]
+        """
         # Type checking for metric parameter
         if isinstance(matching_mode, str):
             try:
@@ -128,7 +133,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             raise EvaluationException(
                 f"matching_mode must be a string with one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]} or TaskNavigationEfficiencyMatchingMode enum, got {type(matching_mode)}",
                 internal_message=str(matching_mode),
-                target="TaskNavigationEfficiencyEvaluator", # ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                target="TaskNavigationEfficiencyEvaluator",  # ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
             )
 
@@ -239,6 +244,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
     def _parse_tools_from_response(self, response):
         """Parse the response to extract tool calls and results.
+
         :param response: The response to parse.
         :type response: Union[str, List[dict]]
         :return: List of tool calls extracted from the response.
@@ -429,7 +435,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             raise EvaluationException(
                 f"Unsupported matching_mode '{self.matching_mode}'",
                 internal_message=str(self.matching_mode),
-                target="TaskNavigationEfficiencyEvaluator", # ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                target="TaskNavigationEfficiencyEvaluator",  # ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
             )
 
