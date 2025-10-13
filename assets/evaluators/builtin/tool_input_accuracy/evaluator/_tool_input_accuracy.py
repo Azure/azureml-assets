@@ -4,7 +4,7 @@
 import os
 import logging
 from itertools import chain
-from typing import Dict, List, Union, TypeVar, Optional, cast
+from typing import Dict, List, Union, TypeVar, cast
 from typing_extensions import override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import (
@@ -24,6 +24,7 @@ if not hasattr(ErrorTarget, 'TOOL_INPUT_ACCURACY_EVALUATOR'):
 
 T_EvalValue = TypeVar("T_EvalValue")
 
+
 def _get_built_in_tool_definition(tool_name: str):
     """Get the definition for the built-in tool."""
     try:
@@ -39,6 +40,7 @@ def _get_built_in_tool_definition(tool_name: str):
     except ImportError:
         pass
     return None
+
 
 def _get_needed_built_in_tool_definitions(tool_calls: List[Dict]) -> List[Dict]:
     """Extract tool definitions needed for the given built-in tool calls."""
@@ -57,84 +59,86 @@ def _get_needed_built_in_tool_definitions(tool_calls: List[Dict]) -> List[Dict]:
 
     return needed_definitions
 
+
 def _extract_needed_tool_definitions(
         tool_calls: List[Dict], tool_definitions: List[Dict], error_target: ErrorTarget
-    ) -> List[Dict]:
-        """Extract the tool definitions that are needed for the provided tool calls.
+) -> List[Dict]:
+    """Extract the tool definitions that are needed for the provided tool calls.
 
-        :param tool_calls: The tool calls that need definitions
-        :type tool_calls: List[Dict]
-        :param tool_definitions: User-provided tool definitions
-        :type tool_definitions: List[Dict]
-        :return: List of needed tool definitions
-        :rtype: List[Dict]
-        :raises EvaluationException: If validation fails
-        """
-        needed_tool_definitions = []
+    :param tool_calls: The tool calls that need definitions
+    :type tool_calls: List[Dict]
+    :param tool_definitions: User-provided tool definitions
+    :type tool_definitions: List[Dict]
+    :return: List of needed tool definitions
+    :rtype: List[Dict]
+    :raises EvaluationException: If validation fails
+    """
+    needed_tool_definitions = []
 
-        # Add all user-provided tool definitions
-        needed_tool_definitions.extend(tool_definitions)
+    # Add all user-provided tool definitions
+    needed_tool_definitions.extend(tool_definitions)
 
-        # Add the needed built-in tool definitions (if they are called)
-        built_in_definitions = _get_needed_built_in_tool_definitions(tool_calls)
-        needed_tool_definitions.extend(built_in_definitions)
+    # Add the needed built-in tool definitions (if they are called)
+    built_in_definitions = _get_needed_built_in_tool_definitions(tool_calls)
+    needed_tool_definitions.extend(built_in_definitions)
 
-        # OpenAPI tool is a collection of functions, so we need to expand it
-        tool_definitions_expanded = list(
-            chain.from_iterable(
-                tool.get("functions", []) if tool.get("type") == "openapi" else [tool]
-                for tool in needed_tool_definitions
-            )
+    # OpenAPI tool is a collection of functions, so we need to expand it
+    tool_definitions_expanded = list(
+        chain.from_iterable(
+            tool.get("functions", []) if tool.get("type") == "openapi" else [tool]
+            for tool in needed_tool_definitions
         )
+    )
 
-        # Validate that all tool calls have corresponding definitions
-        for tool_call in tool_calls:
-            if isinstance(tool_call, dict):
-                tool_type = tool_call.get("type")
+    # Validate that all tool calls have corresponding definitions
+    for tool_call in tool_calls:
+        if isinstance(tool_call, dict):
+            tool_type = tool_call.get("type")
 
-                if tool_type == "tool_call":
-                    tool_name = tool_call.get("name")
-                    if tool_name and _get_built_in_tool_definition(tool_name):
-                        # This is a built-in tool from converter, already handled above
-                        continue
-                    elif tool_name:
-                        # This is a regular function tool from converter
-                        tool_definition_exists = any(
-                            tool.get("name") == tool_name and tool.get("type", "function") == "function"
-                            for tool in tool_definitions_expanded
-                        )
-                        if not tool_definition_exists:
-                            raise EvaluationException(
-                                message=f"Tool definition for {tool_name} not found",
-                                blame=ErrorBlame.USER_ERROR,
-                                category=ErrorCategory.INVALID_VALUE,
-                                target=error_target,
-                            )
-                    else:
+            if tool_type == "tool_call":
+                tool_name = tool_call.get("name")
+                if tool_name and _get_built_in_tool_definition(tool_name):
+                    # This is a built-in tool from converter, already handled above
+                    continue
+                elif tool_name:
+                    # This is a regular function tool from converter
+                    tool_definition_exists = any(
+                        tool.get("name") == tool_name and tool.get("type", "function") == "function"
+                        for tool in tool_definitions_expanded
+                    )
+                    if not tool_definition_exists:
                         raise EvaluationException(
-                            message=f"Tool call missing name: {tool_call}",
+                            message=f"Tool definition for {tool_name} not found",
                             blame=ErrorBlame.USER_ERROR,
                             category=ErrorCategory.INVALID_VALUE,
                             target=error_target,
                         )
                 else:
-                    # Unsupported tool format - only converter format is supported
                     raise EvaluationException(
-                        message=f"Unsupported tool call format. Only converter format is supported: {tool_call}",
+                        message=f"Tool call missing name: {tool_call}",
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=error_target,
                     )
             else:
-                # Tool call is not a dictionary
+                # Unsupported tool format - only converter format is supported
                 raise EvaluationException(
-                    message=f"Tool call is not a dictionary: {tool_call}",
+                    message=f"Unsupported tool call format. Only converter format is supported: {tool_call}",
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=error_target,
                 )
+        else:
+            # Tool call is not a dictionary
+            raise EvaluationException(
+                message=f"Tool call is not a dictionary: {tool_call}",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=error_target,
+            )
 
-        return needed_tool_definitions
+    return needed_tool_definitions
+
 
 def _extract_text_from_content(content):
     text = []
@@ -166,7 +170,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
 
     # Second pass: process messages and build conversation history
     for msg in query:
-        if not "role" in msg:
+        if "role" not in msg:
             continue
 
         if include_system_messages and msg["role"] == "system" and "content" in msg:
@@ -237,7 +241,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
 
 
 def _pretty_format_conversation_history(conversation_history):
-    """Formats the conversation history for better readability."""
+    """Format the conversation history for better readability."""
     formatted_history = ""
     if "system_message" in conversation_history and conversation_history["system_message"] is not None:
         formatted_history += "SYSTEM_PROMPT:\n"
@@ -272,7 +276,7 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
             query, include_system_messages=include_system_messages, include_tool_calls=include_tool_calls
         )
         return _pretty_format_conversation_history(conversation_history)
-    except:
+    except Exception:
         # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
         # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
         # From our tests the negative impact on IntentResolution is:
@@ -286,7 +290,7 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
 
 
 def _get_agent_response(agent_response_msgs, include_tool_messages=False):
-    """Extracts formatted agent response including text, and optionally tool calls/results."""
+    """Extract formatted agent response including text, and optionally tool calls/results."""
     agent_response_text = []
     tool_results = {}
 
@@ -327,12 +331,11 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
     return agent_response_text
 
 
-
 @experimental
 class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Tool Input Accuracy evaluator performs a strict binary evaluation (PASS/FAIL) of parameters
-    passed to tool calls. It ensures that ALL parameters meet ALL criteria:
+    """The Tool Input Accuracy evaluator performs a strict binary evaluation (PASS/FAIL) of parameters passed to tool calls. It ensures that ALL parameters meet ALL criteria.
 
+       The evaluation criteria are as follows:
         - Parameter grounding: All parameters must be derived from conversation history/query
         - Type compliance: All parameters must match exact types specified in tool definitions
         - Format compliance: All parameters must follow exact format and structure requirements
@@ -390,6 +393,16 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         credential=None,
         **kwargs,
     ):
+        """Initialize the Tool Input Accuracy evaluator.
+
+        :param model_config: Configuration for the Azure OpenAI model.
+        :type model_config: Union[~azure.ai.evaluation.AzureOpenAIModelConfiguration,
+            ~azure.ai.evaluation.OpenAIModelConfiguration]
+        :param credential: The credential for authentication.
+        :type credential: Optional[Any]
+        :param kwargs: Additional keyword arguments.
+        :type kwargs: Any
+        """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         super().__init__(
@@ -432,7 +445,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             needed_tool_definitions = _extract_needed_tool_definitions(
                 tool_calls_typed, tool_definitions, ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
             )
-        except EvaluationException as e:
+        except EvaluationException:
             # Check if this is because no tool definitions were provided at all
             if len(tool_definitions) == 0:
                 return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
@@ -505,7 +518,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
     async def _real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Perform the asynchronous call for the real end-to-end evaluation logic.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
