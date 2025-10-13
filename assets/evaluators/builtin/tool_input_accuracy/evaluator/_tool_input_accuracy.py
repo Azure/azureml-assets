@@ -553,6 +553,27 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         accuracy = (correct_parameters / total_parameters) * 100
         return round(accuracy, 2)
 
+    def _not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict]]:
+        """Return a result indicating that the evaluation is not applicable.
+
+        :param error_message: The error message explaining why evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluator.
+        :type threshold: Union[int, float]
+        :return: A dictionary containing the result of the evaluation.
+        :rtype: Dict[str, Union[str, float, Dict]]
+        """
+        # If no tool calls were made or tool call type is not supported, return not applicable result
+        return {
+            self._result_key: self._NOT_APPLICABLE_RESULT,
+            f"{self._result_key}_result": "pass",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_reason": error_message,
+            "details": {},
+        }
+
     @override
     def __call__(  # pylint: disable=docstring-missing-param
         self,
