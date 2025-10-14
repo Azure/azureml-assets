@@ -256,7 +256,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *args,
         **kwargs,
     ):
-        """Evaluate groundedness. Accepts either a query, response, and context for a single evaluation, or a conversation for a multi-turn evaluation. If the conversation has more than one turn, the evaluator will aggregate the results of each turn.
+        """Evaluate groundedness. Accepts either a query, response, and context for a single evaluation, or a conversation for a multi-turn evaluation.
+
+        If the conversation has more than one turn, the evaluator will aggregate the results of each turn.
 
         :keyword query: The query to be evaluated. Mutually exclusive with `conversation`. Optional parameter for use
             with the `response` and `context` parameters. If provided, a different prompt template will be used for
@@ -274,17 +276,22 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Union[Dict[str, Union[str, float]], Dict[str, Union[float, Dict[str, List[Union[str, float]]]]]]
         """
         if kwargs.get("query", None):
-            current_dir = os.path.dirname(__file__)
-            prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_WITH_QUERY)
-            self._prompty_file = prompty_path
-            prompty_model_config = construct_prompty_model_config(
-                validate_model_config(self._model_config),
-                self._DEFAULT_OPEN_API_VERSION,
-                UserAgentSingleton().value,
-            )
-            self._flow = AsyncPrompty.load(source=self._prompty_file, model=prompty_model_config)
+            self._ensure_query_prompty_loaded()
 
         return super().__call__(*args, **kwargs)
+
+    def _ensure_query_prompty_loaded(self):
+        """Switch to the query prompty file if not already loaded."""
+        current_dir = os.path.dirname(__file__)
+        prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_WITH_QUERY)
+
+        self._prompty_file = prompty_path
+        prompty_model_config = construct_prompty_model_config(
+            validate_model_config(self._model_config),
+            self._DEFAULT_OPEN_API_VERSION,
+            UserAgentSingleton().value,
+        )
+        self._flow = AsyncPrompty.load(source=self._prompty_file, model=prompty_model_config)
 
     def has_context(self, eval_input: dict) -> bool:
         """
@@ -351,6 +358,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         query = kwargs.get("query")
         response = kwargs.get("response")
         tool_definitions = kwargs.get("tool_definitions")
+
+        if query and self._prompty_file != self._PROMPTY_FILE_WITH_QUERY:
+            self._ensure_query_prompty_loaded()
 
         if (not query) or (not response):  # or not tool_definitions:
             msg = f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. For Agent groundedness 'query' and 'response' are required."
