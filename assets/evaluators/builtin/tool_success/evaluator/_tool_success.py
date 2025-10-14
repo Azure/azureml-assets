@@ -37,7 +37,7 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
     agent. Please note that this evaluator validates tool calls for potential technical failures like
     errors, exceptions, timeouts and empty results (only in cases where empty results could indicate a
     failure). It does not assess the correctness or the tool result itself, like mathematical errors and
-    unrealistic field values like name="54sasda46a".
+    unrealistic field values like name="668656".
 
     Scoring is binary:
     - TRUE: All tool calls were successful
@@ -172,8 +172,9 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
             success_result = "pass" if success else "fail"
             reason = llm_output.get("explanation", "")
             return {
-                f"{self._result_key}": success,
+                f"{self._result_key}": success*1,
                 f"{self._result_key}_result": success_result,
+                f"{self._result_key}_threshold": 1,
                 f"{self._result_key}_reason": reason,
                 f"{self._result_key}_details": llm_output.get("details", ""),
             }

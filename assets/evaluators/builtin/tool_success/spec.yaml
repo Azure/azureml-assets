@@ -37,5 +37,7 @@ dataMappingSchema:
 outputSchema:
   tool_success:
     type: "boolean"
-    desirable_direction: "neutral"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
 path: ./evaluator
