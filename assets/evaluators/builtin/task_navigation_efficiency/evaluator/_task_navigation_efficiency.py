@@ -69,8 +69,10 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     """
     Evaluates whether an agent's sequence of actions is efficient and follows optimal decision-making patterns.
 
-    The Task Navigation Efficiency Evaluator returns binary matching results between the agent's tool usage trajectory and the ground truth expected steps.
-    It has three matching techniques: exact match, in-order match (allows extra steps), and any-order match (allows extra steps and ignores order).
+    The Task Navigation Efficiency Evaluator returns binary matching results between the agent's tool usage trajectory
+    and the ground truth expected steps.
+    It has three matching techniques: exact match, in-order match (allows extra steps),
+    and any-order match (allows extra steps and ignores order).
     It also returns precision, recall, and F1 scores in properties bag.
 
     :param matching_mode: The matching mode to use. Default is "exact_match".
@@ -89,10 +91,19 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             # Example 1: Using simple tool names list
             result = path_efficiency_eval(
                 response=[
-                    {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_1", "name": "identify_tools_to_call", "arguments": {}}]},
-                    {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_2", "name": "call_tool_A", "arguments": {}}]},
-                    {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_3", "name": "call_tool_B", "arguments": {}}]},
-                    {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_4", "name": "response_synthesis", "arguments": {}}]}
+                    {"role": "assistant", "content": [
+                        {"type": "tool_call", "tool_call_id": "call_1", "name": "identify_tools_to_call",
+                         "arguments": {}}
+                    ]},
+                    {"role": "assistant", "content": [
+                        {"type": "tool_call", "tool_call_id": "call_2", "name": "call_tool_A", "arguments": {}}
+                    ]},
+                    {"role": "assistant", "content": [
+                        {"type": "tool_call", "tool_call_id": "call_3", "name": "call_tool_B", "arguments": {}}
+                    ]},
+                    {"role": "assistant", "content": [
+                        {"type": "tool_call", "tool_call_id": "call_4", "name": "response_synthesis", "arguments": {}}
+                    ]}
                 ],
                 ground_truth=["identify_tools_to_call", ""call_tool_A", "call_tool_B", "response_synthesis"]
             )
@@ -100,8 +111,14 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             # Example 2: Using tool names with parameters (exact parameter matching required)
             result = path_efficiency_eval(
                 response=[
-                    {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_1", "name": "search", "arguments": {"query": "weather", "location": "NYC"}}]},
-                    {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_2", "name": "format_result", "arguments": {"format": "json"}}]}
+                    {"role": "assistant", "content": [
+                        {"type": "tool_call", "tool_call_id": "call_1", "name": "search",
+                         "arguments": {"query": "weather", "location": "NYC"}}
+                    ]},
+                    {"role": "assistant", "content": [
+                        {"type": "tool_call", "tool_call_id": "call_2", "name": "format_result",
+                         "arguments": {"format": "json"}}
+                    ]}
                 ],
                 ground_truth=(
                     ["search", "format_result"],
@@ -138,13 +155,15 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                 self.matching_mode = TaskNavigationEfficiencyMatchingMode(matching_mode)
             except ValueError:
                 raise ValueError(
-                    f"matching_mode must be one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]}, got '{matching_mode}'"
+                    f"matching_mode must be one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]}, "
+                    f"got '{matching_mode}'"
                 )
         elif isinstance(matching_mode, TaskNavigationEfficiencyMatchingMode):
             self.matching_mode = matching_mode
         else:
             raise EvaluationException(
-                f"matching_mode must be a string with one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]} or TaskNavigationEfficiencyMatchingMode enum, got {type(matching_mode)}",
+                f"matching_mode must be a string with one of {[m.value for m in TaskNavigationEfficiencyMatchingMode]}"
+                f" or TaskNavigationEfficiencyMatchingMode enum, got {type(matching_mode)}",
                 internal_message=str(matching_mode),
                 target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
                 category=ErrorCategory.INVALID_VALUE,
@@ -241,7 +260,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         return gt_index == len(ground_truth_steps)
 
     def _calculate_any_order_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
-        """Check if all ground truth steps appear in agent steps with sufficient frequency (any order, extra steps allowed)."""
+        """Check if all ground truth steps appear in agent steps with sufficient frequency
+        (any order, extra steps allowed)."""
         # Count occurrences of each step in both lists to handle duplicates
         agent_counts = Counter(agent_steps)
         ground_truth_counts = Counter(ground_truth_steps)
@@ -400,7 +420,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                         json.dumps(v)
                     except (TypeError, ValueError):
                         raise TypeError(
-                            f"ground_truth parameters for tool '{tool_name}' must have JSON-serializable values (got type {type(v)} for key '{k}')"
+                            f"ground_truth parameters for tool '{tool_name}' must have JSON-serializable values "
+                            f"(got type {type(v)} for key '{k}')"
                         )
 
             ground_truth_names = [name.strip() for name in tool_names_list]
