@@ -15,7 +15,7 @@ COPY requirements.txt .
 # This line is added because azureml-automl-dnn-vision depends on python 3.9.
 # Added ignore python requires to get this installed.
 # RUN pip install --ignore-requires-python azureml-automl-dnn-vision
-RUN pip install azureml-automl-dnn-vision
+RUN pip install --no-deps azureml-automl-dnn-vision
 
 RUN pip install -r requirements.txt --no-cache-dir
 

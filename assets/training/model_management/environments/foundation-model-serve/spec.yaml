@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-description: Environment used for deploying model to use DS-MII or vLLM for inference
+description: Environment used for deploying model using inference server
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"
