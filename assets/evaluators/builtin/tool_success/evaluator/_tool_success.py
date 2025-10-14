@@ -1,6 +1,6 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import os
 import logging
 from typing import Dict, Union, List, Optional
@@ -29,7 +29,15 @@ ExtendedErrorTarget = _create_extended_error_target()
 
 @experimental
 class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
-    """The Tool Success evaluator determines whether tool calls done by an AI agent includes failures or not. This evaluator focuses solely on tool call results and tool definitions, disregarding user's query to the agent, conversation history and agent's final response. Although tool definitions is optional, providing them can help the evaluator better understand the context of the tool calls made by the agent. Please note that this evaluator validates tool calls for potential technical failures like errors, exceptions, timeouts and empty results (only in cases where empty results could indicate a failure).It does not assess the correctness or the tool result itself, like mathematical errors and unrealistic field values like name="54sasda46a".
+    """The Tool Success evaluator determines whether tool calls done by an AI agent includes failures or not.
+
+    This evaluator focuses solely on tool call results and tool definitions, disregarding user's query to
+    the agent, conversation history and agent's final response. Although tool definitions is optional,
+    providing them can help the evaluator better understand the context of the tool calls made by the
+    agent. Please note that this evaluator validates tool calls for potential technical failures like
+    errors, exceptions, timeouts and empty results (only in cases where empty results could indicate a
+    failure). It does not assess the correctness or the tool result itself, like mathematical errors and
+    unrealistic field values like name="54sasda46a".
 
     Scoring is binary:
     - TRUE: All tool calls were successful
@@ -49,13 +57,13 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
 
     .. admonition:: Example using Azure AI Project URL:
 
-        .. literalinclude:: ../samples/evaluation_samples_evaluate_fdp.py
-            :start-after: [START tool_success_evaluator]
-            :end-before: [END tool_success_evaluator]
-            :language: python
-            :dedent: 8
-            :caption: Initialize and call ToolSuccessEvaluator using Azure AI Project URL in the following format
-                https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
+    .. literalinclude:: ../samples/evaluation_samples_evaluate_fdp.py
+        :start-after: [START tool_success_evaluator]
+        :end-before: [END tool_success_evaluator]
+        :language: python
+        :dedent: 8
+        :caption: Initialize and call ToolSuccessEvaluator using Azure AI Project URL in the following
+            format https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
 
     """
 
@@ -90,11 +98,13 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
 
         Example with list of messages:
             evaluator = ToolSuccessEvaluator(model_config)
-            response = [{'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': '**Day 1:** Morning: Visit Louvre Museum (9 AM - 12 PM)...'}]}]
+            response = [{'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant',
+            'content': [{'type': 'text', 'text': '**Day 1:** Morning: Visit Louvre Museum (9 AM - 12 PM)...'}]}]
 
             result = evaluator(response=response, )
 
-        :keyword response: The response being evaluated, either a string or a list of messages (full agent response potentially including tool calls)
+        :keyword response: The response being evaluated, either a string or a list of messages (full agent
+            response potentially including tool calls)
         :paramtype response: Union[str, List[dict]]
         :keyword tool_definitions: Optional tool definitions to use for evaluation.
         :paramtype tool_definitions: Union[dict, List[dict]]
@@ -119,7 +129,8 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[bool, str]]:  # type: ignore[override]
         """Do Tool Success evaluation.
 
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are
+        needed for the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
@@ -245,16 +256,20 @@ def _reformat_tool_calls_results(response, logger=None):
             return ""
         agent_response = _get_tool_calls_results(response)
         if agent_response == []:
-            # If no message could be extracted, likely the format changed, fallback to the original response in that case
+            # If no message could be extracted, likely the format changed,
+            # fallback to the original response in that case
             if logger:
                 logger.warning(
-                    f"Empty agent response extracted, likely due to input schema change. Falling back to using the original response: {response}"
+                    f"Empty agent response extracted, likely due to input schema change. "
+                    f"Falling back to using the original response: {response}"
                 )
             return response
         return "\n".join(agent_response)
     except Exception:
-        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed), the original response is returned
-        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        # If the agent response cannot be parsed for whatever
+        # reason (e.g. the converter format changed), the original response is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(f"Agent response could not be parsed, falling back to original response: {response}")
         return response
@@ -272,7 +287,8 @@ def _reformat_tool_definitions(tool_definitions, logger=None):
         return "\n".join(output_lines)
     except Exception:
         # If the tool definitions cannot be parsed for whatever reason, the original tool definitions are returned
-        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
                 f"Tool definitions could not be parsed, falling back to original definitions: {tool_definitions}"
