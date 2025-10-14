@@ -1,0 +1,11 @@
+image:
+  name: azureml/curated/foundation-model-serve
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+  publish:
+    location: mcr
+    visibility: public
