@@ -260,8 +260,10 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         return gt_index == len(ground_truth_steps)
 
     def _calculate_any_order_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
-        """Check if all ground truth steps appear in agent steps with sufficient frequency
-        (any order, extra steps allowed)."""
+        """Check if all ground truth steps appear in agent steps with sufficient frequency.
+
+        any order, extra steps allowed.
+        """
         # Count occurrences of each step in both lists to handle duplicates
         agent_counts = Counter(agent_steps)
         ground_truth_counts = Counter(ground_truth_steps)
