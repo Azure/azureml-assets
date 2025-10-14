@@ -1,0 +1,49 @@
+type: "evaluator"
+name: "builtin.tool_output_utilization"
+version: 1
+displayName: "Tool-Output-Utilization-Evaluator"
+description: "| | |\n| -- | -- |\n| Score range | Binary [0-1]: 1 indicates correct tool output usage, 0 indicates faulty usage. |\n| What is this metric? | Tool Output Utilization evaluates whether an agent correctly understands and uses the outputs returned by tools it invoked (APIs, search/retrieval, DB queries, etc.). |\n| How does it work? | It focuses exclusively on detecting incorrect, missing, or fabricated uses of tool outputs in the agent's response, checking if tool-derived information is accurately reflected or reused. |\n| When to use it? | Use this metric for agent-based systems that rely on tools, ensuring agents properly interpret and utilize tool results without fabrication or misrepresentation. |\n"
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+    credential:
+      type: "object"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    response:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    tool_definitions:
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+  required: ["query", "response", "tool_definitions"]
+outputSchema:
+  tool_output_utilization:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator
