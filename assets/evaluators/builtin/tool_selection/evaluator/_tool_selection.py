@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 import os
 import logging
 from typing import Dict, List, Union, TypeVar
@@ -306,8 +305,10 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         )
         return _pretty_format_conversation_history(conversation_history)
     except Exception:
-        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
-        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
+        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format change),
+        # the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # However the accuracy of the evaluation will be affected.
         # From our tests the negative impact on IntentResolution is:
         #   Higher intra model variance (0.142 vs 0.046)
         #   Higher inter model variance (0.345 vs 0.607)
@@ -320,8 +321,9 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
 
 @experimental
 class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Tool Selection evaluator assesses the appropriateness and efficiency of tool choices made by an AI agent by examining.
+    """The Tool Selection evaluator assesses the appropriateness and efficiency of tool choices made by an AI agent.
 
+       The evaluator assesses the following:
         - Relevance of selected tools to the conversation.
         - Completeness of tool selection according to task requirements.
         - Efficiency in avoiding unnecessary or redundant tools.
@@ -456,7 +458,8 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         try:
-            needed_tool_definitions = _extract_needed_tool_definitions(tool_calls, tool_definitions, ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
+            needed_tool_definitions = _extract_needed_tool_definitions(
+                            tool_calls, tool_definitions, ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
         except EvaluationException:
             # Check if this is because no tool definitions were provided at all
             if len(tool_definitions) == 0:
