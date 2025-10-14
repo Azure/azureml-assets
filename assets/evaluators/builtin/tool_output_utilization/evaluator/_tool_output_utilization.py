@@ -14,12 +14,10 @@ from azure.ai.evaluation._exceptions import (
     ErrorBlame,
     ErrorCategory,
     ErrorTarget,
-    ErrorMessage
+    ErrorMessage,
 )
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._common.utils import (
-    _extract_text_from_content
-)
+from azure.ai.evaluation._common.utils import _extract_text_from_content
 from azure.ai.evaluation._common._experimental import experimental
 
 logger = logging.getLogger(__name__)
@@ -30,9 +28,9 @@ logger = logging.getLogger(__name__)
 def _create_extended_error_target(ErrorTarget):
     """Create an extended ErrorTarget enum that includes TOOL_OUTPUT_UTILIZATION_EVALUATOR."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members['TOOL_OUTPUT_UTILIZATION_EVALUATOR'] = 'ToolOutputUtilizationEvaluator'
+    existing_members["TOOL_OUTPUT_UTILIZATION_EVALUATOR"] = "ToolOutputUtilizationEvaluator"
 
-    ErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    ErrorTarget = Enum("ExtendedErrorTarget", existing_members)
     return ErrorTarget
 
 
@@ -139,7 +137,10 @@ def _pretty_format_conversation_history(conversation_history):
         formatted_history += "SYSTEM_PROMPT:\n"
         formatted_history += "  " + conversation_history["system_message"] + "\n\n"
     for i, (user_query, agent_response) in enumerate(
-        zip(conversation_history["user_queries"], conversation_history["agent_responses"] + [None])
+        zip(
+            conversation_history["user_queries"],
+            conversation_history["agent_responses"] + [None],
+        )
     ):
         formatted_history += f"User turn {i+1}:\n"
         for msg in user_query:
@@ -163,8 +164,9 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         )
         return _pretty_format_conversation_history(conversation_history)
     except Exception as e:
-        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
-        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
+        # If the conversation history cannot be parsed for whatever reason, the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # However the accuracy of the evaluation will be affected.
         # From our tests the negative impact on IntentResolution is:
         #   Higher intra model variance (0.142 vs 0.046)
         #   Higher inter model variance (0.345 vs 0.607)
@@ -235,16 +237,19 @@ def reformat_agent_response(response, logger=None, include_tool_messages=False):
             return ""
         agent_response = _get_agent_response(response, include_tool_messages=include_tool_messages)
         if agent_response == []:
-            # If no message could be extracted, likely the format changed, fallback to the original response in that case
+            # If no message could be extracted, fallback to the original response in that case
             if logger:
                 logger.warning(
-                    f"Empty agent response extracted, likely due to input schema change. Falling back to using the original response: {response}"
+                    "Empty agent response extracted, likely due to input schema change. "
+                    f"Falling back to using the original response: {response}"
                 )
             return response
         return "\n".join(agent_response)
     except Exception as e:
-        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed), the original response is returned
-        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed),
+        # the original response is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
         return response
@@ -271,12 +276,16 @@ def reformat_tool_definitions(tool_definitions, logger=None):
         return "\n".join(output_lines)
     except Exception as e:
         # If the tool definitions cannot be parsed for whatever reason, the original tool definitions are returned
-        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                f"Tool definitions could not be parsed, falling back to original definitions: {tool_definitions}. Error: {e}"
+                "Tool definitions could not be parsed, falling back to original definitions"
+                f": {tool_definitions}. Error: {e}"
             )
         return tool_definitions
+
+
 # ```
 
 
@@ -287,8 +296,8 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     This evaluator checks whether the agent correctly incorporates information from tools into its responses.
 
     Scoring is based on two levels:
-    1. Pass - The agent effectively utilizes tool outputs and accurately incorporates the information into its response.
-    2. Fail - The agent fails to properly utilize tool outputs or incorrectly incorporates the information into its response.
+    1. Pass - effectively utilizes tool outputs and accurately incorporates the information into its response.
+    2. Fail - fails to properly utilize tool outputs or incorrectly incorporates the information into its response.
 
     The evaluation includes the score, a brief explanation, and a final pass/fail result.
 
@@ -312,9 +321,9 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             :end-before: [END tool_output_utilization_evaluator]
             :language: python
             :dedent: 8
-            :caption: Initialize and call ToolOutputUtilizationEvaluator using Azure AI Project URL in the following format
+            :caption: Initialize and call ToolOutputUtilizationEvaluator
+                using Azure AI Project URL in the following format
                 https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
-
     """
 
     _PROMPTY_FILE = "tool_output_utilization.prompty"
@@ -368,27 +377,62 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         Example with list of messages:
             evaluator = ToolOutputUtilizationEvaluator(model_config)
             query = [
-                {"role": "system","content": "You are a helpful customer service assistant."},
-                {"role": "user","content": [{"type": "text","text": "Hi, can you check the status of my last order?"}]},
+                {
+                    "role": "system",
+                    "content": "You are a helpful customer service assistant.",
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Hi, can you check the status of my last order?",
+                        }
+                    ],
+                },
             ]
 
             response = [
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Sure! Let me look that up for you."}],
+                    "content": [
+                        {"type": "text", "text": "Sure! Let me look that up for you."}
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "tool_call","tool_call": {"id": "tool_1","type": "function","function": {"name": "get_order_status","arguments": {"order_id": "123"}}}}],
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call": {
+                                "id": "tool_1",
+                                "type": "function",
+                                "function": {
+                                    "name": "get_order_status",
+                                    "arguments": {"order_id": "123"},
+                                },
+                            },
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "tool_1",
-                    "content": [{"type": "tool_result","tool_result": '{"order_id": "123", "status": "shipped"}'}],
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"order_id": "123", "status": "shipped"}',
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text","text": "Your order 123 has been shipped and is on its way!"}],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Your order 123 has been shipped and is on its way!",
+                        }
+                    ],
                 },
             ]
 
@@ -396,15 +440,25 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 {
                     "name": "get_order_status",
                     "description": "Retrieve the status of an order by its ID.",
-                    "parameters": {"type": "object","properties": {"order_id": {"type": "string","description": "The order ID to check."}}},
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "order_id": {
+                                "type": "string",
+                                "description": "The order ID to check.",
+                            }
+                        },
+                    },
                 }
             ]
+
 
             result = evaluator(query=query, response=response, tool_definitions=tool_definitions)
 
         :keyword query: The query being evaluated, either a string or a list of messages.
         :paramtype query: Union[str, List[dict]]
-        :keyword response: The response being evaluated, either a string or a list of messages (full agent response potentially including tool calls)
+        :keyword response: The response being evaluated, either a string or a list of messages
+        (full agent response potentially including tool calls)
         :paramtype response: Union[str, List[dict]]
         :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
         :paramtype tool_definitions: Union[dict, List[dict]]
@@ -418,8 +472,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *args,
         **kwargs,
     ):
-        """
-        Invoke the instance using the overloaded __call__ signature.
+        """Invoke the instance using the overloaded __call__ signature.
 
         For detailed parameter types and return value documentation, see the overloaded __call__ definition.
         """
@@ -429,21 +482,24 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do Tool Output Utilization evaluation.
 
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow
+            method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
         """
         # we override the _do_eval method as we want the output to be a dictionary,
         # which is a different schema than _base_prompty_eval.py
-        if (
-            ("query" not in eval_input)
-            and ("response" not in eval_input)
-            and ("tool_definitions" not in eval_input)
-        ):
+        if ("query" not in eval_input) and ("response" not in eval_input) and ("tool_definitions" not in eval_input):
             raise EvaluationException(
-                message="Query, response, and tool_definitions are required inputs to the Tool Output Utilization evaluator.",
-                internal_message="Query, response, and tool_definitions are required inputs to the Tool Output Utilization evaluator.",
+                message=(
+                    "Query, response, and tool_definitions are required inputs to "
+                    "the Tool Output Utilization evaluator."
+                ),
+                internal_message=(
+                    "Query, response, and tool_definitions are required inputs "
+                    "to the Tool Output Utilization evaluator."
+                ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
@@ -455,9 +511,7 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             msgs_lists=[eval_input["query"], eval_input["response"]],
             logger=logger,
         )
-        eval_input["tool_definitions"] = reformat_tool_definitions(
-            filtered_tool_definitions, logger
-        )
+        eval_input["tool_definitions"] = reformat_tool_definitions(filtered_tool_definitions, logger)
 
         eval_input["query"] = reformat_conversation_history(
             eval_input["query"],
@@ -465,25 +519,24 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             include_system_messages=True,
             include_tool_messages=True,
         )
-        eval_input["response"] = reformat_agent_response(
-            eval_input["response"], logger, include_tool_messages=True
-        )
+        eval_input["response"] = reformat_agent_response(eval_input["response"], logger, include_tool_messages=True)
 
         llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         if isinstance(llm_output, dict):
             output_label = llm_output.get("label", None)
             if output_label is None:
                 if logger:
-                    logger.warning(
-                        "LLM output does not contain 'label' key, returning NaN for the score."
-                    )
+                    logger.warning("LLM output does not contain 'label' key, returning NaN for the score.")
                 output_label = "fail"
 
             output_label = output_label.lower()
             if output_label not in ["pass", "fail"]:
                 if logger:
                     logger.warning(
-                        f"LLM output label is not 'pass' or 'fail' (got '{output_label}'), returning NaN for the score."
+                        (
+                            f"LLM output label is not 'pass' or 'fail' (got '{output_label}'), "
+                            "returning NaN for the score."
+                        )
                     )
 
             score = 1.0 if output_label == "pass" else 0.0
@@ -500,7 +553,5 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_reason": reason,
             }
         if logger:
-            logger.warning(
-                "LLM output is not a dictionary, returning NaN for the score."
-            )
+            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
         return {self._result_key: math.nan}
