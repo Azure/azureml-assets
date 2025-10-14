@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 import os
 import logging
 from typing import Dict, Union, List, Optional
@@ -9,7 +8,8 @@ from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response, reformat_tool_definitions
+from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response
+from azure.ai.evaluation._common.utils import reformat_tool_definitions
 from azure.ai.evaluation._common._experimental import experimental
 from enum import Enum
 
@@ -118,15 +118,21 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
 
         Example with list of messages:
             evaluator = TaskCompletionEvaluator(model_config)
-            query = [{'role': 'system', 'content': 'You are a helpful travel planning assistant.'}, {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text', 'text': 'Plan a 3-day Paris itinerary with cultural landmarks and cuisine'}]}]
-            response = [{'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': '**Day 1:** Morning: Visit Louvre Museum (9 AM - 12 PM)...'}]}]
-            tool_definitions = [{'name': 'get_attractions', 'description': 'Get tourist attractions for a city.', 'parameters': {'type': 'object', 'properties': {'city': {'type': 'string', 'description': 'The city name.'}}}}]
+            query = [{'role': 'system', 'content': 'You are a helpful travel planning assistant.'},
+                     {'createdAt': 1700000060, 'role': 'user',
+                     'content': [{'type': 'text', 'text': 'Plan a 3-day Paris itinerary with cultural
+                     landmarks and cuisine'}]}]
+            response = [{'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant',
+                        'content': [{'type': 'text', 'text': '*Day 1:* Morning: Visit Louvre Museum (9 AM-12 PM)'}]}]
+            tool_definitions = [{'name': 'get_attractions', 'description': 'Get tourist attractions for a city.',
+                                'parameters': {'type': 'object', 'properties':
+                                  {'city': {'type': 'string', 'description': 'City name.'}}}}]
 
             result = evaluator(query=query, response=response, tool_definitions=tool_definitions)
 
         :keyword query: The query being evaluated, either a string or a list of messages.
         :paramtype query: Union[str, List[dict]]
-        :keyword response: The response being evaluated, either a string or a list of messages (full agent response potentially including tool calls)
+        :keyword response: The response being evaluated, either a string or a list of messages
         :paramtype response: Union[str, List[dict]]
         :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
         :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
@@ -151,7 +157,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[bool, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
 
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator.
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
