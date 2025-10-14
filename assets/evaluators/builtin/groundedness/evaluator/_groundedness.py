@@ -109,7 +109,9 @@ def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=
 
 class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
-    Evaluates groundedness score for a given query (optional), response, and context or a multi-turn conversation, including reasoning.
+    Evaluates groundedness score.
+
+    Takes query (optional), response, and context or a multi-turn conversation, including reasoning.
 
     The groundedness measure assesses the correspondence between claims in an AI-generated answer and the source
     context, making sure that these claims are substantiated by the context. Even if the responses from LLM are
@@ -256,7 +258,10 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *args,
         **kwargs,
     ):
-        """Evaluate groundedness. Accepts either a query, response, and context for a single evaluation, or a conversation for a multi-turn evaluation.
+        """Evaluate groundedness.
+
+        Accepts either a query, response, and context for a single evaluation,
+        or a conversation for a multi-turn evaluation.
 
         If the conversation has more than one turn, the evaluator will aggregate the results of each turn.
 
@@ -347,7 +352,10 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     self._result_key: self._NOT_APPLICABLE_RESULT,
                     f"{self._result_key}_result": "pass",
                     f"{self._result_key}_threshold": self.threshold,
-                    f"{self._result_key}_reason": f"Supported tools were not called. Supported tools for groundedness are {self._SUPPORTED_TOOLS}.",
+                    f"{self._result_key}_reason": (
+                        "Supported tools were not called. "
+                        f"Supported tools for groundedness are {self._SUPPORTED_TOOLS}."
+                    ),
                 }
             else:
                 raise ex
@@ -363,7 +371,10 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             self._ensure_query_prompty_loaded()
 
         if (not query) or (not response):  # or not tool_definitions:
-            msg = f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. For Agent groundedness 'query' and 'response' are required."
+            msg = (
+                f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. "
+                "For Agent groundedness 'query' and 'response' are required."
+                )
             raise EvaluationException(
                 message=msg,
                 blame=ErrorBlame.USER_ERROR,
