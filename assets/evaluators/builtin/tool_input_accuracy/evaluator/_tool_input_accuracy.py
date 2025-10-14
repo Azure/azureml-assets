@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 import os
 import logging
 from itertools import chain
@@ -287,8 +286,10 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         )
         return _pretty_format_conversation_history(conversation_history)
     except Exception:
-        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed), the original query is returned
-        # This is a fallback to ensure that the evaluation can still proceed. However the accuracy of the evaluation will be affected.
+        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed),
+        #  the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        #  However the accuracy of the evaluation will be affected.
         # From our tests the negative impact on IntentResolution is:
         #   Higher intra model variance (0.142 vs 0.046)
         #   Higher inter model variance (0.345 vs 0.607)
@@ -343,7 +344,7 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
 
 @experimental
 class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Tool Input Accuracy evaluator performs a strict binary evaluation (PASS/FAIL) of parameters passed to tool calls. It ensures that ALL parameters meet ALL criteria.
+    """The Tool Input Accuracy evaluator performs an evaluations of parameters passed to tool calls.
 
        The evaluation criteria are as follows:
         - Parameter grounding: All parameters must be derived from conversation history/query
