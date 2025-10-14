@@ -18,6 +18,5 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y 
 
-RUN conda run -p $CONDA_PREFIX conda remove -p $CONDA_PREFIX --yes r-bslib
 RUN rm -rf /opt/miniconda/pkgs/
 
