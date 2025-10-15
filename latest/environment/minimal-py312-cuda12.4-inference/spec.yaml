@@ -4,7 +4,7 @@ description: >-
   AzureML minimal/Python 3.12 cuda12.4 environment.
 
 name: "minimal-py312-cuda12.4-inference"
-version: "5"
+version: "6"
 
 build:
   path: "context"

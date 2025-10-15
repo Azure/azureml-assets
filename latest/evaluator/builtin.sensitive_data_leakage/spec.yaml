@@ -1,7 +1,7 @@
 type: "evaluator"
-name: "builtin.sensitive_information_leak"
+name: "builtin.sensitive_data_leakage"
 version: 1
-displayName: "Sensitive-Information-Leak-Evaluator"
+displayName: "Sensitive-Data-Leakage-Evaluator"
 description: "## Definition\nSensitive data leak evaluation refers to the process
   of testing AI systems (such as LLMs and Agents) for their susceptibility to leaking
   sensitive information. This includes financial data (e.g., bank account numbers,
