@@ -2,7 +2,12 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-ta
 
 USER root
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
+ENV AZUREML_CONDA# Fix vulnerabilities
+RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
+RUN pip install --force-reinstall torchvision==0.23.0 torchaudio==2.8.0 onnx==1.16.1 --no-cache-dir
+RUN pip install --upgrade 'requests==2.32.4'
+RUN pip install --upgrade 'urllib3==1.26.20'
+RUN pip install --upgrade 'pillow==11.3.0'ONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -43,7 +48,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=22.1.2 -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -61,7 +66,7 @@ RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 # Install conda packages
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
-    numpy~=1.23.5 \
+    numpy~=1.26.4 \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
@@ -69,8 +74,9 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     wheel=0.44.0 \
     scipy=1.10.1 \
     joblib=1.2.0 \
+    pytorch=2.8.0 pytorch-cuda=12.4 \
     # end conda dependencies
-    -c conda-forge -c anaconda
+    -c conda-forge -c anaconda -c pytorch -c nvidia
 
 # Ensure future conda and pip calls are tied to this conda environment,
 # and we don't just get lucky from the implicit PATH ordering.
@@ -115,16 +121,16 @@ RUN pip install \
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 
 # Fix vulnerabilities
-RUN pip install --force-reinstall torch==2.7.1 --no-cache-dir
-RUN pip install --force-reinstall torchvision==0.22.1 --no-cache-dir
+RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
+RUN pip install --force-reinstall torchvision==0.23.0 torchaudio==2.8.0 onnx==1.17.0 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.4'
 RUN pip install --upgrade 'urllib3==2.5.0'
 RUN pip install --upgrade 'pillow==11.3.0'
 
 # If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==1.26.20' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==1.26.20' || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==1.26.20' || true
 # --- End Vulnerability Fixes ---
 # --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \
