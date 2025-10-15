@@ -21,11 +21,11 @@ RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}'
 RUN pip install 'azureml-defaults=={{latest-pypi-version}}'
 
 RUN pip uninstall -y onnxruntime
-RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 pytorch-cuda=12.4 -c pytorch -c nvidia
 # Install/upgrade torch in ptca env if it exists (fixes vulnerability)
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.7.1 torchvision==0.22.1 || true
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 || true
 
-RUN pip install onnx==1.17.0
+RUN pip install onnx==1.18.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
 RUN pip install "numpy==1.22.0" --force-reinstall
