@@ -2,12 +2,7 @@ name: project_environment
 channels:
   - conda-forge
 dependencies:
-  - python=3.9.18
-  - setuptools=78.1.1
-  - cython=0.29.24
-  - numpy==1.23.5
-  - scipy==1.10.0
+  - python=3.10.17
   - pip:
-    - azureml-designer-classic-modules==0.0.195
-    - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
+    - azureml-designer-classic-modules==0.0.196
 
