@@ -25,10 +25,25 @@ dataMappingSchema:
     context:
       type: "string"
     query:
-      type: "string"
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
     response:
-      type: "string"
-  required: ["context", "response"]
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    tool_definitions:
+      anyOf:
+        - type: "string"
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+  required: ["response"]
 outputSchema:
   groundedness:
     type: "ordinal"
