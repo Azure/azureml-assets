@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: eagle3_training
-version: 0.0.1.y24
+version: 0.0.1.y26
 type: command
 
 is_deterministic: true
@@ -176,6 +176,11 @@ inputs:
     optional: true
     description: Whether to resume training from the last checkpoint
 
+  resume_from_checkpoint:
+    type: uri_folder
+    optional: true
+    description: Path to a checkpoint directory to resume training from. Used when resume is true and no checkpoints exist in output folder, or when resume is false to initialize from a pretrained draft model checkpoint.
+    mode: ro_mount
 
   build_dataset_num_proc:
     type: integer
@@ -248,6 +253,7 @@ command: >-
   $[[--embedding_key '${{inputs.embedding_key}}']]
   $[[--dist_timeout '${{inputs.dist_timeout}}']]
   $[[--resume '${{inputs.resume}}']]
+  $[[--resume_from_checkpoint '${{inputs.resume_from_checkpoint}}']]
   --report_to 'azure_ml'
   $[[--build_dataset_num_proc '${{inputs.build_dataset_num_proc}}']]
   $[[--verbose '${{inputs.verbose}}']]

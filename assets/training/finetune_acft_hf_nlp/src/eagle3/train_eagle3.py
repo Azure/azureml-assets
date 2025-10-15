@@ -293,6 +293,12 @@ def parse_args():
 
     # resume
     parser.add_argument("--resume", type=bool, default=False)
+    parser.add_argument(
+        "--resume_from_checkpoint",
+        type=str,
+        default=None,
+        help="Path to a checkpoint directory to resume training from. Used when resume is true and no checkpoints exist in output folder, or when resume is false to initialize from a pretrained draft model checkpoint.",
+    )
 
     # tracking
     parser.add_argument("--report_to", type=str, default="azure_ml")
@@ -437,11 +443,62 @@ def main():
 
     # detecting last ckpt for draft model
     draft_model_last_checkpoint = None
-    if args.resume and os.path.isdir(args.output_dir):
-        print_on_rank0(args.output_dir)
-        draft_model_last_checkpoint = get_last_checkpoint(args.output_dir)
-        print_on_rank0(f"Last checkpoint detected: {draft_model_last_checkpoint}")
-        logger.info(f"Resuming training from checkpoint: {draft_model_last_checkpoint}")
+
+    if args.resume:
+        # When resume is true, check for checkpoints in output folder first
+        if os.path.isdir(args.output_dir):
+            print_on_rank0(f"Checking for checkpoints in output directory: {args.output_dir}")
+            draft_model_last_checkpoint = get_last_checkpoint(args.output_dir)
+
+            if draft_model_last_checkpoint:
+                print_on_rank0(f"Found checkpoint in output directory: {draft_model_last_checkpoint}")
+                logger.info(f"Resuming training from checkpoint: {draft_model_last_checkpoint}")
+            elif args.resume_from_checkpoint:
+                # No checkpoint in output folder, use user input checkpoint
+                if os.path.isdir(args.resume_from_checkpoint) and os.path.exists(os.path.join(args.resume_from_checkpoint, "config.json")):
+                    draft_model_last_checkpoint = args.resume_from_checkpoint
+                    print_on_rank0(f"No checkpoint in output directory. Using user-provided checkpoint: {draft_model_last_checkpoint}")
+                    logger.info(f"Using user-provided checkpoint: {draft_model_last_checkpoint}")
+                else:
+                    error_msg = f"ERROR: resume=True but user-provided checkpoint path is invalid: {args.resume_from_checkpoint}"
+                    print_on_rank0(error_msg)
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
+            else:
+                # No checkpoint in output folder and no user input
+                error_msg = f"ERROR: resume=True but no checkpoint found in output directory ({args.output_dir}) and no resume_from_checkpoint provided"
+                print_on_rank0(error_msg)
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+        elif args.resume_from_checkpoint:
+            # Output directory doesn't exist, use user input checkpoint
+            if os.path.isdir(args.resume_from_checkpoint) and os.path.exists(os.path.join(args.resume_from_checkpoint, "config.json")):
+                draft_model_last_checkpoint = args.resume_from_checkpoint
+                print_on_rank0(f"Output directory does not exist. Using user-provided checkpoint: {draft_model_last_checkpoint}")
+                logger.info(f"Using user-provided checkpoint: {draft_model_last_checkpoint}")
+            else:
+                error_msg = f"ERROR: resume=True but user-provided checkpoint path is invalid: {args.resume_from_checkpoint}"
+                print_on_rank0(error_msg)
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+        else:
+            # No output directory and no user input
+            error_msg = f"ERROR: resume=True but output directory does not exist ({args.output_dir}) and no resume_from_checkpoint provided"
+            print_on_rank0(error_msg)
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+    else:
+        # When resume is false, check if user wants to initialize from a checkpoint
+        if args.resume_from_checkpoint:
+            if os.path.isdir(args.resume_from_checkpoint) and os.path.exists(os.path.join(args.resume_from_checkpoint, "config.json")):
+                draft_model_last_checkpoint = args.resume_from_checkpoint
+                print_on_rank0(f"Initializing draft model from user-provided checkpoint: {draft_model_last_checkpoint}")
+                logger.info(f"Initializing draft model from checkpoint: {draft_model_last_checkpoint}")
+            else:
+                error_msg = f"ERROR: Invalid resume_from_checkpoint path provided: {args.resume_from_checkpoint}"
+                print_on_rank0(error_msg)
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
     # build target and draft model
     if args.tp_size > 1:
@@ -670,7 +727,9 @@ def main():
     # global_step
     global_step = 0
     start_epoch = 0
-    if draft_model_last_checkpoint is not None:
+    # Only load training state (optimizer, epoch) when resume=True
+    # When resume=False but resume_from_checkpoint is provided, we only load model weights (done above)
+    if args.resume and draft_model_last_checkpoint is not None:
         print_on_rank0(
             f"Resuming draft model training from checkpoint: {draft_model_last_checkpoint}"
         )
@@ -682,10 +741,15 @@ def main():
             start_epoch = state["epoch"] + 1
             global_step = state.get("global_step", 0)
             print_on_rank0(f"Resuming from epoch {start_epoch}")
+            logger.info(f"Loaded training state: epoch={start_epoch}, global_step={global_step}")
         else:
             print_on_rank0(
                 f"Warning: Checkpoint directory {draft_model_last_checkpoint} found, but training_state.pt is missing. Starting from scratch."
             )
+            logger.warning(f"training_state.pt not found in {draft_model_last_checkpoint}, starting from epoch 0")
+    elif draft_model_last_checkpoint is not None:
+        print_on_rank0(f"Draft model initialized from checkpoint {draft_model_last_checkpoint}, but starting training from epoch 0 (resume=False)")
+        logger.info(f"Draft model initialized from checkpoint, starting fresh training from epoch 0")
 
     dist.barrier()
 

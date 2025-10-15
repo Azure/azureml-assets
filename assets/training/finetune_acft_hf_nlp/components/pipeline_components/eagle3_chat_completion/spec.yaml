@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: eagle3_chat_completion_pipeline
-version: 0.0.1.y24
+version: 0.0.1.y26
 type: pipeline
 display_name: Eagle3 Chat Completion Pipeline
 description: Pipeline Component to train Eagle3 draft models for speculative decoding on chat completion tasks. The component supports distributed training with PyTorch FSDP. See [docs](https://aka.ms/azureml/components/eagle3_chat_completion_pipeline) to learn more.
@@ -211,6 +211,11 @@ inputs:
     optional: true
     description: Whether to resume training from the last checkpoint
 
+  resume_from_checkpoint:
+    type: uri_folder
+    optional: true
+    description: Path to a checkpoint directory to resume training from. Used when resume is true and no checkpoints exist in output folder, or when resume is false to initialize from a pretrained draft model checkpoint.
+    mode: ro_mount
 
   build_dataset_num_proc:
     type: integer
@@ -288,7 +293,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   eagle3_training:
     type: command
-    component: azureml://registries/test_centralus/components/eagle3_training/versions/0.0.1.y24
+    component: azureml://registries/test_centralus/components/eagle3_training/versions/0.0.1.y26
     compute: '${{parent.inputs.compute_eagle3_training}}'
     distribution:
       type: pytorch
@@ -324,6 +329,7 @@ jobs:
       embedding_key: '${{parent.inputs.embedding_key}}'
       dist_timeout: '${{parent.inputs.dist_timeout}}'
       resume: '${{parent.inputs.resume}}'
+      resume_from_checkpoint: '${{parent.inputs.resume_from_checkpoint}}'
       build_dataset_num_proc: '${{parent.inputs.build_dataset_num_proc}}'
       verbose: '${{parent.inputs.verbose}}'
       profile: '${{parent.inputs.profile}}'
