@@ -51,7 +51,7 @@ ENV ENABLE_METADATA=true
 # Create conda environment
 # begin conda create
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=21.3.1 \
     numpy~=1.23.5 \
@@ -105,11 +105,17 @@ RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.7.1' torchvision==0.22.1 
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip uninstall -y torchaudio || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall 'torch==2.8.0' torchvision==0.23.0 torchaudio==2.8.0 || true 
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+# Final security override - force install secure urllib3 version
+RUN pip install urllib3==2.5.0 --force-reinstall --no-deps
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install urllib3==2.5.0 --force-reinstall --no-deps || true
+
 RUN rm -rf /opt/conda/pkgs/
 
 # end pip install
