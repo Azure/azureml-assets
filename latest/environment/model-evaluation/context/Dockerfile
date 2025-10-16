@@ -24,5 +24,5 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Temp fix for env vuln
-RUN pip install mlflow==3.4.0
+RUN pip install mlflow==3.5.0
 RUN pip install transformers==4.57.1

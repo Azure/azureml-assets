@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.relevance"
-version: 1
+version: 2
 displayName: "Relevance-Evaluator"
 description: "| \t| |\n| -- | -- |\n| Score range |\tInteger [1-5]: 1 is the lowest
   quality and 5 is the highest quality. |\n| What is this metric? | Coherence measures

@@ -1,5 +1,5 @@
 type: "evaluator"
-name: "test.task_completion"
+name: "builtin.task_completion"
 version: 1
 displayName: "Task-Completion-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | Boolean [True/False]: True means

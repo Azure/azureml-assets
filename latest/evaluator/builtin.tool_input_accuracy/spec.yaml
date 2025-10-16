@@ -1,5 +1,5 @@
 type: "evaluator"
-name: "test.tool_input_accuracy"
+name: "builtin.tool_input_accuracy"
 version: 1
 displayName: "Tool-Input-Accuracy-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | Binary [0-1]: 0 means incorrect
