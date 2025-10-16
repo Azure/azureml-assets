@@ -2,21 +2,12 @@ type: "evaluator"
 name: "builtin.retrieval"
 version: 1
 displayName: "Retrieval-Evaluator"
-description: "| \t| |\n| -- | -- |\n| Score range |\tInteger [1-5]: 1 is the lowest
-  quality and 5 is the highest quality. |\n| What is this metric? | Retrieval measures
-  the quality of search without ground truth. It focuses on how relevant the context
-  chunks (encoded as a string) are to address a query and how the most relevant context
-  chunks are surfaced at the top of the list. |\n| How does it work? | The retrieval
-  metric is calculated by instructing a language model to follow the definition (in
-  the description) and a set of grading rubrics, evaluate the user inputs, and output
-  a score on a 5-point scale (higher means better quality). Learn more about our [definition
-  and grading rubrics](https://learn.microsoft.com/azure/ai-studio/concepts/evaluation-metrics-built-in?tabs=warning#ai-assisted-retrieval).
-  |\n| When to use it? |\tThe recommended scenario is the quality of search in information
-  retrieval and retrieval augmented generation, when you don't have ground truth for
-  chunk retrieval rankings. Use the retrieval score when you want to assess to what
-  extent the context chunks retrieved are highly relevant and ranked at the top for
-  answering your users' queries. |\n| What does it need as input? |\tQuery, Context
-  |\n"
+description: "Measures how effectively the system retrieves relevant data or content.
+  Higher scores mean better recall of useful information. It’s best used for the quality
+  of search in information retrieval and retrieval augmented generation, when you
+  don't have ground truth for chunk retrieval rankings. Use the retrieval score when
+  you want to assess to what extent the context chunks retrieved are highly relevant
+  and ranked at the top for answering your users' queries."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]

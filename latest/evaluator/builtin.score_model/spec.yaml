@@ -2,12 +2,10 @@ type: "evaluator"
 name: "builtin.score_model"
 version: 1
 displayName: "Score-Model-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: 0 is False and 1 is
-  True |\n| What is this metric? | SCORE_MODEL_GRADER evaluates how well a model assigns
-  scores to outputs based on quality or relevance. |\n| How does it work? | It compares
-  model-assigned scores to human-annotated scores using correlation metrics like Pearson
-  or Spearman. |\n| When to use it? | Use this metric in ranking systems, evaluation
-  pipelines, and model calibration. |\n"
+description: "Evaluates the model’s overall performance across relevant criteria by
+  comparing model-assigned scores to human annotated using correlation metrics. Useful
+  for comparing quality between different model runs. Use this metric in ranking systems,
+  evaluation pipelines, and model calibration."
 evaluatorType: "builtin"
 evaluatorSubType: "openai_graders"
 categories: ["quality"]

@@ -2,14 +2,10 @@ type: "evaluator"
 name: "builtin.document_retrieval"
 version: 1
 displayName: "Document-Retrieval-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Integer [1-5]: higher means better
-  retrieval accuracy. |\n| What is this metric? | Document Retrieval evaluates how
-  effectively relevant documents are identified and returned in response to a query.
-  It measures the system's ability to locate and surface the most pertinent content
-  from a corpus. |\n| How does it work? | This metric uses precision and recall scored
-  based on whether the retrieved documents match a predefined set of relevant documents.
-  |\n| When to use it? | Use this metric when assessing search engines, recommendation
-  systems, or any system tasked with retrieving documents from a large dataset. |\n"
+description: "Checks how accurately relevant documents are retrieved. Higher scores
+  mean better matching to user intent. Use this metric when assessing search engines,
+  recommendation systems, or any system tasked with retrieving documents from a large
+  dataset."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["quality"]
