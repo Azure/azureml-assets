@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.tool_call_accuracy"
 version: 1
 displayName: "Tool-Call-Accuracy-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Integer [1–5]: higher means more accurate tool usage. |\n| What is this metric? | Tool Call Accuracy measures how correctly a system invokes external tools (e.g., APIs, plugins) based on user intent and context. |\n| How does it work? | It compares the tool call parameters and timing against expected values using exact match or semantic similarity scoring. |\n| When to use it? | Use this metric in agent-based systems, orchestration platforms, and AI assistants that rely on tool integration. |\n"
+description: "Measures whether tools or functions were used correctly in the response. Ensures actions align with intended tool behavior. Use this metric in agent-based systems, orchestration platforms, and AI assistants that rely on tool integration."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
