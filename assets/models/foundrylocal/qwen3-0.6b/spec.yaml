@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: qwen3-0.6b-finetuned
+name: qwen3-0.6b
 version: 1
 path: ./
 tags:
