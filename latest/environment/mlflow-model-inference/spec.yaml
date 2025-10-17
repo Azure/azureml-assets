@@ -4,7 +4,7 @@ description: >-
   AzureML MLflow/Ubuntu 22.04/Python 3.12 cpu environment.
 
 name: "mlflow-model-inference"
-version: "11"
+version: "12"
 
 build:
   path: "context"
