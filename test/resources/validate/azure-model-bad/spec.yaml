@@ -1,6 +1,6 @@
 # This isn't a proper model YAML, but we're not testing this here
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: azure-AI-thing
+name: azure-thing
 version: 1
 path: ./
 tags:
