@@ -4,7 +4,7 @@ description: >-
   AzureML Designer PyTorch image
 
 name: "designer-pytorch-2.3"
-version: "14"
+version: "15"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
@@ -13,5 +13,5 @@ build:
 os_type: linux
 
 tags:
-  Python: 3.8.10
+  Python: 3.12.8
   OS: Ubuntu22.04

@@ -4,7 +4,7 @@ description: >-
   AzureML Designer Recommender image
 
 name: "designer-recommender"
-version: "104"
+version: "105"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
@@ -13,5 +13,5 @@ build:
 os_type: linux
 
 tags:
-  Python: 3.8.10
+  Python: 3.12.8
   OS: Ubuntu22.04
