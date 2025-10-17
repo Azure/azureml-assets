@@ -4,7 +4,7 @@
 from enum import Enum
 from collections import Counter
 import json
-from shutil import copy
+import copy
 from typing import Dict, List, Union, Any, Tuple
 from typing_extensions import overload, override
 
