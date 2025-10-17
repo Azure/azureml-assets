@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.response_completeness"
 version: 1
 displayName: "Response-Completeness-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Integer [1–5]: 1 is the lowest quality and 5 is the highest quality. |\n| What is this metric? | Response Completeness measures how thoroughly a system answers a user's query. It evaluates whether all relevant aspects of the question are addressed. |\n| How does it work? | This metric compares the generated response against a comprehensive reference answer using coverage-based scoring. |\n| When to use it? | Ideal for evaluating chatbots, virtual assistants, and QA systems where full and informative responses are critical. |\n"
+description: "Assesses whether the response covers all key aspects of the question. Higher scores indicate more thorough and complete answers. This evaluator is useful when evaluating chatbots, virtual assistants, and QA systems where full and informative responses are critical."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
