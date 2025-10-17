@@ -3,6 +3,6 @@ channels:
   - conda-forge
   - pytorch
 dependencies:
-  - python=3.10.17
+  - python=3.12.8
   - pip:
       - azureml-designer-cv-modules==0.0.72
