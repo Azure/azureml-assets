@@ -583,7 +583,7 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
             cmd += ["--pytorch_model_path", pytorch_model_path_with_artifact]
         else:
             cmd += ["--pytorch_model_path", pytorch_model_path]
-    
+
     _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder,
                         single_run=True, number_of_processes=num_gpus)
     # preprocess
