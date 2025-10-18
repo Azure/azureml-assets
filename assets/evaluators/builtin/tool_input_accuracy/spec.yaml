@@ -38,7 +38,7 @@ dataMappingSchema:
   required: ["query", "response", "tool_definitions"]
 outputSchema:
   tool_input_accuracy:
-    type: "binary"
+    type: "boolean"
     desirable_direction: "increase"
     min_value: 0
     max_value: 1

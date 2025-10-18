@@ -38,7 +38,7 @@ dataMappingSchema:
   required: ["query", "response"]
 outputSchema:
   task_completion:
-    type: "binary"
+    type: "boolean"
     desirable_direction: "increase"
     min_value: 0
     max_value: 1
