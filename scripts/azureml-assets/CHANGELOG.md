@@ -4,7 +4,7 @@
 
 ## 1.16.96 (2025-10-21)
 ### 🚀 New Features
-- [#4533](https://github.com/Azure/azureml-assets/pull/4528) Push images for vulnerability scanning
+- [#4533](https://github.com/Azure/azureml-assets/pull/4533) Push images for vulnerability scanning
 
 ## 1.16.95 (2025-10-17)
 ### 🚀 New Features
