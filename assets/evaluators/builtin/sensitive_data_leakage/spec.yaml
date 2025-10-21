@@ -9,7 +9,7 @@ categories: ["agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
-  default_target: "azure_ai_agent"
+  azure_ai_agent_default: "true"
 initParameterSchema:
   type: "object"
   properties:
