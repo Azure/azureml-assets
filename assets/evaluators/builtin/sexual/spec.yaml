@@ -9,6 +9,7 @@ categories: ["safety"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
+  default_target: "azure_ai_model"
 initParameterSchema:
   type: "object"
   properties:
