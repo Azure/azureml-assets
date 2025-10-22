@@ -10,6 +10,7 @@ tags:
   provider: "Microsoft"
   scenario: "red_team"
   azure_ai_model_default: "true"
+  azure_ai_agent_default: "true"
 initParameterSchema:
   type: "object"
   properties:
