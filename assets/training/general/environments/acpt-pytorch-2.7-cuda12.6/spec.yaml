@@ -1,0 +1,26 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  Recommended environment for Deep Learning in public preview with PyTorch on Azure containing the Azure ML SDK with the latest compatible versions of Ubuntu, Python, PyTorch, CUDA\RocM, combined with optimizers like ORT Training,+DeepSpeed+MSCCL+ORT MoE and more. The image introduces newly released PyTorch 2.1 for early testing, and preview of new fastcheckpointing capability called Nebula. 
+  Azure Container Registry:acptdev.azurecr.io/test/public/aifx/acpt/stable-ubuntu2004-cu121-py310-torch212
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  PyTorch: "2.7"
+  GPU: Cuda12
+  OS: Ubuntu22.04
+  Training: ""
+  Preview: ""
+  Python: "3.10"
+  DeepSpeed: "0.13.1"
+  ONNXRuntime: "1.17.1"
+  torch_ORT: "1.17.0"
+  Checkpointing:Nebula: "0.16.10"
