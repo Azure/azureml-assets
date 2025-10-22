@@ -1,6 +1,4 @@
-name: ai-studio-dev
-version: auto
-type: environment
+extra_config: model.yaml
 spec: spec.yaml
-extra_config: environment.yaml
-categories: ["AI Studio"]
+type: model
+categories: [""] # include the author name
