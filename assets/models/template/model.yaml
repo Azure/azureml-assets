@@ -1,0 +1,6 @@
+path:
+  uri: ./spec.yaml
+  type: local
+publish:
+  description: description.md
+  type: custom_model

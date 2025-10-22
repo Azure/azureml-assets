@@ -1,0 +1,29 @@
+# AzureML Model Specification Template
+# Generated from schema - Fill in the values below to create your model specification
+
+$schema: "https://azuremlschemas.azureedge.net/latest/model.schema.json" # JSON schema reference (required)
+name: "example-model-name" # Model name (required)
+path: "./" # Path to model files (required)
+version: 1 # Model version (can be integer or string (minimum: 1)) (required)
+
+properties: # Properties (optional)
+  inference-min-sku-spec: "example-value" # Minimum SKU specification for inference in the format of 'cores|GPUs|RAM(GB)|VRAM(GB)' (pattern: ^\d+\|\d+\|\d+\|\d+$) (optional)
+  inference-recommended-sku: "example-value" # A list of comma separated skus that the client should use to deploy the model (String type) (optional)
+
+tags: # Tags (required)
+  author: "example-value" # Model provider/author name (String type) (optional)
+  datasets: "Publicly available sources,bookcorpus,wikipedia" # Where data was sourced for training as a comma-separated string (options: Publicly available sources, bookcorpus, wikipedia (comma-separated)) (optional)
+  displayName: "example-value" # Display name for marketing materials (String type) (optional)
+  evaluation: "evaluation.md" # Reference to evaluation documentation (optional)
+  industry: "consumer-goods" # The industry for the model (options: consumer-goods, health-and-life-sciences, manufacturing, mobility, financial-services) (optional)
+  inputModalities: "audio,csv,embeddings" # Input modalities supported (e.g., text, image) as a comma-separated string (options: audio, csv, embeddings, image, json, pdf, etc. (comma-separated)) (optional)
+  keywords: "Agents,Audio,Coding" # List of key words as a comma-separated string. Max 3 keywords (options: Agents, Audio, Coding, Conversation, Instruction, Large context, etc. (comma-separated)) (optional)
+  languages: "aa,ab,ae" # Comma-separated list of supported languages (ISO 639-1 language codes) (options: aa, ab, ae, af, ak, am, etc. (comma-separated)) (optional)
+  license: "custom" # License type (options: custom, other, llama2, apache-2.0, Llama 3.1 Community Licensed, MIT) (optional)
+  licenseDescription: "example-value" # Description of the license terms (String type) (optional)
+  notes: "notes.md" # Reference to notes documentation (optional)
+  outputModalities: "audio,csv,embeddings" # Output modalities supported (e.g., text) as a comma-separated string (options: audio, csv, embeddings, image, json, pdf, etc. (comma-separated)) (optional)
+  summary: "example-value" # Brief description of the model (String type) (optional)
+  task: "audio-analysis,audio-classification,audio-generation" # Tasks supported by the model as a comma-separated string (options: audio-analysis, audio-classification, audio-generation, automatic-speech-recognition, chat-completion, completions, etc. (comma-separated)) (optional)
+  inference_compute_allow_list: ["example-value"] # List of compute SKUs allowed for inference as a comma-separated string (Array of values) (optional)
+  trainingDataDate: "January 2024" # Training cutoff date (pattern: ^(January|February|March|April|May|June|July|Augus...) (optional)
