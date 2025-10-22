@@ -14,7 +14,7 @@ build:
 os_type: linux
 
 tags:
-  PyTorch: "2.7"
+  PyTorch: "2.8"
   GPU: Cuda12
   OS: Ubuntu22.04
   Training: ""

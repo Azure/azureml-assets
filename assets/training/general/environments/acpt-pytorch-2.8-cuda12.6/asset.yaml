@@ -1,4 +1,4 @@
-name: acpt-pytorch-2.7-cuda12.6
+name: acpt-pytorch-2.8-cuda12.6
 version: auto
 type: environment
 spec: spec.yaml

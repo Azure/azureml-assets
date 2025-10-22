@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Test running a sample job in the pytorch 2.2 environment."""
+"""Test running a sample job in the pytorch 2.8 environment."""
 import os
 import time
 from pathlib import Path
@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_pytorch_2_7():
-    """Tests a sample job using pytorch 2.7 as the environment."""
+def test_pytorch_2_8():
+    """Tests a sample job using pytorch 2.8 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,12 +28,12 @@ def test_pytorch_2_7():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-2_7-cuda12_6"
+    env_name = "acpt-pytorch-2_8-cuda12_6"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 2.7 environment created from a Docker context.",
+        description="Pytorch 2.8 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 

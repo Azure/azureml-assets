@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/acpt-pytorch-2.7-cuda12.6
+  name: azureml/curated/acpt-pytorch-2.8-cuda12.6
   os: linux
   context:
     dir: context
