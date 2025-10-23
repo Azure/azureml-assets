@@ -1,4 +1,4 @@
-azureml-acft-contrib-hf-nlp==0.0.82
+azureml-acft-contrib-hf-nlp==0.0.83
 pillow==11.3.0
 accelerate==1.6.0
 datasets==3.6.0
