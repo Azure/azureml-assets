@@ -5,7 +5,7 @@ description: >-
   Scikit-learn. Contains the Azure ML SDK and additional python packages.
 
 name: "sklearn-1.5"
-version: "34"
+version: "35"
 
 build:
   path: "context"
