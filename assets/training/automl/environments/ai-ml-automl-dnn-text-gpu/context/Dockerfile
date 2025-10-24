@@ -51,7 +51,7 @@ ENV ENABLE_METADATA=true
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=22.1.2 \
     numpy~=1.23.5 \
@@ -99,8 +99,9 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-RUN pip install torch==2.7.1 torchvision==0.22.1
-RUN /opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
+# Security vulnerability fix - GHSA-4xh5-x5gv-qwph: Upgrade pip only (torch upgrade moved to separate fix)
+RUN pip install --upgrade pip
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
