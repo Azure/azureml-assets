@@ -85,7 +85,8 @@ RUN pip install \
                 'sentencepiece==0.1.97' \
                 'cryptography>=42.0.5'\
                 'requests>=2.32.4' \
-                'certifi>=2023.07.22' 
+                'certifi>=2023.07.22' \
+                'urllib3==1.26.20'
                 # end pypi dependencies
 
 # Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
@@ -101,9 +102,6 @@ RUN pip list && \
                 aiohttp==3.12.14
 RUN pip install torch==2.7.1 torchvision==0.22.1
 RUN /opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==1.26.20' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==1.26.20' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==1.26.20' || true
 
 # Patch for pillow vulnerability
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
