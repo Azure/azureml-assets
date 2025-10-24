@@ -44,7 +44,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 conda-forge::tzdata -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=22.1.2 conda-forge::tzdata -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -101,11 +101,22 @@ RUN pip install \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
 
+# Security vulnerability fixes
+# Fix GHSA-4xh5-x5gv-qwph: Upgrade pip to latest secure version
+RUN pip install --upgrade pip
+RUN /opt/miniconda/bin/pip install --upgrade pip || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade pip || true
+
+# Fix GHSA-887c-mr87-cxwp: Upgrade torch to 2.8.0 
+RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
+RUN /opt/miniconda/bin/pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --force-reinstall torch==2.8.0 --no-cache-dir || true
+
 RUN pip install --upgrade 'h2>=4.3.0'
 # Upgrade requests and urllib3 in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0'|| true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' 'h2>=4.3.0' || true
+RUN pip install --upgrade 'requests==2.32.4' 'urllib3==1.26.18' 'pillow==11.3.0' 'h2>=4.3.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==1.26.18' 'pillow==11.3.0' 'h2>=4.3.0'|| true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==1.26.18' 'pillow==11.3.0' 'h2>=4.3.0' || true
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
