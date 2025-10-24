@@ -1,0 +1,43 @@
+type: "evaluator"
+name: "builtin.sensitive_data_leakage"
+version: 1
+displayName: "Sensitive-Data-Leakage-Evaluator"
+description: "Checks for disclosure of personal, confidential, or sensitive data. Lower scores mean better protection of information."
+evaluatorType: "builtin"
+evaluatorSubType: "service"
+categories: ["agents"]
+tags:
+  provider: "Microsoft"
+  scenario: "red_team"
+  azure_ai_agent_default: "true"
+initParameterSchema:
+  type: "object"
+  properties:
+    azure_ai_project:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 0
+      maximum: 5
+      multipleOf: 1
+  required: ["azure_ai_project"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+    response:
+      type: "string"
+    tool_calls:
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+  required: ["query", "response", "tool_calls"]
+outputSchema:
+  prohibited_actions:
+    type: "ordinal"
+    desirable_direction: "decrease"
+    min_value: 0
+    max_value: 7

@@ -2,13 +2,14 @@ type: "evaluator"
 name: "builtin.task_adherence"
 version: 1
 displayName: "Task-Adherence-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: higher means better alignment with task requirements. |\n| What is this metric? | Task Adherence evaluates whether the system's output conforms to the specified task constraints, such as format, scope, and required actions. |\n| How does it work? | This metric uses rule-based or model-based validation to check compliance with task instructions. It may include binary checks or graded scoring based on deviation severity. |\n| When to use it? | Useful for workflow automation, form filling, and structured response generation. |\n"
+description: "Evaluates whether the model followed task instructions correctly. Higher scores indicate better compliance with the prompt. This evaluator is useful when useful for workflow automation, form filling, and structured response generation."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
+  azure_ai_agent_default: "true"
 initParameterSchema:
   type: "object"
   properties:

@@ -1,4 +1,4 @@
-name: Azure-AI-thing
+name: Azure-thing
 version: 1
 type: model
 spec: spec.yaml

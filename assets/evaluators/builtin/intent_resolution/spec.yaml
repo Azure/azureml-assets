@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.intent_resolution"
 version: 1
 displayName: "Intent-Resolution-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Float [0–1]: higher means better intent understanding. |\n| What is this metric? | Intent Resolution assesses how accurately a system identifies and acts upon the user's underlying intent. |\n| How does it work? | It compares predicted intent labels against ground truth using classification metrics like accuracy, precision, and recall. |\n| When to use it? | Use this metric in conversational AI, voice assistants, and customer support bots where understanding user intent is essential. |\n"
+description: "Checks whether the model correctly interprets and addresses user intent. Ensures the response aligns with what the user asked. Use this metric in conversational AI, voice assistants, and customer support bots where understanding user intent is essential."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]

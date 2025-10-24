@@ -294,10 +294,8 @@ def build_images(input_dirs: List[Path],
                                                   add_subdir=True, use_version_dir=use_version_dirs)
                 continue
 
-            # Don't push environments that aren't published
-            push_this_image = push and env_config.publish_enabled
-            if push and not push_this_image:
-                logger.print(f"Skipping push of image for {asset_config.name}: Not published")
+            # Push image for vulnerability scanning
+            push_this_image = push
 
             # Tag with version from spec
             if tag_with_version:
