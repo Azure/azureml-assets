@@ -14,6 +14,16 @@ tags:
   maxOutputTokens: 2048
   alias: qwen2.5-3b
   directoryPath: cpu-int4-rtn-block-32-acc-level-4
+  promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\\
+    n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\"\
+    : \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
+  supportsToolCalling: "true"
+  toolCallStart: "<tool_call>"
+  toolCallEnd: "</tool_call>"
+  toolRegisterStart: "<tools>"
+  toolRegisterEnd: "</tools>"
+  toolResponseStart: "<tool_response>"
+  toolResponseEnd: "</tool_response>"
 type: custom_model
 variantInfo:
   parents:
