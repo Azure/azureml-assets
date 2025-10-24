@@ -101,9 +101,9 @@ RUN pip list && \
                 aiohttp==3.12.14
 RUN pip install torch==2.7.1 torchvision==0.22.1
 RUN /opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==1.26.20' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==1.26.20' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==1.26.20' || true
 
 # Patch for pillow vulnerability
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
