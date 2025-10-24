@@ -14,7 +14,7 @@ tags:
   alias: qwen2.5-coder-14b
   directoryPath: model
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
-  supportsToolCalling: ""
+  supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
   toolCallEnd: "</tool_call>"
   toolRegisterStart: "<tools>"
