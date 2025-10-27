@@ -332,7 +332,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_result": "pass",
             f"{self._result_key}_threshold": self.threshold,
             f"{self._result_key}_reason": error_message,
-            "details": {},
+            f"{self._result_key}_details": {},
         }
 
     def _extract_needed_tool_definitions(self, tool_calls, tool_definitions):
