@@ -1,0 +1,25 @@
+$schema: "https://azuremlschemas.azureedge.net/latest/model.schema.json" # JSON schema reference (required)
+name: "Verbogenie" # Model name (required)
+path: "./" # Path to model files (required)
+version: 3 # Model version (can be integer or string (minimum: 1)) (required)
+
+properties: # Properties (optional)
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4
+
+tags: # Tags (required)
+  datasets: "Publicly available sources,bookcorpus,wikipedia" # Where data was sourced for training as a comma-separated string (options: Publicly available sources, bookcorpus, wikipedia (comma-separated)) (optional)
+  displayName: "Verbogenie" # Display name for marketing materials (String type) (optional)
+  evaluation: "evaluation.md" # Reference to evaluation documentation (optional)
+  industry: "health-and-life-sciences" # The industry for the model (options: consumer-goods, health-and-life-sciences, manufacturing, mobility, financial-services) (optional)
+  inputModalities: "text" # Input modalities supported (e.g., text, image) as a comma-separated string (options: audio, csv, embeddings, image, json, pdf, etc. (comma-separated)) (optional)
+  keywords: "Agents,Audio,Coding" # List of key words as a comma-separated string. Max 3 keywords (options: Agents, Audio, Coding, Conversation, Instruction, Large context, etc. (comma-separated)) (optional)
+  languages: "en,aa,ab,ae" # Comma-separated list of supported languages (ISO 639-1 language codes) (options: aa, ab, ae, af, ak, am, etc. (comma-separated)) (optional)
+  license: "custom" # License type (options: custom, other, llama2, apache-2.0, Llama 3.1 Community Licensed, MIT) (optional)
+  licenseDescription: "license.md" # Description of the license terms (String type) (optional)
+  notes: "notes.md" # Reference to notes documentation (optional)
+  outputModalities: "audio,csv,embeddings" # Output modalities supported (e.g., text) as a comma-separated string (options: audio, csv, embeddings, image, json, pdf, etc. (comma-separated)) (optional)
+  summary: "Efficient 10B open-weight model for reasoning, math, coding, and RAG" # Brief description of the model (String type) (optional)
+  task: "audio-analysis,audio-classification,audio-generation" # Tasks supported by the model as a comma-separated string (options: audio-analysis, audio-classification, audio-generation, automatic-speech-recognition, chat-completion, completions, etc. (comma-separated)) (optional)
+  inference_compute_allow_list: ["Standard_NC24ads_A100_v4", "Standard_NC48ads_A100_v4"] # List of compute SKUs allowed for inference as a comma-separated string (Array of values) (optional)
+  trainingDataDate: "January 2024" # Training cutoff date (pattern: ^(January|February|March|April|May|June|July|Augus...) (optional)
