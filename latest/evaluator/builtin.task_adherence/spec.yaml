@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_adherence"
-version: 1
+version: 2
 displayName: "Task-Adherence-Evaluator"
 description: "Evaluates whether the model followed task instructions correctly. Higher
   scores indicate better compliance with the prompt. This evaluator is useful when
