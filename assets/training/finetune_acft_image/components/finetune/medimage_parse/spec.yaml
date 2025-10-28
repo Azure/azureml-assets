@@ -17,7 +17,6 @@ code: ../../../src/medimage_parse_finetune
 
 distribution:
   type: pytorch
-  process_count_per_instance: 1
 
 # (Optional but recommended) clearer logs & fewer false timeouts
 environment_variables:
