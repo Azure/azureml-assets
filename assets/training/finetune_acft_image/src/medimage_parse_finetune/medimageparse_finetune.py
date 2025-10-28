@@ -242,8 +242,14 @@ def execute_training(args):
 
     # Prepare arguments for olympus_core
     olympus_args = [
-        "-cp", str(importlib.resources.files('azureml.acft.image.components.olympus_biomed_parse') / "configs"),
-        "-cn", os.environ['AMLT_EXPERIMENT_NAME'],
+        "-cp", 
+        str(
+            importlib.resources.files(
+                "azureml.acft.image.components.olympus_biomed_parse"
+                ) 
+                / "configs"
+        ),
+        "-cn", os.environ["AMLT_EXPERIMENT_NAME"],
         "-cd", str(Path(args.config).parent),
     ]
 
