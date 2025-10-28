@@ -2,37 +2,6 @@ name: project_environment
 channels:
   - conda-forge
 dependencies:
-  - pip=23.3
-  - python=3.9.18
-  - r-base=4.4.0
-  - r-caret=6.0
-  - r-catools=1.18.3
-  - r-cluster=2.1.8
-  - r-dplyr=1.1.4
-  - r-e1071=1.7
-  - r-forcats=1.0.0
-  - r-forecast=8.23.0
-  - r-glmnet=4.1
-  - r-igraph=2.0.3
-  - r-matrix=1.6
-  - r-mclust=6.1.1
-  - r-mgcv=1.9
-  - r-nlme=3.1
-  - r-nnet=7.3
-  - r-plyr=1.8.9
-  - r-randomforest=4.7
-  - r-reticulate=1.40
-  - r-rocr=1.0
-  - r-rodbc=1.3
-  - r-rpart=4.1
-  - r-stringr=1.5.1
-  - r-tidyverse=2.0.0
-  - r-timedate=4041.110
-  - r-tseries=0.10
-  - libxcrypt=4.4
-  - setuptools=78.1.1
-  - cython=0.29.24
-  - numpy==1.23.5
-  - scipy==1.10.0
+  - python=3.12.8
   - pip:
-      - azureml-designer-classic-modules==0.0.195
+      - azureml-designer-classic-modules==0.0.196

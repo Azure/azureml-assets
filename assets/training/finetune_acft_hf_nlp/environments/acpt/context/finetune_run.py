@@ -576,7 +576,14 @@ def _initiate_run(completion_files_folder: str, model_selector_output: str,
         "--output_dir", model_selector_output
     ]
     add_optional_input(cmd, "mlflow_model_path")
-    add_optional_input(cmd, "pytorch_model_path")
+    pytorch_model_path = decode_input_from_env_var("pytorch_model_path")
+    if pytorch_model_path is not None and os.path.exists(pytorch_model_path):
+        pytorch_model_path_with_artifact = os.path.join(pytorch_model_path, "model_artifact", "model")
+        if os.path.exists(pytorch_model_path_with_artifact):
+            cmd += ["--pytorch_model_path", pytorch_model_path_with_artifact]
+        else:
+            cmd += ["--pytorch_model_path", pytorch_model_path]
+
     _run_subprocess_cmd(cmd, component_name="model_selector", completion_files_folder=completion_files_folder,
                         single_run=True, number_of_processes=num_gpus)
     # preprocess

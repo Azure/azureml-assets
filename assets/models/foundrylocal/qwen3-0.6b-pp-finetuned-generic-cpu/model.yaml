@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/models/qwen3-0.6b/onnx/pp-finetuned/cpu_and_mobile/v1
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
