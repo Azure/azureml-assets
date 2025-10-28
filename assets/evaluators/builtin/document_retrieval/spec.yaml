@@ -8,6 +8,8 @@ evaluatorSubType: "code"
 categories: ["quality"]
 tags:
   provider: "Microsoft"
+  enable_eval_ui: false
+  enable_redteam_ui: false
 initParameterSchema:
   type: "object"
   properties:
