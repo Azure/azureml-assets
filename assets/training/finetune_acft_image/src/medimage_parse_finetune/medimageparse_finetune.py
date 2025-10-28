@@ -14,8 +14,19 @@ from azureml.acft.image.components.olympus_biomed_parse.checkpoint_loaders.safet
 )
 from azureml.dataprep.api._loggerfactory import _LoggerFactory
 import importlib.resources
+import subprocess
+import contextlib
+import signal
+import tempfile
+import re
 
 logger = _LoggerFactory.get_logger(__name__)
+
+# Discover ranks from AML env (AML sets these for PyTorch distribution)
+RANK = int(os.environ.get("AZUREML_CR_NODE_RANK", "0")) # machine index: 0,1,...
+LOCAL_RANK = int(os.environ.get("LOCAL_RANK", "0")) # proc index on a node
+WORLD_SIZE = int(os.environ.get("WORLD_SIZE", "1"))
+print(f"[launcher] NODE_RANK={RANK} LOCAL_RANK={LOCAL_RANK} WORLD_SIZE={WORLD_SIZE}")
 
 
 def parse_arguments():
@@ -52,6 +63,44 @@ def parse_arguments():
     )
 
     return parser.parse_args()
+
+
+def is_mpi_enabled():
+    return "OMPI_COMM_WORLD_RANK" in os.environ
+
+def safe_setenv(var, value):
+    if value is None:
+        return False
+    if var in os.environ and os.environ[var] is not None and os.environ[var] != value:
+        logger.info(f"Env '{var}' already set to '{os.environ[var]}', not changing to '{value}'")
+        return False
+    os.environ[var] = value
+    return True
+
+def set_environment_variables_for_nccl_backend(master_port=6105):
+    # AML torchrun sets envs; only set if MPI is detected and values missing
+    if is_mpi_enabled():
+        safe_setenv("RANK", os.environ.get("OMPI_COMM_WORLD_RANK"))
+        safe_setenv("WORLD_SIZE", os.environ.get("OMPI_COMM_WORLD_SIZE"))
+        safe_setenv("LOCAL_RANK", os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK"))
+        safe_setenv("MASTER_ADDR", os.environ.get("MASTER_ADDR") or "127.0.0.1")
+        safe_setenv("MASTER_PORT", os.environ.get("MASTER_PORT") or str(master_port))
+
+def get_master_ip_amlk8s():
+    # from: https://k8s-wiki.azureml.com/faq.html
+    regexp = r"[\s\S]*export[\s]*DLTS_SD_worker0_IP=([0-9.]+)[\s|s]*"
+    with open("/dlts-runtime/env/init.env", "r") as f:
+        line = f.read()
+    match = re.match(regexp, line)
+    if match:
+        ip = str(match.group(1))
+        return ip
+    else:
+        print(
+            "Failed to identify MASTER_ADDR from /dlts-runtime/env/init.env: no matching line. "
+            "Assuming 127.0.0.1 by default."
+        )
+        return "127.0.0.1"
 
 
 def _is_heavy_model_file(rel_path: Path) -> bool:
@@ -113,6 +162,19 @@ def copy_catalog_except_weights(src_model_dir: str, dst_model_dir: str):
     logger.info("=== COPY CATALOG FINISHED ===")
 
 
+@contextlib.contextmanager
+def with_signal_handler(process):
+    def handler(sig, frame):
+        process.send_signal(sig)
+    orig_sigterm = signal.signal(signal.SIGTERM, handler)
+    orig_sigint = signal.signal(signal.SIGINT, handler)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, orig_sigterm)
+        signal.signal(signal.SIGINT, orig_sigint)
+
+
 def execute_training(args):
     """Execute the olympus_core training command directly."""
     logger.info("Received arguments:")
@@ -130,6 +192,9 @@ def execute_training(args):
     os.environ["MODEL_PATH"] = args.pretrained_mlflow_model
     os.environ["FINETUNED_MODEL_PATH"] = args.mlflow_model_folder
 
+    # Set up distributed training environment variables
+    set_environment_variables_for_nccl_backend()
+
     logger.info("Environment variables set:")
     logger.info(f"  OUTPUT={os.environ['OUTPUT']}")
     logger.info(f"  EXTERNAL={os.environ['EXTERNAL']}")
@@ -145,65 +210,80 @@ def execute_training(args):
     logger.info(f"Source exists: {os.path.exists(args.pretrained_mlflow_model)}")
     logger.info(f"Destination exists: {os.path.exists(args.mlflow_model_folder)}")
 
-    copy_catalog_except_weights(args.pretrained_mlflow_model, args.mlflow_model_folder)
+    # IMPORTANT: point OUTPUT env to node-local temp for non-rank0
+    node_local_output = str(Path(tempfile.gettempdir()) / f"mip_train_node{RANK}")
+    Path(node_local_output).mkdir(parents=True, exist_ok=True)
+    if RANK == 0:
+        os.environ["OUTPUT"] = args.out
+    else:
+        os.environ["OUTPUT"] = node_local_output
+
+    # Always safe to set EXTERNAL and MLFLOW_MODEL_FOLDER
+    os.environ["EXTERNAL"] = args.data
+    os.environ["MLFLOW_MODEL_FOLDER"] = args.pretrained_mlflow_model
+
+        # ONLY node 0 may touch AzureML outputs
+    if RANK == 0:
+        Path(args.out).mkdir(parents=True, exist_ok=True)
+        Path(args.mlflow_model_folder).mkdir(parents=True, exist_ok=True)
+        copy_catalog_except_weights(args.pretrained_mlflow_model, args.mlflow_model_folder)
 
     logger.info("Copy catalog function completed")
 
+    # Use static shell script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    launcher_script = os.path.join(script_dir, "train_launcher.sh")
+
+    # Check if launcher script exists
+    if not os.path.exists(launcher_script):
+        logger.error(f"Launcher script not found: {launcher_script}")
+        return 1
+
+
     # Prepare arguments for olympus_core
     olympus_args = [
-        "-cp",
-        str(
-            importlib.resources.files(
-                "azureml.acft.image.components.olympus_biomed_parse"
-            )
-            / "configs"
-        ),
-        "-cn",
-        os.environ["AMLT_EXPERIMENT_NAME"],
-        "-cd",
-        str(Path(args.config).parent),
+        "-cp", str(importlib.resources.files('azureml.acft.image.components.olympus_biomed_parse') / "configs"),
+        "-cn", os.environ['AMLT_EXPERIMENT_NAME'],
+        "-cd", str(Path(args.config).parent),
     ]
 
     logger.info("Calling olympus_core with arguments:")
     logger.info(" ".join(olympus_args))
+    cmd = " ".join([launcher_script] + olympus_args)
+    proc = subprocess.Popen(cmd,
+                            shell=True,
+                            executable=shutil.which("bash") or None,
+                            stdout=sys.stdout,
+                            stderr=sys.stderr
+                            )
 
-    # Save original sys.argv
-    original_argv = sys.argv.copy()
+    with with_signal_handler(proc):
+        exit_code = proc.wait()
 
-    try:
-        # Set sys.argv for olympus_core
-        sys.argv = ["olympus_main"] + olympus_args
+    if exit_code == 0:
+        logger.info("Training completed successfully.")
 
-        # Call olympus_core main function directly
-        result = olympus_main()
+        if RANK == 0:
+            ckpt_path = args.out + f"/{os.environ['AMLT_EXPERIMENT_NAME']}/{os.environ['AMLT_JOB_NAME']}/checkpoints/last.ckpt"
+            output_path = args.mlflow_model_folder + "/artifacts/checkpoints/boltzformer_focal_all.safetensors"
+            logger.info("Starting conversion to HuggingFace format...")
+            convert_ckpt_to_safetensor(ckpt_path, output_path)
 
-        ckpt_path = (
-            args.out
-            + f"/{os.environ['AMLT_EXPERIMENT_NAME']}/{os.environ['AMLT_JOB_NAME']}/checkpoints/last.ckpt"
-        )
-        output_path = (
-            args.mlflow_model_folder
-            + "/artifacts/checkpoints/boltzformer_focal_all.safetensors"
-        )
+            logger.info("Output directory snapshot:")
+            for root, dirs, files in os.walk(args.out):
+                logger.info(f"  {root}")
+                for f in files:
+                    logger.info(f"    - {f}")
 
-        convert_ckpt_to_safetensor(ckpt_path, output_path)
+            logger.info("Finetuned MLflow model snapshot:")
+            for root, dirs, files in os.walk(args.mlflow_model_folder):
+                logger.info(f"  {root}")
+                for f in files:
+                    logger.info(f"    - {f}")
+    else:
+        logger.error(f"Training failed with exit code: {exit_code}")
 
-        logger.info("Olympus training completed successfully")
-        return result if result is not None else 0
-
-    except SystemExit as e:
-        # Handle sys.exit calls from olympus_core
-        logger.info(f"Olympus training exited with code: {e.code}")
-        return e.code if e.code is not None else 0
-
-    except Exception as e:
-        logger.error(f"Error during olympus training: {e}")
-        logger.error(f"Error type: {type(e).__name__}")
-        return 1
-
-    finally:
-        # Restore original sys.argv
-        sys.argv = original_argv
+    return exit_code
 
 
 def main():
@@ -234,14 +314,15 @@ def main():
             return 1
 
     # Create output directory if it doesn't exist
-    if not os.path.exists(args.out):
-        logger.info(f"Creating output directory: {args.out}")
-        os.makedirs(args.out, exist_ok=True)
-    elif not os.path.exists(args.mlflow_model_folder + "/artifacts/checkpoints"):
-        logger.info(
-            f"Creating output directory: {args.mlflow_model_folder + '/artifacts/checkpoints'}"
-        )
-        os.makedirs(args.mlflow_model_folder + "/artifacts/checkpoints", exist_ok=True)
+    if RANK == 0:
+        if not os.path.exists(args.out):
+            logger.info(f"Creating output directory: {args.out}")
+            os.makedirs(args.out, exist_ok=True)
+        elif not os.path.exists(args.mlflow_model_folder + "/artifacts/checkpoints"):
+            logger.info(
+                f"Creating output directory: {args.mlflow_model_folder + '/artifacts/checkpoints'}"
+            )
+            os.makedirs(args.mlflow_model_folder + "/artifacts/checkpoints", exist_ok=True)
 
     # Execute training
     return execute_training(args)
