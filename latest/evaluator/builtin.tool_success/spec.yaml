@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_success"
-version: 1
+version: 2
 displayName: "Tool-Success-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | boolean either true or false: True
   all tool calls are successful , False one or more tool calls have failures. |\n\
