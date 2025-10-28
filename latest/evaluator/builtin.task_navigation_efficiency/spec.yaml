@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_navigation_efficiency"
-version: 1
+version: 2
 displayName: "Task-Navigation-Efficiency-Evaluator"
 description: "| | |\n| -- | -- |\n| Score range | Boolean [true, false]: true if the
   agent's tool calls match the ground truth steps, else false. |\n| What is this metric?
@@ -18,14 +18,9 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    deployment_name:
-      type: "string"
     matching_mode:
       type: "string"
       enum: ["exact_match", "in_order_match", "any_order_match"]
-    credential:
-      type: "object"
-  required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
   properties:
