@@ -2,6 +2,14 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.97 (2025-10-22)
+### 🚀 New Features
+- [#4535](https://github.com/Azure/azureml-assets/pull/4535) Add missing generic asset types to GENERIC_ASSET_TYPES
+
+## 1.16.96 (2025-10-21)
+### 🚀 New Features
+- [#4533](https://github.com/Azure/azureml-assets/pull/4533) Push images for vulnerability scanning
+
 ## 1.16.95 (2025-10-17)
 ### 🚀 New Features
 - [#4528](https://github.com/Azure/azureml-assets/pull/4528) Allow Azure- prefix for models
@@ -251,15 +259,15 @@
 
 ## 1.16.35 (2024-02-28)
 ### 🐛 Bugs Fixed
-- [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration 
+- [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration
 
 ## 1.16.34 (2024-01-29)
 ### 🐛 Bugs Fixed
-- [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models 
+- [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models
 
 ## 1.16.33 (2024-01-22)
 ### 🐛 Bugs Fixed
-- [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation 
+- [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation
 
 ## 1.16.32 (2024-01-19)
 ### 🐛 Bugs Fixed
@@ -509,3 +517,4 @@
 ## 1.0.0 (2023-05-16)
 ### 🚀 New Features
 - [#663](https://github.com/Azure/azureml-assets/pull/663) Initial release to PyPI
+
