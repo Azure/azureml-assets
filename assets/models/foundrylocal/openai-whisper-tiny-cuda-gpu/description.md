@@ -1,4 +1,4 @@
-This model is an optimized version of Whisper Tiny for local inference. Optimized models are published here in ONNX format to run on CPU devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
+This model is an optimized version of Whisper Tiny for local inference. Optimized models are published here in ONNX format to run on CUDA devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
 
 > Review the [original model card](https://huggingface.co/openai/whisper-tiny) for details on training data, evaluation metrics, license, intended uses, limitations, and bias before using the model.
 
