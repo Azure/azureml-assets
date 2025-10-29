@@ -53,9 +53,9 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 # vulnearbility fix
 RUN pip install pyarrow==14.0.2
-RUN pip install torch==2.8.0 torchvision==0.22.1
-RUN opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.22.1 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install 2.8.0 torchvision==0.22.1 || true
+RUN pip install torch==2.8.0 torchvision==0.24.0
+RUN opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.24.0 || true
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install 2.8.0 torchvision==0.24.0 || true
 RUN opt/conda/envs/ptca/bin/pip install --upgrade urllib3 || true
 RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
