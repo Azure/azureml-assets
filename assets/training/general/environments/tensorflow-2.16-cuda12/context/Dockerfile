@@ -51,6 +51,7 @@ RUN apt-get update && \
     libk5crypto3 \
     libcap2  \
     gpgconf \
+    dpkg-dev \
     # Perl vulnerability fixes
     perl-modules-5.34 \
     perl \

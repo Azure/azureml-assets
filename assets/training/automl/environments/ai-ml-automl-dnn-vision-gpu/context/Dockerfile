@@ -36,6 +36,8 @@ RUN apt-get update && \
         psmisc \
         rsyslog \
         runit \
+        libc-bin \
+        libssl-dev \
         unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \

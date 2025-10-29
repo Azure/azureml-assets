@@ -21,7 +21,9 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules-bin \
         libpam-modules \
-        libc-bin \
+        libc-bin \ 
+        dpkg-dev \
+        libssl-dev \
         libpam-runtime && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
     apt-mark hold sudo && \
