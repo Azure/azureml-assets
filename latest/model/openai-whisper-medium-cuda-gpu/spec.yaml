@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: openai-whisper-tiny-generic-cpu
-version: 2
+name: openai-whisper-medium-cuda-gpu
+version: 1
 path: ./
 tags:
   foundryLocal: "test"
@@ -12,32 +12,33 @@ tags:
   outputModalities: text
   task: automatic-speech-recognition
   maxOutputTokens: 2048
-  alias: whisper-tiny
-  directoryPath: cpu-fp32
+  alias: whisper-medium
+  directoryPath: cuda-fp16
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/openai-whisper-tiny/versions/1
+  - assetId: 
+      azureml://registries/azureml/models/openai-whisper-medium/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
-    device: 'cpu'
-    executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 236654475
-    vRamFootprintBytes: 236654475
+    device: 'gpu'
+    executionProvider: 'CUDAExecutionProvider'
+    fileSizeBytes: 1640305824
+    vRamFootprintBytes: 1640305824
 description: |-
-  This model is an optimized version of Whisper Tiny for local inference. Optimized models are published here in ONNX format to run on CPU devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
+  This model is an optimized version of Whisper Medium for local inference. Optimized models are published here in ONNX format to run on CUDA devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
 
-  > Review the [original model card](https://huggingface.co/openai/whisper-tiny) for details on training data, evaluation metrics, license, intended uses, limitations, and bias before using the model.
+  > Review the [original model card](https://huggingface.co/openai/whisper-medium) for details on training data, evaluation metrics, license, intended uses, limitations, and bias before using the model.
 
   # Model Description
   - **Developed by:** Microsoft
   - **Model type:** ONNX
   - **License:** apache-2.0
-  - **Model Description:** This is a conversion of the whisper-tiny model for local inference.
+  - **Model Description:** This is a conversion of the whisper-medium model for local inference.
   - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
 
   # Base Model Information
-  See Hugging Face model [Whisper Tiny](https://huggingface.co/openai/whisper-tiny) for details.
+  See Hugging Face model [Whisper Medium](https://huggingface.co/openai/whisper-medium) for details.
