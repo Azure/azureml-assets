@@ -30,7 +30,7 @@ ExtendedErrorTarget = _create_extended_error_target()
 
 
 @experimental
-class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
+class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """The Task Completion evaluator determines whether an AI agent successfully completed the requested task.
 
     This evaluator assesses task completion based on:
@@ -40,8 +40,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
     This evaluator focuses solely on task completion and success, not on task adherence or intent understanding.
 
     Scoring is binary:
-    - TRUE: Task fully completed with usable deliverable that meets all user requirements
-    - FALSE: Task incomplete, partially completed, or deliverable does not meet requirements
+    - 1 (Pass): Task fully completed with usable deliverable that meets all user requirements
+    - 0 (Fail): Task incomplete, partially completed, or deliverable does not meet requirements
 
     The evaluation includes task requirement analysis, outcome assessment, and completion gap identification.
 
@@ -105,7 +105,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         query: Union[str, List[dict]],
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
-    ) -> Dict[str, Union[str, bool]]:
+    ) -> Dict[str, Union[str, int]]:
         """Evaluate task completion for a given query, response, and optionally tool definitions.
 
         The query and response can be either a string or a list of messages.
@@ -138,7 +138,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
         :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :return: A dictionary with the task completion evaluation results.
-        :rtype: Dict[str, Union[str, bool]]
+        :rtype: Dict[str, Union[str, int]]
         """
 
     @override
@@ -155,7 +155,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         return super().__call__(*args, **kwargs)
 
     @override
-    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[bool, str]]:  # type: ignore[override]
+    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[int, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
 
         :param eval_input: The input to the evaluator.
@@ -202,5 +202,5 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
                 f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
             }
         if logger:
-            logger.warning("LLM output is not a dictionary, returning False for the success.")
-        return {self._result_key: False}
+            logger.warning("LLM output is not a dictionary, returning 0 for the success.")
+        return {self._result_key: 0}
