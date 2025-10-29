@@ -8,7 +8,6 @@ import os
 import sys
 import shutil
 from pathlib import Path
-from azureml.acft.image.components.olympus.app.main import main as olympus_main
 from azureml.acft.image.components.olympus_biomed_parse.checkpoint_loaders.safetensors_loader import (
     convert_ckpt_to_safetensor,
 )
@@ -23,8 +22,8 @@ import re
 logger = _LoggerFactory.get_logger(__name__)
 
 # Discover ranks from AML env (AML sets these for PyTorch distribution)
-RANK = int(os.environ.get("AZUREML_CR_NODE_RANK", "0")) # machine index: 0,1,...
-LOCAL_RANK = int(os.environ.get("LOCAL_RANK", "0")) # proc index on a node
+RANK = int(os.environ.get("AZUREML_CR_NODE_RANK", "0"))  # machine index: 0,1,...
+LOCAL_RANK = int(os.environ.get("LOCAL_RANK", "0"))  # proc index on a node
 WORLD_SIZE = int(os.environ.get("WORLD_SIZE", "1"))
 print(f"[launcher] NODE_RANK={RANK} LOCAL_RANK={LOCAL_RANK} WORLD_SIZE={WORLD_SIZE}")
 
@@ -68,6 +67,7 @@ def parse_arguments():
 def is_mpi_enabled():
     return "OMPI_COMM_WORLD_RANK" in os.environ
 
+
 def safe_setenv(var, value):
     if value is None:
         return False
@@ -77,6 +77,7 @@ def safe_setenv(var, value):
     os.environ[var] = value
     return True
 
+
 def set_environment_variables_for_nccl_backend(master_port=6105):
     # AML torchrun sets envs; only set if MPI is detected and values missing
     if is_mpi_enabled():
@@ -85,6 +86,7 @@ def set_environment_variables_for_nccl_backend(master_port=6105):
         safe_setenv("LOCAL_RANK", os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK"))
         safe_setenv("MASTER_ADDR", os.environ.get("MASTER_ADDR") or "127.0.0.1")
         safe_setenv("MASTER_PORT", os.environ.get("MASTER_PORT") or str(master_port))
+
 
 def get_master_ip_amlk8s():
     # from: https://k8s-wiki.azureml.com/faq.html
@@ -222,7 +224,7 @@ def execute_training(args):
     os.environ["EXTERNAL"] = args.data
     os.environ["MLFLOW_MODEL_FOLDER"] = args.pretrained_mlflow_model
 
-        # ONLY node 0 may touch AzureML outputs
+    # ONLY node 0 may touch AzureML outputs
     if RANK == 0:
         Path(args.out).mkdir(parents=True, exist_ok=True)
         Path(args.mlflow_model_folder).mkdir(parents=True, exist_ok=True)
@@ -238,7 +240,6 @@ def execute_training(args):
     if not os.path.exists(launcher_script):
         logger.error(f"Launcher script not found: {launcher_script}")
         return 1
-
 
     # Prepare arguments for olympus_core
     olympus_args = [
