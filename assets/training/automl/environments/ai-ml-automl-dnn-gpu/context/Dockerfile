@@ -116,7 +116,7 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 
 # Fix vulnerabilities
 RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
-RUN pip install --force-reinstall torchvision==0.22.1 --no-cache-dir
+RUN pip install --force-reinstall torchvision==0.24.0 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.4'
 RUN pip install --upgrade 'urllib3==2.5.0'
 RUN pip install --upgrade 'pillow==11.3.0'

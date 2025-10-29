@@ -70,7 +70,7 @@ RUN pip install \
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
 RUN pip install --upgrade 'pyarrow==14.0.2'
-RUN pip install torch==2.8.0 torchvision==0.22.1
+RUN pip install torch==2.8.0 torchvision==0.24.0
 RUN pip install urllib3==2.5.0
 # end pip ad-hoc
 
