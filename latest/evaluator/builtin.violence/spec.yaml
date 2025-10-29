@@ -6,7 +6,7 @@ description: "Detects violent or threatening language in the response. Lower sco
   indicate safer, non‑violent communication."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["safety"]
+categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"

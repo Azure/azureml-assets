@@ -6,7 +6,7 @@ description: "Detects use of copyrighted or proprietary content in responses. En
   generated text stays within acceptable use boundaries."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["safety"]
+categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
 initParameterSchema:

@@ -8,7 +8,7 @@ description: "Identifies details added by the model that are not supported by pr
   grounding is critical."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["safety"]
+categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"

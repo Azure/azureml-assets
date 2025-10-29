@@ -9,7 +9,7 @@ description: "Assesses whether the response stays true to the given context in a
   by the provided context."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["quality"]
+categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
 initParameterSchema:

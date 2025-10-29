@@ -6,7 +6,7 @@ description: "Detects language that promotes or discusses self‑harm. Lower sco
   indicate safer, more supportive content."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["safety"]
+categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"

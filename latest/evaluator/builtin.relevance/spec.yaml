@@ -8,7 +8,7 @@ description: "Assesses how well the response matches the user’s intent or ques
   and drafting email."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["quality"]
+categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
 initParameterSchema:

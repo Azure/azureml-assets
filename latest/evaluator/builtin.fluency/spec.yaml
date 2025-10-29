@@ -8,7 +8,7 @@ description: "Evaluates how natural and grammatically correct the response sound
   and drafting email."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["quality"]
+categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
 initParameterSchema:

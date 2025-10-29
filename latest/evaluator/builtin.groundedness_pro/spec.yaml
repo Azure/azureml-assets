@@ -9,7 +9,7 @@ description: "Checks if the response is properly grounded in provided sources. A
   provided context."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["quality"]
+categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
 initParameterSchema:

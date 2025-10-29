@@ -6,7 +6,7 @@ description: "Detects hateful, biased, or unfair language in the response. Lower
   indicate more neutral and inclusive content."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["safety"]
+categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
