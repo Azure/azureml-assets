@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.task_completion"
 version: 2
 displayName: "Task-Completion-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Boolean [True/False]: True means task was successfully completed, False means task failed or not completed. |\n| What is this metric? | Task Completion evaluates whether an AI agent successfully completed the requested task based on the final outcome and deliverable quality. |\n| How does it work? | This metric analyzes the conversation history and agent response to determine if all task requirements were met and a usable deliverable was provided. It focuses solely on completion status, not adherence or intent understanding. |\n| When to use it? | Use this metric to assess agent effectiveness in task-oriented scenarios, workflow automation, and goal-oriented AI interactions. |\n| What does it need as input? | Query, Response, Tool Definitions (optional) |\n"
+description: "Evaluates whether an AI agent successfully completed the requested task by analyzing the conversation history and agent response to determine if all task requirements were met and a usable deliverable was provided. This evaluator is useful for assessing agent effectiveness in task-oriented scenarios, workflow automation, and goal-oriented AI interactions."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
