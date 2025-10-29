@@ -65,10 +65,12 @@ def parse_arguments():
 
 
 def is_mpi_enabled():
+    """Check if MPI is enabled in the environment."""
     return "OMPI_COMM_WORLD_RANK" in os.environ
 
 
 def safe_setenv(var, value):
+    """Set environment variable only if not already set to a different value."""
     if value is None:
         return False
     if var in os.environ and os.environ[var] is not None and os.environ[var] != value:
@@ -79,7 +81,7 @@ def safe_setenv(var, value):
 
 
 def set_environment_variables_for_nccl_backend(master_port=6105):
-    # AML torchrun sets envs; only set if MPI is detected and values missing
+    """Set environment variables for NCCL backend."""
     if is_mpi_enabled():
         safe_setenv("RANK", os.environ.get("OMPI_COMM_WORLD_RANK"))
         safe_setenv("WORLD_SIZE", os.environ.get("OMPI_COMM_WORLD_SIZE"))
@@ -89,6 +91,7 @@ def set_environment_variables_for_nccl_backend(master_port=6105):
 
 
 def get_master_ip_amlk8s():
+    """Get the MASTER_ADDR IP for AML K8s clusters."""
     # from: https://k8s-wiki.azureml.com/faq.html
     regexp = r"[\s\S]*export[\s]*DLTS_SD_worker0_IP=([0-9.]+)[\s|s]*"
     with open("/dlts-runtime/env/init.env", "r") as f:
@@ -166,6 +169,7 @@ def copy_catalog_except_weights(src_model_dir: str, dst_model_dir: str):
 
 @contextlib.contextmanager
 def with_signal_handler(process):
+    """Context manager to forward SIGTERM and SIGINT to a subprocess."""
     def handler(sig, frame):
         process.send_signal(sig)
     orig_sigterm = signal.signal(signal.SIGTERM, handler)
