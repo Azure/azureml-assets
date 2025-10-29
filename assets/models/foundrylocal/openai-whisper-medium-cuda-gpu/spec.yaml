@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-medium-cuda-gpu
-version: 2
+version: 1
 path: ./
 tags:
   foundryLocal: "test"
