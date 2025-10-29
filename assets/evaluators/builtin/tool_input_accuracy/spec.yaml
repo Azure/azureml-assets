@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.tool_input_accuracy"
 version: 2
 displayName: "Tool-Input-Accuracy-Evaluator"
-description: "Tool Input Accuracy evaluates the correctness of all parameters passed to tool calls by the agent, performing strict binary validation (PASS/FAIL) based on parameter grounding, type compliance, format compliance, completeness, and appropriateness. This metric uses LLM-based validation to check that ALL parameters meet ALL criteria: derived from conversation history, correct types, proper format, all required parameters present, no unexpected parameters, and contextually appropriate values. Useful for validating agent tool usage, API integration testing, and ensuring tool call parameter correctness in AI agent workflows."
+description: "A binary evaluator (0 or 1) that checks whether all parameters in an agent’s tool call are correct, validating grounding, type, format, completeness, and contextual appropriateness using LLM-based analysis. Use it to verify agent tool usage, API integration tests, or to ensure tool call parameters are fully correct in AI workflows."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]

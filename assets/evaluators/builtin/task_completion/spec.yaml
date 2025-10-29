@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.task_completion"
 version: 2
 displayName: "Task-Completion-Evaluator"
-description: "Task Completion evaluates whether an AI agent successfully completed the requested task based on the final outcome and deliverable quality. This metric analyzes the conversation history and agent response to determine if all task requirements were met and a usable deliverable was provided. It focuses solely on completion status, not rule adherence or intent understanding. Use this metric to assess agent effectiveness in task-oriented scenarios, workflow automation, and goal-oriented AI interactions."
+description: "Evaluates whether an AI agent successfully completed the requested task end to end by analyzing the conversation history and agent response to determine if all task requirements were met, ignoring rule adherence or intent understanding. This evaluator is useful for assessing agent effectiveness in task-oriented scenarios, workflow automation, and goal-oriented AI interactions."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
