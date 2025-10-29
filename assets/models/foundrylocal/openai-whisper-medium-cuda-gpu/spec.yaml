@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: openai-whisper-tiny-generic-cpu
-version: 2
+name: openai-whisper-medium-cuda-gpu
+version: 1
 path: ./
 tags:
   foundryLocal: "test"
@@ -11,17 +11,17 @@ tags:
   outputModalities: text
   task: automatic-speech-recognition
   maxOutputTokens: 2048
-  alias: whisper-tiny
-  directoryPath: cpu-fp32
+  alias: whisper-medium
+  directoryPath: cuda-fp16
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/openai-whisper-tiny/versions/1
+  - assetId: azureml://registries/azureml/models/openai-whisper-medium/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
-    device: 'cpu'
-    executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 236654475
-    vRamFootprintBytes: 236654475
+    device: 'gpu'
+    executionProvider: 'CUDAExecutionProvider'
+    fileSizeBytes: 1640305824
+    vRamFootprintBytes: 1640305824
