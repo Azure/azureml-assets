@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_completion"
-version: 2
+version: 3
 displayName: "Task-Completion-Evaluator"
 description: "Evaluates whether an AI agent successfully completed the requested task
   by analyzing the conversation history and agent response to determine if all task
@@ -15,6 +15,8 @@ initParameterSchema:
   properties:
     deployment_name:
       type: "string"
+    threshold:
+      type: "number"
     credential:
       type: "object"
   required: ["deployment_name"]
