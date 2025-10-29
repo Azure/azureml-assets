@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.task_navigation_efficiency"
 version: 2
 displayName: "Task-Navigation-Efficiency-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Boolean [true, false]: true if the agent's tool calls match the ground truth steps, else false. |\n| What is this metric? | Task Navigation Efficiency measures how effectively a system navigates through tasks based on user intent and context by comparing tool call sequences. |\n| How does it work? | It compares the task navigation steps (tool calls) and optionally parameters against ground truth steps. |\n| When to use it? | Use this metric in agent-based systems, orchestration platforms, and AI assistants that rely on tool calls to evaluate if the agent follows optimal decision-making patterns. |\n"
+description: "Determines whether an agent’s sequence of tool calls and parameters aligns with an optimal or ground truth path for completing a task. Use it to evaluate how effectively an agent follows logical decision-making patterns and executes multi-step workflows."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
