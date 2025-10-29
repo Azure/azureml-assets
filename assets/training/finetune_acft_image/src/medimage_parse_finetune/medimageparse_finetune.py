@@ -242,12 +242,11 @@ def execute_training(args):
 
     # Prepare arguments for olympus_core
     olympus_args = [
-        "-cp", 
+        "-cp",
         str(
             importlib.resources.files(
                 "azureml.acft.image.components.olympus_biomed_parse"
-                ) 
-                / "configs"
+            ) / "configs"
         ),
         "-cn", os.environ["AMLT_EXPERIMENT_NAME"],
         "-cd", str(Path(args.config).parent),
@@ -270,8 +269,14 @@ def execute_training(args):
         logger.info("Training completed successfully.")
 
         if RANK == 0:
-            ckpt_path = args.out + f"/{os.environ['AMLT_EXPERIMENT_NAME']}/{os.environ['AMLT_JOB_NAME']}/checkpoints/last.ckpt"
-            output_path = args.mlflow_model_folder + "/artifacts/checkpoints/boltzformer_focal_all.safetensors"
+            ckpt_path = (
+                args.out
+                + f"/{os.environ['AMLT_EXPERIMENT_NAME']}/{os.environ['AMLT_JOB_NAME']}/checkpoints/last.ckpt"
+                )
+            output_path = (
+                args.mlflow_model_folder
+                + "/artifacts/checkpoints/boltzformer_focal_all.safetensors"
+            )
             logger.info("Starting conversion to HuggingFace format...")
             convert_ckpt_to_safetensor(ckpt_path, output_path)
 
