@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.tool_selection"
 version: 2
 displayName: "Tool-Selection-Evaluator"
-description: "| | |\n| -- | -- |\n| Score range | Binary [0/1]: 1 means appropriate tool selection, 0 means inappropriate or missing essential tools. |\n| What is this metric? | Tool Selection evaluates the appropriateness and efficiency of tool choices made by an AI agent, focusing on relevance, completeness, and avoiding unnecessary tools. |\n| How does it work? | This metric analyzes whether the agent selected the right tools for the task, avoided redundant tools, and didn't miss essential tools available in the tool definitions. |\n| When to use it? | Use this metric in agent-based systems, orchestration platforms, and AI assistants that need to select appropriate tools from available options. |\n"
+description: "Evaluates whether an AI agent selected the most appropriate and efficient tools for a given task, avoiding redundancy or missing essentials. Use it to assess tool choice quality in agent-based systems, orchestration platforms, and AI assistants that must pick the right tools from available options."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
