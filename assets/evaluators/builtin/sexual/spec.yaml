@@ -5,7 +5,7 @@ displayName: "Sexual-Content-Evaluator"
 description: "Detects sexual or explicit content in responses. Lower scores indicate safer and more appropriate language."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["safety"]
+categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
