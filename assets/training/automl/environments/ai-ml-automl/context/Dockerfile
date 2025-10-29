@@ -33,7 +33,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools-git \
     setuptools=78.1.1 \
     'psutil>5.0.0,<6.0.0' \
-    pytorch=2.7.1 \
+    pytorch=2.8.0 \
     # end conda dependencies
     -c conda-forge -c pytorch -c anaconda -c nvidia && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
@@ -70,7 +70,7 @@ RUN pip install \
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
 RUN pip install --upgrade 'pyarrow==14.0.2'
-RUN pip install torch==2.7.1 torchvision==0.22.1
+RUN pip install torch==2.8.0 torchvision==0.22.1
 RUN pip install urllib3==2.5.0
 # end pip ad-hoc
 
