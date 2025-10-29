@@ -24,9 +24,9 @@ RUN pip install 'azureml-automl-dnn-nlp=={{latest-pypi-version}}'
 RUN pip install 'azureml-defaults=={{latest-pypi-version}}'
 
 RUN pip uninstall -y onnxruntime
-RUN pip install torch==2.8.0 torchvision==0.24.0
+RUN pip install torch==2.8.0 torchvision==0.23.0
 # Install/upgrade torch in ptca env if it exists (fixes vulnerability)
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.24.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 || true
 
 RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
