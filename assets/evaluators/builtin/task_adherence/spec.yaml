@@ -2,7 +2,7 @@ type: "evaluator"
 name: "builtin.task_adherence"
 version: 1
 displayName: "Task-Adherence-Evaluator"
-description: "Evaluates whether the model followed task instructions correctly. Higher scores indicate better compliance with the prompt. This evaluator is useful when useful for workflow automation, form filling, and structured response generation."
+description: "Evaluates whether the agent completed the task within the confines of the instructions given to the agentic system. Higher scores indicate better compliance with the instructions. This evaluator is useful when useful for end-to-end system-level task evaluation for agents. Exampl outputs include actions such as updating a database and textual responses such as writing a report."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
