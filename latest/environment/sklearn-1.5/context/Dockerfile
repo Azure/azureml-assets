@@ -11,7 +11,7 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Update package lists and reinstall system OpenSSL & OpenSSH
 RUN apt-get update && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server && \
+    apt-get install --reinstall -y openssl libssl-dev openssh-server libpam-runtime libc-bin dpkg-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

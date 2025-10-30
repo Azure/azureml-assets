@@ -37,7 +37,7 @@ RUN apt-get update && \
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
-    python=3.9 \
+    python=3.10 \
     pip=22.1.2 \
     numpy~=1.23.5 \
     py-cpuinfo=5.0.0 \
@@ -49,7 +49,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     setuptools-git \
     setuptools=78.1.1 \
     wheel=0.44.0 \
-    pytorch=2.7.1 \
+    pytorch=2.8.0 \
     scipy=1.10.1 \
     cudatoolkit=10.0.130 \
     'psutil>5.0.0,<6.0.0' \

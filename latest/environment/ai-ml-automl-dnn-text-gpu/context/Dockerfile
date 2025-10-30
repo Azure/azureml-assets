@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch260:biweekly.202509.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202509.2
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
@@ -21,6 +21,9 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules-bin \
         libpam-modules \
+        libc-bin \ 
+        dpkg-dev \
+        libssl-dev \
         libpam-runtime && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
     apt-mark hold sudo && \
@@ -99,8 +102,8 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-RUN pip install torch==2.7.1 torchvision==0.22.1
-RUN /opt/conda/envs/ptca/bin/pip install torch==2.7.1 torchvision==0.22.1 || true
+RUN pip install torch==2.8.0 torchvision==0.23.0
+RUN /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
