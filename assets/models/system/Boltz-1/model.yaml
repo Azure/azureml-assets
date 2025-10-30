@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: OAI/presets
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
