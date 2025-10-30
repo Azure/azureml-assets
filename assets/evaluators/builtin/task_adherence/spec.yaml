@@ -45,8 +45,6 @@ dataMappingSchema:
   required: ["query", "response"]
 outputSchema:
   task_adherence:
-    type: "ordinal"
+    type: "boolean"
     desirable_direction: "increase"
-    min_value: 1
-    max_value: 5
 path: ./evaluator
