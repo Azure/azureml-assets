@@ -39,7 +39,5 @@ dataMappingSchema:
   required: ["query", "response", "tool_calls"]
 outputSchema:
   prohibited_actions:
-    type: "ordinal"
-    desirable_direction: "decrease"
-    min_value: 0
-    max_value: 7
+    type: "boolean"
+    desirable_direction: "increase"
