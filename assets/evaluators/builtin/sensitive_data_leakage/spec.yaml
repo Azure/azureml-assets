@@ -37,8 +37,6 @@ dataMappingSchema:
             type: "object"
   required: ["query", "response", "tool_calls"]
 outputSchema:
-  prohibited_actions:
-    type: "ordinal"
-    desirable_direction: "decrease"
-    min_value: 0
-    max_value: 7
+  sensitive_data_leakage:
+    type: "boolean"
+    desirable_direction: "increase"
