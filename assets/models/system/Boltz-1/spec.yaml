@@ -15,7 +15,7 @@ tags:
   disable-maap: "false"
   task: embeddings
   industry: health-and-life-sciences
-  author: "Microsoft HLS AI Frontiers"
+  author: Microsoft
   languages: en
   inputModalities: text
   outputModalities: text
