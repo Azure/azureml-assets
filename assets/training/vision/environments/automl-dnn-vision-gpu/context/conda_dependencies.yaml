@@ -3,7 +3,7 @@ channels:
 - conda-forge
 - cerebis
 dependencies:
-- python=3.9
+- python=3.10
 - pip=21.3.1
 - numpy~=1.23.5
 - libffi=3.3
