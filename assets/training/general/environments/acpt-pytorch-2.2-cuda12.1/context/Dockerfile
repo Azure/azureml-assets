@@ -49,6 +49,9 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
+        libc-bin \
+        libssl-dev \
+        dpkg-dev \
         sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
