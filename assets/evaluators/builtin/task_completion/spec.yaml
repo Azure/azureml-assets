@@ -13,8 +13,6 @@ initParameterSchema:
       type: "string"
     threshold:
       type: "number"
-    credential:
-      type: "object"
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
