@@ -139,13 +139,13 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
             result = evaluator(query=query, response=response)
 
-        :keyword query: The query being evaluated, must be a list of messages 
+        :keyword query: The query being evaluated, must be a list of messages
             including system and user messages.
         :paramtype query: Union[str, List[dict]]
-        :keyword response: The response being evaluated, must be a list of messages 
+        :keyword response: The response being evaluated, must be a list of messages
             (full agent response including tool calls and results)
         :paramtype response: Union[str, List[dict]]
-        :return: A dictionary with the task adherence evaluation results 
+        :return: A dictionary with the task adherence evaluation results
             including flagged (bool) and reasoning (str).
         :rtype: Dict[str, Union[str, float, bool]]
         """
@@ -168,7 +168,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self, eval_input: Dict
     ) -> Dict[str, Union[float, str, bool]]:  # type: ignore[override]
         """Do Task Adherence evaluation.
-        :param eval_input: The input to the evaluator. Expected to contain whatever 
+        :param eval_input: The input to the evaluator. Expected to contain whatever
             inputs are needed for the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
