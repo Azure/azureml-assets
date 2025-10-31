@@ -1,0 +1,50 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen2.5-7b-instruct-openvino-gpu
+version: 1
+path: ./
+tags:
+  foundryLocal: "test"
+  license: "apache-2.0"
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/LICENSE>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+  alias: qwen2.5-7b
+  directoryPath: model
+  promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\"\
+    : \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\\
+    n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\\
+    n<|im_start|>assistant\"}"
+  supportsToolCalling: "true"
+  toolCallStart: "<tool_call>"
+  toolCallEnd: "</tool_call>"
+  toolRegisterStart: "<tools>"
+  toolRegisterEnd: "</tools>"
+  toolResponseStart: "<tool_response>"
+  toolResponseEnd: "</tool_response>"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/qwen2.5-7b-instruct/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'gpu'
+    executionProvider: 'OpenVINOExecutionProvider'
+    fileSizeBytes: 5141766983
+    vRamFootprintBytes: 5141766983
+description: |-
+  This model is an optimized version of Qwen2.5-7B-Instruct to enable local inference on Intel GPUs.
+
+  # Model Description
+  - **Developed by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** apache-2.0
+  - **Model Description:** This is a conversion of the Qwen2.5-7B-Instruct for local inference on Intel GPUs.
+  - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+  # Base Model Information
+  See Hugging Face model [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) for details.
