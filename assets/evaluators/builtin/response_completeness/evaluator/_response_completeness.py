@@ -93,7 +93,6 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = kwargs.pop('threshold', threshold)
         higher_is_better_value = kwargs.pop('_higher_is_better', True)
-        
         self.threshold = threshold_value  # to be removed in favor of _threshold
         super().__init__(
             model_config=model_config,
