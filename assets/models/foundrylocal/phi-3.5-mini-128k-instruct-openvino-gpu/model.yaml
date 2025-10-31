@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/intel-gpu-models/Phi-3.5-mini-instruct-gpu-context-ov-dynamic/model
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
