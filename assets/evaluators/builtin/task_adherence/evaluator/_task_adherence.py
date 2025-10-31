@@ -19,8 +19,9 @@ logger = logging.getLogger(__name__)
 
 @experimental
 class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
-    """The Task Adherence evaluator assesses whether an AI assistant's actions fully align with the user's intent
-    and fully achieve the intended goal across three dimensions:
+    """The Task Adherence evaluator assesses whether an AI assistant's actions fully align with the user's intent.
+
+    The evaluator fully achieves the intended goal across three dimensions:
 
         - Goal adherence: Did the assistant achieve the user's objective within scope and constraints?
         - Rule adherence: Did the assistant respect safety, privacy, authorization, and presentation contracts?
@@ -69,6 +70,12 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     def __init__(self, model_config, *, threshold=_DEFAULT_TASK_ADHERENCE_SCORE, credential=None, **kwargs):
+        """Initialize the TaskAdherenceEvaluator.
+
+        :param model_config: Configuration for the model
+        :param threshold: Threshold for evaluation scoring
+        :param credential: Authentication credential
+        """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         self.threshold = threshold  # to be removed in favor of _threshold
@@ -90,6 +97,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, float]]:
         """Evaluate task adherence for a given query and response.
+
         The query and response must be lists of messages in conversation format.
 
 
@@ -157,7 +165,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         **kwargs,
     ):
         """
-        Invokes the instance using the overloaded __call__ signature.
+        Invoke the instance using the overloaded __call__ signature.
 
         For detailed parameter types and return value documentation, see the overloaded __call__ definition.
         """
@@ -168,6 +176,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self, eval_input: Dict
     ) -> Dict[str, Union[float, str, bool]]:  # type: ignore[override]
         """Do Task Adherence evaluation.
+
         :param eval_input: The input to the evaluator. Expected to contain whatever
             inputs are needed for the _flow method
         :type eval_input: Dict
