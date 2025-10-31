@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 import os
-import math
 import logging
 from typing import Dict, Union, List, Optional
 
@@ -13,7 +12,6 @@ from ..._common.utils import (
     reformat_conversation_history,
     reformat_agent_response,
 )
-from azure.ai.evaluation._model_configurations import Message
 from azure.ai.evaluation._common._experimental import experimental
 
 logger = logging.getLogger(__name__)
@@ -97,16 +95,58 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         Example with list of messages:
             evaluator = TaskAdherenceEvaluator(model_config)
-            query = [{'role': 'system', 'content': 'You are a friendly and helpful customer service agent.'}, {'createdAt': 1700000060, 'role': 'user', 'content': [{'type': 'text', 'text': 'Hi, I need help with the last 2 orders on my account #888. Could you please update me on their status?'}]}]
-            response = [{'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}]}, {'createdAt': 1700000075, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_001', 'type': 'function', 'function': {'name': 'get_orders', 'arguments': {'account_number': '888'}}}}]}, {'createdAt': 1700000080, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_001', 'role': 'tool', 'content': [{'type': 'tool_result', 'tool_result': '[{ "order_id": "123" }, { "order_id": "124" }]'}]}, {'createdAt': 1700000085, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'Thanks for your patience. I see two orders on your account. Let me fetch the details for both.'}]}, {'createdAt': 1700000090, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_002', 'type': 'function', 'function': {'name': 'get_order', 'arguments': {'order_id': '123'}}}}, {'type': 'tool_call', 'tool_call': {'id': 'tool_call_20250310_003', 'type': 'function', 'function': {'name': 'get_order', 'arguments': {'order_id': '124'}}}}]}, {'createdAt': 1700000095, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_002', 'role': 'tool', 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "123", "status": "shipped", "delivery_date": "2025-03-15" } }'}]}, {'createdAt': 1700000100, 'run_id': '0', 'tool_call_id': 'tool_call_20250310_003', 'role': 'tool', 'content': [{'type': 'tool_result', 'tool_result': '{ "order": { "id": "124", "status": "delayed", "expected_delivery": "2025-03-20" } }'}]}, {'createdAt': 1700000105, 'run_id': '0', 'role': 'assistant', 'content': [{'type': 'text', 'text': 'The order with ID 123 has been shipped and is expected to be delivered on March 15, 2025. However, the order with ID 124 is delayed and should now arrive by March 20, 2025. Is there anything else I can help you with?'}]}]
+            query = [
+                {'role': 'system', 'content': 'You are a friendly and helpful customer service agent.'},
+                {
+                    'createdAt': 1700000060,
+                    'role': 'user',
+                    'content': [
+                        {
+                            'type': 'text',
+                            'text': ('Hi, I need help with the last 2 orders on my account #888. '
+                                   'Could you please update me on their status?')
+                        }
+                    ]
+                }
+            ]
+            response = [
+                {
+                    'createdAt': 1700000070,
+                    'run_id': '0',
+                    'role': 'assistant',
+                    'content': [{'type': 'text', 'text': 'Hello! Let me quickly look up your account details.'}]
+                },
+                {
+                    'createdAt': 1700000075,
+                    'run_id': '0',
+                    'role': 'assistant',
+                    'content': [
+                        {
+                            'type': 'tool_call',
+                            'tool_call': {
+                                'id': 'tool_call_20250310_001',
+                                'type': 'function',
+                                'function': {
+                                    'name': 'get_orders',
+                                    'arguments': {'account_number': '888'}
+                                }
+                            }
+                        }
+                    ]
+                },
+                # ... additional response messages would continue here ...
+            ]
 
             result = evaluator(query=query, response=response)
 
-        :keyword query: The query being evaluated, must be a list of messages including system and user messages.
+        :keyword query: The query being evaluated, must be a list of messages 
+            including system and user messages.
         :paramtype query: Union[str, List[dict]]
-        :keyword response: The response being evaluated, must be a list of messages (full agent response including tool calls and results)
+        :keyword response: The response being evaluated, must be a list of messages 
+            (full agent response including tool calls and results)
         :paramtype response: Union[str, List[dict]]
-        :return: A dictionary with the task adherence evaluation results including flagged (bool) and reasoning (str).
+        :return: A dictionary with the task adherence evaluation results 
+            including flagged (bool) and reasoning (str).
         :rtype: Dict[str, Union[str, float, bool]]
         """
 
@@ -124,9 +164,12 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return super().__call__(*args, **kwargs)
 
     @override
-    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str, bool]]:  # type: ignore[override]
+    async def _do_eval(
+        self, eval_input: Dict
+    ) -> Dict[str, Union[float, str, bool]]:  # type: ignore[override]
         """Do Task Adherence evaluation.
-        :param eval_input: The input to the evaluator. Expected to contain whatever inputs are needed for the _flow method
+        :param eval_input: The input to the evaluator. Expected to contain whatever 
+            inputs are needed for the _flow method
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
@@ -135,8 +178,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # which is a different schema than _base_prompty_eval.py
         if "query" not in eval_input or "response" not in eval_input:
             raise EvaluationException(
-                message=f"Both query and response must be provided as input to the Task Adherence evaluator.",
-                internal_message=f"Both query and response must be provided as input to the Task Adherence evaluator.",
+                message="Both query and response must be provided as input to the Task Adherence evaluator.",
+                internal_message="Both query and response must be provided as input to the Task Adherence evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
