@@ -46,6 +46,7 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
+  required: ["query", "tool_calls", "tool_definitions"]
 outputSchema:
   tool_call_accuracy:
     type: "ordinal"
