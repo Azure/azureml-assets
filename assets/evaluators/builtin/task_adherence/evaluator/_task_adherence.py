@@ -8,7 +8,7 @@ from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from ..._common.utils import (
+from azure.ai.evaluation._common.utils import (
     reformat_conversation_history,
     reformat_agent_response,
 )
