@@ -11,6 +11,10 @@ initParameterSchema:
   properties:
     deployment_name:
       type: "string"
+    threshold:
+      type: "number"
+    credential:
+      type: "object"
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
