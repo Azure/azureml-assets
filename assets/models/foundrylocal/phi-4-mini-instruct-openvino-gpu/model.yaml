@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/intel-gpu-models/Phi-4-mini-instruct_context_ov_dynamic_sym_gs128_bkp_int8_sym/model
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
