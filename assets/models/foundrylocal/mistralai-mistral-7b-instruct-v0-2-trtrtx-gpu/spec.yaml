@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: mistralai-mistral-7b-instruct-v0.2-trtrtx-gpu
+name: mistralai-Mistral-7B-Instruct-v0-2-trtrtx-gpu
 version: 1
 path: ./
 tags:
@@ -11,13 +11,13 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  alias: mistralai-mistral-7b-instruct-v0.2
-  directoryPath: mistralai-Mistral-7B-Instruct-v0.2
+  alias: mistralai-mistral-7b-instruct-v0-2
+  directoryPath: mistralai-Mistral-7B-Instruct-v0-2
   promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\", \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"}"
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/mistralai-mistral-7b-instruct-v0.2/versions/1
+  - assetId: azureml://registries/azureml/models/mistralai-Mistral-7B-Instruct-v0-2/versions/6
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
