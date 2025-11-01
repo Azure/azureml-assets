@@ -80,13 +80,15 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Initialize the Tool Success evaluator."""
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
+        threshold_value = kwargs.pop('threshold', 1)
+        higher_is_better_value = kwargs.pop('_higher_is_better', True)
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
-            threshold=1,
+            threshold=threshold_value,
             credential=credential,
-            _higher_is_better=True,
+            _higher_is_better=higher_is_better_value,
             **kwargs,
         )
 

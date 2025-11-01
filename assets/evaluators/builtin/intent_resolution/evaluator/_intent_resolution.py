@@ -79,14 +79,16 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        self.threshold = threshold
+        threshold_value = kwargs.pop('threshold', threshold)
+        higher_is_better_value = kwargs.pop('_higher_is_better', True)
+        self.threshold = threshold_value
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
-            threshold=threshold,
+            threshold=threshold_value,
             credential=credential,
-            _higher_is_better=True,
+            _higher_is_better=higher_is_better_value,
             **kwargs,
         )
 
