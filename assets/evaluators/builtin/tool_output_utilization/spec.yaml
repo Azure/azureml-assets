@@ -13,10 +13,6 @@ initParameterSchema:
   properties:
     deployment_name:
       type: "string"
-    threshold:
-      type: "number"
-    credential:
-      type: "object"
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
@@ -39,7 +35,7 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
-  required: ["query", "response", "tool_definitions"]
+  required: ["query", "response"]
 outputSchema:
   tool_output_utilization:
     type: "ordinal"
