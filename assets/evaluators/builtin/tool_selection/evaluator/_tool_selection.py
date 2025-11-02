@@ -493,9 +493,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["query"] = reformat_conversation_history(
                 eval_input["query"], logger, include_system_messages=True, include_tool_calls=True
             )
-        print("QUERY:", eval_input["query"], "\n")
-        print("TOOL CALLS:", eval_input["tool_calls"], "\n")
-        print("TOOL DEFINITIONS:", eval_input["tool_definitions"], "\n")
+
         # Call the LLM to evaluate
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", {})
@@ -580,7 +578,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_result": "pass",
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_reason": error_message,
-            "details": {},
+            f"{self._result_key}_details": {},
         }
 
     def _calculate_tool_selection_accuracy(self, details):

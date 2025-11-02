@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/intel-gpu-models/Qwen2.5-Coder-14B-Instruct-gpu-context-dy/model
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

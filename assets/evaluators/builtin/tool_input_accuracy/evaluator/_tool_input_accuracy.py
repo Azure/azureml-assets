@@ -592,7 +592,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_result": "pass",
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_reason": error_message,
-            "details": {},
+            f"{self._result_key}_details": {},
         }
 
     @override
