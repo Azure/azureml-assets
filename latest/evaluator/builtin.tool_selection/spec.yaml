@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_selection"
-version: 2
+version: 3
 displayName: "Tool-Selection-Evaluator"
 description: "Evaluates whether an AI agent selected the most appropriate and efficient
   tools for a given task, avoiding redundancy or missing essentials. Use it to assess
@@ -44,7 +44,7 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["query", "response", "tool_definitions"]
+  required: ["query", "tool_definitions"]
 outputSchema:
   tool_selection:
     type: "ordinal"
