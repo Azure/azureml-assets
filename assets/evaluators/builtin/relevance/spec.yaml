@@ -23,9 +23,17 @@ dataMappingSchema:
   type: "object"
   properties:
     query:
-      type: "string"
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
     response:
-      type: "string"
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
   required: ["query", "response"]
 outputSchema:
   relevance:
