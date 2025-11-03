@@ -397,7 +397,11 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         ground_truth_names = []
         ground_truth_params_dict: Dict[str, Dict[str, Any]] = {}
 
-        if isinstance(ground_truth, tuple) and len(ground_truth) == 2:
+        if isinstance(ground_truth, list) and all(isinstance(step, str) for step in ground_truth):
+            # List format: just tool names
+            ground_truth_names = [step.strip() for step in ground_truth]
+            use_parameter_matching = False
+        elif (isinstance(ground_truth, tuple) or isinstance(ground_truth, list)) and len(ground_truth) == 2:
             # Tuple format: (tool_names, parameters_dict)
             tool_names_list, params_dict = ground_truth
 
@@ -429,10 +433,6 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             ground_truth_names = [name.strip() for name in tool_names_list]
             ground_truth_params_dict = params_dict
             use_parameter_matching = True
-        elif isinstance(ground_truth, list) and all(isinstance(step, str) for step in ground_truth):
-            # List format: just tool names
-            ground_truth_names = [step.strip() for step in ground_truth]
-            use_parameter_matching = False
         else:
             raise TypeError(
                 "ground_truth must be a list of strings or a tuple of (list[str], dict[str, dict[str, str]])"
