@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_input_accuracy"
-version: 3
+version: 4
 displayName: "Tool-Input-Accuracy-Evaluator"
 description: "A binary evaluator (0 or 1) that checks whether all parameters in an
   agent’s tool call are correct, validating grounding, type, format, completeness,
