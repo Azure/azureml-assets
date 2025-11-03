@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:biweekly.202509.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202509.2
 
 USER root
 RUN apt-get -y update && apt-get install -y expat
@@ -10,7 +10,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # # # Install mmcv-full and mmdet
 # Request for scipy installation to avoid error in mmcv-full installation
-RUN apt-get install -y gfortran libopenblas-dev liblapack-dev
+RUN apt-get install -y gfortran libopenblas-dev liblapack-dev libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
+
 
 # [Temp Fix] To address PyTorch Distributed RPC Framework Remote Code Execution (RCE) Vulnerability - Working internally to get a compatbile image, will re-enable
 # RUN mim install mmtrack==0.14.0
