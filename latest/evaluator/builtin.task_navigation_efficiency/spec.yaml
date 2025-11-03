@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_navigation_efficiency"
-version: 2
+version: 3
 displayName: "Task-Navigation-Efficiency-Evaluator"
 description: "Determines whether an agent’s sequence of steps (e.g., tool calls and
   parameters) matches an optimal or ground truth path for completing a task. Use it
@@ -32,11 +32,7 @@ dataMappingSchema:
         items:
           type: "string"
       - type: "array"
-        items:
-        - type: "array"
-          items:
-            type: "string"
-        - type: "object"
+        prefixItems: [{type: "array", items: {type: "string"}}, type: "object"]
   required: ["response", "ground_truth"]
 outputSchema:
   task_navigation_efficiency:
