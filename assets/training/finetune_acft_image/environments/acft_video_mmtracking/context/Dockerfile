@@ -10,7 +10,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # # # Install mmcv-full and mmdet
 # Request for scipy installation to avoid error in mmcv-full installation
-RUN apt-get install -y gfortran libopenblas-dev liblapack-dev libc-bin libc6-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
+RUN apt-get install -y gfortran libopenblas-dev liblapack-dev libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
 
 
 # [Temp Fix] To address PyTorch Distributed RPC Framework Remote Code Execution (RCE) Vulnerability - Working internally to get a compatbile image, will re-enable
