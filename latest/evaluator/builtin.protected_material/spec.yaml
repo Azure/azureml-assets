@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.protected_material"
-version: 1
+version: 2
 displayName: "Protected-Material-Evaluator"
 description: "Detects use of copyrighted or proprietary content in responses. Ensures
   generated text stays within acceptable use boundaries."

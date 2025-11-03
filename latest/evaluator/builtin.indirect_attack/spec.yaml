@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.indirect_attack"
-version: 1
+version: 2
 displayName: "Indirect-Attack-Evaluator"
 description: "Identifies subtle or indirect attacks toward individuals or groups.
   Lower scores indicate more respectful and non‑aggressive tone."

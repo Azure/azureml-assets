@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.groundedness_pro"
-version: 1
+version: 2
 displayName: "Service-Groundedness-Evaluator"
 description: "Checks if the response is properly grounded in provided sources. A true
   result means it aligns with reliable context. It’s best used for retrieval-augmented

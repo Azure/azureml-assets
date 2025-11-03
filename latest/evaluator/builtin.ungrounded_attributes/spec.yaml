@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.ungrounded_attributes"
-version: 1
+version: 2
 displayName: "Ungrounded-Attributes-Evaluator"
 description: "Identifies details added by the model that are not supported by provided
   data. Helps catch hallucinated or made‑up information. This evaluator is useful
