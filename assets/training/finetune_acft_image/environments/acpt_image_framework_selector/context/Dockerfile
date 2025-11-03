@@ -1,7 +1,8 @@
 # PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
-RUN apt-get -y update && apt-get install -y expat
+RUN apt-get -y update && apt-get install -y expat libxml2 libc-bin libc6-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
+
 
 # Install required packages
 COPY requirements.txt .
