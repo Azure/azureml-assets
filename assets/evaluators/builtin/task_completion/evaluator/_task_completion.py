@@ -89,12 +89,13 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
+        threshold_value = kwargs.pop('threshold', 1)
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             credential=credential,
-            threshold=1,
+            threshold=threshold_value,
             **kwargs,
         )
 
