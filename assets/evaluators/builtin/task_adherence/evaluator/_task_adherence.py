@@ -8,7 +8,7 @@ from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from ..._common.utils import (
+from azure.ai.evaluation._common.utils import (
     reformat_conversation_history,
     reformat_agent_response,
 )
@@ -78,13 +78,16 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        self.threshold = threshold  # to be removed in favor of _threshold
+        threshold_value = kwargs.pop('threshold', threshold)
+        higher_is_better_value = kwargs.pop('_higher_is_better', True)
+        self.threshold = threshold_value  # to be removed in favor of _threshold
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
+            threshold=threshold_value,
             credential=credential,
-            _higher_is_better=True,
+            _higher_is_better=higher_is_better_value,
             **kwargs,
         )
 
