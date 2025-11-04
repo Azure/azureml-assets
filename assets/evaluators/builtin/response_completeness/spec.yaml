@@ -1,11 +1,11 @@
 type: "evaluator"
 name: "builtin.response_completeness"
-version: 1
+version: 3
 displayName: "Response-Completeness-Evaluator"
 description: "Assesses whether the response covers all key aspects of the question. Higher scores indicate more thorough and complete answers. This evaluator is useful when evaluating chatbots, virtual assistants, and QA systems where full and informative responses are critical."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["agents"]
+categories: []
 tags:
   provider: "Microsoft"
 initParameterSchema:

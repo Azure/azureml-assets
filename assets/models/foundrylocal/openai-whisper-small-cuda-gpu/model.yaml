@@ -1,0 +1,8 @@
+path:
+  container_name: whisper-models
+  container_path: whisper-small/cuda-fp16
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

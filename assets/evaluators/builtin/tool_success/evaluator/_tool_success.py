@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import math
 import os
 import logging
 from typing import Dict, Union, List, Optional
@@ -28,7 +29,7 @@ ExtendedErrorTarget = _create_extended_error_target()
 
 
 @experimental
-class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
+class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """The Tool Success evaluator determines whether tool calls done by an AI agent includes failures or not.
 
     This evaluator focuses solely on tool call results and tool definitions, disregarding user's query to
@@ -79,11 +80,15 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         """Initialize the Tool Success evaluator."""
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
+        threshold_value = kwargs.pop('threshold', 1)
+        higher_is_better_value = kwargs.pop('_higher_is_better', True)
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
+            threshold=threshold_value,
             credential=credential,
+            _higher_is_better=higher_is_better_value,
             **kwargs,
         )
 
@@ -93,7 +98,7 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         *,
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
-    ) -> Dict[str, Union[str, bool]]:
+    ) -> Dict[str, Union[str, float]]:
         """Evaluate tool call success for a given response, and optionally tool definitions.
 
         Example with list of messages:
@@ -109,7 +114,7 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         :keyword tool_definitions: Optional tool definitions to use for evaluation.
         :paramtype tool_definitions: Union[dict, List[dict]]
         :return: A dictionary with the tool success evaluation results.
-        :rtype: Dict[str, Union[str, bool]]
+        :rtype: Dict[str, Union[str, float]]
         """
 
     @override
@@ -126,7 +131,7 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         return super().__call__(*args, **kwargs)
 
     @override
-    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[bool, str]]:  # type: ignore[override]
+    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[str, float]]:  # type: ignore[override]
         """Do Tool Success evaluation.
 
         :param eval_input: The input to the evaluator. Expected to contain whatever inputs are
@@ -163,7 +168,9 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
             )
             eval_input["tool_definitions"] = _reformat_tool_definitions(filtered_tool_definitions, logger)
 
-        llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        llm_output = prompty_output_dict.get("llm_output", "")
+
         if isinstance(llm_output, dict):
             success = llm_output.get("success", False)
             if isinstance(success, str):
@@ -172,15 +179,28 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
             success_result = "pass" if success else "fail"
             reason = llm_output.get("explanation", "")
             return {
-                f"{self._result_key}": success*1,
+                f"{self._result_key}": success * 1.0,
                 f"{self._result_key}_result": success_result,
-                f"{self._result_key}_threshold": 1,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_details": llm_output.get("details", ""),
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_reason": f"{reason} {llm_output.get('details', '')}",
+                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
+                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
+                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
+                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
+                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
+                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
+                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
             }
         if logger:
-            logger.warning("LLM output is not a dictionary, returning False for the success.")
-        return {self._result_key: False}
+            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
+
+        score = math.nan
+        binary_result = self._get_binary_result(score)
+        return {
+            self._result_key: float(score),
+            f"{self._result_key}_result": binary_result,
+            f"{self._result_key}_threshold": self._threshold,
+        }
 
 
 def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):
