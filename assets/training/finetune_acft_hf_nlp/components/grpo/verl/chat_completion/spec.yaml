@@ -150,6 +150,18 @@ inputs:
     default: false
     optional: true
     description: "FSDP optimizer offload"
+  actor_loss_agg_mode:
+    type: string
+    default: token-mean
+    optional: true
+    description: “seq-mean-token-sum-norm”, which turns off seq-dim averaging
+  
+  algorithm_norm_adv_by_std_in_grpo:
+    type: boolean
+    default: true
+    optional: true
+    description: which turns off standard deviation norm
+
   rollout_log_prob_micro_batch_size_per_gpu:
     type: integer
     default: 20
@@ -300,6 +312,7 @@ command: >-
   $[[--actor_kl_loss_coef '${{inputs.actor_kl_loss_coef}}']]
   $[[--actor_kl_loss_type '${{inputs.actor_kl_loss_type}}']]
   $[[--actor_entropy_coeff '${{inputs.actor_entropy_coeff}}']]
+  $[[--actor_loss_agg_mode '${{inputs.actor_entropy_coeff}}']]
   $[[--actor_model_enable_gradient_checkpointing '${{inputs.actor_model_enable_gradient_checkpointing}}']]
   $[[--actor_fsdp_param_offload '${{inputs.actor_fsdp_param_offload}}']]
   $[[--actor_fsdp_optimizer_offload '${{inputs.actor_fsdp_optimizer_offload}}']]
@@ -327,5 +340,6 @@ command: >-
   $[[--trainer_test_freq '${{inputs.trainer_test_freq}}']]
   $[[--trainer_total_epochs '${{inputs.trainer_total_epochs}}']]
   $[[--total_training_steps '${{inputs.total_training_steps}}']]
+  $[[--algorithm_norm_adv_by_std_in_grpo '${{inputs.algorithm_norm_adv_by_std_in_grpo}}']]
   --output_dir '${{outputs.model_output}}'
 

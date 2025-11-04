@@ -211,6 +211,18 @@ inputs:
     default: false
     optional: true
     description: "FSDP optimizer offload"
+  
+  actor_loss_agg_mode:
+    type: string
+    default: token-mean
+    optional: true
+    description: “seq-mean-token-sum-norm”, which turns off seq-dim averaging
+  
+  algorithm_norm_adv_by_std_in_grpo:
+    type: boolean
+    default: true
+    optional: true
+    description: which turns off standard deviation norm
 
   rollout_log_prob_micro_batch_size_per_gpu:
     type: integer
@@ -417,6 +429,7 @@ jobs:
       actor_model_enable_gradient_checkpointing: '${{parent.inputs.actor_model_enable_gradient_checkpointing}}'
       actor_fsdp_param_offload: '${{parent.inputs.actor_fsdp_param_offload}}'
       actor_fsdp_optimizer_offload: '${{parent.inputs.actor_fsdp_optimizer_offload}}'
+      actor_loss_agg_mode: '${{parent.inputs.actor_loss_agg_mode}}'
       rollout_log_prob_micro_batch_size_per_gpu: '${{parent.inputs.rollout_log_prob_micro_batch_size_per_gpu}}'
       rollout_tensor_model_parallel_size: '${{parent.inputs.rollout_tensor_model_parallel_size}}'
       rollout_name: '${{parent.inputs.rollout_name}}'
