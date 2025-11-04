@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: verl_finetune_pipeline
-version: 0.0.26.drgrpo
+version: 0.0.26.drgrpo.2
 type: pipeline
 display_name: Verl Finetune Pipeline
 description: Pipeline component for fine-tuning models using Verl Package
@@ -139,7 +139,11 @@ inputs:
     default: 128
     optional: true
     description: "PPO mini batch size"
-
+  critic_micro_batch_size:
+    type: integer
+    default: 10
+    optional: true
+    description: "PPO micro batch size per GPU"
   actor_ppo_micro_batch_size_per_gpu:
     type: integer
     default: 10
@@ -390,7 +394,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   verl_trainer_component:
     type: command
-    component: azureml:verl_trainer_component:0.0.23.drgrpo
+    component: azureml:verl_trainer_component:0.0.23.drgrpo.2
     compute: '${{parent.inputs.compute_finetune}}'
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"
@@ -418,6 +422,7 @@ jobs:
       actor_fsdp_config_offload_policy: '${{parent.inputs.actor_fsdp_config_offload_policy}}'
       actor_ppo_mini_batch_size: '${{parent.inputs.actor_ppo_mini_batch_size}}'
       actor_ppo_micro_batch_size_per_gpu: '${{parent.inputs.actor_ppo_micro_batch_size_per_gpu}}'
+      critic_micro_batch_size: '${{parent.inputs.critic_micro_batch_size}}'
       actor_model_lora_rank: '${{parent.inputs.actor_model_lora_rank}}'
       actor_model_lora_alpha: '${{parent.inputs.actor_model_lora_alpha}}'
       actor_model_target_modules: '${{parent.inputs.actor_model_target_modules}}'

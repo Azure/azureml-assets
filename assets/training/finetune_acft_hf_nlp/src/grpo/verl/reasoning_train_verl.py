@@ -186,6 +186,7 @@ def parse_args():
     parser.add_argument("--trainer_device", type=str, default="cuda", help="Device: cuda or cpu")
     parser.add_argument("--trainer_use_legacy_worker_impl", type=str, default="auto", help="Use legacy worker: auto, enable, disable")
     parser.add_argument("--total_training_steps", type=int, help="Total number of training steps")
+    parser.add_argument("--critic_micro_batch_size", type=int, help="critic micro batch size", default=2)
 
     # Checkpoint arguments
     parser.add_argument("--actor_checkpoint_load_contents", type=str, default=None, help="What to load from checkpoint")
@@ -542,7 +543,7 @@ def main():
             f"actor_rollout_ref.rollout.dtype={args.rollout_dtype}",
             f"actor_rollout_ref.actor.strategy={args.actor_strategy}",
             f"actor_rollout_ref.actor.fsdp_config.offload_policy={bool_to_str(args.actor_fsdp_config_offload_policy)}",
-            f"actor.ppo_micro_batch_size_per_gpu={args.actor_ppo_micro_batch_size_per_gpu}"
+            f"critic.micro_batch_size={args.critic_micro_batch_size}"
         ]
         #   f"actor_rollout_ref.rollout.layered_summon={bool_to_str(TRUE)}",
         #   f"actor_rollout_ref.rollout.load_format=safetensors",
