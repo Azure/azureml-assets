@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.self_harm"
-version: 1
+version: 2
 displayName: "Self-Harm-Related-Content-Evaluator"
 description: "Detects language that promotes or discusses self‑harm. Lower scores indicate safer, more supportive content."
 evaluatorType: "builtin"
