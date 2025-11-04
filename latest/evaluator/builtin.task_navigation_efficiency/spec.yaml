@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_navigation_efficiency"
-version: 3
+version: 4
 displayName: "Task-Navigation-Efficiency-Evaluator"
 description: "Determines whether an agent’s sequence of steps (e.g., tool calls and
   parameters) matches an optimal or ground truth path for completing a task. Use it
@@ -8,7 +8,7 @@ description: "Determines whether an agent’s sequence of steps (e.g., tool call
   multi-step workflows."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["agents"]
+categories: []
 tags:
   provider: "Microsoft"
 initParameterSchema:

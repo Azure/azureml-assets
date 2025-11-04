@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.retrieval"
-version: 1
+version: 2
 displayName: "Retrieval-Evaluator"
 description: "Measures how effectively the system retrieves relevant data or content.
   Higher scores mean better recall of useful information. It’s best used for the quality
@@ -10,7 +10,7 @@ description: "Measures how effectively the system retrieves relevant data or con
   and ranked at the top for answering your users' queries."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["agents"]
+categories: []
 tags:
   provider: "Microsoft"
 initParameterSchema:
