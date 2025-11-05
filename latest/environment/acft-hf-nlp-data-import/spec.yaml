@@ -4,7 +4,7 @@ description: >-
   Environment used by Hugging Face NLP Finetune components
 
 name: "acft-hf-nlp-data-import"
-version: "20"
+version: "21"
 
 build:
   path: "context"

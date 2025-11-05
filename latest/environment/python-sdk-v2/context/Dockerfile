@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20251002.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20251104.v1
 
 RUN apt-get update -y && apt-get install wget nscd git cpio less libglib2.0-0 libglib2.0-data util-linux binutils libnghttp2-14 libssh-4 libsqlite3-0 libpam-modules linux-libc-dev libldap-common libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
 

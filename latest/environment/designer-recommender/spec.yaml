@@ -4,7 +4,7 @@ description: >-
   AzureML Designer Recommender image
 
 name: "designer-recommender"
-version: "105"
+version: "106"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
