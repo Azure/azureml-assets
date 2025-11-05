@@ -318,7 +318,7 @@ command: >-
   $[[--actor_kl_loss_coef '${{inputs.actor_kl_loss_coef}}']]
   $[[--actor_kl_loss_type '${{inputs.actor_kl_loss_type}}']]
   $[[--actor_entropy_coeff '${{inputs.actor_entropy_coeff}}']]
-  $[[--actor_loss_agg_mode '${{inputs.actor_entropy_coeff}}']]
+  $[[--actor_loss_agg_mode '${{inputs.actor_loss_agg_mode}}']]
   $[[--actor_model_enable_gradient_checkpointing '${{inputs.actor_model_enable_gradient_checkpointing}}']]
   $[[--actor_fsdp_param_offload '${{inputs.actor_fsdp_param_offload}}']]
   $[[--actor_fsdp_optimizer_offload '${{inputs.actor_fsdp_optimizer_offload}}']]
