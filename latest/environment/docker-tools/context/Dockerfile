@@ -16,8 +16,8 @@ RUN echo \
 RUN apt-get update && \
     apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
-ENV TRIVY_VERSION=0.58.1
-ENV ORAS_VERSION=1.2.2
+ENV TRIVY_VERSION=0.67.2
+ENV ORAS_VERSION=1.3.0
 
 RUN wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb && \
     dpkg -i trivy_${TRIVY_VERSION}_Linux-64bit.deb && \
