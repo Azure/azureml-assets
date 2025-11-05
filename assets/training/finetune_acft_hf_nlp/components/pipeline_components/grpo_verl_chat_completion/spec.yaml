@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: verl_finetune_pipeline
-version: 0.0.26.drgrpo.2
+version: 0.0.26.drgrpo.4
 type: pipeline
 display_name: Verl Finetune Pipeline
 description: Pipeline component for fine-tuning models using Verl Package
@@ -394,7 +394,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   verl_trainer_component:
     type: command
-    component: azureml:verl_trainer_component:0.0.23.drgrpo.2
+    component: azureml:verl_trainer_component:0.0.23.drgrpo.4
     compute: '${{parent.inputs.compute_finetune}}'
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"
