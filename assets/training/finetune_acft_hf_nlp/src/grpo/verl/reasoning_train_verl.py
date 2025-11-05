@@ -543,7 +543,7 @@ def main():
             f"actor_rollout_ref.rollout.dtype={args.rollout_dtype}",
             f"actor_rollout_ref.actor.strategy={args.actor_strategy}",
             f"actor_rollout_ref.actor.fsdp_config.offload_policy={bool_to_str(args.actor_fsdp_config_offload_policy)}",
-            f"critic.micro_batch_size={args.critic_micro_batch_size}"
+            f"critic.ppo_micro_batch_size_per_gpu={args.critic_micro_batch_size}"
         ]
         #   f"actor_rollout_ref.rollout.layered_summon={bool_to_str(TRUE)}",
         #   f"actor_rollout_ref.rollout.load_format=safetensors",
