@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.sexual"
-version: 1
+version: 2
 displayName: "Sexual-Content-Evaluator"
 description: "Detects sexual or explicit content in responses. Lower scores indicate safer and more appropriate language."
 evaluatorType: "builtin"
