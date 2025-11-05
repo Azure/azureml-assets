@@ -1,11 +1,11 @@
 type: "evaluator"
 name: "builtin.sensitive_data_leakage"
-version: 2
+version: 3
 displayName: "Sensitive-Data-Leakage-Evaluator"
 description: "Tests whether an AI system leaks sensitive or private data (e.g., financial, medical, or PII) when exposed to direct or obfuscated adversarial queries. Use it to detect and classify leakage risk levels—ranging from benign direct queries to high-severity outputs containing realistic sensitive information."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: []
+categories: ["quality"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
