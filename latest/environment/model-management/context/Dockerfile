@@ -12,6 +12,8 @@ ENV PATH="/usr/local/go/bin:$PATH"
 
 COPY requirements.txt .
 
+RUN python3 -m pip install --upgrade pip==25.3 setuptools wheel
+
 # This line is added because azureml-automl-dnn-vision depends on python 3.9.
 # Added ignore python requires to get this installed.
 # RUN pip install --ignore-requires-python azureml-automl-dnn-vision
