@@ -54,6 +54,16 @@ COMPONENT_NAME = "ACFT-Eagle3-Training"
 PROJECT_NAME = "azureml-acft-hf-nlp"
 VERSION = "1.0.0"
 
+def str2bool(arg):
+    """Convert string to bool."""
+    arg = arg.lower()
+    if arg in ["true", '1']:
+        return True
+    elif arg in ["false", '0']:
+        return False
+    else:
+        raise ValueError(f"Invalid argument {arg} to while converting string to boolean")
+
 
 class AzureMLTrackerAdapter:
     """
@@ -292,7 +302,7 @@ def parse_args():
     parser.add_argument("--attention_backend", type=str, default="flex_attention")
 
     # resume
-    parser.add_argument("--resume", type=bool, default=False)
+    parser.add_argument("--resume", type=str2bool, default=False)
     parser.add_argument(
         "--resume_from_checkpoint",
         type=str,
