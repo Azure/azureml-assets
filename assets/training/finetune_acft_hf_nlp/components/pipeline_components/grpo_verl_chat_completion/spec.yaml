@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: verl_finetune_pipeline
-version: 0.0.26
+version: 0.0.53
 type: pipeline
 display_name: Verl Finetune Pipeline
 description: Pipeline component for fine-tuning models using Verl Package
@@ -51,6 +51,24 @@ inputs:
     type: mlflow_model
     optional: true
     description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+  # Critic Model Import parameters
+  critic_huggingface_id:
+    type: string
+    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads) for the critic model. Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    optional: true
+
+  critic_pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Pytorch model asset path for critic model. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+  critic_mlflow_model_path:
+    type: mlflow_model
+    optional: true
+    description: MLflow model asset path for critic model. Special characters like \ and ' are invalid in the parameter value.
     mode: rw_mount
 
   # DRO-specific parameters
@@ -306,6 +324,42 @@ inputs:
     optional: true
     description: "Use KL in reward"
 
+  critic_optim_lr:
+    type: number
+    default: 1e-5
+    optional: true
+    description: "Critic optimizer learning rate"
+
+  critic_model_use_remove_padding:
+    type: boolean
+    default: true
+    optional: true
+    description: "Use remove padding in critic model"
+
+  critic_model_enable_gradient_checkpointing:
+    type: boolean
+    default: true
+    optional: true
+    description: "Enable gradient checkpointing for critic model"
+
+  critic_ppo_micro_batch_size_per_gpu:
+    type: integer
+    default: 32
+    optional: true
+    description: "Critic PPO micro batch size per GPU"
+
+  critic_fsdp_param_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "Critic FSDP param offload"
+
+  critic_fsdp_optimizer_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "Critic FSDP optimizer offload"
+
   trainer_critic_warmup:
     type: integer
     default: 0
@@ -347,6 +401,12 @@ inputs:
     optional: true
     description: "Total number of training steps"
 
+  # PyPI packages override
+  pypi_packages_override:
+    type: string
+    optional: true
+    description: "Comma-separated list of PyPI packages to override before starting the run (e.g., transformers==4.30.0,torch==2.3.1). These will be installed using pip before each component starts."
+
   # Compute parameters
   compute_model_import:
     type: string
@@ -368,7 +428,7 @@ outputs:
 jobs:
   chat_completion_model_import:
     type: command
-    component: azureml:chat_completion_model_import:0.0.83
+    component: azureml:chat_completion_model_import:0.0.92
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -376,9 +436,10 @@ jobs:
       huggingface_id: '${{parent.inputs.huggingface_id}}'
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      pypi_packages_override: '${{parent.inputs.pypi_packages_override}}'
   verl_trainer_component:
     type: command
-    component: azureml:verl_trainer_component:0.0.23
+    component: azureml:verl_trainer_component:0.0.41
     compute: '${{parent.inputs.compute_finetune}}'
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"
@@ -431,6 +492,12 @@ jobs:
       ref_fsdp_param_offload: '${{parent.inputs.ref_fsdp_param_offload}}'
       algorithm_adv_estimator: '${{parent.inputs.algorithm_adv_estimator}}'
       algorithm_use_kl_in_reward: '${{parent.inputs.algorithm_use_kl_in_reward}}'
+      critic_optim_lr: '${{parent.inputs.critic_optim_lr}}'
+      critic_model_use_remove_padding: '${{parent.inputs.critic_model_use_remove_padding}}'
+      critic_model_enable_gradient_checkpointing: '${{parent.inputs.critic_model_enable_gradient_checkpointing}}'
+      critic_ppo_micro_batch_size_per_gpu: '${{parent.inputs.critic_ppo_micro_batch_size_per_gpu}}'
+      critic_fsdp_param_offload: '${{parent.inputs.critic_fsdp_param_offload}}'
+      critic_fsdp_optimizer_offload: '${{parent.inputs.critic_fsdp_optimizer_offload}}'
       trainer_critic_warmup: '${{parent.inputs.trainer_critic_warmup}}'
       trainer_n_gpus_per_node: '${{parent.inputs.trainer_n_gpus_per_node}}'
       trainer_nnodes: '${{parent.inputs.trainer_nnodes}}'
@@ -438,5 +505,6 @@ jobs:
       trainer_test_freq: '${{parent.inputs.trainer_test_freq}}'
       trainer_total_epochs: '${{parent.inputs.trainer_total_epochs}}'
       total_training_steps: '${{parent.inputs.total_training_steps}}'
+      pypi_packages_override: '${{parent.inputs.pypi_packages_override}}'
     outputs:
       model_output: '${{parent.outputs.model_output}}'

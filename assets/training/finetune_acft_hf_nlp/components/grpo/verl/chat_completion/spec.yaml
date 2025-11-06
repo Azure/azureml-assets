@@ -1,7 +1,7 @@
 
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: verl_trainer_component
-version: 0.0.23
+version: 0.0.41
 type: command
 is_deterministic: true
 display_name: Verl Finetuning Component
@@ -234,6 +234,41 @@ inputs:
     default: false
     optional: true
     description: "Use KL in reward"
+  critic_optim_lr:
+    type: number
+    default: 1e-5
+    optional: true
+    description: "Critic optimizer learning rate"
+  critic_model_use_remove_padding:
+    type: boolean
+    default: true
+    optional: true
+    description: "Use remove padding in critic model"
+  critic_model_path:
+    type: uri_folder
+    optional: true
+    description: "Critic model path (if different from actor model)"
+    mode: rw_mount
+  critic_model_enable_gradient_checkpointing:
+    type: boolean
+    default: true
+    optional: true
+    description: "Enable gradient checkpointing for critic model"
+  critic_ppo_micro_batch_size_per_gpu:
+    type: integer
+    default: 32
+    optional: true
+    description: "Critic PPO micro batch size per GPU"
+  critic_fsdp_param_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "Critic FSDP param offload"
+  critic_fsdp_optimizer_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "Critic FSDP optimizer offload"
   trainer_critic_warmup:
     type: integer
     default: 0
@@ -268,6 +303,10 @@ inputs:
     type: integer
     optional: true
     description: "Total number of training steps"
+  pypi_packages_override:
+    type: string
+    optional: true
+    description: "Comma-separated list of PyPI packages to override before starting the run (e.g., transformers==4.30.0,torch==2.3.1). These will be installed using pip before the component starts."
 
 outputs:
   model_output:
@@ -276,6 +315,7 @@ outputs:
 
 command: >-
   python reasoning_train_verl.py
+  $[[--pypi_packages_override '${{inputs.pypi_packages_override}}']]
   $[[--ENGINE '${{inputs.ENGINE}}']]
   --data_train_files '${{inputs.data_train_files}}'
   --data_val_files '${{inputs.data_val_files}}'
@@ -317,6 +357,13 @@ command: >-
   $[[--ref_fsdp_param_offload '${{inputs.ref_fsdp_param_offload}}']]
   $[[--algorithm_adv_estimator '${{inputs.algorithm_adv_estimator}}']]
   $[[--algorithm_use_kl_in_reward '${{inputs.algorithm_use_kl_in_reward}}']]
+  $[[--critic_optim_lr '${{inputs.critic_optim_lr}}']]
+  $[[--critic_model_use_remove_padding '${{inputs.critic_model_use_remove_padding}}']]
+  $[[--critic_model_path '${{inputs.critic_model_path}}']]
+  $[[--critic_model_enable_gradient_checkpointing '${{inputs.critic_model_enable_gradient_checkpointing}}']]
+  $[[--critic_ppo_micro_batch_size_per_gpu '${{inputs.critic_ppo_micro_batch_size_per_gpu}}']]
+  $[[--critic_fsdp_param_offload '${{inputs.critic_fsdp_param_offload}}']]
+  $[[--critic_fsdp_optimizer_offload '${{inputs.critic_fsdp_optimizer_offload}}']]
   $[[--trainer_critic_warmup '${{inputs.trainer_critic_warmup}}']]
   --trainer_logger '["console","azureml"]'
   --trainer_project_name 'verl_grpo_finetuning'

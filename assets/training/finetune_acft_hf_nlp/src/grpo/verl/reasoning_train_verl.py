@@ -31,6 +31,10 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Direct Reasoning Optimization using verl.trainer.main_ppo")
 
+    # PyPI packages override
+    parser.add_argument("--pypi_packages_override", type=str, default=None, 
+                       help="Comma-separated list of PyPI packages to override (e.g., transformers==4.30.0,torch==2.3.1)")
+
     # Engine argument
     parser.add_argument("--ENGINE", type=str, default="vllm", help="Engine type (default: vllm)")
 
@@ -79,6 +83,15 @@ def parse_args():
     # Reference arguments
     parser.add_argument("--ref_log_prob_micro_batch_size_per_gpu", type=int, default=20, help="Ref log prob micro batch size per GPU")
     parser.add_argument("--ref_fsdp_param_offload", type=bool, default=True, help="Ref FSDP param offload")
+
+    # Critic arguments
+    parser.add_argument("--critic_optim_lr", type=float, default=1e-5, help="Critic optimizer learning rate")
+    parser.add_argument("--critic_model_use_remove_padding", type=bool, default=True, help="Use remove padding in critic model")
+    parser.add_argument("--critic_model_path", type=str, default=None, help="Critic model path (if different from actor)")
+    parser.add_argument("--critic_model_enable_gradient_checkpointing", type=bool, default=True, help="Enable gradient checkpointing for critic")
+    parser.add_argument("--critic_ppo_micro_batch_size_per_gpu", type=int, default=32, help="Critic PPO micro batch size per GPU")
+    parser.add_argument("--critic_fsdp_param_offload", type=bool, default=False, help="Critic FSDP param offload")
+    parser.add_argument("--critic_fsdp_optimizer_offload", type=bool, default=False, help="Critic FSDP optimizer offload")
 
     # Algorithm arguments
     parser.add_argument("--algorithm_adv_estimator", type=str, default="grpo", help="Advantage estimator (e.g., grpo, gae)")
@@ -216,6 +229,23 @@ def _log_user_error(message: str):
 def bool_to_str(value):
     """Convert boolean to string for command line."""
     return str(value).lower() if isinstance(value, bool) else str(value)
+
+
+def quote_if_needed(value):
+    """Quote a value if it contains spaces or special characters.
+
+    Args:
+        value: The value to potentially quote
+
+    Returns:
+        str: The quoted or unquoted value as appropriate
+    """
+    import shlex
+    value_str = str(value)
+    # If the value contains spaces, parentheses, or other special chars, quote it
+    if ' ' in value_str or '(' in value_str or ')' in value_str or any(c in value_str for c in ['&', '|', ';', '<', '>', '$', '`', '"', "'"]):
+        return shlex.quote(value_str)
+    return value_str
 
 
 def find_model_config_path(base_path):
@@ -390,7 +420,7 @@ def main():
         is_head_node = setup_ray_cluster()
 
         # Initialize Azure ML logging
-        app_logger = get_logger_app("azureml.acft.contrib.nlp.entry_point.run_training")
+        logger = get_logger_app("azureml.acft.contrib.nlp.entry_point.run_training")
 
         # Set logging parameters
         set_logging_parameters(
@@ -402,11 +432,35 @@ def main():
             }
         )
 
-        app_logger.info("Starting Direct Reasoning Optimization component")
-        logger = app_logger
+        logger.info("Starting Direct Reasoning Optimization component")
 
         # Parse arguments
         args = parse_args()
+
+        # Install PyPI package overrides if provided
+        if args.pypi_packages_override:
+            logger.info(f"Installing PyPI package overrides: {args.pypi_packages_override}")
+            packages = [pkg.strip() for pkg in args.pypi_packages_override.split(',') if pkg.strip()]
+            for package in packages:
+                logger.info(f"Installing package: {package}")
+                try:
+                    result = subprocess.run(
+                        [sys.executable, "-m", "pip", "install", "--upgrade", package],
+                        check=True,
+                        capture_output=True,
+                        text=True
+                    )
+                    logger.info(f"Successfully installed {package}")
+                    if result.stdout:
+                        logger.info(f"STDOUT: {result.stdout}")
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Failed to install {package}: {e}")
+                    if e.stdout:
+                        logger.error(f"STDOUT: {e.stdout}")
+                    if e.stderr:
+                        logger.error(f"STDERR: {e.stderr}")
+                    logger.warning(f"Continuing with remaining packages despite failure for: {package}")
+            logger.info("Completed PyPI package overrides installation")
 
         logger.info("Arguments parsed successfully")
         logger.info(f"Engine type: {args.ENGINE}")
@@ -420,6 +474,13 @@ def main():
         if original_actor_model_path != args.actor_model_path:
             logger.info(f"Updated actor model path from {original_actor_model_path} to {args.actor_model_path}")
 
+        # Find the correct critic model path containing config.json if provided
+        if args.critic_model_path:
+            original_critic_model_path = args.critic_model_path
+            args.critic_model_path = find_model_config_path(args.critic_model_path)
+            if original_critic_model_path != args.critic_model_path:
+                logger.info(f"Updated critic model path from {original_critic_model_path} to {args.critic_model_path}")
+
         # Create output directory if it doesn't exist
         os.makedirs(args.output_dir, exist_ok=True)
 
@@ -431,15 +492,15 @@ def main():
         cmd = [
             "python3", "-m", "verl.trainer.main_ppo",
             f"algorithm.adv_estimator={args.algorithm_adv_estimator}",
-            f"data.train_files={args.data_train_files}",
-            f"data.val_files={args.data_val_files}",
+            f"data.train_files={quote_if_needed(args.data_train_files)}",
+            f"data.val_files={quote_if_needed(args.data_val_files)}",
             f"data.train_batch_size={args.data_train_batch_size}",
             f"data.max_prompt_length={args.data_max_prompt_length}",
             f"data.max_response_length={args.data_max_response_length}",
             f"data.filter_overlong_prompts={bool_to_str(args.data_filter_overlong_prompts)}",
             f"data.truncation={args.data_truncation}",
             f"data.image_key={args.data_image_key}",
-            f"actor_rollout_ref.model.path={args.actor_model_path}",
+            f"actor_rollout_ref.model.path={quote_if_needed(args.actor_model_path)}",
             f"actor_rollout_ref.actor.optim.lr={args.actor_optim_lr}",
             f"actor_rollout_ref.model.use_remove_padding={bool_to_str(args.actor_model_use_remove_padding)}",
             f"actor_rollout_ref.actor.ppo_mini_batch_size={args.actor_ppo_mini_batch_size}",
@@ -544,6 +605,16 @@ def main():
             f"actor_rollout_ref.actor.strategy={args.actor_strategy}",
             f"actor_rollout_ref.actor.fsdp_config.offload_policy={bool_to_str(args.actor_fsdp_config_offload_policy)}"
         ]
+        
+        # Add critic parameters
+        cmd.append(f"critic.optim.lr={args.critic_optim_lr}")
+        cmd.append(f"critic.model.use_remove_padding={bool_to_str(args.critic_model_use_remove_padding)}")
+        if args.critic_model_path:
+            cmd.append(f"critic.model.path={quote_if_needed(args.critic_model_path)}")
+        cmd.append(f"critic.model.enable_gradient_checkpointing={bool_to_str(args.critic_model_enable_gradient_checkpointing)}")
+        cmd.append(f"critic.ppo_micro_batch_size_per_gpu={args.critic_ppo_micro_batch_size_per_gpu}")
+        cmd.append(f"critic.model.fsdp_config.param_offload={bool_to_str(args.critic_fsdp_param_offload)}")
+        cmd.append(f"critic.model.fsdp_config.optimizer_offload={bool_to_str(args.critic_fsdp_optimizer_offload)}")
         #   f"actor_rollout_ref.rollout.layered_summon={bool_to_str(TRUE)}",
         #   f"actor_rollout_ref.rollout.load_format=safetensors",
         # Add total_training_steps if provided
@@ -558,19 +629,20 @@ def main():
             cmd.append(f"data.val_batch_size={args.data_val_batch_size}")
 
         if args.data_tokenizer is not None:
-            cmd.append(f"data.tokenizer={args.data_tokenizer}")
+            cmd.append(f"data.tokenizer={quote_if_needed(args.data_tokenizer)}")
 
         if args.actor_model_custom_chat_template is not None:
-            cmd.append(f"actor_rollout_ref.model.custom_chat_template={args.actor_model_custom_chat_template}")
+            cmd.append(f"actor_rollout_ref.model.custom_chat_template={quote_if_needed(args.actor_model_custom_chat_template)}")
 
         if args.actor_model_external_lib is not None:
-            cmd.append(f"actor_rollout_ref.model.external_lib={args.actor_model_external_lib}")
+            cmd.append(f"actor_rollout_ref.model.external_lib={quote_if_needed(args.actor_model_external_lib)}")
 
         if args.actor_checkpoint_load_contents is not None:
             cmd.append(f"actor_rollout_ref.actor.checkpoint.load_contents={args.actor_checkpoint_load_contents}")
 
         if args.trainer_resume_from_path is not None:
-            cmd.append(f"trainer.resume_from_path={args.trainer_resume_from_path}")
+            cmd.append(f"trainer.resume_from_path={quote_if_needed(args.trainer_resume_from_path)}")
+
 
         # Add model configuration flags
         cmd.extend([
@@ -586,7 +658,7 @@ def main():
 
         # Add remaining parameters
         cmd.extend([
-            f"trainer.default_local_dir={args.output_dir}",
+            f"trainer.default_local_dir={quote_if_needed(args.output_dir)}",
             f"trainer.project_name={args.trainer_project_name}",
         ])
 
@@ -599,7 +671,7 @@ def main():
 
         # Add custom dataset class parameters to the command
         cmd.extend([
-            f"data.custom_cls.path={jsonl_dataset_path}",
+            f"data.custom_cls.path={quote_if_needed(jsonl_dataset_path)}",
             "data.custom_cls.name=JSONLDataset",
         ])
 
@@ -611,8 +683,21 @@ def main():
             logger.info("This is a worker node, skipping main execution")
             return 0  # Worker nodes should not execute main
 
-        result = subprocess.run(cmd, check=True, capture_output=False)
         logger.info(f"Running command : {cmd}")
+        result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+
+        if result.stdout:
+            logger.info(f"STDOUT:\n{result.stdout}")
+        if result.stderr:
+            logger.error(f"STDERR:\n{result.stderr}")
+
+        if result.returncode != 0:
+            error_msg = f"Command failed with return code {result.returncode}"
+            logger.error(error_msg)
+            logger.error(f"Command: {' '.join(cmd)}")
+            _log_user_error(error_msg)
+            sys.exit(result.returncode)
+
         logger.info("Command executed successfully")
         logger.info(f"Return code: {result.returncode}")
 
@@ -620,6 +705,10 @@ def main():
 
     except subprocess.CalledProcessError as e:
         error_msg = f"Command failed with return code {e.returncode}"
+        if hasattr(e, 'stdout') and e.stdout:
+            logger.error(f"STDOUT:\n{e.stdout}")
+        if hasattr(e, 'stderr') and e.stderr:
+            logger.error(f"STDERR:\n{e.stderr}")
         _log_user_error(error_msg)
         sys.exit(e.returncode)
 
