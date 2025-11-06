@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: vllm_evaluation_pipeline
-version: 0.0.4
+version: 0.0.5
 type: pipeline
 display_name: vLLM Evaluation Pipeline
 description: Pipeline component for evaluating models using vLLM inference with model import
@@ -155,7 +155,7 @@ jobs:
 
   vllm_evaluation:
     type: command
-    component: azureml:vllm_evaluation_component:0.0.5
+    component: azureml:vllm_evaluation_component:0.0.6
     compute: '${{parent.inputs.compute_evaluation}}'
     distribution:
       type: pytorch

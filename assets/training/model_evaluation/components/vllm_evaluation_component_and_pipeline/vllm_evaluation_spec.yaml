@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: vllm_evaluation_component
-version: 0.0.5
+version: 0.0.6
 type: command
 is_deterministic: true
 display_name: vLLM Evaluation Component

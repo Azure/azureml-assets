@@ -22,6 +22,7 @@ from tqdm import tqdm
 
 from vllm import LLM, SamplingParams
 from verl.utils.reward_score.gsm8k import extract_solution
+from math_verify import parse, verify
 
 
 def load_validation_data(validation_file: str) -> List[Dict[str, Any]]:
@@ -97,14 +98,17 @@ def evaluate_responses(
         if extracted_answer is None:
             no_answer += 1
             status = "no_answer"
-        elif ground_truth is not None and extracted_answer == ground_truth:
-            correct += 1
-            format_correct += 1
-            is_correct = True
-            status = "correct"
         elif ground_truth is not None:
-            format_correct += 1
-            status = "wrong_answer"
+            gold = parse(ground_truth)
+            answer = parse(extracted_answer)
+            if verify(gold, answer):
+                correct += 1
+                format_correct += 1
+                is_correct = True
+                status = "correct"
+            else:
+                format_correct += 1
+                status = "wrong_answer"
         else:
             status = "no_ground_truth"
         
