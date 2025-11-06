@@ -3,7 +3,7 @@ name: DeepSeek-R1-Distill-Qwen-1.5B-openvino-gpu
 version: 1
 path: ./
 tags:
-  foundryLocal: "hide"
+  foundryLocal: ""
   license: "MIT"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/blob/main/LICENSE>."
   author: Microsoft
