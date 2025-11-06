@@ -1,12 +1,12 @@
 type: "evaluator"
 name: "builtin.prohibited_actions"
-version: 3
+version: 4
 displayName: "Prohibited-Actions-Evaluator"
 description: "Flags content that suggests or enables actions violating safety guidelines.
   Helps prevent risky or disallowed behaviors."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["quality"]
+categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
