@@ -129,7 +129,6 @@ def parse_args():
     parser.add_argument("--actor_model_use_liger", type=bool, default=False, help="Use Liger for linear fusion")
     parser.add_argument("--actor_model_use_fused_kernels", type=bool, default=False, help="Use custom fused kernels")
     parser.add_argument("--actor_model_trust_remote_code", type=bool, default=False, help="Trust remote code")
-
     # Rollout Generation Parameters
     parser.add_argument("--rollout_mode", type=str, default="sync", help="Rollout mode: sync or async")
     parser.add_argument("--rollout_temperature", type=float, default=1.0, help="Sampling temperature")
@@ -187,6 +186,7 @@ def parse_args():
     parser.add_argument("--trainer_device", type=str, default="cuda", help="Device: cuda or cpu")
     parser.add_argument("--trainer_use_legacy_worker_impl", type=str, default="auto", help="Use legacy worker: auto, enable, disable")
     parser.add_argument("--total_training_steps", type=int, help="Total number of training steps")
+    parser.add_argument("--critic_micro_batch_size", type=int, help="critic micro batch size", default=2)
 
     # Checkpoint arguments
     parser.add_argument("--actor_checkpoint_load_contents", type=str, default=None, help="What to load from checkpoint")
@@ -542,7 +542,8 @@ def main():
             f"actor_rollout_ref.actor.checkpoint.save_contents={args.trainer_save_contents}",
             f"actor_rollout_ref.rollout.dtype={args.rollout_dtype}",
             f"actor_rollout_ref.actor.strategy={args.actor_strategy}",
-            f"actor_rollout_ref.actor.fsdp_config.offload_policy={bool_to_str(args.actor_fsdp_config_offload_policy)}"
+            f"actor_rollout_ref.actor.fsdp_config.offload_policy={bool_to_str(args.actor_fsdp_config_offload_policy)}",
+            f"critic.ppo_micro_batch_size_per_gpu={args.critic_micro_batch_size}"
         ]
         #   f"actor_rollout_ref.rollout.layered_summon={bool_to_str(TRUE)}",
         #   f"actor_rollout_ref.rollout.load_format=safetensors",
