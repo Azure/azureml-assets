@@ -3,7 +3,7 @@ name: mistralai-Mistral-7B-Instruct-v0-2-trtrtx-gpu
 version: 1
 path: ./
 tags:
-  foundryLocal: "test"
+  foundryLocal: ""
   license: "Apache-2.0"
   licenseDescription: "This model is provided under the License Terms available at <https://www.apache.org/licenses/LICENSE-2.0.html>."
   author: Microsoft
