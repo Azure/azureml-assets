@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: phi-3.5-mini-128k-instruct-trtrtx-gpu
+name: phi-3.5-mini-instruct-trtrtx-gpu
 version: 1
 path: ./
 tags:
