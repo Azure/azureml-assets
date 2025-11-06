@@ -1,0 +1,179 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+name: vllm_evaluation_pipeline
+version: 0.0.4
+type: pipeline
+display_name: vLLM Evaluation Pipeline
+description: Pipeline component for evaluating models using vLLM inference with model import
+
+inputs:
+  # Infrastructure parameters
+  instance_type_model_import:
+    type: string
+    optional: true
+    default: Standard_d12_v2
+    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. The parameter compute_model_import must be set to 'serverless' for instance_type to be used
+  instance_type_evaluation:
+    type: string
+    optional: true
+    default: Standard_NC24ads_A100_v4
+    description: Instance type to be used for evaluation component in case of serverless compute. The parameter compute_evaluation must be set to 'serverless' for instance_type to be used
+  num_nodes_evaluation:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of nodes to be used for evaluation
+  number_of_gpu_to_use_evaluation:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of GPUs to be used per node for evaluation, should be equal to number of GPU per node in the compute SKU used
+
+  # Model Import parameters
+  huggingface_id:
+    type: string
+    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    optional: true
+
+  pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+  mlflow_model_path:
+    type: mlflow_model
+    optional: true
+    description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+  # Evaluation parameters
+  validation_file:
+    type: uri_file
+    optional: false
+    description: "Path to the validation JSONL file"
+
+  max_prompt_length:
+    type: integer
+    default: 2048
+    optional: true
+    description: "Maximum prompt length"
+
+  max_response_length:
+    type: integer
+    default: 1024
+    optional: true
+    description: "Maximum response length for generation"
+
+  batch_size:
+    type: integer
+    default: 16
+    optional: true
+    description: "Batch size for evaluation"
+
+  temperature:
+    type: number
+    default: 0.7
+    optional: true
+    description: "Sampling temperature for generation"
+
+  top_p:
+    type: number
+    default: 0.9
+    optional: true
+    description: "Top-p sampling parameter"
+
+  tensor_parallel_size:
+    type: integer
+    default: 1
+    optional: true
+    description: "Tensor parallel size for vLLM"
+
+  gpu_memory_utilization:
+    type: number
+    default: 0.8
+    optional: true
+    description: "GPU memory utilization for vLLM"
+
+  dtype:
+    type: string
+    enum:
+    - "float16"
+    - "bfloat16"
+    - "float32"
+    default: "bfloat16"
+    optional: true
+    description: "Data type for model inference"
+
+  extraction_method:
+    type: string
+    enum:
+    - "strict"
+    - "flexible"
+    default: "strict"
+    optional: true
+    description: "Method for extracting solutions from responses (strict: looks for #### pattern, flexible: extracts last number)"
+
+  # PyPI packages override
+  pypi_packages_override:
+    type: string
+    optional: true
+    description: "Comma-separated list of PyPI packages to override before starting the run (e.g., transformers==4.30.0,torch==2.3.1). These will be installed using pip before each component starts."
+
+  # Compute parameters
+  compute_model_import:
+    type: string
+    optional: true
+    default: serverless
+    description: Compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
+  compute_evaluation:
+    type: string
+    optional: true
+    default: serverless
+    description: Compute to be used for evaluation eg. provide 'Eval-Cluster' if your compute is named 'Eval-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
+outputs:
+  evaluation_results:
+    type: uri_folder
+    description: "Directory containing evaluation results and metrics"
+    mode: rw_mount
+
+jobs:
+  chat_completion_model_import:
+    type: command
+    component: azureml:chat_completion_model_import:0.0.92
+    compute: '${{parent.inputs.compute_model_import}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_import}}'
+    inputs:
+      huggingface_id: '${{parent.inputs.huggingface_id}}'
+      pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
+      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      pypi_packages_override: '${{parent.inputs.pypi_packages_override}}'
+
+  vllm_evaluation:
+    type: command
+    component: azureml:vllm_evaluation_component:0.0.5
+    compute: '${{parent.inputs.compute_evaluation}}'
+    distribution:
+      type: pytorch
+    resources:
+      instance_count: '${{parent.inputs.num_nodes_evaluation}}'
+      instance_type: '${{parent.inputs.instance_type_evaluation}}'
+    inputs:
+      model_path: '${{parent.jobs.chat_completion_model_import.outputs.output_dir}}'
+      validation_file: '${{parent.inputs.validation_file}}'
+      max_prompt_length: '${{parent.inputs.max_prompt_length}}'
+      max_response_length: '${{parent.inputs.max_response_length}}'
+      batch_size: '${{parent.inputs.batch_size}}'
+      temperature: '${{parent.inputs.temperature}}'
+      top_p: '${{parent.inputs.top_p}}'
+      tensor_parallel_size: '${{parent.inputs.tensor_parallel_size}}'
+      gpu_memory_utilization: '${{parent.inputs.gpu_memory_utilization}}'
+      dtype: '${{parent.inputs.dtype}}'
+      extraction_method: '${{parent.inputs.extraction_method}}'
+      n_gpus_per_node: '${{parent.inputs.number_of_gpu_to_use_evaluation}}'
+    outputs:
+      evaluation_results: '${{parent.outputs.evaluation_results}}'
