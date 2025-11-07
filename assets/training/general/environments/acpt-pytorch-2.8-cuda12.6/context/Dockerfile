@@ -3,22 +3,6 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-# Upgrade known vulnerable packages again just to be safe
-RUN pip install --upgrade \
-    requests==2.32.4 \
-    urllib3==2.5.0 \
-    pillow==11.3.0 || true
-
-# Repeat for other envs if applicable
-RUN /opt/conda/bin/pip install --upgrade \
-    requests==2.32.4 \
-    urllib3==2.5.0 \
-    pillow==11.3.0 || true
-
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-    requests==2.32.4 \
-    urllib3==2.5.0 \
-    pillow==11.3.0 || true
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/

@@ -1,10 +1,8 @@
 azureml-core=={{latest-pypi-version}}
 azureml-dataset-runtime=={{latest-pypi-version}}
 azureml-defaults=={{latest-pypi-version}}
-azure-ml=={{latest-pypi-version}}
 azure-ml-component=={{latest-pypi-version}}
 azureml-mlflow=={{latest-pypi-version}}
-azureml-contrib-services=={{latest-pypi-version}}
 azureml-contrib-services=={{latest-pypi-version}}
 azureml-inference-server-http
 inference-schema
@@ -15,7 +13,6 @@ urllib3==2.5.0
 requests==2.32.4
 pillow==11.3.0
 transformers==4.54.1
-cryptography>=42.0.4
 aiohttp>=3.12.14
 py-spy==0.3.12
 debugpy~=1.6.3
