@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.relevance"
-version: 5
+version: 6
 displayName: "Relevance-Evaluator"
 description: "Assesses how well the response matches the user’s intent or question. Higher scores mean better alignment with the prompt. It’s best used for generative business writing such as summarizing meeting notes, creating marketing materials, and drafting email."
 evaluatorType: "builtin"
