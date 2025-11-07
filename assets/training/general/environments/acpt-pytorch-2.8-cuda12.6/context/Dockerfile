@@ -27,6 +27,7 @@ ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 # support Deepspeed launcher requirement of passwordless ssh login
+RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
 
 RUN pip list
