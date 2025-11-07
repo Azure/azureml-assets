@@ -29,6 +29,11 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the similarity evaluator. Default is 3.
     :type threshold: int
+    :param credential: The credential for authenticating to Azure AI service.
+    :type credential: ~azure.core.credentials.TokenCredential
+    :keyword is_reasoning_model: If True, the evaluator will use reasoning model configuration (o1/o3 models).
+        This will adjust parameters like max_completion_tokens and remove unsupported parameters. Default is False.
+    :paramtype is_reasoning_model: bool
 
     .. admonition:: Example:
 
@@ -74,7 +79,7 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, threshold=3, credential=None):
+    def __init__(self, model_config, *, threshold=3, credential=None, **kwargs):
         """Initialize the Similarity evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -96,6 +101,7 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
             threshold=threshold,
             credential=credential,
             _higher_is_better=self._higher_is_better,
+            **kwargs,
         )
 
     # Ignoring a mypy error about having only 1 overload function.

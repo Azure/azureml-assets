@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.coherence"
-version: 1
+version: 2
 displayName: "Coherence-Evaluator"
 description: "Evaluates how logically connected and consistent the response is. Ensures
   ideas flow naturally and make sense together. It’s best used for generative business
