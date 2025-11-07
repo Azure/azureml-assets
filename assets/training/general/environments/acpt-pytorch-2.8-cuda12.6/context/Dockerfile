@@ -22,26 +22,11 @@ RUN apt-get update && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
-
-RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 # support Deepspeed launcher requirement of passwordless ssh login
-RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
 
 RUN pip list
