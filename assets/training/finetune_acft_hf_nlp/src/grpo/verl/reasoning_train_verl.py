@@ -32,8 +32,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Direct Reasoning Optimization using verl.trainer.main_ppo")
 
     # PyPI packages override
-    parser.add_argument("--pypi_packages_override", type=str, default=None, 
-                       help="Comma-separated list of PyPI packages to override (e.g., transformers==4.30.0,torch==2.3.1)")
+    parser.add_argument("--pypi_packages_override", type=str, default=None,
+                        help="Comma-separated list of PyPI packages\
+                        to override (e.g., transformers==4.30.0,torch==2.3.1)")
 
     # Engine argument
     parser.add_argument("--ENGINE", type=str, default="vllm", help="Engine type (default: vllm)")
@@ -342,9 +343,9 @@ def setup_ray_cluster():
                     "--include-dashboard=false",  # Disable dashboard to avoid additional port conflicts
                 ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-                logger.info("STDOUT:\n", result.stdout)
+                logger.info(f"STDOUT:\n{result.stdout}")
                 if result.stderr:
-                    logger.error("STDERR:\n", result.stderr)
+                    logger.error(f"STDERR:\n{result.stderr}")
 
                 if result.returncode != 0:
                     logger.error(f"Ray head node failed to start with return code {result.returncode}")
@@ -370,9 +371,9 @@ def setup_ray_cluster():
                         "--disable-usage-stats",
                     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-                    logger.info("STDOUT:\n", result.stdout)
+                    logger.info(f"STDOUT:\n{result.stdout}")
                     if result.stderr:
-                        logger.error("STDERR:\n", result.stderr)
+                        logger.error(f"STDERR:\n{result.stderr}")
 
                     if result.returncode != 0:
                         logger.error(f"Ray worker failed to connect with return code {result.returncode}")
@@ -393,9 +394,9 @@ def setup_ray_cluster():
                         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
                         logger.info("Ray status output:")
-                        logger.info("Ray status STDOUT:\n", status_result.stdout)
+                        logger.info(f"Ray status STDOUT:\n {status_result.stdout}")
                         if status_result.stderr:
-                            logger.error("Ray status STDERR:\n", status_result.stderr)
+                            logger.error(f"Ray status STDERR:\n {status_result.stderr}")
                         time.sleep(2*t)
 
                 except Exception as e:
@@ -605,7 +606,7 @@ def main():
             f"actor_rollout_ref.actor.strategy={args.actor_strategy}",
             f"actor_rollout_ref.actor.fsdp_config.offload_policy={bool_to_str(args.actor_fsdp_config_offload_policy)}"
         ]
-        
+
         # Add critic parameters
         cmd.append(f"critic.optim.lr={args.critic_optim_lr}")
         cmd.append(f"critic.model.use_remove_padding={bool_to_str(args.critic_model_use_remove_padding)}")
