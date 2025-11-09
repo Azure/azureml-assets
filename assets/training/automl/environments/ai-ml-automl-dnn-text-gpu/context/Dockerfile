@@ -56,8 +56,8 @@ ENV ENABLE_METADATA=true
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.9 \
     # begin conda dependencies
-    pip=22.1.2 \
-    numpy~=1.23.5 \
+    pip=25.3 \
+    numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
     setuptools=78.1.1 \
@@ -99,13 +99,14 @@ RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/hor
 # We should aim for this list to be empty with new and patched releases
 # by fixing dependencies in the base packages
 RUN pip list && \
+    pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
 RUN pip install torch==2.8.0 torchvision==0.23.0
-RUN /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' torch==2.8.0 torchvision==0.23.0 || true
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
 
 # Patch for pillow vulnerability
