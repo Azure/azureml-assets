@@ -5,17 +5,23 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # Upgrade known vulnerable packages again just to be safe
 RUN pip install --upgrade \
+    pip>=25.3 \
+    starlette>=0.49.1 \
     requests==2.32.4 \
     urllib3==2.5.0 \
     pillow==11.3.0 || true
 
 # Repeat for other envs if applicable
 RUN /opt/conda/bin/pip install --upgrade \
+    pip>=25.3 \
+    starlette>=0.49.1 \
     requests==2.32.4 \
     urllib3==2.5.0 \
     pillow==11.3.0 || true
 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
+    pip>=25.3 \
+    starlette>=0.49.1 \
     requests==2.32.4 \
     urllib3==2.5.0 \
     pillow==11.3.0 || true

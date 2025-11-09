@@ -46,8 +46,8 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip=22.1.2 \
-    numpy~=1.23.5 \
+    pip=25.3 \
+    numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
     scipy=1.10.1 \
@@ -99,8 +99,8 @@ RUN pip install \
 RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
 
-# Fix vulnerabilities
-RUN pip install --upgrade urllib3
+# Fix vulnerabilities - upgrade pip, starlette, urllib3
+RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0'
 RUN pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/
