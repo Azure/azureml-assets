@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.hate_unfairness"
-version: 1
+version: 2
 displayName: "Hate-and-Unfairness-Evaluator"
 description: "Detects hateful, biased, or unfair language in the response. Lower scores indicate more neutral and inclusive content."
 evaluatorType: "builtin"

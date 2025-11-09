@@ -24,6 +24,11 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         ~azure.ai.evaluation.OpenAIModelConfiguration]
     :param threshold: The threshold for the fluency evaluator. Default is 3.
     :type threshold: int
+    :param credential: The credential for authenticating to Azure AI service.
+    :type credential: ~azure.core.credentials.TokenCredential
+    :keyword is_reasoning_model: If True, the evaluator will use reasoning model configuration (o1/o3 models).
+        This will adjust parameters like max_completion_tokens and remove unsupported parameters. Default is False.
+    :paramtype is_reasoning_model: bool
 
     .. admonition:: Example:
 
@@ -67,7 +72,7 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, threshold=3):
+    def __init__(self, model_config, *, credential=None, threshold=3, **kwargs):
         """Initialize the Fluency evaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -89,6 +94,7 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             threshold=threshold,
             credential=credential,
             _higher_is_better=self._higher_is_better,
+            **kwargs,
         )
 
     @overload
