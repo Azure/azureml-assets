@@ -252,7 +252,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
-        """ 
+        """
         if "query" not in eval_input:
             raise EvaluationException(
                 message=(
