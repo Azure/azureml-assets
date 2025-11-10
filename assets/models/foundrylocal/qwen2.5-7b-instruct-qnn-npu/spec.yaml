@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-7b-instruct-qnn-npu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-7b
-  directoryPath: qwen2.5-7b
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>You are Qwen, an AI assistant developed by Alibaba. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
