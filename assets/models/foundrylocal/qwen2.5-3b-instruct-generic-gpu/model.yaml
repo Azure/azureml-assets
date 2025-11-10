@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/onnx-models/qwen-2.5-3b-instruct/onnx/directml/directml-int4-awq-block-128
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/tool_calling/qwen2.5-3b-instruct-generic-gpu/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md
