@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-instruct-generic-cpu
-version: 4
+version: 5
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini
-  directoryPath: v3
+  directoryPath: v5
   promptTemplate: "{\"system\": \"<|system|>{Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\"\
     , \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
     }"
