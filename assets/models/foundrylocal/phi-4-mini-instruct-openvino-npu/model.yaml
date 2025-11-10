@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/intel-npu-models/WMLGA_Sep23_NPU/Phi-4-mini-instruct_context_ov_dynamic_sym_gs128_bkp_int8_sym/Phi-4-mini-instruct_context_ov_dynamic_sym_gs128_bkp_int8_sym/model
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/tool_calling/phi-4-mini-instruct-openvino-npu/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md

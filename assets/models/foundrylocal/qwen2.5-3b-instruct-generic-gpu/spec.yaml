@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-3b-instruct-generic-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: "hide"
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-3b
-  directoryPath: directml-int4-awq-block-128
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\": \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
