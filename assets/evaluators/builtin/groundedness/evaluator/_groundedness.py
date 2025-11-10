@@ -354,7 +354,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
         if eval_input.get("query", None) is None:
-            return await super()._do_eval_with_flow(eval_input, self._flow_no_query)
+            return await self._do_eval_with_flow(eval_input, self._flow_no_query)
 
         contains_context = self.has_context(eval_input)
 
@@ -369,7 +369,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
 
         # Replace and call the parent method
-        return await super()._do_eval_with_flow(simplified_eval_input, self._flow_with_query)
+        return await self._do_eval_with_flow(simplified_eval_input, self._flow_with_query)
 
     async def _do_eval_with_flow(self, eval_input: Dict, flow: AsyncPrompty) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do a relevance evaluation.
@@ -392,7 +392,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.CONVERSATION,
             )
         # Call the prompty flow to get the evaluation result.
-        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        prompty_output_dict = await flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
 
         score = math.nan
         if prompty_output_dict:
