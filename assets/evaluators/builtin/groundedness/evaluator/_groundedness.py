@@ -289,17 +289,16 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The relevance score.
         :rtype: Union[Dict[str, Union[str, float]], Dict[str, Union[float, Dict[str, List[Union[str, float]]]]]]
         """
-
         return super().__call__(*args, **kwargs)
 
     def _load_flow(self, prompty_filename: str, **kwargs) -> AsyncPrompty:
         """Load the Prompty flow from the specified file.
+
         :param prompty_filename: The filename of the Prompty flow to load.
         :type prompty_filename: str
         :return: The loaded Prompty flow.
         :rtype: AsyncPrompty
         """
-
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, prompty_filename)
 
@@ -329,6 +328,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def _validate_context(self, context) -> bool:
         """
         Validate if the provided context is non-empty and meaningful.
+
         Treats None, empty strings, empty lists, and lists of empty strings as no context.
         :param context: The context to validate
         :type context: Union[str, List, None]
@@ -365,17 +365,16 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Replace and call the parent method
         return await self._do_eval_with_flow(simplified_eval_input, self._flow_with_query)
 
-    async def _do_eval_with_flow(
-            self, eval_input: Dict, flow: AsyncPrompty
-        ) -> Dict[str, Union[float, str]]:  # type: ignore[override]
-        """Do a relevance evaluation.
+    async def _do_eval_with_flow(self, eval_input: Dict, flow: AsyncPrompty) -> Dict[str, Union[float, str]]:
+        """Do an evaluation.
 
         NOTE: This is copy from parent with addition of flow parameter to allow choosing between two flows.
-
         :param eval_input: The input to the evaluator. Expected to contain
-        whatever inputs are needed for the _flow method, including context
+        whatever inputs are needed for the flow method, including context
         and other fields depending on the child class.
         :type eval_input: Dict
+        :param flow: The AsyncPrompty flow to use for evaluation.
+        :type flow: AsyncPrompty
         :return: The evaluation result.
         :rtype: Dict
         """
