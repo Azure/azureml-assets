@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-reasoning-vitis-npu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini-reasoning
-  directoryPath: Phi-4-mini-reasoning-vai
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
   supportsToolCalling: "true"
   toolCallStart: "<|tool_call|>"

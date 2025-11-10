@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/fl-perf-improvements/phi-4-mini-instruct/onnx/webgpu/webgpu-int4-kquant-block-32-mixed-acc-level-4/v3
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/tool_calling/Phi-4-mini-instruct-generic-gpu/v5
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md
