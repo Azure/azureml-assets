@@ -488,7 +488,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float]]
         """
-        if "query" not in eval_input:
+        if "query" not in eval_input or eval_input.get("query") is None:
             raise EvaluationException(
                 message=(
                     "Query is a required input to the Tool Selection evaluator."
@@ -502,8 +502,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
         # Format conversation history for cleaner evaluation
-        else:
-            eval_input["query"] = reformat_conversation_history(
+        eval_input["query"] = reformat_conversation_history(
                 eval_input["query"], logger, include_system_messages=True, include_tool_calls=True
             )
 
