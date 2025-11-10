@@ -427,7 +427,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             )
 
-        filtered_response = self._filter_file_search_results(response) if self.has_context(context) else response
+        filtered_response = self._filter_file_search_results(response) if self._validate_context(context) else response
         return super()._convert_kwargs_to_eval_input(response=filtered_response, context=context, query=query)
 
     def _filter_file_search_results(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
