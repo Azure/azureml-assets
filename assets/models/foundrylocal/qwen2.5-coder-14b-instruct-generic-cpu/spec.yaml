@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-coder-14b-instruct-generic-cpu
-version: 3
+version: 4
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-coder-14b
-  directoryPath: v3
+  directoryPath: v4
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
