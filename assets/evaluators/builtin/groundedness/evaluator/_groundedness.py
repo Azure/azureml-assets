@@ -365,7 +365,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Replace and call the parent method
         return await self._do_eval_with_flow(simplified_eval_input, self._flow_with_query)
 
-    async def _do_eval_with_flow(self, eval_input: Dict, flow: AsyncPrompty) -> Dict[str, Union[float, str]]:  # type: ignore[override]
+    async def _do_eval_with_flow(
+            self, eval_input: Dict, flow: AsyncPrompty
+        ) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do a relevance evaluation.
 
         NOTE: This is copy from parent with addition of flow parameter to allow choosing between two flows.
