@@ -4,7 +4,6 @@
 import json
 import os
 from dataclasses import asdict, dataclass
-from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple, Union, Type, TypeVar
 
 from foundation.model.serve.logging_config import configure_logger
@@ -30,7 +29,7 @@ class SerializableDataClass:
 
 @dataclass
 class MIRPayload(SerializableDataClass):
-    """Json serializable dataclass that represents the input received from the server."""
+    """Json serializable dataclass for input""" 
 
     query: Union[List[TextMessage], List[MultimodalMessage],
                  str, List[str], List[Tuple[str, str]]]

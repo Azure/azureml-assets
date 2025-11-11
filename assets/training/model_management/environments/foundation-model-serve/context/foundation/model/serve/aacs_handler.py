@@ -226,6 +226,7 @@ class AACSValidator:
             try:
                 decoded_data = base64.b64decode(base64_string, validate=True)
             except Exception as e:
+                logger.info(f"Base64 decoding error: {e}")
                 return False
 
             # Try to open as image using PIL
@@ -245,9 +246,11 @@ class AACSValidator:
                 return True
 
             except Exception as e:
+                logger.info(f"PIL image validation error: {e}")
                 return False
 
         except Exception as e:
+            logger.info(f"Unexpected error during base64 image validation: {e}")
             return False
 
 

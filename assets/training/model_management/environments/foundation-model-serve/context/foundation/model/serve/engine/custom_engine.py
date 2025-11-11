@@ -31,6 +31,6 @@ class CustomEngine(BaseEngine):
 
     def init_server(self):
         """Initialize client[s] for the engine to receive requests on."""
-        logger.info(f"Starting custom engine with startup script.")
+        logger.info("Starting custom engine with startup script.")
         if self.startup_script_path:
             subprocess.Popen([sys.executable, self.startup_script_path])
