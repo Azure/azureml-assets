@@ -7,6 +7,7 @@ from foundation.model.serve.replica_manager import ReplicaManager
 
 logger = configure_logger(__name__)
 
+
 class FMScore:
     """Class for running inference engines with given prompts and parameters."""
 

@@ -13,6 +13,7 @@ from foundation.model.serve.constants import EnvironmentVariables, TaskType
 
 logger = configure_logger(__name__)
 
+
 @dataclass
 class SerializableDataClass:
     """A data class that can be serialized to and from a dictionary."""
@@ -26,11 +27,13 @@ class SerializableDataClass:
         """Create a data class from a dictionary."""
         return cls(**d)
 
+
 @dataclass
 class MIRPayload(SerializableDataClass):
     """Json serializable dataclass that represents the input received from the server."""
 
-    query: Union[List[TextMessage], List[MultimodalMessage], str, List[str], List[Tuple[str, str]]]
+    query: Union[List[TextMessage], List[MultimodalMessage],
+                 str, List[str], List[Tuple[str, str]]]
     params: Dict[str, Any]
     task_type: str
 
@@ -53,6 +56,7 @@ class MIRPayload(SerializableDataClass):
         """Update current parameters to the new parameters the MIRPayload should have."""
         self.params = new_params
 
+
 def get_request_data(
     data
 ) -> (Tuple)[Union[str, List[str]], Dict[str, Any], str, bool]:
@@ -62,9 +66,10 @@ def get_request_data(
     return type for text-generation: list, dict, str, bool
     """
     try:
-        task_type = os.getenv(EnvironmentVariables.TASK_TYPE, TaskType.CHAT_COMPLETION)
+        task_type = os.getenv(
+            EnvironmentVariables.TASK_TYPE, TaskType.CHAT_COMPLETION)
         inputs = data.get("input_data", None)
-        
+
         if task_type != TaskType.TEXT_GENERATION:
             if not isinstance(inputs, dict):
                 raise Exception("Invalid input data")
@@ -80,7 +85,8 @@ def get_request_data(
             task_type == TaskType.TEXT_GENERATION and "input_string" not in inputs
         )
         input_data = inputs if is_text_gen_without_input else inputs["input_string"]
-        params = data.get("params", {}) if is_text_gen_without_input else inputs.get("parameters", {})
+        params = data.get("params", {}) if is_text_gen_without_input else inputs.get(
+            "parameters", {})
 
         if not isinstance(input_data, list):
             raise Exception("query is not a list")
@@ -90,7 +96,8 @@ def get_request_data(
 
         return input_data, params, task_type
     except Exception as e:
-        task_type = data.get(EnvironmentVariables.TASK_TYPE, TaskType.CHAT_COMPLETION)
+        task_type = data.get(EnvironmentVariables.TASK_TYPE,
+                             TaskType.CHAT_COMPLETION)
         if task_type == TaskType.CHAT_COMPLETION:
             correct_input_format = (
                 '{"input_data": {"input_string": [{"role":"user", "content": "str1"}, '

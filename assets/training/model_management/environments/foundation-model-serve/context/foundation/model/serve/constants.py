@@ -3,12 +3,14 @@
 """This module defines the constants and enums."""
 from enum import Enum
 
+
 class CommonConstants:
     """Common constants used across the module."""
 
     DEFAULT_PORT = 8000
     HOST = "localhost"
     CONTENT_SAFETY_THERESHOLD_DEFAULT = 2
+
 
 class EnvironmentVariables:
     """Environment variables"""
@@ -28,8 +30,10 @@ class EnvironmentVariables:
     CONTENT_SAFETY_ACCOUNT_NAME = "CONTENT_SAFETY_ACCOUNT_NAME"
     CONTENT_SAFETY_ENDPOINT = "CONTENT_SAFETY_ENDPOINT"
 
+
 class EngineName:
     VLLM = "VLLM"
+
 
 class ExtraParameters:
     """Extra parameter options."""
@@ -40,16 +44,18 @@ class ExtraParameters:
     PASS_THROUGH = "pass-through"
     OPTIONS = [ERROR, DROP, PASS_THROUGH]
 
+
 class OpenAIEndpoints:
     V1_COMPLETIONS = "v1/completions"
     V1_CHAT_COMLETIONS = "v1/chat/completions"
+
 
 class TaskType(str, Enum):
     """Enum representing the types of tasks."""
 
     TEXT_GENERATION = "text-generation"
     CHAT_COMPLETION = "chat-completion"
-    
+
     def __str__(self):
         """Return the string representation of the task type."""
         return self.value

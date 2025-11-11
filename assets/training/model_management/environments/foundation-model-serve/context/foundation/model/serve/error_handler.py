@@ -35,6 +35,7 @@ def get_status_code_string(status_code):
     """
     return status_code_mapping.get(status_code, "Unknown Status Code")
 
+
 def to_azure_error_json_response(status_code, message, headers):
     """Azure standard error response."""
     if headers is not None and CONTENT_LENGTH in headers:

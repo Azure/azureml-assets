@@ -47,9 +47,11 @@ from foundation.model.serve.replica_manager import InferenceResult
 logger = configure_logger(__name__)
 
 g_fmscorer: FMScore = None
-DEFAULT_AACS_INFERENCE_URIS = [OpenAIEndpoints.V1_CHAT_COMLETIONS, OpenAIEndpoints.V1_COMPLETIONS]
+DEFAULT_AACS_INFERENCE_URIS = [
+    OpenAIEndpoints.V1_CHAT_COMLETIONS, OpenAIEndpoints.V1_COMPLETIONS]
 
-g_aacs_threshold = int(os.environ.get(EnvironmentVariables.CONTENT_SAFETY_THRESHOLD, CommonConstants.CONTENT_SAFETY_THERESHOLD_DEFAULT))
+g_aacs_threshold = int(os.environ.get(
+    EnvironmentVariables.CONTENT_SAFETY_THRESHOLD, CommonConstants.CONTENT_SAFETY_THERESHOLD_DEFAULT))
 g_aacs_client = None
 
 TIMEOUT_KEEP_ALIVE = 30
@@ -69,6 +71,8 @@ app.add_middleware(
 # --------------------------------------------------
 # Custom OpenAPI
 # --------------------------------------------------
+
+
 def filter_swagger_paths_by_tag(schema, tag):
     """Filter APIs to return in swagger."""
     schema_copy = copy.deepcopy(schema)
@@ -104,7 +108,9 @@ def custom_openapi():
     app.openapi_schema = filter_swagger_paths_by_tag(openapi_schema, tag)
     return app.openapi_schema
 
+
 app.openapi = custom_openapi
+
 
 def _init_cuda_visible_devices():
     import torch
@@ -126,6 +132,8 @@ def _init_cuda_visible_devices():
 # --------------------------------------------------
 # Proxy Middleware (Catch-all downstream forwarding)
 # --------------------------------------------------
+
+
 class ProxyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Try to process the request normally first
@@ -158,7 +166,8 @@ class ProxyMiddleware(BaseHTTPMiddleware):
                         headers={}
                     )
             except Exception as e:
-                logger.error(f"Error parsing the request for content safety {e}")
+                logger.error(
+                    f"Error parsing the request for content safety {e}")
                 raise
 
         safe_headers = {
@@ -196,9 +205,12 @@ class ProxyMiddleware(BaseHTTPMiddleware):
             logger.error(f"Proxy error for {url}: {e}")
             return JSONResponse({"error": "Downstream unavailable"}, status_code=502)
 
+
 def get_downstream_url():
-    engine_startup_port = os.getenv(EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT))
+    engine_startup_port = os.getenv(
+        EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT))
     return f"http://{CommonConstants.HOST}:{engine_startup_port}"
+
 
 def stream_response_to_generator(stream_response):
     """Get generator."""
@@ -217,20 +229,27 @@ def stream_response_to_generator(stream_response):
                 if task_type == TaskType.TEXT_GENERATION:
                     response_chunk = CompletionStreamResponse(**decoded_json)
                 elif task_type == TaskType.CHAT_COMPLETION:
-                    response_chunk = ChatCompletionStreamResponse(**decoded_json)
+                    response_chunk = ChatCompletionStreamResponse(
+                        **decoded_json)
                 else:
-                    logger.error(f"Unsupported task type {task_type} for streaming response.")
-                    raise Exception(f"Unsupported task type {task_type} for streaming response.")
-                response_chunk_json = response_chunk.model_dump_json(exclude_unset=True)
-                logger.info(f"Response chunk: {response_chunk_json}")            
+                    logger.error(
+                        f"Unsupported task type {task_type} for streaming response.")
+                    raise Exception(
+                        f"Unsupported task type {task_type} for streaming response.")
+                response_chunk_json = response_chunk.model_dump_json(
+                    exclude_unset=True)
+                logger.info(f"Response chunk: {response_chunk_json}")
                 yield f"data: {response_chunk_json}\n\n"
             except Exception as e:
-                logger.error(f"Error parsing decoded line: {decoded_line}, with exception: {e}")  
+                logger.error(
+                    f"Error parsing decoded line: {decoded_line}, with exception: {e}")
                 yield f"event: error\ndata: Error parsing decoded stream: {decoded_line}, with exception: {e}\n\n"
                 yield "data: [DONE]\n\n"
 
+
 # Register middleware
 app.add_middleware(ProxyMiddleware)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -262,6 +281,7 @@ async def health():
     """Check if server is healthy. Used by the readiness probe to check server is healthy."""
     print("health")
     return "healthy"
+
 
 @app.post("/score")
 async def score(request: Request) -> Response:
@@ -298,10 +318,10 @@ class PrettyJSONResponse(JSONResponse):
 #     }
 
 
-@app.post("/completions", summary="Azure AI model inference: Text Generation", tags = TaskType.TEXT_GENERATION)
+@app.post("/completions", summary="Azure AI model inference: Text Generation", tags=TaskType.TEXT_GENERATION)
 async def create_completion(
-    request: CompletionRequest,
-    raw_request: Request) -> CompletionResponse:
+        request: CompletionRequest,
+        raw_request: Request) -> CompletionResponse:
     """Completion API similar to OpenAI's API.
 
     See  https://platform.openai.com/docs/api-reference/chat/create
@@ -311,16 +331,17 @@ async def create_completion(
         - function_call (Users should implement this by themselves)
         - logit_bias (to be supported by vLLM engine)
     """
-    
+
     request = get_adapter(request, raw_request).adapt()
-    response = send_openai_request(request, raw_request, OpenAIEndpoints.V1_COMPLETIONS)
+    response = send_openai_request(
+        request, raw_request, OpenAIEndpoints.V1_COMPLETIONS)
     if response.status_code >= 400:
         return response
-    
+
     if request.stream:
         generator = stream_response_to_generator(response)
         return StreamingResponse(content=generator,
-                                #  media_type="text/event-stream",
+                                 #  media_type="text/event-stream",
                                  media_type=response.headers["Content-Type"],
                                  headers=response.headers,)
     try:
@@ -334,8 +355,8 @@ async def create_completion(
 
 @app.post("/chat/completions", summary="Azure AI model inference: Chat Completion")
 async def create_chat_completion(
-    request: ChatCompletionRequest,
-    raw_request: Request) -> ChatCompletionResponse:
+        request: ChatCompletionRequest,
+        raw_request: Request) -> ChatCompletionResponse:
     """Completion API similar to OpenAI's API.
 
     See  https://platform.openai.com/docs/api-reference/chat/create
@@ -344,16 +365,17 @@ async def create_chat_completion(
     """
 
     adapted_request = get_adapter(request, raw_request).adapt()
-    response = send_openai_request(adapted_request, raw_request, OpenAIEndpoints.V1_CHAT_COMLETIONS)
+    response = send_openai_request(
+        adapted_request, raw_request, OpenAIEndpoints.V1_CHAT_COMLETIONS)
     if response.status_code >= 400:
         return response
 
     if request.stream:
         generator = stream_response_to_generator(response)
         return StreamingResponse(content=generator,
-                                #  media_type="text/event-stream",
+                                 #  media_type="text/event-stream",
                                  media_type=response.headers["Content-Type"],
-                                 headers=response.headers,)    
+                                 headers=response.headers,)
     try:
         # temp hack to overwrite model to be the model_id thats being loaded
         response_json = response.json()
@@ -369,7 +391,8 @@ async def create_chat_completion(
 def send_openai_request(request, raw_request, uri):
     """Send request to downstream engine with open ai alike schema."""
     try:
-        _, severity = g_aacs_client.get_safe_input(request.to_downstream_json())
+        _, severity = g_aacs_client.get_safe_input(
+            request.to_downstream_json())
         if severity > g_aacs_threshold:
             logger.warning(
                 f"Input severity ({severity}) greater than aacs threshold " f"({g_aacs_threshold}).",
@@ -387,8 +410,9 @@ def send_openai_request(request, raw_request, uri):
     forward_headers = {}
     forward_headers['content-length'] = "application/json"
     payload = request.model_dump()          # Convert to Python dict
-    
-    response = requests.post(f"{get_downstream_url()}/{uri}", headers=forward_headers, json=payload)
+
+    response = requests.post(
+        f"{get_downstream_url()}/{uri}", headers=forward_headers, json=payload)
     if response.status_code >= 400:
         try:
             return to_azure_error_json_response(
@@ -402,8 +426,9 @@ def send_openai_request(request, raw_request, uri):
                 status_code=response.status_code,
                 headers=response.headers,
             )
-        
+
     return response
+
 
 VLLM_SAMPLING_PARAMS = {
     "n": "Number of output sequences to return for the given prompt.",
@@ -449,12 +474,14 @@ def _normalize_generation_params(params: Dict) -> Dict:
     # Handle EOS / Stop token mapping
     if "eos_token_id" in params:
         eos_token_id = params["eos_token_id"]
-        params["stop_token_ids"] = [eos_token_id] if not isinstance(eos_token_id, list) else eos_token_id
+        params["stop_token_ids"] = [eos_token_id] if not isinstance(
+            eos_token_id, list) else eos_token_id
 
     # Remove unsupported parameters
     unsupported_keys = set(params.keys()) - set(VLLM_SAMPLING_PARAMS.keys())
     for key in unsupported_keys:
-        logger.warning(f"Parameter '{key}' is not supported by VLLM and will be removed.")
+        logger.warning(
+            f"Parameter '{key}' is not supported by VLLM and will be removed.")
         params.pop(key, None)
 
     return params
@@ -494,7 +521,8 @@ async def send_request(data: Dict) -> (InferenceResult, Dict):
             )
             return {}
 
-        task_type = os.getenv(EnvironmentVariables.TASK_TYPE, TaskType.CHAT_COMPLETION)
+        task_type = os.getenv(
+            EnvironmentVariables.TASK_TYPE, TaskType.CHAT_COMPLETION)
         payload, uri = _get_payload_for_engine(data, task_type)
 
         headers = {
@@ -505,7 +533,8 @@ async def send_request(data: Dict) -> (InferenceResult, Dict):
         logger.info(f"JSON payload for request execution: {payload}")
 
         start_time = time.time()
-        response = requests.post(f"{get_downstream_url()}/{uri}", headers=headers, json=payload)
+        response = requests.post(
+            f"{get_downstream_url()}/{uri}", headers=headers, json=payload)
         end_time = time.time()
 
         generated_text = None
@@ -531,22 +560,23 @@ async def send_request(data: Dict) -> (InferenceResult, Dict):
             "exception": str(e),
         }))
 
-@asynccontextmanager  
-async def lifespan(app: FastAPI) -> Generator:  
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> Generator:
     """Initialize and shutdown events for each worker that is spawned in the main function."""
     global g_aacs_client
     g_aacs_client = AACSValidator()
     AACS_error = g_aacs_client.aacs_setup()
-  
+
     init_error = init_server(AACS_error)
     if init_error:
         logger.exception(init_error)
         raise init_error
     yield
 
-app.router.lifespan_context = lifespan 
+app.router.lifespan_context = lifespan
 
- 
+
 def init_server(AACS_error: Union[None, Exception]):
     """Initialize text-generation-inference server and client."""
     global g_fmscorer
@@ -556,7 +586,8 @@ def init_server(AACS_error: Union[None, Exception]):
         _init_cuda_visible_devices()
         azureml_model_dir = os.getenv(EnvironmentVariables.AZUREML_MODEL_DIR)
         if azureml_model_dir is None:
-            raise Exception(f"{EnvironmentVariables.AZUREML_MODEL_DIR} environment variable is not set.")
+            raise Exception(
+                f"{EnvironmentVariables.AZUREML_MODEL_DIR} environment variable is not set.")
         g_fmscorer = FMScore()
         g_fmscorer.init()
         logger.info("Server started successfully")
@@ -564,7 +595,8 @@ def init_server(AACS_error: Union[None, Exception]):
             for k, v in os.environ.items():
                 logger.info(f"env: {k} = {v}")
             if AACS_error:
-                logger.warning(f"AACS was not configured. Content moderation bypassed in setup. Error {AACS_error}")
+                logger.warning(
+                    f"AACS was not configured. Content moderation bypassed in setup. Error {AACS_error}")
         return None
     except Exception as e:
         return Exception(f"Error in creating client or server: {e}")

@@ -73,7 +73,8 @@ class MultimodalMessage(Message):
 class Conversation:
     """Class representing a conversation."""
 
-    messages: Optional[List[Union[TextMessage, MultimodalMessage]]] = field(default_factory=list)
+    messages: Optional[List[Union[TextMessage, MultimodalMessage]]] = field(
+        default_factory=list)
 
     def __post_init__(self):
         """Validate the first message after initialization."""
@@ -84,12 +85,14 @@ class Conversation:
         if self.messages:
             first_role = self.messages[0].role
             if first_role not in [Role.SYSTEM, Role.USER]:
-                raise ValueError("The first message should be from the system or the user.")
+                raise ValueError(
+                    "The first message should be from the system or the user.")
 
     def add_message(self, message: Union[TextMessage, MultimodalMessage]):
         """Add a message to the conversation."""
         if len(self.messages) == 0 and message.role not in [Role.SYSTEM, Role.USER]:
-            raise ValueError("The first message should be from the system or the user.")
+            raise ValueError(
+                "The first message should be from the system or the user.")
         self.messages.append(message)
 
     def to_json(self) -> str:
@@ -106,23 +109,30 @@ class Conversation:
                 messages.append(MultimodalMessage(Role(msg_dict["role"]),
                                 [MultimodalContent(**item) for item in msg_dict["content"]]))
             else:
-                messages.append(TextMessage(Role(msg_dict["role"]), msg_dict["content"]))
+                messages.append(TextMessage(
+                    Role(msg_dict["role"]), msg_dict["content"]))
         return cls(messages)
 
 
 if __name__ == "__main__":
     """Example usage of the Conversation class."""
     try:
-        conv = Conversation([TextMessage(Role.ASSISTANT, "Can't start with assistant.")])
+        conv = Conversation(
+            [TextMessage(Role.ASSISTANT, "Can't start with assistant.")])
     except ValueError as e:
         print(f"Validation Error: {e}")
 
-    conv = Conversation([TextMessage(Role.SYSTEM, "You are a helpful assistant.")])
-    conv.add_message(TextMessage(Role.USER, "Who won the world series in 2020?"))
-    conv.add_message(TextMessage(Role.ASSISTANT, "The Los Angeles Dodgers won the World Series in 2020."))
+    conv = Conversation(
+        [TextMessage(Role.SYSTEM, "You are a helpful assistant.")])
+    conv.add_message(TextMessage(
+        Role.USER, "Who won the world series in 2020?"))
+    conv.add_message(TextMessage(
+        Role.ASSISTANT, "The Los Angeles Dodgers won the World Series in 2020."))
     conv.add_message(MultimodalMessage(Role.USER, [
-        MultimodalContent(type="image_url", image_url={"url": "https://example.com/image.jpg"}),
-        MultimodalContent(type="audio_url", audio_url={"url": "https://example.com/audio.wav"})
+        MultimodalContent(type="image_url", image_url={
+                          "url": "https://example.com/image.jpg"}),
+        MultimodalContent(type="audio_url", audio_url={
+                          "url": "https://example.com/audio.wav"})
     ]))
 
     json_str = conv.to_json()

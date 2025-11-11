@@ -6,6 +6,7 @@ from foundation.model.serve.logging_config import configure_logger
 
 logger = configure_logger(__name__)
 
+
 def log_execution_time(func):
     """Decorate a function to log the execution time.
 
@@ -33,6 +34,7 @@ def log_execution_time(func):
         return result
 
     return wrapper
+
 
 def box_logger(message: str):
     """Log a message, but in a box."""
