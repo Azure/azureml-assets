@@ -16,6 +16,7 @@ from foundation.model.serve.logging_config import configure_logger
 
 logger = configure_logger(__name__)
 
+
 class VLLMEngine(BaseEngine):
     """VLLM Engine class.
 
@@ -43,15 +44,17 @@ class VLLMEngine(BaseEngine):
         print(" ".join(cmd))
 
         subprocess.Popen(cmd)
-    
+
     def formulate_environment_variables(self):
         """Formulate environment variables specific to VLLM engine."""
         azureml_model_dir = os.getenv(EnvironmentVariables.AZUREML_MODEL_DIR)
         aml_model = os.getenv(EnvironmentVariables.AML_MODEL)
-        engine_port = os.getenv(EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT))
+        engine_port = os.getenv(
+            EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT))
 
         if not aml_model:
-            raise EnvironmentError(f"{EnvironmentVariables.AML_MODEL} environment variable is not set.")
+            raise EnvironmentError(
+                f"{EnvironmentVariables.AML_MODEL} environment variable is not set.")
 
         # Set AML port
         os.environ[EnvironmentVariables.AML_PORT] = engine_port

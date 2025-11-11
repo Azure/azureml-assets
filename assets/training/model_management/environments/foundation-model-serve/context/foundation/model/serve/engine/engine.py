@@ -11,6 +11,7 @@ from foundation.model.serve.constants import CommonConstants
 
 logger = configure_logger(__name__)
 
+
 class BaseEngine(ABC):
     """Base class for inference engines backends."""
 

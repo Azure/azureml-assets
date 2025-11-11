@@ -158,15 +158,20 @@ class ContentPart(BaseModel):
     @model_validator(mode="after")
     def validate_content_part(self):
         if self.type == ContentPartType.text and not self.text:
-            raise ValueError(f"Content part type is {self.type} but text is not provided.")
+            raise ValueError(
+                f"Content part type is {self.type} but text is not provided.")
         if self.type == ContentPartType.image and not self.image:
-            raise ValueError(f"Content part type is {self.type} but image is not provided.")
+            raise ValueError(
+                f"Content part type is {self.type} but image is not provided.")
         if self.type == ContentPartType.image_url and not self.image_url:
-            raise ValueError(f"Content part type is {self.type} but image_url is not provided.")
+            raise ValueError(
+                f"Content part type is {self.type} but image_url is not provided.")
         if self.type == ContentPartType.audio_url and not self.audio_url:
-            raise ValueError(f"Content part type is {self.type} but audio_url is not provided.")
+            raise ValueError(
+                f"Content part type is {self.type} but audio_url is not provided.")
         if self.type == ContentPartType._input_audio and not self._input_audio:
-            raise ValueError(f"Content part type is {self.type} but input_audio is not provided.")
+            raise ValueError(
+                f"Content part type is {self.type} but input_audio is not provided.")
         return self
 
 
@@ -200,7 +205,8 @@ class ResponseFormat(BaseModel):
             "text",
             "json_object",
         ]:
-            raise ValueError(f"Response format was {v} but must be either 'text' or 'json_object'.")
+            raise ValueError(
+                f"Response format was {v} but must be either 'text' or 'json_object'.")
         return v
 
 
@@ -310,7 +316,8 @@ class BaseRequest(BaseModel):
             for k in self.model_extra:
                 if k in model:
                     if logger:
-                        logger.warning(f"[to_downstream_json] Removing extra key: {k}")
+                        logger.warning(
+                            f"[to_downstream_json] Removing extra key: {k}")
                     del model[k]
 
         return model
@@ -530,7 +537,8 @@ class LogProbs(BaseModel):
     text_offset: List[int] = Field(default_factory=list)
     token_logprobs: List[Optional[float]] = Field(default_factory=list)
     tokens: List[str] = Field(default_factory=list)
-    top_logprobs: List[Optional[Dict[str, float]]] = Field(default_factory=list)
+    top_logprobs: List[Optional[Dict[str, float]]
+                       ] = Field(default_factory=list)
 
 
 class CompletionResponseChoice(BaseModel):

@@ -16,6 +16,7 @@ from foundation.model.serve.logging_config import configure_logger
 
 logger = configure_logger(__name__)
 
+
 class CustomEngine(BaseEngine):
     """Custom Engine class.
 
@@ -25,7 +26,8 @@ class CustomEngine(BaseEngine):
 
     def __init__(self):
         """Initialize the CustomEngine class."""
-        self.startup_script_path = os.getenv(EnvironmentVariables.ENGINE_STARTUP_FILE_PATH, None)
+        self.startup_script_path = os.getenv(
+            EnvironmentVariables.ENGINE_STARTUP_FILE_PATH, None)
 
     def init_server(self):
         """Initialize client[s] for the engine to receive requests on."""
