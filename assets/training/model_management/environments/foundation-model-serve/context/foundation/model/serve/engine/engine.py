@@ -20,7 +20,7 @@ class BaseEngine(ABC):
         """Initialize client[s] for the engine to receive requests on."""
         pass
 
-    def is_port_open(self, host: str = CommonConstants.HOST, 
+    def is_port_open(self, host: str = CommonConstants.HOST,
                      port: int = CommonConstants.DEFAULT_PORT, timeout: float = 1.0) -> bool:
         """Check if a port is open on the given host."""
         try:
