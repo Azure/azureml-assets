@@ -13,7 +13,7 @@ class CommonConstants:
 
 
 class EnvironmentVariables:
-    """Environment variables"""
+    """Environment variables."""
 
     ENGINE_NAME = "ENGINE_NAME"
     AACS_INFERENCE_URI = "AACS_INFERENCE_URI"
@@ -32,6 +32,8 @@ class EnvironmentVariables:
 
 
 class EngineName:
+    """Engine name constants."""
+
     VLLM = "VLLM"
 
 
@@ -46,6 +48,8 @@ class ExtraParameters:
 
 
 class OpenAIEndpoints:
+    """OpenAI API endpoint constants."""
+
     V1_COMPLETIONS = "v1/completions"
     V1_CHAT_COMLETIONS = "v1/chat/completions"
 

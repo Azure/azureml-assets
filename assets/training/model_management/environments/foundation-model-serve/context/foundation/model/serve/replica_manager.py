@@ -53,6 +53,7 @@ def get_engine() -> BaseEngine:
 @dataclass
 class InferenceResult:
     """Data class for storing inference results."""
+
     response: str
 
 

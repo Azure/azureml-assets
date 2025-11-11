@@ -160,7 +160,17 @@ class ProxyMiddleware(BaseHTTPMiddleware):
     This middleware catches 404 responses from FastAPI and forwards them to
     the downstream inference engine, enabling pass-through of engine-specific endpoints.
     """
+
     async def dispatch(self, request: Request, call_next):
+        """Dispatch HTTP requests, forwarding 404s to the downstream engine.
+        
+        Args:
+            request: The incoming HTTP request.
+            call_next: Callable to invoke the next middleware in the chain.
+            
+        Returns:
+            Response: Either the FastAPI response or proxied downstream response.
+        """
         # Try to process the request normally first
         response = await call_next(request)
 
@@ -397,7 +407,6 @@ async def create_completion(
         - function_call (Users should implement this by themselves)
         - logit_bias (to be supported by vLLM engine)
     """
-
     request = get_adapter(request, raw_request).adapt()
     response = send_openai_request(
         request, raw_request, OpenAIEndpoints.V1_COMPLETIONS)
@@ -429,7 +438,6 @@ async def create_chat_completion(
     for the API specification. This API mimics the OpenAI ChatCompletion API.
 
     """
-
     adapted_request = get_adapter(request, raw_request).adapt()
     response = send_openai_request(
         adapted_request, raw_request, OpenAIEndpoints.V1_CHAT_COMLETIONS)
@@ -535,7 +543,6 @@ def _normalize_generation_params(params: Dict) -> Dict:
     Returns:
         Dict: Normalized parameters compatible with VLLM.
     """
-
     # Map legacy or alternate keys
     for key in ("max_gen_len", "max_new_tokens"):
         if key in params:

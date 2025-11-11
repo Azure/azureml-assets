@@ -37,6 +37,7 @@ import uuid
 
 class ChatRole(str, Enum):
     """Enumeration of chat message roles."""
+
     system = "system"
     user = "user"
     assistant = "assistant"
@@ -45,6 +46,7 @@ class ChatRole(str, Enum):
 
 class ContentImageDetail(str, Enum):
     """Enumeration of image detail levels for content."""
+
     auto = "auto"
     low = "low"
     high = "high"
@@ -52,6 +54,7 @@ class ContentImageDetail(str, Enum):
 
 class ContentPartType(str, Enum):
     """Enumeration of content part types for multimodal messages."""
+
     text = "text"
     image = "image"
     image_url = "image_url"
@@ -61,17 +64,27 @@ class ContentPartType(str, Enum):
 
 class ToolType(str, Enum):
     """Enumeration of tool types for function calling."""
+
     function = "function"
 
 
 class Function(BaseModel):
     """Model representing a function call with name and arguments."""
+
     name: str
     arguments: Union[Dict, str]
     call_id: Optional[str] = None
 
     @field_validator("arguments")
     def cast_to_dict(cls, v):
+        """Cast string arguments to dictionary if valid JSON.
+        
+        Args:
+            v: The arguments value to validate.
+            
+        Returns:
+            Dict or str: Parsed dictionary if valid JSON, otherwise original value.
+        """
         if isinstance(v, str):
             try:
                 loaded = json.loads(v)
@@ -85,6 +98,17 @@ class Function(BaseModel):
 
     @field_validator("name")
     def must_be_alphanumeric_or_underscore_dash(cls, v: str) -> str:
+        """Validate function name contains only allowed characters.
+        
+        Args:
+            v: The function name to validate.
+            
+        Returns:
+            str: The validated function name.
+            
+        Raises:
+            ValueError: If name contains invalid characters or exceeds 64 chars.
+        """
         if not re.match(r"^[a-zA-Z0-9_-]{1,64}$", v):
             raise ValueError(
                 f"Function name was {v} but must be a-z, A-Z, 0-9, "
@@ -100,6 +124,7 @@ class Function(BaseModel):
 
 class ChatCompletionMessageToolCall(BaseModel):
     """Model representing a tool call in a chat completion message."""
+
     id: Optional[str] = None
     type: ToolType = ToolType.function
     function: Function
@@ -112,6 +137,7 @@ class ChatCompletionMessageToolCall(BaseModel):
 
 class ContentImage(BaseModel):
     """Model representing image content with optional detail level."""
+
     data: Any
     detail: Optional[ContentImageDetail] = ContentImageDetail.auto
 
@@ -123,6 +149,7 @@ class ContentImage(BaseModel):
 
 class ContentImageUrl(BaseModel):
     """Model representing an image URL with optional detail level."""
+
     url: str
     detail: Optional[ContentImageDetail] = ContentImageDetail.auto
 
@@ -134,6 +161,7 @@ class ContentImageUrl(BaseModel):
 
 class ContentAudioUrl(BaseModel):
     """Model representing an audio URL."""
+
     url: str
 
     model_config = ConfigDict(
@@ -144,12 +172,14 @@ class ContentAudioUrl(BaseModel):
 
 class ContentAudioFormat(str, Enum):
     """Enumeration of supported audio formats."""
+
     wav = "wav"
     mp3 = "mp3"
 
 
 class ContentInputAudio(BaseModel):
     """Model representing input audio data with format specification."""
+
     data: Any
     format: ContentAudioFormat = ContentAudioFormat.wav
 
@@ -161,6 +191,7 @@ class ContentInputAudio(BaseModel):
 
 class ContentPart(BaseModel):
     """Model representing a part of multimodal content (text, image, or audio)."""
+
     type: ContentPartType
     text: Optional[str] = None
     image: Optional[ContentImage] = None
@@ -175,6 +206,14 @@ class ContentPart(BaseModel):
 
     @model_validator(mode="after")
     def validate_content_part(self):
+        """Validate content part has required fields for its type.
+        
+        Returns:
+            ContentPart: The validated content part.
+            
+        Raises:
+            ValueError: If required field is missing for the content type.
+        """
         if self.type == ContentPartType.text and not self.text:
             raise ValueError(
                 f"Content part type is {self.type} but text is not provided.")
@@ -195,6 +234,7 @@ class ContentPart(BaseModel):
 
 class ChatMessage(BaseModel):
     """Model representing a chat message with role and content."""
+
     role: ChatRole
     content: Optional[Union[str, List[ContentPart]]] = None
     tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
@@ -205,6 +245,11 @@ class ChatMessage(BaseModel):
     )
 
     def __init__(self, **data):
+        """Initialize ChatMessage and generate IDs for tool calls if needed.
+        
+        Args:
+            **data: Keyword arguments for message fields.
+        """
         super().__init__(**data)
         if self.tool_calls:
             for (
@@ -217,10 +262,22 @@ class ChatMessage(BaseModel):
 
 class ResponseFormat(BaseModel):
     """Model specifying the response format (text or json_object)."""
+
     type: str
 
     @field_validator("type")
     def must_be_valid_response_format(cls, v: str) -> str:
+        """Validate response format type is either 'text' or 'json_object'.
+        
+        Args:
+            v: The response format type to validate.
+            
+        Returns:
+            str: The validated response format type.
+            
+        Raises:
+            ValueError: If format is not 'text' or 'json_object'.
+        """
         if v.lower() not in [
             "text",
             "json_object",
@@ -232,12 +289,24 @@ class ResponseFormat(BaseModel):
 
 class FunctionDefinition(BaseModel):
     """Model defining a function for function calling."""
+
     name: str
     description: str
     parameters: Optional[Any] = None
 
     @field_validator("parameters")
     def validate_parameters(cls, v: dict) -> dict:
+        """Validate function parameters schema using JSON Schema Draft 7.
+        
+        Args:
+            v: The parameters schema to validate.
+            
+        Returns:
+            dict: The validated parameters schema.
+            
+        Raises:
+            ValueError: If schema validation fails.
+        """
         try:
             Draft7Validator.check_schema(v)
         except SchemaError as e:
@@ -246,6 +315,17 @@ class FunctionDefinition(BaseModel):
 
     @field_validator("name")
     def must_be_alphanumeric_or_underscore_dash(cls, v: str) -> str:
+        """Validate function name contains only allowed characters.
+        
+        Args:
+            v: The function name to validate.
+            
+        Returns:
+            str: The validated function name.
+            
+        Raises:
+            ValueError: If name contains invalid characters or exceeds 64 chars.
+        """
         if not re.match(r"^[a-zA-Z0-9_-]{1,64}$", v):
             raise ValueError(
                 f"Function name was {v} but must be a-z, A-Z, 0-9, "
@@ -261,12 +341,14 @@ class FunctionDefinition(BaseModel):
 
 class ChatCompletionToolParam(BaseModel):
     """Model representing a tool parameter for chat completion."""
+
     type: ToolType = ToolType.function
     function: FunctionDefinition = None
 
 
 class BaseRequest(BaseModel):
     """Base model for all API requests with common parameters."""
+
     model_config = ConfigDict(
         extra="allow",
         exclude_unset=True,
@@ -322,6 +404,11 @@ class BaseRequest(BaseModel):
     stream: Optional[bool] = False
 
     def __repr__(self) -> str:
+        """Return string representation of the request with redacted sensitive fields.
+        
+        Returns:
+            str: String representation of the BaseRequest instance.
+        """
         model = self.model_dump()
         repr_str = "BaseRequest("
         for k, v in model.items():
@@ -333,6 +420,15 @@ class BaseRequest(BaseModel):
         return repr_str
 
     def to_downstream_json(self, include_extra=False, logger=None) -> Dict[str, Any]:
+        """Convert request to JSON for downstream engine API call.
+        
+        Args:
+            include_extra: Whether to include extra fields not in schema.
+            logger: Optional logger for warnings about extra parameters.
+            
+        Returns:
+            Dict[str, Any]: JSON-serializable dictionary for downstream API.
+        """
         model = self.model_dump(exclude_unset=True)
 
         if include_extra is False:
@@ -348,6 +444,7 @@ class BaseRequest(BaseModel):
 
 class CompletionRequest(BaseRequest):
     """Model for text completion requests."""
+
     model_config = ConfigDict(
         extra="allow",
         exclude_unset=True,
@@ -359,6 +456,11 @@ class CompletionRequest(BaseRequest):
     )
 
     def __repr__(self) -> str:
+        """Return string representation of the completion request.
+        
+        Returns:
+            str: String representation of the CompletionRequest instance.
+        """
         model = self.model_dump()
         repr_str = "TextGenerationRequest("
         for k, v in model.items():
@@ -372,6 +474,7 @@ class CompletionRequest(BaseRequest):
 
 class ChatCompletionRequest(BaseRequest):
     """Model for chat completion requests."""
+
     model_config = ConfigDict(
         extra="allow",
         exclude_unset=True,
@@ -394,11 +497,27 @@ class ChatCompletionRequest(BaseRequest):
 
     @field_validator("messages")
     def validate_messages_not_empty(cls, msgs):
+        """Validate messages list is not empty.
+        
+        Args:
+            msgs: List of chat messages.
+            
+        Returns:
+            List[ChatMessage]: The validated messages list.
+            
+        Raises:
+            ValueError: If messages list is empty.
+        """
         if len(msgs) == 0:
             raise ValueError("messages can not be an empty list")
         return msgs
 
     def __repr__(self) -> str:
+        """Return string representation of the chat completion request.
+        
+        Returns:
+            str: String representation of the ChatCompletionRequest instance.
+        """
         model = self.model_dump()
         repr_str = "ChatCompletionRequest("
         for k, v in model.items():
@@ -412,6 +531,7 @@ class ChatCompletionRequest(BaseRequest):
 
 class ChatCompletionRequestFreeFlow(BaseRequest):
     """Model for chat completion requests with free-flow extra parameters."""
+
     model_config = ConfigDict(
         extra="allow",         # accept extra params
         exclude_unset=True,    # drop unset values
@@ -440,13 +560,31 @@ class ChatCompletionRequestFreeFlow(BaseRequest):
 
     @field_validator("messages")
     def validate_messages_not_empty(cls, msgs):
+        """Validate messages list is not empty.
+        
+        Args:
+            msgs: List of chat messages.
+            
+        Returns:
+            List[ChatMessage]: The validated messages list.
+            
+        Raises:
+            ValueError: If messages list is empty.
+        """
         if len(msgs) == 0:
             raise ValueError("messages can not be an empty list")
         return msgs
 
     @model_validator(mode="before")
     def collect_extra_params(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        """Move unknown keys into extra_params"""
+        """Move unknown keys into extra_params.
+        
+        Args:
+            values: Dictionary of all input values.
+            
+        Returns:
+            Dict[str, Any]: Updated values with extras in extra_params field.
+        """
         known_fields = set(cls.model_fields.keys())
         extras = {k: v for k, v in values.items() if k not in known_fields}
         if extras:
@@ -454,6 +592,11 @@ class ChatCompletionRequestFreeFlow(BaseRequest):
         return values
 
     def __repr__(self) -> str:
+        """Return string representation of the free-flow chat completion request.
+        
+        Returns:
+            str: String representation of the ChatCompletionRequestFreeFlow instance.
+        """
         model = self.model_dump()
         repr_str = "ChatCompletionRequest("
         for k, v in model.items():
@@ -471,6 +614,8 @@ class ChatCompletionRequestFreeFlow(BaseRequest):
 
 # Response
 class FinishReason(str, Enum):
+    """Enumeration of possible completion finish reasons."""
+
     stop: str = "stop"
     length: str = "length"
     model_length: str = "model_length"
@@ -481,6 +626,7 @@ class FinishReason(str, Enum):
 
 class ChatCompletionResponseChoice(BaseModel):
     """Model representing a single choice in a chat completion response."""
+
     index: int
     message: ChatMessage
     finish_reason: Optional[FinishReason] = None
@@ -493,6 +639,7 @@ class ChatCompletionResponseChoice(BaseModel):
 
 class UsageInfo(BaseModel):
     """Model representing token usage information."""
+
     prompt_tokens: int = 0
     total_tokens: int = 0
     completion_tokens: Optional[int] = 0
@@ -505,6 +652,7 @@ class UsageInfo(BaseModel):
 
 class ChatCompletionResponse(BaseModel):
     """Model for chat completion response."""
+
     id: str  # internal X-Request-Id from request headers
     object: str = "chat.completion"
     created: int = Field(default_factory=lambda: int(time.time()))
@@ -520,6 +668,7 @@ class ChatCompletionResponse(BaseModel):
 
 class ChoiceDeltaToolCall(BaseModel):
     """Model representing a delta tool call in streaming responses."""
+
     id: str
     index: int
     type: str
@@ -533,6 +682,7 @@ class ChoiceDeltaToolCall(BaseModel):
 
 class DeltaMessage(BaseModel):
     """Model representing a delta message in streaming chat completion."""
+
     role: Optional[str] = None
     content: Optional[str] = None
     tool_calls: Optional[List[ChoiceDeltaToolCall]] = None
@@ -542,6 +692,7 @@ class DeltaMessage(BaseModel):
 
 class ChatCompletionResponseStreamChoice(BaseModel):
     """Model representing a choice in a streaming chat completion response."""
+
     index: int
     delta: DeltaMessage
     finish_reason: Optional[FinishReason] = None
@@ -551,6 +702,7 @@ class ChatCompletionResponseStreamChoice(BaseModel):
 
 class ChatCompletionStreamResponse(BaseModel):
     """Model for streaming chat completion response chunks."""
+
     id: str  # internal X-Request-Id from request headers
     object: str = "chat.completion.chunk"
     created: int = Field(default_factory=lambda: int(time.time()))
@@ -606,6 +758,7 @@ class CompletionResponse(BaseModel):
 
 class CompletionResponseStreamChoice(BaseModel):
     """Model representing a choice in a streaming text completion response."""
+
     index: int = 0
     text: str = ""
     logprobs: Optional[LogProbs] = None
@@ -616,6 +769,7 @@ class CompletionResponseStreamChoice(BaseModel):
 
 class CompletionStreamResponse(BaseModel):
     """Model for streaming text completion response chunks."""
+
     id: str = Field(default_factory=lambda: f"cmpl-{uuid.uuid4()}")
     object: str = "text_completion"
     created: int = Field(default_factory=lambda: int(time.time()))
@@ -628,6 +782,7 @@ class CompletionStreamResponse(BaseModel):
 
 class AzureError(BaseModel):
     """Model representing an Azure error response."""
+
     code: str
     message: str
     status: int
@@ -635,4 +790,5 @@ class AzureError(BaseModel):
 
 class AzureErrorResponse(BaseModel):
     """Model for Azure error response wrapper."""
+
     error: AzureError
