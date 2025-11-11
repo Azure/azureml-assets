@@ -90,24 +90,6 @@ def set_environment_variables_for_nccl_backend(master_port=6105):
         safe_setenv("MASTER_PORT", os.environ.get("MASTER_PORT") or str(master_port))
 
 
-def get_master_ip_amlk8s():
-    """Get the MASTER_ADDR IP for AML K8s clusters."""
-    # from: https://k8s-wiki.azureml.com/faq.html
-    regexp = r"[\s\S]*export[\s]*DLTS_SD_worker0_IP=([0-9.]+)[\s|s]*"
-    with open("/dlts-runtime/env/init.env", "r") as f:
-        line = f.read()
-    match = re.match(regexp, line)
-    if match:
-        ip = str(match.group(1))
-        return ip
-    else:
-        print(
-            "Failed to identify MASTER_ADDR from /dlts-runtime/env/init.env: no matching line. "
-            "Assuming 127.0.0.1 by default."
-        )
-        return "127.0.0.1"
-
-
 def _is_heavy_model_file(rel_path: Path) -> bool:
     """Return True if the suffix is .safetensors."""
     _HEAVY_EXTS = {".safetensors"}
@@ -213,8 +195,8 @@ def execute_training(args):
     logger.info(
         f"About to copy catalog from {args.pretrained_mlflow_model} to {args.mlflow_model_folder}"
     )
-    logger.info(f"Source exists: {os.path.exists(args.pretrained_mlflow_model)}")
-    logger.info(f"Destination exists: {os.path.exists(args.mlflow_model_folder)}")
+    logger.info(f"Source exists: {Path(args.pretrained_mlflow_model).exists()}")
+    logger.info(f"Destination exists: {Path(args.mlflow_model_folder).exists()}")
 
     # IMPORTANT: point OUTPUT env to node-local temp for non-rank0
     node_local_output = str(Path(tempfile.gettempdir()) / f"mip_train_node{RANK}")
@@ -237,11 +219,11 @@ def execute_training(args):
     logger.info("Copy catalog function completed")
 
     # Use static shell script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    launcher_script = os.path.join(script_dir, "train_launcher.sh")
+    script_path = Path(__file__).parent
+    launcher_script = script_path / "train_launcher.sh"
 
     # Check if launcher script exists
-    if not os.path.exists(launcher_script):
+    if not launcher_script.exists():
         logger.error(f"Launcher script not found: {launcher_script}")
         return 1
 
@@ -259,7 +241,7 @@ def execute_training(args):
 
     logger.info("Calling olympus_core with arguments:")
     logger.info(" ".join(olympus_args))
-    cmd = " ".join([launcher_script] + olympus_args)
+    cmd = " ".join([str(launcher_script)] + olympus_args)
     proc = subprocess.Popen(cmd,
                             shell=True,
                             executable=shutil.which("bash") or None,
@@ -274,28 +256,21 @@ def execute_training(args):
         logger.info("Training completed successfully.")
 
         if RANK == 0:
-            ckpt_path = (
-                args.out
-                + f"/{os.environ['AMLT_EXPERIMENT_NAME']}/{os.environ['AMLT_JOB_NAME']}/checkpoints/last.ckpt"
-                )
-            output_path = (
-                args.mlflow_model_folder
-                + "/artifacts/checkpoints/boltzformer_focal_all.safetensors"
-            )
+            ckpt_path = Path(args.out) / os.environ['AMLT_EXPERIMENT_NAME'] / os.environ['AMLT_JOB_NAME'] / "checkpoints" / "last.ckpt"
+            output_path = Path(args.mlflow_model_folder) / "artifacts" / "checkpoints" / "boltzformer_focal_all.safetensors"
+            
             logger.info("Starting conversion to HuggingFace format...")
-            convert_ckpt_to_safetensor(ckpt_path, output_path)
+            convert_ckpt_to_safetensor(str(ckpt_path), str(output_path))
 
             logger.info("Output directory snapshot:")
-            for root, dirs, files in os.walk(args.out):
-                logger.info(f"  {root}")
-                for f in files:
-                    logger.info(f"    - {f}")
+            for item in Path(args.out).rglob("*"):
+                if item.is_file():
+                    logger.info(f"  {item}")
 
             logger.info("Finetuned MLflow model snapshot:")
-            for root, dirs, files in os.walk(args.mlflow_model_folder):
-                logger.info(f"  {root}")
-                for f in files:
-                    logger.info(f"    - {f}")
+            for item in Path(args.mlflow_model_folder).rglob("*"):
+                if item.is_file():
+                    logger.info(f"  {item}")
     else:
         logger.error(f"Training failed with exit code: {exit_code}")
 
@@ -317,28 +292,31 @@ def main():
     ]
 
     # For config, check if it exists (can be file or directory)
-    if not os.path.exists(args.config):
+    config_path = Path(args.config)
+    if not config_path.exists():
         logger.error(f"Config path does not exist: {args.config}")
         return 1
 
-    for name, path in paths_to_check:
-        if not os.path.exists(path):
+    for name, path_str in paths_to_check:
+        path = Path(path_str)
+        if not path.exists():
             logger.error(f"{name} path does not exist: {path}")
             return 1
-        if not os.path.isdir(path):
+        if not path.is_dir():
             logger.error(f"{name} path is not a directory: {path}")
             return 1
 
     # Create output directory if it doesn't exist
     if RANK == 0:
-        if not os.path.exists(args.out):
-            logger.info(f"Creating output directory: {args.out}")
-            os.makedirs(args.out, exist_ok=True)
-        elif not os.path.exists(args.mlflow_model_folder + "/artifacts/checkpoints"):
-            logger.info(
-                f"Creating output directory: {args.mlflow_model_folder + '/artifacts/checkpoints'}"
-            )
-            os.makedirs(args.mlflow_model_folder + "/artifacts/checkpoints", exist_ok=True)
+        out_path = Path(args.out)
+        if not out_path.exists():
+            logger.info(f"Creating output directory: {out_path}")
+            out_path.mkdir(parents=True, exist_ok=True)
+        
+        checkpoint_path = Path(args.mlflow_model_folder) / "artifacts" / "checkpoints"
+        if not checkpoint_path.exists():
+            logger.info(f"Creating output directory: {checkpoint_path}")
+            checkpoint_path.mkdir(parents=True, exist_ok=True)
 
     # Execute training
     return execute_training(args)
