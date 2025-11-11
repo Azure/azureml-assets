@@ -1,6 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""This class provides model replication and load balancing functionality."""
+"""Replica manager module for model replication and load balancing.
+
+This module provides functionality for managing multiple model replicas
+to enable load balancing and horizontal scaling of inference workloads.
+"""
 import os
 import random
 import tempfile
@@ -21,7 +25,14 @@ logger = configure_logger(__name__)
 
 
 def get_engine() -> BaseEngine:
-    """Return the appropriate engine based on the engine name."""
+    """Return the appropriate engine based on the engine name configuration.
+    
+    Returns:
+        BaseEngine: An instance of the configured engine (VLLM, Custom, etc.).
+        
+    Raises:
+        ValueError: If the engine name is invalid.
+    """
     engine_name = os.getenv(EnvironmentVariables.ENGINE_NAME, EngineName.VLLM)
     startup_script_path = os.getenv(
         EnvironmentVariables.ENGINE_STARTUP_FILE_PATH, None)
@@ -46,10 +57,14 @@ class InferenceResult:
 
 
 class ReplicaManager:
-    """Class for managing replicas of a model."""
+    """Manager class for handling multiple model replicas.
+    
+    This class manages the creation, initialization, and lifecycle of multiple
+    inference engine replicas for load balancing and scaling.
+    """
 
     def __init__(self):
-        """Initialize the ReplicaManager."""
+        """Initialize the ReplicaManager with engine replicas and GPU configuration."""
         self.engine_replicas = []  # type: List[BaseEngine]
         self._replica_index = 0  # index of the next available replica
         self._tensor_parallel = int(
@@ -60,7 +75,8 @@ class ReplicaManager:
     def _get_cuda_visible_devices():
         """Get the CUDA_VISIBLE_DEVICES environment variable or set it to all available GPUs.
 
-        Returns a comma-separated string of GPU IDs, e.g. "0,1,2,3"
+        Returns:
+            str: A comma-separated string of GPU IDs, e.g. "0,1,2,3".
         """
         gpu_ids = os.environ.get("CUDA_VISIBLE_DEVICES", None)
         if gpu_ids is None:
@@ -69,7 +85,11 @@ class ReplicaManager:
         return gpu_ids
 
     def initialize(self):
-        """Initialize the ReplicaManager by creating engine replicas."""
+        """Initialize the ReplicaManager by creating and launching engine replicas.
+        
+        This method creates the specified number of replicas and launches them
+        with proper GPU allocation and synchronization across workers.
+        """
         num_replicas = int(os.environ.get("NUM_REPLICAS", 1))
         for idx in list(range(num_replicas)):
             engine_replica = get_engine()
@@ -127,7 +147,14 @@ Using tensor parallel of {self._tensor_parallel} GPUs per replica.",
                 os.remove(flag_file_path)
 
     def _launch_single_replica(self, replica_idx):
-        """Launch a single replica."""
+        """Launch a single replica with appropriate GPU allocation.
+        
+        Args:
+            replica_idx (int): The index of the replica to launch.
+            
+        Returns:
+            BaseEngine: The launched engine replica.
+        """
         engine_replica: BaseEngine = self.engine_replicas[replica_idx]
         gpu_ids_list = [int(gpu_id.strip())
                         for gpu_id in self.gpu_ids.split(",")]
@@ -154,7 +181,15 @@ Using tensor parallel of {self._tensor_parallel} GPUs per replica.",
         return engine_replica
 
     def _get_gpu_ids_for_replica(self, replica_idx: int, gpu_ids_list: List[int]) -> List[int]:
-        """Get the GPU IDs for a specific replica."""
+        """Get the GPU IDs for a specific replica based on tensor parallelism.
+        
+        Args:
+            replica_idx (int): The index of the replica.
+            gpu_ids_list (List[int]): The list of available GPU IDs.
+            
+        Returns:
+            List[int]: The list of GPU IDs assigned to this replica.
+        """
         # By default, use all available GPUs
         if self._tensor_parallel in ["", None]:
             replica_gpu_ids = gpu_ids_list

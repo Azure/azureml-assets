@@ -1,5 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Utility functions for logging and performance monitoring.
+
+This module provides decorators and utilities for logging function execution times
+and formatting log messages.
+"""
 import time
 import os
 from foundation.model.serve.logging_config import configure_logger
@@ -8,18 +13,24 @@ logger = configure_logger(__name__)
 
 
 def log_execution_time(func):
-    """Decorate a function to log the execution time.
+    """Decorate a function to log its execution time.
 
-    :param func: The function to be decorated.
-    :return: The decorated function.
+    Args:
+        func: The function to be decorated.
+        
+    Returns:
+        function: The decorated function that logs execution time.
     """
 
     def wrapper(*args, **kwargs):
-        """Calculate and log the execution time.
+        """Calculate and log the execution time of the decorated function.
 
-        :param args: Positional arguments for the decorated function.
-        :param kwargs: Keyword arguments for the decorated function.
-        :return: The result of the decorated function.
+        Args:
+            *args: Positional arguments for the decorated function.
+            **kwargs: Keyword arguments for the decorated function.
+            
+        Returns:
+            The result of the decorated function.
         """
         start_time = time.time()
         result = func(*args, **kwargs)
@@ -37,7 +48,11 @@ def log_execution_time(func):
 
 
 def box_logger(message: str):
-    """Log a message, but in a box."""
+    """Log a message with a decorative box border.
+    
+    Args:
+        message (str): The message to log in a box.
+    """
     row = len(message)
     h = "".join(["+"] + ["-" * row] + ["+"])
     result = "\n" + h + "\n" + message + "\n" + h

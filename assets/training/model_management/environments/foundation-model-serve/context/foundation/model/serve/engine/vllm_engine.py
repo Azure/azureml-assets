@@ -29,7 +29,11 @@ class VLLMEngine(BaseEngine):
         pass
 
     def init_server(self):
-        """Initialize client[s] for the engine to receive requests on."""
+        """Initialize client[s] for the engine to receive requests on.
+        
+        Starts the VLLM server process with appropriate command-line arguments
+        derived from environment variables.
+        """
         self.formulate_environment_variables()
 
         prefix = "AML_"
@@ -46,7 +50,17 @@ class VLLMEngine(BaseEngine):
         subprocess.Popen(cmd)
 
     def formulate_environment_variables(self):
-        """Formulate environment variables specific to VLLM engine."""
+        """Formulate environment variables specific to VLLM engine.
+        
+        Processes AML-specific environment variables and sets up the model path
+        and port configuration for the VLLM engine.
+        
+        Returns:
+            str: The final model path to be used by VLLM.
+            
+        Raises:
+            EnvironmentError: If required environment variables are not set.
+        """
         azureml_model_dir = os.getenv(EnvironmentVariables.AZUREML_MODEL_DIR)
         aml_model = os.getenv(EnvironmentVariables.AML_MODEL)
         engine_port = os.getenv(

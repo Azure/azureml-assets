@@ -1,32 +1,58 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Adapter for input request."""
+"""Request adapter module for input request transformation and validation.
+
+This module provides adapters for transforming and validating incoming requests
+before forwarding them to the inference engine.
+"""
 import copy
 from fastapi import HTTPException
 from foundation.model.serve.constants import ExtraParameters
 
 
 def get_adapter(request, raw_request):
+    """Get the appropriate adapter for the request.
+    
+    Args:
+        request: The parsed request object.
+        raw_request: The raw FastAPI request object.
+        
+    Returns:
+        BaseAdapter: An adapter instance for the request.
+    """
     # Default return original request object
     return BaseAdapter(request, raw_request)
 
 
 class BaseAdapter:
-    """Default adapter for input request."""
+    """Default adapter for input request transformation and validation."""
 
     def __init__(self, req, raw_req):
-        """Initialize the BaseAdapter with the given request."""
+        """Initialize the BaseAdapter with the given request.
+        
+        Args:
+            req: The parsed request object.
+            raw_req: The raw FastAPI request object.
+        """
         self.req = copy.deepcopy(req)
         self.headers = copy.deepcopy(raw_req.headers)
         self.path = getattr(raw_req.url, "path", "")
 
     def adapt(self):
-        """Return the original request."""
+        """Adapt and validate the request.
+        
+        Returns:
+            The adapted request object.
+        """
         self.validate()
         return self.req
 
     def validate(self):
-        """Validate input request for all the models."""
+        """Validate input request for all models.
+        
+        Raises:
+            HTTPException: If validation fails.
+        """
         # Skip validation if path is /v1/completions or /v1/chat/completions
 
         if self.path in ["/completions", "/chat/completions"]:

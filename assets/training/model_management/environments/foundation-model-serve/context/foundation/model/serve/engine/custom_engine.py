@@ -25,12 +25,16 @@ class CustomEngine(BaseEngine):
     """
 
     def __init__(self):
-        """Initialize the CustomEngine class."""
+        """Initialize the CustomEngine class with startup script path from environment."""
         self.startup_script_path = os.getenv(
             EnvironmentVariables.ENGINE_STARTUP_FILE_PATH, None)
 
     def init_server(self):
-        """Initialize client[s] for the engine to receive requests on."""
+        """Initialize client[s] for the engine to receive requests on.
+        
+        Launches the custom engine by executing the startup script specified
+        in the ENGINE_STARTUP_FILE_PATH environment variable.
+        """
         logger.info("Starting custom engine with startup script.")
         if self.startup_script_path:
             subprocess.Popen([sys.executable, self.startup_script_path])

@@ -1,6 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Protocol definitions for API server requests and responses.
+
+This module defines Pydantic models for OpenAI-compatible API requests and responses,
+including chat completion, text completion, and their streaming variants.
+"""
+
 import json
 import re
 import time
@@ -30,6 +36,7 @@ import uuid
 
 
 class ChatRole(str, Enum):
+    """Enumeration of chat message roles."""
     system = "system"
     user = "user"
     assistant = "assistant"
@@ -37,12 +44,14 @@ class ChatRole(str, Enum):
 
 
 class ContentImageDetail(str, Enum):
+    """Enumeration of image detail levels for content."""
     auto = "auto"
     low = "low"
     high = "high"
 
 
 class ContentPartType(str, Enum):
+    """Enumeration of content part types for multimodal messages."""
     text = "text"
     image = "image"
     image_url = "image_url"
@@ -51,10 +60,12 @@ class ContentPartType(str, Enum):
 
 
 class ToolType(str, Enum):
+    """Enumeration of tool types for function calling."""
     function = "function"
 
 
 class Function(BaseModel):
+    """Model representing a function call with name and arguments."""
     name: str
     arguments: Union[Dict, str]
     call_id: Optional[str] = None
@@ -88,6 +99,7 @@ class Function(BaseModel):
 
 
 class ChatCompletionMessageToolCall(BaseModel):
+    """Model representing a tool call in a chat completion message."""
     id: Optional[str] = None
     type: ToolType = ToolType.function
     function: Function
@@ -99,6 +111,7 @@ class ChatCompletionMessageToolCall(BaseModel):
 
 
 class ContentImage(BaseModel):
+    """Model representing image content with optional detail level."""
     data: Any
     detail: Optional[ContentImageDetail] = ContentImageDetail.auto
 
@@ -109,6 +122,7 @@ class ContentImage(BaseModel):
 
 
 class ContentImageUrl(BaseModel):
+    """Model representing an image URL with optional detail level."""
     url: str
     detail: Optional[ContentImageDetail] = ContentImageDetail.auto
 
@@ -119,6 +133,7 @@ class ContentImageUrl(BaseModel):
 
 
 class ContentAudioUrl(BaseModel):
+    """Model representing an audio URL."""
     url: str
 
     model_config = ConfigDict(
@@ -128,11 +143,13 @@ class ContentAudioUrl(BaseModel):
 
 
 class ContentAudioFormat(str, Enum):
+    """Enumeration of supported audio formats."""
     wav = "wav"
     mp3 = "mp3"
 
 
 class ContentInputAudio(BaseModel):
+    """Model representing input audio data with format specification."""
     data: Any
     format: ContentAudioFormat = ContentAudioFormat.wav
 
@@ -143,6 +160,7 @@ class ContentInputAudio(BaseModel):
 
 
 class ContentPart(BaseModel):
+    """Model representing a part of multimodal content (text, image, or audio)."""
     type: ContentPartType
     text: Optional[str] = None
     image: Optional[ContentImage] = None
@@ -176,6 +194,7 @@ class ContentPart(BaseModel):
 
 
 class ChatMessage(BaseModel):
+    """Model representing a chat message with role and content."""
     role: ChatRole
     content: Optional[Union[str, List[ContentPart]]] = None
     tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
@@ -197,6 +216,7 @@ class ChatMessage(BaseModel):
 
 
 class ResponseFormat(BaseModel):
+    """Model specifying the response format (text or json_object)."""
     type: str
 
     @field_validator("type")
@@ -211,6 +231,7 @@ class ResponseFormat(BaseModel):
 
 
 class FunctionDefinition(BaseModel):
+    """Model defining a function for function calling."""
     name: str
     description: str
     parameters: Optional[Any] = None
@@ -239,11 +260,13 @@ class FunctionDefinition(BaseModel):
 
 
 class ChatCompletionToolParam(BaseModel):
+    """Model representing a tool parameter for chat completion."""
     type: ToolType = ToolType.function
     function: FunctionDefinition = None
 
 
 class BaseRequest(BaseModel):
+    """Base model for all API requests with common parameters."""
     model_config = ConfigDict(
         extra="allow",
         exclude_unset=True,
@@ -324,6 +347,7 @@ class BaseRequest(BaseModel):
 
 
 class CompletionRequest(BaseRequest):
+    """Model for text completion requests."""
     model_config = ConfigDict(
         extra="allow",
         exclude_unset=True,
@@ -347,6 +371,7 @@ class CompletionRequest(BaseRequest):
 
 
 class ChatCompletionRequest(BaseRequest):
+    """Model for chat completion requests."""
     model_config = ConfigDict(
         extra="allow",
         exclude_unset=True,
@@ -386,6 +411,7 @@ class ChatCompletionRequest(BaseRequest):
 
 
 class ChatCompletionRequestFreeFlow(BaseRequest):
+    """Model for chat completion requests with free-flow extra parameters."""
     model_config = ConfigDict(
         extra="allow",         # accept extra params
         exclude_unset=True,    # drop unset values
@@ -454,6 +480,7 @@ class FinishReason(str, Enum):
 
 
 class ChatCompletionResponseChoice(BaseModel):
+    """Model representing a single choice in a chat completion response."""
     index: int
     message: ChatMessage
     finish_reason: Optional[FinishReason] = None
@@ -465,6 +492,7 @@ class ChatCompletionResponseChoice(BaseModel):
 
 
 class UsageInfo(BaseModel):
+    """Model representing token usage information."""
     prompt_tokens: int = 0
     total_tokens: int = 0
     completion_tokens: Optional[int] = 0
@@ -476,6 +504,7 @@ class UsageInfo(BaseModel):
 
 
 class ChatCompletionResponse(BaseModel):
+    """Model for chat completion response."""
     id: str  # internal X-Request-Id from request headers
     object: str = "chat.completion"
     created: int = Field(default_factory=lambda: int(time.time()))
@@ -490,6 +519,7 @@ class ChatCompletionResponse(BaseModel):
 
 
 class ChoiceDeltaToolCall(BaseModel):
+    """Model representing a delta tool call in streaming responses."""
     id: str
     index: int
     type: str
@@ -502,6 +532,7 @@ class ChoiceDeltaToolCall(BaseModel):
 
 
 class DeltaMessage(BaseModel):
+    """Model representing a delta message in streaming chat completion."""
     role: Optional[str] = None
     content: Optional[str] = None
     tool_calls: Optional[List[ChoiceDeltaToolCall]] = None
@@ -510,6 +541,7 @@ class DeltaMessage(BaseModel):
 
 
 class ChatCompletionResponseStreamChoice(BaseModel):
+    """Model representing a choice in a streaming chat completion response."""
     index: int
     delta: DeltaMessage
     finish_reason: Optional[FinishReason] = None
@@ -518,6 +550,7 @@ class ChatCompletionResponseStreamChoice(BaseModel):
 
 
 class ChatCompletionStreamResponse(BaseModel):
+    """Model for streaming chat completion response chunks."""
     id: str  # internal X-Request-Id from request headers
     object: str = "chat.completion.chunk"
     created: int = Field(default_factory=lambda: int(time.time()))
@@ -532,7 +565,7 @@ class ChatCompletionStreamResponse(BaseModel):
 
 
 class LogProbs(BaseModel):
-    """Class that represents logprobs in the openai way."""
+    """Class representing logprobs in OpenAI format."""
 
     text_offset: List[int] = Field(default_factory=list)
     token_logprobs: List[Optional[float]] = Field(default_factory=list)
@@ -542,7 +575,7 @@ class LogProbs(BaseModel):
 
 
 class CompletionResponseChoice(BaseModel):
-    """Class for one of the 'choices' in the openai api text generation response."""
+    """Model representing one of the choices in a text completion response."""
 
     index: int = 0
     text: str = ""
@@ -559,7 +592,7 @@ class CompletionResponseChoice(BaseModel):
 
 
 class CompletionResponse(BaseModel):
-    """An openai text generation response object."""
+    """Model for OpenAI-compatible text completion response."""
 
     id: str = Field(default_factory=lambda: f"cmpl-{uuid.uuid4()}")
     object: str = "text_completion"
@@ -572,6 +605,7 @@ class CompletionResponse(BaseModel):
 
 
 class CompletionResponseStreamChoice(BaseModel):
+    """Model representing a choice in a streaming text completion response."""
     index: int = 0
     text: str = ""
     logprobs: Optional[LogProbs] = None
@@ -581,6 +615,7 @@ class CompletionResponseStreamChoice(BaseModel):
 
 
 class CompletionStreamResponse(BaseModel):
+    """Model for streaming text completion response chunks."""
     id: str = Field(default_factory=lambda: f"cmpl-{uuid.uuid4()}")
     object: str = "text_completion"
     created: int = Field(default_factory=lambda: int(time.time()))
@@ -592,10 +627,12 @@ class CompletionStreamResponse(BaseModel):
 
 
 class AzureError(BaseModel):
+    """Model representing an Azure error response."""
     code: str
     message: str
     status: int
 
 
 class AzureErrorResponse(BaseModel):
+    """Model for Azure error response wrapper."""
     error: AzureError

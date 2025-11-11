@@ -1,5 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Azure AI Content Safety (AACS) handler module.
+
+This module provides content safety validation using Azure AI Content Safety service.
+It analyzes text and image content for harmful content categories including hate, self-harm,
+sexual content, and violence.
+"""
 import os
 import numpy as np
 import pandas as pd
@@ -29,15 +35,29 @@ logger = configure_logger(__name__)
 
 
 class AACSValidator:
+    """Azure AI Content Safety validator for analyzing content safety.
+    
+    This class provides functionality to validate text and image content
+    using Azure AI Content Safety service. It checks content against
+    severity thresholds for harmful content categories.
+    """
 
     def __init__(self):
+        """Initialize the AACSValidator with content safety client and threshold settings."""
         self.g_aacs_client = None
         self.g_aacs_threshold = int(os.environ.get(
             EnvironmentVariables.CONTENT_SAFETY_THRESHOLD, CommonConstants.CONTENT_SAFETY_THERESHOLD_DEFAULT))
         self.aacs_setup()
 
     def get_aacs_access_key(self):
-        """Get aacs access key."""
+        """Get Azure AI Content Safety access key using managed identity.
+        
+        Returns:
+            str: The access key for the AACS account.
+            
+        Raises:
+            RuntimeError: If UAI_CLIENT_ID is not set.
+        """
         uai_client_id = os.environ.get(EnvironmentVariables.UAI_CLIENT_ID)
         subscription_id = os.environ.get(EnvironmentVariables.SUBSCRIPTION_ID)
         resource_group_name = os.environ.get(
@@ -60,7 +80,11 @@ class AACSValidator:
         return key
 
     def aacs_setup(self):
-        """Create an AACS endpoint for the server to check input and outputs."""
+        """Create an AACS endpoint for the server to check input and outputs.
+        
+        Returns:
+            Exception or None: Exception if setup fails, None otherwise.
+        """
         AACS_error = None
         try:
             endpoint = os.environ.get(
@@ -90,7 +114,15 @@ class AACSValidator:
         return AACS_error
 
     def iterate(self, obj, current_key=None):
-        """Iterate through obj and check content severity."""
+        """Iterate through object and check content severity recursively.
+        
+        Args:
+            obj: The object to analyze (dict, list, DataFrame, or string).
+            current_key: The current key being processed (optional).
+            
+        Returns:
+            tuple: A tuple containing the sanitized object and maximum severity found.
+        """
         if isinstance(obj, dict):
             severity = 0
             for key, value in obj.items():
@@ -126,7 +158,14 @@ class AACSValidator:
             return obj, 0
 
     def get_safe_response(self, result: Union[Dict, CompletionResponse, ChatCompletionResponse]):
-        """Check if response is safe."""
+        """Check if response is safe and sanitize if necessary.
+        
+        Args:
+            result: The response to validate (dict or response object).
+            
+        Returns:
+            The sanitized response with unsafe content removed.
+        """
         logger.info("Analyzing response...")
         jsonable_result = _get_jsonable_obj(result, pandas_orient="records")
         if not self.g_aacs_client:
@@ -137,7 +176,14 @@ class AACSValidator:
         return result
 
     def get_safe_input(self, input_data: Dict):
-        """Check if input is safe."""
+        """Check if input is safe and sanitize if necessary.
+        
+        Args:
+            input_data: The input data to validate.
+            
+        Returns:
+            tuple: A tuple containing the sanitized input and severity level.
+        """
         if not self.g_aacs_client:
             return input_data, 0
         logger.info("Analyzing input...")
@@ -146,7 +192,14 @@ class AACSValidator:
         return result, severity
 
     def analyze_response(self, aacs_response: AnalyzeTextResult):
-        """Analyze response."""
+        """Analyze AACS response and extract maximum severity.
+        
+        Args:
+            aacs_response: The AACS analysis result.
+            
+        Returns:
+            int: The maximum severity level found across all categories.
+        """
         severity = 0
         aacs_category_set = [TextCategory.HATE, TextCategory.SELF_HARM,
                              TextCategory.SEXUAL, TextCategory.VIOLENCE]
@@ -159,7 +212,14 @@ class AACSValidator:
         return severity
 
     def analyze_text(self, text: str):
-        """Analyze text."""
+        """Analyze text content for safety violations.
+        
+        Args:
+            text: The text to analyze.
+            
+        Returns:
+            int: The maximum severity level found in the text.
+        """
         # Chunk text
         logger.info("Analyzing ...")
         if (not text) or (not text.strip()):
@@ -196,10 +256,10 @@ class AACSValidator:
         Check if a string is a valid base64-encoded image.
 
         Args:
-            base64_string (str): The string to validate
+            base64_string (str): The string to validate.
 
         Returns:
-            tuple: (is_valid (bool), image_format (str or None), error_message (str or None))
+            bool: True if the string is a valid base64-encoded image, False otherwise.
         """
         try:
             # Remove data URL prefix if present (e.g., "data:image/png;base64,")
@@ -255,19 +315,39 @@ class AACSValidator:
 
 
 class CsChunkingUtils:
-    """Cs chunking utils."""
+    """Content safety chunking utilities for splitting text into analyzable chunks."""
 
     def __init__(self, chunking_n=1000, delimiter="."):
-        """Init function."""
+        """Initialize the chunking utility.
+        
+        Args:
+            chunking_n: Maximum chunk size (default: 1000).
+            delimiter: String delimiter for splitting (default: ".").
+        """
         self.delimiter = delimiter
         self.chunking_n = chunking_n
 
     def chunkstring(self, string, length):
-        """Chunk strings in a given length."""
+        """Chunk string into segments of a given length.
+        
+        Args:
+            string: The string to chunk.
+            length: Maximum length of each chunk.
+            
+        Yields:
+            str: Chunks of the input string.
+        """
         return (string[0 + i: length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
-        """Split the input."""
+        """Split the input text intelligently by delimiter while respecting chunk size.
+        
+        Args:
+            input: The input text to split.
+            
+        Returns:
+            list: List of text chunks.
+        """
         max_n = self.chunking_n
         split = [e + self.delimiter for e in input.split(self.delimiter) if e]
         ret = []

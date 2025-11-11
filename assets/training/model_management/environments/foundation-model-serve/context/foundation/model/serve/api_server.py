@@ -1,6 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Run script to infer."""
+"""API server for foundation model inference.
+
+This module implements a FastAPI-based server for serving foundation models with support for
+OpenAI-compatible endpoints, content safety validation, and downstream engine proxying.
+"""
 # flake8: noqa
 
 import torch
@@ -74,7 +78,15 @@ app.add_middleware(
 
 
 def filter_swagger_paths_by_tag(schema, tag):
-    """Filter APIs to return in swagger."""
+    """Filter Swagger API paths by tag.
+    
+    Args:
+        schema: The OpenAPI schema dictionary.
+        tag: The tag to filter by.
+        
+    Returns:
+        dict: The filtered schema containing only paths with the specified tag.
+    """
     schema_copy = copy.deepcopy(schema)
     for path in list(schema["paths"].keys()):
         for op in list(schema["paths"][path].keys()):
@@ -87,7 +99,11 @@ def filter_swagger_paths_by_tag(schema, tag):
 
 
 def custom_openapi():
-    """Populate openapi values for swagger."""
+    """Populate OpenAPI schema values for Swagger UI.
+    
+    Returns:
+        dict: The custom OpenAPI schema.
+    """
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
@@ -113,6 +129,10 @@ app.openapi = custom_openapi
 
 
 def _init_cuda_visible_devices():
+    """Initialize CUDA visible devices environment variable.
+    
+    Sets CUDA_VISIBLE_DEVICES based on NVIDIA_VISIBLE_DEVICES or available GPUs.
+    """
     import torch
 
     if "CUDA_VISIBLE_DEVICES" in os.environ:
@@ -135,6 +155,11 @@ def _init_cuda_visible_devices():
 
 
 class ProxyMiddleware(BaseHTTPMiddleware):
+    """Proxy middleware for forwarding unmatched requests to downstream engine.
+    
+    This middleware catches 404 responses from FastAPI and forwards them to
+    the downstream inference engine, enabling pass-through of engine-specific endpoints.
+    """
     async def dispatch(self, request: Request, call_next):
         # Try to process the request normally first
         response = await call_next(request)
@@ -207,13 +232,25 @@ class ProxyMiddleware(BaseHTTPMiddleware):
 
 
 def get_downstream_url():
+    """Get the downstream engine URL.
+    
+    Returns:
+        str: The URL of the downstream inference engine.
+    """
     engine_startup_port = os.getenv(
         EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT))
     return f"http://{CommonConstants.HOST}:{engine_startup_port}"
 
 
 def stream_response_to_generator(stream_response):
-    """Get generator."""
+    """Convert streaming response to generator for SSE output.
+    
+    Args:
+        stream_response: The streaming HTTP response from the downstream engine.
+        
+    Yields:
+        str: Server-sent event formatted response chunks.
+    """
     logger.info(f"Streaming response to generator")
     for line in stream_response.iter_lines():
         if line:
@@ -253,7 +290,15 @@ app.add_middleware(ProxyMiddleware)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Input request validation handler."""
+    """Handle input request validation errors.
+    
+    Args:
+        request: The FastAPI request object.
+        exc: The validation error exception.
+        
+    Returns:
+        JSONResponse: Formatted error response with validation details.
+    """
     return JSONResponse(
         status_code=422,
         content=(
@@ -271,14 +316,28 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def all_exception_handler(request: Request, exc: Exception):
-    """Exception handler."""
+    """Handle all unhandled exceptions.
+    
+    Args:
+        request: The FastAPI request object.
+        exc: The exception.
+        
+    Returns:
+        JSONResponse: Formatted error response.
+    """
     msg = f"An error occurred during the request processing: {exc}"
     return to_azure_error_json_response(status_code=500, message=msg, headers={})
 
 
 @app.get("/")
 async def health():
-    """Check if server is healthy. Used by the readiness probe to check server is healthy."""
+    """Health check endpoint.
+    
+    Used by readiness probes to verify server health.
+    
+    Returns:
+        str: Health status message.
+    """
     print("health")
     return "healthy"
 
@@ -301,10 +360,17 @@ async def score(request: Request) -> Response:
 
 
 class PrettyJSONResponse(JSONResponse):
-    """Pretty Json Response."""
+    """Pretty-printed JSON response class."""
 
     def render(self, content: Any) -> bytes:
-        """Render pretty json response."""
+        """Render content as pretty-printed JSON.
+        
+        Args:
+            content: The content to render.
+            
+        Returns:
+            bytes: Pretty-printed JSON as bytes.
+        """
         return json.dumps(content, ensure_ascii=False, indent=4).encode("utf-8")
 
 
@@ -389,7 +455,16 @@ async def create_chat_completion(
 
 
 def send_openai_request(request, raw_request, uri):
-    """Send request to downstream engine with open ai alike schema."""
+    """Send request to downstream engine with OpenAI-compatible schema.
+    
+    Args:
+        request: The request object with OpenAI-compatible format.
+        raw_request: The raw FastAPI request object.
+        uri: The endpoint URI path.
+        
+    Returns:
+        Response: The HTTP response from the downstream engine.
+    """
     try:
         _, severity = g_aacs_client.get_safe_input(
             request.to_downstream_json())
@@ -452,7 +527,14 @@ VLLM_SAMPLING_PARAMS = {
 
 
 def _normalize_generation_params(params: Dict) -> Dict:
-    """Normalize generation-related parameter names and values for VLLM."""
+    """Normalize generation-related parameter names and values for VLLM.
+    
+    Args:
+        params: Dictionary of generation parameters.
+        
+    Returns:
+        Dict: Normalized parameters compatible with VLLM.
+    """
 
     # Map legacy or alternate keys
     for key in ("max_gen_len", "max_new_tokens"):
@@ -488,7 +570,18 @@ def _normalize_generation_params(params: Dict) -> Dict:
 
 
 def _get_payload_for_engine(data: Dict, task_type: str):
-    """Prepare payload and endpoint path based on task type."""
+    """Prepare payload and endpoint path based on task type.
+    
+    Args:
+        data: The input data dictionary.
+        task_type: The task type (chat-completion or text-generation).
+        
+    Returns:
+        tuple: A tuple containing (engine_payload, endpoint_uri).
+        
+    Raises:
+        ValueError: If task type is not supported.
+    """
     payload = MIRPayload.from_dict(data)
     logger.info(f"Processing new request with parameters: {payload.params}")
 
@@ -510,7 +603,17 @@ def _get_payload_for_engine(data: Dict, task_type: str):
 
 
 async def send_request(data: Dict) -> (InferenceResult, Dict):
-    """Execute inference request against VLLM engine."""
+    """Execute inference request against VLLM engine.
+    
+    Args:
+        data: The input data dictionary containing query and parameters.
+        
+    Returns:
+        tuple: A tuple containing (InferenceResult, result_dict).
+        
+    Raises:
+        Exception: If request processing fails.
+    """
     global g_fmscorer, task_type
 
     try:
@@ -563,7 +666,14 @@ async def send_request(data: Dict) -> (InferenceResult, Dict):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> Generator:
-    """Initialize and shutdown events for each worker that is spawned in the main function."""
+    """Initialize and shutdown events for each worker that is spawned in the main function.
+    
+    Args:
+        app: The FastAPI application instance.
+        
+    Yields:
+        None: Control is yielded during the application lifespan.
+    """
     global g_aacs_client
     g_aacs_client = AACSValidator()
     AACS_error = g_aacs_client.aacs_setup()
@@ -578,7 +688,14 @@ app.router.lifespan_context = lifespan
 
 
 def init_server(AACS_error: Union[None, Exception]):
-    """Initialize text-generation-inference server and client."""
+    """Initialize text-generation-inference server and client.
+    
+    Args:
+        AACS_error: Exception from AACS setup, if any.
+        
+    Returns:
+        Exception or None: Exception if initialization fails, None otherwise.
+    """
     global g_fmscorer
 
     try:

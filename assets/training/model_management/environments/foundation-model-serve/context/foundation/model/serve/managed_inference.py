@@ -1,6 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""This module provides the MIRPayload class that codifies the payload that is received in the scoring script."""
+"""Managed inference payload module.
+
+This module provides the MIRPayload class that codifies the payload format
+received in the scoring script for managed inference requests.
+"""
 import json
 import os
 from dataclasses import asdict, dataclass
@@ -15,7 +19,7 @@ logger = configure_logger(__name__)
 
 @dataclass
 class SerializableDataClass:
-    """A data class that can be serialized to and from a dictionary."""
+    """A base data class that can be serialized to and from a dictionary."""
 
     def to_dict(self) -> Dict:
         """Convert the data class to a dictionary."""
@@ -23,13 +27,24 @@ class SerializableDataClass:
 
     @classmethod
     def from_dict(cls: Type[TypeVar("T")], d: Dict) -> TypeVar("T"):
-        """Create a data class from a dictionary."""
+        """Create a data class instance from a dictionary.
+        
+        Args:
+            d (Dict): The dictionary containing data class field values.
+            
+        Returns:
+            An instance of the data class.
+        """
         return cls(**d)
 
 
 @dataclass
 class MIRPayload(SerializableDataClass):
-    """Json serializable dataclass for input"""
+    """Managed inference request payload.
+    
+    This class represents the JSON serializable dataclass for inference input,
+    containing the query, parameters, and task type.
+    """
 
     query: Union[List[TextMessage], List[MultimodalMessage],
                  str, List[str], List[Tuple[str, str]]]
@@ -38,31 +53,50 @@ class MIRPayload(SerializableDataClass):
 
     @classmethod
     def from_dict(cls, mir_input_data: Dict):
-        """Create an instance of MIRPayload from input data received from the server."""
+        """Create an instance of MIRPayload from input data received from the server.
+        
+        Args:
+            mir_input_data (Dict): The input data dictionary.
+            
+        Returns:
+            MIRPayload: An instance of MIRPayload.
+        """
         query, params, task_type = get_request_data(mir_input_data)
         return MIRPayload(query, params, task_type)
 
     def convert_query_to_list(self) -> None:
         """Convert the query parameter into a list.
 
-        FMScore.run expects a list of prompts. In the case of chat completion, a single string
-        is produced and needs to be put inside of a list.
+        The inference engine expects a list of prompts. In the case of chat completion,
+        a single string is produced and needs to be put inside a list.
         """
         if not isinstance(self.query, list):
             self.query = [self.query]
 
     def update_params(self, new_params: Dict) -> None:
-        """Update current parameters to the new parameters the MIRPayload should have."""
+        """Update current parameters to the new parameters the MIRPayload should have.
+        
+        Args:
+            new_params (Dict): The new parameters to set.
+        """
         self.params = new_params
 
 
 def get_request_data(
     data
 ) -> (Tuple)[Union[str, List[str]], Dict[str, Any], str, bool]:
-    """Process and validate inference request.
+    """Process and validate inference request data.
 
-    return type for chat-completion: str, dict, str, bool
-    return type for text-generation: list, dict, str, bool
+    Args:
+        data: The input data dictionary.
+        
+    Returns:
+        tuple: A tuple containing (input_data, params, task_type).
+            - For chat-completion: (str, dict, str, bool)
+            - For text-generation: (list, dict, str, bool)
+            
+    Raises:
+        Exception: If the input data format is invalid.
     """
     try:
         task_type = os.getenv(
