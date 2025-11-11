@@ -30,7 +30,8 @@ def get_engine() -> BaseEngine:
             return CustomEngine()
         else:
             logger.error(
-                f"Provided ENGINE_STARTUP_FILE_PATH {startup_script_path} does not exist. Falling back to {engine_name}.")
+                f"Provided ENGINE_STARTUP_FILE_PATH {startup_script_path} does not exist. "
+                f"Falling back to {engine_name}.")
 
     if engine_name == EngineName.VLLM:
         return VLLMEngine()

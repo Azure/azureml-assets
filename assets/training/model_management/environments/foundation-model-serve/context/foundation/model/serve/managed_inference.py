@@ -29,7 +29,7 @@ class SerializableDataClass:
 
 @dataclass
 class MIRPayload(SerializableDataClass):
-    """Json serializable dataclass for input""" 
+    """Json serializable dataclass for input"""
 
     query: Union[List[TextMessage], List[MultimodalMessage],
                  str, List[str], List[Tuple[str, str]]]
