@@ -17,7 +17,7 @@ def log_execution_time(func):
 
     Args:
         func: The function to be decorated.
-        
+
     Returns:
         function: The decorated function that logs execution time.
     """
@@ -28,7 +28,7 @@ def log_execution_time(func):
         Args:
             *args: Positional arguments for the decorated function.
             **kwargs: Keyword arguments for the decorated function.
-            
+
         Returns:
             The result of the decorated function.
         """
@@ -49,7 +49,7 @@ def log_execution_time(func):
 
 def box_logger(message: str):
     """Log a message with a decorative box border.
-    
+
     Args:
         message (str): The message to log in a box.
     """

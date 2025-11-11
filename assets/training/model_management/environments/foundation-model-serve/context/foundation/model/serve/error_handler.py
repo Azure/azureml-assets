@@ -43,12 +43,12 @@ def get_status_code_string(status_code):
 
 def to_azure_error_json_response(status_code, message, headers):
     """Create an Azure standard error JSON response.
-    
+
     Args:
         status_code (int): The HTTP status code.
         message: The error message.
         headers (dict): HTTP headers to include in the response.
-        
+
     Returns:
         JSONResponse: A FastAPI JSONResponse with Azure-formatted error.
     """

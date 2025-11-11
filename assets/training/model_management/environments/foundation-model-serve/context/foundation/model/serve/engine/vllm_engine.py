@@ -30,7 +30,7 @@ class VLLMEngine(BaseEngine):
 
     def init_server(self):
         """Initialize client[s] for the engine to receive requests on.
-        
+
         Starts the VLLM server process with appropriate command-line arguments
         derived from environment variables.
         """
@@ -51,13 +51,13 @@ class VLLMEngine(BaseEngine):
 
     def formulate_environment_variables(self):
         """Formulate environment variables specific to VLLM engine.
-        
+
         Processes AML-specific environment variables and sets up the model path
         and port configuration for the VLLM engine.
-        
+
         Returns:
             str: The final model path to be used by VLLM.
-            
+
         Raises:
             EnvironmentError: If required environment variables are not set.
         """

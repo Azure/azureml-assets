@@ -26,10 +26,10 @@ logger = configure_logger(__name__)
 
 def get_engine() -> BaseEngine:
     """Return the appropriate engine based on the engine name configuration.
-    
+
     Returns:
         BaseEngine: An instance of the configured engine (VLLM, Custom, etc.).
-        
+
     Raises:
         ValueError: If the engine name is invalid.
     """
@@ -58,7 +58,7 @@ class InferenceResult:
 
 class ReplicaManager:
     """Manager class for handling multiple model replicas.
-    
+
     This class manages the creation, initialization, and lifecycle of multiple
     inference engine replicas for load balancing and scaling.
     """
@@ -86,7 +86,7 @@ class ReplicaManager:
 
     def initialize(self):
         """Initialize the ReplicaManager by creating and launching engine replicas.
-        
+
         This method creates the specified number of replicas and launches them
         with proper GPU allocation and synchronization across workers.
         """
@@ -148,10 +148,10 @@ Using tensor parallel of {self._tensor_parallel} GPUs per replica.",
 
     def _launch_single_replica(self, replica_idx):
         """Launch a single replica with appropriate GPU allocation.
-        
+
         Args:
             replica_idx (int): The index of the replica to launch.
-            
+
         Returns:
             BaseEngine: The launched engine replica.
         """
@@ -182,11 +182,11 @@ Using tensor parallel of {self._tensor_parallel} GPUs per replica.",
 
     def _get_gpu_ids_for_replica(self, replica_idx: int, gpu_ids_list: List[int]) -> List[int]:
         """Get the GPU IDs for a specific replica based on tensor parallelism.
-        
+
         Args:
             replica_idx (int): The index of the replica.
             gpu_ids_list (List[int]): The list of available GPU IDs.
-            
+
         Returns:
             List[int]: The list of GPU IDs assigned to this replica.
         """

@@ -31,7 +31,7 @@ class CustomEngine(BaseEngine):
 
     def init_server(self):
         """Initialize client[s] for the engine to receive requests on.
-        
+
         Launches the custom engine by executing the startup script specified
         in the ENGINE_STARTUP_FILE_PATH environment variable.
         """

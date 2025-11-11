@@ -12,11 +12,11 @@ from foundation.model.serve.constants import ExtraParameters
 
 def get_adapter(request, raw_request):
     """Get the appropriate adapter for the request.
-    
+
     Args:
         request: The parsed request object.
         raw_request: The raw FastAPI request object.
-        
+
     Returns:
         BaseAdapter: An adapter instance for the request.
     """
@@ -29,7 +29,7 @@ class BaseAdapter:
 
     def __init__(self, req, raw_req):
         """Initialize the BaseAdapter with the given request.
-        
+
         Args:
             req: The parsed request object.
             raw_req: The raw FastAPI request object.
@@ -40,7 +40,7 @@ class BaseAdapter:
 
     def adapt(self):
         """Adapt and validate the request.
-        
+
         Returns:
             The adapted request object.
         """
@@ -49,7 +49,7 @@ class BaseAdapter:
 
     def validate(self):
         """Validate input request for all models.
-        
+
         Raises:
             HTTPException: If validation fails.
         """

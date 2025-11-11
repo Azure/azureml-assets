@@ -20,7 +20,7 @@ logger = configure_logger(__name__)
 
 class BaseEngine(ABC):
     """Abstract base class for inference engine backends.
-    
+
     This class defines the interface that all inference engines must implement,
     including server initialization and health monitoring capabilities.
     """
@@ -28,7 +28,7 @@ class BaseEngine(ABC):
     @abstractmethod
     def init_server(self):
         """Initialize client[s] for the engine to receive requests on.
-        
+
         This method should be implemented by subclasses to start the engine server.
         """
         pass
@@ -36,12 +36,12 @@ class BaseEngine(ABC):
     def is_port_open(self, host: str = CommonConstants.HOST,
                      port: int = CommonConstants.DEFAULT_PORT, timeout: float = 1.0) -> bool:
         """Check if a port is open on the given host.
-        
+
         Args:
             host (str): The hostname or IP address to check.
             port (int): The port number to check.
             timeout (float): Connection timeout in seconds.
-            
+
         Returns:
             bool: True if the port is open and accepting connections, False otherwise.
         """
@@ -54,12 +54,12 @@ class BaseEngine(ABC):
     @log_execution_time
     def wait_until_server_healthy(self, host: str, port: int, timeout: float = 1.0):
         """Wait until the server is healthy and accepting connections.
-        
+
         Args:
             host (str): The hostname or IP address of the server.
             port (int): The port number of the server.
             timeout (float): Connection timeout in seconds for each check.
-            
+
         Raises:
             Exception: If the server does not become healthy within 15 minutes.
         """

@@ -36,7 +36,7 @@ logger = configure_logger(__name__)
 
 class AACSValidator:
     """Azure AI Content Safety validator for analyzing content safety.
-    
+
     This class provides functionality to validate text and image content
     using Azure AI Content Safety service. It checks content against
     severity thresholds for harmful content categories.
@@ -51,10 +51,10 @@ class AACSValidator:
 
     def get_aacs_access_key(self):
         """Get Azure AI Content Safety access key using managed identity.
-        
+
         Returns:
             str: The access key for the AACS account.
-            
+
         Raises:
             RuntimeError: If UAI_CLIENT_ID is not set.
         """
@@ -81,7 +81,7 @@ class AACSValidator:
 
     def aacs_setup(self):
         """Create an AACS endpoint for the server to check input and outputs.
-        
+
         Returns:
             Exception or None: Exception if setup fails, None otherwise.
         """
@@ -115,11 +115,11 @@ class AACSValidator:
 
     def iterate(self, obj, current_key=None):
         """Iterate through object and check content severity recursively.
-        
+
         Args:
             obj: The object to analyze (dict, list, DataFrame, or string).
             current_key: The current key being processed (optional).
-            
+
         Returns:
             tuple: A tuple containing the sanitized object and maximum severity found.
         """
@@ -159,10 +159,10 @@ class AACSValidator:
 
     def get_safe_response(self, result: Union[Dict, CompletionResponse, ChatCompletionResponse]):
         """Check if response is safe and sanitize if necessary.
-        
+
         Args:
             result: The response to validate (dict or response object).
-            
+
         Returns:
             The sanitized response with unsafe content removed.
         """
@@ -177,10 +177,10 @@ class AACSValidator:
 
     def get_safe_input(self, input_data: Dict):
         """Check if input is safe and sanitize if necessary.
-        
+
         Args:
             input_data: The input data to validate.
-            
+
         Returns:
             tuple: A tuple containing the sanitized input and severity level.
         """
@@ -193,10 +193,10 @@ class AACSValidator:
 
     def analyze_response(self, aacs_response: AnalyzeTextResult):
         """Analyze AACS response and extract maximum severity.
-        
+
         Args:
             aacs_response: The AACS analysis result.
-            
+
         Returns:
             int: The maximum severity level found across all categories.
         """
@@ -213,10 +213,10 @@ class AACSValidator:
 
     def analyze_text(self, text: str):
         """Analyze text content for safety violations.
-        
+
         Args:
             text: The text to analyze.
-            
+
         Returns:
             int: The maximum severity level found in the text.
         """
@@ -319,7 +319,7 @@ class CsChunkingUtils:
 
     def __init__(self, chunking_n=1000, delimiter="."):
         """Initialize the chunking utility.
-        
+
         Args:
             chunking_n: Maximum chunk size (default: 1000).
             delimiter: String delimiter for splitting (default: ".").
@@ -329,11 +329,11 @@ class CsChunkingUtils:
 
     def chunkstring(self, string, length):
         """Chunk string into segments of a given length.
-        
+
         Args:
             string: The string to chunk.
             length: Maximum length of each chunk.
-            
+
         Yields:
             str: Chunks of the input string.
         """
@@ -341,10 +341,10 @@ class CsChunkingUtils:
 
     def split_by(self, input):
         """Split the input text intelligently by delimiter while respecting chunk size.
-        
+
         Args:
             input: The input text to split.
-            
+
         Returns:
             list: List of text chunks.
         """

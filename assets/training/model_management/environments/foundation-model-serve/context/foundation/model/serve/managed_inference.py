@@ -28,10 +28,10 @@ class SerializableDataClass:
     @classmethod
     def from_dict(cls: Type[TypeVar("T")], d: Dict) -> TypeVar("T"):
         """Create a data class instance from a dictionary.
-        
+
         Args:
             d (Dict): The dictionary containing data class field values.
-            
+
         Returns:
             An instance of the data class.
         """
@@ -41,7 +41,7 @@ class SerializableDataClass:
 @dataclass
 class MIRPayload(SerializableDataClass):
     """Managed inference request payload.
-    
+
     This class represents the JSON serializable dataclass for inference input,
     containing the query, parameters, and task type.
     """
@@ -54,10 +54,10 @@ class MIRPayload(SerializableDataClass):
     @classmethod
     def from_dict(cls, mir_input_data: Dict):
         """Create an instance of MIRPayload from input data received from the server.
-        
+
         Args:
             mir_input_data (Dict): The input data dictionary.
-            
+
         Returns:
             MIRPayload: An instance of MIRPayload.
         """
@@ -75,7 +75,7 @@ class MIRPayload(SerializableDataClass):
 
     def update_params(self, new_params: Dict) -> None:
         """Update current parameters to the new parameters the MIRPayload should have.
-        
+
         Args:
             new_params (Dict): The new parameters to set.
         """
@@ -89,12 +89,12 @@ def get_request_data(
 
     Args:
         data: The input data dictionary.
-        
+
     Returns:
         tuple: A tuple containing (input_data, params, task_type).
             - For chat-completion: (str, dict, str, bool)
             - For text-generation: (list, dict, str, bool)
-            
+
     Raises:
         Exception: If the input data format is invalid.
     """
