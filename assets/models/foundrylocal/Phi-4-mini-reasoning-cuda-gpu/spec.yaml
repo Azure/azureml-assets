@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-reasoning-cuda-gpu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: ""
@@ -12,13 +12,15 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini-reasoning
-  directoryPath: v1
+  directoryPath: v3
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
-  supportsToolCalling: ""
+  supportsToolCalling: "true"
   toolCallStart: "<|tool_call|>"
   toolCallEnd: "<|/tool_call|>"
   toolRegisterStart: "<|tool|>"
   toolRegisterEnd: "<|/tool|>"
+  toolResponseStart: "<|tool_response|>"
+  toolResponseEnd: "<|tool_response|>"
 type: custom_model
 variantInfo:
   parents:

@@ -4,13 +4,15 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
-RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
-    rm go1.24.4.linux-amd64.tar.gz
+RUN wget https://go.dev/dl/go1.24.9.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.24.9.linux-amd64.tar.gz && \
+    rm go1.24.9.linux-amd64.tar.gz
 
 ENV PATH="/usr/local/go/bin:$PATH"
 
 COPY requirements.txt .
+
+RUN python3 -m pip install --upgrade pip==25.3 setuptools wheel
 
 # This line is added because azureml-automl-dnn-vision depends on python 3.9.
 # Added ignore python requires to get this installed.

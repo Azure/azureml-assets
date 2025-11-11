@@ -34,7 +34,7 @@ WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
 NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-naming-convention"
 INVALID_STRINGS = [["azureml", "azure"], "aml"]  # Disallow these in any asset name
 NON_MODEL_INVALID_STRINGS = ["microsoft"]  # Allow these in model names and other assets related to models
-MODEL_NAMES_VALIDATION_OVERRIDE_PREFIX = ["Azure-AI-"]  # Exception for Azure-AI models
+MODEL_NAMES_VALIDATION_OVERRIDE_PREFIX = ["Azure-"]  # Exception for Azure- models
 MODEL_RELATED_ASSETS = [assets.AssetType.MODEL, assets.AssetType.EVALUATIONRESULT]
 NON_MODEL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 

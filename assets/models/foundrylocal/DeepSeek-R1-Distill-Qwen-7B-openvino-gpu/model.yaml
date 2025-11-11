@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/intel-gpu-models/DeepSeek-R1-Distill-Qwen-7B-gpu-context-ov-dy-gs128-r1/model
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
