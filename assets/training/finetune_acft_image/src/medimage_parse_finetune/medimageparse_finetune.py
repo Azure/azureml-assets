@@ -322,7 +322,7 @@ def main():
         if not out_path.exists():
             logger.info(f"Creating output directory: {out_path}")
             out_path.mkdir(parents=True, exist_ok=True)
-        
+
         checkpoint_path = Path(args.mlflow_model_folder) / "artifacts" / "checkpoints"
         if not checkpoint_path.exists():
             logger.info(f"Creating output directory: {checkpoint_path}")
