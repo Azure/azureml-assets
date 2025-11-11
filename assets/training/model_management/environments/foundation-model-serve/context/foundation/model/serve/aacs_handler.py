@@ -10,7 +10,11 @@ from PIL import Image
 from typing import Dict, Union
 
 from azure.ai.contentsafety import ContentSafetyClient
-from azure.ai.contentsafety.models import AnalyzeTextOptions, AnalyzeImageOptions, ImageData, AnalyzeTextResult, TextCategory
+from azure.ai.contentsafety.models import (AnalyzeTextOptions,
+                                           AnalyzeImageOptions,
+                                           ImageData,
+                                           AnalyzeTextResult,
+                                           TextCategory)
 from azure.core.credentials import AzureKeyCredential
 from azure.core.pipeline.policies import HeadersPolicy
 from azure.identity import ManagedIdentityCredential
@@ -23,48 +27,56 @@ from foundation.model.serve.constants import EnvironmentVariables, CommonConstan
 
 logger = configure_logger(__name__)
 
+
 class AACSValidator:
 
     def __init__(self):
         self.g_aacs_client = None
-        self.g_aacs_threshold = int(os.environ.get(EnvironmentVariables.CONTENT_SAFETY_THRESHOLD, CommonConstants.CONTENT_SAFETY_THERESHOLD_DEFAULT))
+        self.g_aacs_threshold = int(os.environ.get(
+            EnvironmentVariables.CONTENT_SAFETY_THRESHOLD, CommonConstants.CONTENT_SAFETY_THERESHOLD_DEFAULT))
         self.aacs_setup()
-    
+
     def get_aacs_access_key(self):
         """Get aacs access key."""
         uai_client_id = os.environ.get(EnvironmentVariables.UAI_CLIENT_ID)
         subscription_id = os.environ.get(EnvironmentVariables.SUBSCRIPTION_ID)
-        resource_group_name = os.environ.get(EnvironmentVariables.RESOURCE_GROUP_NAME)
-        aacs_account_name = os.environ.get(EnvironmentVariables.CONTENT_SAFETY_ACCOUNT_NAME)
-        
+        resource_group_name = os.environ.get(
+            EnvironmentVariables.RESOURCE_GROUP_NAME)
+        aacs_account_name = os.environ.get(
+            EnvironmentVariables.CONTENT_SAFETY_ACCOUNT_NAME)
+
         if not uai_client_id:
             raise RuntimeError(
                 "Cannot get AACS access key, UAI_CLIENT_ID is not set, exiting...",
             )
         credential = ManagedIdentityCredential(client_id=uai_client_id)
-        cs_client = CognitiveServicesManagementClient(credential, subscription_id)
+        cs_client = CognitiveServicesManagementClient(
+            credential, subscription_id)
         key = cs_client.accounts.list_keys(
             resource_group_name=resource_group_name,
             account_name=aacs_account_name,
         ).key1
-        
+
         return key
-    
+
     def aacs_setup(self):
         """Create an AACS endpoint for the server to check input and outputs."""
         AACS_error = None
         try:
-            endpoint = os.environ.get(EnvironmentVariables.CONTENT_SAFETY_ENDPOINT, None)
+            endpoint = os.environ.get(
+                EnvironmentVariables.CONTENT_SAFETY_ENDPOINT, None)
             key = self.get_aacs_access_key()
-            
+
             if not endpoint:
-                raise Exception("CONTENT_SAFETY_ENDPOINT env not set for AACS.")
+                raise Exception(
+                    "CONTENT_SAFETY_ENDPOINT env not set for AACS.")
             if not key:
                 raise Exception("CONTENT_SAFETY_KEY env not set for AACS.")
 
             # Create a Content Safety client
             headers_policy = HeadersPolicy()
-            headers_policy.add_header("ms-azure-ai-sender", "fm-optimized-inference")
+            headers_policy.add_header(
+                "ms-azure-ai-sender", "fm-optimized-inference")
             self.g_aacs_client = ContentSafetyClient(
                 endpoint,
                 AzureKeyCredential(key),
@@ -88,7 +100,8 @@ class AACSValidator:
         elif isinstance(obj, list) or isinstance(obj, np.ndarray):
             severity = 0
             for idx in range(len(obj)):
-                obj[idx], value_severity = self.iterate(obj[idx], current_key=current_key)
+                obj[idx], value_severity = self.iterate(
+                    obj[idx], current_key=current_key)
                 severity = max(severity, value_severity)
             return obj, severity
         elif isinstance(obj, pd.DataFrame):
@@ -96,7 +109,8 @@ class AACSValidator:
             columns = list(obj.columns)
             for i in range(obj.shape[0]):  # iterate over rows
                 for j in range(obj.shape[1]):  # iterate over columns
-                    obj.at[i, j], value_severity = self.iterate(obj.at[i, j], current_key=columns[j])
+                    obj.at[i, j], value_severity = self.iterate(
+                        obj.at[i, j], current_key=columns[j])
                     severity = max(severity, value_severity)
             return obj, severity
         elif isinstance(obj, str):
@@ -111,7 +125,6 @@ class AACSValidator:
         else:
             return obj, 0
 
-
     def get_safe_response(self, result: Union[Dict, CompletionResponse, ChatCompletionResponse]):
         """Check if response is safe."""
         logger.info("Analyzing response...")
@@ -122,7 +135,6 @@ class AACSValidator:
         result, severity = self.iterate(jsonable_result)
         logger.info(f"Response analyzed, severity {severity}")
         return result
-
 
     def get_safe_input(self, input_data: Dict):
         """Check if input is safe."""
@@ -136,11 +148,13 @@ class AACSValidator:
     def analyze_response(self, aacs_response: AnalyzeTextResult):
         """Analyze response."""
         severity = 0
-        aacs_category_set = [TextCategory.HATE, TextCategory.SELF_HARM, TextCategory.SEXUAL, TextCategory.VIOLENCE]
+        aacs_category_set = [TextCategory.HATE, TextCategory.SELF_HARM,
+                             TextCategory.SEXUAL, TextCategory.VIOLENCE]
         if aacs_response.categories_analysis:
             for category in aacs_response.categories_analysis:
                 if category.category in aacs_category_set and category.severity > 0:
-                    logger.info(f"Analyzing aacs response for category {category.category} with severity {category.severity}")
+                    logger.info(
+                        f"Analyzing aacs response for category {category.category} with severity {category.severity}")
                     severity = max(severity, category.severity)
         return severity
 
@@ -153,12 +167,12 @@ class AACSValidator:
         chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
         split_text = chunking_utils.split_by(text)
 
-        result = [self.analyze_response(self.g_aacs_client.analyze_text(AnalyzeTextOptions(text=i))) for i in split_text]
+        result = [self.analyze_response(self.g_aacs_client.analyze_text(
+            AnalyzeTextOptions(text=i))) for i in split_text]
         severity = max(result)
         logger.info(f"Analyzed, severity {severity}")
 
         return severity
-
 
     def analyze_image(self, image_in_byte64: str) -> int:
         """Analyze image severity using azure content safety service.
@@ -180,10 +194,10 @@ class AACSValidator:
     def is_valid_base64_image(self, base64_string):
         """
         Check if a string is a valid base64-encoded image.
-        
+
         Args:
             base64_string (str): The string to validate
-            
+
         Returns:
             tuple: (is_valid (bool), image_format (str or None), error_message (str or None))
         """
@@ -195,45 +209,47 @@ class AACSValidator:
                     base64_string = base64_string.split(',', 1)[1]
                 else:
                     return False
-            
+
             # Remove any whitespace
             base64_string = base64_string.strip()
-            
+
             # Check if string contains only valid base64 characters
             base64_pattern = re.compile(r'^[A-Za-z0-9+/]*={0,2}$')
             if not base64_pattern.match(base64_string):
                 return False
-            
+
             # Check if length is valid for base64 (must be multiple of 4)
             if len(base64_string) % 4 != 0:
                 return False
-            
+
             # Try to decode base64
             try:
                 decoded_data = base64.b64decode(base64_string, validate=True)
             except Exception as e:
                 return False
-            
+
             # Try to open as image using PIL
             try:
                 image = Image.open(io.BytesIO(decoded_data))
                 image_format = image.format.lower() if image.format else None
-                
+
                 # Verify it's a supported image format
-                supported_formats = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp', 'tiff']
+                supported_formats = ['jpeg', 'jpg',
+                                     'png', 'gif', 'bmp', 'webp', 'tiff']
                 if image_format not in supported_formats:
                     return False
-                
+
                 # Additional validation - try to load the image data
                 image.load()
-                
+
                 return True
-                
+
             except Exception as e:
                 return False
-                
+
         except Exception as e:
             return False
+
 
 class CsChunkingUtils:
     """Cs chunking utils."""
@@ -245,7 +261,7 @@ class CsChunkingUtils:
 
     def chunkstring(self, string, length):
         """Chunk strings in a given length."""
-        return (string[0 + i : length + i] for i in range(0, len(string), length))
+        return (string[0 + i: length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
         """Split the input."""
