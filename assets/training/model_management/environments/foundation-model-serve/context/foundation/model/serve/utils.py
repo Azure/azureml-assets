@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 import time
 import os
 from foundation.model.serve.logging_config import configure_logger

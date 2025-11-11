@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from foundation.model.serve.api_server_setup.protocol import (
