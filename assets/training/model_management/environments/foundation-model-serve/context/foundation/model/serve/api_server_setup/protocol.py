@@ -78,10 +78,10 @@ class Function(BaseModel):
     @field_validator("arguments")
     def cast_to_dict(cls, v):
         """Cast string arguments to dictionary if valid JSON.
-        
+
         Args:
             v: The arguments value to validate.
-            
+
         Returns:
             Dict or str: Parsed dictionary if valid JSON, otherwise original value.
         """
@@ -99,13 +99,13 @@ class Function(BaseModel):
     @field_validator("name")
     def must_be_alphanumeric_or_underscore_dash(cls, v: str) -> str:
         """Validate function name contains only allowed characters.
-        
+
         Args:
             v: The function name to validate.
-            
+
         Returns:
             str: The validated function name.
-            
+
         Raises:
             ValueError: If name contains invalid characters or exceeds 64 chars.
         """
@@ -207,10 +207,10 @@ class ContentPart(BaseModel):
     @model_validator(mode="after")
     def validate_content_part(self):
         """Validate content part has required fields for its type.
-        
+
         Returns:
             ContentPart: The validated content part.
-            
+
         Raises:
             ValueError: If required field is missing for the content type.
         """
@@ -246,7 +246,7 @@ class ChatMessage(BaseModel):
 
     def __init__(self, **data):
         """Initialize ChatMessage and generate IDs for tool calls if needed.
-        
+
         Args:
             **data: Keyword arguments for message fields.
         """
@@ -268,13 +268,13 @@ class ResponseFormat(BaseModel):
     @field_validator("type")
     def must_be_valid_response_format(cls, v: str) -> str:
         """Validate response format type is either 'text' or 'json_object'.
-        
+
         Args:
             v: The response format type to validate.
-            
+
         Returns:
             str: The validated response format type.
-            
+
         Raises:
             ValueError: If format is not 'text' or 'json_object'.
         """
@@ -297,13 +297,13 @@ class FunctionDefinition(BaseModel):
     @field_validator("parameters")
     def validate_parameters(cls, v: dict) -> dict:
         """Validate function parameters schema using JSON Schema Draft 7.
-        
+
         Args:
             v: The parameters schema to validate.
-            
+
         Returns:
             dict: The validated parameters schema.
-            
+
         Raises:
             ValueError: If schema validation fails.
         """
@@ -316,13 +316,13 @@ class FunctionDefinition(BaseModel):
     @field_validator("name")
     def must_be_alphanumeric_or_underscore_dash(cls, v: str) -> str:
         """Validate function name contains only allowed characters.
-        
+
         Args:
             v: The function name to validate.
-            
+
         Returns:
             str: The validated function name.
-            
+
         Raises:
             ValueError: If name contains invalid characters or exceeds 64 chars.
         """
@@ -405,7 +405,7 @@ class BaseRequest(BaseModel):
 
     def __repr__(self) -> str:
         """Return string representation of the request with redacted sensitive fields.
-        
+
         Returns:
             str: String representation of the BaseRequest instance.
         """
@@ -421,11 +421,11 @@ class BaseRequest(BaseModel):
 
     def to_downstream_json(self, include_extra=False, logger=None) -> Dict[str, Any]:
         """Convert request to JSON for downstream engine API call.
-        
+
         Args:
             include_extra: Whether to include extra fields not in schema.
             logger: Optional logger for warnings about extra parameters.
-            
+
         Returns:
             Dict[str, Any]: JSON-serializable dictionary for downstream API.
         """
@@ -457,7 +457,7 @@ class CompletionRequest(BaseRequest):
 
     def __repr__(self) -> str:
         """Return string representation of the completion request.
-        
+
         Returns:
             str: String representation of the CompletionRequest instance.
         """
@@ -498,13 +498,13 @@ class ChatCompletionRequest(BaseRequest):
     @field_validator("messages")
     def validate_messages_not_empty(cls, msgs):
         """Validate messages list is not empty.
-        
+
         Args:
             msgs: List of chat messages.
-            
+
         Returns:
             List[ChatMessage]: The validated messages list.
-            
+
         Raises:
             ValueError: If messages list is empty.
         """
@@ -514,7 +514,7 @@ class ChatCompletionRequest(BaseRequest):
 
     def __repr__(self) -> str:
         """Return string representation of the chat completion request.
-        
+
         Returns:
             str: String representation of the ChatCompletionRequest instance.
         """
@@ -561,13 +561,13 @@ class ChatCompletionRequestFreeFlow(BaseRequest):
     @field_validator("messages")
     def validate_messages_not_empty(cls, msgs):
         """Validate messages list is not empty.
-        
+
         Args:
             msgs: List of chat messages.
-            
+
         Returns:
             List[ChatMessage]: The validated messages list.
-            
+
         Raises:
             ValueError: If messages list is empty.
         """
@@ -578,10 +578,10 @@ class ChatCompletionRequestFreeFlow(BaseRequest):
     @model_validator(mode="before")
     def collect_extra_params(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Move unknown keys into extra_params.
-        
+
         Args:
             values: Dictionary of all input values.
-            
+
         Returns:
             Dict[str, Any]: Updated values with extras in extra_params field.
         """
@@ -593,7 +593,7 @@ class ChatCompletionRequestFreeFlow(BaseRequest):
 
     def __repr__(self) -> str:
         """Return string representation of the free-flow chat completion request.
-        
+
         Returns:
             str: String representation of the ChatCompletionRequestFreeFlow instance.
         """
