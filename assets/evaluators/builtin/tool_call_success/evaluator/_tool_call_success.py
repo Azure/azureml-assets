@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import math
 import os
 import logging
 from typing import Dict, Union, List, Optional
@@ -16,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 # Create extended ErrorTarget enum with the new member
 def _create_extended_error_target():
-    """Create an extended ErrorTarget enum that includes TOOL_SUCCESS_EVALUATOR."""
+    """Create an extended ErrorTarget enum that includes TOOL_CALL_SUCCESS_EVALUATOR."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members['TOOL_SUCCESS_EVALUATOR'] = 'ToolSuccessEvaluator'
+    existing_members["TOOL_CALL_SUCCESS_EVALUATOR"] = "ToolCallSuccessEvaluator"
 
-    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
     return ExtendedErrorTarget
 
 
@@ -28,8 +29,8 @@ ExtendedErrorTarget = _create_extended_error_target()
 
 
 @experimental
-class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
-    """The Tool Success evaluator determines whether tool calls done by an AI agent includes failures or not.
+class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
+    """The Tool Call Success evaluator determines whether tool calls done by an AI agent includes failures or not.
 
     This evaluator focuses solely on tool call results and tool definitions, disregarding user's query to
     the agent, conversation history and agent's final response. Although tool definitions is optional,
@@ -49,41 +50,45 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
 
     .. admonition:: Example:
         .. literalinclude:: ../samples/evaluation_samples_evaluate.py
-            :start-after: [START tool_success_evaluator]
-            :end-before: [END tool_success_evaluator]
+            :start-after: [START TOOL_CALL_SUCCESS_EVALUATOR]
+            :end-before: [END TOOL_CALL_SUCCESS_EVALUATOR]
             :language: python
             :dedent: 8
-            :caption: Initialize and call a ToolSuccessEvaluator with a tool definitions and response.
+            :caption: Initialize and call a ToolCallSuccessEvaluator with a tool definitions and response.
 
     .. admonition:: Example using Azure AI Project URL:
 
     .. literalinclude:: ../samples/evaluation_samples_evaluate_fdp.py
-        :start-after: [START tool_success_evaluator]
-        :end-before: [END tool_success_evaluator]
+        :start-after: [START TOOL_CALL_SUCCESS_EVALUATOR]
+        :end-before: [END TOOL_CALL_SUCCESS_EVALUATOR]
         :language: python
         :dedent: 8
-        :caption: Initialize and call ToolSuccessEvaluator using Azure AI Project URL in the following
+        :caption: Initialize and call ToolCallSuccessEvaluator using Azure AI Project URL in the following
             format https://{resource_name}.services.ai.azure.com/api/projects/{project_name}
 
     """
 
-    _PROMPTY_FILE = "tool_success.prompty"
-    _RESULT_KEY = "tool_success"
+    _PROMPTY_FILE = "tool_call_success.prompty"
+    _RESULT_KEY = "tool_call_success"
     _OPTIONAL_PARAMS = ["tool_definitions"]
 
-    id = "azureai://built-in/evaluators/tool_success"
+    id = "azureai://built-in/evaluators/tool_call_success"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
     def __init__(self, model_config, *, credential=None, **kwargs):
-        """Initialize the Tool Success evaluator."""
+        """Initialize the Tool Call Success evaluator."""
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
+        threshold_value = kwargs.pop("threshold", 1)
+        higher_is_better_value = kwargs.pop("_higher_is_better", True)
         super().__init__(
             model_config=model_config,
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
+            threshold=threshold_value,
             credential=credential,
+            _higher_is_better=higher_is_better_value,
             **kwargs,
         )
 
@@ -93,11 +98,11 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         *,
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
-    ) -> Dict[str, Union[str, bool]]:
+    ) -> Dict[str, Union[str, float]]:
         """Evaluate tool call success for a given response, and optionally tool definitions.
 
         Example with list of messages:
-            evaluator = ToolSuccessEvaluator(model_config)
+            evaluator = ToolCallSuccessEvaluator(model_config)
             response = [{'createdAt': 1700000070, 'run_id': '0', 'role': 'assistant',
             'content': [{'type': 'text', 'text': '**Day 1:** Morning: Visit Louvre Museum (9 AM - 12 PM)...'}]}]
 
@@ -109,7 +114,7 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         :keyword tool_definitions: Optional tool definitions to use for evaluation.
         :paramtype tool_definitions: Union[dict, List[dict]]
         :return: A dictionary with the tool success evaluation results.
-        :rtype: Dict[str, Union[str, bool]]
+        :rtype: Dict[str, Union[str, float]]
         """
 
     @override
@@ -126,8 +131,8 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         return super().__call__(*args, **kwargs)
 
     @override
-    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[bool, str]]:  # type: ignore[override]
-        """Do Tool Success evaluation.
+    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[str, float]]:  # type: ignore[override]
+        """Do Tool Call Success evaluation.
 
         :param eval_input: The input to the evaluator. Expected to contain whatever inputs are
         needed for the _flow method
@@ -137,19 +142,19 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
         """
         if "response" not in eval_input:
             raise EvaluationException(
-                message="response, is a required inputs to the Tool Success evaluator.",
-                internal_message="response, is a required inputs to the Tool Success evaluator.",
+                message="response, is a required inputs to the Tool Call Success evaluator.",
+                internal_message="response, is a required inputs to the Tool Call Success evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
-                target=ExtendedErrorTarget.TOOL_SUCCESS_EVALUATOR,
+                target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             )
         if eval_input["response"] is None or eval_input["response"] == []:
             raise EvaluationException(
-                message="response cannot be None or empty for the Tool Success evaluator.",
-                internal_message="response cannot be None or empty for the Tool Success evaluator.",
+                message="response cannot be None or empty for the Tool Call Success evaluator.",
+                internal_message="response cannot be None or empty for the Tool Call Success evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
-                target=ExtendedErrorTarget.TOOL_SUCCESS_EVALUATOR,
+                target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             )
 
         eval_input["tool_calls"] = _reformat_tool_calls_results(eval_input["response"], logger)
@@ -163,7 +168,9 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
             )
             eval_input["tool_definitions"] = _reformat_tool_definitions(filtered_tool_definitions, logger)
 
-        llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        llm_output = prompty_output_dict.get("llm_output", "")
+
         if isinstance(llm_output, dict):
             success = llm_output.get("success", False)
             if isinstance(success, str):
@@ -172,15 +179,28 @@ class ToolSuccessEvaluator(PromptyEvaluatorBase[Union[str, bool]]):
             success_result = "pass" if success else "fail"
             reason = llm_output.get("explanation", "")
             return {
-                f"{self._result_key}": success*1,
+                f"{self._result_key}": success * 1.0,
                 f"{self._result_key}_result": success_result,
-                f"{self._result_key}_threshold": 1,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_details": llm_output.get("details", ""),
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_reason": f"{reason} {llm_output.get('details', '')}",
+                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
+                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
+                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
+                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
+                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
+                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
+                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
             }
         if logger:
-            logger.warning("LLM output is not a dictionary, returning False for the success.")
-        return {self._result_key: False}
+            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
+
+        score = math.nan
+        binary_result = self._get_binary_result(score)
+        return {
+            self._result_key: float(score),
+            f"{self._result_key}_result": binary_result,
+            f"{self._result_key}_threshold": self._threshold,
+        }
 
 
 def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):

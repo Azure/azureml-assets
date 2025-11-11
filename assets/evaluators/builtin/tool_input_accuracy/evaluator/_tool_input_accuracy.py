@@ -421,6 +421,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             credential=credential,
+            threshold=1,
             **kwargs,
         )
 
@@ -484,14 +485,29 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float]]
         """
+        if eval_input.get("query") is None:
+            raise EvaluationException(
+                message=(
+                    "Query is a required input to "
+                    "the Tool Input Accuracy evaluator."
+                ),
+                internal_message=(
+                    "Query is a required input "
+                    "to the Tool Input Accuracy evaluator."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+            )
+
         # Format conversation history for cleaner evaluation
-        if "query" in eval_input:
-            eval_input["query"] = reformat_conversation_history(
+        eval_input["query"] = reformat_conversation_history(
                 eval_input["query"], logger, include_system_messages=True, include_tool_calls=True
             )
 
         # Call the LLM to evaluate
-        llm_output = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        llm_output = prompty_output_dict.get("llm_output", {})
 
         if isinstance(llm_output, dict):
             result = llm_output.get("result", None)
@@ -515,8 +531,16 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             response_dict = {
                 self._result_key: result,
                 f"{self._result_key}_result": score_result,
+                f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_reason": explanation,
-                "details": details,
+                f"{self._result_key}_details": details,
+                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
+                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
+                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
+                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
+                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
+                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
+                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
             }
             return response_dict
 
@@ -582,7 +606,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_result": "pass",
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_reason": error_message,
-            "details": {},
+            f"{self._result_key}_details": {},
         }
 
     @override

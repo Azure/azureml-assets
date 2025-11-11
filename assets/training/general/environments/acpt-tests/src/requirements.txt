@@ -1,7 +1,6 @@
 transformers
 datasets
-evaluate
 accelerate
 scikit-learn
-apache_beam
+apache_beam~=2.69.0
 evaluate

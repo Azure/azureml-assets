@@ -1,5 +1,5 @@
 ---
-name: Tool Success
+name: Tool Call Success
 description: Evaluates whether a Tool call was successful or resulted in a technical error
 model:
   api: chat
@@ -42,7 +42,7 @@ TOOL_CALLS: {{tool_calls}}
 
 
 TOOL_CALLS is a list of tool calls that was produced by the AI agent's. It includes calls together with the result of every tool call.
-TOOL_DEFINITIONS is a list of definitions for the tools that was called. This definition can contain a description of functionality provided by the tool , the parameters that the tool accept and the expected return of the tool. This definition can contribute to the assessment of whether a tool call succeeded or failed. 
+TOOL_DEFINITIONS is a list of definitions for the tools that was called. This definition can contain a description of functionality provided by the tool, the parameters that the tool accept and the expected return of the tool. This definition can contribute to the assessment of whether a tool call succeeded or failed. 
 
 
 EVALUATION FRAMEWORK
@@ -116,7 +116,7 @@ EXPECTED OUTPUT
 
 EXPECTED OUTPUT
 {
-     "explanation": "Although the returned value 7 is not the square root of 4, but this is a business mistake in the tool. The tool did not return a result indicating a technical error",
+     "explanation": "Although the returned value 7 is not the square root of 4, this is a business mistake in the tool. The tool did not return a result indicating a technical error",
      "details": {
        "failed_tools": "",
      },
@@ -133,7 +133,7 @@ EXPECTED OUTPUT
 
 EXPECTED OUTPUT
 {
-     "explanation": "The tool returned a semicolon separated list of names. Although the description in the definition says it should return comma-separated list , this formatting mistake is a business mistake of the tool , not a technical failure. The tool did not return an error",
+     "explanation": "The tool returned a semicolon separated list of names. Although the description in the definition says it should return comma-separated list , this formatting mistake is a business mistake of the tool, not a technical failure. The tool did not return an error",
      "details": {
        "failed_tools": "",
      },

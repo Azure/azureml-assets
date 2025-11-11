@@ -3,7 +3,7 @@ name: phi-3-mini-128k-instruct-trtrtx-gpu
 version: 1
 path: ./
 tags:
-  foundryLocal: "test"
+  foundryLocal: ""
   license: "MIT"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/microsoft/Phi-3-mini-128k-instruct/blob/main/LICENSE>."
   author: Microsoft

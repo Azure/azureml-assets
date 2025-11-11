@@ -1,11 +1,11 @@
 type: "evaluator"
 name: "builtin.violence"
-version: 1
+version: 2
 displayName: "Violence-Content-Evaluator"
 description: "Detects violent or threatening language in the response. Lower scores indicate safer, non‑violent communication."
 evaluatorType: "builtin"
 evaluatorSubType: "service"
-categories: ["safety"]
+categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
