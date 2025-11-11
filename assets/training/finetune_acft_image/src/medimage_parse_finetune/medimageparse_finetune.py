@@ -17,7 +17,6 @@ import subprocess
 import contextlib
 import signal
 import tempfile
-import re
 
 logger = _LoggerFactory.get_logger(__name__)
 
@@ -256,9 +255,20 @@ def execute_training(args):
         logger.info("Training completed successfully.")
 
         if RANK == 0:
-            ckpt_path = Path(args.out) / os.environ['AMLT_EXPERIMENT_NAME'] / os.environ['AMLT_JOB_NAME'] / "checkpoints" / "last.ckpt"
-            output_path = Path(args.mlflow_model_folder) / "artifacts" / "checkpoints" / "boltzformer_focal_all.safetensors"
-            
+            ckpt_path = (
+                Path(args.out)
+                / os.environ['AMLT_EXPERIMENT_NAME']
+                / os.environ['AMLT_JOB_NAME']
+                / "checkpoints"
+                / "last.ckpt"
+            )
+            output_path = (
+                Path(args.mlflow_model_folder)
+                / "artifacts"
+                / "checkpoints"
+                / "boltzformer_focal_all.safetensors"
+            )
+
             logger.info("Starting conversion to HuggingFace format...")
             convert_ckpt_to_safetensor(str(ckpt_path), str(output_path))
 
