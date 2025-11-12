@@ -9,7 +9,7 @@ dependencies:
     - azure-ai-ml==1.30.0
     - azure-identity==1.25.1
     - cryptography==46.0.3
-    - certifi==2025.10.5
+    - certifi==2025.11.12
     - urllib3==2.5.0
     - paramiko==4.0.0
     - idna==3.11
