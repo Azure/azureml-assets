@@ -1,0 +1,12 @@
+azure-ai-contentsafety
+azure-ai-ml
+azureml-mlflow
+azure-identity
+requests
+fastapi
+pandas
+transformers
+uvicorn
+httpx
+azure-mgmt-cognitiveservices
+Pillow
