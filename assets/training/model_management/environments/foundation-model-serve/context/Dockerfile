@@ -35,17 +35,12 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# Need to copy src code and install in editable mode
 COPY . .
-#RUN pip install -e ./ --no-cache-dir
+RUN pip install -e ./ --no-cache-dir
 
-# When copied to assets repo, change to install from public pypi
-# RUN pip install llm-optimized-inference --no-cache-dir
-# install new
 
 RUN pip install --no-cache-dir torch==2.8.0
 
-# clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 
 ADD runit_folder/api_server /var/runit/api_server
