@@ -36,7 +36,7 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 WORKDIR /
 
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.43 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.44 --no-cache-dir
 
 # torch installation
 RUN pip install --no-cache-dir torch==2.8.0
