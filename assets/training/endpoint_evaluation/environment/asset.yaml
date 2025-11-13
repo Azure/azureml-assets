@@ -1,4 +1,4 @@
-name: verl_trainer_rl
+name: verl-trainer-rl
 version: auto
 type: environment
 spec: spec.yaml
