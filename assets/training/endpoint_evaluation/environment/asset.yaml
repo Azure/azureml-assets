@@ -1,0 +1,11 @@
+name: verl_trainer_rl
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: false
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests
+categories: ["Training", "RL"]
