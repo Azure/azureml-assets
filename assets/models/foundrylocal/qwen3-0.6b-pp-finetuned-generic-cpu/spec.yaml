@@ -3,7 +3,7 @@ name: qwen3-0.6b-pp-finetuned-generic-cpu
 version: 2
 path: ./
 tags:
-  foundryLocal: "pp_finetuned_2"
+  foundryLocal: "pp_finetuned"
   license: "apache-2.0"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE>."
   author: Microsoft
