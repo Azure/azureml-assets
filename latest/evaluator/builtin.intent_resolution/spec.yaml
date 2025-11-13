@@ -1,13 +1,13 @@
 type: "evaluator"
 name: "builtin.intent_resolution"
-version: 2
+version: 3
 displayName: "Intent-Resolution-Evaluator"
 description: "Checks whether the model correctly interprets and resolves user intent.
   Ensures the response aligns with what the user asked. Use this metric in conversational
   AI assistants, and customer support bots where understanding user intent is essential."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["agents"]
+categories: ["agents", "quality"]
 tags:
   provider: "Microsoft"
 initParameterSchema:

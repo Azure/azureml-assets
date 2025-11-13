@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.coherence"
-version: 2
+version: 3
 displayName: "Coherence-Evaluator"
 description: "Evaluates how logically connected and consistent the response is. Ensures
   ideas flow naturally and make sense together. It’s best used for generative business
@@ -8,7 +8,7 @@ description: "Evaluates how logically connected and consistent the response is. 
   emails."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["quality"]
+categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
 initParameterSchema:
