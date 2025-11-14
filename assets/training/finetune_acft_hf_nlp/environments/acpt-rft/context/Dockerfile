@@ -10,6 +10,8 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
 
 RUN MAX_JOBS=4 pip install --upgrade flash-attn==2.8.3 --no-build-isolation 
+RUN pip install sglang==0.5.4
+RUN pip install sgl-kernel==0.3.16.post3
 RUN pip install starlette==0.49.1
 RUN pip install mlflow==3.0.0
 # clean conda and pip caches
