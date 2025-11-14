@@ -11,7 +11,7 @@ COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/track
 
 RUN pip install transformers==4.56.1
 RUN pip install vllm==0.10.2
-RUN pip install --upgrade flash-attn==2.8.3
+RUN MAX_JOBS=4 pip install --upgrade flash-attn==2.8.3 --no-build-isolation
 RUN pip install click==8.2.1
 RUN pip install sglang==0.4.1.post6
 RUN pip install sgl-kernel==0.3.14
