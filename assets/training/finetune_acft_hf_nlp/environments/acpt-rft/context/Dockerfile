@@ -9,7 +9,6 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
 
-RUN pip install transformers==4.56.1
 RUN MAX_JOBS=4 pip install --upgrade flash-attn==2.8.3 --no-build-isolation 
 RUN pip install starlette==0.49.1
 RUN pip install mlflow==3.0.0
