@@ -71,6 +71,7 @@ def parse_args():
         "--model",
         type=str,
         help="Name or path of the model. If not set, the default model will request /v1/models for conf.",
+        default=None,
     )
     parser.add_argument(
         "--tokenizer",
@@ -286,6 +287,11 @@ def _generate_avg_metrics(metrics_file: str):
 
 def main():
     args = parse_args()
+    print("> Parsed arguments:", args)
+
+    # remove last slash if exists from arg base-url
+    if args.base_url and args.base_url.endswith("/"):
+        args.base_url = args.base_url[:-1]
 
     api_key, _ = get_api_key_from_connection(args.connection_name)
     del args.connection_name
