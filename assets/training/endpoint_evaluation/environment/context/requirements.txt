@@ -13,6 +13,7 @@ latex2sympy2_extended
 liger-kernel
 math_verify
 mathruler
+matplotlib>=3.5.0
 numpy
 packaging
 pandas
