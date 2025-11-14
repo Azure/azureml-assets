@@ -13,5 +13,6 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 # release of following packages consider moving then to requirements.txt
 RUN pip install mlflow==3.1.0
 RUN pip install xgrammar==0.1.27
+RUN pip install transformers==4.57.1
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
