@@ -1,5 +1,5 @@
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-accelerate==1.10.0
+
 click==8.2.1
 codetiming==1.4.0
 datasets==4.0.0
