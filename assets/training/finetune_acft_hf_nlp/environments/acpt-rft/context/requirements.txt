@@ -1,5 +1,6 @@
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 accelerate==1.10.0
+click==8.2.1
 codetiming==1.4.0
 datasets==4.0.0
 deepspeed==0.17.4
@@ -20,6 +21,8 @@ pybind11==3.0.0
 pylatexenc==2.10
 qwen-vl-utils==0.0.10
 ray[default]==2.48.0
+sglang==0.5.4
+sgl-kernel==0.3.14
 tensorboard==2.20.0
 tensordict==0.9.1
 torchdata==0.11.0
@@ -28,6 +31,7 @@ transformers==4.56.1
 triton==3.2.0
 uvicorn==0.35.0
 verl==0.5.0
+vllm==0.11.0
 xgrammar==0.1.24
 wandb==0.21.1
 zmq==0.0.0

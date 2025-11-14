@@ -1,5 +1,6 @@
-azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-pillow==11.3.0
 accelerate==1.6.0
+azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 datasets==3.6.0
-git+https://github.com/sgl-project/SpecForge.git@a2cb6d847eaa8b04c5e4a285774bc73a0eb947cd
+pillow==11.3.0
+sglang==0.5.5
+transformers==4.56.2
