@@ -33,6 +33,5 @@ transformers
 triton
 uvicorn
 verl
-vllm
 wandb
 zmq
