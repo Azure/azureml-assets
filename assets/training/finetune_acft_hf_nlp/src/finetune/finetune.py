@@ -280,6 +280,8 @@ def get_parser():
     parser.add_argument("--lora_alpha", type=int, default=128, help="lora attn alpha")
     parser.add_argument("--lora_dropout", type=float, default=0.0, help="lora dropout value")
     parser.add_argument("--lora_r", default=8, type=int, help="lora dimension")
+    parser.add_argument("--lora_target_modules", default=None, type=str, help="lora target modules")
+    parser.add_argument("--lora_target_parameters", default=None, type=str, help="lora target parameters")
 
     # Training settings
     parser.add_argument("--num_train_epochs", default=5, type=int, help="training epochs")
@@ -1093,9 +1095,25 @@ def validate_early_stop_settings(args: Namespace) -> None:
             )
         )
 
+def resolve_lora_key(args: Namespace, ft_config, key) -> None:
+    """Resolve lora target modules from finetune config if not passed by user."""
+    lora_key_from_ft_config = ft_config.get(key)
+    lora_key_from_args = getattr(args, key, None)
+    
+    # Override values from ft config with values from args if not None
+    if lora_key_from_ft_config and not lora_key_from_args:
+        logger.info(f"Setting {key} to: {lora_key_from_ft_config} from finetune config")
+        return lora_key_from_ft_config if isinstance(lora_key_from_ft_config, list) else lora_key_from_ft_config.split(",")
+    elif lora_key_from_args:
+        logger.info(f"Using {key}: {lora_key_from_args} from user args")
+        return lora_key_from_args if isinstance(lora_key_from_args, list) else lora_key_from_args.split(",")
+    else:
+        logger.info(f"{key} is not set in finetune config or user args defaulting to None")
+        return None
 
 def finetune(args: Namespace):
     """Finetune."""
+    logger.info(args)
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
     enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
 
@@ -1146,12 +1164,13 @@ def finetune(args: Namespace):
             if "lora_algo" in ft_config:
                 logger.info(f'Setting lora_algo to: {ft_config.get("lora_algo")}')
                 setattr(args, "lora_algo", ft_config.get("lora_algo"))
-            if "lora_target_modules" in ft_config:
-                logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
-                setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
-            if "lora_target_parameters" in ft_config:
-                logger.info(f'Setting lora_target_parameters to: {ft_config.get("lora_target_parameters")}')
-                setattr(args, "lora_target_parameters", ft_config.get("lora_target_parameters"))
+
+            lora_target_modules = resolve_lora_key(args, ft_config, "lora_target_modules")
+            setattr(args, "lora_target_modules", lora_target_modules)
+            
+            lora_target_parameters = resolve_lora_key(args, ft_config, "lora_target_parameters")
+            setattr(args, "lora_target_parameters", lora_target_parameters)
+
             # Read leaf modules for MoE models from finetune config
             if "leaf_modules_of_moe_models" in ft_config:
                 logger.info(f'Setting leaf_modules_of_moe_models to: {ft_config.get("leaf_modules_of_moe_models")}')
