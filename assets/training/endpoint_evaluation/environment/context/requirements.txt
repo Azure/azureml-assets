@@ -8,7 +8,6 @@ datasets
 deepspeed
 dill
 fastapi
-flash-attn
 hydra-core
 latex2sympy2_extended
 liger-kernel
