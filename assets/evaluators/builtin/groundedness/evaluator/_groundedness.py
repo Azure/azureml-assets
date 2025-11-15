@@ -220,8 +220,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def __call__(
         self,
         *,
-        query: str,
-        response: List[dict],
+        query: str | List[dict],
+        response: str | List[dict],
         tool_definitions: List[dict],
     ) -> Dict[str, Union[str, float]]:
         """Evaluate groundedness for agent response with tool calls. Only file_search tool is supported.
