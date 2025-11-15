@@ -1,6 +1,6 @@
-azureml-acft-common-components
-azureml-acft-contrib-hf-nlp
-azureml-evaluate-mlflow
+azureml-acft-common-components==0.0.83
+azureml-acft-contrib-hf-nlp==0.0.83
+azureml-evaluate-mlflow==0.0.83
 accelerate
 click
 codetiming
