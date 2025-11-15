@@ -226,7 +226,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
         # Calculate false negatives (expected actions steps not in agent or missing occurrences)
         # For each step, count the excess occurrences of expected actions steps not in (minus) agent steps
-        # or zero (expected actions steps minus expected actions steps) if expected actions steps is less than agent steps
+        # or zero (expected actions steps minus expected actions steps) if expected actions steps is less than
+        # agent steps
         false_negatives = sum(
             expected_actions_counts[step] - min(expected_actions_counts[step], agent_steps_counts.get(step, 0))
             for step in expected_actions_counts
