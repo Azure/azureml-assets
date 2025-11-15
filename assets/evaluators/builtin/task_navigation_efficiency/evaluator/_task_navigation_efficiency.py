@@ -36,12 +36,12 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     Enumeration of task navigation efficiency matching mode.
 
     This enum allows you to specify which single matching technique should be used when evaluating
-    the efficiency of an agent's tool calls sequence against a ground truth path.
+    the efficiency of an agent's tool calls sequence against a expected actions path.
     """
 
     EXACT_MATCH = "exact_match"
     """
-    Binary metric indicating whether the agent's tool calls exactly match the ground truth.
+    Binary metric indicating whether the agent's tool calls exactly match the expected actions.
 
     Returns True only if the agent's tool calls sequence is identical to the expected sequence
     in both order and content (no extra steps, no missing steps, correct order).
@@ -51,7 +51,7 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     """
     Binary metric allowing extra steps but requiring correct order of required tool calls.
 
-    Returns True if all ground truth steps appear in the agent's sequence in the correct
+    Returns True if all expected actions steps appear in the agent's sequence in the correct
     order, even if there are additional steps interspersed.
     """
 
@@ -59,7 +59,7 @@ class TaskNavigationEfficiencyMatchingMode(str, Enum):
     """
     Binary metric allowing both extra steps and different ordering.
 
-    Returns True if all ground truth steps appear in the agent's sequence with sufficient
+    Returns True if all expected actions steps appear in the agent's sequence with sufficient
     frequency, regardless of order. Most lenient matching criterion.
     """
 
@@ -70,7 +70,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     Evaluates whether an agent's sequence of actions is efficient and follows optimal decision-making patterns.
 
     The Task Navigation Efficiency Evaluator returns binary matching results between the agent's tool usage trajectory
-    and the ground truth expected steps.
+    and the expected actions expected steps.
     It has three matching techniques: exact match, in-order match (allows extra steps),
     and any-order match (allows extra steps and ignores order).
     It also returns precision, recall, and F1 scores in properties bag.
@@ -181,7 +181,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         List[Union[str, Tuple[str, Tuple]]],
         List[Union[str, Tuple[str, Tuple]]],
     ]:
-        """Prepare agent and ground truth steps for comparison based on parameter matching mode."""
+        """Prepare agent and expected actions steps for comparison based on parameter matching mode."""
         agent_steps: List[Union[str, Tuple[str, Tuple]]] = []
         expected_actions_steps: List[Union[str, Tuple[str, Tuple]]] = []
         if use_parameter_matching:
@@ -197,7 +197,9 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
         return agent_steps, expected_actions_steps
 
-    def _calculate_precision_recall_f1_scores(self, agent_steps: List, expected_actions_steps: List) -> Dict[str, float]:
+    def _calculate_precision_recall_f1_scores(
+        self, agent_steps: List, expected_actions_steps: List
+    ) -> Dict[str, float]:
         """Calculate precision, recall, and F1 scores."""
         if not agent_steps:
             return {"precision_score": 0.0, "recall_score": 0.0, "f1_score": 0.0}
@@ -207,24 +209,24 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         expected_actions_counts = Counter(expected_actions_steps)
 
         # Calculate true positives by taking the minimum count for each common element
-        # For each step, count the intersection (min count) of agent and ground truth steps
+        # For each step, count the intersection (min count) of agent and expected actions steps
         true_positives = sum(
             min(agent_steps_counts[step], expected_actions_counts[step])
             for step in agent_steps_counts
             if step in expected_actions_counts
         )
 
-        # Calculate false positives (agent steps not in ground truth or excess occurrences)
-        # For each step, count the excess occurrences of agent steps not in (minus) ground truth
-        # or zero (agent steps minus agent steps) if agent steps is less than ground truth
+        # Calculate false positives (agent steps not in expected actions or excess occurrences)
+        # For each step, count the excess occurrences of agent steps not in (minus) expected actions
+        # or zero (agent steps minus agent steps) if agent steps is less than expected actions
         false_positives = sum(
             agent_steps_counts[step] - min(agent_steps_counts[step], expected_actions_counts.get(step, 0))
             for step in agent_steps_counts
         )
 
-        # Calculate false negatives (ground truth steps not in agent or missing occurrences)
-        # For each step, count the excess occurrences of ground truth steps not in (minus) agent steps
-        # or zero (ground truth steps minus ground truth steps) if ground truth steps is less than agent steps
+        # Calculate false negatives (expected actions steps not in agent or missing occurrences)
+        # For each step, count the excess occurrences of expected actions steps not in (minus) agent steps
+        # or zero (expected actions steps minus expected actions steps) if expected actions steps is less than agent steps
         false_negatives = sum(
             expected_actions_counts[step] - min(expected_actions_counts[step], agent_steps_counts.get(step, 0))
             for step in expected_actions_counts
@@ -244,11 +246,11 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         }
 
     def _calculate_exact_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
-        """Check if agent steps exactly match ground truth (order and content)."""
+        """Check if agent steps exactly match expected actions (order and content)."""
         return agent_steps == expected_actions_steps
 
     def _calculate_in_order_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
-        """Check if all ground truth steps appear in agent steps in correct order (extra steps allowed)."""
+        """Check if all expected actions steps appear in agent steps in correct order (extra steps allowed)."""
         if not expected_actions_steps:
             return True
 
@@ -260,7 +262,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         return gt_index == len(expected_actions_steps)
 
     def _calculate_any_order_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
-        """Check if all ground truth steps appear in agent steps with sufficient frequency.
+        """Check if all expected actions steps appear in agent steps with sufficient frequency.
 
         any order, extra steps allowed.
         """
@@ -268,7 +270,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         agent_counts = Counter(agent_steps)
         expected_actions_counts = Counter(expected_actions_steps)
 
-        # Check if agent has at least as many occurrences of each ground truth step
+        # Check if agent has at least as many occurrences of each expected actions step
         return all(agent_counts[step] >= expected_actions_counts[step] for step in expected_actions_counts)
 
     _TASK_NAVIGATION_EFFICIENCY_MATCHING_MODE_TO_FUNCTIONS = {
@@ -388,7 +390,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         actions = eval_input["actions"]
         expected_actions = eval_input["expected_actions"]
 
-        # Value and type checking for ground truth steps
+        # Value and type checking for expected actions steps
         if not expected_actions:
             raise ValueError("expected_actions cannot be empty")
 
@@ -401,7 +403,9 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             # List format: just tool names
             expected_actions_names = [step.strip() for step in expected_actions]
             use_parameter_matching = False
-        elif (isinstance(expected_actions, tuple) or isinstance(expected_actions, list)) and len(expected_actions) == 2:
+        elif (
+            isinstance(expected_actions, tuple) or isinstance(expected_actions, list)
+        ) and len(expected_actions) == 2:
             # Tuple format: (tool_names, parameters_dict)
             tool_names_list, params_dict = expected_actions
 
