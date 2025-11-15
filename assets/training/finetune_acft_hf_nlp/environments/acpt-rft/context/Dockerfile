@@ -19,3 +19,4 @@ RUN pip install starlette==0.49.1
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 RUN rm -rf /opt/conda/lib/python3.10/site-packages/pip-25.2.dist-info
+RUN rm -rf opt/conda/lib/python3.13/site-packages/pip-25.2.dist-info
