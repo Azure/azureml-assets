@@ -90,7 +90,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
             # Example 1: Using simple tool names list
             result = path_efficiency_eval(
-                response=[
+                actions=[
                     {"role": "assistant", "content": [
                         {"type": "tool_call", "tool_call_id": "call_1", "name": "identify_tools_to_call",
                          "arguments": {}}
@@ -105,12 +105,12 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                         {"type": "tool_call", "tool_call_id": "call_4", "name": "response_synthesis", "arguments": {}}
                     ]}
                 ],
-                ground_truth=["identify_tools_to_call", ""call_tool_A", "call_tool_B", "response_synthesis"]
+                expected_actions=["identify_tools_to_call", ""call_tool_A", "call_tool_B", "response_synthesis"]
             )
 
             # Example 2: Using tool names with parameters (exact parameter matching required)
             result = path_efficiency_eval(
-                response=[
+                actions=[
                     {"role": "assistant", "content": [
                         {"type": "tool_call", "tool_call_id": "call_1", "name": "search",
                          "arguments": {"query": "weather", "location": "NYC"}}
@@ -120,7 +120,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                          "arguments": {"format": "json"}}
                     ]}
                 ],
-                ground_truth=(
+                expected_actions=(
                     ["search", "format_result"],
                     {
                         "search": {"query": "weather", "location": "NYC"},
@@ -174,8 +174,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     def _prepare_steps_for_comparison(
         self,
         agent_tool_pairs: List[Tuple[str, Dict[str, Any]]],
-        ground_truth: List[str],
-        ground_truth_params: Dict[str, Dict[str, Any]],
+        expected_actions: List[str],
+        expected_actions_params: Dict[str, Dict[str, Any]],
         use_parameter_matching: bool,
     ) -> Tuple[
         List[Union[str, Tuple[str, Tuple]]],
@@ -183,42 +183,42 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     ]:
         """Prepare agent and ground truth steps for comparison based on parameter matching mode."""
         agent_steps: List[Union[str, Tuple[str, Tuple]]] = []
-        ground_truth_steps: List[Union[str, Tuple[str, Tuple]]] = []
+        expected_actions_steps: List[Union[str, Tuple[str, Tuple]]] = []
         if use_parameter_matching:
             # When parameter matching is enabled, we need to match both tool name and parameters
             agent_steps = [(pair[0], tuple(sorted(pair[1].items()))) for pair in agent_tool_pairs]
-            ground_truth_steps = [
-                (name, tuple(sorted(ground_truth_params.get(name, {}).items()))) for name in ground_truth
+            expected_actions_steps = [
+                (name, tuple(sorted(expected_actions_params.get(name, {}).items()))) for name in expected_actions
             ]
         else:
             # When parameter matching is disabled, only compare tool names
             agent_steps = [name for name, _ in agent_tool_pairs]
-            ground_truth_steps = [step for step in ground_truth]
+            expected_actions_steps = [step for step in expected_actions]
 
-        return agent_steps, ground_truth_steps
+        return agent_steps, expected_actions_steps
 
-    def _calculate_precision_recall_f1_scores(self, agent_steps: List, ground_truth_steps: List) -> Dict[str, float]:
+    def _calculate_precision_recall_f1_scores(self, agent_steps: List, expected_actions_steps: List) -> Dict[str, float]:
         """Calculate precision, recall, and F1 scores."""
         if not agent_steps:
             return {"precision_score": 0.0, "recall_score": 0.0, "f1_score": 0.0}
 
         # Count occurrences of each step in both lists to handle duplicates
         agent_steps_counts = Counter(agent_steps)
-        ground_truth_counts = Counter(ground_truth_steps)
+        expected_actions_counts = Counter(expected_actions_steps)
 
         # Calculate true positives by taking the minimum count for each common element
         # For each step, count the intersection (min count) of agent and ground truth steps
         true_positives = sum(
-            min(agent_steps_counts[step], ground_truth_counts[step])
+            min(agent_steps_counts[step], expected_actions_counts[step])
             for step in agent_steps_counts
-            if step in ground_truth_counts
+            if step in expected_actions_counts
         )
 
         # Calculate false positives (agent steps not in ground truth or excess occurrences)
         # For each step, count the excess occurrences of agent steps not in (minus) ground truth
         # or zero (agent steps minus agent steps) if agent steps is less than ground truth
         false_positives = sum(
-            agent_steps_counts[step] - min(agent_steps_counts[step], ground_truth_counts.get(step, 0))
+            agent_steps_counts[step] - min(agent_steps_counts[step], expected_actions_counts.get(step, 0))
             for step in agent_steps_counts
         )
 
@@ -226,8 +226,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         # For each step, count the excess occurrences of ground truth steps not in (minus) agent steps
         # or zero (ground truth steps minus ground truth steps) if ground truth steps is less than agent steps
         false_negatives = sum(
-            ground_truth_counts[step] - min(ground_truth_counts[step], agent_steps_counts.get(step, 0))
-            for step in ground_truth_counts
+            expected_actions_counts[step] - min(expected_actions_counts[step], agent_steps_counts.get(step, 0))
+            for step in expected_actions_counts
         )
 
         # Calculate precision, recall, F1
@@ -243,33 +243,33 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             "f1_score": f1_score,
         }
 
-    def _calculate_exact_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
+    def _calculate_exact_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
         """Check if agent steps exactly match ground truth (order and content)."""
-        return agent_steps == ground_truth_steps
+        return agent_steps == expected_actions_steps
 
-    def _calculate_in_order_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
+    def _calculate_in_order_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
         """Check if all ground truth steps appear in agent steps in correct order (extra steps allowed)."""
-        if not ground_truth_steps:
+        if not expected_actions_steps:
             return True
 
         gt_index = 0
         for step in agent_steps:
-            if gt_index < len(ground_truth_steps) and step == ground_truth_steps[gt_index]:
+            if gt_index < len(expected_actions_steps) and step == expected_actions_steps[gt_index]:
                 gt_index += 1
 
-        return gt_index == len(ground_truth_steps)
+        return gt_index == len(expected_actions_steps)
 
-    def _calculate_any_order_match(self, agent_steps: List, ground_truth_steps: List) -> bool:
+    def _calculate_any_order_match(self, agent_steps: List, expected_actions_steps: List) -> bool:
         """Check if all ground truth steps appear in agent steps with sufficient frequency.
 
         any order, extra steps allowed.
         """
         # Count occurrences of each step in both lists to handle duplicates
         agent_counts = Counter(agent_steps)
-        ground_truth_counts = Counter(ground_truth_steps)
+        expected_actions_counts = Counter(expected_actions_steps)
 
         # Check if agent has at least as many occurrences of each ground truth step
-        return all(agent_counts[step] >= ground_truth_counts[step] for step in ground_truth_counts)
+        return all(agent_counts[step] >= expected_actions_counts[step] for step in expected_actions_counts)
 
     _TASK_NAVIGATION_EFFICIENCY_MATCHING_MODE_TO_FUNCTIONS = {
         TaskNavigationEfficiencyMatchingMode.EXACT_MATCH: _calculate_exact_match,
@@ -277,22 +277,22 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         TaskNavigationEfficiencyMatchingMode.ANY_ORDER_MATCH: _calculate_any_order_match,
     }
 
-    def _parse_tools_from_response(self, response):
-        """Parse the response to extract tool calls and results.
+    def _parse_tools_from_actions(self, actions):
+        """Parse the actions to extract tool calls and results.
 
-        :param response: The response to parse.
-        :type response: Union[str, List[dict]]
-        :return: List of tool calls extracted from the response.
+        :param actions: The actions to parse.
+        :type actions: Union[str, List[dict]]
+        :return: List of tool calls extracted from the actions.
         :rtype: List[dict]
         """
         tool_calls = []
         tool_results_map = {}
 
         # Work on a deep copy to avoid modifying the original object
-        response_copy = copy.deepcopy(response)
+        actions_copy = copy.deepcopy(actions)
 
-        if isinstance(response_copy, list):
-            for message in response_copy:
+        if isinstance(actions_copy, list):
+            for message in actions_copy:
                 # Extract tool calls from assistant messages
                 if message.get("role") == "assistant" and isinstance(message.get("content"), list):
                     for content_item in message.get("content"):
@@ -315,15 +315,15 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
         return tool_calls
 
-    def _extract_tool_names_and_params_from_response(self, response) -> List[Tuple[str, Dict[str, str]]]:
-        """Extract tool names and parameters from the response.
+    def _extract_tool_names_and_params_from_actions(self, actions) -> List[Tuple[str, Dict[str, str]]]:
+        """Extract tool names and parameters from the actions.
 
-        :param response: The response to parse.
-        :type response: Union[str, List[dict]]
-        :return: List of tuples containing (tool_name, parameters_dict) extracted from the response.
+        :param actions: The actions to parse.
+        :type actions: Union[str, List[dict]]
+        :return: List of tuples containing (tool_name, parameters_dict) extracted from the actions.
         :rtype: List[Tuple[str, Dict[str, str]]]
         """
-        tool_calls = self._parse_tools_from_response(response)
+        tool_calls = self._parse_tools_from_actions(actions)
         tool_name_param_pairs = []
         for tool_call in tool_calls:
             if not isinstance(tool_call, dict):
@@ -380,77 +380,77 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str, Dict[str, float]]]:
         """Produce a path efficiency evaluation result.
 
-        :param eval_input: The input to the evaluation function. Must contain "response" and "ground_truth".
+        :param eval_input: The input to the evaluation function. Must contain "actions" and "expected_actions".
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
-        response = eval_input["response"]
-        ground_truth = eval_input["ground_truth"]
+        actions = eval_input["actions"]
+        expected_actions = eval_input["expected_actions"]
 
         # Value and type checking for ground truth steps
-        if not ground_truth:
-            raise ValueError("ground_truth cannot be empty")
+        if not expected_actions:
+            raise ValueError("expected_actions cannot be empty")
 
-        # Check if ground_truth is a tuple (tool names + parameters) or list (tool names only)
+        # Check if expected_actions is a tuple (tool names + parameters) or list (tool names only)
         use_parameter_matching = False
-        ground_truth_names = []
-        ground_truth_params_dict: Dict[str, Dict[str, Any]] = {}
+        expected_actions_names = []
+        expected_actions_params_dict: Dict[str, Dict[str, Any]] = {}
 
-        if isinstance(ground_truth, list) and all(isinstance(step, str) for step in ground_truth):
+        if isinstance(expected_actions, list) and all(isinstance(step, str) for step in expected_actions):
             # List format: just tool names
-            ground_truth_names = [step.strip() for step in ground_truth]
+            expected_actions_names = [step.strip() for step in expected_actions]
             use_parameter_matching = False
-        elif (isinstance(ground_truth, tuple) or isinstance(ground_truth, list)) and len(ground_truth) == 2:
+        elif (isinstance(expected_actions, tuple) or isinstance(expected_actions, list)) and len(expected_actions) == 2:
             # Tuple format: (tool_names, parameters_dict)
-            tool_names_list, params_dict = ground_truth
+            tool_names_list, params_dict = expected_actions
 
             if not isinstance(tool_names_list, list) or not all(isinstance(name, str) for name in tool_names_list):
-                raise TypeError("ground_truth tuple first element must be a list of strings (tool names)")
+                raise TypeError("expected_actions tuple first element must be a list of strings (tool names)")
 
             if not isinstance(params_dict, dict):
                 raise TypeError(
-                    "ground_truth tuple second element must be a dictionary mapping tool names to parameters"
+                    "expected_actions tuple second element must be a dictionary mapping tool names to parameters"
                 )
 
             # Validate that all values in params_dict are dictionaries with string keys and values
             for tool_name, params in params_dict.items():
                 if not isinstance(tool_name, str):
-                    raise TypeError("ground_truth parameters dictionary keys must be strings (tool names)")
+                    raise TypeError("expected_actions parameters dictionary keys must be strings (tool names)")
                 if not isinstance(params, dict):
-                    raise TypeError(f"ground_truth parameters for tool '{tool_name}' must be a dictionary")
+                    raise TypeError(f"expected_actions parameters for tool '{tool_name}' must be a dictionary")
                 for k, v in params.items():
                     if not isinstance(k, str):
-                        raise TypeError(f"ground_truth parameters for tool '{tool_name}' must have string keys")
+                        raise TypeError(f"expected_actions parameters for tool '{tool_name}' must have string keys")
                     try:
                         json.dumps(v)
                     except (TypeError, ValueError):
                         raise TypeError(
-                            f"ground_truth parameters for tool '{tool_name}' must have JSON-serializable values "
+                            f"expected_actions parameters for tool '{tool_name}' must have JSON-serializable values "
                             f"(got type {type(v)} for key '{k}')"
                         )
 
-            ground_truth_names = [name.strip() for name in tool_names_list]
-            ground_truth_params_dict = params_dict
+            expected_actions_names = [name.strip() for name in tool_names_list]
+            expected_actions_params_dict = params_dict
             use_parameter_matching = True
         else:
             raise TypeError(
-                "ground_truth must be a list of strings or a tuple of (list[str], dict[str, dict[str, str]])"
+                "expected_actions must be a list of strings or a tuple of (list[str], dict[str, dict[str, str]])"
             )
 
-        # Extract tool information from the response
-        agent_tool_pairs = self._extract_tool_names_and_params_from_response(response)
+        # Extract tool information from the actions
+        agent_tool_pairs = self._extract_tool_names_and_params_from_actions(actions)
 
         # Prepare steps for comparison
-        agent_steps, ground_truth_steps = self._prepare_steps_for_comparison(
+        agent_steps, expected_actions_steps = self._prepare_steps_for_comparison(
             agent_tool_pairs,
-            ground_truth_names,
-            ground_truth_params_dict,
+            expected_actions_names,
+            expected_actions_params_dict,
             use_parameter_matching,
         )
 
         # Calculate precision, recall, and F1 scores
-        additional_properties_metrics = self._calculate_precision_recall_f1_scores(agent_steps, ground_truth_steps)
+        additional_properties_metrics = self._calculate_precision_recall_f1_scores(agent_steps, expected_actions_steps)
 
         # Convert metrics to floats, using nan for None or non-convertible values
         for metric, score in additional_properties_metrics.items():
@@ -459,7 +459,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         if self.matching_mode in self._TASK_NAVIGATION_EFFICIENCY_MATCHING_MODE_TO_FUNCTIONS:
             # Calculate binary match metrics
             match_result = self._TASK_NAVIGATION_EFFICIENCY_MATCHING_MODE_TO_FUNCTIONS[self.matching_mode](
-                self, agent_steps, ground_truth_steps
+                self, agent_steps, expected_actions_steps
             )
 
             return {
@@ -477,15 +477,15 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
     @overload
     def __call__(  # type: ignore
-        self, *, response: Union[str, List[Dict[str, Any]]], ground_truth: List[str]
+        self, *, actions: Union[str, List[Dict[str, Any]]], expected_actions: List[str]
     ) -> Dict[str, Union[float, str, Dict[str, float]]]:
         """
         Evaluate the task navigation efficiency of an agent's action sequence.
 
-        :keyword response: The agent's response containing tool calls.
-        :paramtype response: Union[str, List[Dict[str, Any]]]
-        :keyword ground_truth: List of expected tool/action steps.
-        :paramtype ground_truth: List[str]
+        :keyword actions: The agent's actions containing tool calls.
+        :paramtype actions: Union[str, List[Dict[str, Any]]]
+        :keyword expected_actions: List of expected tool/action steps.
+        :paramtype expected_actions: List[str]
         :return: The task navigation efficiency scores and results.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
@@ -494,16 +494,16 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
     def __call__(  # type: ignore
         self,
         *,
-        response: Union[str, List[Dict[str, Any]]],
-        ground_truth: Tuple[List[str], Dict[str, Dict[str, str]]],
+        actions: Union[str, List[Dict[str, Any]]],
+        expected_actions: Tuple[List[str], Dict[str, Dict[str, str]]],
     ) -> Dict[str, Union[float, str, Dict[str, float]]]:
         """
         Evaluate the task navigation efficiency of an agent's action sequence with tool parameters.
 
-        :keyword response: The agent's response containing tool calls.
-        :paramtype response: Union[str, List[Dict[str, Any]]]
-        :keyword ground_truth: Tuple of (tool names list, parameters dict) where parameters must match exactly.
-        :paramtype ground_truth: Tuple[List[str], Dict[str, Dict[str, str]]]
+        :keyword actions: The agent's actions containing tool calls.
+        :paramtype actions: Union[str, List[Dict[str, Any]]]
+        :keyword expected_actions: Tuple of (tool names list, parameters dict) where parameters must match exactly.
+        :paramtype expected_actions: Tuple[List[str], Dict[str, Dict[str, str]]]
         :return: The task navigation efficiency scores and results.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
@@ -517,10 +517,10 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         """
         Evaluate task navigation efficiency.
 
-        :keyword response: The agent's response containing tool calls.
-        :paramtype response: Union[str, List[Dict[str, Any]]]
-        :keyword ground_truth: List of expected tool/action steps or tuple of (tool names, parameters dict).
-        :paramtype ground_truth: Union[List[str], Tuple[List[str], Dict[str, Dict[str, str]]]]
+        :keyword actions: The agent's actions containing tool calls.
+        :paramtype actions: Union[str, List[Dict[str, Any]]]
+        :keyword expected_actions: List of expected tool/action steps or tuple of (tool names, parameters dict).
+        :paramtype expected_actions: Union[List[str], Tuple[List[str], Dict[str, Dict[str, str]]]]
         :return: The task navigation efficiency scores and results.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
