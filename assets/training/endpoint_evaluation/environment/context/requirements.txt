@@ -1,5 +1,6 @@
 azureml-acft-common-components==0.0.83
 azureml-acft-contrib-hf-nlp==0.0.83
+azureml-metrics==0.0.83
 azureml-evaluate-mlflow==0.0.83
 accelerate
 click
