@@ -16,3 +16,4 @@ RUN pip install xgrammar==0.1.27
 RUN pip install transformers==4.57.1
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
+RUN rm -rf /opt/conda/lib/python3.10/site-packages/pip-25.2.dist-info 
