@@ -112,7 +112,7 @@ RUN pip install \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
-RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH /bin/bash -c "HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 # Fix vulnerabilities
 RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
