@@ -55,8 +55,8 @@ ENV ENABLE_METADATA=true
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.9 \
     # begin conda dependencies
-    pip=21.3.1 \
-    numpy~=1.23.5 \
+    pip=25.3 \
+    numpy~=1.23.5\
     libffi=3.3 \
     pycocotools=2.0.4 \
     shap=0.39.0 \
@@ -97,10 +97,10 @@ RUN pip install cryptography>=42.0.5 \
                 pyarrow==14.0.2 \
                 aiohttp>=3.12.14
 
-# Patch for pillow vulnerability
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'pillow==11.3.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0'
+# Patch for pillow vulnerability and update pip/starlette
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
                 
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
