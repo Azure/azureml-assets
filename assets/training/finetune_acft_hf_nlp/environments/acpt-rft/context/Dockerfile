@@ -14,7 +14,7 @@ RUN pip install accelerate==1.10.0
 RUN pip install sglang==0.5.4
 RUN triton==3.2.0
 RUN pip install sgl-kernel==0.3.16.post3
+RUN pip install mlflow==3.1.0
 RUN pip install starlette==0.49.1
-RUN pip install mlflow==3.0.0
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
