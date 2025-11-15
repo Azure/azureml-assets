@@ -92,7 +92,7 @@ RUN pip install \
                 # end pypi dependencies
 
 # Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH /bin/bash -c "HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages
