@@ -96,7 +96,7 @@ RUN pip install \
                 "pillow>=11.3.0"
                 # end pypi dependencies
 
-RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && pip install --no-cache-dir horovod[pytorch]==0.28.1"
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3
