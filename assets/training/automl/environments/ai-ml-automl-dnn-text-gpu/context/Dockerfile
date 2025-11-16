@@ -21,7 +21,7 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules-bin \
         libpam-modules \
-        libc-bin \ 
+        libc-bin \
         dpkg-dev \
         libssl-dev \
         libpam-runtime && \
@@ -88,11 +88,11 @@ RUN pip install \
                 'sentencepiece==0.1.97' \
                 'cryptography>=42.0.5'\
                 'requests>=2.32.4' \
-                'certifi>=2023.07.22' 
+                'certifi>=2023.07.22'
                 # end pypi dependencies
 
 # Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
-RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && pip install --no-cache-dir horovod[pytorch]==0.28.1"
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages
