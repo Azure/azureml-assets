@@ -12,7 +12,7 @@ tags:
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  alias: mistralai-mistral-7b-instruct-v0.2
+  alias: mistral-7b-v0.2
   directoryPath: mistralai-Mistral-7B-Instruct-v0.2
   promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\"\
     , \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"\
