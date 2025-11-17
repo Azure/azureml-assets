@@ -25,8 +25,8 @@ pybind11
 pylatexenc
 qwen-vl-utils
 ray[default]
-sgl-kernel
 sglang>=0.5.4
+sgl-kernel>=0.3.16.post4
 tensorboard
 tensordict
 torchdata
