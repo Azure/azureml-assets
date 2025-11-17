@@ -104,6 +104,9 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py
     rm -f /tmp/miniconda.sh && \
     find /opt/miniconda -type d -name __pycache__ | xargs rm -rf
 
+    # Fix pip vulnerability in base miniconda environment
+RUN /opt/miniconda/bin/pip install --upgrade pip==25.3
+
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/mlflow
 ENV AZUREML_CONDA_DEFAULT_ENVIRONMENT=$AZUREML_CONDA_ENVIRONMENT_PATH
