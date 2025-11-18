@@ -3,6 +3,6 @@ channels:
 - conda-forge
 dependencies:
 - python=3.9
-- pip=21.3.1
+- pip=25.3
 - pip:
   - mldesigner==0.1.0b21

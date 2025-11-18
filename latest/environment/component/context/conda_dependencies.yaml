@@ -3,7 +3,7 @@ channels:
 - conda-forge
 dependencies:
 - python=3.9
-- pip=24.0
+- pip=25.3
 - pip:
   - azure-ml-component==0.9.18.post2
   - azureml-defaults==1.60.0
