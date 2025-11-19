@@ -41,7 +41,7 @@ RUN apt-get update && \
     login \
     passwd \
     libldap-common \
-    openssl - 1.1.1 \
+    openssl \
     procps \
     libprocps8 \
     libmlx4-1 \
@@ -93,7 +93,7 @@ RUN apt-get update && \
 	libibverbs-dev \
     libsm6 \
     libxext6 \
-    libssl1.1 \
+    libssl3 \
     libxrender-dev \
     libglib2.0-0 \
     dh-make \
