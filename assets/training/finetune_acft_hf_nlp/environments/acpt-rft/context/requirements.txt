@@ -20,7 +20,7 @@ pyarrow==21.0.0
 pybind11==3.0.0
 pylatexenc==2.10
 qwen-vl-utils==0.0.10
-ray[default]==2.48.0
+ray[default]==2.51.1
 tensorboard==2.20.0
 tensordict==0.9.1
 torchdata==0.11.0
@@ -30,5 +30,5 @@ uvicorn==0.35.0
 verl==0.5.0
 vllm==0.11.0
 xgrammar==0.1.25
-wandb==0.21.1
+wandb==0.21.4
 zmq==0.0.0
