@@ -214,14 +214,17 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
 RUN apt-get update && \
     apt-get install -y cmake
 
-# rdma-core v30.0 for Mlnx_ofed_5_1_2 as user space driver
-RUN mkdir /tmp/rdma-core && \
-    cd /tmp/rdma-core && \
-    git clone --branch v30.0 https://github.com/linux-rdma/rdma-core && \
-    cd /tmp/rdma-core/rdma-core && \
-    debian/rules binary && \
-    dpkg -i ../*.deb && \
-    rm -rf /tmp/rdma-core
+# Install rdma-core from Ubuntu repositories (compatible with Ubuntu 22.04)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    rdma-core \
+    libibverbs1 \
+    libibverbs-dev \
+    librdmacm1 \
+    librdmacm-dev \
+    ibverbs-providers && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \
