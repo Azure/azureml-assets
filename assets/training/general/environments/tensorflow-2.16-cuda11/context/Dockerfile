@@ -150,6 +150,8 @@ RUN apt-get update && apt-get install -y lsb-release && \
 # Inference
 # Copy logging utilities, nginx and rsyslog configuration files, IOT server binary, etc.
 COPY --from=inferencing-assets /artifacts /var/
+# Fix liblttng-ust0 compatibility issue for Ubuntu 22.04 (it uses liblttng-ust1)
+RUN sed -i 's/liblttng-ust0/liblttng-ust1/g' /var/requirements/install_system_requirements.sh
 RUN /var/requirements/install_system_requirements.sh && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
