@@ -294,7 +294,7 @@ def validate_build_context(environment_config: assets.EnvironmentConfig) -> int:
     error_count = 0
     # Iterate over all files in the build context
     for file_path in environment_config.release_paths:
-        with open(file_path) as f:
+        with open(file_path, encoding='utf-8') as f:
             # Read file into memory, normalize EOL characters
             contents = f.read()
             contents = contents.replace("\r\n", "\n")
@@ -464,7 +464,7 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
     """
     error_count = 0
 
-    with open(Path(__file__).parent / CONFIG_DIRECTORY / valid_tags_filename) as f:
+    with open(Path(__file__).parent / CONFIG_DIRECTORY / valid_tags_filename, encoding='utf-8') as f:
         valid_tags = YAML().load(f)
 
     asset_spec = asset_config._spec._yaml
@@ -621,7 +621,7 @@ def confirm_model_validation_results(
             error_count += 1
         else:
             overall_summary = {}
-            with open(validation_job_details_path) as f:
+            with open(validation_job_details_path, encoding='utf-8') as f:
                 overall_summary = json.load(f)
 
             validation_run_status = overall_summary.get(
@@ -906,7 +906,7 @@ def validate_model_spec(asset_config: assets.AssetConfig) -> int:
     )
 
     # check valid computes for inference
-    with open(SUPPORTED_INFERENCE_SKU_FILE_PATH) as f:
+    with open(SUPPORTED_INFERENCE_SKU_FILE_PATH, encoding='utf-8') as f:
         supported_inference_skus = set(json.load(f))
         unsupported_skus_in_spec = [
             sku
@@ -968,7 +968,7 @@ def validate_mlflow_model(asset_config: assets.AssetConfig) -> int:
         # Update mlflow_model_detected variable for Github Actions only
         if "GITHUB_OUTPUT" in os.environ:
             logger.print("Setting GITHUB_OUTPUT env variable for mlflow_model_detected=true")
-            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            with open(os.environ["GITHUB_OUTPUT"], "a", encoding='utf-8') as f:
                 print("mlflow_model_detected=true", file=f)
 
 
@@ -1058,7 +1058,7 @@ def validate_assets(input_dirs: List[Path],
         unsupported_fields_mapping = {}
 
         if asset_config.type == assets.AssetType.MODEL:
-            with open(asset_config.spec_with_path, "r") as f:
+            with open(asset_config.spec_with_path, "r", encoding='utf-8') as f:
                 spec_config = yaml.safe_load(f)
 
                 for field in unsupported_fields:
@@ -1069,8 +1069,8 @@ def validate_assets(input_dirs: List[Path],
             if unsupported_fields_mapping:
                 logger.print(f"Found unsupported fields in spec, popping out info and rewriting spec. "
                              f"unsupported fields: {unsupported_fields_mapping}")
-                with open(asset_config.spec_with_path, "w") as f:
-                    yaml.dump(spec_config, f)
+                with open(asset_config.spec_with_path, "w", encoding='utf-8') as f:
+                    yaml.dump(spec_config, f, allow_unicode=True, default_flow_style=False)
 
         # Populate dictionary of asset names to asset config paths
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
@@ -1186,8 +1186,8 @@ def validate_assets(input_dirs: List[Path],
         # Write unsupported fields back to spec
         if unsupported_fields_mapping:
             spec_config.update(unsupported_fields_mapping)
-            with open(asset_config.spec_with_path, "w") as f:
-                yaml.dump(spec_config, f)
+            with open(asset_config.spec_with_path, "w", encoding='utf-8') as f:
+                yaml.dump(spec_config, f, allow_unicode=True, default_flow_style=False)
 
     # Ensure unique assets
     for type_and_name, dirs in asset_dirs.items():
