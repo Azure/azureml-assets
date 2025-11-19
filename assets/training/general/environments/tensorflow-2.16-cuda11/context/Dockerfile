@@ -41,7 +41,6 @@ RUN apt-get update && \
     login \
     passwd \
     libldap-common \
-    libldap-2.4-2 \
     openssl - 1.1.1 \
     procps \
     libprocps8 \
