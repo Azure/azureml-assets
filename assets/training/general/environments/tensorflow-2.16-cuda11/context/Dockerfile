@@ -183,11 +183,11 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
 # Open-MPI-UCX installation
 RUN mkdir /tmp/ucx && \
     cd /tmp/ucx && \
-        wget -q https://github.com/openucx/ucx/releases/download/v1.9.0/ucx-1.9.0.tar.gz && \
-        tar zxf ucx-1.9.0.tar.gz && \
-	cd ucx-1.9.0 && \
+        wget -q https://github.com/openucx/ucx/releases/download/v1.15.0/ucx-1.15.0.tar.gz && \
+        tar zxf ucx-1.15.0.tar.gz && \
+	cd ucx-1.15.0 && \
         ./configure --prefix=/usr/local --enable-optimizations --disable-assertions --disable-params-check --enable-mt && \
-        make -j $(nproc --all) CFLAGS="-O3 -g -Wall" CXXFLAGS="-O3 -g -Wall" && \
+        make -j $(nproc --all) && \
         make install && \
         rm -rf /tmp/ucx
 
