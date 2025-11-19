@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 RUN apt-get update && apt-get -y upgrade && \
+    apt-get install -y --only-upgrade linux-headers-5.15.0-160-generic linux-headers-5.15.0-160 linux-libc-dev || \
     apt-get install -y --only-upgrade linux-headers-generic linux-libc-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN pip install pip==25.3
