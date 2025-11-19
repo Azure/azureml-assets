@@ -150,8 +150,14 @@ RUN apt-get update && apt-get install -y lsb-release && \
 # Inference
 # Copy logging utilities, nginx and rsyslog configuration files, IOT server binary, etc.
 COPY --from=inferencing-assets /artifacts /var/
-# Fix liblttng-ust0 compatibility issue for Ubuntu 22.04 (it uses liblttng-ust1)
-RUN sed -i 's/liblttng-ust0/liblttng-ust1/g' /var/requirements/install_system_requirements.sh
+# Install liblttng-ust1 for Ubuntu 22.04 and create dummy package for liblttng-ust0 compatibility
+RUN apt-get update && \
+    apt-get install -y liblttng-ust1 equivs && \
+    echo "Section: misc\nPriority: optional\nStandards-Version: 3.9.2\nPackage: liblttng-ust0\nVersion: 999.0\nDepends: liblttng-ust1\nDescription: Dummy package for liblttng-ust0 compatibility" > /tmp/liblttng-ust0.control && \
+    equivs-build /tmp/liblttng-ust0.control && \
+    dpkg -i liblttng-ust0_999.0_all.deb && \
+    rm -f liblttng-ust0_999.0_all.deb /tmp/liblttng-ust0.control && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
 RUN /var/requirements/install_system_requirements.sh && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -181,7 +187,7 @@ RUN mkdir /tmp/ucx && \
         tar zxf ucx-1.9.0.tar.gz && \
 	cd ucx-1.9.0 && \
         ./configure --prefix=/usr/local --enable-optimizations --disable-assertions --disable-params-check --enable-mt && \
-        make -j $(nproc --all) && \
+        make -j $(nproc --all) CFLAGS="-O3 -g -Wall" CXXFLAGS="-O3 -g -Wall" && \
         make install && \
         rm -rf /tmp/ucx
 
