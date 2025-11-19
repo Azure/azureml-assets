@@ -1,9 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-1.5b-instruct-openvino-gpu
-version: 1
+version: 2
 path: ./
 tags:
-  foundryLocal: "test"
+  foundryLocal: ""
   license: "apache-2.0"
   licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/blob/main/LICENSE>."
   author: Microsoft
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-1.5b
-  directoryPath: model
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"

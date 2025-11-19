@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/olive-trt-models/Qwen-Qwen2.5-Coder-0.5B-Instruct
+  container_path: foundrylocal/tool_calling/qwen2.5-coder-0.5b-instruct-trtrtx-gpu/v2
   storage_name: foundrylocalmodels
   type: azureblob
 publish:
