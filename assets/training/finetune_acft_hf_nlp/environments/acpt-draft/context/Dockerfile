@@ -1,7 +1,9 @@
 #PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch271:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update && apt-get -y upgrade && \
+    apt-get install -y --only-upgrade linux-headers-generic linux-libc-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN pip install pip==25.3
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
