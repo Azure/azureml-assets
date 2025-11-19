@@ -30,5 +30,4 @@ uvicorn==0.35.0
 verl==0.5.0
 vllm==0.11.0
 xgrammar==0.1.25
-wandb==0.21.4
 zmq==0.0.0
