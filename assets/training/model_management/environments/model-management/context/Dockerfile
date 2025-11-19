@@ -17,7 +17,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade pip==25.3 || true
 
 # Remove old conda metadata for pip 25.2 to fix vulnerability detection
 RUN rm -f /opt/conda/envs/ptca/conda-meta/pip-25.2-pyhc872135_0.json || true
-
+RUN rm -f /opt/conda/conda-meta/pip-25.2-pyhc872135_0.json || true
 # This line is added because azureml-automl-dnn-vision depends on python 3.9.
 # Added ignore python requires to get this installed.
 # RUN pip install --ignore-requires-python azureml-automl-dnn-vision

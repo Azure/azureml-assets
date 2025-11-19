@@ -96,16 +96,13 @@ RUN chown -R dockeruser:dockeruser /opt/miniconda
 USER dockeruser
 
 ENV PATH=/opt/miniconda/bin:$PATH
-RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py39_24.5.0-0-Linux-x86_64.sh && \
+RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py312_24.5.0-0-Linux-x86_64.sh && \
     bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
     conda update --all -c conda-forge -y && \
     conda clean -ay && \
     rm -rf /opt/miniconda/pkgs && \
     rm -f /tmp/miniconda.sh && \
     find /opt/miniconda -type d -name __pycache__ | xargs rm -rf
-
-    # Fix pip vulnerability in base miniconda environment
-RUN /opt/miniconda/bin/pip install --upgrade pip==25.3
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/mlflow
