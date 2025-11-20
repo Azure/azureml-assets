@@ -43,7 +43,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=25.3 -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -112,10 +112,7 @@ RUN pip install \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
-RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
-
 # Fix vulnerabilities
-RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
 RUN pip install --force-reinstall torchvision==0.23.0 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.4'
 RUN pip install --upgrade 'urllib3==2.5.0'
@@ -131,6 +128,19 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --f
     pip install 'numpy==1.26.4' --force-reinstall && \
     /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+         pip install --no-cache-dir torch==2.8.0"
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+ export CUDACXX=/usr/local/cuda/bin/nvcc && \
+ export HOROVOD_BUILD_CUDA_CC_LIST='60,61,70,75,80,86,89,90' && \
+ HOROVOD_WITH_PYTORCH=1 \
+ HOROVOD_CUDA_HOME=/usr/local/cuda \
+ CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
+ pip install --no-cache-dir --no-build-isolation \
+ git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+
 RUN rm -rf /opt/miniconda/pkgs/
 
 
