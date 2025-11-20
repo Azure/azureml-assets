@@ -27,8 +27,8 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip \
-    py-cpuinfo=5.0.0 \
+    pip=25.3 \
+    py-cpuinfo=5.0.0\
     joblib=1.2.0 \
     setuptools-git \
     setuptools=78.1.1 \
@@ -71,8 +71,7 @@ RUN pip install \
 
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
-RUN pip install --upgrade 'pyarrow==14.0.2'
-RUN pip install urllib3==2.5.0
+RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.5.0'
 # end pip ad-hoc
 
 

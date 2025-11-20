@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch271:biweekly
 USER root
 
 RUN apt-get update && apt-get -y upgrade
-RUN pip install --upgrade pip
+RUN pip install --upgrade "pip>=25.3"
 
 COPY requirements.txt .
 # The below 2 files are required for baking the code into the environment
@@ -13,7 +13,7 @@ COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install mlflow==3.1.0
+RUN pip install mlflow==3.1.0 "starlette>=0.49.1"
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=4 pip install flash-attn==2.8.1 --no-build-isolation
