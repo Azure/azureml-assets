@@ -2,8 +2,10 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 RUN apt-get update && apt-get -y upgrade && \
-    apt-get install -y --only-upgrade linux-headers-5.15.0-160-generic=5.15.0-160.170 linux-headers-5.15.0-160=5.15.0-160.170 linux-libc-dev=5.15.0-160.170 || \
+    apt-get install -y --only-upgrade linux-headers-5.15.0-163-generic=5.15.0-163.173 linux-headers-5.15.0-163=5.15.0-163.173 linux-libc-dev=5.15.0-163.173 || \
     apt-get install -y --only-upgrade linux-headers-generic linux-libc-dev && \
+    apt-get install -y --only-upgrade git tar binutils binutils-common binutils-x86-64-linux-gnu libbinutils wget && \
+    apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null || true && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN pip install pip==25.3
 COPY requirements.txt .
@@ -15,7 +17,7 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 
 # following are for vulnerability overrides at later\
 # release of following packages consider moving then to requirements.txt
-RUN pip install mlflow==3.1.0
+RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 RUN pip install xgrammar==0.1.27
 RUN pip install transformers==4.57.1
 # clean conda and pip caches
