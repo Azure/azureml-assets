@@ -21,22 +21,22 @@ class TestVLLMEngine(unittest.TestCase):
     def tearDown(self):
         pass
 
-    @patch("foundation.model.serve.engine.vllm_engine.subprocess.Popen")
+    @patch("context.foundation.model.serve.engine.vllm_engine.subprocess.Popen")
     def test_load_model(self, mock_popen):
         engine = VLLMEngine(self.engine_config, self.task_config)
         engine.load_model()
         mock_popen.assert_called_once()
 
-    @patch("foundation.model.serve.engine.vllm_engine.requests.post")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.is_port_open")
+    @patch("context.foundation.model.serve.engine.vllm_engine.requests.post")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.is_port_open")
     def test_is_healthy(self, mock_is_port_open, mock_post):
         mock_is_port_open.return_value = True
         mock_post.return_value.status_code = 200
         engine = VLLMEngine(self.engine_config, self.task_config)
         self.assertIsNone(engine.init_client())
 
-    @patch("foundation.model.serve.engine.vllm_engine.requests.post")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.get_tokens")
+    @patch("context.foundation.model.serve.engine.vllm_engine.requests.post")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.get_tokens")
     def test_generate_text(self, mock_get_tokens, mock_post):
         mock_get_tokens.return_value = [1, 2, 3]
         mock_post.return_value.status_code = 200
@@ -46,8 +46,8 @@ class TestVLLMEngine(unittest.TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].response, "response")
 
-    @patch("foundation.model.serve.engine.vllm_engine.requests.post")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.get_tokens")
+    @patch("context.foundation.model.serve.engine.vllm_engine.requests.post")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.get_tokens")
     def test_generate_chat(self, mock_get_tokens, mock_post):
         mock_get_tokens.return_value = [1, 2, 3]
         mock_post.return_value.status_code = 200
@@ -57,8 +57,8 @@ class TestVLLMEngine(unittest.TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].response, "response")
 
-    @patch("foundation.model.serve.engine.vllm_engine.requests.post")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.get_tokens")
+    @patch("context.foundation.model.serve.engine.vllm_engine.requests.post")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.get_tokens")
     def test_return_full_text(self, mock_get_tokens, mock_post):
         mock_get_tokens.return_value = [1, 2, 3]
         mock_post.return_value.status_code = 200
