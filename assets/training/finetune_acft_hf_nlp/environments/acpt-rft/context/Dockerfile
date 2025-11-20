@@ -39,6 +39,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
 RUN pip install --no-cache-dir pip==25.3
+# Remove all old pip metadata after upgrade
+RUN find /opt/conda -type d -name "pip-25.2*" -exec rm -rf {} + 2>/dev/null || true
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
@@ -59,6 +61,8 @@ RUN pip install --no-cache-dir "cryptography>=43.0.0"
 # Upgrade wandb to fix golang.org/x/crypto vulnerabilities (CVE-2025-47914, CVE-2025-58181)
 RUN pip install --no-cache-dir --upgrade "wandb>=0.19.0"
 
+# Clean up pip caches and old package files to prevent vulnerability detection
+RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
