@@ -8,8 +8,8 @@ from configs import EngineConfig
 from fastapi.testclient import TestClient
 from api_server import app, filter_swagger_paths_by_tag
 import api_server
-from foundation.model.serve.constants import SupportedTask, ModelInfo
-from foundation.model.serve.api_server_setup.protocol import ChatRole, ChatMessage, UsageInfo
+from context.foundation.model.serve.constants import SupportedTask, ModelInfo
+from context.foundation.model.serve.api_server_setup.protocol import ChatRole, ChatMessage, UsageInfo
 from dataclasses import asdict
 
 
