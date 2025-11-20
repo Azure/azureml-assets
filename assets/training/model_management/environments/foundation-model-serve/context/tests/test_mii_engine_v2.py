@@ -34,7 +34,7 @@ class TestMiiEngineV2(unittest.TestCase):
     #     mock_mii_server.assert_called_once()
 
     @patch("engine.mii_engine_v2.mii.backend.client.MIIClient")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.is_port_open")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.is_port_open")
     def test_is_healthy(self, mock_is_port_open, mock_client):
         mock_is_port_open.return_value = True
         mock_client.return_value = "model"
@@ -76,7 +76,7 @@ class TestMiiEngineV2Async:
     task_config = TaskConfig(task_type=TaskType.TEXT_GENERATION)
     chat_task_config = TaskConfig(task_type=TaskType.CONVERSATIONAL)
 
-    @patch("foundation.model.serve.engine.engine.BaseEngine.get_tokens")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.get_tokens")
     @pytest.mark.asyncio
     async def test_generate_text(self, mock_get_tokens):
         mock_get_tokens.return_value = [1, 2, 3]
@@ -89,7 +89,7 @@ class TestMiiEngineV2Async:
         assert len(results) == 1
         assert results[0].response == "response"
 
-    @patch("foundation.model.serve.engine.engine.BaseEngine.get_tokens")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.get_tokens")
     @pytest.mark.asyncio
     async def test_generate_chat(self, mock_get_tokens):
         mock_get_tokens.return_value = [1, 2, 3]
