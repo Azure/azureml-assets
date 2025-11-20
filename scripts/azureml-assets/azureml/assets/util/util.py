@@ -74,7 +74,7 @@ def _log_diff(message: str, enabled: bool):
 
 def _log_file_diff(file1: Path, file2: Path, enabled: bool):
     if enabled:
-        with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+        with open(file1, "r", encoding='utf-8') as file1_obj, open(file2, "r", encoding='utf-8') as file2_obj:
             file1_contents = file1_obj.readlines()
             file2_contents = file2_obj.readlines()
             diff = difflib.unified_diff(file1_contents, file2_contents, str(file1), str(file2))
@@ -82,7 +82,7 @@ def _log_file_diff(file1: Path, file2: Path, enabled: bool):
 
 
 def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
-    with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+    with open(file1, "r", encoding='utf-8') as file1_obj, open(file2, "r", encoding='utf-8') as file2_obj:
         while True:
             line1 = file1_obj.readline()
             line2 = file2_obj.readline()
@@ -96,7 +96,7 @@ def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
 
 def _resolve_from_file(value):
     if os.path.isfile(value):
-        with open(value, 'r') as f:
+        with open(value, 'r', encoding='utf-8') as f:
             content = f.read()
             return (True, content)
     else:
@@ -487,7 +487,7 @@ def load_yaml(file_path: str) -> dict:
     Returns:
         dict: loaded yaml as dict
     """
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding='utf-8') as f:
         yaml_dict = YAML().load(f)
     return yaml_dict
 
@@ -499,8 +499,8 @@ def dump_yaml(yaml_dict: dict, file_path: str):
         yaml_dict (str): dictionary object to dump into yaml.
         file_path (str): File path to store dump result to.
     """
-    with open(file_path, "w") as f:
-        yaml_dict = YAML().dump(yaml_dict, f)
+    with open(file_path, "w", encoding='utf-8') as f:
+        YAML().dump(yaml_dict, f)
 
 
 def retry(times):
