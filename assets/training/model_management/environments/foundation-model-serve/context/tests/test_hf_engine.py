@@ -1,7 +1,7 @@
 import unittest
-from foundation.model.serve.engine.hf_engine import HfEngine
-from foundation.model.serve.configs import EngineConfig, TaskConfig
-from foundation.model.serve.constants import TaskType
+from context.foundation.model.serve.engine.hf_engine import HfEngine
+from context.foundation.model.serve.configs import EngineConfig, TaskConfig
+from context.foundation.model.serve.constants import TaskType
 
 
 class TestHfEngine(unittest.TestCase):
