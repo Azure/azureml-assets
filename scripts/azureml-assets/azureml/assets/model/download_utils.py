@@ -187,7 +187,7 @@ def run_azcopy(src_uri: str, dstn_uri: str, include_paths: List[str] = None, exc
                 for file in files:
                     file_path = os.path.join(root, file)
                     logger.print(f"azcopy log file: {file_path}")
-                    with open(file_path, "r") as f:
+                    with open(file_path, "r", encoding='utf-8') as f:
                         logger.print(f.read())
 
         return result
