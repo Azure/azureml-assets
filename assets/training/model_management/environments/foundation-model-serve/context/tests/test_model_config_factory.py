@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import pytest
 from unittest.mock import patch, MagicMock
 from model_config_factory import ModelConfigFactory
