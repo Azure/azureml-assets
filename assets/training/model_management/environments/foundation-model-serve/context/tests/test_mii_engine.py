@@ -32,7 +32,7 @@ class TestMiiEngine(unittest.TestCase):
 
     @patch("engine.mii_engine.MiiEngine._file_restructure")
     @patch("engine.mii_engine.mii.MIIClient")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.is_port_open")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.is_port_open")
     def test_is_healthy(self, mock_is_port_open, mock_client, mock_file_restructure):
         mock_file_restructure.return_value = None
         mock_is_port_open.return_value = True
@@ -110,7 +110,7 @@ class TestMiiEngineAsync:
     chat_task_config = TaskConfig(task_type=TaskType.CONVERSATIONAL)
 
     @patch("engine.mii_engine.MiiEngine._file_restructure")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.get_tokens")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.get_tokens")
     @pytest.mark.asyncio
     async def test_generate_text(self, mock_get_tokens, mock_file_restructure):
         mock_file_restructure.return_value = None
@@ -125,7 +125,7 @@ class TestMiiEngineAsync:
         assert results[0].response == "response"
 
     @patch("engine.mii_engine.MiiEngine._file_restructure")
-    @patch("foundation.model.serve.engine.engine.BaseEngine.get_tokens")
+    @patch("context.foundation.model.serve.engine.engine.BaseEngine.get_tokens")
     @pytest.mark.asyncio
     async def test_generate_chat(self, mock_get_tokens, mock_file_restructure):
         mock_file_restructure.return_value = None
