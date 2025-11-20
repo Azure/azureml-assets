@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used for deploying model using inference server
 
 name: "foundation-model-serve"
-version: "1"
+version: "2"
 
 build:
   path: "context"
