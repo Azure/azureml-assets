@@ -91,9 +91,6 @@ RUN pip install \
                 'certifi>=2023.07.22'
                 # end pypi dependencies
 
-# Horovod incompatible with torch>2.0 https://github.com/horovod/horovod/issues/3996
-RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && pip install --no-cache-dir horovod[pytorch]==0.28.1"
-
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages
 # We should aim for this list to be empty with new and patched releases
@@ -103,7 +100,7 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-RUN pip install torch==2.8.0 torchvision==0.23.0
+RUN pip install torchvision==0.23.0
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' torch==2.8.0 torchvision==0.23.0 || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
@@ -114,5 +111,18 @@ RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow=
 RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+         pip install --no-cache-dir torch==2.8.0"
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+ export CUDACXX=/usr/local/cuda/bin/nvcc && \
+ export HOROVOD_BUILD_CUDA_CC_LIST='60,61,70,75,80,86,89,90' && \
+ HOROVOD_WITH_PYTORCH=1 \
+ HOROVOD_CUDA_HOME=/usr/local/cuda \
+ CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
+ pip install --no-cache-dir --no-build-isolation \
+ git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+
 RUN rm -rf /opt/conda/pkgs/
 # end pip install

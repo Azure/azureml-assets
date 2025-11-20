@@ -95,12 +95,23 @@ RUN pip install \
                 'py-cpuinfo==5.0.0' \
                 "pillow>=11.3.0"
                 # end pypi dependencies
-
-RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && pip install --no-cache-dir horovod[pytorch]==0.28.1"
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3
 RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0'
-RUN pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0
+RUN pip install --no-cache-dir torchvision==0.23.0
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'h2>=4.3.0'
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+         pip install --no-cache-dir torch==2.8.0"
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+ export CUDACXX=/usr/local/cuda/bin/nvcc && \
+ export HOROVOD_BUILD_CUDA_CC_LIST='60,61,70,75,80,86,89,90' && \
+ HOROVOD_WITH_PYTORCH=1 \
+ HOROVOD_CUDA_HOME=/usr/local/cuda \
+ CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
+ pip install --no-cache-dir --no-build-isolation \
+ git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+
 RUN rm -rf /opt/miniconda/pkgs/
