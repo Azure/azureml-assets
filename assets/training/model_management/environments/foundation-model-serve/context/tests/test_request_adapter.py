@@ -5,9 +5,9 @@ import os
 
 from fastapi import HTTPException
 
-from foundation.model.serve.api_server_setup.protocol import ChatRole, ChatMessage, ChatCompletionRequest, ContentPartType, ContentPart
-from foundation.model.serve.request_adapter import BaseAdapter, VllmChatCompletionsAdapter, MixtralChatCompletionAdapter
-from foundation.model.serve.constants import ExtraParameters
+from context.foundation.model.serve.api_server_setup.protocol import ChatRole, ChatMessage, ChatCompletionRequest, ContentPartType, ContentPart
+from context.foundation.model.serve.request_adapter import BaseAdapter, VllmChatCompletionsAdapter, MixtralChatCompletionAdapter
+from context.foundation.model.serve.constants import ExtraParameters
 
 
 def compare_dict(obj, cmp):
