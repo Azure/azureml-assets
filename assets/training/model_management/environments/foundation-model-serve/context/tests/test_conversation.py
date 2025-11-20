@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import unittest
 from conversation import Conversation, Role, TextMessage, MultimodalMessage, MultimodalContent
 
