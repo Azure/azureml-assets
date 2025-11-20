@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import unittest
 from context.foundation.model.serve.engine.hf_engine import HfEngine
 from context.foundation.model.serve.configs import EngineConfig, TaskConfig
