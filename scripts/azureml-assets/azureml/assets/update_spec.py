@@ -102,7 +102,7 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     yaml.preserve_quotes = True
 
     # Load spec template and render
-    with open(asset_config.spec_with_path) as f:
+    with open(asset_config.spec_with_path, encoding='utf-8') as f:
         contents = util.render(f.read(), data)
         contents_yaml = yaml.load(contents)
 
@@ -110,7 +110,7 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     description_file = asset_config.description_file_with_path
     if description_file is not None:
         # Load description
-        with open(description_file) as f:
+        with open(description_file, encoding='utf-8') as f:
             description = f.read()
 
         # Replace description in spec
@@ -129,7 +129,7 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     else:
         if output_file is None:
             output_file = asset_config.spec_with_path
-        with open(output_file, "w") as f:
+        with open(output_file, "w", encoding='utf-8') as f:
             yaml.dump(contents_yaml, f)
 
 
