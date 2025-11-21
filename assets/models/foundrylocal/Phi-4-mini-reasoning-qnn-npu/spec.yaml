@@ -14,7 +14,7 @@ tags:
   alias: phi-4-mini-reasoning
   directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
-  supportsToolCalling: "true"
+  supportsToolCalling: ""
   toolCallStart: "<|tool_call|>"
   toolCallEnd: "<|/tool_call|>"
   toolRegisterStart: "<|tool|>"
