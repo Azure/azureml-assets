@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -150,4 +149,3 @@ class TestModelUtils(unittest.TestCase):
         expected_task_type = "text-generation"
         self.assertEqual(engine_config["engine_name"], expected_engine_name)
         self.assertEqual(task_type, expected_task_type)
->>>>>>> 4736c86812f5a79482f8001ee49abe9393309f85
