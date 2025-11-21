@@ -220,7 +220,7 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
 
 RUN conda run -p $CONDA_PREFIX
 
-RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
+RUN /bin/bash -c "source activate $CONDA_PREFIX && pip install --no-cache-dir horovod[tensorflow]==0.28.1"
 
 # Reinstall OpenSSL inside Conda
 RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
