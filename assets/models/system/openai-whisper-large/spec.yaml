@@ -47,5 +47,7 @@ tags:
   license: mit
   SharedComputeCapacityEnabled: ""
   hiddenlayerscanned: ""
+  deploymentOptions: "MaaP"
+  invisibleUntil: "2025-11-06T12:30:00Z"
   task: automatic-speech-recognition
-version: 19
+version: 20
