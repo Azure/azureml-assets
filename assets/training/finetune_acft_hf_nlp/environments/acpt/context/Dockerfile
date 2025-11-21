@@ -18,6 +18,6 @@ RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=4 pip install flash-attn==2.8.1 --no-build-isolation
 RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
-
+COPY finetune /opt/conda/envs/ptca/lib/python3.10/site-packages/azureml/acft/contrib/hf/nlp/entry_point/finetune/finetune.py
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
