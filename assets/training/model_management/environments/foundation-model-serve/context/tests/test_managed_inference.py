@@ -81,37 +81,14 @@ class TestMIRPayload(unittest.TestCase):
                     "input_data": {
                         "input_string": [
                             {
-                                "role": "user",
-                                "content": [
+                                "role": "user", "content": [
                                     {
-                                        "type": "image_url",
-                                        "image_url": {
-                                            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
-                                        },
-                                    },
-                                    {
-                                        "type": "image_url",
-                                        "image_url": {
-                                            "url": "https://www.ilankelman.org/stopsigns/australia.jpg"
-                                        },
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": "What are in these images? What is the difference between two images?",
-                                    },
-                                ],
-                            }
-                        ],
-                        "parameters": {
-                            "temperature": 0.7,
-                            "top_p": 0.6,
-                            "do_sample": True,
-                            "max_new_tokens": 200,
-                        },
-                    }
-                }
-            ]
-        }
+                                        "type": "image_url", "image_url": {
+                                            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}, }, {
+                                        "type": "image_url", "image_url": {
+                                            "url": "https://www.ilankelman.org/stopsigns/australia.jpg"}, }, {
+                                                "type": "text", "text": "What are in these images? What is the difference between two images?", }, ], }], "parameters": {
+                            "temperature": 0.7, "top_p": 0.6, "do_sample": True, "max_new_tokens": 200, }, }}]}
         self.valid_text_gen_queries = [
             ["the meaning of life is"],
             [
@@ -151,13 +128,10 @@ class TestMIRPayload(unittest.TestCase):
             {"temperature": 0.9, "top_p": 0.6, "do_sample": True, "max_new_tokens": 100}
         ]
         self.valid_chat_completion_multimodal_queries = [
-            (
-                "<s>[INST] Analyze the two images: "
-                "Image 1: https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, "
-                "Image 2: https://www.ilankelman.org/stopsigns/australia.jpg. "
-                "What are in these images? What is the difference between two images? [/INST]"
-            )
-        ]
+            ("<s>[INST] Analyze the two images: "
+             "Image 1: https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, "
+             "Image 2: https://www.ilankelman.org/stopsigns/australia.jpg. "
+             "What are in these images? What is the difference between two images? [/INST]")]
 
         self.valid_chat_completion_multimodal_params = [
             {"temperature": 0.7, "top_p": 0.6, "do_sample": True, "max_new_tokens": 200}
@@ -188,8 +162,7 @@ class TestMIRPayload(unittest.TestCase):
             "llava-hf/llava-onevision-qwen2-0.5b-ov-hf"
         )
         mock_tokenizer_instance.apply_chat_template = MagicMock(
-            return_value="<s>[INST] Analyze the two images: Image 1: https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, Image 2: https://www.ilankelman.org/stopsigns/australia.jpg. What are in these images? What is the difference between two images? [/INST]"
-        )
+            return_value="<s>[INST] Analyze the two images: Image 1: https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, Image 2: https://www.ilankelman.org/stopsigns/australia.jpg. What are in these images? What is the difference between two images? [/INST]")
         mock_tokenizer.return_value = mock_tokenizer_instance
 
         for sample_ip in self.sample_inputs_chat_completion_multimodal[

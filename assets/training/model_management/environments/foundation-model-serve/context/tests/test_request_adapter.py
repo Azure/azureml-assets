@@ -44,21 +44,22 @@ def compare_list(lis, cmp):
         else:
             assert item == cmp[i]
 
+
 class TestRequestAdapter(unittest.TestCase):
     def test_base_adapter(self):
         messages = [
-                ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
-                ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
+            ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
+            ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
         ]
         chat_request = {
             "messages": [message.model_dump() for message in messages]
         }
-        
+
         raw_request_mock = MagicMock()
         raw_request_mock.headers = {
             ExtraParameters.KEY: None
         }
-        
+
         req = BaseAdapter(ChatCompletionRequest(**chat_request), raw_request_mock).adapt()
         compare_dict(chat_request, req.model_dump())
 
@@ -79,21 +80,21 @@ class TestRequestAdapter(unittest.TestCase):
         with pytest.raises(HTTPException) as ex:
             BaseAdapter(ChatCompletionRequest(**chat_request), raw_request_mock).adapt()
         assert "Extra parameters ['extra'] are not allowed" in ex.value.detail
-    
+
     def test_vllm_chat_adapter(self):
         messages = [
-                ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
-                ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
+            ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
+            ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
         ]
         chat_request = {
             "messages": [message.model_dump() for message in messages]
         }
-        
+
         raw_request_mock = MagicMock()
         raw_request_mock.headers = {
             ExtraParameters.KEY: None
         }
-        
+
         req = VllmChatCompletionsAdapter(ChatCompletionRequest(**chat_request), raw_request_mock).adapt()
         compare_dict(chat_request, req.model_dump())
 
@@ -127,8 +128,8 @@ class TestRequestAdapter(unittest.TestCase):
     def test_mixtral_chat_adapter(self):
         # [system, user]
         messages = [
-                ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
-                ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
+            ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
+            ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
         ]
 
         expected_updated_msgs = [
@@ -140,7 +141,7 @@ class TestRequestAdapter(unittest.TestCase):
         chat_request = {
             "messages": [message.model_dump() for message in messages]
         }
-        
+
         expected_updated_req = {
             "messages": [message.model_dump() for message in expected_updated_msgs]
         }
@@ -153,13 +154,13 @@ class TestRequestAdapter(unittest.TestCase):
 
         # [system, assistant]
         messages = [
-                ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
-                ChatMessage(role=ChatRole.assistant, content="Hello, how are you?"),
+            ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
+            ChatMessage(role=ChatRole.assistant, content="Hello, how are you?"),
         ]
 
         expected_updated_msgs = [
-                ChatMessage(role=ChatRole.user, content="You are a helpful assistant."),
-                ChatMessage(role=ChatRole.assistant, content="Hello, how are you?"),
+            ChatMessage(role=ChatRole.user, content="You are a helpful assistant."),
+            ChatMessage(role=ChatRole.assistant, content="Hello, how are you?"),
         ]
         chat_request = {
             "messages": [message.model_dump() for message in messages]
@@ -191,7 +192,7 @@ class TestRequestAdapter(unittest.TestCase):
         with pytest.raises(HTTPException) as ex:
             MixtralChatCompletionAdapter(ChatCompletionRequest(**chat_request), raw_request_mock).adapt()
         assert "Extra parameters ['extra'] are not allowed" in ex.value.detail
-        
+
 
 if __name__ == "__main__":
     unittest.main()

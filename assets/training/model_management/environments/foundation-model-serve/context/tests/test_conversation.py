@@ -19,12 +19,12 @@ class TestConversationModel(unittest.TestCase):
     def test_first_message_validation(self):
         with self.assertRaises(ValueError):
             Conversation([TextMessage(Role.ASSISTANT, "This should fail.")])
-        
+
         try:
             Conversation([TextMessage(Role.SYSTEM, "This is valid.")])
         except ValueError:
             self.fail("Conversation initialization failed when it should have succeeded.")
-        
+
         try:
             Conversation([TextMessage(Role.USER, "This is valid.")])
         except ValueError:
@@ -33,12 +33,12 @@ class TestConversationModel(unittest.TestCase):
     def test_add_message_validation(self):
         # Create empty conversation
         conv = Conversation()
-        
+
         with self.assertRaises(ValueError):
             conv.add_message(TextMessage(Role.ASSISTANT, "This should fail."))
-        
+
         conv.add_message(TextMessage(Role.SYSTEM, "This is valid."))
-        
+
         try:
             conv.add_message(TextMessage(Role.USER, "This is valid."))
             conv.add_message(TextMessage(Role.ASSISTANT, "This is valid."))
@@ -70,15 +70,16 @@ class TestConversationModel(unittest.TestCase):
                 MultimodalContent(type="image_url", image_url={"url": "https://example.com/cat.jpg"}),
             ],
         )
-        
+
         conv = Conversation([TextMessage(Role.SYSTEM, "I can show images."), multimodal_msg])
         json_str = conv.to_json()
         new_conv = Conversation.from_json(json_str)
-        
+
         self.assertEqual(len(new_conv.messages), 2)
         self.assertIsInstance(new_conv.messages[1], MultimodalMessage)
         self.assertEqual(new_conv.messages[1].content[0].text, "Show me an image of a cat")
         self.assertEqual(new_conv.messages[1].content[1].image_url["url"], "https://example.com/cat.jpg")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -20,7 +20,7 @@ class TestMiiEngine(unittest.TestCase):
                                  num_replicas=1,
                                  ml_model_info={},
                                  mii_config=mii_config
-                                )
+                                 )
     task_config = TaskConfig(task_type=TaskType.TEXT_GENERATION)
     chat_task_config = TaskConfig(task_type=TaskType.CONVERSATIONAL)
 
@@ -55,12 +55,11 @@ class TestMiiEngine(unittest.TestCase):
                                      num_replicas=1,
                                      ml_model_info={},
                                      mii_config=self.mii_config
-                                    )
+                                     )
         engine = MiiEngine(engine_config, self.task_config)
         test_tokens = engine.get_tokens("This is a test. A token counting test. How many tokens will the llama count?")
         print(f"tokens counted: {len(test_tokens)}")
         self.assertIsNotNone(test_tokens)
-
 
     def test_file_restructure(self):
         model_path = os.path.join(os.getcwd(), "model")
@@ -84,7 +83,7 @@ class TestMiiEngine(unittest.TestCase):
                                      num_replicas=1,
                                      ml_model_info={},
                                      mii_config=self.mii_config
-                                    )
+                                     )
         engine = MiiEngine(engine_config, self.task_config)
 
         for file in files:
@@ -108,7 +107,7 @@ class TestMiiEngineAsync:
                                  num_replicas=1,
                                  ml_model_info={},
                                  mii_config=mii_config
-                                )
+                                 )
     task_config = TaskConfig(task_type=TaskType.TEXT_GENERATION)
     chat_task_config = TaskConfig(task_type=TaskType.CONVERSATIONAL)
 

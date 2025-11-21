@@ -17,7 +17,7 @@ class TestVLLMEngine(unittest.TestCase):
                                           model_id="model_id",
                                           tokenizer="tokenizer",
                                           ml_model_info={}
-                                        )
+                                          )
         self.task_config = TaskConfig(task_type=TaskType.TEXT_GENERATION)
         self.chat_task_config = TaskConfig(task_type=TaskType.CONVERSATIONAL)
 
@@ -43,7 +43,7 @@ class TestVLLMEngine(unittest.TestCase):
     def test_generate_text(self, mock_get_tokens, mock_post):
         mock_get_tokens.return_value = [1, 2, 3]
         mock_post.return_value.status_code = 200
-        mock_post.return_value.content = '{"text": ["response"]}' # this
+        mock_post.return_value.content = '{"text": ["response"]}'  # this
         engine = VLLMEngine(self.engine_config, self.task_config)
         results = engine.generate(["prompt"], {"max_gen_len": 10})
         self.assertEqual(len(results), 1)
@@ -54,7 +54,7 @@ class TestVLLMEngine(unittest.TestCase):
     def test_generate_chat(self, mock_get_tokens, mock_post):
         mock_get_tokens.return_value = [1, 2, 3]
         mock_post.return_value.status_code = 200
-        mock_post.return_value.content = '{"text": ["promptresponse"]}' # this
+        mock_post.return_value.content = '{"text": ["promptresponse"]}'  # this
         engine = VLLMEngine(self.engine_config, self.chat_task_config)
         results = engine.generate(["prompt"], {"max_gen_len": 10})
         self.assertEqual(len(results), 1)
@@ -96,7 +96,7 @@ class TestVLLMEngine(unittest.TestCase):
         for size in tensor_parallel_sizes:
             for head_size in attention_head_sizes:
                 self.engine_config.tensor_parallel = size
-                self.engine_config.model_config = {"num_attention_heads": head_size, 
+                self.engine_config.model_config = {"num_attention_heads": head_size,
                                                    "num_key_value_heads": head_size}
 
                 if (size, head_size) in expected_warnings:
@@ -116,14 +116,14 @@ class TestVLLMEngine(unittest.TestCase):
         expected_warnings = [i for i in range(1, 9) if i not in valid_sizes]
         for size in tensor_parallel_sizes:
             self.engine_config.tensor_parallel = size
-            self.engine_config.model_config = {"num_attention_heads": 40, 
-                                                "num_key_value_heads": 10}
+            self.engine_config.model_config = {"num_attention_heads": 40,
+                                               "num_key_value_heads": 10}
             if size in expected_warnings:
                 with self.assertLogs("engine.vllm_engine", level="WARNING") as logs:
-                        _ = VLLMEngine(self.engine_config, self.task_config)
-                        self.assertTrue(any(
-                            "Tensor parallel size was incompatible" in output for output in logs.output
-                        ))
+                    _ = VLLMEngine(self.engine_config, self.task_config)
+                    self.assertTrue(any(
+                        "Tensor parallel size was incompatible" in output for output in logs.output
+                    ))
             engine = VLLMEngine(self.engine_config, self.task_config)
             if size not in expected_warnings:
                 self.assertTrue(engine._vllm_kwargs["tensor-parallel-size"] == size)
@@ -153,6 +153,7 @@ class TestVLLMEngine(unittest.TestCase):
         self.engine_config.model_config = {"model_type": "phi3"}
         engine = VLLMEngine(self.engine_config, self.task_config)
         self.assertEqual(expected_args, set(engine._vllm_args))
+
 
 if __name__ == "__main__":
     unittest.main()

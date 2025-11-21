@@ -10,6 +10,7 @@ from replica_manager import ReplicaManagerConfig, ReplicaManager, get_engine
 
 from typing import List, Dict
 
+
 class StubEngine(BaseEngine):
     def __init__(self, engine_config):
         self.engine_config = engine_config
@@ -102,7 +103,12 @@ class TestReplicaManager(unittest.TestCase):
 
     def test_invalid_engine(self):
         with self.assertRaises(ValueError):
-            get_engine(EngineConfig(engine_name="invalid_engine", model_id="gpt2", tokenizer="tokenizer"), TaskConfig())
+            get_engine(
+                EngineConfig(
+                    engine_name="invalid_engine",
+                    model_id="gpt2",
+                    tokenizer="tokenizer"),
+                TaskConfig())
 
     def test_replica_manager_insufficient_gpus(self):
         self.engine_config.tensor_parallel = 4

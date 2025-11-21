@@ -87,5 +87,6 @@ class TestFMScore(unittest.TestCase):
         fms.init()
         assert fms.formatter == 'custom formatter'
 
+
 if __name__ == '__main__':
     unittest.main()

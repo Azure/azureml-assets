@@ -24,7 +24,7 @@ class TestMiiEngineV2(unittest.TestCase):
                                  num_replicas=1,
                                  ml_model_info={},
                                  mii_config=mii_config
-                                )
+                                 )
     task_config = TaskConfig(task_type=TaskType.TEXT_GENERATION)
     chat_task_config = TaskConfig(task_type=TaskType.CONVERSATIONAL)
 
@@ -59,7 +59,7 @@ class TestMiiEngineV2(unittest.TestCase):
                                      num_replicas=1,
                                      ml_model_info={},
                                      mii_config=self.mii_config
-                                    )
+                                     )
         engine = MiiEngineV2(engine_config, self.task_config)
         test_tokens = engine.get_tokens("This is a test. A token counting test. How many tokens will the llama count?")
         print(f"tokens counted: {len(test_tokens)}")
@@ -75,7 +75,7 @@ class TestMiiEngineV2Async:
                                  num_replicas=1,
                                  ml_model_info={},
                                  mii_config=mii_config
-                                )
+                                 )
     task_config = TaskConfig(task_type=TaskType.TEXT_GENERATION)
     chat_task_config = TaskConfig(task_type=TaskType.CONVERSATIONAL)
 

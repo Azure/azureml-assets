@@ -13,9 +13,9 @@ class TestHfEngine(unittest.TestCase):
 
     def test_fill_mask(self):
         ml_model_info = {
-                "task": "fill-mask",
-                "hf_tokenizer_class": "BertTokenizerFast",
-                "hf_pretrained_class": "BertForMaskedLM"
+            "task": "fill-mask",
+            "hf_tokenizer_class": "BertTokenizerFast",
+            "hf_pretrained_class": "BertForMaskedLM"
         }
         engine_config = EngineConfig(engine_name="hf", model_id="bert-base-cased",
                                      tokenizer="bert-base-cased", hf_config_path="bert-base-cased",
@@ -26,9 +26,9 @@ class TestHfEngine(unittest.TestCase):
 
     def test_question_answering(self):
         ml_model_info = {
-                "task": "question-answering",
-                "hf_tokenizer_class": "DistilBertTokenizerFast",
-                "hf_pretrained_class": "DistilBertForQuestionAnswering"
+            "task": "question-answering",
+            "hf_tokenizer_class": "DistilBertTokenizerFast",
+            "hf_pretrained_class": "DistilBertForQuestionAnswering"
         }
         engine_config = EngineConfig(engine_name="hf", model_id="distilbert-base-cased-distilled-squad",
                                      tokenizer="distilbert-base-cased-distilled-squad",
@@ -42,10 +42,9 @@ class TestHfEngine(unittest.TestCase):
             If you would like to fine-tune a model on a SQuAD task,
             you may leverage the examples/pytorch/question-answering/run_squad.py script.
         """
-        test_tokens = engine.generate([{"question":"What is a good example of a question answering dataset?",
-                                        "context":context}], params={})
+        test_tokens = engine.generate([{"question": "What is a good example of a question answering dataset?",
+                                        "context": context}], params={})
         self.assertIsNotNone(test_tokens)
-
 
 
 if __name__ == "__main__":

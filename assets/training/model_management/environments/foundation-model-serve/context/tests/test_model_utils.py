@@ -15,18 +15,18 @@ class TestModelUtils(unittest.TestCase):
         self.mlmodel = {
             "flavors":
                 {
-                    "hftransformersv2":{
+                    "hftransformersv2": {
                         "task_type": "text-generation"
                     }
                 },
-            "metadata": 
+            "metadata":
                 {
                     "base_model_name": "Meta-Llama-3.1-8B",
                     "base_model_task": "text-generation",
                     "model_provider_name": "llama",
                     "is_common_api_enabled": True
                 }
-            }
+        }
         self.model_path = "mock_model_path"
         self.temp_dir = tempfile.mkdtemp()
         self.config_path = os.path.join(self.temp_dir, "config.json")
@@ -43,14 +43,14 @@ class TestModelUtils(unittest.TestCase):
         with open(self.config_path, 'w+') as config:
             json.dump(config_content, config)
 
-        engine_config, _, _, task_type, model_info = build_configs_from_model(self.mlmodel, self.model_path, self.config_path, self.model_path, self.inference_path)
+        engine_config, _, _, task_type, model_info = build_configs_from_model(
+            self.mlmodel, self.model_path, self.config_path, self.model_path, self.inference_path)
 
         expected_engine_name = "vllm"
         expected_task_type = "text-generation"
         self.assertEqual(engine_config["engine_name"], expected_engine_name)
         self.assertEqual(task_type, expected_task_type)
         self.assertEqual(model_info["is_common_api_enabled"], True)
-        
 
     def test_build_model_config_inference_config(self):
         # Vllm Engine
@@ -66,7 +66,8 @@ class TestModelUtils(unittest.TestCase):
         with open(self.inference_path, "w+") as inference_config:
             json.dump(inference_content, inference_config)
 
-        engine_config, _, _, task_type, _ = build_configs_from_model(self.mlmodel, self.model_path, self.config_path, self.model_path, self.inference_path)
+        engine_config, _, _, task_type, _ = build_configs_from_model(
+            self.mlmodel, self.model_path, self.config_path, self.model_path, self.inference_path)
 
         expected_engine_name = "mii"
         expected_task_type = "text-generation"
