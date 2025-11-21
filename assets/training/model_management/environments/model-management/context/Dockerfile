@@ -12,7 +12,10 @@ ENV PATH="/usr/local/go/bin:$PATH"
 
 COPY requirements.txt .
 
-RUN python3 -m pip install --upgrade pip==25.3 setuptools wheel
+# Clean conda cache and force reinstall pip to overwrite metadata
+RUN conda clean --all -y
+RUN conda install -n base -c conda-forge pip=25.3 setuptools wheel --force-reinstall -y
+RUN conda install -n ptca -c conda-forge pip=25.3 setuptools wheel --force-reinstall -y || true
 
 # This line is added because azureml-automl-dnn-vision depends on python 3.9.
 # Added ignore python requires to get this installed.
