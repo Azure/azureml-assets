@@ -453,6 +453,7 @@ def get_asset_details(
         "--name", asset_name,
         "--version", asset_version,
         "--registry-name", registry_name,
+        "--only-show-errors",
     ]
     result = run_command(cmd)
     if result.returncode != 0:
