@@ -16,7 +16,7 @@ tags:
   inference_supported_envs:
     - hf
   license: custom
-  licensedescription: "**PAIGE.AI, INC. EMBEDDING SERVICES TERMS OF USE**
+  licenseDescription: "**PAIGE.AI, INC. EMBEDDING SERVICES TERMS OF USE**
 **Updated as of November 11, 2025**
 
 These terms of use (the “***Terms of Use***”) are between Paige.AI, Inc. and its affiliates (collectively, “***Paige***”, “***us***”, “***we***”, or “***our***”) and you and/or the entity or organization you represent.
