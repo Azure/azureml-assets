@@ -4,7 +4,7 @@
 import asyncio
 import json
 import unittest
-import pytest
+# import pytest
 from unittest.mock import patch, MagicMock
 from engine import InferenceResult
 from configs import EngineConfig
