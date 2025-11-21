@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -196,4 +195,3 @@ def test_convert_url_image(mock_get):
 
 if __name__ == "__main__":
     unittest.main()
->>>>>>> 4736c86812f5a79482f8001ee49abe9393309f85
