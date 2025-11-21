@@ -16,7 +16,8 @@ tags:
   inference_supported_envs:
     - hf
   license: custom
-  licensedescription: |"These terms of use (the “***Terms of Use***”) are between Paige.AI, Inc. and its affiliates (collectively, “***Paige***”, “***us***”, “***we***”, or “***our***”) and you and/or the entity or organization you represent.
+  licensedescription: |
+"These terms of use (the “***Terms of Use***”) are between Paige.AI, Inc. and its affiliates (collectively, “***Paige***”, “***us***”, “***we***”, or “***our***”) and you and/or the entity or organization you represent.
 
 By accessing or using the Embeddings Service (defined below), you agree to be legally bound by these Terms of Use. If you do not accept these Terms of Use, do not use the Embeddings Service.
 
