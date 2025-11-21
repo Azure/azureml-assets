@@ -4,7 +4,7 @@
 import asyncio
 import json
 import unittest
-# import pytest
+import pytest
 from unittest.mock import patch, MagicMock
 from engine import InferenceResult
 from configs import EngineConfig
@@ -64,6 +64,7 @@ def get_serving_url(task_type):
     else:
         return ""
 
+
 def compare_stream_response_and_chunks(chunks, stream_response):
     cmp = []
     for line in stream_response.iter_lines():
@@ -85,8 +86,8 @@ def compare_stream_response_and_chunks(chunks, stream_response):
 class TestAPIServer(unittest.TestCase):
     client = TestClient(app)
     messages = [
-            ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
-            ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
+        ChatMessage(role=ChatRole.system, content="You are a helpful assistant."),
+        ChatMessage(role=ChatRole.user, content="Hello, how are you?"),
     ]
     chat_request = {
         "messages": [message.model_dump() for message in messages],
@@ -98,8 +99,8 @@ class TestAPIServer(unittest.TestCase):
         "stream": False,
     }
     textgen_request = {
-        "model":"default-ignored",
-        "prompt":"my favorite color is blue because",
+        "model": "default-ignored",
+        "prompt": "my favorite color is blue because",
         "temperature": 0.7
     }
     vllm_chat_response = {
@@ -142,26 +143,125 @@ class TestAPIServer(unittest.TestCase):
         ).model_dump(),
     }
     inference_results = [InferenceResult("This is the response", 1.0, 1.0, ["token"], 1)]
-    vllm_stream_textgen_response_chunks = [
-        {'id': 'cmpl-b306f98794fc4a2496147f11304045f4', 'created': 1715647995, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'text': '\n', 'finish_reason': None}], 'usage': None},
-        {'id': 'cmpl-b306f98794fc4a2496147f11304045f4', 'created': 1715647995, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'text': '\n', 'finish_reason': None}], 'usage': None},
-        {'id': 'cmpl-b306f98794fc4a2496147f11304045f4', 'created': 1715647995, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'text': 'An', 'finish_reason': None}], 'usage': None},
-        {'id': 'cmpl-b306f98794fc4a2496147f11304045f4', 'created': 1715647995, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'text': ' LL', 'finish_reason': None}], 'usage': None},
-        {'id': 'cmpl-b306f98794fc4a2496147f11304045f4', 'created': 1715647995, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'text': 'M', 'finish_reason': 'length'}], 'usage': {'prompt_tokens': 7, 'total_tokens': 12, 'completion_tokens': 5}},
-    ]
-    vllm_stream_chat_response_chunks = [
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'role': 'assistant'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' The'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' answer'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' to'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' the'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' mathematical'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' expression'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' '}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': '2'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' +'}, 'finish_reason': None}]},
-        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754', 'object': 'chat.completion.chunk', 'created': 1715653435, 'model': '/data/mlflow_model_folder/data/model', 'choices': [{'index': 0, 'delta': {'content': ' '}, 'finish_reason': 'length'}], 'usage': {'prompt_tokens': 32, 'total_tokens': 42, 'completion_tokens': 10}},
-    ]
+    vllm_stream_textgen_response_chunks = [{'id': 'cmpl-b306f98794fc4a2496147f11304045f4',
+                                            'created': 1715647995,
+                                            'model': '/data/mlflow_model_folder/data/model',
+                                            'choices': [{'index': 0,
+                                                         'text': '\n',
+                                                         'finish_reason': None}],
+                                            'usage': None},
+                                           {'id': 'cmpl-b306f98794fc4a2496147f11304045f4',
+                                            'created': 1715647995,
+                                            'model': '/data/mlflow_model_folder/data/model',
+                                            'choices': [{'index': 0,
+                                                         'text': '\n',
+                                                         'finish_reason': None}],
+                                            'usage': None},
+                                           {'id': 'cmpl-b306f98794fc4a2496147f11304045f4',
+                                            'created': 1715647995,
+                                            'model': '/data/mlflow_model_folder/data/model',
+                                            'choices': [{'index': 0,
+                                                         'text': 'An',
+                                                         'finish_reason': None}],
+                                            'usage': None},
+                                           {'id': 'cmpl-b306f98794fc4a2496147f11304045f4',
+                                            'created': 1715647995,
+                                            'model': '/data/mlflow_model_folder/data/model',
+                                            'choices': [{'index': 0,
+                                                         'text': ' LL',
+                                                         'finish_reason': None}],
+                                            'usage': None},
+                                           {'id': 'cmpl-b306f98794fc4a2496147f11304045f4',
+                                            'created': 1715647995,
+                                            'model': '/data/mlflow_model_folder/data/model',
+                                            'choices': [{'index': 0,
+                                                         'text': 'M',
+                                                         'finish_reason': 'length'}],
+                                            'usage': {'prompt_tokens': 7,
+                                                      'total_tokens': 12,
+                                                      'completion_tokens': 5}},
+                                           ]
+    vllm_stream_chat_response_chunks = [{'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'role': 'assistant'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' The'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' answer'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' to'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' the'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' mathematical'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' expression'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' '},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': '2'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' +'},
+                                                      'finish_reason': None}]},
+                                        {'id': 'cmpl-7c77e37de3b446c3a70806d7ddaf3754',
+                                         'object': 'chat.completion.chunk',
+                                         'created': 1715653435,
+                                         'model': '/data/mlflow_model_folder/data/model',
+                                         'choices': [{'index': 0,
+                                                      'delta': {'content': ' '},
+                                                      'finish_reason': 'length'}],
+                                         'usage': {'prompt_tokens': 32,
+                                                   'total_tokens': 42,
+                                                   'completion_tokens': 10}},
+                                        ]
 
     def mock_sse_stream_iter_lines(self, chunks):
         for chunk in chunks:
@@ -169,7 +269,7 @@ class TestAPIServer(unittest.TestCase):
             sse_formatted_line = f"data: {json_string}\n\n"
             yield sse_formatted_line.encode('utf-8')
         yield "data: [DONE]\n\n".encode('utf-8')
-    
+
     def test_health(self):
         response = self.client.get("/")
         assert response.status_code == 200
@@ -186,17 +286,16 @@ class TestAPIServer(unittest.TestCase):
                 "p2": {"op1": {}},
                 "p3": {"op1": {"tags": ["not_target"]}},
                 "p4": {"op1": {"tags": [target_tag, "not_target"]},
-                       "op2": {"tags": ["anything"]} }
+                       "op2": {"tags": ["anything"]}}
             }
         }
 
         filtered = filter_swagger_paths_by_tag(sample_openapi_schema, target_tag)
-        assert(set(filtered["paths"].keys()) == set(["p1", "p2", "p4"]))
-        assert(set(filtered["paths"]["p4"].keys()) == set(["op1"]))
+        assert (set(filtered["paths"].keys()) == set(["p1", "p2", "p4"]))
+        assert (set(filtered["paths"]["p4"].keys()) == set(["op1"]))
 
         filtered = filter_swagger_paths_by_tag(sample_openapi_schema, "")
-        assert(set(filtered["paths"].keys()) == set(["p2"]))
-
+        assert (set(filtered["paths"].keys()) == set(["p2"]))
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.CHAT_COMPLETION)
@@ -215,7 +314,6 @@ class TestAPIServer(unittest.TestCase):
         final_chat_response['model'] = expected_model
         compare_dict(final_chat_response, final_response.json())
 
-    
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.CHAT_COMPLETION)
     @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm", model_id="model_id", tokenizer="tokenizer")))
@@ -226,15 +324,23 @@ class TestAPIServer(unittest.TestCase):
         }
         response = self.client.post(get_serving_url(SupportedTask.CHAT_COMPLETION), json=request_data)
         assert response.status_code == 422
-        response_json = {"error":{"code":"Invalid input","status":422,"message":"invalid input error","details":[{"type":"missing","loc":["body","messages"],"msg":"Field required","input":{"temperature":0.8}}]}}
+        response_json = {"error": {"code": "Invalid input", "status": 422, "message": "invalid input error", "details": [
+            {"type": "missing", "loc": ["body", "messages"], "msg": "Field required", "input": {"temperature": 0.8}}]}}
         compare_dict(response.json(), response_json)
 
         request_data["messages"] = []
         response = self.client.post(get_serving_url(SupportedTask.CHAT_COMPLETION), json=request_data)
-        response_json = {"error":{"code":"Invalid input","status":422,"message":"invalid input error","details":[{"type":"value_error","loc":["body","messages"],"msg":"Value error, messages can not be an empty list","input":[],"ctx":{"error":{}}}]}}
+        response_json = {"error": {"code": "Invalid input",
+                                   "status": 422,
+                                   "message": "invalid input error",
+                                   "details": [{"type": "value_error",
+                                                "loc": ["body",
+                                                        "messages"],
+                                                "msg": "Value error, messages can not be an empty list",
+                                                "input": [],
+                                                "ctx": {"error": {}}}]}}
         assert response.status_code == 422
         compare_dict(response.json(), response_json)
-
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
@@ -244,7 +350,7 @@ class TestAPIServer(unittest.TestCase):
     def test_api_version_and_extra_parameters(self, mock_fmscorer):
         request_data = {
             "model": "gpt-3.5-turbo",
-            "prompt":"my favorite color is blue because",
+            "prompt": "my favorite color is blue because",
             "temperature": 0.8,
             "top_p": 0.9,
             "max_tokens": 100,
@@ -257,7 +363,12 @@ class TestAPIServer(unittest.TestCase):
         assert response.status_code == 400
         assert f"Extra parameters ['some-random-param'] are not allowed" in response.json()["detail"]
 
-        response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION), json=request_data, headers={"extra-parameters": "not-exist"})
+        response = self.client.post(
+            get_serving_url(
+                SupportedTask.TEXT_GENERATION),
+            json=request_data,
+            headers={
+                "extra-parameters": "not-exist"})
         assert response.status_code == 400
         assert f"Unexpected EXTRA_PARAMETERS option" in response.json()["detail"]
 
@@ -265,10 +376,14 @@ class TestAPIServer(unittest.TestCase):
         response.json.return_value = self.vllm_textgen_response
         response.status_code = 200
         mock_fmscorer.run_openai_async.return_value = response
-        response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION), json=request_data, headers={"extra-parameters": "pass-through"})
+        response = self.client.post(
+            get_serving_url(
+                SupportedTask.TEXT_GENERATION),
+            json=request_data,
+            headers={
+                "extra-parameters": "pass-through"})
         assert response.status_code == 200
         compare_dict(self.vllm_textgen_response, response.json())
-
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
@@ -287,8 +402,8 @@ class TestAPIServer(unittest.TestCase):
         final_textgen_response['model'] = expected_model
         compare_dict(final_textgen_response, final_response.json())
 
-
     # [TODO] prepare an invalid test for openai api server case
+
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
     @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm", model_id="model_id", tokenizer="tokenizer")))
@@ -303,9 +418,24 @@ class TestAPIServer(unittest.TestCase):
         final_response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION), json=request_data)
         assert final_response.status_code == 422
         final_response_json = final_response.json()
-        response_json = {"error":{"code":"Invalid input","status":422,"message":"invalid input error","details":[{"type":"missing","loc":["body","prompt"],"msg":"Field required","input":{"model":"gpt-3.5-turbo","temperature":0.8,"top_p":0.9,"max_tokens":100}}]}}
+        response_json = {
+            "error": {
+                "code": "Invalid input",
+                "status": 422,
+                "message": "invalid input error",
+                "details": [
+                    {
+                        "type": "missing",
+                        "loc": [
+                            "body",
+                            "prompt"],
+                        "msg": "Field required",
+                        "input": {
+                            "model": "gpt-3.5-turbo",
+                            "temperature": 0.8,
+                            "top_p": 0.9,
+                            "max_tokens": 100}}]}}
         compare_dict(final_response_json, response_json)
-
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
@@ -314,7 +444,9 @@ class TestAPIServer(unittest.TestCase):
     @patch('api_server.g_fmscorer')
     def test_stream_text_generation_valid_request(self, mock_fmscorer):
         response = MagicMock()
-        response.iter_lines = MagicMock(side_effect=lambda: self.mock_sse_stream_iter_lines(self.vllm_stream_textgen_response_chunks))
+        response.iter_lines = MagicMock(
+            side_effect=lambda: self.mock_sse_stream_iter_lines(
+                self.vllm_stream_textgen_response_chunks))
         response.status_code = 200
         response.headers = {
             "Content-Type": "application/json"
@@ -330,7 +462,6 @@ class TestAPIServer(unittest.TestCase):
             chunk.update({"model": expected_model})
         compare_stream_response_and_chunks(final_stream_textgen_response_chunks, final_response)
 
-
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.CHAT_COMPLETION)
     @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm", model_id="model_id", tokenizer="tokenizer")))
@@ -338,7 +469,9 @@ class TestAPIServer(unittest.TestCase):
     @patch('api_server.g_fmscorer')
     def test_stream_chat_completion_valid_request(self, mock_fmscorer):
         response = MagicMock()
-        response.iter_lines = MagicMock(side_effect=lambda: self.mock_sse_stream_iter_lines(self.vllm_stream_chat_response_chunks))
+        response.iter_lines = MagicMock(
+            side_effect=lambda: self.mock_sse_stream_iter_lines(
+                self.vllm_stream_chat_response_chunks))
         response.headers = {
             "Content-Type": "application/json"
         }
@@ -357,7 +490,6 @@ class TestAPIServer(unittest.TestCase):
             if line:
                 print(line)
         compare_stream_response_and_chunks(final_stream_chat_response_chunks, final_response)
-        
 
 
 if __name__ == "__main__":
