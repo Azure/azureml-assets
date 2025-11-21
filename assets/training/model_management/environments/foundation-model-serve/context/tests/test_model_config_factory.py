@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
@@ -57,4 +56,3 @@ def test_get_model_config_for_stable_diffusion_inpainting(mock_diffusion_config)
 
     mock_diffusion_config.assert_called_once_with(task)
     assert config is mock_diffusion_config.return_value
->>>>>>> 4736c86812f5a79482f8001ee49abe9393309f85
