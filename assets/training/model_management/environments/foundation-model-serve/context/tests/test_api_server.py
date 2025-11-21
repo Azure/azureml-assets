@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 """Model package containing model serving functionality."""
