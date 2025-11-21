@@ -312,7 +312,7 @@ def validate_update_component(
     :return: True for successful validation and update
     :rtype: bool
     """
-    with open(spec_path) as f:
+    with open(spec_path, encoding='utf-8') as f:
         try:
             component_dict = YAML().load(f)
         except Exception:
@@ -504,7 +504,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
 
         tags_to_update = None
         try:
-            with open(spec_path) as f:
+            with open(spec_path, encoding='utf-8') as f:
                 asset_spec = YAML().load(f)
                 tags = asset_spec.get("tags", {})
                 properties = asset_spec.get("properties", {})

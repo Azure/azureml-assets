@@ -492,8 +492,8 @@ def send_openai_request(request, raw_request, uri):
     # set model to be the correct model_id
     forward_headers = {}
     forward_headers['content-length'] = "application/json"
-    payload = request.model_dump()          # Convert to Python dict
-
+    payload = request.model_dump(exclude_none=True)          # Convert to Python dict
+    
     response = requests.post(
         f"{get_downstream_url()}/{uri}", headers=forward_headers, json=payload)
     if response.status_code >= 400:
