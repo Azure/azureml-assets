@@ -297,8 +297,16 @@ class TestAPIServer(unittest.TestCase):
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.CHAT_COMPLETION)
-    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm",
-                                                                    model_id="model_id",tokenizer="tokenizer")))
+    @patch(
+        'api_server.g_engine_config',
+        new=asdict(
+            EngineConfig(
+                engine_name="vllm",
+                model_id="model_id",
+                tokenizer="tokenizer"
+            )
+        ),
+    )
     @patch('api_server.g_model_info', new=mock_model_info())
     @patch('api_server.g_fmscorer')
     def test_chat_completion_valid_request(self, mock_fmscorer):
@@ -495,5 +503,6 @@ class TestAPIServer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
