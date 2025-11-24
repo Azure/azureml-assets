@@ -10,6 +10,8 @@ generating responses for given prompts, and managing the server processes.
 import subprocess
 import sys
 import os
+import signal
+from typing import Optional
 from foundation.model.serve.constants import EnvironmentVariables, CommonConstants
 from foundation.model.serve.engine.engine import BaseEngine
 from foundation.model.serve.logging_config import configure_logger
@@ -26,7 +28,9 @@ class VLLMEngine(BaseEngine):
 
     def __init__(self):
         """Initialize the VLLMEngine with the given engine and task configurations."""
-        pass
+        super().__init__()
+        self.server_process: Optional[subprocess.Popen] = None
+        self.server_cmd: Optional[list] = None
 
     def init_server(self):
         """Initialize client[s] for the engine to receive requests on.
@@ -44,10 +48,48 @@ class VLLMEngine(BaseEngine):
                 arg_name = key[len(prefix):].lower().replace("_", "-")
                 cmd.extend([f"--{arg_name}", value])
 
+        self.server_cmd = cmd
+        
         print("Starting vLLM server with command:")
         print(" ".join(cmd))
 
-        subprocess.Popen(cmd)
+        self.server_process = subprocess.Popen(cmd)
+        logger.info(f"VLLM server started with PID: {self.server_process.pid}")
+
+    def restart_server(self):
+        """Restart the VLLM server by stopping current process and starting new one.
+
+        Raises:
+            RuntimeError: If server command is not initialized.
+        """
+        if not self.server_cmd:
+            raise RuntimeError("Server command not initialized. Call init_server() first.")
+        
+        logger.info("Attempting to restart VLLM server...")
+        
+        # Stop the current server process
+        if self.server_process and self.server_process.poll() is None:
+            try:
+                logger.info(f"Stopping VLLM server process (PID: {self.server_process.pid})...")
+                self.server_process.terminate()
+                
+                # Wait up to 30 seconds for graceful shutdown
+                try:
+                    self.server_process.wait(timeout=30)
+                    logger.info("VLLM server stopped gracefully")
+                except subprocess.TimeoutExpired:
+                    logger.warning("VLLM server did not stop gracefully, force killing...")
+                    self.server_process.kill()
+                    self.server_process.wait()
+                    logger.info("VLLM server force killed")
+                    
+            except Exception as e:
+                logger.error(f"Error stopping VLLM server: {str(e)}")
+        
+        # Start new server process
+        logger.info("Starting new VLLM server instance...")
+        self.server_process = subprocess.Popen(self.server_cmd)
+        logger.info(f"VLLM server restarted with PID: {self.server_process.pid}")
 
     def formulate_environment_variables(self):
         """Formulate environment variables specific to VLLM engine.
