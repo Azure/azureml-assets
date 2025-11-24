@@ -20,6 +20,7 @@ import json
 import os
 import requests
 import argparse
+import asyncio
 from typing import Any, Dict, Generator, Dict, Union
 
 from torch.multiprocessing import set_start_method
@@ -57,6 +58,7 @@ DEFAULT_AACS_INFERENCE_URIS = [
 g_aacs_threshold = int(os.environ.get(
     EnvironmentVariables.CONTENT_SAFETY_THRESHOLD, CommonConstants.CONTENT_SAFETY_THERESHOLD_DEFAULT))
 g_aacs_client = None
+g_health_check_task = None  # Background task for periodic health checks
 
 TIMEOUT_KEEP_ALIVE = 30
 
@@ -400,6 +402,93 @@ async def health():
         )
 
 
+@app.get("/ready")
+async def ready():
+    """Readiness check endpoint that verifies downstream engine readiness.
+    
+    This endpoint calls the downstream engine's /ready endpoint to verify
+    the engine is ready to accept and process inference requests.
+    
+    Returns:
+        JSONResponse: Readiness status with 200 OK if downstream is ready,
+                     503 Service Unavailable if downstream is not ready.
+    """
+    try:
+        downstream_url = get_downstream_url()
+        ready_url = f"{downstream_url}/ready"
+        
+        # Check downstream engine readiness with 5 second timeout
+        response = requests.get(ready_url, timeout=5.0)
+        
+        if response.status_code == 200:
+            logger.debug("Downstream engine readiness check passed")
+            return JSONResponse(
+                content={"status": "ready", "downstream": "ok"},
+                status_code=200
+            )
+        else:
+            logger.warning(f"Downstream engine readiness check failed with status {response.status_code}")
+            return JSONResponse(
+                content={"status": "not_ready", "downstream": f"status_{response.status_code}"},
+                status_code=503
+            )
+    except requests.exceptions.ConnectionError:
+        logger.warning("Downstream engine readiness check failed: connection error")
+        return JSONResponse(
+            content={"status": "not_ready", "downstream": "connection_error"},
+            status_code=503
+        )
+    except requests.exceptions.Timeout:
+        logger.warning("Downstream engine readiness check failed: timeout")
+        return JSONResponse(
+            content={"status": "not_ready", "downstream": "timeout"},
+            status_code=503
+        )
+    except Exception as e:
+        logger.error(f"Downstream engine readiness check failed: {str(e)}")
+        return JSONResponse(
+            content={"status": "not_ready", "downstream": "error", "error": str(e)},
+            status_code=503
+        )
+
+
+async def periodic_health_check():
+    """Background task that performs periodic health checks on the downstream engine.
+    
+    This function runs continuously, checking the downstream engine's health
+    every 2 minutes and logging the status. It helps monitor the ongoing
+    health of the inference stack.
+    """
+    health_check_interval = 120  # 2 minutes in seconds
+    
+    logger.info(f"Starting periodic health check task (interval: {health_check_interval}s)")
+    
+    # Wait a bit before starting periodic checks to ensure server is fully initialized
+    await asyncio.sleep(30)
+    
+    while True:
+        try:
+            downstream_url = get_downstream_url()
+            health_url = f"{downstream_url}/health"
+            
+            response = requests.get(health_url, timeout=5.0)
+            
+            if response.status_code == 200:
+                logger.info("Periodic health check: Downstream engine is healthy")
+            else:
+                logger.warning(
+                    f"Periodic health check: Downstream engine returned status {response.status_code}"
+                )
+        except requests.exceptions.ConnectionError:
+            logger.error("Periodic health check: Connection error to downstream engine")
+        except requests.exceptions.Timeout:
+            logger.error("Periodic health check: Timeout when checking downstream engine")
+        except Exception as e:
+            logger.error(f"Periodic health check: Unexpected error - {str(e)}")
+        
+        await asyncio.sleep(health_check_interval)
+
+
 @app.post("/score")
 async def score(request: Request) -> Response:
     """Generate completion for the request.
@@ -729,7 +818,7 @@ async def lifespan(app: FastAPI) -> Generator:
     Yields:
         None: Control is yielded during the application lifespan.
     """
-    global g_aacs_client
+    global g_aacs_client, g_health_check_task
     g_aacs_client = AACSValidator()
     AACS_error = g_aacs_client.aacs_setup()
 
@@ -737,7 +826,20 @@ async def lifespan(app: FastAPI) -> Generator:
     if init_error:
         logger.exception(init_error)
         raise init_error
+    
+    # Start periodic health check background task
+    g_health_check_task = asyncio.create_task(periodic_health_check())
+    logger.info("Started periodic health check background task")
+    
     yield
+    
+    # Cleanup: cancel the background task on shutdown
+    if g_health_check_task:
+        g_health_check_task.cancel()
+        try:
+            await g_health_check_task
+        except asyncio.CancelledError:
+            logger.info("Periodic health check task cancelled")
 
 app.router.lifespan_context = lifespan
 
