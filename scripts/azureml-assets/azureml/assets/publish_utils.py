@@ -41,7 +41,7 @@ def sanitize_output(input: str) -> str:
 
 def extract_json_from_output(text: str) -> Union[Dict, List, None]:
     """Extract and parse JSON from text that may contain non-JSON content.
-    
+
     :param text: Text containing JSON, possibly with warnings or other output
     :type text: str
     :return: Parsed JSON object or None if not found/invalid
@@ -460,7 +460,7 @@ def get_asset_versions(
     if result.returncode != 0:
         logger.log_error(f"Failed to list assets: {result.stderr}")
         return []
-    
+
     parsed_output = extract_json_from_output(result.stdout)
     if parsed_output is None:
         return []
