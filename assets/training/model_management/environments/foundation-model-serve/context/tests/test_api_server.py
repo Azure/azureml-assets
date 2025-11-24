@@ -341,8 +341,21 @@ class TestAPIServer(unittest.TestCase):
         }
         response = self.client.post(get_serving_url(SupportedTask.CHAT_COMPLETION), json=request_data)
         assert response.status_code == 422
-        response_json = {"error": {"code": "Invalid input", "status": 422, "message": "invalid input error", "details": [
-            {"type": "missing", "loc": ["body", "messages"], "msg": "Field required", "input": {"temperature": 0.8}}]}}
+        response_json = {
+            "error": {
+                "code": "Invalid input",
+                "status": 422,
+                "message": "invalid input error",
+                "details": [
+                    {
+                        "type": "missing",
+                        "loc": ["body", "messages"],
+                        "msg": "Field required",
+                        "input": {"temperature": 0.8},
+                    }
+                ],
+            }
+        }
         compare_dict(response.json(), response_json)
 
         request_data["messages"] = []
@@ -511,6 +524,7 @@ class TestAPIServer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
