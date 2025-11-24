@@ -83,10 +83,13 @@ class TestMIRPayload(unittest.TestCase):
                             {
                                 "role": "user", "content": [
                                     {
-                                        "type": "image_url", "image_url": {
+                                        "type": "image_url"
+                                                , "image_url": {
                                             "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"}, }, {
                                         "type": "image_url", "image_url": {
-                                            "url": "https://www.ilankelman.org/stopsigns/australia.jpg"}, }, {
+                                            "url": "https://www.ilankelman.org/stopsigns/australia.jpg"},
+                                    }, 
+                                    {
                                                 "type": "text", "text": "What are in these images? What is the difference between two images?", }, ], }], "parameters": {
                             "temperature": 0.7, "top_p": 0.6, "do_sample": True, "max_new_tokens": 200, }, }}]}
         self.valid_text_gen_queries = [
@@ -351,3 +354,4 @@ def test_get_request_data_text_to_image_inpainting():
 
 if __name__ == "__main__":
     unittest.main()
+
