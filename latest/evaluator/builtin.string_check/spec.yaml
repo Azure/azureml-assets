@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.string_check"
-version: 1
+version: 2
 displayName: "String-Check-Evaluator"
 description: "Compares exact text strings to verify presence or match. Useful for
   confirming fixed outputs or keywords. Use this metric in form validation, structured
@@ -13,8 +13,6 @@ tags:
 initParameterSchema:
   type: "object"
   properties:
-    deployment_name:
-      type: "string"
     input:
       type: "string"
     reference:
@@ -26,7 +24,7 @@ initParameterSchema:
     operation:
       type: "string"
       enum: ["eq", "ne", "like", "ilike"]
-  required: ["deployment_name", "name", "input", "reference", "type", "operation"]
+  required: ["name", "input", "reference", "type", "operation"]
 dataMappingSchema: {}
 outputSchema:
   string_check:
