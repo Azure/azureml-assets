@@ -86,16 +86,17 @@ class BaseEngine(ABC):
             return False
 
     @log_execution_time
-    def wait_until_server_healthy(self, host: str, port: int, timeout: float = 1.0):
+    def wait_until_server_healthy(self, host: str, port: int, health_check_timeout: float = 5.0):
         """Wait until the server health endpoint returns 200 OK.
 
         This method calls the downstream engine's /health endpoint to verify the server
-        is healthy and ready to accept requests.
+        is healthy and ready to accept requests. It performs health checks every 30 seconds
+        until the server is healthy or the maximum wait time (15 minutes) is exceeded.
 
         Args:
             host (str): The hostname or IP address of the server.
             port (int): The port number of the server.
-            timeout (float): Request timeout in seconds for each health check.
+            health_check_timeout (float): Timeout in seconds for each individual health check request (default: 5.0).
 
         Raises:
             Exception: If the server does not become healthy within 15 minutes.
@@ -106,18 +107,28 @@ class BaseEngine(ABC):
         
         should_log = os.environ.get("LOGGING_WORKER_ID", "") == str(os.getpid())
         
+        if should_log:
+            logger.info(
+                f"Starting health checks for {host}:{port} "
+                f"(checking every {health_check_interval}s, max wait {max_wait_time // 60} minutes)"
+            )
+        
         while time.time() - start_time < max_wait_time:
             # Check health endpoint
-            is_healthy = self.check_health_endpoint(host, port, timeout=timeout)
+            is_healthy = self.check_health_endpoint(host, port, timeout=health_check_timeout)
             
             if is_healthy:
+                elapsed = int(time.time() - start_time)
                 if should_log:
-                    logger.info("Server is healthy (health endpoint returned 200 OK).")
+                    logger.info(f"Server is healthy after {elapsed}s (health endpoint returned 200 OK).")
                 return
             
             elapsed = int(time.time() - start_time)
             if should_log:
-                logger.info(f"Waiting for server health endpoint... ({elapsed}s elapsed)")
+                logger.info(
+                    f"Server not ready yet. Waiting {health_check_interval}s before next check... "
+                    f"({elapsed}s/{max_wait_time}s elapsed)"
+                )
             
             time.sleep(health_check_interval)
         
