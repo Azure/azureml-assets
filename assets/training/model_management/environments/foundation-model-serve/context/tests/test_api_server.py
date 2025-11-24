@@ -315,7 +315,7 @@ class TestAPIServer(unittest.TestCase):
         response.status_code = 200
         mock_fmscorer.run_openai_async.return_value = response
         final_response = self.client.post(get_serving_url(SupportedTask.CHAT_COMPLETION),
-                                                              json=self.chat_request)
+                                          json=self.chat_request)
         assert final_response.status_code == 200
         expected_model = "meme"
         final_chat_response = self.vllm_chat_response.copy()
@@ -324,8 +324,16 @@ class TestAPIServer(unittest.TestCase):
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.CHAT_COMPLETION)
-    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm",
-                                                                     model_id="model_id", tokenizer="tokenizer")))
+    @patch(
+        'api_server.g_engine_config',
+        new=asdict(
+            EngineConfig(
+                engine_name="vllm",
+                model_id="model_id",
+                tokenizer="tokenizer",
+            )
+        )
+    )
     @patch('api_server.g_fmscorer')
     def test_chat_completion_missing_messages(self, mock_fmscorer):
         request_data = {
@@ -503,6 +511,7 @@ class TestAPIServer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
