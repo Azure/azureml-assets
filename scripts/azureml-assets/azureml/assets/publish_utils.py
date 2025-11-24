@@ -39,6 +39,29 @@ def sanitize_output(input: str) -> str:
     return sanitized_output
 
 
+def extract_json_from_output(text: str) -> Union[Dict, List, None]:
+    """Extract and parse JSON from text that may contain non-JSON content.
+    
+    :param text: Text containing JSON, possibly with warnings or other output
+    :type text: str
+    :return: Parsed JSON object or None if not found/invalid
+    :rtype: Union[Dict, List, None]
+    """
+    # Try to match JSON object {...} or array [...]
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    if not match:
+        logger.log_error("No JSON object or array found in output")
+        return None
+
+    json_str = match.group(0)
+
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        logger.log_error(f"Invalid JSON detected: {e}")
+        return None
+
+
 def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
@@ -437,7 +460,11 @@ def get_asset_versions(
     if result.returncode != 0:
         logger.log_error(f"Failed to list assets: {result.stderr}")
         return []
-    return [a['version'] for a in json.loads(result.stdout)]
+    
+    parsed_output = extract_json_from_output(result.stdout)
+    if parsed_output is None:
+        return []
+    return [a['version'] for a in parsed_output]
 
 
 def get_asset_details(
@@ -461,7 +488,7 @@ def get_asset_details(
             # Don't show the error if it's expected for new assets
             logger.log_error(f"Failed to get asset details: {result.stderr}")
         return None
-    return json.loads(result.stdout)
+    return extract_json_from_output(result.stdout)
 
 
 def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[str, str, str, str]:
