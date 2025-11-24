@@ -388,9 +388,7 @@ class TestAPIServer(unittest.TestCase):
             "max_tokens": 100,
         }
         # mock_served_model.return_value = 'g_served_model'
-        # mock_engine_config.return_value = EngineConfig(engine_name="vllm"
-                                                            , model_id="model_id"
-                                                            , tokenizer="tokenizer")
+        # mock_engine_config.return_value = EngineConfig(engine_name="vllm", model_id="model_id", tokenizer="tokenizer")
 
         request_data["some-random-param"] = "hello"
         response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION), json=request_data)
@@ -538,4 +536,5 @@ class TestAPIServer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
