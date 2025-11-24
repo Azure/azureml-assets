@@ -340,16 +340,64 @@ async def all_exception_handler(request: Request, exc: Exception):
 
 
 @app.get("/")
-async def health():
-    """Health check endpoint.
-    
-    Used by readiness probes to verify server health.
+async def root():
+    """Root endpoint.
     
     Returns:
-        str: Health status message.
+        str: Simple health status message.
     """
-    print("health")
+    print("root endpoint called")
     return "healthy"
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint that verifies downstream engine health.
+    
+    This endpoint calls the downstream engine's /health endpoint to verify
+    the entire inference stack is healthy and ready to serve requests.
+    
+    Returns:
+        JSONResponse: Health status with 200 OK if downstream is healthy,
+                     503 Service Unavailable if downstream is unhealthy.
+    """
+    try:
+        downstream_url = get_downstream_url()
+        health_url = f"{downstream_url}/health"
+        
+        # Check downstream engine health with 5 second timeout
+        response = requests.get(health_url, timeout=5.0)
+        
+        if response.status_code == 200:
+            logger.debug("Downstream engine health check passed")
+            return JSONResponse(
+                content={"status": "healthy", "downstream": "ok"},
+                status_code=200
+            )
+        else:
+            logger.warning(f"Downstream engine health check failed with status {response.status_code}")
+            return JSONResponse(
+                content={"status": "unhealthy", "downstream": f"status_{response.status_code}"},
+                status_code=503
+            )
+    except requests.exceptions.ConnectionError:
+        logger.warning("Downstream engine health check failed: connection error")
+        return JSONResponse(
+            content={"status": "unhealthy", "downstream": "connection_error"},
+            status_code=503
+        )
+    except requests.exceptions.Timeout:
+        logger.warning("Downstream engine health check failed: timeout")
+        return JSONResponse(
+            content={"status": "unhealthy", "downstream": "timeout"},
+            status_code=503
+        )
+    except Exception as e:
+        logger.error(f"Downstream engine health check failed: {str(e)}")
+        return JSONResponse(
+            content={"status": "unhealthy", "downstream": "error", "error": str(e)},
+            status_code=503
+        )
 
 
 @app.post("/score")
