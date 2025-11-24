@@ -374,9 +374,9 @@ class TestAPIServer(unittest.TestCase):
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
-    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm"
-                                                                 , model_id="model_id"
-                                                                 , tokenizer="tokenizer")))
+    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm",
+                                                                 model_id="model_id",
+                                                                 tokenizer="tokenizer")))
     @patch('api_server.g_model_info', new=mock_model_info())
     @patch('api_server.g_fmscorer')
     def test_api_version_and_extra_parameters(self, mock_fmscorer):
@@ -389,8 +389,8 @@ class TestAPIServer(unittest.TestCase):
         }
         # mock_served_model.return_value = 'g_served_model'
         # mock_engine_config.return_value = EngineConfig(engine_name="vllm"
-                                                            # , model_id="model_id"
-                                                            # , tokenizer="tokenizer")
+                                                            , model_id="model_id"
+                                                            , tokenizer="tokenizer")
 
         request_data["some-random-param"] = "hello"
         response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION), json=request_data)
@@ -421,9 +421,9 @@ class TestAPIServer(unittest.TestCase):
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
-    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm"
-                                                                 , model_id="model_id"
-                                                                 , tokenizer="tokenizer")))
+    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm",
+                                                                 model_id="model_id",
+                                                                 tokenizer="tokenizer")))
     @patch('api_server.g_model_info', new=mock_model_info())
     @patch('api_server.g_fmscorer')
     def test_text_generation_valid_request(self, mock_fmscorer):
@@ -442,9 +442,9 @@ class TestAPIServer(unittest.TestCase):
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
-    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm"
-                                                                 , model_id="model_id"
-                                                                 , tokenizer="tokenizer")))
+    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm",
+                                                                 model_id="model_id,
+                                                                 tokenizer="tokenizer")))
     @patch('api_server.g_fmscorer')
     def test_text_generation_invalid_request(self, mock_fmscorer):
         request_data = {
@@ -477,9 +477,9 @@ class TestAPIServer(unittest.TestCase):
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.TEXT_GENERATION)
-    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm"
-                                                                 , model_id="model_id"
-                                                                 , tokenizer="tokenizer")))
+    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm",
+                                                                 model_id="model_id",
+                                                                 tokenizer="tokenizer")))
     @patch('api_server.g_model_info', new=mock_model_info())
     @patch('api_server.g_fmscorer')
     def test_stream_text_generation_valid_request(self, mock_fmscorer):
@@ -505,9 +505,9 @@ class TestAPIServer(unittest.TestCase):
 
     @patch('api_server.g_served_model', new="g_served_model")
     @patch('api_server.task_type', new=SupportedTask.CHAT_COMPLETION)
-    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm"
-                                                                 , model_id="model_id"
-                                                                 , tokenizer="tokenizer")))
+    @patch('api_server.g_engine_config', new=asdict(EngineConfig(engine_name="vllm",
+                                                                 model_id="model_id",
+                                                                 tokenizer="tokenizer")))
     @patch('api_server.g_model_info', new=mock_model_info())
     @patch('api_server.g_fmscorer')
     def test_stream_chat_completion_valid_request(self, mock_fmscorer):
@@ -538,3 +538,4 @@ class TestAPIServer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
