@@ -179,7 +179,7 @@ class TestMIRPayload(unittest.TestCase):
             "llava-hf/llava-onevision-qwen2-0.5b-ov-hf"
         )
         mock_tokenizer_instance.apply_chat_template = MagicMock(
-            return_value = (
+            return_value = 
     "<s>[INST] Analyze the two images: "
     "Image 1: "
     "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
@@ -377,3 +377,4 @@ def test_get_request_data_text_to_image_inpainting():
 
 if __name__ == "__main__":
     unittest.main()
+
