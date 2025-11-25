@@ -73,7 +73,7 @@ class TestMiiEngine(unittest.TestCase):
 
         for file in files:
             file_path = os.path.join(tokenizer_path, file)
-            with open(file_path, "x") as f:
+            with open(file_path, "x"):
                 continue
 
         engine_config = EngineConfig(engine_name="mii-v1",
@@ -144,3 +144,4 @@ class TestMiiEngineAsync:
 
 if __name__ == "__main__":
     unittest.main()
+
