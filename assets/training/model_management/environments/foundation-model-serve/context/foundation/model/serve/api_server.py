@@ -364,9 +364,10 @@ async def health():
                      503 Service Unavailable if downstream is unhealthy.
     """
     try:
+        health_path = os.getenv(EnvironmentVariables.HEALTH_CHECK_PATH, str(CommonConstants.DEFAULT_HEALTH_PATH))
         downstream_url = get_downstream_url()
-        health_url = f"{downstream_url}/health"
-        
+        health_url = f"{downstream_url}{health_path}"
+
         # Check downstream engine health with 5 second timeout
         response = requests.get(health_url, timeout=5.0)
         
@@ -414,8 +415,9 @@ async def ready():
                      503 Service Unavailable if downstream is not ready.
     """
     try:
+        ready_path = os.getenv(EnvironmentVariables.CONTAINER_READY_CHECK_PATH, "/ready")
         downstream_url = get_downstream_url()
-        ready_url = f"{downstream_url}/ready"
+        ready_url = f"{downstream_url}{ready_path}"
         
         # Check downstream engine readiness with 5 second timeout
         response = requests.get(ready_url, timeout=5.0)

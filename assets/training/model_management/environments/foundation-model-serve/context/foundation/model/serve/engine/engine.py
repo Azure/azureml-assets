@@ -14,7 +14,7 @@ import requests
 from abc import ABC, abstractmethod
 from foundation.model.serve.logging_config import configure_logger
 from foundation.model.serve.utils import log_execution_time
-from foundation.model.serve.constants import CommonConstants
+from foundation.model.serve.constants import CommonConstants, EnvironmentVariables
 
 logger = configure_logger(__name__)
 
@@ -54,7 +54,6 @@ class BaseEngine(ABC):
 
     def check_health_endpoint(self, host: str = CommonConstants.HOST,
                              port: int = CommonConstants.DEFAULT_PORT,
-                             health_path: str = "/health",
                              timeout: float = 5.0) -> bool:
         """Check if the downstream engine health endpoint returns 200 OK.
 
@@ -68,6 +67,7 @@ class BaseEngine(ABC):
             bool: True if health endpoint returns 200 OK, False otherwise.
         """
         try:
+            health_path = os.getenv(EnvironmentVariables.HEALTH_CHECK_PATH, str(CommonConstants.DEFAULT_HEALTH_PATH))
             url = f"http://{host}:{port}{health_path}"
             response = requests.get(url, timeout=timeout)
             if response.status_code == 200:
