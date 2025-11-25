@@ -86,10 +86,10 @@ class TestMIRPayload(unittest.TestCase):
                                         "type": "image_url",
                                         "image_url": {
                                                        "url": (
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
-    "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
-    "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
-)
+                                                                "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
+                                                                "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
+                                                                "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+                                                            )
                                                      },
                                     },
                                     {
@@ -142,13 +142,12 @@ class TestMIRPayload(unittest.TestCase):
             {"temperature": 0.9, "top_p": 0.6, "do_sample": True, "max_new_tokens": 100}
         ]
         self.valid_chat_completion_multimodal_queries = [
-            ("<s>[INST] Analyze the two images: "
-            "Image 1: "
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
-            "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
-            "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, "
-             "Image 2: https://www.ilankelman.org/stopsigns/australia.jpg. "
-             "What are in these images? What is the difference between two images? [/INST]")]
+            ("<s>[INST] Analyze the two images: Image 1: "
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
+                "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
+                "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, "
+                 "Image 2: https://www.ilankelman.org/stopsigns/australia.jpg. "
+                 "What are in these images? What is the difference between two images? [/INST]")]
 
         self.valid_chat_completion_multimodal_params = [
             {"temperature": 0.7, "top_p": 0.6, "do_sample": True, "max_new_tokens": 200}
@@ -377,4 +376,5 @@ def test_get_request_data_text_to_image_inpainting():
 
 if __name__ == "__main__":
     unittest.main()
+
 
