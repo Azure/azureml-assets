@@ -377,7 +377,3 @@ def test_get_request_data_text_to_image_inpainting():
 
 if __name__ == "__main__":
     unittest.main()
-
-
-
-
