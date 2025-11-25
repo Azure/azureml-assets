@@ -86,9 +86,10 @@ class TestMIRPayload(unittest.TestCase):
                                         "type": "image_url",
                                         "image_url": {
                                                         "url": (
-                                                                "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
-                                                                "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
-                                                                "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+                                                        "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
+                                                        "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
+                                                        "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+                                                    )
                                                                 )
 
                                                      },
@@ -365,9 +366,3 @@ def test_get_request_data_text_to_image_inpainting():
 
 if __name__ == "__main__":
     unittest.main()
-
-
-
-
-
-
