@@ -96,21 +96,32 @@ RUN pip install \
 # We should aim for this list to be empty with new and patched releases
 # by fixing dependencies in the base packages
 RUN pip list && \
-    pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' && \
-    pip install pyarrow==14.0.2 \
+    pip install \
+        --upgrade 'pip>=25.3' 'starlette>=0.49.1' && \
+    pip install \
+                pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-RUN pip install torchvision==0.23.0
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' torch==2.8.0 torchvision==0.23.0 || true
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN pip install \
+    torchvision==0.23.0
+RUN /opt/conda/envs/ptca/bin/pip install \
+    --upgrade 'pip>=25.3' 'starlette>=0.49.1' torch==2.8.0 torchvision==0.23.0 || true
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install \
+    --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN /opt/conda/bin/pip install \
+    --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install \
+    --upgrade 'urllib3==2.5.0' || true
 
 # Patch for pillow vulnerability
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install \
+    --upgrade 'pillow==11.3.0' || true
+RUN /opt/conda/bin/pip install \
+    --upgrade 'pillow==11.3.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install \
+    --upgrade 'pillow==11.3.0' || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install \
+    --upgrade 'h2>=4.3.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
          pip install --no-cache-dir torch==2.8.0"

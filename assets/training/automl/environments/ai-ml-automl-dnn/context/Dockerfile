@@ -90,8 +90,10 @@ RUN pip install \
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3
-RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0'
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'h2>=4.3.0'
+RUN pip install \
+    --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0'
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install \
+    --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'h2>=4.3.0'
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

@@ -93,25 +93,36 @@ RUN pip install \
                 # end pypi dependencies
 
 # Update cryptography and pyarow for fixing vulnerability. Doing it  separately from pip install to avoid conflict with other packages
-RUN pip install cryptography>=42.0.5 \
+RUN pip install \
+                cryptography>=42.0.5 \
                 pyarrow==14.0.2 \
                 aiohttp>=3.12.14
 
 # Patch for pillow vulnerability and update pip/starlette
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install \
+    --upgrade 'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
+RUN /opt/conda/bin/pip install --upgrade \
+    'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
+    'pillow==11.3.0' 'pip>=25.3' 'starlette>=0.49.1'
                 
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
+RUN /opt/conda/bin/pip install --upgrade \
+    'urllib3==2.5.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
+    'urllib3==2.5.0'
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install \
+    --upgrade 'urllib3==2.5.0'
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install \
+    --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN /opt/conda/envs/ptca/bin/pip install \
+    --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install \
+    --upgrade 'mlflow==3.1.4'
 
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install \
+    --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/conda/pkgs/
 
 # end pip install
