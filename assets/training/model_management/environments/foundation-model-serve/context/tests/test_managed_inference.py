@@ -90,8 +90,6 @@ class TestMIRPayload(unittest.TestCase):
                                                         "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
                                                         "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
                                                     )
-                                                                )
-
                                                      },
                                     },
                                     {
@@ -366,3 +364,4 @@ def test_get_request_data_text_to_image_inpainting():
 
 if __name__ == "__main__":
     unittest.main()
+
