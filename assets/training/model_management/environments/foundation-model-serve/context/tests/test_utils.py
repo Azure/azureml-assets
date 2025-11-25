@@ -17,6 +17,7 @@ from utils import (
     convert_image_to_bytes,
 )
 
+
 class TestUtils(unittest.TestCase):
     @patch.dict(os.environ, {
         "MODEL": "test_model",
@@ -100,6 +101,3 @@ def test_convert_url_image(mock_get):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-
