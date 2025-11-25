@@ -9,9 +9,13 @@ import io
 
 from PIL import Image
 
-from utils import map_env_vars_to_vllm_server_kwargs,map_env_vars_to_vllm_server_args
-                    ,get_gpu_device_capability, image_to_base64, convert_image_to_bytes
-
+from utils import (
+    map_env_vars_to_vllm_server_kwargs,
+    map_env_vars_to_vllm_server_args,
+    get_gpu_device_capability,
+    image_to_base64,
+    convert_image_to_bytes,
+)
 
 class TestUtils(unittest.TestCase):
     @patch.dict(os.environ, {
@@ -96,5 +100,6 @@ def test_convert_url_image(mock_get):
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
