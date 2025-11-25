@@ -180,12 +180,10 @@ class TestMIRPayload(unittest.TestCase):
         )
         mock_tokenizer_instance.apply_chat_template = MagicMock(
             return_value="<s>[INST] Analyze the two images: 
-            image_1 = (
-    "Image 1: "
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
-    "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
-    "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, "
-)
+            "Image 1: "
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/"
+            "Gfp-wisconsin-madison-the-nature-boardwalk.jpg/"
+            "2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg, "
             Image 2: https://www.ilankelman.org/stopsigns/australia.jpg. What are in these images? What is the difference between two images? [/INST]")
         mock_tokenizer.return_value = mock_tokenizer_instance
 
@@ -375,5 +373,6 @@ def test_get_request_data_text_to_image_inpainting():
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
