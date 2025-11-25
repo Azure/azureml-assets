@@ -7,8 +7,20 @@ from unittest.mock import MagicMock
 
 from fastapi import HTTPException
 
-from context.foundation.model.serve.api_server_setup.protocol import ChatRole, ChatMessage, ChatCompletionRequest, ContentPartType, ContentPart
-from context.foundation.model.serve.request_adapter import BaseAdapter, VllmChatCompletionsAdapter, MixtralChatCompletionAdapter
+from context.foundation.model.serve.api_server_setup.protocol import (
+    ChatRole,
+    ChatMessage,
+    ChatCompletionRequest,
+    ContentPartType,
+    ContentPart,
+)
+
+from context.foundation.model.serve.request_adapter import (
+    BaseAdapter,
+    VllmChatCompletionsAdapter,
+    MixtralChatCompletionAdapter,
+)
+
 from context.foundation.model.serve.constants import ExtraParameters
 
 
@@ -195,3 +207,4 @@ class TestRequestAdapter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
