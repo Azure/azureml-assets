@@ -388,7 +388,6 @@ class TestAPIServer(unittest.TestCase):
             "max_tokens": 100,
         }
         # mock_served_model.return_value = 'g_served_model'
-        # mock_engine_config.return_value = EngineConfig(engine_name="vllm", model_id="model_id", tokenizer="tokenizer")
 
         request_data["some-random-param"] = "hello"
         response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION), json=request_data)
@@ -492,8 +491,8 @@ class TestAPIServer(unittest.TestCase):
         mock_fmscorer.run_openai_async.return_value = response
         textgen_request_stream = self.textgen_request.copy()
         textgen_request_stream['stream'] = True
-        final_response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION)
-                                          , json=textgen_request_stream)
+        final_response = self.client.post(get_serving_url(SupportedTask.TEXT_GENERATION),
+                                          json=textgen_request_stream)
         assert final_response.status_code == 200
         expected_model = "meme"
         final_stream_textgen_response_chunks = self.vllm_stream_textgen_response_chunks.copy()
@@ -520,8 +519,8 @@ class TestAPIServer(unittest.TestCase):
         mock_fmscorer.run_openai_async.return_value = response
         chat_request_stream = self.chat_request.copy()
         chat_request_stream['stream'] = True
-        final_response = self.client.post(get_serving_url(SupportedTask.CHAT_COMPLETION)
-                                          , json=chat_request_stream)
+        final_response = self.client.post(get_serving_url(SupportedTask.CHAT_COMPLETION),
+                                          json=chat_request_stream)
         assert final_response.status_code == 200
         expected_model = "meme"
         final_stream_chat_response_chunks = self.vllm_stream_chat_response_chunks.copy()
@@ -536,6 +535,3 @@ class TestAPIServer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-
