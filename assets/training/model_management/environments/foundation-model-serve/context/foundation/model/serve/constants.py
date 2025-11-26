@@ -10,7 +10,6 @@ class CommonConstants:
     DEFAULT_PORT = 8000
     HOST = "localhost"
     CONTENT_SAFETY_THERESHOLD_DEFAULT = 2
-    DEFAULT_HEALTH_PATH = "/health"
 
 
 class EnvironmentVariables:
