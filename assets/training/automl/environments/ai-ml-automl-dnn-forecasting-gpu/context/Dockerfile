@@ -1,8 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-forecasting-gpu
 # Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
@@ -83,17 +83,17 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-train-automl=={{latest-pypi-version}} \
                 azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
-                'azure-identity>=1.16.1' \
+                'azure-identity>=1.25.1' \
                 'inference-schema' \
                 'xgboost==1.5.2' \
-                'cryptography>=42.0.5' \
-                'requests>=2.32.4' \
-                'certifi>=2023.07.22' \
+                'cryptography>=45.0.7' \
+                'requests>=2.32.5' \
+                'certifi>=2025.11.12' \
                 'spacy==3.7.4' \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
-                "pillow>=11.3.0"
+                "pillow>=12.0.0"
                 # end pypi dependencies
 # end pip install
 
