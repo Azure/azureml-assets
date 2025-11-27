@@ -71,6 +71,10 @@ EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
 
+# try updating pip for base and ptca env using conda
+RUN conda install pip -p /opt/conda/ -y || true
+RUN conda install pip -p /opt/conda/envs/ptca -y || true
+
 # Create conda environment
 # begin conda create
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -119,9 +123,9 @@ RUN pip install cryptography>=45.0.7 \
                 aiohttp>=3.12.14
 
 # Patch for pillow, requests, urllib3 vulnerability and update pip/starlette
-RUN pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0'
+RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
 
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0

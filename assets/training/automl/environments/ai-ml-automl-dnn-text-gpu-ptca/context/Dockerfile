@@ -37,6 +37,10 @@ RUN apt-get update && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# try updating pip for base and ptca env using conda
+RUN conda install pip -p /opt/conda/ -y || true
+RUN conda install pip -p /opt/conda/envs/ptca -y || true
+
 RUN pip install \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
@@ -77,7 +81,7 @@ RUN pip install \
     'urllib3==2.5.0'
 
 # Patch for Pillow vulnerability
-RUN pip install --upgrade 'pillow==12.0.0' 'pip>=25.3'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' || true
+RUN pip install --upgrade 'pillow==12.0.0'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
 
 RUN pip list

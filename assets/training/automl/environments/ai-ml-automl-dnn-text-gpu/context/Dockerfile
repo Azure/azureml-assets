@@ -70,6 +70,10 @@ EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
 
+# try updating pip for base and ptca env using conda
+RUN conda install pip -p /opt/conda/ -y || true
+RUN conda install pip -p /opt/conda/envs/ptca -y || true
+
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -115,16 +119,19 @@ RUN pip install \
 # We should aim for this list to be empty with new and patched releases
 # by fixing dependencies in the base packages
 RUN pip list && \
-    pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' && \
+    pip install --upgrade 'starlette>=0.49.1' && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
 
+# Upgrade torch and torchvision
 RUN pip install torch==2.8.0 torchvision==0.23.0 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' torch==2.8.0 torchvision==0.23.0 || true
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
+
+# Upgrade starlette and urllib3
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
 
 # Patch for pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0' || true
