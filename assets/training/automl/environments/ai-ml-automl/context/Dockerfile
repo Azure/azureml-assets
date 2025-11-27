@@ -1,10 +1,10 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -63,7 +63,7 @@ RUN pip install \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
-                'pillow==11.3.0' \ 
+                'pillow==12.0.0' \ 
                 'torch==2.8.0' \
                 'torchvision==0.23.0'
                 # end pypi dependencies
