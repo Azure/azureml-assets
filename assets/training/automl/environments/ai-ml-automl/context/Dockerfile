@@ -71,8 +71,7 @@ RUN pip install \
 
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
-RUN pip install \
-    --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.5.0'
+RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.5.0'
 # end pip ad-hoc
 
 
