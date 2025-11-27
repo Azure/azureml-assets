@@ -11,7 +11,7 @@ RUN apt-get -y install unzip libc-bin libc-bin libc-dev locales libc6 dpkg-dev d
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-RUN pip install azureml-mlflow==1.60.0.post1
+RUN pip install azureml-mlflow==1.61.0
 RUN pip install mlflow==3.1.0
 
 # Upgrade requests in the system Python (3.13) for fixing vulnerability

@@ -20,8 +20,8 @@ RUN apt-get update && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pip install 'azureml-automl-dnn-nlp==1.60.0'
-RUN pip install 'azureml-defaults==1.60.0'
+RUN pip install 'azureml-automl-dnn-nlp==1.61.0'
+RUN pip install 'azureml-defaults==1.61.0'
 
 RUN pip uninstall -y onnxruntime
 RUN pip install torch==2.8.0 torchvision==0.23.0

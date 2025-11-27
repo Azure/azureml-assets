@@ -2,7 +2,7 @@
 azure-ai-ml==1.30.0
 openai
 # hardcoded the version of azureml-mlflow here for faster Docker image building speed
-azureml-mlflow==1.60.0.post1
+azureml-mlflow==1.61.0
 # copilot dependencies
 keyrings.alt
 ipykernel

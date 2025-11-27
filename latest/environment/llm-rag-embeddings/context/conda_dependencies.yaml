@@ -17,8 +17,8 @@ dependencies:
     # Azure ML packages
   - azureml-contrib-services
   - azureml-inference-server-http>=1.4.1 #Upgrading version to ensure flask-cors>=6.0.0 is installed
-  - azureml-mlflow==1.60.0.post1
-  - azureml-telemetry==1.60.0
+  - azureml-mlflow==1.61.0
+  - azureml-telemetry==1.61.0
     # More packages needed for RAG extras
   - beautifulsoup4~=4.11.2 # explicitly install for [data_generation] [document_parsing]
   - langchain>=0.3.0,<0.4.0 # explicitly install for [langchain]

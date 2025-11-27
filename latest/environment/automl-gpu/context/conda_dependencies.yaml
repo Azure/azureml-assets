@@ -14,19 +14,19 @@ dependencies:
 - wheel=0.44.0
 - pip:
   - inference-schema
-  - azureml-core==1.60.0.post1
-  - azureml-mlflow==1.60.0.post1
-  - azureml-defaults==1.60.0
-  - azureml-telemetry==1.60.0
-  - azureml-interpret==1.60.0
-  - azureml-responsibleai==1.60.0
-  - azureml-automl-core==1.60.0
-  - azureml-automl-runtime==1.60.0
-  - azureml-train-automl-client==1.60.0
-  - azureml-train-automl-runtime==1.60.0
-  - azureml-dataset-runtime==1.60.0
-  - azureml-train-automl==1.60.0
-  - azureml-contrib-automl-dnn-forecasting==1.60.0
+  - azureml-core==1.61.0
+  - azureml-mlflow==1.61.0
+  - azureml-defaults==1.61.0
+  - azureml-telemetry==1.61.0
+  - azureml-interpret==1.61.0
+  - azureml-responsibleai==1.61.0
+  - azureml-automl-core==1.61.0
+  - azureml-automl-runtime==1.61.0
+  - azureml-train-automl-client==1.61.0
+  - azureml-train-automl-runtime==1.61.0
+  - azureml-dataset-runtime==1.61.0
+  - azureml-train-automl==1.61.0
+  - azureml-contrib-automl-dnn-forecasting==1.61.0
   - https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz
   - scipy==1.10.1
   - spacy==3.7.4
