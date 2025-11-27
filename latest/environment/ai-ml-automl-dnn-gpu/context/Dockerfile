@@ -2,11 +2,11 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:20251110.v1
 
 USER root
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-gpu
 # Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -43,7 +43,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=25.3 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=25.3 -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -94,7 +94,7 @@ RUN pip install \
                 azureml-dataset-runtime==1.61.0 \
                 azureml-mlflow==1.61.0 \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'azure-identity>=1.16.1' --no-cache-dir
+                'azure-identity>=1.25.1' --no-cache-dir
 
 RUN pip install \
                 'inference-schema' \
@@ -106,17 +106,17 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
                 'psutil>5.0.0,<6.0.0' \
-                'requests>=2.32.4' \
-                'certifi>=2023.07.22' \
-                'cryptography>=42.0.5' \
+                'requests>=2.32.5' \
+                'certifi>=2025.11.12' \
+                'cryptography>=45.0.7' \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
 # Fix vulnerabilities
 RUN pip install --force-reinstall torchvision==0.23.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.4'
+RUN pip install --upgrade 'requests==2.32.5'
 RUN pip install --upgrade 'urllib3==2.5.0'
-RUN pip install --upgrade 'pillow==11.3.0'
+RUN pip install --upgrade 'pillow==12.0.0'
 
 # If you have other python/pip environments, update them too:
 RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==2.5.0' || true
@@ -144,5 +144,5 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
 RUN rm -rf /opt/miniconda/pkgs/
 
 
-ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 

@@ -1,10 +1,10 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202509.2
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-text-gpu
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -54,7 +54,7 @@ ENV ENABLE_METADATA=true
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.9 \
+    python=3.10 \
     # begin conda dependencies
     pip=25.3 \
     numpy~=1.23.5\
@@ -84,11 +84,11 @@ RUN pip install \
                 azureml-train-automl-client==1.61.0 \
                 azureml-train-automl-runtime==1.61.0 \
                 azureml-defaults==1.61.0 \
-                'azure-identity>=1.16.1' \
-                'sentencepiece==0.1.97' \
-                'cryptography>=42.0.5'\
-                'requests>=2.32.4' \
-                'certifi>=2023.07.22'
+                'azure-identity>=1.25.1' \
+                'sentencepiece==0.2.1' \
+                'cryptography>=45.0.7'\
+                'requests>=2.32.5' \
+                'certifi>=2025.11.12'
                 # end pypi dependencies
 
 # Separate updates for fixing vulnerabilities.
@@ -107,9 +107,9 @@ RUN /opt/conda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
 
 # Patch for pillow vulnerability
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==11.3.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'pillow==11.3.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==11.3.0' || true
+RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==12.0.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' || true
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
