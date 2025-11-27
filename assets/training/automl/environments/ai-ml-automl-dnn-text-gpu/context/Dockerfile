@@ -22,6 +22,23 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
+        libxml2 \
+        libssh-4 \
+        locales \
+        openssl \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        binutils \
+        binutils-common \
+        binutils-x86-64-linux-gnu \
+        libbinutils \
+        libctf0 \
+        libctf-nobfd0 \
+        dpkg \
         dpkg-dev \
         libssl-dev \
         libpam-runtime && \
@@ -100,20 +117,20 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-RUN pip install torchvision==0.23.0
+
+RUN pip install torch==2.8.0 torchvision==0.23.0 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' torch==2.8.0 torchvision==0.23.0 || true
 RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
 
 # Patch for pillow vulnerability
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==12.0.0' || true
+RUN pip install --upgrade 'pillow==12.0.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 
-RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
-         pip install --no-cache-dir torch==2.8.0"
+RUN pip install --upgrade 'h2>=4.3.0'
+
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \

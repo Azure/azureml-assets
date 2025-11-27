@@ -63,9 +63,7 @@ RUN pip install \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
-                'pillow==12.0.0' \ 
-                'torch==2.8.0' \
-                'torchvision==0.23.0'
+                'pillow==12.0.0'
                 # end pypi dependencies
 # end pip install
 
@@ -73,5 +71,3 @@ RUN pip install \
 # Install pip ad-hoc dependencies for security updates
 RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.5.0'
 # end pip ad-hoc
-
-

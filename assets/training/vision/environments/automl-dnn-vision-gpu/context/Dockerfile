@@ -26,6 +26,23 @@ RUN apt-get update && \
         libc-bin \
         dpkg-dev \
         libssl-dev \
+        dpkg \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        binutils \
+        binutils-common \
+        binutils-x86-64-linux-gnu \
+        libbinutils \
+        libctf0 \
+        libctf-nobfd0 \
+        libc6 \
+        libc6-dev \
+        libc-dev-bin \
+        libssh-4 \
+        libxml2 \
+        locales \
+        openssl \
         unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
@@ -54,15 +71,17 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # vulnearbility fix
 RUN pip install pyarrow==14.0.2
 RUN pip install torch==2.8.0 torchvision==0.23.0
-RUN opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install 2.8.0 torchvision==0.23.0 || true
-RUN opt/conda/envs/ptca/bin/pip install --upgrade urllib3 || true
-RUN opt/conda/bin/pip install --upgrade requests urllib3 || true
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade urllib3 || true
+RUN pip install --upgrade urllib3==2.5.0
+
+# Update conda base and ptca envs
+RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
+RUN /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3==2.5.0 || true
+
 # Patch pillow vulnerability
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade pillow==11.3.0 || true
-RUN /opt/conda/bin/pip install --upgrade pillow==11.3.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==11.3.0 || true
+RUN pip install --upgrade pillow==12.0.0 pip>=25.3
+RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 pip>=25.3 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 pip>=25.3 || true
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
