@@ -60,6 +60,7 @@ RUN pip install \
                 # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
                 'mlflow-skinny==2.15.1' \
                 'xgboost==1.5.2' \
+                'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \

@@ -28,8 +28,7 @@ RUN apt-get update && \
         libxml2 \
         libssh-4 \
         linux-libc-dev \
-        linux-headers-5.15.0-153 \
-        linux-headers-5.15.0-153-generic \
+        linux-headers-generic \
         locales \
         openssl \
         dotnet-hostfxr-8.0 \

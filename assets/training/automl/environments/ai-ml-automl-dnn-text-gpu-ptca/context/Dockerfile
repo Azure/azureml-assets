@@ -27,8 +27,7 @@ RUN apt-get update && \
     dotnet-host-8.0 \
     dotnet-runtime-8.0 \
     linux-libc-dev \
-    linux-headers-5.15.0-153 \
-    linux-headers-5.15.0-153-generic \
+    linux-headers-generic \
     locales \
     openssl \
     libssl-dev \
