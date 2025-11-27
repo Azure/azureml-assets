@@ -97,7 +97,7 @@ RUN pip install \
                 'py-cpuinfo==5.0.0' \
                 'prophet==1.1.4' \
                 'cryptography>=45.0.7' \
-                'requests>=2.31.0' \
+                'requests==2.32.5' \
                 'certifi>=2025.11.12'
                 # end pypi dependencies
 
