@@ -34,6 +34,11 @@ RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
 
+# Install numpy
+RUN pip install "numpy==1.23.5" --force-reinstall
+RUN /opt/conda/bin/pip install "numpy==1.23.5" --force-reinstall || true
+RUN /opt/conda/envs/ptca/bin/pip install "numpy==1.23.5" --force-reinstall || true 
+
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
 RUN pip install torch-ort==1.18.0 && TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m torch_ort.configure
@@ -44,11 +49,6 @@ RUN pip install \
     optimum==1.23.3 \
     accelerate==0.33.0 \
     deepspeed~=0.15.1
-
-# reinstall numpy
-RUN pip install "numpy==1.23.5" --force-reinstall
-RUN /opt/conda/bin/pip install "numpy==1.23.5" --force-reinstall || true
-RUN /opt/conda/envs/ptca/bin/pip install "numpy==1.23.5" --force-reinstall || true 
 
 # Address vulnerabilities
 RUN pip install pyarrow==14.0.1
