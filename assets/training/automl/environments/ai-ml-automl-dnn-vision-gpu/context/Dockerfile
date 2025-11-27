@@ -4,7 +4,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -98,17 +98,17 @@ RUN pip install cryptography>=45.0.7 \
                 aiohttp>=3.12.14
 
 # Patch for pillow vulnerability and update pip/starlette
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' 'starlette>=0.49.1'
 RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' 'starlette>=0.49.1'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' 'starlette>=0.49.1'
-                
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'pillow==12.0.0' 'pip>=25.3' 'starlette>=0.49.1'
+
 # Upgrade torch, requests, urllib3 in the system Python for fixing vulnerability
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0'
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'urllib3==2.5.0'
 
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
 RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
 
 RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
