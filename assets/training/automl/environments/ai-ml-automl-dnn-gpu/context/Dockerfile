@@ -50,12 +50,14 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 ###############################
 # Pre-Build LightGBM
 ###############################
-RUN pip install --upgrade lightgbm==4.6.0
+RUN pip install \
+    --upgrade lightgbm==4.6.0
                 
 ###############################
 # Install GPU LightGBM and XgBoost
 ###############################
-RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
+RUN pip install \
+    --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # begin conda create
 # Install conda packages
@@ -113,24 +115,36 @@ RUN pip install \
                 # end pypi dependencies
 
 # Fix vulnerabilities
-RUN pip install --force-reinstall torchvision==0.23.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.5'
-RUN pip install --upgrade 'urllib3==2.5.0'
-RUN pip install --upgrade 'pillow==12.0.0'
+RUN pip install \
+    --force-reinstall torchvision==0.23.0 --no-cache-dir
+RUN pip install \
+    --upgrade 'requests==2.32.5'
+RUN pip install \
+    --upgrade 'urllib3==2.5.0'
+RUN pip install \
+    --upgrade 'pillow==12.0.0'
 
 # If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/miniconda/bin/pip install \
+    --upgrade 'urllib3==2.5.0' || true
+RUN /opt/conda/bin/pip install \
+    --upgrade 'urllib3==2.5.0' || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install \
+    --upgrade 'urllib3==2.5.0' || true
 # --- End Vulnerability Fixes ---
 # --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \
-    pip install 'numpy==1.26.4' --force-reinstall && \
-    /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install \
+    'numpy==1.26.4' --force-reinstall && \
+    pip install \
+    'numpy==1.26.4' --force-reinstall && \
+    /opt/conda/bin/pip install \
+    'numpy==1.26.4' --force-reinstall || true
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install \
+    --upgrade 'h2>=4.3.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
-         pip install --no-cache-dir torch==2.8.0"
+         pip install \
+        --no-cache-dir torch==2.8.0"
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
