@@ -26,6 +26,10 @@ RUN apt-get update && \
     dotnet-hostfxr-8.0 \
     dotnet-host-8.0 \
     dotnet-runtime-8.0 \
+    linux-libc-dev \
+    linux-headers-5.15.0-153 \
+    linux-headers-5.15.0-153-generic \
+    locales \
     openssl \
     libssl-dev \
     libssh-4 \

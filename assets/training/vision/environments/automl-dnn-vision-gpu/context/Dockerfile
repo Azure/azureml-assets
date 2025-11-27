@@ -41,6 +41,9 @@ RUN apt-get update && \
         libc-dev-bin \
         libssh-4 \
         libxml2 \
+        linux-libc-dev \
+        linux-headers-5.15.0-153 \
+        linux-headers-5.15.0-153-generic \
         locales \
         openssl \
         unzip && \
