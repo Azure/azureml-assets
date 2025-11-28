@@ -42,8 +42,7 @@ RUN apt-get update && \
         libssh-4 \
         libxml2 \
         linux-libc-dev \
-        linux-headers-5.15.0-153 \
-        linux-headers-5.15.0-153-generic \
+        linux-headers-generic \
         locales \
         openssl \
         unzip && \
@@ -52,17 +51,23 @@ RUN apt-get update && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
+
 # Upgrade sudo to patch known vulnerability
 RUN apt-get update && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
     apt-mark hold sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get autoremove -y
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
+
+# try updating pip for base and ptca env using conda
+RUN conda install pip -p /opt/conda/ -y || true
+RUN conda install pip -p /opt/conda/envs/ptca -y || true
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -82,9 +87,9 @@ RUN /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || tru
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3==2.5.0 || true
 
 # Patch pillow vulnerability
-RUN pip install --upgrade pillow==12.0.0 pip>=25.3
-RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 pip>=25.3 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 pip>=25.3 || true
+RUN pip install --upgrade pillow==12.0.0
+RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 || true
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

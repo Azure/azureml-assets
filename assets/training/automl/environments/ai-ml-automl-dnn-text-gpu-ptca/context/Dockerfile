@@ -35,7 +35,8 @@ RUN apt-get update && \
     libpam-runtime && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
     apt-mark hold sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get autoremove -y
 
 # try updating pip for base and ptca env using conda
 RUN conda install pip -p /opt/conda/ -y || true
@@ -75,7 +76,7 @@ RUN pip install \
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
 RUN pip install \
     'pyarrow==14.0.1' \
-    'aiohttp==3.8.6' \
+    'aiohttp==3.12.14' \
     'idna==3.7' \
     'requests==2.32.5' \
     'urllib3==2.5.0'
