@@ -13,19 +13,42 @@ RUN apt-get update && \
     libpam-modules-bin \
     libpam-modules \
     libc-bin \
+    libc-dev-bin \
+    binutils \
+    binutils-common \
+    binutils-x86-64-linux-gnu \
+    libbinutils \
+    libctf0 \
+    libctf-nobfd0 \
+    libxml2 \
+    dpkg \
     dpkg-dev \
+    dotnet-hostfxr-8.0 \
+    dotnet-host-8.0 \
+    dotnet-runtime-8.0 \
+    linux-libc-dev \
+    linux-headers-generic \
+    locales \
+    openssl \
     libssl-dev \
+    libssh-4 \
     libpam-runtime && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
     apt-mark hold sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get autoremove -y
+
+# try updating pip for base and ptca env using conda
+RUN conda install pip -n base -y || true
+RUN conda install pip -n ptca -y || true
 
 RUN pip install \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
 
 RUN pip uninstall -y onnxruntime
-RUN pip install torch==2.8.0 torchvision==0.23.0
+RUN pip uninstall -y torch torchvision torchaudio
+RUN pip install torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 # Install/upgrade torch in ptca env if it exists (fixes vulnerability)
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 || true
 
@@ -37,7 +60,6 @@ RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packagi
 # Install numpy
 RUN pip install "numpy==1.23.5" --force-reinstall
 RUN /opt/conda/bin/pip install "numpy==1.23.5" --force-reinstall || true
-RUN /opt/conda/envs/ptca/bin/pip install "numpy==1.23.5" --force-reinstall || true 
 
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
@@ -51,17 +73,16 @@ RUN pip install \
     deepspeed~=0.15.1
 
 # Address vulnerabilities
-RUN pip install pyarrow==14.0.1
-RUN pip install aiohttp==3.12.14
-RUN pip install idna==3.7
-RUN pip install requests==2.32.5
-RUN pip install urllib3==2.5.0
 RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN pip install \
+    'pyarrow==14.0.1' \
+    'aiohttp==3.12.14' \
+    'idna==3.7' \
+    'requests==2.32.5' \
+    'urllib3==2.5.0'
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0'
 RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' || true
 
 RUN pip list

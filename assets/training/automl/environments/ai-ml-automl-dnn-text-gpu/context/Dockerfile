@@ -22,6 +22,25 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libc-bin \
+        libc-dev-bin \
+        libc6 \
+        libc6-dev \
+        libxml2 \
+        libssh-4 \
+        linux-libc-dev \
+        linux-headers-generic \
+        locales \
+        openssl \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        binutils \
+        binutils-common \
+        binutils-x86-64-linux-gnu \
+        libbinutils \
+        libctf0 \
+        libctf-nobfd0 \
+        dpkg \
         dpkg-dev \
         libssl-dev \
         libpam-runtime && \
@@ -44,12 +63,18 @@ RUN apt-get update && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
-    rm -f /etc/nginx/sites-enabled/default
+    rm -f /etc/nginx/sites-enabled/default && \
+    apt-get autoremove -y
+
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
+
+# try updating pip for base and ptca env using conda
+RUN conda install pip -n base -y || true
+RUN conda install pip -n ptca -y || true
 
 # begin conda create
 # Create conda environment
@@ -96,24 +121,27 @@ RUN pip install \
 # We should aim for this list to be empty with new and patched releases
 # by fixing dependencies in the base packages
 RUN pip list && \
-    pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' && \
+    pip install --upgrade 'starlette>=0.49.1' && \
     pip install pyarrow==14.0.2 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
-RUN pip install torchvision==0.23.0
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' torch==2.8.0 torchvision==0.23.0 || true
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' || true
+
+# Upgrade torch and torchvision
+RUN pip install torch==2.8.0 torchvision==0.23.0 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
+
+# Upgrade starlette and urllib3
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
 
 # Patch for pillow vulnerability
-RUN /azureml-envs/azureml-automl-dnn-text-gpu/bin/pip install --upgrade 'pillow==12.0.0' || true
+RUN pip install --upgrade 'pillow==12.0.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
 
-RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
-         pip install --no-cache-dir torch==2.8.0"
+RUN pip install --upgrade 'h2>=4.3.0'
+
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
