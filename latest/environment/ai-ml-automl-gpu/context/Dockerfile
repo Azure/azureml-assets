@@ -58,10 +58,14 @@ RUN pip install --upgrade lightgbm==4.6.0
 ###############################
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
+# try updating pip for base env using conda
+RUN conda install pip -n base -y || true
+
 # begin conda create
 # Create conda environment
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
+    pip=25.3 \
     numpy~=1.23.5 \
     scikit-learn=1.5.1 \
     holidays=0.29 \
@@ -101,11 +105,10 @@ RUN pip install \
                 'certifi>=2025.11.12'
                 # end pypi dependencies
 
-RUN pip install --upgrade 'h2>=4.3.0'
 # Upgrade requests, urllib3, pip, starlette in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'
-RUN /opt/miniconda/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'|| true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0' || true
+RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'|| true
+
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

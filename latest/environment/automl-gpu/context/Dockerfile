@@ -42,7 +42,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 # Address vulnerabilities
 # RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' || true
-RUN pip install --upgrade --no-cache-dir 'requests==2.32.4' 'urllib3==2.5.0' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==11.3.0' || true
+RUN pip install --upgrade --no-cache-dir 'requests==2.32.5' 'urllib3==2.5.0' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==11.3.0' || true
 # If ptca env exists (for miniconda setups)
 # RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.8.0' 'torchvision==0.22.1' 'pillow==11.3.0' || true
 
