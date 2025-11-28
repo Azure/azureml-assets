@@ -60,9 +60,10 @@ RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 RUN pip install --no-cache-dir starlette==0.49.1
 RUN pip install --no-cache-dir "cryptography>=43.0.0"
 # Upgrade wandb to fix golang.org/x/crypto vulnerabilities (CVE-2025-47914, CVE-2025-58181)
-RUN pip install --no-cache-dir --upgrade "wandb>=0.19.0"
-RUN pip install vllm==0.10.2
+RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
+RUN pip install vllm==0.11.0
 RUN pip install --no-cache-dir triton==3.4.0
+RUN pip install xgrammar==0.1.27
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*

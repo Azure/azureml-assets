@@ -18,6 +18,7 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 # following are for vulnerability overrides at later\
 # release of following packages consider moving then to requirements.txt
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
+RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install xgrammar==0.1.27
 RUN pip install transformers==4.57.1
 # clean conda and pip caches
