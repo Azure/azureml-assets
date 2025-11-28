@@ -39,8 +39,8 @@ RUN apt-get update && \
     apt-get autoremove -y
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -p /opt/conda/ -y || true
-RUN conda install pip -p /opt/conda/envs/ptca -y || true
+RUN conda install pip -n base -y || true
+RUN conda install pip -n ptca -y || true
 
 RUN pip install \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \

@@ -66,8 +66,8 @@ EXPOSE 5001 8883 8888
 ENV ENABLE_METADATA=true
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -p /opt/conda/ -y || true
-RUN conda install pip -p /opt/conda/envs/ptca -y || true
+RUN conda install pip -n base -y || true
+RUN conda install pip -n ptca -y || true
 
 # Create conda environment
 COPY conda_dependencies.yaml .

@@ -59,7 +59,7 @@ RUN pip install --upgrade lightgbm==4.6.0
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # try updating pip for base env using conda
-RUN conda install pip -p /opt/miniconda/ -y || true
+RUN conda install pip -n base -y || true
 
 # begin conda create
 # Create conda environment
