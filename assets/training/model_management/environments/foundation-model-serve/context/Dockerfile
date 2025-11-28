@@ -40,9 +40,6 @@ WORKDIR /
 COPY . .
 RUN pip install -e ./ --no-cache-dir
 
-
-RUN pip install --no-cache-dir torch==2.8.0
-
 RUN rm -rf ~/.cache/pip
 
 ADD runit_folder/api_server /var/runit/api_server
@@ -53,3 +50,15 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
 EXPOSE 5001
 CMD [ "runsvdir", "/var/runit" ]
+
+ENV AML_MODEL_PATH=model_artifact/model
+ENV TASK_TYPE="chat-completion"
+
+ENV ENGINE_STARTUP_PORT=8001
+
+COPY sglang_startup.py /home/
+ENV ENGINE_STARTUP_FILE_PATH=/home/sglang_startup.py
+
+# Library installation
+RUN pip install sglang==0.5.5.post3
+RUN apt-get install -y libnuma1 libnuma-dev
