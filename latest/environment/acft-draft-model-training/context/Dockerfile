@@ -18,9 +18,13 @@ RUN pip install azureml-evaluate-mlflow==0.0.83
 # following are for vulnerability overrides at later\
 # release of following packages consider moving then to requirements.txt
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
+RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install xgrammar==0.1.27
 RUN pip install transformers==4.57.1
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 RUN rm -rf /opt/conda/lib/python3.10/site-packages/pip-25.2.dist-info
 RUN rm -rf opt/conda/lib/python3.13/site-packages/pip-25.2.dist-info
+COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
+COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
+COPY parse /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/data/parse.py
