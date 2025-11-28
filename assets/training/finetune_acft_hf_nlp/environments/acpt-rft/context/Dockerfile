@@ -48,6 +48,7 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install verl==0.6.0
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
+COPY vllm_async_server dest/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 
 
 RUN pip install --no-cache-dir accelerate==1.10.0
