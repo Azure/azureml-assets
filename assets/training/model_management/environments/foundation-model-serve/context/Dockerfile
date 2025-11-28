@@ -53,3 +53,11 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=3600
 EXPOSE 5001
 CMD [ "runsvdir", "/var/runit" ]
+
+ENV AML_MODEL_PATH=model_artifact/model
+ENV TASK_TYPE="chat-completion"
+
+ENV ENGINE_STARTUP_PORT=8001
+
+# Library installation
+RUN pip install vllm
