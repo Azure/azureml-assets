@@ -1,5 +1,5 @@
 azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-
+packaging==25.0
 click==8.2.1
 codetiming==1.4.0
 datasets==4.0.0
@@ -25,9 +25,6 @@ tensorboard==2.20.0
 tensordict==0.9.1
 torchdata==0.11.0
 torchvision==0.23.0
-transformers==4.57.1
+transformers==4.57.3
 uvicorn==0.35.0
-verl==0.5.0
-vllm==0.11.0
-xgrammar==0.1.25
 zmq==0.0.0
