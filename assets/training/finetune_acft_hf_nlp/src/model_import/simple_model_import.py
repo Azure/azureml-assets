@@ -22,6 +22,9 @@ from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.simple_model_import.simple_model_import")
 
 COMPONENT_NAME = "ACFT-Simple_Model_Import"
+HUGGINGFACE_CACHE = "huggingface_cache"
+CACHE_DIR = f"/tmp/{HUGGINGFACE_CACHE}"
+MODEL_METADATA_FILE = 'model_import_metadata.json'
 
 
 def get_disk_usage(path):
@@ -99,25 +102,24 @@ def download_hf_model(model_id, output_dir):
 
     # Check disk space before download
     usage = get_disk_usage(output_dir)
-    logger.info(f"\n💾 Output directory disk space:")
-    logger.info(f"   Path: {output_dir}")
-    logger.info(f"   Free: {usage.get('free_gb', 0)} GB")
-    logger.info(f"   Total: {usage.get('total_gb', 0)} GB")
+    logger.info(r"\n Output directory disk space:")
+    logger.info(f"Path: {output_dir}")
+    logger.info(f"Free: {usage.get('free_gb', 0)} GB")
+    logger.info(f"Total: {usage.get('total_gb', 0)} GB")
 
     if usage.get('free_gb', 0) < 10:
-        logger.warning(f"\n⚠️  WARNING: Low disk space at output_dir ({usage.get('free_gb', 0)} GB)")
-        logger.info(f"   Searching for alternative mount point with 70+ GB...")
+        logger.warning(f"\n WARNING: Low disk space at output_dir ({usage.get('free_gb', 0)} GB)")
+        logger.info(r"Searching for alternative mount point with 70+ GB...")
 
         # Find better mount point for cache
         best_mount = find_best_mount_for_download(min_required_gb=70)
         if best_mount:
-            cache_dir = os.path.join(best_mount, 'huggingface_cache')
-            logger.info(f"   Using cache at: {cache_dir}")
+            cache_dir = os.path.join(best_mount, HUGGINGFACE_CACHE)
+            logger.info(f"Using cache at: {cache_dir}")
         else:
-            cache_dir = '/tmp/huggingface_cache'
-            logger.warning(f"   ⚠️  Proceeding with /tmp/huggingface_cache (may fail if insufficient space)")
+            logger.warning(f"Proceeding with {CACHE_DIR}, may fail if there is insufficient space)")
     else:
-        cache_dir = '/tmp/huggingface_cache'
+        cache_dir = CACHE_DIR
 
     local_dir = output_dir
 
@@ -125,9 +127,9 @@ def download_hf_model(model_id, output_dir):
         os.makedirs(cache_dir, exist_ok=True)
         os.makedirs(local_dir, exist_ok=True)
 
-        logger.info(f"\n🚀 Starting download of {model_id}...")
-        logger.info(f"   Cache: {cache_dir}")
-        logger.info(f"   Local: {local_dir}")
+        logger.info(f"\n Starting download of {model_id}...")
+        logger.info(f"Cache: {cache_dir}")
+        logger.info(f"Local: {local_dir}")
         logger.info("-" * 80)
 
         # Download model using snapshot_download
@@ -140,9 +142,9 @@ def download_hf_model(model_id, output_dir):
         )
 
         logger.info("-" * 80)
-        logger.info(f"\n✅ Successfully downloaded {model_id}")
-        logger.info(f"📂 Model location: {local_dir}")
-        logger.info(f"💾 Cache location: {cache_dir}")
+        logger.info(f"\nSuccessfully downloaded {model_id}")
+        logger.info(f"Model location: {local_dir}")
+        logger.info(f"Cache location: {cache_dir}")
 
         return {
             'success': True,
@@ -153,7 +155,7 @@ def download_hf_model(model_id, output_dir):
         }
 
     except Exception as e:
-        logger.error(f"\n❌ Download failed: {str(e)}")
+        logger.error(f"\nDownload failed: {str(e)}")
         return {
             'success': False,
             'model_id': model_id,
@@ -219,11 +221,10 @@ def main():
     )
 
     logger.info("=" * 80)
-    logger.info("SIMPLIFIED MODEL IMPORT")
+    logger.info("Model Import")
     logger.info("=" * 80)
     logger.info(f"Model ID: {args.huggingface_id}")
     logger.info(f"Output Directory: {args.output_dir}")
-    logger.info(f"Cache Directory: /tmp/huggingface_cache")
     logger.info(f"Task: {args.task_name}")
     logger.info(f"Timestamp: {datetime.now().isoformat()}")
     logger.info("=" * 80)
@@ -267,7 +268,7 @@ def main():
                 'model_id': args.pytorch_model_path or args.mlflow_model_path,
                 'source': 'pytorch_model_path' if args.pytorch_model_path else 'mlflow_model_path',
                 'local_dir': args.output_dir,
-                'cache_dir': '/tmp/huggingface_cache',
+                'cache_dir': CACHE_DIR,
                 'timestamp': datetime.now().isoformat()
             }
             logger.info(f" Successfully copied model to {args.output_dir}")
@@ -287,7 +288,7 @@ def main():
         )
 
     # Save result metadata
-    metadata_file = Path(args.output_dir) / 'model_import_metadata.json'
+    metadata_file = Path(args.output_dir) / MODEL_METADATA_FILE
     with open(metadata_file, 'w') as f:
         json.dump(result, f, indent=2)
 
