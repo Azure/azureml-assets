@@ -1,0 +1,44 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: component_model_import
+version: 0.0.1
+type: command
+
+is_deterministic: true
+
+display_name: Component Model Import
+description: Component to import HuggingFace models or AML registered models.
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/107
+
+code: ./src/
+
+inputs:
+  # Match reference component inputs
+  huggingface_id:
+    type: string
+    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    optional: true
+
+  pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Pytorch model asset path.
+    mode: rw_mount
+
+  mlflow_model_path:
+    type: mlflow_model
+    optional: true
+    description: MLflow model asset path.
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: Path to output directory which contains the component metadata and the model artifacts folder.
+
+command: >-
+  python simple_model_import.py
+  --task_name ChatCompletion
+  $[[--huggingface_id '${{inputs.huggingface_id}}']]
+  $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']]
+  $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']]
+  --output_dir '${{outputs.output_dir}}'
