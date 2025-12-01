@@ -595,12 +595,13 @@ def main():
             logger.info(f"Installing PyPI package overrides: {args.pypi_packages_override}")
 
             # Verify the pip executable exists, fallback to sys.executable if not
-            import os
             if os.path.exists(PIP_EXECUTABLE):
+                global PIP_EXECUTABLE
                 logger.info(f"Using conda environment pip: {PIP_EXECUTABLE}")
             else:
                 PIP_EXECUTABLE = sys.executable
-                logger.warning(f"Conda pip not found at {CONDA_ENV_PATH}/bin/pip, using sys.executable: {PIP_EXECUTABLE}")
+                logger.warning(f"Conda pip not found at {CONDA_ENV_PATH}/bin/pip,\
+                    using sys.executable: {PIP_EXECUTABLE}")
 
             # Check if this is a full pip command or a package list
             override_str = args.pypi_packages_override.strip()
@@ -660,10 +661,10 @@ def main():
                     else:
                         # Default to install if not specified
                         command_type = "install"
-                        logger.info(f"Command type: install (default)")
+                        logger.info(r"Command type: install (default)")
 
                     # Build the full command with conda pip (preserve user's flags)
-                    full_cmd = [pip_executable, command_type] + cmd_parts
+                    full_cmd = [PIP_EXECUTABLE, command_type] + cmd_parts
 
                     # Prepare environment with custom env vars
                     cmd_env = os.environ.copy()
@@ -696,7 +697,7 @@ def main():
                     logger.info(f"Installing: {part} (force reinstall)")
                     try:
                         result = subprocess.run(
-                            [pip_executable, "install", "--force-reinstall", "--no-deps", part],
+                            [PIP_EXECUTABLE, "install", "--force-reinstall", "--no-deps", part],
                             check=True,
                             capture_output=True,
                             text=True
@@ -792,8 +793,10 @@ def main():
             f"actor_rollout_ref.actor.optim.num_cycles={args.actor_optim_num_cycles}",
             f"actor_rollout_ref.actor.optim.warmup_style={args.actor_optim_warmup_style}",
             f"actor_rollout_ref.actor.optim.weight_decay={args.actor_optim_weight_decay}",
-            f"actor_rollout_ref.actor.fsdp_config.wrap_policy.min_num_params={args.actor_fsdp_wrap_policy_min_num_params}",
-            f"actor_rollout_ref.actor.fsdp_config.reshard_after_forward={bool_to_str(args.actor_fsdp_reshard_after_forward)}",
+            f"actor_rollout_ref.actor.fsdp_config.wrap_policy.min_num_params=\
+                {args.actor_fsdp_wrap_policy_min_num_params}",
+            f"actor_rollout_ref.actor.fsdp_config.reshard_after_forward=\
+                {bool_to_str(args.actor_fsdp_reshard_after_forward)}",
             f"actor_rollout_ref.actor.fsdp_config.fsdp_size={args.actor_fsdp_size}",
             f"actor_rollout_ref.actor.fsdp_config.forward_prefetch={bool_to_str(args.actor_fsdp_forward_prefetch)}",
             f"actor_rollout_ref.actor.ulysses_sequence_parallel_size={args.actor_ulysses_sequence_parallel_size}",
@@ -852,7 +855,8 @@ def main():
         # Add model configuration flags
         cmd.extend([
             f"actor_rollout_ref.model.use_shm={bool_to_str(args.actor_model_use_shm)}",
-            f"actor_rollout_ref.model.enable_activation_offload={bool_to_str(args.actor_model_enable_activation_offload)}",
+            f"actor_rollout_ref.model.enable_activation_offload=\
+                {bool_to_str(args.actor_model_enable_activation_offload)}",
             f"actor_rollout_ref.model.use_liger={bool_to_str(args.actor_model_use_liger)}",
             f"actor_rollout_ref.model.use_fused_kernels={bool_to_str(args.actor_model_use_fused_kernels)}",
             f"actor_rollout_ref.model.trust_remote_code={bool_to_str(args.actor_model_trust_remote_code)}",
