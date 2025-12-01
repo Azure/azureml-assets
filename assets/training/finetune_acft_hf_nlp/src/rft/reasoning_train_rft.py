@@ -765,7 +765,8 @@ def main():
             f"actor_rollout_ref.rollout.n={args.rollout_n}",
             f"actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu={args.ref_log_prob_micro_batch_size_per_gpu}",
             f"actor_rollout_ref.ref.fsdp_config.param_offload={bool_to_str(args.ref_fsdp_param_offload)}",
-            f"actor_rollout_ref.ref.fsdp_config.reshard_after_forward={bool_to_str(args.ref_fsdp_reshard_after_forward)}",
+            f"actor_rollout_ref.ref.fsdp_config.reshard_after_forward=\
+                {bool_to_str(args.ref_fsdp_reshard_after_forward)}",
             f"algorithm.use_kl_in_reward={bool_to_str(args.algorithm_use_kl_in_reward)}",
             f"algorithm.gamma={args.algorithm_gamma}",
             f"algorithm.lam={args.algorithm_lam}",
