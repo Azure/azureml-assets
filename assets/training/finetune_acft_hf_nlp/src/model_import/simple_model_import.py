@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""
-Simplified Model Import using snapshot_download.
+"""Simplified Model Import using snapshot_download.
+
 Downloads HuggingFace models directly to output directory with disk space management.
 """
 
@@ -167,6 +167,7 @@ def download_hf_model(model_id, output_dir):
 
 
 def main():
+    """Run the simplified model import process."""
     parser = argparse.ArgumentParser(
         description='Simplified Model Import using snapshot_download'
     )
