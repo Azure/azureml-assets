@@ -36,5 +36,7 @@ class CustomEngine(BaseEngine):
         in the ENGINE_STARTUP_FILE_PATH environment variable.
         """
         logger.info("Starting custom engine with startup script.")
+        import torch
+        logger.info(f"number of devices present in machine is {torch.cuda.device_count()}")
         if self.startup_script_path:
             subprocess.Popen([sys.executable, self.startup_script_path])
