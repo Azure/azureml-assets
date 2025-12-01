@@ -3,7 +3,7 @@ channels:
 - conda-forge
 - pytorch
 dependencies:
-- python=3.9
+- python=3.9.17
 - pip=21.3.1
 - pip:
   - azureml-core=={{latest-pypi-version}}
