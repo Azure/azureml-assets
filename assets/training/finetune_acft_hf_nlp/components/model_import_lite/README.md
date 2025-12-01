@@ -2,7 +2,7 @@
 
 ### Name
 
-component_model_import
+model_import_lite
 
 ### Version
 

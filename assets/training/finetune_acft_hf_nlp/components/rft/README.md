@@ -2,7 +2,7 @@
 
 ### Name
 
-component_rl_trainer
+rft_trainer
 
 ### Version
 
