@@ -9,8 +9,18 @@ import sys
 import json
 import shutil
 import argparse
+import logging
 from pathlib import Path
 from datetime import datetime
+
+from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
+from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
+
+
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.simple_model_import.simple_model_import")
+
+COMPONENT_NAME = "ACFT-Simple_Model_Import"
 
 
 def get_disk_usage(path):
@@ -47,7 +57,7 @@ def check_all_mounts():
                                 'usage': usage
                             })
     except Exception as e:
-        print(f"Warning: Could not read /proc/mounts: {e}", file=sys.stderr)
+        logger.warning(f"Could not read /proc/mounts: {e}")
 
     # Sort by free space (descending)
     mounts.sort(key=lambda x: x['usage'].get('free_gb', 0), reverse=True)
@@ -58,22 +68,22 @@ def find_best_mount_for_download(min_required_gb=10):
     """Find the best mount point with sufficient space."""
     mounts = check_all_mounts()
 
-    print("\n Available Mount Points:")
-    print(f"{'Mount Point':<40} {'Free (GB)':<12} {'Total (GB)':<12}")
-    print("-" * 80)
+    logger.info("\n Available Mount Points:")
+    logger.info(f"{'Mount Point':<40} {'Free (GB)':<12} {'Total (GB)':<12}")
+    logger.info("-" * 80)
 
     for mount in mounts:
         mp = mount['mount_point']
         u = mount['usage']
-        print(f"{mp:<40} {u['free_gb']:<12} {u['total_gb']:<12}")
+        logger.info(f"{mp:<40} {u['free_gb']:<12} {u['total_gb']:<12}")
 
     # Find best mount with sufficient space
     for mount in mounts:
         if mount['usage']['free_gb'] >= min_required_gb:
-            print(f"\n Selected mount: {mount['mount_point']} ({mount['usage']['free_gb']} GB free)")
+            logger.info(f"\n Selected mount: {mount['mount_point']} ({mount['usage']['free_gb']} GB free)")
             return mount['mount_point']
 
-    print(f"\n  No mount found with {min_required_gb}+ GB free space")
+    logger.warning(f"\n  No mount found with {min_required_gb}+ GB free space")
     return None
 
 
@@ -82,29 +92,29 @@ def download_hf_model(model_id, output_dir):
     try:
         from huggingface_hub import snapshot_download
     except ImportError:
-        print("ERROR: huggingface_hub not installed.", file=sys.stderr)
-        print("Install with: pip install huggingface_hub", file=sys.stderr)
+        logger.error("ERROR: huggingface_hub not installed.")
+        logger.error("Install with: pip install huggingface_hub")
         sys.exit(1)
 
     # Check disk space before download
     usage = get_disk_usage(output_dir)
-    print(f"\n Output directory disk space:")
-    print(f"   Path: {output_dir}")
-    print(f"   Free: {usage.get('free_gb', 0)} GB")
-    print(f"   Total: {usage.get('total_gb', 0)} GB")
+    logger.info(f"\n💾 Output directory disk space:")
+    logger.info(f"   Path: {output_dir}")
+    logger.info(f"   Free: {usage.get('free_gb', 0)} GB")
+    logger.info(f"   Total: {usage.get('total_gb', 0)} GB")
 
     if usage.get('free_gb', 0) < 10:
-        print(f"\n WARNING: Low disk space at output_dir ({usage.get('free_gb', 0)} GB)")
-        print(f"   Searching for alternative mount point with 70+ GB...")
+        logger.warning(f"\n⚠️  WARNING: Low disk space at output_dir ({usage.get('free_gb', 0)} GB)")
+        logger.info(f"   Searching for alternative mount point with 70+ GB...")
 
         # Find better mount point for cache
         best_mount = find_best_mount_for_download(min_required_gb=70)
         if best_mount:
             cache_dir = os.path.join(best_mount, 'huggingface_cache')
-            print(f"   Using cache at: {cache_dir}")
+            logger.info(f"   Using cache at: {cache_dir}")
         else:
             cache_dir = '/tmp/huggingface_cache'
-            print(f"Proceeding with /tmp/huggingface_cache (may fail if insufficient space)")
+            logger.warning(f"   ⚠️  Proceeding with /tmp/huggingface_cache (may fail if insufficient space)")
     else:
         cache_dir = '/tmp/huggingface_cache'
 
@@ -114,10 +124,10 @@ def download_hf_model(model_id, output_dir):
         os.makedirs(cache_dir, exist_ok=True)
         os.makedirs(local_dir, exist_ok=True)
 
-        print(f"\n Starting download of {model_id}...")
-        print(f"   Cache: {cache_dir}")
-        print(f"   Local: {local_dir}")
-        print("-" * 80)
+        logger.info(f"\n🚀 Starting download of {model_id}...")
+        logger.info(f"   Cache: {cache_dir}")
+        logger.info(f"   Local: {local_dir}")
+        logger.info("-" * 80)
 
         # Download model using snapshot_download
         snapshot_download(
@@ -128,10 +138,10 @@ def download_hf_model(model_id, output_dir):
             resume_download=True
         )
 
-        print("-" * 80)
-        print(f"\n Successfully downloaded {model_id}")
-        print(f" Model location: {local_dir}")
-        print(f" Cache location: {cache_dir}")
+        logger.info("-" * 80)
+        logger.info(f"\n✅ Successfully downloaded {model_id}")
+        logger.info(f"📂 Model location: {local_dir}")
+        logger.info(f"💾 Cache location: {cache_dir}")
 
         return {
             'success': True,
@@ -142,7 +152,7 @@ def download_hf_model(model_id, output_dir):
         }
 
     except Exception as e:
-        print(f"\n Download failed: {str(e)}", file=sys.stderr)
+        logger.error(f"\n❌ Download failed: {str(e)}")
         return {
             'success': False,
             'model_id': model_id,
@@ -196,19 +206,30 @@ def main():
 
     args = parser.parse_args()
 
-    print("=" * 80)
-    print("SIMPLIFIED MODEL IMPORT")
-    print("=" * 80)
-    print(f"Model ID: {args.huggingface_id}")
-    print(f"Output Directory: {args.output_dir}")
-    print(f"Cache Directory: /tmp/huggingface_cache")
-    print(f"Task: {args.task_name}")
-    print(f"Timestamp: {datetime.now().isoformat()}")
-    print("=" * 80)
+    set_logging_parameters(
+        task_type=args.task_name,
+        acft_custom_dimensions={
+            LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
+            LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+        },
+        azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+        log_level=logging.INFO,
+    )
+
+    logger.info("=" * 80)
+    logger.info("SIMPLIFIED MODEL IMPORT")
+    logger.info("=" * 80)
+    logger.info(f"Model ID: {args.huggingface_id}")
+    logger.info(f"Output Directory: {args.output_dir}")
+    logger.info(f"Cache Directory: /tmp/huggingface_cache")
+    logger.info(f"Task: {args.task_name}")
+    logger.info(f"Timestamp: {datetime.now().isoformat()}")
+    logger.info("=" * 80)
 
     # Validate inputs - need at least one model source
     if args.huggingface_id is None and args.pytorch_model_path is None and args.mlflow_model_path is None:
-        print("ERROR: Must provide one of: --huggingface_id, --pytorch_model_path, or --mlflow_model_path", file=sys.stderr)
+        logger.error("ERROR: Must provide one of: --huggingface_id, --pytorch_model_path, or --mlflow_model_path")
         sys.exit(1)
 
     # Create output directory
@@ -225,11 +246,11 @@ def main():
             if config_paths:
                 # Use the directory containing config.json as source
                 source_path = str(config_paths[0].parent)
-                print(f"Found model artifact at: {source_path}")
+                logger.info(f"Found model artifact at: {source_path}")
             else:
-                print(f"Warning: No config.json found, using root path: {source_path}")
+                logger.warning(f"Warning: No config.json found, using root path: {source_path}")
 
-        print(f"\n Copying model from {source_path} to {args.output_dir}...")
+        logger.info(f"\n Copying model from {source_path} to {args.output_dir}...")
 
         try:
             import shutil
@@ -248,9 +269,9 @@ def main():
                 'cache_dir': '/tmp/huggingface_cache',
                 'timestamp': datetime.now().isoformat()
             }
-            print(f"Successfully copied model to {args.output_dir}")
+            logger.info(f" Successfully copied model to {args.output_dir}")
         except Exception as e:
-            print(f" Failed to copy model: {e}", file=sys.stderr)
+            logger.error(f" Failed to copy model: {e}")
             result = {
                 'success': False,
                 'error': str(e),
@@ -269,14 +290,14 @@ def main():
     with open(metadata_file, 'w') as f:
         json.dump(result, f, indent=2)
 
-    print(f"\nMetadata saved to: {metadata_file}")
+    logger.info(f"\n Metadata saved to: {metadata_file}")
 
     # Exit with appropriate code
     if result['success']:
-        print("\nModel import complete!")
+        logger.info("\n Model import complete!")
         sys.exit(0)
     else:
-        print("\nModel import failed!")
+        logger.error("\n Model import failed!")
         sys.exit(1)
 
 
