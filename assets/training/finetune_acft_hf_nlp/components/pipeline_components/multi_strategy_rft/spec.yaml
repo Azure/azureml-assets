@@ -443,7 +443,7 @@ outputs:
 jobs:
   component_model_import:
     type: command
-    component: azureml:component_model_import:0.0.1
+    component: azureml:model_import_lite:0.0.1
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -453,7 +453,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   component_rl_trainer:
     type: command
-    component: azureml:component_rl_trainer:0.0.1
+    component: azureml:rft_trainer:0.0.1
     compute: '${{parent.inputs.compute_finetune}}'
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"

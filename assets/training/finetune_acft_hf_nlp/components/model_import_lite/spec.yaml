@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: component_model_import
+name: model_import_lite
 version: 0.0.1
 type: command
 
