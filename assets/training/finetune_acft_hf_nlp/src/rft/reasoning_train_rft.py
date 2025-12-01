@@ -41,6 +41,8 @@ from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 TASK_TYPE = 'chat-completion'
 COMPONENT_NAME = "ACFT-RFT-TRAINER"
 CHECKPOINT_FILE_NAME = "latest_checkpointed_iteration.txt"
+CONDA_ENV_PATH = "/opt/conda/envs/ptca"
+PIP_EXECUTABLE = f"{CONDA_ENV_PATH}/bin/pip"
 # Configure Ray logging - disable verbose stats
 os.environ["RAY_LOG_TO_STDERR"] = "1"
 os.environ["RAY_BACKEND_LOG_LEVEL"] = "error"
@@ -72,13 +74,18 @@ def parse_args():
     parser.add_argument("--data_truncation", type=str, default="error", help="Truncation strategy")
 
     # Actor model arguments
-    parser.add_argument("--actor_model_path", type=str, default="Qwen/Qwen2.5-VL-7B-Instruct", help="Model path")
+    parser.add_argument("--actor_model_path", type=str,
+                        default="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", help="Model path")
     parser.add_argument("--actor_optim_lr", type=float, default=3e-6, help="Actor optimizer learning rate")
-    parser.add_argument("--actor_model_use_remove_padding", type=bool, default=True, help="Use remove padding in model")
-    parser.add_argument("--actor_strategy", type=str, default="fsdp2", help="Actor training strategy (e.g., fsdp, fsdp2)")
-    parser.add_argument("--actor_fsdp_config_offload_policy", type=bool, default=True, help="FSDP config offload policy")
+    parser.add_argument("--actor_model_use_remove_padding", type=bool,
+                        default=True, help="Use remove padding in model")
+    parser.add_argument("--actor_strategy", type=str, default="fsdp2",
+                        help="Actor training strategy (e.g., fsdp, fsdp2)")
+    parser.add_argument("--actor_fsdp_config_offload_policy", type=bool,
+                        default=True, help="FSDP config offload policy")
     parser.add_argument("--actor_ppo_mini_batch_size", type=int, default=128, help="PPO mini batch size")
-    parser.add_argument("--actor_ppo_micro_batch_size_per_gpu", type=int, default=10, help="PPO micro batch size per GPU")
+    parser.add_argument("--actor_ppo_micro_batch_size_per_gpu",
+                        type=int, default=10, help="PPO micro batch size per GPU")
     parser.add_argument("--actor_model_lora_rank", type=int, default=64, help="LoRA rank")
     parser.add_argument("--actor_model_lora_alpha", type=int, default=32, help="LoRA alpha")
     parser.add_argument("--actor_model_target_modules", type=str, default="all-linear", help="Target modules for LoRA")
@@ -86,7 +93,8 @@ def parse_args():
     parser.add_argument("--actor_kl_loss_coef", type=float, default=0.01, help="KL loss coefficient")
     parser.add_argument("--actor_kl_loss_type", type=str, default="low_var_kl", help="KL loss type")
     parser.add_argument("--actor_entropy_coeff", type=float, default=0, help="Entropy coefficient")
-    parser.add_argument("--actor_model_enable_gradient_checkpointing", type=bool, default=True, help="Enable gradient checkpointing")
+    parser.add_argument("--actor_model_enable_gradient_checkpointing",
+                        type=bool, default=True, help="Enable gradient checkpointing")
     parser.add_argument("--actor_fsdp_param_offload", type=bool, default=False, help="FSDP param offload")
     parser.add_argument("--actor_fsdp_optimizer_offload", type=bool, default=False, help="FSDP optimizer offload")
 
@@ -122,30 +130,43 @@ def parse_args():
     # Rollout arguments
     # NOTE : The following arguments are exhaustive list of all supported arguments from verl sdk
     # However, only few are exposed to component.
-    parser.add_argument("--rollout_log_prob_micro_batch_size_per_gpu", type=int, default=20, help="Rollout log prob micro batch size per GPU")
-    parser.add_argument("--rollout_tensor_model_parallel_size", type=int, default=2, help="Rollout tensor model parallel size")
-    parser.add_argument("--rollout_dtype", type=str, default="float16", help="Rollout data type (e.g., float16, bfloat16, float32)")
-    parser.add_argument("--rollout_gpu_memory_utilization", type=float, default=0.6, help="Rollout GPU memory utilization")
+    parser.add_argument("--rollout_log_prob_micro_batch_size_per_gpu",
+                        type=int, default=20, help="Rollout log prob micro batch size per GPU")
+    parser.add_argument("--rollout_tensor_model_parallel_size",
+                        type=int, default=2, help="Rollout tensor model parallel size")
+    parser.add_argument("--rollout_dtype", type=str, default="float16",
+                        help="Rollout data type (e.g., float16, bfloat16, float32)")
+    parser.add_argument("--rollout_gpu_memory_utilization", type=float, default=0.6,
+                        help="Rollout GPU memory utilization")
     parser.add_argument("--rollout_enable_chunked_prefill", type=bool, default=False, help="Enable chunked prefill")
     parser.add_argument("--rollout_enforce_eager", type=bool, default=False, help="Enforce eager execution")
     parser.add_argument("--rollout_free_cache_engine", type=bool, default=False, help="Free cache engine")
     parser.add_argument("--rollout_n", type=int, default=5, help="Rollout n")
 
     # Reference arguments
-    parser.add_argument("--ref_log_prob_micro_batch_size_per_gpu", type=int, default=20, help="Ref log prob micro batch size per GPU")
+    parser.add_argument("--ref_log_prob_micro_batch_size_per_gpu", type=int,
+                        default=20, help="Ref log prob micro batch size per GPU")
     parser.add_argument("--ref_fsdp_param_offload", type=bool, default=True, help="Ref FSDP param offload")
 
     # Algorithm arguments
-    parser.add_argument("--algorithm_adv_estimator", type=str, default="grpo", help="Advantage estimator (e.g., grpo, reinforce_plus_plus)")
+    parser.add_argument("--algorithm_adv_estimator", type=str, default="grpo",
+                        help="Advantage estimator (e.g., grpo, reinforce_plus_plus)")
     parser.add_argument("--algorithm_gamma", type=float, default=1.0, help="Discount factor for future rewards")
     parser.add_argument("--algorithm_lam", type=float, default=1.0, help="GAE lambda parameter")
-    parser.add_argument("--algorithm_norm_adv_by_std_in_grpo", type=bool, default=True, help="Normalize advantages by std in GRPO")
-    parser.add_argument("--algorithm_use_kl_in_reward", type=bool, default=False, help="Use KL in reward")
-    parser.add_argument("--algorithm_kl_penalty", type=str, default="kl", help="KL penalty type: kl, abs, mse, low_var_kl, full")
-    parser.add_argument("--algorithm_kl_ctrl_type", type=str, default="fixed", help="KL control type: fixed or adaptive")
-    parser.add_argument("--algorithm_kl_ctrl_kl_coef", type=float, default=0.001, help="KL coefficient")
-    parser.add_argument("--algorithm_kl_ctrl_horizon", type=int, default=10000, help="Horizon for adaptive KL controller")
-    parser.add_argument("--algorithm_kl_ctrl_target_kl", type=float, default=0.1, help="Target KL for adaptive controller")
+    parser.add_argument("--algorithm_norm_adv_by_std_in_grpo", type=bool, default=True,
+                        help="Normalize advantages by std in GRPO")
+    parser.add_argument("--algorithm_use_kl_in_reward", type=bool, default=False,
+                        help="Use KL in reward")
+    parser.add_argument("--algorithm_kl_penalty", type=str, default="kl",
+                        help="KL penalty type: kl, abs, mse, low_var_kl, full")
+    parser.add_argument("--algorithm_kl_ctrl_type", type=str, default="fixed",
+                        help="KL control type: fixed or adaptive")
+    parser.add_argument("--algorithm_kl_ctrl_kl_coef", type=float, default=0.001,
+                        help="KL coefficient")
+    parser.add_argument("--algorithm_kl_ctrl_horizon", type=int, default=10000,
+                        help="Horizon for adaptive KL controller")
+    parser.add_argument("--algorithm_kl_ctrl_target_kl", type=float, default=0.1,
+                        help="Target KL for adaptive controller")
 
     # Actor Training Parameters
     parser.add_argument("--actor_clip_ratio", type=float, default=0.2, help="PPO clip ratio")
@@ -156,31 +177,39 @@ def parse_args():
     parser.add_argument("--actor_ppo_epochs", type=int, default=1, help="Number of PPO epochs per batch")
     parser.add_argument("--actor_shuffle", type=bool, default=False, help="Shuffle training data across PPO epochs")
     parser.add_argument("--actor_use_dynamic_bsz", type=bool, default=False, help="Auto-adjust batch size at runtime")
-    parser.add_argument("--actor_ppo_max_token_len_per_gpu", type=int, default=16384, help="Max tokens per GPU in one PPO batch")
+    parser.add_argument("--actor_ppo_max_token_len_per_gpu", type=int, default=16384,
+                        help="Max tokens per GPU in one PPO batch")
     parser.add_argument("--actor_use_torch_compile", type=bool, default=True, help="Use torch.compile()")
     parser.add_argument("--actor_grad_clip", type=float, default=1.0, help="Gradient clipping value")
-    parser.add_argument("--actor_policy_loss_mode", type=str, default="vanilla", help="Policy loss mode: vanilla, clip-cov, kl-cov, gpg")
+    parser.add_argument("--actor_policy_loss_mode", type=str, default="vanilla",
+                        help="Policy loss mode: vanilla, clip-cov, kl-cov, gpg")
 
     # Actor Optimizer Parameters
     parser.add_argument("--actor_optim_lr_warmup_steps", type=int, default=-1, help="Warmup steps")
     parser.add_argument("--actor_optim_lr_warmup_steps_ratio", type=float, default=0.0, help="Warmup steps ratio")
     parser.add_argument("--actor_optim_min_lr_ratio", type=float, default=0.0, help="Min LR ratio for cosine schedule")
     parser.add_argument("--actor_optim_num_cycles", type=float, default=0.5, help="Number of cosine cycles")
-    parser.add_argument("--actor_optim_warmup_style", type=str, default="constant", help="Warmup style: constant or cosine")
+    parser.add_argument("--actor_optim_warmup_style", type=str, default="constant",
+                        help="Warmup style: constant or cosine")
     parser.add_argument("--actor_optim_weight_decay", type=float, default=0.01, help="Weight decay")
 
     # Actor FSDP Configuration
-    parser.add_argument("--actor_fsdp_wrap_policy_min_num_params", type=int, default=0, help="Min params to trigger FSDP wrapping")
-    parser.add_argument("--actor_fsdp_reshard_after_forward", type=bool, default=True, help="Reshard after forward")
+    parser.add_argument("--actor_fsdp_wrap_policy_min_num_params", type=int, default=0,
+                        help="Min params to trigger FSDP wrapping")
+    parser.add_argument("--actor_fsdp_reshard_after_forward", type=bool, default=True,
+                        help="Reshard after forward")
     parser.add_argument("--actor_fsdp_size", type=int, default=-1, help="GPUs in each FSDP shard group")
     parser.add_argument("--actor_fsdp_forward_prefetch", type=bool, default=False, help="FSDP1 forward prefetch")
-    parser.add_argument("--actor_ulysses_sequence_parallel_size", type=int, default=1, help="Sequence parallelism size")
+    parser.add_argument("--actor_ulysses_sequence_parallel_size", type=int, default=1,
+                        help="Sequence parallelism size")
 
     # Model Configuration
     parser.add_argument("--actor_model_custom_chat_template", type=str, default=None, help="Custom chat template")
     parser.add_argument("--actor_model_use_shm", type=bool, default=False, help="Use shared memory for loading")
-    parser.add_argument("--actor_model_external_lib", type=str, default=None, help="External Python packages for custom models")
-    parser.add_argument("--actor_model_enable_activation_offload", type=bool, default=False, help="Enable activation offloading")
+    parser.add_argument("--actor_model_external_lib", type=str, default=None,
+                        help="External Python packages for custom models")
+    parser.add_argument("--actor_model_enable_activation_offload", type=bool, default=False,
+                        help="Enable activation offloading")
     parser.add_argument("--actor_model_use_liger", type=bool, default=False, help="Use Liger for linear fusion")
     parser.add_argument("--actor_model_use_fused_kernels", type=bool, default=False, help="Use custom fused kernels")
     parser.add_argument("--actor_model_trust_remote_code", type=bool, default=False, help="Trust remote code")
@@ -242,14 +271,17 @@ def parse_args():
     parser.add_argument("--trainer_val_before_train", type=bool, default=True, help="Run validation before training")
     parser.add_argument("--trainer_val_only", type=bool, default=False, help="Run validation only")
     parser.add_argument("--trainer_device", type=str, default="cuda", help="Device: cuda or cpu")
-    parser.add_argument("--trainer_use_legacy_worker_impl", type=str, default="auto", help="Use legacy worker: auto, enable, disable")
+    parser.add_argument("--trainer_use_legacy_worker_impl", type=str, default="auto",
+                        help="Use legacy worker: auto, enable, disable")
     parser.add_argument("--total_training_steps", type=int, help="Total number of training steps")
 
     # Checkpoint arguments
-    parser.add_argument("--actor_checkpoint_load_contents", type=str, default=None, help="What to load from checkpoint")
+    parser.add_argument("--actor_checkpoint_load_contents", type=str, default=None,
+                        help="What to load from checkpoint")
 
     # Output arguments
-    parser.add_argument("--intermediate_folder", type=str, required=True, help="Intermediate directory for VERL training checkpoints")
+    parser.add_argument("--intermediate_folder", type=str, required=True,
+                        help="Intermediate directory for RFT training checkpoints")
     parser.add_argument("--output_dir", type=str, default="./output", help="Output directory for model artifacts")
 
     return parser.parse_args()
@@ -304,7 +336,8 @@ def quote_if_needed(value):
     import shlex
     value_str = str(value)
     # If the value contains spaces, parentheses, or other special chars, quote it
-    if ' ' in value_str or '(' in value_str or ')' in value_str or any(c in value_str for c in ['&', '|', ';', '<', '>', '$', '`', '"', "'"]):
+    if ' ' in value_str or '(' in value_str or ')'\
+            in value_str or any(c in value_str for c in ['&', '|', ';', '<', '>', '$', '`', '"', "'"]):
         return shlex.quote(value_str)
     return value_str
 
@@ -423,8 +456,12 @@ def setup_ray_cluster():
                     "--include-dashboard=false",
                     "--log-style=minimal",
                     "--autoscaling-config={}",
-                    "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\"periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"automatic_object_spilling_enabled\":false,\"enable_object_reconstruction\":false}",
-                ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env={**os.environ, "RAY_LOG_TO_STDERR": "0"})
+                    "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\
+                    \"periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"\
+                    automatic_object_spilling_enabled\":false,\"enable_object_reconstruction\":false}",
+                ], stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True, env={**os.environ, "RAY_LOG_TO_STDERR": "0"})
 
                 logger.info(f"STDOUT:\n{result.stdout}")
                 if result.stderr:
@@ -454,8 +491,13 @@ def setup_ray_cluster():
                         "--disable-usage-stats",
                         "--log-style=minimal",
                         "--autoscaling-config={}",
-                        "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\"periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"automatic_object_spilling_enabled\":false,\"enable_object_reconstruction\":false}",
-                    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env={**os.environ, "RAY_LOG_TO_STDERR": "1"})
+                        "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\"\
+                        periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"\
+                        automatic_object_spilling_enabled\":false,\"enable_object_reconstruction\":false}",
+                    ],  stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        env={**os.environ, "RAY_LOG_TO_STDERR": "1"})
 
                     logger.info(f"STDOUT:\n{result.stdout}")
                     if result.stderr:
@@ -545,21 +587,20 @@ def main():
         logger.info("========================")
 
         # Install PyPI package overrides if provided
-        logger.info(f"Package override status: '{args.pypi_packages_override}' (type: {type(args.pypi_packages_override).__name__})")
-        if args.pypi_packages_override is not None and args.pypi_packages_override.strip() and args.pypi_packages_override.lower() != 'none':
+        logger.info(f"Package override status: '{args.pypi_packages_override}'\
+                    (type: {type(args.pypi_packages_override).__name__})")
+        if args.pypi_packages_override is not None and \
+                args.pypi_packages_override.strip() and \
+                args.pypi_packages_override.lower() != 'none':
             logger.info(f"Installing PyPI package overrides: {args.pypi_packages_override}")
-
-            # Determine the correct pip executable in the conda environment
-            conda_env_path = "/opt/conda/envs/ptca"
-            pip_executable = f"{conda_env_path}/bin/pip"
 
             # Verify the pip executable exists, fallback to sys.executable if not
             import os
-            if os.path.exists(pip_executable):
-                logger.info(f"Using conda environment pip: {pip_executable}")
+            if os.path.exists(PIP_EXECUTABLE):
+                logger.info(f"Using conda environment pip: {PIP_EXECUTABLE}")
             else:
-                pip_executable = sys.executable
-                logger.warning(f"Conda pip not found at {conda_env_path}/bin/pip, using sys.executable: {pip_executable}")
+                PIP_EXECUTABLE = sys.executable
+                logger.warning(f"Conda pip not found at {CONDA_ENV_PATH}/bin/pip, using sys.executable: {PIP_EXECUTABLE}")
 
             # Check if this is a full pip command or a package list
             override_str = args.pypi_packages_override.strip()
@@ -587,7 +628,7 @@ def main():
                                 try:
                                     var_name, var_value = word.split('=', 1)
                                     env_vars[var_name] = var_value
-                                    logger.info(f"  Detected environment variable: {var_name}={var_value}")
+                                    logger.info(f"Detected environment variable: {var_name}={var_value}")
                                     pip_cmd_start_idx = i + 1
                                 except ValueError:
                                     break
@@ -600,11 +641,11 @@ def main():
                 # Reconstruct the command without env vars
                 if pip_cmd_start_idx > 0:
                     part = ' '.join(part_words[pip_cmd_start_idx:])
-                    logger.info(f"  Command after extracting env vars: {part}")
+                    logger.info(f"Command after extracting env vars: {part}")
 
                 if part.startswith(("pip ", "pip3 ")):
                     # Full pip command provided - parse and execute it
-                    logger.info("  Format: Full pip command")
+                    logger.info("Format: Full pip command")
 
                     # Remove pip/pip3 prefix
                     cmd_parts = part.split()
@@ -615,11 +656,11 @@ def main():
                     if cmd_parts and cmd_parts[0] in ["install", "uninstall"]:
                         command_type = cmd_parts[0]
                         cmd_parts = cmd_parts[1:]  # Remove install/uninstall
-                        logger.info(f"  Command type: {command_type}")
+                        logger.info(f"Command type: {command_type}")
                     else:
                         # Default to install if not specified
                         command_type = "install"
-                        logger.info(f"  Command type: install (default)")
+                        logger.info(f"Command type: install (default)")
 
                     # Build the full command with conda pip (preserve user's flags)
                     full_cmd = [pip_executable, command_type] + cmd_parts
@@ -628,9 +669,9 @@ def main():
                     cmd_env = os.environ.copy()
                     if env_vars:
                         cmd_env.update(env_vars)
-                        logger.info(f"  Environment variables: {env_vars}")
+                        logger.info(f"Environment variables: {env_vars}")
 
-                    logger.info(f"  Executing: {' '.join(full_cmd)}")
+                    logger.info(f"Executing: {' '.join(full_cmd)}")
                     try:
                         result = subprocess.run(
                             full_cmd,
@@ -639,20 +680,20 @@ def main():
                             text=True,
                             env=cmd_env
                         )
-                        logger.info(f"  Successfully executed pip {command_type} command")
+                        logger.info(f"Successfully executed pip {command_type} command")
                         if result.stdout:
-                            logger.info(f"  STDOUT: {result.stdout}")
+                            logger.info(f"STDOUT: {result.stdout}")
                     except subprocess.CalledProcessError as e:
-                        logger.error(f"  Failed to execute pip {command_type} command: {e}")
+                        logger.error(f"Failed to execute pip {command_type} command: {e}")
                         if e.stdout:
-                            logger.error(f"  STDOUT: {e.stdout}")
+                            logger.error(f"STDOUT: {e.stdout}")
                         if e.stderr:
-                            logger.error(f"  STDERR: {e.stderr}")
-                        logger.warning(f"  Continuing despite failure")
+                            logger.error(f"STDERR: {e.stderr}")
+                        logger.warning("Continuing despite failure")
                 else:
                     # Simple package specification
-                    logger.info(f"  Format: Package specification")
-                    logger.info(f"  Installing: {part} (force reinstall)")
+                    logger.info(r"Format: Package specification")
+                    logger.info(f"Installing: {part} (force reinstall)")
                     try:
                         result = subprocess.run(
                             [pip_executable, "install", "--force-reinstall", "--no-deps", part],
@@ -660,16 +701,16 @@ def main():
                             capture_output=True,
                             text=True
                         )
-                        logger.info(f"  Successfully reinstalled {part}")
+                        logger.info(f"Successfully reinstalled {part}")
                         if result.stdout:
-                            logger.info(f"  STDOUT: {result.stdout}")
+                            logger.info(f"STDOUT: {result.stdout}")
                     except subprocess.CalledProcessError as e:
-                        logger.error(f"  Failed to install {part}: {e}")
+                        logger.error(f"Failed to install {part}: {e}")
                         if e.stdout:
-                            logger.error(f"  STDOUT: {e.stdout}")
+                            logger.error(f"STDOUT: {e.stdout}")
                         if e.stderr:
-                            logger.error(f"  STDERR: {e.stderr}")
-                        logger.warning(f"  Continuing despite failure")
+                            logger.error(f"STDERR: {e.stderr}")
+                        logger.warning(r"Continuing despite failure")
 
             logger.info("Completed PyPI package overrides installation")
         else:
@@ -703,19 +744,19 @@ def main():
             f"actor_rollout_ref.model.lora_rank={args.actor_model_lora_rank}",
             f"actor_rollout_ref.model.lora_alpha={args.actor_model_lora_alpha}",
             f"actor_rollout_ref.model.target_modules={args.actor_model_target_modules}",
-            f"actor_rollout_ref.model.exclude_modules=.*visual.*",
+            r"actor_rollout_ref.model.exclude_modules=.*visual.*",
             f"actor_rollout_ref.actor.use_kl_loss={bool_to_str(args.actor_use_kl_loss)}",
             f"actor_rollout_ref.actor.kl_loss_coef={args.actor_kl_loss_coef}",
             f"actor_rollout_ref.actor.kl_loss_type={args.actor_kl_loss_type}",
             f"actor_rollout_ref.actor.entropy_coeff={args.actor_entropy_coeff}",
-            f"actor_rollout_ref.model.enable_gradient_checkpointing=" +
+            r"actor_rollout_ref.model.enable_gradient_checkpointing=" +
             f"{bool_to_str(args.actor_model_enable_gradient_checkpointing)}",
             f"actor_rollout_ref.actor.fsdp_config.param_offload={bool_to_str(args.actor_fsdp_param_offload)}",
             f"actor_rollout_ref.actor.fsdp_config.optimizer_offload={bool_to_str(args.actor_fsdp_optimizer_offload)}",
-            f"actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=" +
+            r"actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=" +
             f"{args.rollout_log_prob_micro_batch_size_per_gpu}",
             f"actor_rollout_ref.rollout.tensor_model_parallel_size={args.rollout_tensor_model_parallel_size}",
-            f"actor_rollout_ref.rollout.name=vllm",
+            r"actor_rollout_ref.rollout.name=vllm",
             f"actor_rollout_ref.rollout.gpu_memory_utilization={args.rollout_gpu_memory_utilization}",
             f"actor_rollout_ref.rollout.enable_chunked_prefill={args.rollout_enable_chunked_prefill}",
             f"actor_rollout_ref.rollout.enforce_eager={bool_to_str(args.rollout_enforce_eager)}",
@@ -756,7 +797,7 @@ def main():
             f"actor_rollout_ref.actor.fsdp_config.fsdp_size={args.actor_fsdp_size}",
             f"actor_rollout_ref.actor.fsdp_config.forward_prefetch={bool_to_str(args.actor_fsdp_forward_prefetch)}",
             f"actor_rollout_ref.actor.ulysses_sequence_parallel_size={args.actor_ulysses_sequence_parallel_size}",
-            f"actor_rollout_ref.rollout.mode=async",
+            r"actor_rollout_ref.rollout.mode=async",
             f"actor_rollout_ref.rollout.temperature={args.rollout_temperature}",
             f"actor_rollout_ref.rollout.top_k={args.rollout_top_k}",
             f"actor_rollout_ref.rollout.top_p={args.rollout_top_p}",
@@ -784,7 +825,7 @@ def main():
             f"trainer.val_only={bool_to_str(args.trainer_val_only)}",
             f"trainer.device={args.trainer_device}",
             f"trainer.use_legacy_worker_impl={args.trainer_use_legacy_worker_impl}",
-            f"trainer.critic_warmup=0",
+            r"trainer.critic_warmup=0",
             f"trainer.logger={args.trainer_logger}",
             f"trainer.project_name={args.trainer_project_name}",
             f"trainer.experiment_name={args.trainer_experiment_name}",
