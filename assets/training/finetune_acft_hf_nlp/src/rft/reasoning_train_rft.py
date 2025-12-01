@@ -595,8 +595,8 @@ def main():
             logger.info(f"Installing PyPI package overrides: {args.pypi_packages_override}")
 
             # Verify the pip executable exists, fallback to sys.executable if not
+            global PIP_EXECUTABLE
             if os.path.exists(PIP_EXECUTABLE):
-                global PIP_EXECUTABLE
                 logger.info(f"Using conda environment pip: {PIP_EXECUTABLE}")
             else:
                 PIP_EXECUTABLE = sys.executable
