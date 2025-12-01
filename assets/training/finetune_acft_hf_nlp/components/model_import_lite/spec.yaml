@@ -10,7 +10,7 @@ description: Component to import HuggingFace models or AML registered models.
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/107
 
-code: ../../../src/model_import
+code: ../../src/model_import
 
 inputs:
   # Match reference component inputs
