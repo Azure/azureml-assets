@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""
+
+"""Reinforcement Learning Training Pipeline.
 
 ╔═══════════════════════════════════════════════════════════════════════════════╗
 ║                    REINFORCEMENT LEARNING TRAINING PIPELINE                   ║
@@ -400,7 +401,7 @@ def get_current_ip():
 
 
 def setup_ray_cluster():
-    """Setup Ray cluster based on distributed configuration using agent mode."""
+    """Set up Ray cluster based on distributed configuration using agent mode."""
     RAY_PORT = 20001  # Changed from 18125 to avoid conflict with worker ports (10002-19999)
 
     # Disable Ray periodic stats printing and autoscaler output (most aggressive settings)
@@ -543,7 +544,7 @@ def setup_ray_cluster():
 
 
 def main():
-    """Main function to run Direct Reasoning Optimization."""
+    """Run the RFT trainer component."""
     try:
         # Suppress Ray's verbose logging by setting log level to WARNING
         import logging as ray_logging
@@ -897,6 +898,7 @@ def main():
 
         class RayLogFilter:
             """Filter to suppress verbose Ray statistics and autoscaler output."""
+
             def __init__(self, stream):
                 self.stream = stream
                 self.suppress_patterns = [
