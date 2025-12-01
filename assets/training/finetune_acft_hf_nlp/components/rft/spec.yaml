@@ -1,0 +1,460 @@
+
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: component_rl_trainer
+version: 0.0.1
+type: command
+is_deterministic: true
+display_name: Component RL Trainer (Preview)
+description: Component for Multi-Strategy Reinforcement Learning Training of Large Language Models.
+environment: azureml://registries/azureml/environments/acft-rft-training/versions/1
+code: ./src/
+
+distribution:
+  type: mpi
+
+inputs:
+  algorithm_adv_estimator:
+    type: string
+    enum:
+    - "grpo"
+    - "reinforce_plus_plus"
+    default: "grpo"
+    optional: false
+    description: "Advantage estimator algorithm.\
+                  Valid values:  grpo (Group Relative Policy Optimization - critic-free GRPO for mathematical reasoning),\
+                  reinforce_plus_plus (REINFORCE++ - efficient RLHF with global advantage normalization)."
+
+  trainer_n_gpus_per_node:
+    type: integer
+    default: 8
+    optional: true
+    description: "Number of GPUs per node."
+
+  trainer_nnodes:
+    type: integer
+    default: 1
+    optional: true
+    description: "Number of nodes."
+
+  data_train_files:
+    type: uri_file
+    optional: false
+    description: "Path to the training parquet or jsonl file."
+
+  data_val_files:
+    type: uri_file
+    optional: false
+    description: "Path to the validation parquet or jsonl file."
+
+  data_train_batch_size:
+    type: integer
+    default: 512
+    optional: true
+    description: "Training batch size."
+
+  data_max_prompt_length:
+    type: integer
+    default: 1024
+    optional: true
+    description: "Maximum prompt length."
+
+  data_max_response_length:
+    type: integer
+    default: 2048
+    optional: true
+    description: "Maximum response length"
+
+  data_filter_overlong_prompts:
+    type: boolean
+    default: true
+    optional: true
+    description: "Filter overlong prompts"
+
+  data_truncation:
+    type: string
+    enum:
+    - "error"
+    - "left"
+    - "right"
+    - "middle"
+    default: "error"
+    description: "Truncation strategy. Options: 'error', 'left', 'right', 'middle'.\
+                  Default is 'error'. \
+                  - 'error': Raises an error if length exceeds max.\
+                  - 'left': Keeps the end/right portion (removes beginning)\
+                  - 'right': Keeps the beginning/left portion (removes end)\
+                  - 'middle': Keeps both beginning and end (removes middle portion)"
+
+  actor_model_path:
+    type: uri_folder
+    optional: false
+    description: "Output folder of model import component containing model artifacts."
+    mode: rw_mount
+
+  actor_optim_lr:
+    type: number
+    default: 3e-6
+    optional: true
+    description: "Actor optimizer learning rate."
+
+  actor_model_use_remove_padding:
+    type: boolean
+    default: true
+    optional: true
+    description: "Enables sequence packing optimization, which \
+                  removes padding tokens from inputs during training to save computation."
+
+  actor_strategy:
+    type: string
+    enum:
+    - "fsdp"
+    - "fsdp2"
+    default: "fsdp2"
+    optional: true
+    description: "Actor training strategy.\
+                  Valid values: fsdp (Fully Sharded Data Parallel v1),\
+                  fsdp2 (Fully Sharded Data Parallel v2)"
+
+  actor_fsdp_config_offload_policy:
+    type: boolean
+    default: true
+    optional: true
+    description: "FSDP config offload policy(params/optimizers/gradients) to reduce memory usage"
+
+  actor_rft_mini_batch_size:
+    type: integer
+    default: 128
+    optional: true
+    description: "The global batch size for splitting sampled data into multiple sub-batches during training"
+
+  actor_rft_micro_batch_size_per_gpu:
+    type: integer
+    default: 10
+    optional: true
+    description: "The per-GPU batch size for each forward and backward pass during training."
+
+  actor_model_lora_rank:
+    type: integer
+    default: 64
+    optional: true
+    description: "LoRA rank to control the capacity of the low-rank adaptation.\
+                  Higher values increase model adaptability but also computational cost and memory usage."
+
+  actor_model_lora_alpha:
+    type: integer
+    default: 32
+    optional: true
+    description: "LoRA alpha to scale the LoRA updates.\
+                  Higher values increase the influence of the LoRA layers on the overall model output."
+
+  actor_model_target_modules:
+    type: string
+    default: "all-linear"
+    optional: true
+    description: "Target modules for LoRA\
+                  Options: 'all-linear' (applies LoRA to all linear layers),\
+                  '[q_proj,k_proj,v_proj,o_proj]' (applies LoRA to specific attention projection layers),\
+                  '[q_proj,v_proj]'' (applies LoRA to query and value projection layers only).\
+                  '.*_proj'(We can use Regex pattern, here it's for all modules ending with '_proj') \
+                  "
+
+  actor_use_kl_loss:
+    type: boolean
+    default: true
+    optional: true
+    description: "If this is True KL penalty is added to actor loss which is computed during training,\
+                  else KL penalty is added to reward during rollout."
+
+  actor_kl_loss_coef:
+    type: number
+    default: 0.01
+    optional: true
+    description: "Controls the strength of the KL penalty, higher values increase the penalty.\
+                  Higher values encourage the model to stay closer to the reference policy,\
+                  while lower values allow for more exploration and deviation."
+
+  actor_kl_loss_type:
+    type: string
+    enum:
+    - "low_var_kl"
+    - "kl"
+    - "abs"
+    - "mse"
+    default: "low_var_kl"
+    optional: true
+    description: "Types of KL divergence loss calculation. Valid values: \
+                  'low_var_kl' (Low Variance KL - reduces variance in KL estimates for stable training), \
+                  'kl' (Standard KL - traditional KL divergence calculation), \
+                  'abs' (Absolute KL - When you want to penalize both increase and decrease equally), \
+                  'mse' (Mean Squared Error - When you want stronger penalty for large deviations)."
+
+  actor_entropy_coeff:
+    type: number
+    default: 0.0
+    optional: true
+    description: "Entropy regularization coefficient in loss. Default 0.0 (disabled) is recommended for most cases including GRPO and math/reasoning tasks.\
+                  Use 0.001 for mild exploration if observing mode collapse. Higher values encourage diversity but may hurt convergence."
+
+  actor_model_enable_gradient_checkpointing:
+    type: boolean
+    default: true
+    optional: true
+    description: "Trades off compute for memory by saving only a subset of activations during the forward pass and recomputing them during the backward pass.\
+                  This can significantly reduce memory usage, allowing for training larger models or using larger batch sizes,\
+                  but may increase computation time due to the need for recomputation."
+
+  actor_fsdp_param_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "In FSDP strategy, offload model parameters to CPU memory when not in use to reduce GPU memory consumption."
+
+  actor_fsdp_optimizer_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "In FSDP strategy, we offload optimizer state to CPU."
+
+  rollout_log_prob_micro_batch_size_per_gpu:
+    type: integer
+    default: 20
+    optional: true
+    description: "Rollout log prob micro batch size per GPU"
+
+  rollout_tensor_model_parallel_size:
+    type: integer
+    default: 2
+    optional: true
+    description: "Rollout tensor model parallel size"
+
+  rollout_dtype:
+    type: string
+    enum:
+    - "float16"
+    - "bfloat16"
+    - "float32"
+    - "auto"
+    default: "bfloat16"
+    optional: true
+    description: "Rollout data type for model inference.\
+                  Valid values: float16 (half precision for older GPUs),\
+                  bfloat16 (recommended for modern NVIDIA GPUs like A100/H100),\
+                  float32 (full precision, slower but more accurate), auto (automatic selection)"
+
+  rollout_gpu_memory_utilization:
+    type: number
+    default: 0.6
+    optional: true
+    description: "Rollout GPU memory utilization"
+
+  rollout_enable_chunked_prefill:
+    type: boolean
+    default: false
+    optional: true
+    description: "Enable chunked prefill.\
+                  A feature for rollout in vLLM which allows to chunk large prefills into smaller chunks \
+                  and batch them together with decode request. This helps to reduce memory consumption on GPUs,\
+                  enabling the processing of larger inputs or batch sizes that might otherwise exceed memory limits."
+
+  rollout_enforce_eager:
+    type: boolean
+    default: false
+    optional: true
+    description: "Disable CUDA graphs and use eager execution in vLLM.\
+                  Set to true for NPU/Ascend/non-NVIDIA hardware or debugging.\
+                  Set to false (default) for NVIDIA GPUs to enable CUDA graphs for 10-30% better performance."
+
+  rollout_free_cache_engine:
+    type: boolean
+    default: false
+    optional: true
+    description: "Free vLLM KV cache and offload model to CPU between rollout steps.\
+                  Enable (true) to save GPU memory in memory-constrained scenarios at cost of slight performance overhead (~2-5s per cycle).\
+                  Disable (false, default) for better throughput when GPU memory is sufficient."
+
+  rollout_n:
+    type: integer
+    default: 5
+    optional: true
+    description: "Number of responses to sample per prompt during rollout. Critical for GRPO (requires n > 1)"
+
+  rollout_temperature:
+    type: number
+    default: 1.0
+    optional: true
+    description: "Sampling temperature for rollout generation. Controls randomness during generation.\
+                  Use 1.0 for training (standard exploration), 0.7-0.9 for evaluation (more deterministic).\
+                  Range: [0.1, 2.0]. Lower values = more focused, higher values = more diverse."
+
+  rollout_top_p:
+    type: number
+    default: 1.0
+    optional: true
+    description: "Nucleus sampling threshold. Samples from smallest set of tokens with cumulative probability > top_p.\
+                  Use 1.0 for full exploration in training, 0.7-0.95 for focused sampling in evaluation.\
+                  Range: [0.0, 1.0]."
+
+  rollout_top_k:
+    type: integer
+    default: -1
+    optional: true
+    description: "Top-k sampling limit. Use -1 (disabled) for vLLM rollout, 0 for HuggingFace rollout.\
+                  Positive values limit vocabulary to top-k tokens."
+
+  rollout_do_sample:
+    type: boolean
+    default: true
+    optional: true
+    description: "Enable sampling during generation. Use true for RL training (stochastic sampling),\
+                  false for greedy decoding (always pick most probable token). Standard is true."
+
+  rollout_val_temperature:
+    type: number
+    default: 0.7
+    optional: true
+    description: "Temperature for validation/evaluation generation. Lower than training temperature\
+                  for more deterministic and reproducible evaluation. Typical: 0.7"
+
+  rollout_val_top_p:
+    type: number
+    default: 0.7
+    optional: true
+    description: "Top-p for validation/evaluation. Lower than training for more focused sampling during evaluation.\
+                  Typical: 0.7"
+
+  rollout_val_top_k:
+    type: integer
+    default: -1
+    optional: true
+    description: "Top-k for validation. Use -1 (disabled) for vLLM."
+
+  ref_log_prob_micro_batch_size_per_gpu:
+    type: integer
+    default: 20
+    optional: true
+    description: "Per-GPU micro batch size for computing reference policy log probabilities.\
+                  Used when use_kl_loss or use_kl_in_reward is enabled.\
+                  Higher values improve throughput but require more GPU memory.\
+                  Typically set equal to or higher than actor micro batch size since reference is inference-only."
+
+  ref_fsdp_param_offload:
+    type: boolean
+    default: true
+    optional: true
+    description: "Offload reference policy model parameters to CPU to save GPU memory.\
+                  Strongly recommended to enable (true) as reference model is read-only and used infrequently.\
+                  Saves significant GPU memory (14-128GB depending on model size)."
+
+  algorithm_use_kl_in_reward:
+    type: boolean
+    default: false
+    optional: true
+    description: "Add KL divergence penalty to reward signal (classic PPO approach with adaptive KL).\
+                  Set false (default) for GRPO which uses kl_loss in actor loss instead.\
+                  Cannot be true if actor.use_kl_loss is true. Requires reference model when enabled."
+
+  trainer_save_freq:
+    type: integer
+    default: 20
+    optional: true
+    description: "Checkpoint save frequency in epochs.\
+                  The trainer saves model state (HuggingFace-compatible model) every N epochs."
+
+  trainer_test_freq:
+    type: integer
+    default: 5
+    optional: true
+    description: "Validation frequency in epochs. For example, test_freq=5 means validation runs at epochs 5, 10, 15, etc.\
+                  Validation uses different sampling parameters (typically greedy decoding with temperature=0, do_sample=False, n=1) for consistent evaluation."
+
+  trainer_val_before_train:
+    type: boolean
+    default: true
+    optional: true
+    description: "Run validation before training starts. When enabled, the trainer evaluates the model on the validation set,\
+                  before any training occurs to establish baseline performance metrics. This is useful for tracking improvement from the initial model state."
+
+  trainer_total_epochs:
+    type: integer
+    default: 7
+    optional: true
+    description: "Total epochs"
+
+  total_training_steps:
+    type: integer
+    optional: true
+    description: "Total number of training steps"
+
+  pypi_packages_override:
+    type: string
+    optional: true
+    description: "Comma-separated list of PyPI packages to override before starting the run (e.g., transformers==4.30.0,torch==2.3.1).\
+                  These will be installed using pip before the component starts."
+
+outputs:
+  intermediate_folder:
+    type: uri_folder
+    description: "Intermediate directory for RL training checkpoints"
+  model_output:
+    type: uri_folder
+    description: "Directory containing the trained model artifacts"
+
+command: >-
+  python reasoning_train_rft.py
+  $[[--pypi_packages_override '${{inputs.pypi_packages_override}}']]
+  --data_train_files '${{inputs.data_train_files}}'
+  --data_val_files '${{inputs.data_val_files}}'
+  $[[--data_train_batch_size '${{inputs.data_train_batch_size}}']]
+  $[[--data_max_prompt_length '${{inputs.data_max_prompt_length}}']]
+  $[[--data_max_response_length '${{inputs.data_max_response_length}}']]
+  $[[--data_filter_overlong_prompts '${{inputs.data_filter_overlong_prompts}}']]
+  --data_truncation '${{inputs.data_truncation}}'
+  --actor_model_path '${{inputs.actor_model_path}}'
+  $[[--actor_optim_lr '${{inputs.actor_optim_lr}}']]
+  $[[--actor_model_use_remove_padding '${{inputs.actor_model_use_remove_padding}}']]
+  $[[--actor_strategy '${{inputs.actor_strategy}}']]
+  $[[--actor_fsdp_config_offload_policy '${{inputs.actor_fsdp_config_offload_policy}}']]
+  $[[--actor_ppo_mini_batch_size '${{inputs.actor_rft_mini_batch_size}}']]
+  $[[--actor_ppo_micro_batch_size_per_gpu '${{inputs.actor_rft_micro_batch_size_per_gpu}}']]
+  $[[--actor_model_lora_rank '${{inputs.actor_model_lora_rank}}']]
+  $[[--actor_model_lora_alpha '${{inputs.actor_model_lora_alpha}}']]
+  $[[--actor_model_target_modules '${{inputs.actor_model_target_modules}}']]
+  $[[--actor_use_kl_loss '${{inputs.actor_use_kl_loss}}']]
+  $[[--actor_kl_loss_coef '${{inputs.actor_kl_loss_coef}}']]
+  $[[--actor_kl_loss_type '${{inputs.actor_kl_loss_type}}']]
+  $[[--actor_entropy_coeff '${{inputs.actor_entropy_coeff}}']]
+  $[[--actor_model_enable_gradient_checkpointing '${{inputs.actor_model_enable_gradient_checkpointing}}']]
+  $[[--actor_fsdp_param_offload '${{inputs.actor_fsdp_param_offload}}']]
+  $[[--actor_fsdp_optimizer_offload '${{inputs.actor_fsdp_optimizer_offload}}']]
+  $[[--rollout_log_prob_micro_batch_size_per_gpu '${{inputs.rollout_log_prob_micro_batch_size_per_gpu}}']]
+  $[[--rollout_tensor_model_parallel_size '${{inputs.rollout_tensor_model_parallel_size}}']]
+  $[[--rollout_dtype '${{inputs.rollout_dtype}}']]
+  $[[--rollout_gpu_memory_utilization '${{inputs.rollout_gpu_memory_utilization}}']]
+  $[[--rollout_enable_chunked_prefill '${{inputs.rollout_enable_chunked_prefill}}']]
+  $[[--rollout_enforce_eager '${{inputs.rollout_enforce_eager}}']]
+  $[[--rollout_free_cache_engine '${{inputs.rollout_free_cache_engine}}']]
+  $[[--rollout_n '${{inputs.rollout_n}}']]
+  $[[--rollout_temperature '${{inputs.rollout_temperature}}']]
+  $[[--rollout_top_p '${{inputs.rollout_top_p}}']]
+  $[[--rollout_top_k '${{inputs.rollout_top_k}}']]
+  $[[--rollout_do_sample '${{inputs.rollout_do_sample}}']]
+  $[[--rollout_val_temperature '${{inputs.rollout_val_temperature}}']]
+  $[[--rollout_val_top_p '${{inputs.rollout_val_top_p}}']]
+  $[[--rollout_val_top_k '${{inputs.rollout_val_top_k}}']]
+  $[[--ref_log_prob_micro_batch_size_per_gpu '${{inputs.ref_log_prob_micro_batch_size_per_gpu}}']]
+  $[[--ref_fsdp_param_offload '${{inputs.ref_fsdp_param_offload}}']]
+  $[[--algorithm_use_kl_in_reward '${{inputs.algorithm_use_kl_in_reward}}']]
+  --algorithm_adv_estimator '${{inputs.algorithm_adv_estimator}}'
+  --trainer_logger '["console","azureml"]'
+  --trainer_project_name 'rft_finetuning_project'
+  --trainer_experiment_name 'rft_training'
+  $[[--trainer_n_gpus_per_node '${{inputs.trainer_n_gpus_per_node}}']]
+  $[[--trainer_nnodes '${{inputs.trainer_nnodes}}']]
+  $[[--trainer_save_freq '${{inputs.trainer_save_freq}}']]
+  $[[--trainer_test_freq '${{inputs.trainer_test_freq}}']]
+  $[[--trainer_val_before_train '${{inputs.trainer_val_before_train}}']]
+  $[[--trainer_total_epochs '${{inputs.trainer_total_epochs}}']]
+  $[[--total_training_steps '${{inputs.total_training_steps}}']]
+  --intermediate_folder '${{outputs.intermediate_folder}}'
+  --output_dir '${{outputs.model_output}}'
+

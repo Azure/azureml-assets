@@ -1,0 +1,521 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+name: pipeline_rl_finetune
+version: 0.0.1
+type: pipeline
+display_name: Pipeline RFT Trainer (Preview)
+description: Pipeline for Multi-Strategy Reinforcement Learning Training of Large Language Models.
+
+inputs:
+  # Infrastructure parameters
+  instance_type_model_import:
+    type: string
+    optional: true
+    default: Standard_d12_v2
+    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. The parameter compute_model_import must be set to 'serverless' for instance_type to be used.
+
+  instance_type_finetune:
+    type: string
+    optional: true
+    default: Standard_ND96isr_H100_v5
+    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. The parameter compute_finetune must be set to 'serverless' for instance_type to be used.
+
+  shm_size_finetune:
+    type: string
+    optional: true
+    default: 5g
+    description: Shared memory size to be used for finetune component. It is useful while using Nebula (via DeepSpeed) which uses shared memory to save model and optimizer states.
+
+  algorithm_adv_estimator:
+    type: string
+    enum:
+    - "grpo"
+    - "reinforce_plus_plus"
+    default: "grpo"
+    optional: true
+    description: "Advantage estimator algorithm.\
+                  Valid values:  grpo (Group Relative Policy Optimization - critic-free GRPO for mathematical reasoning),\
+                  reinforce_plus_plus (REINFORCE++ - efficient RLHF with global advantage normalization)."
+
+  num_nodes_finetune:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of nodes to be used for finetuning. (used for distributed training)
+
+  number_of_gpu_to_use_finetuning:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of gpus to be used per node for finetuning, should be equal to number of gpu per node in the compute SKU used for finetune.
+
+  # Model Import parameters
+  huggingface_id:
+    type: string
+    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    optional: true
+
+  pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+  mlflow_model_path:
+    type: mlflow_model
+    optional: true
+    description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
+    mode: rw_mount
+
+  data_train_files:
+    type: uri_file
+    optional: false
+    description: "Path to the training parquet or jsonl file."
+
+  data_val_files:
+    type: uri_file
+    optional: false
+    description: "Path to the validation parquet or jsonl file."
+
+  data_train_batch_size:
+    type: integer
+    default: 512
+    optional: true
+    description: "Training batch size."
+
+  data_max_prompt_length:
+    type: integer
+    default: 1024
+    optional: true
+    description: "Maximum prompt length."
+
+  data_max_response_length:
+    type: integer
+    default: 2048
+    optional: true
+    description: "Maximum response length"
+
+  data_filter_overlong_prompts:
+    type: boolean
+    default: true
+    optional: true
+    description: "Filter overlong prompts"
+
+  data_truncation:
+    type: string
+    enum:
+    - "error"
+    - "left"
+    - "right"
+    - "middle"
+    default: "error"
+    optional: false
+    description: "Truncation strategy. Options: 'error', 'left', 'right', 'middle'.\
+                  Default is 'error'. \
+                  - 'error': Raises an error if length exceeds max.\
+                  - 'left': Keeps the end/right portion (removes beginning)\
+                  - 'right': Keeps the beginning/left portion (removes end)\
+                  - 'middle': Keeps both beginning and end (removes middle portion)"
+
+  actor_optim_lr:
+    type: number
+    default: 3e-6
+    optional: true
+    description: "Actor optimizer learning rate."
+
+  actor_model_use_remove_padding:
+    type: boolean
+    default: true
+    optional: true
+    description: "Enables sequence packing optimization, which \
+                  removes padding tokens from inputs during training to save computation."
+
+  actor_strategy:
+    type: string
+    enum:
+    - "fsdp"
+    - "fsdp2"
+    default: "fsdp2"
+    optional: true
+    description: "Actor training strategy.\
+                  Valid values: fsdp (Fully Sharded Data Parallel v1),\
+                  fsdp2 (Fully Sharded Data Parallel v2)"
+
+  actor_fsdp_config_offload_policy:
+    type: boolean
+    default: true
+    optional: true
+    description: "FSDP config offload policy(params/optimizers/gradients) to reduce memory usage"
+
+  actor_rft_mini_batch_size:
+    type: integer
+    default: 128
+    optional: true
+    description: "The global batch size for splitting sampled data into multiple sub-batches during training"
+
+  actor_rft_micro_batch_size_per_gpu:
+    type: integer
+    default: 10
+    optional: true
+    description: "The per-GPU batch size for each forward and backward pass during training."
+
+  actor_model_lora_rank:
+    type: integer
+    default: 64
+    optional: true
+    description: "LoRA rank to control the capacity of the low-rank adaptation.\
+                  Higher values increase model adaptability but also computational cost and memory usage."
+
+  actor_model_lora_alpha:
+    type: integer
+    default: 32
+    optional: true
+    description: "LoRA alpha to scale the LoRA updates.\
+                  Higher values increase the influence of the LoRA layers on the overall model output."
+
+  actor_model_target_modules:
+    type: string
+    default: "all-linear"
+    optional: true
+    description: "Target modules for LoRA\
+                  Options: 'all-linear' (applies LoRA to all linear layers),\
+                  '[q_proj,k_proj,v_proj,o_proj]' (applies LoRA to specific attention projection layers),\
+                  '[q_proj,v_proj]'' (applies LoRA to query and value projection layers only).\
+                  '.*_proj'(We can use Regex pattern, here it's for all modules ending with '_proj') \
+                  "
+
+  actor_use_kl_loss:
+    type: boolean
+    default: true
+    optional: true
+    description: "If this is True KL penalty is added to actor loss which is computed during training,\
+                  else KL penalty is added to reward during rollout."
+
+  actor_kl_loss_coef:
+    type: number
+    default: 0.01
+    optional: true
+    description: "Controls the strength of the KL penalty, higher values increase the penalty.\
+                  Higher values encourage the model to stay closer to the reference policy,\
+                  while lower values allow for more exploration and deviation."
+
+  actor_kl_loss_type:
+    type: string
+    enum:
+    - "low_var_kl"
+    - "kl"
+    - "abs"
+    - "mse"
+    default: "low_var_kl"
+    optional: true
+    description: "Types of KL divergence loss calculation. Valid values: \
+                  'low_var_kl' (Low Variance KL - reduces variance in KL estimates for stable training), \
+                  'kl' (Standard KL - traditional KL divergence calculation), \
+                  'abs' (Absolute KL - When you want to penalize both increase and decrease equally), \
+                  'mse' (Mean Squared Error - When you want stronger penalty for large deviations)."
+
+  actor_entropy_coeff:
+    type: number
+    default: 0.0
+    optional: true
+    description: "Entropy regularization coefficient in GRPO loss. Default 0.0 (disabled) is recommended for most cases including GRPO and math/reasoning tasks.\
+                  Use 0.001 for mild exploration if observing mode collapse. Higher values encourage diversity but may hurt convergence."
+
+  actor_model_enable_gradient_checkpointing:
+    type: boolean
+    default: true
+    optional: true
+    description: "Trades off compute for memory by saving only a subset of activations during the forward pass and recomputing them during the backward pass.\
+                  This can significantly reduce memory usage, allowing for training larger models or using larger batch sizes,\
+                  but may increase computation time due to the need for recomputation."
+
+  actor_fsdp_param_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "In FSDP strategy, offload model parameters to CPU memory when not in use to reduce GPU memory consumption."
+
+  actor_fsdp_optimizer_offload:
+    type: boolean
+    default: false
+    optional: true
+    description: "In FSDP strategy, we offload optimizer state to CPU."
+
+  rollout_log_prob_micro_batch_size_per_gpu:
+    type: integer
+    default: 20
+    optional: true
+    description: "Rollout log prob micro batch size per GPU"
+
+  rollout_tensor_model_parallel_size:
+    type: integer
+    default: 2
+    optional: true
+    description: "Rollout tensor model parallel size"
+
+  rollout_dtype:
+    type: string
+    enum:
+    - "float16"
+    - "bfloat16"
+    - "float32"
+    - "auto"
+    default: "bfloat16"
+    optional: true
+    description: "Rollout data type for model inference.\
+                  Valid values: float16 (half precision for older GPUs),\
+                  bfloat16 (recommended for modern NVIDIA GPUs like A100/H100),\
+                  float32 (full precision, slower but more accurate), auto (automatic selection)"
+
+  rollout_gpu_memory_utilization:
+    type: number
+    default: 0.6
+    optional: true
+    description: "Rollout GPU memory utilization"
+
+  rollout_enable_chunked_prefill:
+    type: boolean
+    default: false
+    optional: true
+    description: "Enable chunked prefill.\
+                  A feature for rollout in vLLM which allows to chunk large prefills into smaller chunks \
+                  and batch them together with decode request. This helps to reduce memory consumption on GPUs,\
+                  enabling the processing of larger inputs or batch sizes that might otherwise exceed memory limits."
+
+  rollout_enforce_eager:
+    type: boolean
+    default: false
+    optional: true
+    description: "Disable CUDA graphs and use eager execution in vLLM.\
+                  Set to true for NPU/Ascend/non-NVIDIA hardware or debugging.\
+                  Set to false (default) for NVIDIA GPUs to enable CUDA graphs for 10-30% better performance."
+
+  rollout_free_cache_engine:
+    type: boolean
+    default: false
+    optional: true
+    description: "Free vLLM KV cache and offload model to CPU between rollout steps.\
+                  Enable (true) to save GPU memory in memory-constrained scenarios at cost of slight performance overhead (~2-5s per cycle).\
+                  Disable (false, default) for better throughput when GPU memory is sufficient."
+
+  rollout_n:
+    type: integer
+    default: 5
+    optional: true
+    description: "Number of responses to sample per prompt during rollout. Critical for GRPO (requires n > 1)"
+
+  rollout_temperature:
+    type: number
+    default: 1.0
+    optional: true
+    description: "Sampling temperature for rollout generation. Controls randomness during generation.\
+                  Use 1.0 for training (standard exploration), 0.7-0.9 for evaluation (more deterministic).\
+                  Range: [0.1, 2.0]. Lower values = more focused, higher values = more diverse."
+
+  rollout_top_p:
+    type: number
+    default: 1.0
+    optional: true
+    description: "Nucleus sampling threshold. Samples from smallest set of tokens with cumulative probability > top_p.\
+                  Use 1.0 for full exploration in training, 0.7-0.95 for focused sampling in evaluation.\
+                  Range: [0.0, 1.0]."
+
+  rollout_top_k:
+    type: integer
+    default: -1
+    optional: true
+    description: "Top-k sampling limit. Use -1 (disabled) for vLLM rollout, 0 for HuggingFace rollout.\
+                  Positive values limit vocabulary to top-k tokens."
+
+  rollout_do_sample:
+    type: boolean
+    default: true
+    optional: true
+    description: "Enable sampling during generation. Use true for RL training (stochastic sampling),\
+                  false for greedy decoding (always pick most probable token). Standard is true."
+
+  rollout_val_temperature:
+    type: number
+    default: 0.7
+    optional: true
+    description: "Temperature for validation/evaluation generation. Lower than training temperature\
+                  for more deterministic and reproducible evaluation. Typical: 0.7"
+
+  rollout_val_top_p:
+    type: number
+    default: 0.7
+    optional: true
+    description: "Top-p for validation/evaluation. Lower than training for more focused sampling during evaluation.\
+                  Typical: 0.7"
+
+  rollout_val_top_k:
+    type: integer
+    default: -1
+    optional: true
+    description: "Top-k for validation. Use -1 (disabled) for vLLM."
+
+  ref_log_prob_micro_batch_size_per_gpu:
+    type: integer
+    default: 20
+    optional: true
+    description: "Per-GPU micro batch size for computing reference policy log probabilities.\
+                  Used when use_kl_loss or use_kl_in_reward is enabled.\
+                  Higher values improve throughput but require more GPU memory.\
+                  Typically set equal to or higher than actor micro batch size since reference is inference-only."
+
+  ref_fsdp_param_offload:
+    type: boolean
+    default: true
+    optional: true
+    description: "Offload reference policy model parameters to CPU to save GPU memory.\
+                  Strongly recommended to enable (true) as reference model is read-only and used infrequently.\
+                  Saves significant GPU memory (14-128GB depending on model size)."
+
+  algorithm_use_kl_in_reward:
+    type: boolean
+    default: false
+    optional: true
+    description: "Add KL divergence penalty to reward signal (classic PPO approach with adaptive KL).\
+                  Set false (default) for GRPO which uses kl_loss in actor loss instead.\
+                  Cannot be true if actor.use_kl_loss is true. Requires reference model when enabled."
+
+  trainer_save_freq:
+    type: integer
+    default: 20
+    optional: true
+    description: "Checkpoint save frequency in epochs.\
+                  The trainer saves model state (HuggingFace-compatible model) every N epochs."
+
+  trainer_test_freq:
+    type: integer
+    default: 5
+    optional: true
+    description: "Validation frequency in epochs. For example, test_freq=5 means validation runs at epochs 5, 10, 15, etc.\
+                  Validation uses different sampling parameters (typically greedy decoding with temperature=0, do_sample=False, n=1) for consistent evaluation."
+
+  trainer_val_before_train:
+    type: boolean
+    default: true
+    optional: true
+    description: "Run validation before training starts. When enabled, the trainer evaluates the model on the validation set,\
+                  before any training occurs to establish baseline performance metrics. This is useful for tracking improvement from the initial model state."
+
+  trainer_total_epochs:
+    type: integer
+    default: 15
+    optional: true
+    description: "Total epochs"
+
+  total_training_steps:
+    type: integer
+    optional: true
+    description: "Total number of training steps"
+
+  # PyPI packages override
+  pypi_packages_override:
+    type: string
+    optional: true
+    description: "Comma-separated list of PyPI packages to override before starting the run (e.g., transformers==4.30.0,torch==2.3.1). These will be installed using pip before each component starts."
+
+  # Compute parameters
+  compute_model_import:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for model_import eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+  compute_finetune:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
+outputs:
+  intermediate_folder:
+    type: uri_folder
+    description: "Intermediate directory for RL training checkpoints"
+    mode: rw_mount
+  model_output:
+    type: uri_folder
+    description: "Directory containing the trained model artifacts"
+    mode: rw_mount
+
+jobs:
+  component_model_import:
+    type: command
+    component: azureml:component_model_import:0.0.1
+    compute: '${{parent.inputs.compute_model_import}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_import}}'
+    inputs:
+      huggingface_id: '${{parent.inputs.huggingface_id}}'
+      pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
+      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+  component_rl_trainer:
+    type: command
+    component: azureml:component_rl_trainer:0.0.1
+    compute: '${{parent.inputs.compute_finetune}}'
+    environment_variables:
+      _AZUREML_CR_ENABLE_ITP_CAP: "false"
+    distribution:
+      type: mpi
+      process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
+    resources:
+      instance_count: '${{parent.inputs.num_nodes_finetune}}'
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
+      shm_size: '${{parent.inputs.shm_size_finetune}}'
+    inputs:
+      data_train_files: '${{parent.inputs.data_train_files}}'
+      data_val_files: '${{parent.inputs.data_val_files}}'
+      data_train_batch_size: '${{parent.inputs.data_train_batch_size}}'
+      data_max_prompt_length: '${{parent.inputs.data_max_prompt_length}}'
+      data_max_response_length: '${{parent.inputs.data_max_response_length}}'
+      data_filter_overlong_prompts: '${{parent.inputs.data_filter_overlong_prompts}}'
+      data_truncation: '${{parent.inputs.data_truncation}}'
+      actor_model_path: '${{parent.jobs.component_model_import.outputs.output_dir}}'
+      actor_optim_lr: '${{parent.inputs.actor_optim_lr}}'
+      actor_model_use_remove_padding: '${{parent.inputs.actor_model_use_remove_padding}}'
+      actor_strategy: '${{parent.inputs.actor_strategy}}'
+      actor_fsdp_config_offload_policy: '${{parent.inputs.actor_fsdp_config_offload_policy}}'
+      actor_rft_mini_batch_size: '${{parent.inputs.actor_rft_mini_batch_size}}'
+      actor_rft_micro_batch_size_per_gpu: '${{parent.inputs.actor_rft_micro_batch_size_per_gpu}}'
+      actor_model_lora_rank: '${{parent.inputs.actor_model_lora_rank}}'
+      actor_model_lora_alpha: '${{parent.inputs.actor_model_lora_alpha}}'
+      actor_model_target_modules: '${{parent.inputs.actor_model_target_modules}}'
+      actor_use_kl_loss: '${{parent.inputs.actor_use_kl_loss}}'
+      actor_kl_loss_coef: '${{parent.inputs.actor_kl_loss_coef}}'
+      actor_kl_loss_type: '${{parent.inputs.actor_kl_loss_type}}'
+      actor_entropy_coeff: '${{parent.inputs.actor_entropy_coeff}}'
+      actor_model_enable_gradient_checkpointing: '${{parent.inputs.actor_model_enable_gradient_checkpointing}}'
+      actor_fsdp_param_offload: '${{parent.inputs.actor_fsdp_param_offload}}'
+      actor_fsdp_optimizer_offload: '${{parent.inputs.actor_fsdp_optimizer_offload}}'
+      rollout_log_prob_micro_batch_size_per_gpu: '${{parent.inputs.rollout_log_prob_micro_batch_size_per_gpu}}'
+      rollout_tensor_model_parallel_size: '${{parent.inputs.rollout_tensor_model_parallel_size}}'
+      rollout_dtype: '${{parent.inputs.rollout_dtype}}'
+      rollout_gpu_memory_utilization: '${{parent.inputs.rollout_gpu_memory_utilization}}'
+      rollout_enable_chunked_prefill: '${{parent.inputs.rollout_enable_chunked_prefill}}'
+      rollout_enforce_eager: '${{parent.inputs.rollout_enforce_eager}}'
+      rollout_free_cache_engine: '${{parent.inputs.rollout_free_cache_engine}}'
+      rollout_n: '${{parent.inputs.rollout_n}}'
+      rollout_temperature: '${{parent.inputs.rollout_temperature}}'
+      rollout_top_p: '${{parent.inputs.rollout_top_p}}'
+      rollout_top_k: '${{parent.inputs.rollout_top_k}}'
+      rollout_do_sample: '${{parent.inputs.rollout_do_sample}}'
+      rollout_val_temperature: '${{parent.inputs.rollout_val_temperature}}'
+      rollout_val_top_p: '${{parent.inputs.rollout_val_top_p}}'
+      rollout_val_top_k: '${{parent.inputs.rollout_val_top_k}}'
+      ref_log_prob_micro_batch_size_per_gpu: '${{parent.inputs.ref_log_prob_micro_batch_size_per_gpu}}'
+      ref_fsdp_param_offload: '${{parent.inputs.ref_fsdp_param_offload}}'
+      algorithm_use_kl_in_reward: '${{parent.inputs.algorithm_use_kl_in_reward}}'
+      algorithm_adv_estimator: '${{parent.inputs.algorithm_adv_estimator}}'
+      trainer_n_gpus_per_node: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
+      trainer_nnodes: '${{parent.inputs.num_nodes_finetune}}'
+      trainer_save_freq: '${{parent.inputs.trainer_save_freq}}'
+      trainer_test_freq: '${{parent.inputs.trainer_test_freq}}'
+      trainer_val_before_train: '${{parent.inputs.trainer_val_before_train}}'
+      trainer_total_epochs: '${{parent.inputs.trainer_total_epochs}}'
+      total_training_steps: '${{parent.inputs.total_training_steps}}'
+      pypi_packages_override: '${{parent.inputs.pypi_packages_override}}'
+    outputs:
+      intermediate_folder: '${{parent.outputs.intermediate_folder}}'
+      model_output: '${{parent.outputs.model_output}}'
