@@ -7,7 +7,7 @@ is_deterministic: true
 display_name: Component RL Trainer (Preview)
 description: Component for Multi-Strategy Reinforcement Learning Training of Large Language Models.
 environment: azureml://registries/azureml/environments/acft-rft-training/versions/1
-code: ./src/
+code: ../../../src/rft
 
 distribution:
   type: mpi
