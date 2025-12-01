@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """
 Simplified Model Import using snapshot_download.
 Downloads HuggingFace models directly to output directory with disk space management.
