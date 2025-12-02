@@ -18,7 +18,7 @@ ARG ORAS_VERSION=1.3.0
 # CVE-2025-58181 (GHSA-j5w8-q4qc-rx2x) and CVE-2025-47914 (GHSA-f6x5-jh6r-wrfv)
 RUN git clone --depth 1 --branch v${ORAS_VERSION} https://github.com/oras-project/oras.git /tmp/oras \
  && cd /tmp/oras \
- && go get golang.org/x/crypto@v0.31.0 \
+ && go get golang.org/x/crypto@latest \
  && go mod tidy \
  && GOBIN=/out go install ./cmd/oras \
  && test -x /out/oras \
