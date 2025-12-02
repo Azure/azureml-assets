@@ -123,7 +123,8 @@ RUN pip install \
 RUN pip list && \
     pip install --upgrade 'starlette>=0.49.1' && \
     pip install pyarrow==14.0.2 \
-                'transformers[accelerate,sentencepiece,torch]==4.53.0' \
+                accelerate==1.12.0 \
+                'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
 
 # Upgrade torch and torchvision
