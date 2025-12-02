@@ -68,6 +68,7 @@ RUN pip install xgrammar==0.1.27
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
+RUN rm /opt/conda/envs/ptca/conda-meta/pip-25.2-pyhc872135_0.json
 # Set secure defaults
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1

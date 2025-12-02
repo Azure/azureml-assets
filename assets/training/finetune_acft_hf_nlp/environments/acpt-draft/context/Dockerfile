@@ -25,6 +25,7 @@ RUN pip install transformers==4.57.1
 RUN rm -rf ~/.cache/pip
 RUN rm -rf /opt/conda/lib/python3.10/site-packages/pip-25.2.dist-info
 RUN rm -rf opt/conda/lib/python3.13/site-packages/pip-25.2.dist-info
+RUN rm /opt/conda/envs/ptca/conda-meta/pip-25.2-pyhc872135_0.json
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
 COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
 COPY parse /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/data/parse.py
