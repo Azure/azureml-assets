@@ -38,9 +38,8 @@ RUN apt-get update && \
     apt-get autoclean && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
-RUN pip install --no-cache-dir pip==25.3
+RUN conda install pip==25.3 -y
 # Remove all old pip metadata after upgrade
-RUN find /opt/conda -type d -name "pip-25.2*" -exec rm -rf {} + 2>/dev/null || true
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
@@ -68,7 +67,6 @@ RUN pip install xgrammar==0.1.27
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
-RUN rm /opt/conda/envs/ptca/conda-meta/pip-25.2-pyhc872135_0.json
 # Set secure defaults
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1

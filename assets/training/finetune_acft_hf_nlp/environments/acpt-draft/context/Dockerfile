@@ -7,7 +7,7 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade git tar binutils binutils-common binutils-x86-64-linux-gnu libbinutils wget && \
     apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null || true && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN pip install pip==25.3
+RUN conda install pip==25.3 -y
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -25,7 +25,6 @@ RUN pip install transformers==4.57.1
 RUN rm -rf ~/.cache/pip
 RUN rm -rf /opt/conda/lib/python3.10/site-packages/pip-25.2.dist-info
 RUN rm -rf opt/conda/lib/python3.13/site-packages/pip-25.2.dist-info
-RUN rm /opt/conda/envs/ptca/conda-meta/pip-25.2-pyhc872135_0.json
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
 COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
 COPY parse /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/data/parse.py
