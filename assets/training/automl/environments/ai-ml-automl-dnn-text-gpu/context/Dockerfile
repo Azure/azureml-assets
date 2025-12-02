@@ -123,6 +123,7 @@ RUN pip install \
 RUN pip list && \
     pip install --upgrade 'starlette>=0.49.1' && \
     pip install pyarrow==14.0.2 \
+                accelerate==1.12.0 \
                 'transformers[sentencepiece,torch]==4.53.0' \
                 aiohttp==3.12.14
 
