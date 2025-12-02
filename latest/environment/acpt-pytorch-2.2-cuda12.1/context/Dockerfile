@@ -1,30 +1,17 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:biweekly.202509.2
 
+# Upgrade base conda packages
+RUN conda install -n base -c conda-forge pip=25.3 -y
+RUN conda list -n base
+
+# Upgrade ptca environment conda packages
+RUN conda install -c conda-forge pip=25.3 -y && \
+    conda clean -a -y
+
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-# Upgrade known vulnerable packages again just to be safe
-RUN pip install --upgrade \
-    pip>=25.3 \
-    starlette>=0.49.1 \
-    requests==2.32.4 \
-    urllib3==2.5.0 \
-    pillow==11.3.0 || true
-
-# Repeat for other envs if applicable
-RUN /opt/conda/bin/pip install --upgrade \
-    pip>=25.3 \
-    starlette>=0.49.1 \
-    requests==2.32.4 \
-    urllib3==2.5.0 \
-    pillow==11.3.0 || true
-
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-    pip>=25.3 \
-    starlette>=0.49.1 \
-    requests==2.32.4 \
-    urllib3==2.5.0 \
-    pillow==11.3.0 || true
+RUN conda list
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
@@ -55,11 +42,33 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
-        libc-bin \
-        libssl-dev \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        dpkg \
         dpkg-dev \
+        libbinutils \
+        binutils \
+        binutils-common \
+        binutils-x86-64-linux-gnu \
+        libctf0 \
+        libctf-nobfd0 \
+        libc6 \
+        libc6-dev \
+        libc-bin \
+        libc-dev-bin \
+        libdpkg-perl \
+        libssh-4 \
+        libxml2 \
+        linux-libc-dev \
+        linux-headers-generic \
+        locales \
+        libssl-dev \
+        libssl3 \
+        openssl \
         sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get autoremove -y 
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
