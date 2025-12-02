@@ -69,6 +69,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     wheel=0.44.0 \
     scipy=1.10.1 \
     joblib=1.2.0 \
+    ncurses=6.5 \
     # end conda dependencies
     -c conda-forge -c anaconda
 
@@ -119,16 +120,14 @@ RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0'
 
 # If you have other python/pip environments, update them too:
 RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
 
 # --- End Vulnerability Fixes ---
 
 # --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \
-    pip install 'numpy==1.26.4' --force-reinstall && \
-    /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.23.5' --force-reinstall && \
+    pip install 'numpy==1.23.5' --force-reinstall
+RUN pip install --upgrade 'h2>=4.3.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
@@ -141,6 +140,7 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
 
 RUN rm -rf /opt/miniconda/pkgs/
 
+# Verify installation
+RUN conda list
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
-

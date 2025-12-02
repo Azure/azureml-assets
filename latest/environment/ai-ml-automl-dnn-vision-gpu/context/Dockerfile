@@ -131,10 +131,10 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=
 
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN /azureml-envs/azureml-automl-dnn-vision-gpu/bin/pip install --upgrade 'mlflow==3.1.4'
+RUN pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN pip install --upgrade 'mlflow==3.1.4' 'numpy~=1.23.5'
 
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/conda/pkgs/
 
 # end pip install
