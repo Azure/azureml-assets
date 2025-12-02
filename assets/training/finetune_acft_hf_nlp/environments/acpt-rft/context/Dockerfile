@@ -39,6 +39,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
 RUN conda install pip==25.3 -y
+RUN conda run -n base python -m pip install --upgrade pip==25.3
 # Remove all old pip metadata after upgrade
 COPY requirements.txt .
 
