@@ -12,9 +12,18 @@ RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go
  && rm /tmp/go.tar.gz
 ENV PATH=/usr/local/go/bin:$PATH
 ARG ORAS_VERSION=1.3.0
-RUN GOBIN=/out go install oras.land/oras/cmd/oras@v${ORAS_VERSION} \
- && test -x /out/oras
-
+# RUN GOBIN=/out go install oras.land/oras/cmd/oras@v${ORAS_VERSION} \
+#  && test -x /out/oras
+# Build ORAS v1.3.0 with patched golang.org/x/crypto to fix:
+# CVE-2025-58181 (GHSA-j5w8-q4qc-rx2x) and CVE-2025-47914 (GHSA-f6x5-jh6r-wrfv)
+RUN git clone --depth 1 --branch v${ORAS_VERSION} https://github.com/oras-project/oras.git /tmp/oras \
+ && cd /tmp/oras \
+ && go get golang.org/x/crypto@v0.31.0 \
+ && go mod tidy \
+ && GOBIN=/out go install ./cmd/oras \
+ && test -x /out/oras \
+ && rm -rf /tmp/oras
+ 
 # =========================================
 # Runtime: AzureML base + Docker + Trivy + conda
 # =========================================
