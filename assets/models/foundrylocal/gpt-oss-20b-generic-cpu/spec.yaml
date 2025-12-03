@@ -1,0 +1,26 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: gpt-oss-20b-generic-cpu
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+  license: "MIT"
+  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/openai/gpt-oss-20b/blob/main/LICENSE>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+  alias: gpt-oss-20b
+  directoryPath: v1
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml-openai-oss/models/gpt-oss-20b/versions/9
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'cpu'
+    executionProvider: 'CPUExecutionProvider'
+    fileSizeBytes: 13161936965
+    vRamFootprintBytes: 13161936965
