@@ -80,9 +80,12 @@ class ReplicaManager:
             str: A comma-separated string of GPU IDs, e.g. "0,1,2,3".
         """
         gpu_ids = os.environ.get("CUDA_VISIBLE_DEVICES", None)
-        if gpu_ids is None:
-            gpu_ids = ",".join(
-                map(str, range(torch.cuda.device_count()))) if torch.cuda.is_available() else ""
+        logger.info(f"CUDA_VISIBLE_DEVICES read from environment: {gpu_ids}")
+
+        if not os.environ.get("ENFORCE_CUDA_VISIBLE_DEVICES", "false").lower() == "true":
+            gpu_ids = ",".join(map(str, range(torch.cuda.device_count()))) if torch.cuda.is_available() else ""
+            os.environ["CUDA_VISIBLE_DEVICES"] = gpu_ids
+            logger.info(f"Setting CUDA_VISIBLE_DEVICES to: {gpu_ids} via automatic detection.")
         return gpu_ids
 
     def initialize(self):
