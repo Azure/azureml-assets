@@ -6,6 +6,7 @@ RUN apt-get -y update && apt-get install -y expat
 
 # Install required packages from pypi
 COPY requirements.txt .
+RUN pip install --upgrade "pip>=25.3"
 RUN pip install -r requirements.txt --no-cache-dir
 
 # # # Install mmcv-full and mmdet

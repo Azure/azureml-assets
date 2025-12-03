@@ -5,5 +5,5 @@ RUN apt-get -y update && apt-get install -y libc-bin libc-bin libc-dev locales l
 
 
 COPY requirements.txt .
-
+RUN pip install --upgrade "pip>=25.3"
 RUN pip install -r requirements.txt

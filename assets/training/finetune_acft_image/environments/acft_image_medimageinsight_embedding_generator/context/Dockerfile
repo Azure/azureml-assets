@@ -9,6 +9,7 @@ RUN apt-get -y install unzip libc-bin libc-bin libc-dev locales libc6 dpkg-dev d
 
 # Install required packages from pypi
 COPY requirements.txt .
+RUN pip install --upgrade "pip>=25.3"
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Upgrade requests in the system Python (3.13) for fixing vulnerability

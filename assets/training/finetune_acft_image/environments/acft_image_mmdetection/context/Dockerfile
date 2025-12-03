@@ -7,12 +7,11 @@ RUN apt-get -y update && apt-get install -y libglib2.0-0 libc-bin libc-bin libc-
 
 # Install required packages from pypi
 COPY requirements.txt .
+RUN pip install --upgrade "pip>=25.3"
 RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get install -y expat
 
 # # # Install mmdet
-# Temporary workaround for https://github.com/open-mmlab/mim/issues/244
-RUN pip install pip==24.0
 # # Note that MMDet installs pycocotools
 # Note: mmdet should be installed via mim to access the model zoo config folder.
 RUN mim install mmdet==3.3.0
