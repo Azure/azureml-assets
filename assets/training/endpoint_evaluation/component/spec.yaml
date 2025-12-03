@@ -1,77 +1,106 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-name: sglang_benchmark
-display_name: SGLang Benchmark
-description: Runs benchmark on AzureML online endpoint using SGLang.
+name: component_endpoint_benchmarking
+display_name: Component Endpoint Benchmarking
+description: Runs benchmark on AzureML online endpoints.
 version: 0.0.1
-is_deterministic: true
+is_deterministic: True
 
 inputs:
-  scoring_url:
+  base_scoring_url:
     type: string
-    optional: false
-    description: The URL of the endpoint.
-  connection_name:
+    optional: False
+    description: The URL of the base endpoint.
+  base_connection_name:
     type: string
-    optional: false
-    description: The name of the connection to fetch the API_KEY for the endpoint authentication.
-  model:
+    optional: False
+    description: The name of the connection to fetch the API_KEY for the base endpoint authentication.
+  target_scoring_url:
     type: string
-    optional: false
-    description: HuggingFace repo ID of the model.
+    optional: False
+    description: The URL of the target endpoint.
+  target_connection_name:
+    type: string
+    optional: False
+    description: The name of the connection to fetch the API_KEY for the target endpoint authentication.
+  base_model:
+    type: string
+    optional: False
     default: nvidia/Llama-3.1-8B-Instruct-FP8
-  backend:
+    description: HuggingFace repo ID of the model for the base endpoint.
+  target_model:
     type: string
-    optional: true
-    description: Depending on the LLM Inference Engine.
+    optional: False
+    default: nvidia/Llama-3.1-8B-Instruct-FP8
+    description: HuggingFace repo ID of the model for the target endpoint.
+  base_backend:
+    type: string
+    optional: True
+    default: sglang
+    description: LLM Inference Engine for base endpoint.
     enum:
     - sglang
     - vllm
+  target_backend:
+    type: string
+    optional: True
     default: sglang
+    description: LLM Inference Engine for target endpoint.
+    enum:
+    - sglang
+    - vllm
   dataset_name:
     type: string
-    optional: true
+    optional: True
+    default: sharegpt
     description: Depending on the LLM Inference Engine.
     enum:
     - sharegpt
     default: sharegpt
   request_rate:
     type: integer
-    optional: true
-    description: The request rate per second for sending requests to the endpoint.
+    optional: True
     default: 10
+    description: The request rate per second for sending requests to the endpoint.
   num_prompts:
     type: integer
-    optional: true
-    description: The total number of prompts to send to the endpoint.
+    optional: True
     default: 2500
+    description: The total number of prompts to send to the endpoint.
   disable_shuffle:
     type: boolean
-    optional: true
+    optional: True
+    default: True
     description: Disable shuffling the dataset before sending requests.
-    default: true
   trials:
     type: integer
-    optional: true
-    description: Number of trials to run the benchmark, result will be averaged over all trials.
+    optional: True
     default: 5
+    description: Number of trials to run the benchmark, result will be averaged over all trials.
 
 outputs:
   metrics:
     type: uri_folder
     description: The output folder containing the benchmarking metrics.
 
+environment: azureml://registries/test_centralus/environments/acft-draft-model-training/versions/12
+resources:
+  instance_count: 1
+
 code: ../src
-environment: azureml://registries/test_centralus/environments/verl_trainer_rl/versions/7
 command: >-
   python main.py
   --output-file ${{outputs.metrics}}
-  --base-url ${{inputs.scoring_url}}
-  --connection-name ${{inputs.connection_name}}
-  --model ${{inputs.model}}
+  --base-url ${{inputs.base_scoring_url}}
+  --connection-name ${{inputs.base_connection_name}}
+  --base-model ${{inputs.base_model}}
+  --target-url ${{inputs.target_scoring_url}}
+  --target-connection-name ${{inputs.target_connection_name}}
+  --target-model ${{inputs.target_model}}
+  $[[--base-backend ${{inputs.base_backend}}]]
+  $[[--target-backend ${{inputs.target_backend}}]]
   $[[--trials ${{inputs.trials}}]]
-  $[[--backend ${{inputs.backend}}]]
   $[[--dataset-name ${{inputs.dataset_name}}]]
   $[[--request-rate ${{inputs.request_rate}}]]
   $[[--num-prompts ${{inputs.num_prompts}}]]
