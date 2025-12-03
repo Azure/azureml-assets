@@ -1,7 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: gpt-oss-20b
-version: 1
-path: ./
-tags:
-  foundryLocal: ""
-type: custom_model
