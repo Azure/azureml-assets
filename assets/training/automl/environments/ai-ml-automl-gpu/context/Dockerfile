@@ -99,6 +99,7 @@ RUN pip install \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
+                'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'cryptography>=45.0.7' \
                 'requests==2.32.5' \
