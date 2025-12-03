@@ -38,9 +38,9 @@ RUN apt-get update && \
     apt-get autoclean && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
-RUN pip install --no-cache-dir pip==25.3
+RUN conda install pip==25.3 -y
+RUN conda run -n base python -m pip install --upgrade pip==25.3
 # Remove all old pip metadata after upgrade
-RUN find /opt/conda -type d -name "pip-25.2*" -exec rm -rf {} + 2>/dev/null || true
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
