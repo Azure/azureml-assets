@@ -69,7 +69,7 @@ RUN pip uninstall -y onnxruntime
 RUN pip install \ 
     transformers==4.53.0 \
     optimum==1.23.3 \
-    accelerate==0.33.0 \
+    accelerate==1.12.0 \
     deepspeed~=0.15.1
 
 # Address vulnerabilities
