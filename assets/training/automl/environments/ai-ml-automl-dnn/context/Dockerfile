@@ -92,6 +92,11 @@ RUN pip install \
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3
 RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' 'h2>=4.3.0'
+
+# Downgrade mlflow to <3.0.0 to avoid model logging issues
+# check https://learn.microsoft.com/en-us/answers/questions/2288377/how-to-fix-model-logging-in-mlflow
+RUN pip install --upgrade 'mlflow<3.0.0' 'numpy~=1.23.5'
+
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

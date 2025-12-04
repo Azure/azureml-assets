@@ -132,7 +132,10 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
 RUN pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN pip install --upgrade 'mlflow==3.1.4' 'numpy~=1.23.5'
+
+# Downgrade mlflow to <3.0.0 to avoid model logging issues
+# check https://learn.microsoft.com/en-us/answers/questions/2288377/how-to-fix-model-logging-in-mlflow
+RUN pip install --upgrade 'mlflow<3.0.0' 'numpy~=1.23.5'
 
 RUN pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/conda/pkgs/
