@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 # Install wkhtmltopdf for pdf rendering from html
 RUN apt-get -y update && apt-get -y install wkhtmltopdf
@@ -33,7 +33,7 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.6'
 
-RUN pip install 'azureml-telemetry' --no-deps \
+RUN pip install 'azureml-telemetry==1.60.0' --no-deps \
                 'applicationinsights'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
@@ -47,7 +47,7 @@ RUN pip install 'cryptography>=43.0.1'
 RUN pip install 'rai-core-flask==0.7.6'
 
 # To resolve vulnerability issue
-RUN pip install 'mlflow>=3.1.0,<3.1.2'
+RUN pip install 'mlflow>=3.2.0,<=3.5.0'
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
