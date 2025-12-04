@@ -116,7 +116,6 @@ RUN pip install \
                 azureml-automl-dnn-vision=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
                 'requests>=2.32.5' \
-                'mlflow-skinny==2.22.2' \
                 'azure-identity>=1.25.1'
                 # end pypi dependencies
 
@@ -133,6 +132,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
 RUN pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN pip install --upgrade 'mlflow==2.22.2' 'numpy~=1.23.5'
 
 RUN pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/conda/pkgs/

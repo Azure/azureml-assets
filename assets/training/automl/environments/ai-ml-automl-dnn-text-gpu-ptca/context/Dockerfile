@@ -79,14 +79,11 @@ RUN pip install \
     'aiohttp==3.12.14' \
     'idna==3.7' \
     'requests==2.32.5' \
-    'urllib3==2.5.0'
+    'urllib3==2.5.0' \
+    'mlflow-skinny==2.22.2'
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0'
 RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
-
-# Downgrade mlflow to <3.0.0 to avoid model logging issues
-# check https://learn.microsoft.com/en-us/answers/questions/2288377/how-to-fix-model-logging-in-mlflow
-RUN pip install --upgrade 'mlflow<3.0.0' 'numpy~=1.23.5'
 
 RUN pip list
