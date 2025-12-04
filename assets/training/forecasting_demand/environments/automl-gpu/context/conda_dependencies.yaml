@@ -33,4 +33,3 @@ dependencies:
   - prophet==1.1.4
   - GitPython>=3.1.41
   - py-cpuinfo==5.0.0
-  - mlflow-skinny==2.22.2

@@ -95,7 +95,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'mlflow-skinny==2.22.2' \
+                'mlflow-skinny==2.15.1' \
                 'azure-identity>=1.25.1' --no-cache-dir
 
 RUN pip install \

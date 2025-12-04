@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-forecasting-gpu
 # Prepend path to AzureML conda environment
@@ -70,22 +70,22 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # GitPython>=3.1.41 is required for https://github.com/advisories/GHSA-2mqj-m65w-jghx and is not available in conda
 RUN pip install \
                 # begin pypi dependencies
-                azureml-core=={{latest-pypi-version}} \
-                azureml-mlflow=={{latest-pypi-version}} \
-                azureml-defaults=={{latest-pypi-version}} \
-                azureml-telemetry=={{latest-pypi-version}} \
-                azureml-interpret=={{latest-pypi-version}} \
-                azureml-responsibleai=={{latest-pypi-version}} \
-                azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
-                azureml-dataset-runtime=={{latest-pypi-version}} \
-                azureml-train-automl=={{latest-pypi-version}} \
-                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
+                azureml-core==1.61.0  \
+                azureml-mlflow==1.61.0  \
+                azureml-defaults==1.61.0  \
+                azureml-telemetry==1.61.0  \
+                azureml-interpret==1.61.0  \
+                azureml-responsibleai==1.61.0  \
+                azureml-automl-core==1.61.0  \
+                azureml-automl-runtime==1.61.0  \
+                azureml-train-automl-client==1.61.0  \
+                azureml-train-automl-runtime==1.61.0  \
+                azureml-dataset-runtime==1.61.0  \
+                azureml-train-automl==1.61.0  \
+                azureml-contrib-automl-dnn-forecasting==1.61.0  \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
-                'mlflow-skinny==2.22.2' \
+                'mlflow-skinny==2.15.1' \
                 'xgboost==1.5.2' \
                 'cryptography>=45.0.7' \
                 'requests>=2.32.5' \
