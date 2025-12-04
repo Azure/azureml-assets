@@ -4,7 +4,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/automl
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -42,7 +42,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 # Address vulnerabilities
 # RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.4' 'urllib3==2.5.0' 'pillow==11.3.0' || true
-RUN pip install --upgrade --no-cache-dir 'requests==2.32.4' 'urllib3==2.5.0' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==11.3.0' || true
+RUN pip install --upgrade --no-cache-dir 'requests==2.32.5' 'urllib3==2.5.0' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==11.3.0' || true
 # If ptca env exists (for miniconda setups)
 # RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'urllib3==2.5.0' 'torch==2.8.0' 'torchvision==0.22.1' 'pillow==11.3.0' || true
 
