@@ -10,7 +10,7 @@ FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20240327.v1 AS inferencin
 
 # DisableDockerDetector "Preferred to use nvidia registry over MCR mirror"
 
-FROM nvcr.io/nvidia/cuda:12.3.2-cudnn9-devel-ubuntu20.04
+FROM nvcr.io/nvidia/cuda:12.3.2-cudnn9-devel-ubuntu22.04
 
 USER root:root
 
@@ -41,8 +41,7 @@ RUN apt-get update && \
     login \
     passwd \
     libldap-common \
-    libldap-2.4-2 \
-    openssl - 1.1.1 \
+    openssl \
     procps \
     libprocps8 \
     libmlx4-1 \
@@ -94,7 +93,7 @@ RUN apt-get update && \
 	libibverbs-dev \
     libsm6 \
     libxext6 \
-    libssl1.1 \
+    libssl3 \
     libxrender-dev \
     libglib2.0-0 \
     dh-make \
@@ -151,6 +150,14 @@ RUN apt-get update && apt-get install -y lsb-release && \
 # Inference
 # Copy logging utilities, nginx and rsyslog configuration files, IOT server binary, etc.
 COPY --from=inferencing-assets /artifacts /var/
+# Install liblttng-ust1 for Ubuntu 22.04 and create dummy package for liblttng-ust0 compatibility
+RUN apt-get update && \
+    apt-get install -y liblttng-ust1 equivs && \
+    echo "Section: misc\nPriority: optional\nStandards-Version: 3.9.2\nPackage: liblttng-ust0\nVersion: 999.0\nDepends: liblttng-ust1\nDescription: Dummy package for liblttng-ust0 compatibility" > /tmp/liblttng-ust0.control && \
+    equivs-build /tmp/liblttng-ust0.control && \
+    dpkg -i liblttng-ust0_999.0_all.deb && \
+    rm -f liblttng-ust0_999.0_all.deb /tmp/liblttng-ust0.control && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
 RUN /var/requirements/install_system_requirements.sh && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -176,9 +183,9 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
 # Open-MPI-UCX installation
 RUN mkdir /tmp/ucx && \
     cd /tmp/ucx && \
-        wget -q https://github.com/openucx/ucx/releases/download/v1.9.0/ucx-1.9.0.tar.gz && \
-        tar zxf ucx-1.9.0.tar.gz && \
-	cd ucx-1.9.0 && \
+        wget -q https://github.com/openucx/ucx/releases/download/v1.15.0/ucx-1.15.0.tar.gz && \
+        tar zxf ucx-1.15.0.tar.gz && \
+	cd ucx-1.15.0 && \
         ./configure --prefix=/usr/local --enable-optimizations --disable-assertions --disable-params-check --enable-mt && \
         make -j $(nproc --all) && \
         make install && \
@@ -207,14 +214,17 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
 RUN apt-get update && \
     apt-get install -y cmake
 
-# rdma-core v30.0 for Mlnx_ofed_5_1_2 as user space driver
-RUN mkdir /tmp/rdma-core && \
-    cd /tmp/rdma-core && \
-    git clone --branch v30.0 https://github.com/linux-rdma/rdma-core && \
-    cd /tmp/rdma-core/rdma-core && \
-    debian/rules binary && \
-    dpkg -i ../*.deb && \
-    rm -rf /tmp/rdma-core
+# Install rdma-core from Ubuntu repositories (compatible with Ubuntu 22.04)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    rdma-core \
+    libibverbs1 \
+    libibverbs-dev \
+    librdmacm1 \
+    librdmacm-dev \
+    ibverbs-providers && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \
@@ -249,7 +259,7 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
 
 RUN conda run -p $CONDA_PREFIX
 
-RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
+RUN pip install --no-cache-dir horovod[tensorflow]==0.28.1
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH

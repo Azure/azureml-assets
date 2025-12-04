@@ -2,6 +2,14 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.99 (2025-11-24)
+### 🐛 Bugs Fixed
+- [#4636](https://github.com/Azure/azureml-assets/pull/4636) Handle non-JSON content from Azure CLI responses
+
+## 1.16.98 (2025-11-19)
+### 🚀 New Features
+- [#4629](https://github.com/Azure/azureml-assets/pull/4629) Enforce encoding for file read and write operations
+
 ## 1.16.97 (2025-10-22)
 ### 🚀 New Features
 - [#4535](https://github.com/Azure/azureml-assets/pull/4535) Add missing generic asset types to GENERIC_ASSET_TYPES

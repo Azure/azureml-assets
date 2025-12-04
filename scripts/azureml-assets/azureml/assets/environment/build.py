@@ -141,10 +141,10 @@ def create_acr_task(image_name: str,
         })
 
     # Write YAML file to disk
-    with open(task_filename, "w") as f:
+    with open(task_filename, "w", encoding='utf-8') as f:
         yaml = YAML()
         yaml.default_flow_style = False
-        YAML().dump(task, f)
+        yaml.dump(task, f)
 
     # Compute task timeout by adding all step timeouts
     return sum([step.get('timeout', DEFAULT_STEP_TIMEOUT_SECONDS) for step in task['steps']])
@@ -199,7 +199,7 @@ def build_image(asset_config: assets.AssetConfig,
     end = timer()
     logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
     os.makedirs(build_log.parent, exist_ok=True)
-    with open(build_log, "w") as f:
+    with open(build_log, "w", encoding='utf-8') as f:
         f.write(p.stdout.decode())
     return (asset_config, image_name, p.returncode, p.stdout.decode())
 
