@@ -217,7 +217,7 @@ class DeploymentConfig:
         Returns:
             DeploymentConfig: Deployment config.
         """
-        with open(deployment_config) as fp:
+        with open(deployment_config, encoding='utf-8') as fp:
             config = YAML().load(fp)
             return DeploymentConfigSchema().load(config)
 
