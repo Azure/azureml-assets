@@ -97,6 +97,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.25.1' \
+                'mlflow-skinny==2.22.2' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
                 'cmdstanpy==1.0.4' \
@@ -109,10 +110,6 @@ RUN pip install \
 # Upgrade requests, urllib3, pip, starlette in all relevant Python environments to meet vulnerability requirements
 RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'
 RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'|| true
-
-# Downgrade mlflow to <3.0.0 to avoid model logging issues
-# check https://learn.microsoft.com/en-us/answers/questions/2288377/how-to-fix-model-logging-in-mlflow
-RUN pip install --upgrade 'mlflow<3.0.0' 'numpy~=1.23.5'
 
 RUN rm -rf /opt/miniconda/pkgs/
 

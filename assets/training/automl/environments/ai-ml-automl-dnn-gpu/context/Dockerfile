@@ -95,6 +95,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
+                'mlflow-skinny==2.22.2' \
                 'azure-identity>=1.25.1' --no-cache-dir
 
 RUN pip install \
@@ -138,11 +139,7 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  pip install --no-cache-dir --no-build-isolation \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
-# Downgrade mlflow to <3.0.0 to avoid model logging issues
-# check https://learn.microsoft.com/en-us/answers/questions/2288377/how-to-fix-model-logging-in-mlflow
-RUN pip install --upgrade 'mlflow<3.0.0' 'numpy~=1.23.5'
-
-RUN rm -rf /opt/miniconda/pkgs/
+ RUN rm -rf /opt/miniconda/pkgs/
 
 # Verify installation
 RUN conda list
