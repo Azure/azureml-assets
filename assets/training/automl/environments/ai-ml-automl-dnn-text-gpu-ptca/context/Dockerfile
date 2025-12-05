@@ -79,7 +79,8 @@ RUN pip install \
     'aiohttp==3.12.14' \
     'idna==3.7' \
     'requests==2.32.5' \
-    'urllib3==2.5.0'
+    'urllib3==2.5.0' \
+    'mlflow-skinny==2.15.1'
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0'

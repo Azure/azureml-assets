@@ -97,6 +97,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.25.1' \
+                'mlflow-skinny==2.15.1' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
                 'cmdstanpy==1.0.4' \
