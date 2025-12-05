@@ -23,7 +23,7 @@ tags:
   task: chat-completion
   author: "Mistral AI"
   benchmark: "quality"
-version: 6
+version: 7
 description: |
   The Mistral-7B-Instruct-v0.2 Large Language Model (LLM) is an instruct fine-tuned version of the Mistral-7B-v0.2.
 
