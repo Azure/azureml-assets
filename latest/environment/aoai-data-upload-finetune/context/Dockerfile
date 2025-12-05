@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20251130.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20251204.v1
 
 RUN apt-get update && apt-get -y upgrade
 RUN pip install --upgrade "pip>=25.3"

@@ -4,7 +4,7 @@ description: >-
   CPU based environment for AML Data Labeling.
 
 name: "data-labeling"
-version: "45"
+version: "46"
 
 build:
   path: "context"
