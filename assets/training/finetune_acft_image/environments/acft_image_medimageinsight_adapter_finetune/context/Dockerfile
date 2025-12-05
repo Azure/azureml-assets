@@ -6,7 +6,6 @@ RUN apt-get -y update
 
 # Install unzip
 RUN apt-get -y install unzip libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
-RUN pip install --upgrade "pip>=25.3"
 
 # Install required packages from pypi
 COPY requirements.txt .

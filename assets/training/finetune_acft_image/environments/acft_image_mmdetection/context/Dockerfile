@@ -7,7 +7,6 @@ RUN apt-get -y update && apt-get install -y libglib2.0-0 libc-bin libc-bin libc-
 
 # Install required packages from pypi
 COPY requirements.txt .
-RUN pip install --upgrade "pip>=25.3"
 RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get install -y expat
 
