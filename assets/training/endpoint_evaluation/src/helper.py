@@ -1,6 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Helper utilities for Azure ML integration and API key management.
+
+This module provides functions for:
+- Retrieving API keys from Azure ML workspace connections
+- Creating HTTP sessions with retry policies
+- Logging metrics to Azure ML runs
+- Managing authentication and workspace connections
+"""
+
 from typing import Optional, Tuple
 import json
 import requests
@@ -39,6 +48,14 @@ LOGGABLE_METRIC_NAMES = {
 
 
 def _get_retry_policy(num_retry: int = 3) -> Retry:
+    """Create HTTP retry policy with exponential backoff.
+    
+    Args:
+        num_retry: Maximum number of retry attempts
+        
+    Returns:
+        Retry: Configured retry policy for HTTP requests
+    """
     """
     Request retry policy with increasing backoff.
 
@@ -61,6 +78,14 @@ def _get_retry_policy(num_retry: int = 3) -> Retry:
 
 
 def _create_session_with_retry(retry: int = 3) -> requests.Session:
+    """Create HTTP session with retry capability.
+    
+    Args:
+        retry: Number of retry attempts for failed requests
+        
+    Returns:
+        requests.Session: Configured session with retry adapters
+    """
     """
     Create requests.session with retry.
 
@@ -76,6 +101,19 @@ def _create_session_with_retry(retry: int = 3) -> requests.Session:
 
 
 def _send_post_request(url: str, headers: dict, payload: dict):
+    """Send HTTP POST request with retry handling.
+    
+    Args:
+        url: Target URL for the request
+        headers: HTTP headers dictionary
+        payload: JSON payload dictionary
+        
+    Returns:
+        requests.Response: HTTP response object
+        
+    Raises:
+        requests.exceptions.HTTPError: If request fails after retries
+    """
     """Send a POST request."""
     try:
         with _create_session_with_retry() as session:
@@ -138,6 +176,11 @@ def get_api_key_from_connection(connections_name: str) -> Tuple[str, Optional[st
 
 
 def _get_azureml_run():
+    """Get active Azure ML run context if available.
+    
+    Returns:
+        Run or None: Azure ML run object if available, None otherwise
+    """
     """Get AzureML Run context if available."""
     try:
         azureml_run = Run.get_context()
@@ -149,6 +192,11 @@ def _get_azureml_run():
 
 
 def log_metrics(metrics: dict):
+    """Log metrics to Azure ML run if available.
+    
+    Args:
+        metrics: Dictionary of metric names and values to log
+    """
     """Log metrics to AzureML Run if available."""
     azureml_run = _get_azureml_run()
     if azureml_run:

@@ -43,6 +43,17 @@ global args
 
 @dataclass
 class RequestFuncInput:
+    """Input data structure for benchmark request functions.
+    
+    Attributes:
+        prompts: List of tuples containing (message_content, input_length, output_length)
+        api_url: URL endpoint for the API
+        model: Model identifier
+        lora_name: LoRA adapter name if applicable
+        extra_request_body: Additional parameters for the request payload
+        prev_messages: Previous messages in conversation for multiturn chat
+        finished_prompts: Number of completed prompts in the conversation
+    """
     prompts: List[Tuple[MsgContent, int, int]]
     api_url: str
     model: str
@@ -56,6 +67,18 @@ class RequestFuncInput:
 
 @dataclass
 class RequestFuncOutput:
+    """Output data structure for benchmark request functions.
+    
+    Attributes:
+        generated_text: List of generated text responses
+        prompt_len: List of prompt lengths in tokens
+        output_len: List of output lengths in tokens
+        latency: List of end-to-end latencies in seconds
+        ttft: List of time-to-first-token values in seconds
+        itl: List of inter-token latencies in seconds
+        success: Whether the request completed successfully
+        error: Error message if request failed
+    """
     generated_text: List[str] = field(default_factory=list)
     prompt_len: List[int] = field(default_factory=list)
     output_len: List[int] = field(default_factory=list)
@@ -74,6 +97,18 @@ async def async_request_openai_completions(
     tokenizer: PreTrainedTokenizerBase,
     pbar: Optional[tqdm] = None,
 ) -> RequestFuncOutput:
+    """Make asynchronous requests to OpenAI-compatible completions API.
+    
+    Args:
+        request_func_input: Input configuration for the request
+        queue: Async queue for managing concurrent requests
+        tokenizer: Tokenizer for processing text
+        pbar: Optional progress bar for tracking completion
+        
+    Returns:
+        RequestFuncOutput: Results from the API request including generated text,
+            latency metrics, and success/error status
+    """
     api_url = request_func_input.api_url
     assert api_url.endswith("completions"), "OpenAI Completions API URL must end with 'completions'."
 
@@ -197,6 +232,14 @@ async def async_request_openai_completions(
 
 
 async def async_request_profile(api_url: str) -> RequestFuncOutput:
+    """Send profiling control request to the API endpoint.
+
+    Args:
+        api_url: URL for the profiling control endpoint
+        
+    Returns:
+        RequestFuncOutput: Response indicating success or failure of profiling command
+    """
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         output = RequestFuncOutput()
         try:
@@ -223,6 +266,40 @@ ASYNC_REQUEST_FUNCS = {
 
 @dataclass
 class BenchmarkMetrics:
+    """Comprehensive metrics collected during benchmark execution.
+    
+    Attributes:
+        completed: Number of successfully completed requests
+        total_input: Total number of input tokens processed
+        total_output: Total number of output tokens generated
+        total_output_retokenized: Total output tokens after retokenization
+        request_throughput: Requests processed per second
+        input_throughput: Input tokens processed per second
+        output_throughput: Output tokens generated per second
+        output_throughput_retokenized: Retokenized output tokens per second
+        total_throughput: Combined input/output tokens per second
+        total_throughput_retokenized: Combined throughput with retokenized output
+        mean_ttft_ms: Mean time-to-first-token in milliseconds
+        median_ttft_ms: Median time-to-first-token in milliseconds
+        std_ttft_ms: Standard deviation of TTFT in milliseconds
+        p90_ttft_ms: 90th percentile TTFT in milliseconds
+        p99_ttft_ms: 99th percentile TTFT in milliseconds
+        mean_tpot_ms: Mean time-per-output-token in milliseconds
+        median_tpot_ms: Median time-per-output-token in milliseconds
+        std_tpot_ms: Standard deviation of TPOT in milliseconds
+        p90_tpot_ms: 90th percentile TPOT in milliseconds
+        p99_tpot_ms: 99th percentile TPOT in milliseconds
+        mean_itl_ms: Mean inter-token latency in milliseconds
+        median_itl_ms: Median inter-token latency in milliseconds
+        std_itl_ms: Standard deviation of ITL in milliseconds
+        p90_itl_ms: 90th percentile ITL in milliseconds
+        p99_itl_ms: 99th percentile ITL in milliseconds
+        mean_e2e_latency_ms: Mean end-to-end latency in milliseconds
+        median_e2e_latency_ms: Median end-to-end latency in milliseconds
+        std_e2e_latency_ms: Standard deviation of E2E latency in milliseconds
+        p99_e2e_latency_ms: 99th percentile E2E latency in milliseconds
+        concurrency: Average concurrency level during benchmark
+    """
     completed: int
     total_input: int
     total_output: int
@@ -260,6 +337,16 @@ async def get_requests(
     request_rate: float,
     num_actual_requests: int,
 ) -> AsyncGenerator[RequestFuncInput, None]:
+    """Generate requests at specified rate using Poisson process.
+    
+    Args:
+        input_requests_queue: Queue containing prepared request inputs
+        request_rate: Target requests per second (inf for immediate)
+        num_actual_requests: Total number of requests to generate
+        
+    Yields:
+        RequestFuncInput: Individual request configurations at controlled intervals
+    """
     for _ in range(num_actual_requests):
         try:
             request = await asyncio.wait_for(input_requests_queue.get(), timeout=300)  # Wait for 5 minutes then abort
@@ -282,6 +369,19 @@ def calculate_metrics(
     tokenizer: PreTrainedTokenizerBase,
     backend: str,
 ) -> Tuple[BenchmarkMetrics, List[int]]:
+    """Calculate comprehensive benchmark metrics from request outputs.
+    
+    Args:
+        outputs: List of completed request outputs
+        dur_s: Total benchmark duration in seconds
+        tokenizer: Tokenizer for retokenizing generated text
+        backend: Backend identifier for metric calculation
+        
+    Returns:
+        Tuple containing:
+            - BenchmarkMetrics: Comprehensive performance metrics
+            - List[int]: Output lengths for each successful request
+    """
     output_lens: List[int] = []
     retokenized_output_lens: List[int] = []
     total_input = 0
@@ -370,6 +470,26 @@ async def benchmark(
     profile: bool,
     enable_shared_prefix: bool,
 ):
+    """Execute the main benchmark against a language model endpoint.
+    
+    Args:
+        backend: Backend type (sglang, vllm, etc.)
+        api_url: Complete API endpoint URL
+        base_url: Base URL for the service
+        model_id: Model identifier
+        tokenizer: Tokenizer for text processing
+        input_requests: Prepared benchmark requests
+        request_rate: Target requests per second
+        max_concurrency: Maximum concurrent requests (optional)
+        disable_tqdm: Whether to disable progress bar
+        lora_name: LoRA adapter name (optional)
+        extra_request_body: Additional request parameters
+        profile: Whether to enable profiling
+        enable_shared_prefix: Whether to enable shared prefix optimization
+        
+    Returns:
+        dict: Comprehensive benchmark results including all metrics
+    """
     if backend in ASYNC_REQUEST_FUNCS:
         request_func = ASYNC_REQUEST_FUNCS[backend]
     else:
@@ -627,6 +747,14 @@ async def benchmark(
 
 
 def run_benchmark(args_: argparse.Namespace):
+    """Run a complete benchmark using the provided arguments.
+    
+    Args:
+        args_: Namespace containing all benchmark configuration options
+        
+    Returns:
+        dict: Benchmark results from the async benchmark execution
+    """
     global args
     args = args_
 

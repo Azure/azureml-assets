@@ -1,6 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Main entry point for endpoint evaluation benchmarking.
+
+This module provides command-line interface and orchestration for running
+performance benchmarks against both base and target endpoints using SGLang.
+It supports various datasets and backend configurations, and logs metrics
+to Azure ML.
+"""
+
 import argparse
 import os
 import sys
@@ -12,6 +20,13 @@ from helper import get_api_key_from_connection, log_metrics
 
 
 def parse_args():
+    """Parse command-line arguments for endpoint evaluation.
+    
+    Returns:
+        argparse.Namespace: Parsed command-line arguments containing all
+            configuration options for the benchmark including endpoint URLs,
+            dataset settings, and benchmark parameters.
+    """
     parser = argparse.ArgumentParser(description="SGLang Benchmarking")
     # parser.add_argument(
     #     "--metrics_path",
@@ -287,6 +302,16 @@ def parse_args():
 
 
 def _generate_avg_metrics(metrics_file: str, prefix: str = "", log_to_aml: bool = True):
+    """Generate average metrics from multiple trial results.
+    
+    Args:
+        metrics_file (str): Path to JSONL file containing metrics from each trial.
+        prefix (str, optional): Prefix to add to metric names. Defaults to "".
+        log_to_aml (bool, optional): Whether to log metrics to Azure ML. Defaults to True.
+        
+    Returns:
+        dict: Dictionary containing averaged metrics across all trials.
+    """
     metrics_list = []
     with open(metrics_file, "r") as f:
         for line in f:
@@ -372,6 +397,14 @@ def run_endpoint_benchmark(
 
 
 def main():
+    """Main entry point for the endpoint evaluation benchmark.
+    
+    Orchestrates the complete benchmark process:
+    1. Parses command-line arguments
+    2. Runs benchmarks sequentially for base and target endpoints
+    3. Logs final metrics to Azure ML
+    4. Handles errors and cleanup
+    """
     args = parse_args()
     print("> Parsed arguments:", args)
 

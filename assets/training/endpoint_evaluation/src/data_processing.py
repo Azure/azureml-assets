@@ -1,6 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Data processing utilities for benchmark datasets.
+
+This module provides functions to load, filter, and prepare various datasets
+for benchmarking including ShareGPT, UltraChat, Loogle, NextQA, and synthetic
+datasets. It handles tokenization, length filtering, and format conversion.
+"""
+
 import json
 import os
 import pickle
@@ -50,6 +57,21 @@ def common_filter_chat(
     max_output_len: Optional[int],
     fixed_output_len: Optional[int],
 ) -> SampleOutput:
+    """Filter chat dataset based on token length constraints.
+    
+    Args:
+        num_requests: Number of requests to generate
+        new_dataset: Raw dataset conversations
+        tokenizer: Tokenizer for length calculation
+        min_prompt_len: Minimum prompt length in tokens (optional)
+        min_output_len: Minimum output length in tokens (optional)
+        max_prompt_len: Maximum prompt length in tokens (optional)
+        max_output_len: Maximum output length in tokens (optional)
+        fixed_output_len: Fixed output length override (optional)
+        
+    Returns:
+        SampleOutput: Filtered dataset with conversations meeting length criteria
+    """
     # Filter out sequences that are too long or too short
     filtered_dataset: SampleOutput = []
     k = 0
@@ -101,6 +123,19 @@ def sample_sharegpt_requests(
     enable_multiturn: bool = True,
     fixed_output_len: Optional[int] = None,
 ) -> SampleOutput:
+    """Sample requests from ShareGPT dataset.
+    
+    Args:
+        dataset_path: Path to ShareGPT JSON file
+        num_requests: Number of conversations to sample
+        tokenizer: Tokenizer for processing text
+        disable_shuffle: Whether to disable dataset shuffling
+        enable_multiturn: Whether to include full conversations or just first turn
+        fixed_output_len: Fixed output length override (optional)
+        
+    Returns:
+        SampleOutput: Processed ShareGPT conversations ready for benchmarking
+    """
     if fixed_output_len is not None and fixed_output_len < 4:
         raise ValueError("output_len too small")
 
@@ -154,6 +189,19 @@ def sample_ultrachat_requests(
     enable_multiturn: bool = True,
     fixed_output_len: Optional[int] = None,
 ) -> SampleOutput:
+    """Sample requests from UltraChat dataset.
+    
+    Args:
+        dataset_path: Path to UltraChat JSONL file
+        num_requests: Number of conversations to sample
+        tokenizer: Tokenizer for processing text
+        disable_shuffle: Whether to disable dataset shuffling
+        enable_multiturn: Whether to include full conversations or just first turn
+        fixed_output_len: Fixed output length override (optional)
+        
+    Returns:
+        SampleOutput: Processed UltraChat conversations ready for benchmarking
+    """
     if fixed_output_len is not None and fixed_output_len < 4:
         raise ValueError("output_len too small")
 
@@ -203,6 +251,20 @@ def sample_loogle_requests(
     enable_shared_prefix: bool = False,
     fixed_output_len: Optional[int] = None,
 ) -> SampleOutput:
+    """Sample requests from Loogle dataset with document QA pairs.
+    
+    Args:
+        dataset_path: Path to Loogle JSONL file
+        num_requests: Number of conversations to sample
+        tokenizer: Tokenizer for processing text
+        disable_shuffle: Whether to disable dataset shuffling
+        enable_multiturn: Whether to include multiple QA pairs per document
+        enable_shared_prefix: Whether to use shared document prefix optimization
+        fixed_output_len: Fixed output length override (optional)
+        
+    Returns:
+        SampleOutput: Processed Loogle conversations with document context
+    """
     if fixed_output_len is not None and fixed_output_len < 4:
         raise ValueError("output_len too small")
 
@@ -266,7 +328,11 @@ def sample_nextqa_requests(
     chat_template_name: Optional[str] = None,
     fixed_output_len: Optional[int] = None,
 ) -> SampleOutput:
-    """
+    """Sample requests from NextQA video dataset for video question answering.
+    
+    Creates multimodal requests with video content and text questions.
+    Encodes videos as base64 and combines with text prompts.
+
     Example of messages:
     message = {
         "role": "user",
@@ -275,6 +341,21 @@ def sample_nextqa_requests(
             {"type": "text", "text": video.prompt},
         ],
     }
+    
+    Args:
+        dataset_path: Directory containing NextQA video files
+        num_requests: Number of video QA pairs to sample
+        tokenizer: Tokenizer for processing text prompts
+        max_frames: Maximum number of video frames to extract
+        model_path: Path to model for chat template resolution
+        disable_shuffle: Whether to disable dataset shuffling
+        enable_multiturn: Whether to enable multiturn (not currently supported)
+        backend: Backend type for prompt formatting
+        chat_template_name: Optional chat template name override
+        fixed_output_len: Fixed output length for responses
+        
+    Returns:
+        SampleOutput: Processed video QA requests with base64 encoded videos
     """
 
     if fixed_output_len is None:
@@ -343,6 +424,20 @@ def sample_random_requests(
     dataset_path: str,
     disable_shuffle: bool = False,
 ) -> SampleOutput:
+    """Generate random benchmark requests with specified token lengths.
+    
+    Args:
+        input_len: Target input length in tokens
+        output_len: Target output length in tokens
+        num_prompts: Number of prompts to generate
+        range_ratio: Ratio for length variation (0.0 = exact, 1.0 = full range)
+        tokenizer: Tokenizer for processing text
+        dataset_path: Path to source dataset for token sampling
+        disable_shuffle: Whether to disable shuffling
+        
+    Returns:
+        SampleOutput: Generated random requests with specified characteristics
+    """
 
     input_lens = np.random.randint(
         max(int(input_len * range_ratio), 1),
@@ -411,6 +506,15 @@ def sample_random_requests(
 
 
 def gen_prompt(tokenizer, token_num):
+    """Generate a random prompt of specified token length.
+    
+    Args:
+        tokenizer: Tokenizer to use for text generation
+        token_num: Number of tokens to generate
+        
+    Returns:
+        str: Generated prompt with approximately the specified token count
+    """
     """Generate a random prompt of specified token length using tokenizer vocabulary."""
     all_available_tokens = list(tokenizer.get_vocab().values())
     selected_tokens = random.choices(all_available_tokens, k=token_num)
@@ -418,6 +522,15 @@ def gen_prompt(tokenizer, token_num):
 
 
 def get_gen_prefix_cache_path(args, tokenizer):
+    """Create cache directory path for generated shared prefix dataset.
+    
+    Args:
+        args: Arguments containing generation parameters
+        tokenizer: Tokenizer used for generation
+        
+    Returns:
+        Path: Cache file path based on generation parameters
+    """
     """Create cache directory under ~/.cache/sglang/benchmark"""
     cache_dir = Path.home() / ".cache" / "sglang" / "benchmark"
 
@@ -440,7 +553,25 @@ def sample_generated_shared_prefix_requests(
     args,
     disable_shuffle: bool = False,
 ) -> SampleOutput:
-    """Generate benchmark requests with shared system prompts using random tokens and caching."""
+    """Generate synthetic benchmark requests with shared system prompts.
+    
+    Creates groups of requests sharing common system prompts to test
+    prefix caching and shared context optimization. Uses caching to
+    avoid regenerating identical datasets.
+    
+    Args:
+        num_groups: Number of system prompt groups to create
+        prompts_per_group: Number of questions per system prompt
+        system_prompt_len: Target length in tokens for system prompts
+        question_len: Target length in tokens for individual questions
+        output_len: Target length in tokens for expected outputs
+        tokenizer: Tokenizer for generating and measuring text
+        args: Full arguments object for cache key generation
+        disable_shuffle: Whether to disable shuffling of groups
+        
+    Returns:
+        SampleOutput: Generated requests grouped by shared system prompts
+    """
     cache_path = get_gen_prefix_cache_path(args, tokenizer)
 
     # Try to load from cache first
@@ -505,6 +636,18 @@ def sample_generated_shared_prefix_requests(
 
 
 def get_dataset(args, tokenizer):
+    """Get processed dataset based on the specified dataset name and configuration.
+    
+    Args:
+        args: Arguments containing dataset configuration
+        tokenizer: Tokenizer for text processing
+        
+    Returns:
+        SampleOutput: Processed dataset ready for benchmarking
+        
+    Raises:
+        ValueError: If dataset_name is not recognized
+    """
     if args.dataset_name == "sharegpt":
         input_requests = sample_sharegpt_requests(
             dataset_path=args.dataset_path,

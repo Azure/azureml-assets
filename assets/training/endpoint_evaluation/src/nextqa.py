@@ -1,6 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""NextQA dataset loading utilities for video question answering benchmarks.
+
+This module provides classes and functions for loading and processing
+video files and NextQA dataset entries for benchmarking video-language models.
+Supports both file-based video loading and HuggingFace dataset integration.
+"""
+
 import os
 import sys
 from typing import List
@@ -10,6 +17,14 @@ from datasets import load_dataset
 
 
 def find_video_files(video_dir) -> List[str]:
+    """Recursively find all video files in a directory.
+    
+    Args:
+        video_dir: Directory path to search for video files
+        
+    Returns:
+        List[str]: List of video file paths found
+    """
     if os.path.isfile(video_dir):
         return [video_dir]
 
@@ -25,13 +40,34 @@ def find_video_files(video_dir) -> List[str]:
 
 
 def video_frames(video_path, max_frames) -> int:
+    """Get the number of frames to extract from a video.
+    
+    Args:
+        video_path: Path to the video file
+        max_frames: Maximum number of frames to extract
+        
+    Returns:
+        int: Actual number of frames to extract (min of total frames and max_frames)
+    """
     container = av.open(video_path)
     total_frames = container.streams.video[0].frames
     return min(total_frames, max_frames)
 
 
 class Video:
+    """Represents a video file with frame count information.
+    
+    Attributes:
+        path (str): Path to the video file
+        num_frames (int): Number of frames in the video
+    """
     def __init__(self, video_path, num_frames):
+        """Initialize a Video object.
+        
+        Args:
+            video_path (str): Path to the video file
+            num_frames (int): Number of frames in the video
+        """
         self.path = video_path
         self.num_frames = num_frames
 
@@ -43,7 +79,23 @@ class Video:
 
 
 class VideoPrompt(Video):
+    """Represents a video with an associated text prompt for QA tasks.
+    
+    Inherits from Video and adds prompt functionality for question-answering.
+    
+    Attributes:
+        path (str): Path to the video file
+        num_frames (int): Number of frames in the video
+        prompt (str): Text prompt/question associated with the video
+    """
     def __init__(self, video_path, num_frames, prompt):
+        """Initialize a VideoPrompt object.
+        
+        Args:
+            video_path (str): Path to the video file
+            num_frames (int): Number of frames in the video
+            prompt (str): Text prompt/question for the video
+        """
         super().__init__(video_path, num_frames)
         self.prompt = prompt
 
@@ -55,15 +107,31 @@ class VideoPrompt(Video):
 
 
 class VideoLoader:
+    """Base class for video loading implementations.
+    
+    Provides a common interface for different video loading strategies.
+    """
     pass
 
 
 class VideoFileLoader(VideoLoader):
+    """Load videos from filesystem directory.
+    
+    Scans a directory for video files and provides iteration interface
+    for processing videos in batches.
+    """
     """
     Load all the videos in a directory
     """
 
     def __init__(self, video_dir, batch_size=1, max_frames=sys.maxsize):
+        """Initialize video file loader.
+        
+        Args:
+            video_dir (str): Directory containing video files
+            batch_size (int): Number of videos per batch
+            max_frames (int): Maximum frames to extract per video
+        """
         super().__init__()
         self.video_dir = video_dir
         self.video_files = find_video_files(video_dir)
@@ -71,7 +139,12 @@ class VideoFileLoader(VideoLoader):
         self.max_frames = max_frames
         print(f"batch_size: {batch_size}, max_frames: {max_frames}")
 
-    def __iter__(self):  # (file, number of frames)
+    def __iter__(self):
+        """Iterate over video files in the directory.
+        
+        Yields:
+            Video or List[Video]: Individual videos or batches of videos
+        """
         if self.batch_size == 1:
             for video_file in self.video_files:
                 yield Video(video_file, video_frames(video_file, self.max_frames))
@@ -86,14 +159,25 @@ class VideoFileLoader(VideoLoader):
 
 
 class NExTQALoader(VideoLoader):
+    """Load videos and prompts from NextQA dataset.
+    
+    Integrates with HuggingFace datasets to load NextQA dataset and
+    combines it with local video files for benchmarking.
+    """
     """
     Load vdideos and prompts from NExT dataset
     set: train, test or validation
     """
 
     def __init__(self, video_dir, batch_size=1, max_frames=sys.maxsize, dset="test", task="OE"):
-        """
-        task: 'MV' or 'OE'
+        """Initialize NextQA dataset loader.
+        
+        Args:
+            video_dir (str): Directory containing NextQA video files
+            batch_size (int): Number of video prompts per batch
+            max_frames (int): Maximum frames to extract per video
+            dset (str): Dataset split ('train', 'test', 'validation')
+            task (str): Task type ('MV' for multiple choice, 'OE' for open-ended)
         """
         super().__init__()
         self.task = task
@@ -113,6 +197,15 @@ class NExTQALoader(VideoLoader):
         self.max_frames = max_frames
 
     def get_video_prompt(self, entry, max_frames) -> VideoPrompt:
+        """Create VideoPrompt object from dataset entry.
+        
+        Args:
+            entry: Dataset entry containing video and question information
+            max_frames (int): Maximum number of frames to extract
+            
+        Returns:
+            VideoPrompt: Video object with associated question prompt
+        """
         # Get video
         video_id = entry["video"]
         video_path = self.video_to_path[video_id]
