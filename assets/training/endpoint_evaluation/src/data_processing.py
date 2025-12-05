@@ -67,11 +67,7 @@ def common_filter_chat(
 
                 completion = j[1]
                 completion_token_ids = tokenizer.encode(completion)
-                output_len = (
-                    len(completion_token_ids)
-                    if fixed_output_len is None
-                    else fixed_output_len
-                )
+                output_len = len(completion_token_ids) if fixed_output_len is None else fixed_output_len
                 if (
                     min_prompt_len is not None
                     and prompt_len < min_prompt_len
@@ -224,20 +220,13 @@ def sample_loogle_requests(
     # NOTE: Now we preprocess it only for chat
     for data in dataset:
         chat = []
-        if (
-            "qa_pairs" not in data
-            or data["qa_pairs"] == "none"
-            or len(data["qa_pairs"]) == 0
-        ):
+        if "qa_pairs" not in data or data["qa_pairs"] == "none" or len(data["qa_pairs"]) == 0:
             # If Q is none (for summarization),
             # We add a question for summarization
             # And keep the summary up to 1024 words
             chat.append(
                 (
-                    "Input: "
-                    + data["input"]
-                    + " Question: "
-                    + "Please summarize the input",
+                    "Input: " + data["input"] + " Question: " + "Please summarize the input",
                     data["input"][:1024],
                 )
             )
@@ -247,9 +236,7 @@ def sample_loogle_requests(
             for i, qa in enumerate(qa_pairs):
                 if i == 0 or enable_shared_prefix:
                     # Combine input with the first Q
-                    chat.append(
-                        ("Input: " + data["input"] + " Question: " + qa["Q"], qa["A"])
-                    )
+                    chat.append(("Input: " + data["input"] + " Question: " + qa["Q"], qa["A"]))
                 elif enable_multiturn:
                     chat.append((qa["Q"], qa["A"]))
 
@@ -380,10 +367,7 @@ def sample_random_requests(
         # Filter out the conversations with less than 2 turns.
         dataset = [data for data in dataset if len(data["conversations"]) >= 2]
         # Only keep the first two turns of each conversation.
-        dataset = [
-            (data["conversations"][0]["value"], data["conversations"][1]["value"])
-            for data in dataset
-        ]
+        dataset = [(data["conversations"][0]["value"], data["conversations"][1]["value"]) for data in dataset]
 
         if not disable_shuffle:
             # Shuffle the dataset.
@@ -417,12 +401,7 @@ def sample_random_requests(
         offsets = np.random.randint(0, tokenizer.vocab_size, size=num_prompts)
         input_requests = []
         for i in range(num_prompts):
-            prompt = tokenizer.decode(
-                [
-                    (offsets[i] + i + j) % tokenizer.vocab_size
-                    for j in range(input_lens[i])
-                ]
-            )
+            prompt = tokenizer.decode([(offsets[i] + i + j) % tokenizer.vocab_size for j in range(input_lens[i])])
             input_requests.append([(prompt, int(input_lens[i]), int(output_lens[i]))])
 
     print(f"#Input tokens: {np.sum(input_lens)}")
@@ -491,9 +470,7 @@ def sample_generated_shared_prefix_requests(
     for group_idx in tqdm(range(num_groups), desc="Generating system prompt"):
         system_prompt = system_prompts[group_idx]
         input_requests.append([])
-        for prompt_idx in tqdm(
-            range(prompts_per_group), desc="Generating questions", leave=False
-        ):
+        for prompt_idx in tqdm(range(prompts_per_group), desc="Generating questions", leave=False):
             question = questions[group_idx * prompts_per_group + prompt_idx]
             full_prompt = f"{system_prompt}\n\n{question}"
             prompt_len = len(tokenizer.encode(full_prompt))
@@ -515,9 +492,7 @@ def sample_generated_shared_prefix_requests(
     print(
         f"Average system prompt length: {sum(len(tokenizer.encode(sp)) for sp in system_prompts) / len(system_prompts):.1f} tokens"
     )
-    print(
-        f"Average question length: {sum(len(tokenizer.encode(q)) for q in questions) / len(questions):.1f} tokens\n"
-    )
+    print(f"Average question length: {sum(len(tokenizer.encode(q)) for q in questions) / len(questions):.1f} tokens\n")
 
     # Save to cache
     cache_path.parent.mkdir(parents=True, exist_ok=True)

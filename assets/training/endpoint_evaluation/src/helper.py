@@ -101,9 +101,7 @@ def get_api_key_from_connection(connections_name: str) -> Tuple[str, Optional[st
         curr_ws = run.experiment.workspace
 
     if hasattr(curr_ws._auth, "get_token"):
-        bearer_token = curr_ws._auth.get_token(
-            "https://management.azure.com/.default"
-        ).token
+        bearer_token = curr_ws._auth.get_token("https://management.azure.com/.default").token
     else:
         bearer_token = curr_ws._auth.token
 

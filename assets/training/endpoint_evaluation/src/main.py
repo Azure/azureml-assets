@@ -61,9 +61,7 @@ def parse_args():
         default=None,
         help="Server or API base url if not using http host and port.",
     )
-    parser.add_argument(
-        "--host", type=str, default="0.0.0.0", help="Default host is 0.0.0.0."
-    )
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Default host is 0.0.0.0.")
     parser.add_argument(
         "--port",
         type=int,
@@ -83,9 +81,7 @@ def parse_args():
         ],
         help="Name of the dataset to benchmark on.",
     )
-    parser.add_argument(
-        "--dataset-path", type=str, default="", help="Path to the dataset."
-    )
+    parser.add_argument("--dataset-path", type=str, default="", help="Path to the dataset.")
     parser.add_argument(
         "--base-model",
         type=str,
@@ -142,8 +138,7 @@ def parse_args():
         "--random-range-ratio",
         type=float,
         default=0.0,
-        help="Range of sampled ratio of input/output length, "
-        "used only for random dataset.",
+        help="Range of sampled ratio of input/output length, " "used only for random dataset.",
     )
     parser.add_argument(
         "--request-rate",
@@ -233,8 +228,7 @@ def parse_args():
     parser.add_argument(
         "--profile",
         action="store_true",
-        help="Use Torch Profiler. The endpoint must be launched with "
-        "SGLANG_TORCH_PROFILER_DIR to enable profiler.",
+        help="Use Torch Profiler. The endpoint must be launched with " "SGLANG_TORCH_PROFILER_DIR to enable profiler.",
     )
     parser.add_argument(
         "--lora-name",
@@ -304,9 +298,7 @@ def _generate_avg_metrics(metrics_file: str, prefix: str = "", log_to_aml: bool 
         else:
             avg_metrics[key] = metrics_list[0][key]
 
-    output_file = os.path.join(
-        os.path.dirname(metrics_file), f"{prefix}metrics_avg.json"
-    )
+    output_file = os.path.join(os.path.dirname(metrics_file), f"{prefix}metrics_avg.json")
     with open(output_file, "w") as f:
         json.dump(avg_metrics, f, indent=4)
 
@@ -351,9 +343,7 @@ def run_endpoint_benchmark(
     os.environ["OPENAI_API_KEY"] = api_key
 
     # Set output file for this endpoint
-    endpoint_args.output_file = os.path.join(
-        output_dir, f"{endpoint_name}_metrics_each_trial.jsonl"
-    )
+    endpoint_args.output_file = os.path.join(output_dir, f"{endpoint_name}_metrics_each_trial.jsonl")
 
     trials = endpoint_args.trials
     del endpoint_args.trials
@@ -371,9 +361,7 @@ def run_endpoint_benchmark(
             raise
 
     # Generate average metrics with prefix (don't log in child process)
-    _generate_avg_metrics(
-        endpoint_args.output_file, prefix=f"{endpoint_name}_", log_to_aml=False
-    )
+    _generate_avg_metrics(endpoint_args.output_file, prefix=f"{endpoint_name}_", log_to_aml=False)
     print(f"\n[{endpoint_name}] Benchmark completed!\n")
 
 

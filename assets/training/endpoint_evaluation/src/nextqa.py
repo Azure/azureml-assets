@@ -91,9 +91,7 @@ class NExTQALoader(VideoLoader):
     set: train, test or validation
     """
 
-    def __init__(
-        self, video_dir, batch_size=1, max_frames=sys.maxsize, dset="test", task="OE"
-    ):
+    def __init__(self, video_dir, batch_size=1, max_frames=sys.maxsize, dset="test", task="OE"):
         """
         task: 'MV' or 'OE'
         """
@@ -153,9 +151,7 @@ if __name__ == "__main__":
     for batch in video_loader:
         print(f"Number of videos in batch: {len(batch)}")
         for video_file, num_frames, prompt in batch:
-            print(
-                f"Video: {video_file} number of frames: {num_frames}, prompt: {prompt}"
-            )
+            print(f"Video: {video_file} number of frames: {num_frames}, prompt: {prompt}")
         # break
         # for video_file, prompt in batch:
         #     print(f"Video: {video_file} prompt: {prompt}")

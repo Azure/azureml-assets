@@ -57,7 +57,6 @@ inputs:
     description: Depending on the LLM Inference Engine.
     enum:
     - sharegpt
-    default: sharegpt
   request_rate:
     type: integer
     optional: True

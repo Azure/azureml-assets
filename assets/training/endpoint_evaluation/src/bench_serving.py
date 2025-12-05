@@ -76,9 +76,7 @@ async def async_request_openai_completions(
     pbar: Optional[tqdm] = None,
 ) -> RequestFuncOutput:
     api_url = request_func_input.api_url
-    assert api_url.endswith(
-        "completions"
-    ), "OpenAI Completions API URL must end with 'completions'."
+    assert api_url.endswith("completions"), "OpenAI Completions API URL must end with 'completions'."
 
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         payload = {
@@ -101,8 +99,7 @@ async def async_request_openai_completions(
         messages = request_func_input.prev_messages
         prompt, input_len, max_tokens = request_func_input.prompts[prompt_idx]
         prompt_len = sum(
-            prompt[1] + prompt[2]  # input_len + output_len
-            for prompt in request_func_input.prompts[:prompt_idx]
+            prompt[1] + prompt[2] for prompt in request_func_input.prompts[:prompt_idx]  # input_len + output_len
         )
         prompt_len += input_len
 
@@ -124,9 +121,7 @@ async def async_request_openai_completions(
         st = time.perf_counter()
         most_recent_timestamp = st
         try:
-            async with session.post(
-                url=api_url, json=payload, headers=headers
-            ) as response:
+            async with session.post(url=api_url, json=payload, headers=headers) as response:
                 if response.status == 200:
                     actual_prompt_len = prompt_len - 1
                     actual_output_len = 0
@@ -145,11 +140,7 @@ async def async_request_openai_completions(
                             # NOTE: Some completion API might have a last
                             # usage summary response without a token so we
                             # want to check a token was generated
-                            if (
-                                "usage" in data
-                                and data["usage"] is not None
-                                and len(data["usage"]) > 0
-                            ):
+                            if "usage" in data and data["usage"] is not None and len(data["usage"]) > 0:
                                 actual_prompt_len = data["usage"]["prompt_tokens"]
                                 actual_output_len = data["usage"]["completion_tokens"]
                                 continue
@@ -272,9 +263,7 @@ async def get_requests(
 ) -> AsyncGenerator[RequestFuncInput, None]:
     for _ in range(num_actual_requests):
         try:
-            request = await asyncio.wait_for(
-                input_requests_queue.get(), timeout=300
-            )  # Wait for 5 minutes then abort
+            request = await asyncio.wait_for(input_requests_queue.get(), timeout=300)  # Wait for 5 minutes then abort
         except Exception as e:
             print(f"exception: {e}")
             break
@@ -311,17 +300,11 @@ def calculate_metrics(
             for j in range(len(outputs[i].generated_text)):
                 output_len = outputs[i].output_len[j]
                 output_lens.append(output_len)
-                retokenized_output_len = len(
-                    tokenizer.encode(
-                        outputs[i].generated_text[j], add_special_tokens=False
-                    )
-                )
+                retokenized_output_len = len(tokenizer.encode(outputs[i].generated_text[j], add_special_tokens=False))
                 retokenized_output_lens.append(retokenized_output_len)
                 total_input += outputs[i].prompt_len[j]
                 if output_len > 1:
-                    tpots.append(
-                        (outputs[i].latency[j] - outputs[i].ttft[j]) / (output_len - 1)
-                    )
+                    tpots.append((outputs[i].latency[j] - outputs[i].ttft[j]) / (output_len - 1))
 
                 completed += 1
             itls += outputs[i].itl
@@ -334,8 +317,7 @@ def calculate_metrics(
 
     if completed == 0:
         warnings.warn(
-            "All requests failed. This is likely due to a misconfiguration "
-            "on the benchmark arguments.",
+            "All requests failed. This is likely due to a misconfiguration " "on the benchmark arguments.",
             stacklevel=2,
         )
     metrics = BenchmarkMetrics(
@@ -348,10 +330,8 @@ def calculate_metrics(
         output_throughput=sum(output_lens) / dur_s,
         output_throughput_retokenized=sum(retokenized_output_lens) / dur_s,
         total_throughput=(total_input + sum(output_lens)) / dur_s,
-        total_throughput_retokenized=(total_input + sum(retokenized_output_lens))
-        / dur_s,
-        mean_ttft_ms=np.mean(ttfts or 0)
-        * 1000,  # ttfts is empty if streaming is not supported by backend
+        total_throughput_retokenized=(total_input + sum(retokenized_output_lens)) / dur_s,
+        mean_ttft_ms=np.mean(ttfts or 0) * 1000,  # ttfts is empty if streaming is not supported by backend
         median_ttft_ms=np.median(ttfts or 0) * 1000,
         std_ttft_ms=np.std(ttfts or 0) * 1000,
         p90_ttft_ms=np.percentile(ttfts or 0, 90) * 1000,
@@ -433,9 +413,7 @@ async def benchmark(
         lora_name=lora_name,
         extra_request_body=extra_request_body,
     )
-    test_output = await request_func(
-        request_func_input=test_input, queue=inputs_requests_queue, tokenizer=tokenizer
-    )
+    test_output = await request_func(request_func_input=test_input, queue=inputs_requests_queue, tokenizer=tokenizer)
     if not test_output.success:
         raise ValueError(
             "Initial test run failed - Please make sure benchmark arguments "
@@ -456,9 +434,7 @@ async def benchmark(
     # Start profiler
     if profile:
         print("Starting profiler...")
-        profile_output = await async_request_profile(
-            api_url=base_url + "/start_profile"
-        )
+        profile_output = await async_request_profile(api_url=base_url + "/start_profile")
         if profile_output.success:
             print("Profiler started")
 
@@ -482,9 +458,7 @@ async def benchmark(
 
     benchmark_start_time = time.perf_counter()
     tasks: List[asyncio.Task] = []
-    async for request in get_requests(
-        inputs_requests_queue, request_rate, num_actual_requests
-    ):
+    async for request in get_requests(inputs_requests_queue, request_rate, num_actual_requests):
         tasks.append(
             asyncio.create_task(
                 limited_request_func(
@@ -529,49 +503,21 @@ async def benchmark(
     print("{:<40} {:<10.2f}".format("Benchmark duration (s):", benchmark_duration))
     print("{:<40} {:<10}".format("Total input tokens:", metrics.total_input))
     print("{:<40} {:<10}".format("Total generated tokens:", metrics.total_output))
-    print(
-        "{:<40} {:<10}".format(
-            "Total generated tokens (retokenized):", metrics.total_output_retokenized
-        )
-    )
-    print(
-        "{:<40} {:<10.2f}".format(
-            "Request throughput (req/s):", metrics.request_throughput
-        )
-    )
-    print(
-        "{:<40} {:<10.2f}".format(
-            "Input token throughput (tok/s):", metrics.input_throughput
-        )
-    )
-    print(
-        "{:<40} {:<10.2f}".format(
-            "Output token throughput (tok/s):", metrics.output_throughput
-        )
-    )
-    print(
-        "{:<40} {:<10.2f}".format(
-            "Total token throughput (tok/s):", metrics.total_throughput
-        )
-    )
+    print("{:<40} {:<10}".format("Total generated tokens (retokenized):", metrics.total_output_retokenized))
+    print("{:<40} {:<10.2f}".format("Request throughput (req/s):", metrics.request_throughput))
+    print("{:<40} {:<10.2f}".format("Input token throughput (tok/s):", metrics.input_throughput))
+    print("{:<40} {:<10.2f}".format("Output token throughput (tok/s):", metrics.output_throughput))
+    print("{:<40} {:<10.2f}".format("Total token throughput (tok/s):", metrics.total_throughput))
     print("{:<40} {:<10.2f}".format("Concurrency:", metrics.concurrency))
     print("{s:{c}^{n}}".format(s="End-to-End Latency", n=50, c="-"))
-    print(
-        "{:<40} {:<10.2f}".format("Mean E2E Latency (ms):", metrics.mean_e2e_latency_ms)
-    )
-    print(
-        "{:<40} {:<10.2f}".format(
-            "Median E2E Latency (ms):", metrics.median_e2e_latency_ms
-        )
-    )
+    print("{:<40} {:<10.2f}".format("Mean E2E Latency (ms):", metrics.mean_e2e_latency_ms))
+    print("{:<40} {:<10.2f}".format("Median E2E Latency (ms):", metrics.median_e2e_latency_ms))
     print("{s:{c}^{n}}".format(s="Time to First Token", n=50, c="-"))
     print("{:<40} {:<10.2f}".format("Mean TTFT (ms):", metrics.mean_ttft_ms))
     print("{:<40} {:<10.2f}".format("Median TTFT (ms):", metrics.median_ttft_ms))
     print("{:<40} {:<10.2f}".format("P90 TTFT (ms):", metrics.p90_ttft_ms))
     print("{:<40} {:<10.2f}".format("P99 TTFT (ms):", metrics.p99_ttft_ms))
-    print(
-        "{s:{c}^{n}}".format(s="Time per Output Token (excl. 1st token)", n=50, c="-")
-    )
+    print("{s:{c}^{n}}".format(s="Time per Output Token (excl. 1st token)", n=50, c="-"))
     print("{:<40} {:<10.2f}".format("Mean TPOT (ms):", metrics.mean_tpot_ms))
     print("{:<40} {:<10.2f}".format("Median TPOT (ms):", metrics.median_tpot_ms))
     print("{:<40} {:<10.2f}".format("P90 TPOT (ms):", metrics.p90_tpot_ms))
@@ -643,11 +589,11 @@ async def benchmark(
     else:
         now = datetime.now().strftime("%m%d")
         if args.dataset_name == "random":
-            output_file_name = f"{args.backend}_{now}_{args.num_prompts}_{args.random_input_len}_{args.random_output_len}.jsonl"
-        else:
             output_file_name = (
-                f"{args.backend}_{now}_{args.num_prompts}_{args.dataset_name}.jsonl"
+                f"{args.backend}_{now}_{args.num_prompts}_{args.random_input_len}_{args.random_output_len}.jsonl"
             )
+        else:
+            output_file_name = f"{args.backend}_{now}_{args.num_prompts}_{args.dataset_name}.jsonl"
 
     # Append results to a JSONL file
     with open(output_file_name, "a") as file:
@@ -714,11 +660,7 @@ def run_benchmark(args_: argparse.Namespace):
             "vllm": 8000,
         }.get(args.backend, 30000)
 
-    model_url = (
-        f"{args.base_url}/v1/models"
-        if args.base_url
-        else f"http://{args.host}:{args.port}/v1/models"
-    )
+    model_url = f"{args.base_url}/v1/models" if args.base_url else f"http://{args.host}:{args.port}/v1/models"
 
     if args.backend in ["sglang", "vllm", "lmdeploy"]:
         api_url = (
@@ -726,9 +668,7 @@ def run_benchmark(args_: argparse.Namespace):
             if args.base_url
             else f"http://{args.host}:{args.port}/v1/chat/completions"
         )
-    base_url = (
-        f"http://{args.host}:{args.port}" if args.base_url is None else args.base_url
-    )
+    base_url = f"http://{args.host}:{args.port}" if args.base_url is None else args.base_url
 
     # Get model name
     if args.model is None:
@@ -743,9 +683,7 @@ def run_benchmark(args_: argparse.Namespace):
             args.model = model_list[0]["id"] if model_list else None
         except Exception as e:
             print(f"Failed to fetch model from {model_url}. Error: {e}")
-            print(
-                "Please specify the correct host and port using `--host` and `--port`."
-            )
+            print("Please specify the correct host and port using `--host` and `--port`.")
             sys.exit(1)
 
     if args.model is None:
@@ -756,9 +694,7 @@ def run_benchmark(args_: argparse.Namespace):
     if args.enable_multiturn:
         # TODO: Support multiturn for random
         if args.dataset_name not in ["sharegpt", "ultrachat", "loogle", "nextqa"]:
-            print(
-                "Multiturn conversation is only supported for sharegpt, ultrachat, loogle, and nextqa datasets."
-            )
+            print("Multiturn conversation is only supported for sharegpt, ultrachat, loogle, and nextqa datasets.")
             sys.exit(1)
 
     if args.enable_shared_prefix:
@@ -811,9 +747,7 @@ if __name__ == "__main__":
         default=None,
         help="Server or API base url if not using http host and port.",
     )
-    parser.add_argument(
-        "--host", type=str, default="0.0.0.0", help="Default host is 0.0.0.0."
-    )
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Default host is 0.0.0.0.")
     parser.add_argument(
         "--port",
         type=int,
@@ -833,9 +767,7 @@ if __name__ == "__main__":
         ],
         help="Name of the dataset to benchmark on.",
     )
-    parser.add_argument(
-        "--dataset-path", type=str, default="", help="Path to the dataset."
-    )
+    parser.add_argument("--dataset-path", type=str, default="", help="Path to the dataset.")
     parser.add_argument(
         "--model",
         type=str,
@@ -885,8 +817,7 @@ if __name__ == "__main__":
         "--random-range-ratio",
         type=float,
         default=0.0,
-        help="Range of sampled ratio of input/output length, "
-        "used only for random dataset.",
+        help="Range of sampled ratio of input/output length, " "used only for random dataset.",
     )
     parser.add_argument(
         "--request-rate",
@@ -938,8 +869,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--disable-shuffle",
         action="store_true",
-        help="Disable shuffling datasets. This is useful to generate stable output "
-        "in benchmarking",
+        help="Disable shuffling datasets. This is useful to generate stable output " "in benchmarking",
     )
     parser.add_argument(
         "--disable-tqdm",
@@ -977,8 +907,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--profile",
         action="store_true",
-        help="Use Torch Profiler. The endpoint must be launched with "
-        "SGLANG_TORCH_PROFILER_DIR to enable profiler.",
+        help="Use Torch Profiler. The endpoint must be launched with " "SGLANG_TORCH_PROFILER_DIR to enable profiler.",
     )
     parser.add_argument(
         "--lora-name",
@@ -1029,8 +958,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.enable_multiturn and args.enable_shared_prefix:
-        parser.error(
-            "--enable-multiturn and --enable-shared-prefix cannot be set at the same time."
-        )
+        parser.error("--enable-multiturn and --enable-shared-prefix cannot be set at the same time.")
 
     run_benchmark(args)
