@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-name: component_endpoint_benchmarking
-display_name: Component Endpoint Benchmarking
+name: endpoint_benchmarking
+display_name: Endpoint Benchmarking Component
 description: Runs benchmark on AzureML online endpoints.
 version: 0.0.1
 is_deterministic: True

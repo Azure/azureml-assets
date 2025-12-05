@@ -168,10 +168,6 @@ class NExTQALoader(VideoLoader):
     Integrates with HuggingFace datasets to load NextQA dataset and
     combines it with local video files for benchmarking.
     """
-    """
-    Load vdideos and prompts from NExT dataset
-    set: train, test or validation
-    """
 
     def __init__(self, video_dir, batch_size=1, max_frames=sys.maxsize, dset="test", task="OE"):
         """Initialize NextQA dataset loader.
@@ -222,6 +218,11 @@ class NExTQALoader(VideoLoader):
         return VideoPrompt(video_path, num_frames, prompt)
 
     def __iter__(self):
+        """Iterate over NextQA dataset entries.
+
+        Yields:
+            VideoPrompt or List[VideoPrompt]: Individual video prompts or batches
+        """
         if self.batch_size == 1:
             for entry in self.ds:
                 yield self.get_video_prompt(entry, self.max_frames)
