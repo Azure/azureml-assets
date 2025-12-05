@@ -19,7 +19,7 @@ metadata:
   base_model_task: chat-completion
   is_acft_model: true
   is_finetuned_model: false
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:58
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:86
 mlflow_version: 2.9.2
 model_uuid: 77a1902e3a414556823bac84b91c1462
 utc_time_created: '2024-02-26 20:56:26.654737'
