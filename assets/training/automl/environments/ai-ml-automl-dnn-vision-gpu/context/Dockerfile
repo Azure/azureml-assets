@@ -84,7 +84,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
     pip=25.3 \
     numpy~=1.23.5\
-    libffi=3.3 \
+    libffi=3.4.4 \
     pycocotools=2.0.4 \
     shap=0.39.0 \
     llvmlite=0.39.1 \
@@ -132,7 +132,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
 RUN pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN pip install --upgrade 'mlflow==2.22.2' 'numpy~=1.23.5'
+RUN pip install --upgrade 'mlflow-skinny==2.15.1' 'numpy~=1.23.5'
 
 RUN pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/conda/pkgs/
