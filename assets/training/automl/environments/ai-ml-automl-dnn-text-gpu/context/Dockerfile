@@ -111,6 +111,7 @@ RUN pip install \
                 azureml-defaults=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
+                'mlflow-skinny==2.15.1' \
                 'cryptography>=45.0.7'\
                 'requests>=2.32.5' \
                 'certifi>=2025.11.12'
