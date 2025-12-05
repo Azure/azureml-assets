@@ -7,9 +7,9 @@ Benchmark online serving with dynamic requests.
 Usage:
 python3 -m sglang.bench_serving --backend sglang --num-prompt 10
 
-python3 -m sglang.bench_serving --backend sglang --dataset-name random --num-prompts 3000 
+python3 -m sglang.bench_serving --backend sglang --dataset-name random --num-prompts 3000
     --random-input 1024 --random-output 1024 --random-range-ratio 0.5
-python3 -m sglang.bench_serving --backend sglang --dataset-name random --request-rate-range 
+python3 -m sglang.bench_serving --backend sglang --dataset-name random --request-rate-range
     1,2,4,8,16,32 --random-input 4096 --random-output 1024 --random-range-ratio 0.125 --multi
 """
 
@@ -665,7 +665,7 @@ def run_benchmark(args_: argparse.Namespace):
     if args.model is None:
         if args.backend == "truss":
             print(
-                "Please provide a model with `--model` when using truss backend. e.g. --model " \
+                "Please provide a model with `--model` when using truss backend. e.g. --model "
                 "meta-llama/Llama-3.1-8B-Instruct"
             )
             sys.exit(1)
@@ -743,7 +743,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        help="If not set, the default port is configured according to its default value for different LLM " \
+        help="If not set, the default port is configured according to its default value for different LLM "
         "Inference Engines.",
     )
     parser.add_argument(
@@ -774,7 +774,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--chat-template",
         type=str,
-        help="The buliltin chat template name or the path of the chat template file. This is only used for " \
+        help="The buliltin chat template name or the path of the chat template file. This is only used for "
         "OpenAI-compatible API server.",
     )
     parser.add_argument(
@@ -793,7 +793,7 @@ if __name__ == "__main__":
         "--sharegpt-context-len",
         type=int,
         default=None,
-        help="The context length of the model for the ShareGPT dataset. Requests longer than the context " \
+        help="The context length of the model for the ShareGPT dataset. Requests longer than the context "
         "length will be dropped.",
     )
     parser.add_argument(
@@ -843,7 +843,7 @@ if __name__ == "__main__":
         "--request-rate-range",
         type=str,
         default="2,34,2",
-        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports a " \
+        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports a "
         "list of request rates, requiring the parameters to not equal three.",
     )
     parser.add_argument("--output-file", type=str, help="Output JSONL file name.")

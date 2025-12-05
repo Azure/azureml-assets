@@ -65,7 +65,7 @@ def parse_args():
     parser.add_argument(
         "--port",
         type=int,
-        help="If not set, the default port is configured according to its default value for" \
+        help="If not set, the default port is configured according to its default value for"
         " different LLM Inference Engines.",
     )
     parser.add_argument(
@@ -105,7 +105,7 @@ def parse_args():
     parser.add_argument(
         "--chat-template",
         type=str,
-        help="The buliltin chat template name or the path of the chat template file. This is only used " \
+        help="The buliltin chat template name or the path of the chat template file. This is only used "
         "for OpenAI-compatible API server.",
     )
     parser.add_argument(
@@ -124,7 +124,7 @@ def parse_args():
         "--sharegpt-context-len",
         type=int,
         default=None,
-        help="The context length of the model for the ShareGPT dataset. Requests longer than the " \
+        help="The context length of the model for the ShareGPT dataset. Requests longer than the "
         "context length will be dropped.",
     )
     parser.add_argument(
@@ -174,7 +174,7 @@ def parse_args():
         "--request-rate-range",
         type=str,
         default="2,34,2",
-        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports " \
+        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports "
         "a list of request rates, requiring the parameters to not equal three.",
     )
     parser.add_argument("--output-file", type=str, help="Output JSONL file name.")

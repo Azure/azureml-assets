@@ -52,12 +52,12 @@ def common_filter_chat(
 ) -> SampleOutput:
     # Filter out sequences that are too long or too short
     filtered_dataset: SampleOutput = []
-    l = 0
+    k = 0
     input_tokens = 0
     output_tokens = 0
-    while l < num_requests:
+    while k < num_requests:
         for i in range(len(new_dataset)):
-            if l == num_requests:
+            if k == num_requests:
                 break
             processed = []
             for j in new_dataset[i]:
@@ -86,7 +86,7 @@ def common_filter_chat(
                 processed.append((prompt, prompt_len, output_len))
             if len(processed) != 0:
                 filtered_dataset.append(processed)
-                l += 1
+                k += 1
 
     print(f"#Input tokens: {input_tokens}")
     print(f"#Output tokens: {output_tokens}")
