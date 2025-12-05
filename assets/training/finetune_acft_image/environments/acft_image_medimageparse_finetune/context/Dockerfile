@@ -7,3 +7,4 @@ RUN apt-get -y update && apt-get install -y libc-bin libc-bin libc-dev locales l
 COPY requirements.txt .
 RUN pip install --upgrade "pip>=25.3"
 RUN pip install -r requirements.txt
+RUN pip install --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
