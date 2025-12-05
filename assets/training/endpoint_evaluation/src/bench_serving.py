@@ -54,6 +54,7 @@ class RequestFuncInput:
         prev_messages: Previous messages in conversation for multiturn chat
         finished_prompts: Number of completed prompts in the conversation
     """
+
     prompts: List[Tuple[MsgContent, int, int]]
     api_url: str
     model: str
@@ -79,6 +80,7 @@ class RequestFuncOutput:
         success: Whether the request completed successfully
         error: Error message if request failed
     """
+
     generated_text: List[str] = field(default_factory=list)
     prompt_len: List[int] = field(default_factory=list)
     output_len: List[int] = field(default_factory=list)
@@ -300,6 +302,7 @@ class BenchmarkMetrics:
         p99_e2e_latency_ms: 99th percentile E2E latency in milliseconds
         concurrency: Average concurrency level during benchmark
     """
+
     completed: int
     total_input: int
     total_output: int

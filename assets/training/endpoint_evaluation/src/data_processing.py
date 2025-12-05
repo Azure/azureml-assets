@@ -357,7 +357,6 @@ def sample_nextqa_requests(
     Returns:
         SampleOutput: Processed video QA requests with base64 encoded videos
     """
-
     if fixed_output_len is None:
         fixed_output_len = 4096
 
@@ -438,7 +437,6 @@ def sample_random_requests(
     Returns:
         SampleOutput: Generated random requests with specified characteristics
     """
-
     input_lens = np.random.randint(
         max(int(input_len * range_ratio), 1),
         input_len + 1,

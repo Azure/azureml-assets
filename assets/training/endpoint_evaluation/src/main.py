@@ -354,7 +354,7 @@ def run_endpoint_benchmark(
     backend: str,
     output_dir: str,
 ):
-    """Run benchmark for a specific endpoint"""
+    """Run benchmark for a specific endpoint."""
     print(f"\n{'='*60}")
     print(f"Starting benchmark for {endpoint_name} endpoint")
     print(f"{'='*60}\n")
@@ -397,7 +397,7 @@ def run_endpoint_benchmark(
 
 
 def main():
-    """Main entry point for the endpoint evaluation benchmark.
+    """Execute the endpoint evaluation benchmark.
 
     Orchestrates the complete benchmark process:
     1. Parses command-line arguments

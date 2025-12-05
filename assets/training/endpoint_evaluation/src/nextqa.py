@@ -61,6 +61,7 @@ class Video:
         path (str): Path to the video file
         num_frames (int): Number of frames in the video
     """
+
     def __init__(self, video_path, num_frames):
         """Initialize a Video object.
 
@@ -72,9 +73,11 @@ class Video:
         self.num_frames = num_frames
 
     def __str__(self):
+        """Return string representation of the Video object."""
         return f"Video({self.path}, {self.num_frames})"
 
     def __iter__(self):
+        """Return iterator over video path and frame count."""
         return iter((self.path, self.num_frames))
 
 
@@ -88,6 +91,7 @@ class VideoPrompt(Video):
         num_frames (int): Number of frames in the video
         prompt (str): Text prompt/question associated with the video
     """
+
     def __init__(self, video_path, num_frames, prompt):
         """Initialize a VideoPrompt object.
 
@@ -100,9 +104,11 @@ class VideoPrompt(Video):
         self.prompt = prompt
 
     def __str__(self):
+        """Return string representation of the VideoPrompt object."""
         return f"VideoPrompt({self.path}, {self.num_frames}, {self.prompt})"
 
     def __iter__(self):
+        """Return iterator over video path, frame count, and prompt."""
         return iter((self.path, self.num_frames, self.prompt))
 
 
@@ -111,6 +117,7 @@ class VideoLoader:
 
     Provides a common interface for different video loading strategies.
     """
+
     pass
 
 
@@ -119,9 +126,6 @@ class VideoFileLoader(VideoLoader):
 
     Scans a directory for video files and provides iteration interface
     for processing videos in batches.
-    """
-    """
-    Load all the videos in a directory
     """
 
     def __init__(self, video_dir, batch_size=1, max_frames=sys.maxsize):
