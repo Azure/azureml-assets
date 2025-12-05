@@ -17,15 +17,16 @@ from transformers import PreTrainedTokenizerBase
 
 from sglang.bench_serving import (
     download_and_cache_file,
-    gen_prompt,
-    get_gen_prefix_cache_path,
 )
 from sglang.lang.chat_template import get_chat_template, get_chat_template_by_model_path
 from sglang.srt.entrypoints.openai.protocol import ChatCompletionMessageContentPart
 from sglang.utils import encode_video_base64
 
 
-SHAREGPT_URL = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
+SHAREGPT_URL = (
+    "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/"
+    "ShareGPT_V3_unfiltered_cleaned_split.json"
+)
 
 # type of content fields, can be only prompts or with images/videos
 MsgContent = Union[str, List[ChatCompletionMessageContentPart]]
@@ -290,10 +291,10 @@ def sample_nextqa_requests(
 
     # TODO: prompt len can get from server side
     filtered_dataset = []
-    l = 0
-    while l < num_requests:
+    k = 0
+    while k < num_requests:
         for i in range(len(new_dataset)):
-            if l == num_requests:
+            if k == num_requests:
                 break
 
             video = new_dataset[i]
@@ -329,7 +330,7 @@ def sample_nextqa_requests(
             ]
 
             filtered_dataset.append([(content, prompt_len, output_len)])
-            l += 1
+            k += 1
     return filtered_dataset
 
 
@@ -483,16 +484,16 @@ def sample_generated_shared_prefix_requests(
         random.shuffle(input_requests)
 
     # Print statistics
-    print(f"\nGenerated shared prefix dataset statistics:")
+    print("\nGenerated shared prefix dataset statistics:")
     print(f"Number of groups: {num_groups}")
     print(f"Prompts per group: {prompts_per_group}")
     print(f"Total prompts: {len(input_requests) * prompts_per_group}")
     print(f"Total input tokens: {total_input_tokens}")
     print(f"Total output tokens: {total_output_tokens}")
-    print(
-        f"Average system prompt length: {sum(len(tokenizer.encode(sp)) for sp in system_prompts) / len(system_prompts):.1f} tokens"
-    )
-    print(f"Average question length: {sum(len(tokenizer.encode(q)) for q in questions) / len(questions):.1f} tokens\n")
+    avg_system_prompt_len = sum(len(tokenizer.encode(sp)) for sp in system_prompts) / len(system_prompts)
+    avg_question_len = sum(len(tokenizer.encode(q)) for q in questions) / len(questions)
+    print(f"Average system prompt length: {avg_system_prompt_len:.1f} tokens")
+    print(f"Average question length: {avg_question_len:.1f} tokens\n")
 
     # Save to cache
     cache_path.parent.mkdir(parents=True, exist_ok=True)

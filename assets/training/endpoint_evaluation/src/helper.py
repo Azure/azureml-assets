@@ -82,7 +82,7 @@ def _send_post_request(url: str, headers: dict, payload: dict):
             response = session.post(url, data=json.dumps(payload), headers=headers)
             # Raise an exception if the response contains an HTTP error status code
             response.raise_for_status()
-    except requests.exceptions.HTTPError as errh:
+    except requests.exceptions.HTTPError:
         raise
     return response
 

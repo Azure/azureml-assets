@@ -65,7 +65,8 @@ def parse_args():
     parser.add_argument(
         "--port",
         type=int,
-        help="If not set, the default port is configured according to its default value for different LLM Inference Engines.",
+        help="If not set, the default port is configured according to its default value for" \
+        " different LLM Inference Engines.",
     )
     parser.add_argument(
         "--dataset-name",
@@ -85,13 +86,15 @@ def parse_args():
     parser.add_argument(
         "--base-model",
         type=str,
-        help="Name or path of the model for base endpoint. If not set, the default model will request /v1/models for conf.",
+        help="Name or path of the model for base endpoint. If not set, the default model will request "
+        "/v1/models for conf.",
         default=None,
     )
     parser.add_argument(
         "--target-model",
         type=str,
-        help="Name or path of the model for target endpoint. If not set, the default model will request /v1/models for conf.",
+        help="Name or path of the model for target endpoint. If not set, the default model will request "
+        "/v1/models for conf.",
         default=None,
     )
     parser.add_argument(
@@ -102,7 +105,8 @@ def parse_args():
     parser.add_argument(
         "--chat-template",
         type=str,
-        help="The buliltin chat template name or the path of the chat template file. This is only used for OpenAI-compatible API server.",
+        help="The buliltin chat template name or the path of the chat template file. This is only used " \
+        "for OpenAI-compatible API server.",
     )
     parser.add_argument(
         "--num-prompts",
@@ -120,7 +124,8 @@ def parse_args():
         "--sharegpt-context-len",
         type=int,
         default=None,
-        help="The context length of the model for the ShareGPT dataset. Requests longer than the context length will be dropped.",
+        help="The context length of the model for the ShareGPT dataset. Requests longer than the " \
+        "context length will be dropped.",
     )
     parser.add_argument(
         "--random-input-len",
@@ -169,7 +174,8 @@ def parse_args():
         "--request-rate-range",
         type=str,
         default="2,34,2",
-        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports a list of request rates, requiring the parameters to not equal three.",
+        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports " \
+        "a list of request rates, requiring the parameters to not equal three.",
     )
     parser.add_argument("--output-file", type=str, help="Output JSONL file name.")
     parser.add_argument(

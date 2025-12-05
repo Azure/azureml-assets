@@ -1,17 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-# Adapted from https://github.com/vllm-project/vllm/blob/6366efc67b0aedd2c1721c14385370e50b297fb3/benchmarks/backend_request_func.py
-# Adapted from https://github.com/vllm-project/vllm/blob/6366efc67b0aedd2c1721c14385370e50b297fb3/benchmarks/benchmark_serving.py
-
 """
 Benchmark online serving with dynamic requests.
 
 Usage:
 python3 -m sglang.bench_serving --backend sglang --num-prompt 10
 
-python3 -m sglang.bench_serving --backend sglang --dataset-name random --num-prompts 3000 --random-input 1024 --random-output 1024 --random-range-ratio 0.5
-python3 -m sglang.bench_serving --backend sglang --dataset-name random --request-rate-range 1,2,4,8,16,32 --random-input 4096 --random-output 1024 --random-range-ratio 0.125 --multi
+python3 -m sglang.bench_serving --backend sglang --dataset-name random --num-prompts 3000 
+    --random-input 1024 --random-output 1024 --random-range-ratio 0.5
+python3 -m sglang.bench_serving --backend sglang --dataset-name random --request-rate-range 
+    1,2,4,8,16,32 --random-input 4096 --random-output 1024 --random-range-ratio 0.125 --multi
 """
 
 import argparse
@@ -546,7 +545,6 @@ async def benchmark(
             "random_range_ratio": args.random_range_ratio,
             # Results
             "duration": benchmark_duration,
-            "completed": metrics.completed,
             "total_input_tokens": metrics.total_input,
             "total_output_tokens": metrics.total_output,
             "total_output_tokens_retokenized": metrics.total_output_retokenized,
@@ -570,13 +568,6 @@ async def benchmark(
             "std_itl_ms": metrics.std_itl_ms,
             "p99_itl_ms": metrics.p99_itl_ms,
             "concurrency": metrics.concurrency,
-            "input_throughput": metrics.input_throughput,
-            "output_throughput": metrics.output_throughput,
-            "fixed_output_len": args.fixed_output_len,
-            "random_input_len": args.random_input_len,
-            "random_output_len": args.random_output_len,
-            "random_range_ratio": args.random_range_ratio,
-            "duration": benchmark_duration,
             "completed": metrics.completed,
         }
     else:
@@ -674,7 +665,8 @@ def run_benchmark(args_: argparse.Namespace):
     if args.model is None:
         if args.backend == "truss":
             print(
-                "Please provide a model with `--model` when using truss backend. e.g. --model meta-llama/Llama-3.1-8B-Instruct"
+                "Please provide a model with `--model` when using truss backend. e.g. --model " \
+                "meta-llama/Llama-3.1-8B-Instruct"
             )
             sys.exit(1)
         try:
@@ -751,7 +743,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        help="If not set, the default port is configured according to its default value for different LLM Inference Engines.",
+        help="If not set, the default port is configured according to its default value for different LLM " \
+        "Inference Engines.",
     )
     parser.add_argument(
         "--dataset-name",
@@ -781,7 +774,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--chat-template",
         type=str,
-        help="The buliltin chat template name or the path of the chat template file. This is only used for OpenAI-compatible API server.",
+        help="The buliltin chat template name or the path of the chat template file. This is only used for " \
+        "OpenAI-compatible API server.",
     )
     parser.add_argument(
         "--num-prompts",
@@ -799,7 +793,8 @@ if __name__ == "__main__":
         "--sharegpt-context-len",
         type=int,
         default=None,
-        help="The context length of the model for the ShareGPT dataset. Requests longer than the context length will be dropped.",
+        help="The context length of the model for the ShareGPT dataset. Requests longer than the context " \
+        "length will be dropped.",
     )
     parser.add_argument(
         "--random-input-len",
@@ -848,7 +843,8 @@ if __name__ == "__main__":
         "--request-rate-range",
         type=str,
         default="2,34,2",
-        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports a list of request rates, requiring the parameters to not equal three.",
+        help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports a " \
+        "list of request rates, requiring the parameters to not equal three.",
     )
     parser.add_argument("--output-file", type=str, help="Output JSONL file name.")
     parser.add_argument(
