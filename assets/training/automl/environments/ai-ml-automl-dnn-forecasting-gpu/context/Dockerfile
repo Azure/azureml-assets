@@ -1,10 +1,10 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-forecasting-gpu
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-forecasting-gpu
 # Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -46,8 +46,8 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip=22.1.2 \
-    numpy~=1.23.5 \
+    pip=25.3 \
+    numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
     scipy=1.10.1 \
@@ -83,24 +83,32 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-train-automl=={{latest-pypi-version}} \
                 azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
-                'azure-identity>=1.16.1' \
+                'azure-identity>=1.25.1' \
                 'inference-schema' \
+                'mlflow-skinny==2.15.1' \
                 'xgboost==1.5.2' \
-                'cryptography>=42.0.5' \
-                'requests>=2.32.4' \
-                'certifi>=2023.07.22' \
+                'cryptography>=45.0.7' \
+                'requests>=2.32.5' \
+                'certifi>=2025.11.12' \
                 'spacy==3.7.4' \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
-                "pillow>=11.3.0"
+                "pillow>=12.0.0"
                 # end pypi dependencies
-
-RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
 # end pip install
 
-# Fix vulnerabilities
-RUN pip install --upgrade urllib3
+# Fix vulnerabilities - upgrade pip, starlette, urllib3
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' 'h2>=4.3.0'
 RUN pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+ export CUDACXX=/usr/local/cuda/bin/nvcc && \
+ export HOROVOD_BUILD_CUDA_CC_LIST='60,61,70,75,80,86,89,90' && \
+ HOROVOD_WITH_PYTORCH=1 \
+ HOROVOD_CUDA_HOME=/usr/local/cuda \
+ CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
+ pip install --no-cache-dir --no-build-isolation \
+ git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+
 RUN rm -rf /opt/miniconda/pkgs/

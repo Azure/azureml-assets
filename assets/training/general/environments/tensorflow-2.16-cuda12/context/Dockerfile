@@ -37,21 +37,12 @@ RUN apt-get update && \
     dh-make \
     # Vulnerability fixes
     libgnutls30 \
-    libc-bin \
     libgssapi-krb5-2 \
     libpam-cap \
     libtasn1-6 \
-    binutils \
-    binutils-x86-64-linux-gnu \
-    binutils-common \
-    libbinutils \
-    libctf0 \
-    libctf-nobfd0 \
-    binutils-multiarch \
     libk5crypto3 \
     libcap2  \
     gpgconf \
-    dpkg-dev \
     # Perl vulnerability fixes
     perl-modules-5.34 \
     perl \
@@ -62,10 +53,35 @@ RUN apt-get update && \
 
 RUN apt-get update && \
     apt-get install -y --only-upgrade \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
         libsqlite3-0 \
         libc6 \
         libc6-dev \
+        libc-bin \
         libc-dev-bin \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        dpkg \
+        dpkg-dev \
+        libbinutils \
+        binutils \
+        binutils-common \
+        binutils-multiarch \
+        binutils-x86-64-linux-gnu \
+        libctf0 \
+        libctf-nobfd0 \
+        libdpkg-perl \
+        libssh-4 \
+        libxml2 \
+        linux-libc-dev \
+        linux-headers-generic \
+        locales \
+        openssl \
+        gnupg2 \
         systemd \
         systemd-sysv \
         systemd-timesyncd \
@@ -185,6 +201,10 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends rdma-core && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# remove unused packages
+RUN apt-get autoremove -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \
     mkdir -p /usr/local/nccl-rdma-sharp-plugins && \
@@ -220,20 +240,10 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
 
 RUN conda run -p $CONDA_PREFIX
 
-RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
+RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --no-cache-dir --no-build-isolation horovod["tensorflow"]==0.28.1
 
 # Reinstall OpenSSL inside Conda
 RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
-
-RUN pip install --upgrade \
-        requests==2.32.4 \
-        urllib3==2.5.0 && \
-    $CONDA_PREFIX/bin/pip install --upgrade \
-        requests==2.32.4 \
-        urllib3==2.5.0 \
-        protobuf==4.25.8 \
-        pillow==11.3.0 \
-        flask-cors==6.0.0
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
