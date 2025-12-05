@@ -29,3 +29,4 @@ dependencies:
   - azureml-automl-dnn-vision==1.61.0
   - azureml-dataprep>=2.24.4
   - azure-identity>=1.16.1
+  - mlflow-skinny==2.15.1
