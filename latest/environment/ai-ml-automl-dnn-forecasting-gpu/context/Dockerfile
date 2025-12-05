@@ -85,6 +85,7 @@ RUN pip install \
                 azureml-contrib-automl-dnn-forecasting==1.61.0 \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
+                'mlflow-skinny==2.15.1' \
                 'xgboost==1.5.2' \
                 'cryptography>=45.0.7' \
                 'requests>=2.32.5' \
