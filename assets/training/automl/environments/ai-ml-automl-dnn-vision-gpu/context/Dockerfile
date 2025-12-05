@@ -130,8 +130,8 @@ RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'u
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
 
 # Upgrade torch and torchvision to fix vulnerabilities
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
 RUN pip install --upgrade 'mlflow-skinny==2.15.1' 'numpy~=1.23.5'
 
 RUN pip install --upgrade 'h2>=4.3.0'

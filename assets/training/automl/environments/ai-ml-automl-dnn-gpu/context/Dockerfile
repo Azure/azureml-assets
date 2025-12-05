@@ -116,7 +116,7 @@ RUN pip install \
                 # end pypi dependencies
 
 # Fix vulnerabilities
-RUN pip install --force-reinstall torchvision==0.23.0 torch==2.8.0 --no-cache-dir
+RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
 RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0'
 
 # If you have other python/pip environments, update them too:
@@ -126,9 +126,7 @@ RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' |
 # --- End Vulnerability Fixes ---
 
 # --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.23.5' --force-reinstall && \
-    pip install 'numpy==1.23.5' --force-reinstall
-RUN pip install --upgrade 'h2>=4.3.0'
+RUN pip install --upgrade 'numpy==1.23.5' 'h2>=4.3.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
