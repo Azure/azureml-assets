@@ -22,7 +22,7 @@ flavors:
     python_version: 3.8.18
 metadata:
   base_model_name: mistralai/Mistral-7B-Instruct-v0.2
-  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:58
+  azureml.base_image: mcr.microsoft.com/azureml/curated/foundation-model-inference:86
   base_model_task: chat-completion
   model_provider_name: mistral
   is_acft_model: true
