@@ -145,7 +145,11 @@ async def async_request_openai_completions(
                             # NOTE: Some completion API might have a last
                             # usage summary response without a token so we
                             # want to check a token was generated
-                            if "usage" in data and data["usage"] is not None and len(data["usage"]) > 0:
+                            if (
+                                "usage" in data
+                                and data["usage"] is not None
+                                and len(data["usage"]) > 0
+                            ):
                                 actual_prompt_len = data["usage"]["prompt_tokens"]
                                 actual_output_len = data["usage"]["completion_tokens"]
                                 continue

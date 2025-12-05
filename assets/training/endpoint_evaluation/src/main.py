@@ -304,7 +304,9 @@ def _generate_avg_metrics(metrics_file: str, prefix: str = "", log_to_aml: bool 
         else:
             avg_metrics[key] = metrics_list[0][key]
 
-    output_file = os.path.join(os.path.dirname(metrics_file), f"{prefix}metrics_avg.json")
+    output_file = os.path.join(
+        os.path.dirname(metrics_file), f"{prefix}metrics_avg.json"
+    )
     with open(output_file, "w") as f:
         json.dump(avg_metrics, f, indent=4)
 
@@ -316,36 +318,46 @@ def _generate_avg_metrics(metrics_file: str, prefix: str = "", log_to_aml: bool 
             metric_key = k.upper()
             prefixed_metrics[f"{prefix}{metric_key}"] = v
         log_metrics(prefixed_metrics)
-    
+
     return avg_metrics
 
 
-def run_endpoint_benchmark(args, endpoint_name: str, url: str, connection_name: str, model: str, backend: str, output_dir: str):
+def run_endpoint_benchmark(
+    args,
+    endpoint_name: str,
+    url: str,
+    connection_name: str,
+    model: str,
+    backend: str,
+    output_dir: str,
+):
     """Run benchmark for a specific endpoint"""
     print(f"\n{'='*60}")
     print(f"Starting benchmark for {endpoint_name} endpoint")
     print(f"{'='*60}\n")
-    
+
     # Create a copy of args for this endpoint
     endpoint_args = deepcopy(args)
     endpoint_args.base_url = url
     endpoint_args.model = model
     endpoint_args.backend = backend
-    
+
     # Remove last slash if exists
     if endpoint_args.base_url and endpoint_args.base_url.endswith("/"):
         endpoint_args.base_url = endpoint_args.base_url[:-1]
-    
+
     # Get API key for this endpoint
     api_key, _ = get_api_key_from_connection(connection_name)
     os.environ["OPENAI_API_KEY"] = api_key
-    
+
     # Set output file for this endpoint
-    endpoint_args.output_file = os.path.join(output_dir, f"{endpoint_name}_metrics_each_trial.jsonl")
-    
+    endpoint_args.output_file = os.path.join(
+        output_dir, f"{endpoint_name}_metrics_each_trial.jsonl"
+    )
+
     trials = endpoint_args.trials
     del endpoint_args.trials
-    
+
     # Run trials
     for trial in range(trials):
         print(f"[{endpoint_name}] Starting trial {trial + 1} of {trials}...")
@@ -354,11 +366,14 @@ def run_endpoint_benchmark(args, endpoint_name: str, url: str, connection_name: 
         except Exception as e:
             print(f"[{endpoint_name}] Trial {trial + 1} failed with error: {e}")
             import traceback
+
             traceback.print_exc()
             raise
-    
+
     # Generate average metrics with prefix (don't log in child process)
-    _generate_avg_metrics(endpoint_args.output_file, prefix=f"{endpoint_name}_", log_to_aml=False)
+    _generate_avg_metrics(
+        endpoint_args.output_file, prefix=f"{endpoint_name}_", log_to_aml=False
+    )
     print(f"\n[{endpoint_name}] Benchmark completed!\n")
 
 
@@ -376,7 +391,7 @@ def main():
     target_model = args.target_model
     target_backend = args.target_backend
     output_dir = args.output_file
-    
+
     # Remove endpoint-specific args from the base args
     del args.connection_name
     del args.base_model
@@ -389,42 +404,60 @@ def main():
     del args.base_url
 
     # Run benchmarks sequentially
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Starting sequential benchmarks for base and target endpoints")
-    print("="*60 + "\n")
-    
+    print("=" * 60 + "\n")
+
     # Run base endpoint benchmark first
     print("Running base endpoint benchmark...")
     try:
-        run_endpoint_benchmark(args, "base", base_url, base_connection, base_model, base_backend, output_dir)
+        run_endpoint_benchmark(
+            args,
+            "base",
+            base_url,
+            base_connection,
+            base_model,
+            base_backend,
+            output_dir,
+        )
         print("Base endpoint benchmark completed.\n")
     except Exception as e:
         print(f"[ERROR] Base endpoint benchmark failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
-    
+
     # Run target endpoint benchmark second
     print("Running target endpoint benchmark...")
     try:
-        run_endpoint_benchmark(args, "target", target_url, target_connection, target_model, target_backend, output_dir)
+        run_endpoint_benchmark(
+            args,
+            "target",
+            target_url,
+            target_connection,
+            target_model,
+            target_backend,
+            output_dir,
+        )
         print("Target endpoint benchmark completed.\n")
     except Exception as e:
         print(f"[ERROR] Target endpoint benchmark failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
-    
-    print("\n" + "="*60)
+
+    print("\n" + "=" * 60)
     print("All benchmarks completed successfully!")
-    print("="*60 + "\n")
-    
+    print("=" * 60 + "\n")
+
     # Log metrics to AML from main process
     print("Logging metrics to AzureML...")
     try:
         base_metrics_file = os.path.join(output_dir, "base_metrics_avg.json")
         target_metrics_file = os.path.join(output_dir, "target_metrics_avg.json")
-        
+
         if os.path.exists(base_metrics_file):
             with open(base_metrics_file, "r") as f:
                 base_metrics = json.load(f)
@@ -435,7 +468,7 @@ def main():
                     prefixed_base[f"base_{metric_key}"] = v
                 log_metrics(prefixed_base)
                 print(f"  ✓ Logged {len(base_metrics)} base metrics")
-        
+
         if os.path.exists(target_metrics_file):
             with open(target_metrics_file, "r") as f:
                 target_metrics = json.load(f)
@@ -446,7 +479,7 @@ def main():
                     prefixed_target[f"target_{metric_key}"] = v
                 log_metrics(prefixed_target)
                 print(f"  ✓ Logged {len(target_metrics)} target metrics")
-        
+
         print("Metrics logging completed!")
     except Exception as e:
         print(f"Warning: Failed to log metrics to AML: {e}")

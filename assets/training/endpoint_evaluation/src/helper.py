@@ -15,20 +15,26 @@ RETRIABLE_STATUS_CODES = {413, 429, 500, 502, 503, 504, None}
 # Define loggable metrics - only mean metrics for TPOT, TTFT, E2E latency, and ITL
 LOGGABLE_METRIC_NAMES = {
     # Core throughput metrics (lowercase from JSON files)
-    "request_throughput", "input_throughput", "output_throughput",
+    "request_throughput",
+    "input_throughput",
+    "output_throughput",
     # Mean latency metrics only (no median)
     "mean_e2e_latency_ms",
     "mean_ttft_ms",
     "mean_tpot_ms",
     "mean_itl_ms",
-    "total_input_tokens", "total_output_tokens",
+    "total_input_tokens",
+    "total_output_tokens",
     # Uppercase versions for AML logging
-    "REQUEST_THROUGHPUT", "INPUT_THROUGHPUT", "OUTPUT_THROUGHPUT",
+    "REQUEST_THROUGHPUT",
+    "INPUT_THROUGHPUT",
+    "OUTPUT_THROUGHPUT",
     "MEAN_E2E_LATENCY_MS",
     "MEAN_TTFT_MS",
     "MEAN_TPOT_MS",
     "MEAN_ITL_MS",
-    "TOTAL_INPUT_TOKENS", "TOTAL_OUTPUT_TOKENS",
+    "TOTAL_INPUT_TOKENS",
+    "TOTAL_OUTPUT_TOKENS",
 }
 
 
@@ -154,7 +160,7 @@ def log_metrics(metrics: dict):
             key_to_check = key
             if key.startswith("base_") or key.startswith("target_"):
                 key_to_check = key.split("_", 1)[1]  # Remove prefix
-            
+
             if key_to_check in LOGGABLE_METRIC_NAMES:
                 azureml_run.log(key, value)
         azureml_run.flush()
