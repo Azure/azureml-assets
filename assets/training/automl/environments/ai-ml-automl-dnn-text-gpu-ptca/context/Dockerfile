@@ -49,8 +49,6 @@ RUN pip install \
 RUN pip uninstall -y onnxruntime
 RUN pip uninstall -y torch torchvision torchaudio
 RUN pip install --upgrade torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
-# Install/upgrade torch in ptca env if it exists (fixes vulnerability)
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
 
 # onnx and onnxruntime-training installation
 RUN pip install onnx==1.17.0

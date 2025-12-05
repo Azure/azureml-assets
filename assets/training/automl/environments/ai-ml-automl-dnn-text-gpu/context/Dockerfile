@@ -129,7 +129,7 @@ RUN pip list && \
                 aiohttp==3.12.14
 
 # Upgrade torch and torchvision
-RUN pip install torch==2.8.0 torchvision==0.23.0 
+RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
 
 # Upgrade starlette and urllib3
