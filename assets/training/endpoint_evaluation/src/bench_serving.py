@@ -44,7 +44,7 @@ global args
 @dataclass
 class RequestFuncInput:
     """Input data structure for benchmark request functions.
-    
+
     Attributes:
         prompts: List of tuples containing (message_content, input_length, output_length)
         api_url: URL endpoint for the API
@@ -68,7 +68,7 @@ class RequestFuncInput:
 @dataclass
 class RequestFuncOutput:
     """Output data structure for benchmark request functions.
-    
+
     Attributes:
         generated_text: List of generated text responses
         prompt_len: List of prompt lengths in tokens
@@ -98,13 +98,13 @@ async def async_request_openai_completions(
     pbar: Optional[tqdm] = None,
 ) -> RequestFuncOutput:
     """Make asynchronous requests to OpenAI-compatible completions API.
-    
+
     Args:
         request_func_input: Input configuration for the request
         queue: Async queue for managing concurrent requests
         tokenizer: Tokenizer for processing text
         pbar: Optional progress bar for tracking completion
-        
+
     Returns:
         RequestFuncOutput: Results from the API request including generated text,
             latency metrics, and success/error status
@@ -236,7 +236,7 @@ async def async_request_profile(api_url: str) -> RequestFuncOutput:
 
     Args:
         api_url: URL for the profiling control endpoint
-        
+
     Returns:
         RequestFuncOutput: Response indicating success or failure of profiling command
     """
@@ -267,7 +267,7 @@ ASYNC_REQUEST_FUNCS = {
 @dataclass
 class BenchmarkMetrics:
     """Comprehensive metrics collected during benchmark execution.
-    
+
     Attributes:
         completed: Number of successfully completed requests
         total_input: Total number of input tokens processed
@@ -338,12 +338,12 @@ async def get_requests(
     num_actual_requests: int,
 ) -> AsyncGenerator[RequestFuncInput, None]:
     """Generate requests at specified rate using Poisson process.
-    
+
     Args:
         input_requests_queue: Queue containing prepared request inputs
         request_rate: Target requests per second (inf for immediate)
         num_actual_requests: Total number of requests to generate
-        
+
     Yields:
         RequestFuncInput: Individual request configurations at controlled intervals
     """
@@ -370,13 +370,13 @@ def calculate_metrics(
     backend: str,
 ) -> Tuple[BenchmarkMetrics, List[int]]:
     """Calculate comprehensive benchmark metrics from request outputs.
-    
+
     Args:
         outputs: List of completed request outputs
         dur_s: Total benchmark duration in seconds
         tokenizer: Tokenizer for retokenizing generated text
         backend: Backend identifier for metric calculation
-        
+
     Returns:
         Tuple containing:
             - BenchmarkMetrics: Comprehensive performance metrics
@@ -471,7 +471,7 @@ async def benchmark(
     enable_shared_prefix: bool,
 ):
     """Execute the main benchmark against a language model endpoint.
-    
+
     Args:
         backend: Backend type (sglang, vllm, etc.)
         api_url: Complete API endpoint URL
@@ -486,7 +486,7 @@ async def benchmark(
         extra_request_body: Additional request parameters
         profile: Whether to enable profiling
         enable_shared_prefix: Whether to enable shared prefix optimization
-        
+
     Returns:
         dict: Comprehensive benchmark results including all metrics
     """
@@ -748,10 +748,10 @@ async def benchmark(
 
 def run_benchmark(args_: argparse.Namespace):
     """Run a complete benchmark using the provided arguments.
-    
+
     Args:
         args_: Namespace containing all benchmark configuration options
-        
+
     Returns:
         dict: Benchmark results from the async benchmark execution
     """

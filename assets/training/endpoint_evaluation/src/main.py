@@ -21,7 +21,7 @@ from helper import get_api_key_from_connection, log_metrics
 
 def parse_args():
     """Parse command-line arguments for endpoint evaluation.
-    
+
     Returns:
         argparse.Namespace: Parsed command-line arguments containing all
             configuration options for the benchmark including endpoint URLs,
@@ -303,12 +303,12 @@ def parse_args():
 
 def _generate_avg_metrics(metrics_file: str, prefix: str = "", log_to_aml: bool = True):
     """Generate average metrics from multiple trial results.
-    
+
     Args:
         metrics_file (str): Path to JSONL file containing metrics from each trial.
         prefix (str, optional): Prefix to add to metric names. Defaults to "".
         log_to_aml (bool, optional): Whether to log metrics to Azure ML. Defaults to True.
-        
+
     Returns:
         dict: Dictionary containing averaged metrics across all trials.
     """
@@ -398,7 +398,7 @@ def run_endpoint_benchmark(
 
 def main():
     """Main entry point for the endpoint evaluation benchmark.
-    
+
     Orchestrates the complete benchmark process:
     1. Parses command-line arguments
     2. Runs benchmarks sequentially for base and target endpoints
