@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
 # Removing it from requirements.txt to avoid conflict with scikit-learn version
-RUN pip install azureml-metrics==0.0.33
+RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
