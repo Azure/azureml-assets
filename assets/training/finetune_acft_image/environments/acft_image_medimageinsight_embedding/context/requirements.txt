@@ -23,8 +23,8 @@ azure-storage-blob==12.13.0
 deepspeed==0.17.1
 GPUtil==1.4.0
 mup==1.0.0
-torchvision==0.22.1
-torch==2.7.1
+torch==2.8.0
+torchvision==0.23.0
 safetensors==0.5.2
 setuptools==78.1.1
 mlflow==3.1.0

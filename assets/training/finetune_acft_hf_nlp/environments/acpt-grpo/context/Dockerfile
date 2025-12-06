@@ -6,5 +6,8 @@ USER root
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
+RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
+RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
+
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
