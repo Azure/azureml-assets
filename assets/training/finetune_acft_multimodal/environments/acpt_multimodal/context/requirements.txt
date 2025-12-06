@@ -21,7 +21,7 @@ sacrebleu==2.2.1
 bitsandbytes==0.41.0
 einops==0.6.1
 numpy==1.22
-azureml-dataprep=={{latest-pypi-version}}
+azureml-dataprep==4.12.4
 # Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
 azureml-metrics==0.0.33
 setuptools==78.1.1
