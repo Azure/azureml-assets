@@ -4,7 +4,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -111,6 +111,7 @@ RUN pip install \
                 azureml-defaults=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
+                'mlflow-skinny==2.15.1' \
                 'cryptography>=45.0.7'\
                 'requests>=2.32.5' \
                 'certifi>=2025.11.12'
@@ -128,7 +129,7 @@ RUN pip list && \
                 aiohttp==3.12.14
 
 # Upgrade torch and torchvision
-RUN pip install torch==2.8.0 torchvision==0.23.0 
+RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
 
 # Upgrade starlette and urllib3

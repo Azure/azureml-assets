@@ -4,7 +4,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -84,7 +84,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
     pip=25.3 \
     numpy~=1.23.5\
-    libffi=3.3 \
+    libffi=3.4.4 \
     pycocotools=2.0.4 \
     shap=0.39.0 \
     llvmlite=0.39.1 \
@@ -130,9 +130,9 @@ RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'u
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
 
 # Upgrade torch and torchvision to fix vulnerabilities
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN pip install --force-reinstall --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN pip install --upgrade 'mlflow==3.1.4' 'numpy~=1.23.5'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
+RUN pip install --upgrade 'mlflow-skinny==2.15.1' 'numpy~=1.23.5'
 
 RUN pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/conda/pkgs/
