@@ -12,10 +12,10 @@ COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install mlflow==3.1.0 "starlette>=0.49.1"
+RUN pip install mlflow==3.1.0
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
-RUN MAX_JOBS=4 pip install flash-attn==2.8.1 --no-build-isolation
+RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
 RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
 
 # clean conda and pip caches
