@@ -1,4 +1,4 @@
-azureml-acft-contrib-hf-nlp==0.0.83
+azureml-acft-contrib-hf-nlp==0.0.84
 packaging==25.0
 click==8.2.1
 codetiming==1.4.0

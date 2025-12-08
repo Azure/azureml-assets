@@ -1,7 +1,7 @@
-azureml-acft-accelerator==0.0.83
-azureml_acft_common_components==0.0.83
-azureml-acft-contrib-hf-nlp==0.0.83
-azureml-evaluate-mlflow==0.0.83
+azureml-acft-accelerator==0.0.84
+azureml_acft_common_components==0.0.84
+azureml-acft-contrib-hf-nlp==0.0.84
+azureml-evaluate-mlflow==0.0.84
 mltable==1.6.3
 mpi4py==3.1.5
 sentencepiece==0.1.99

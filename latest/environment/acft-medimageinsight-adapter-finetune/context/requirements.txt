@@ -1,5 +1,5 @@
-azureml-acft-common-components==0.0.83
-azureml-acft-contrib-hf-nlp==0.0.83
+azureml-acft-common-components==0.0.84
+azureml-acft-contrib-hf-nlp==0.0.84
 nbformat~=5.10.0
 plotly~=5.23.0
 scikit-learn==1.5.1

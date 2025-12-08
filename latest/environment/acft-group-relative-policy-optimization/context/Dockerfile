@@ -6,8 +6,8 @@ USER root
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install azureml-evaluate-mlflow==0.0.83
-RUN pip install azureml-acft-common-components==0.0.83
+RUN pip install azureml-evaluate-mlflow==0.0.84
+RUN pip install azureml-acft-common-components==0.0.84
 RUN pip install transformers==4.56.0
 
 # clean conda and pip caches

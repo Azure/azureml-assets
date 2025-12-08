@@ -11,5 +11,5 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Removing it from requirements.txt to avoid conflict with scikit-learn version
 RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 
-RUN pip install azureml-acft-common-components==0.0.83
-RUN pip install azureml-acft-accelerator==0.0.83
+RUN pip install azureml-acft-common-components==0.0.84
+RUN pip install azureml-acft-accelerator==0.0.84

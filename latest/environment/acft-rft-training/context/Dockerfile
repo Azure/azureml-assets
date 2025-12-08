@@ -44,8 +44,8 @@ RUN conda run -n base python -m pip install --upgrade pip==25.3
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
-RUN pip install azureml-acft-common-components==0.0.83
-RUN pip install azureml-evaluate-mlflow==0.0.83
+RUN pip install azureml-acft-common-components==0.0.84
+RUN pip install azureml-evaluate-mlflow==0.0.84
 RUN pip install verl==0.6.0
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
 COPY vllm_async_server dest/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py

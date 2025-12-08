@@ -1,5 +1,5 @@
 accelerate==1.6.0
-azureml-acft-contrib-hf-nlp==0.0.83
+azureml-acft-contrib-hf-nlp==0.0.84
 datasets==3.6.0
 pillow==11.3.0
 sglang==0.5.5

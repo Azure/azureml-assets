@@ -30,4 +30,4 @@ appdirs==1.4.4
 ffmpeg==1.4
 wheel==0.41.2
 lightning==2.5.5
-azureml-acft-image-components[mip]==0.0.83
+azureml-acft-image-components[mip]==0.0.84
