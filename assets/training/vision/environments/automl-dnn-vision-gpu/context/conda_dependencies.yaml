@@ -4,7 +4,7 @@ channels:
 - cerebis
 dependencies:
 - python=3.10
-- pip=21.3.1
+- pip=25.3
 - numpy~=1.23.5
 - libffi=3.3
 - pycocotools=2.0.4
@@ -29,3 +29,4 @@ dependencies:
   - azureml-automl-dnn-vision=={{latest-pypi-version}}
   - azureml-dataprep>=2.24.4
   - azure-identity>=1.16.1
+  - mlflow-skinny==2.15.1
