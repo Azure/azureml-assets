@@ -5,7 +5,7 @@
 
 """Entry script for Batch resource manager."""
 
-from typing import List, Generator, Optional
+from typing import List, Generator, Optional, Tuple
 import argparse
 import json
 import subprocess
@@ -14,7 +14,7 @@ import time
 import traceback
 
 from azureml.core import Run
-from aml_benchmark.utils.logging import get_logger
+from aml_benchmark.utils.logging import get_logger, BufferStore
 from aml_benchmark.utils.exceptions import swallow_all_exceptions
 from aml_benchmark.utils.aml_run_utils import str2bool, get_dependent_run
 from aml_benchmark.utils.online_endpoint.endpoint_utils import EndpointUtilities
@@ -29,6 +29,8 @@ from azureml._restclient.constants import RunStatus
 
 logger = get_logger(__name__)
 
+# TODO: check back here if there is a way to have a published contract supporitng this
+_FINAL_STATUSES = { RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELED }
 
 def parse_args() -> argparse.Namespace:
     """Parse the args for the method."""
@@ -75,6 +77,12 @@ def parse_args() -> argparse.Namespace:
         "--wait_finetuned_step",
         default=False, type=str2bool,
         help="Force redeploymodels or not.",
+    )
+    parser.add_argument(
+        "--finetuned_start_timeout_seconds",
+        default=900, 
+        type=int,
+        help="Maximum time to wait for fine tune step to start.",
     )
     parser.add_argument(
         "--finetuned_step_name", type=str, help="finetuned_step_name", default=None)
@@ -168,7 +176,7 @@ def deploy_endpoint_maybe(online_endpoint: OnlineEndpoint) -> bool:
 def deploy_model_maybe(
         online_endpoint: OnlineEndpoint, output_metadata_dir: str,
         managed_endpoint: bool, redeploy_model: bool
-) -> bool:
+) -> Tuple[bool, bool]:
     """Deploy the model if it is not deployed."""
     managed_deployment = False
     managed_connections = True
@@ -183,11 +191,13 @@ def deploy_model_maybe(
         logger.info("Deployment is not found, create it now.")
         online_endpoint.create_deployment()
         managed_deployment = True
-    online_endpoint.create_connections()
+    is_conn_created = online_endpoint.create_connections()
     EndpointUtilities.dump_endpoint_metadata_json(
         online_endpoint, managed_endpoint, managed_deployment, managed_connections, output_metadata_dir)
+    if not is_conn_created:
+        logger.warning("Connections were not created. The deployment may not work properly.")
     logger.info("model is ready/checked now.")
-    return managed_deployment
+    return managed_deployment, is_conn_created
 
 
 def _online_endpoint_generator(
@@ -295,12 +305,15 @@ def deploy_model_in_list_maybe(
             continue
         managed_deployment = False
         try:
-            managed_deployment = deploy_model_maybe(
+            managed_deployment, is_conn_created = deploy_model_maybe(
                 online_endpoint, output_metadata_dir, managed_endpoint, redeploy_model)
-            logger.info("Endpoint is deployed successfully.")
-            return True
+            if not is_conn_created:
+                error_msg = "Deployment was created, but connection was not, making it unusable."
+                raise ValueError(error_msg)
+            logger.info("Deployment and connections are created successfully.")
+            return managed_deployment
         except Exception as e:
-            logger.error(f"Failed to deploy model with error {e}.")
+            logger.error(f"Model deployment failed with error {e}.")
             logger.error(traceback.format_exception(*sys.exc_info()))
         # If endpoint is deployed successfully, the deletion code won't be reached
         if managed_deployment and online_endpoint.deployment_state() != ResourceState.NOT_FOUND:
@@ -312,20 +325,43 @@ def deploy_model_in_list_maybe(
     return False
 
 
-def _wait_finetuned_step(finetuned_step_name: Optional[str]) -> None:
+# the function must not return None on a non-error path
+def _repeat_till_success_or_timeout(timeout_seconds : int, interval_seconds : int, func, *args, **kwargs):
+    start_time = time.time()
+    while not (result:=func(*args, **kwargs)):
+        if time.time() - start_time > timeout_seconds:
+            return None
+        logger.info("Waiting for %d seconds before retrying to get dependent run.", interval_seconds)
+        time.sleep(interval_seconds)
+    return result
+
+
+def _wait_finetuned_step(finetuned_step_name: Optional[str], start_timeout_seconds = 900) -> None:
     """Wait for finetuned step to finish."""
     finetuned_step_name = finetuned_step_name if finetuned_step_name else "openai_completions_finetune_pipeline"
-    running_states = RunStatus.get_running_statuses()
-    wait_step_run = get_dependent_run(finetuned_step_name)
-    while wait_step_run and wait_step_run.get_status() in running_states:
-        logger.info("Waiting for finetuned step to finish.")
-        time.sleep(60)
-    if not wait_step_run or wait_step_run.get_status() != RunStatus.COMPLETED:
+    logger.info(f"Wait for finetuned step {finetuned_step_name} to finish.")
+    wait_step_run = _repeat_till_success_or_timeout(start_timeout_seconds,30,get_dependent_run,finetuned_step_name)
+    if wait_step_run is None:
+        logger.error(f"Finetuned wait step {finetuned_step_name} not found or failed to "
+                     f"start in allotted {start_timeout_seconds} seconds.")
         raise BenchmarkUserException._with_error(
             AzureMLError.create(
                 BenchmarkUserError,
-                error_details=f"Finetuned wait step {finetuned_step_name} is failed. Or wait step not found.")
+                error_details=f"Finetuned wait step {finetuned_step_name} not found or failed to start in allotted {start_timeout_seconds} seconds.")
             )
+    # TODO: this needs a timeout    
+    while (wait_step_status:=wait_step_run.get_status()) not in _FINAL_STATUSES:
+        logger.info("Waiting for finetuned step to finish. Current status is %s.", wait_step_status)
+        time.sleep(60)
+    if wait_step_status != RunStatus.COMPLETED:
+        logger.error(f"Finetuned wait step {finetuned_step_name} is not COMPLETED, status: %s.", wait_step_run.get_status())
+        raise BenchmarkUserException._with_error(
+            AzureMLError.create(
+                BenchmarkUserError,
+                error_details=f"Finetuned wait step {finetuned_step_name} is not successful, status: {wait_step_status}.")
+            )
+
+    logger.info(f"Finetuned wait step {finetuned_step_name} is COMPLETED.")
 
 
 @swallow_all_exceptions(logger)
@@ -359,7 +395,7 @@ def main(
     deployment_retry_interval_seconds: int,
     wait_finetuned_step: bool,
     finetuned_step_name: str,
-    finetuned_model_metadata: str
+    finetuned_start_timeout_seconds: int
 ) -> None:
     """
     Entry function of the script.
@@ -392,13 +428,13 @@ def main(
         )
     if not deletion_model:
         if wait_finetuned_step:
-            logger.info("Wait for finetuned step to finish.")
-            _wait_finetuned_step(finetuned_step_name)
+            _wait_finetuned_step(finetuned_step_name, finetuned_start_timeout_seconds)
         subscriptions_list = [
             s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
         locations_list = [
             s.strip() for s in endpoint_location.split(',')] if endpoint_location else [None]
         if is_finetuned_model:
+            logger.info("Detected a finetuned model, setting up an online endpoint.")
             workspace = Run.get_context().experiment.workspace
             finetuned_workspace = finetuned_workspace if finetuned_workspace else workspace.name
             finetuned_resource_group = finetuned_resource_group \
@@ -419,6 +455,10 @@ def main(
             finetuned_step_name, is_aoai_finetuned_model
         )
         is_deployment_successful = False
+        if deployment_retries <= 0:
+            logger.warning("Deployment retries is less than 0, resetting it to 1 to allow at least one attempt")
+            deployment_retries = 1
+        retries_err_msg = f"Deployment is not successful after {deployment_retries} retries."
         while deployment_retries > 0:
             is_deployment_successful = deploy_model_in_list_maybe(
                 subscriptions_list,
@@ -448,8 +488,8 @@ def main(
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(
                     BenchmarkUserError,
-                    error_details=f"Deployment is not successful after {deployment_retries} retries.")
-                )
+                    error_details=f"{retries_err_msg} Details: {BufferStore.get_all_data()}"
+                ))
     elif delete_managed_deployment:
         if not deployment_metadata:
             logger.info("Delete deployment using input parameters.")
@@ -480,34 +520,34 @@ def main(
 if __name__ == "__main__":
     args = parse_args()
     main(
-        args.model,
-        args.model_version,
-        args.model_type,
-        args.endpoint_name,
-        args.endpoint_workspace,
-        args.endpoint_resource_group,
-        args.endpoint_subscription_id,
-        args.endpoint_location,
-        args.deployment_name,
-        args.deployment_sku,
-        args.output_metadata,
-        args.deployment_metadata,
-        args.deletion_model,
-        args.connections_name,
-        args.additional_deployment_env_vars,
-        args.do_quota_validation,
-        args.use_max_quota,
-        args.redeploy_model,
-        args.deployment_env,
-        args.cli_file,
-        args.is_finetuned_model,
-        args.finetuned_subscription_id,
-        args.finetuned_resource_group,
-        args.finetuned_workspace,
-        args.delete_managed_deployment,
-        args.deployment_retries,
-        args.deployment_retry_interval_seconds,
-        args.wait_finetuned_step,
-        args.finetuned_step_name,
-        args.finetuned_model_metadata
+        model=args.model,
+        model_version=args.model_version,
+        model_type=args.model_type,
+        endpoint_name=args.endpoint_name,
+        endpoint_workspace=args.endpoint_workspace,
+        endpoint_resource_group=args.endpoint_resource_group,
+        endpoint_subscription_id=args.endpoint_subscription_id,
+        endpoint_location=args.endpoint_location,
+        deployment_name=args.deployment_name,
+        deployment_sku=args.deployment_sku,
+        output_metadata_dir=args.output_metadata,
+        deployment_metadata=args.deployment_metadata,
+        deletion_model=args.deletion_model,
+        connections_name=args.connections_name,
+        additional_deployment_env_vars=args.additional_deployment_env_vars,
+        do_quota_validation=args.do_quota_validation,
+        use_max_quota=args.use_max_quota,
+        redeploy_model=args.redeploy_model,
+        deployment_env=args.deployment_env,
+        cli_file=args.cli_file,
+        is_finetuned_model=args.is_finetuned_model,
+        finetuned_subscription_id=args.finetuned_subscription_id,
+        finetuned_resource_group=args.finetuned_resource_group,
+        finetuned_workspace=args.finetuned_workspace,
+        delete_managed_deployment=args.delete_managed_deployment,
+        deployment_retries=args.deployment_retries,
+        deployment_retry_interval_seconds=args.deployment_retry_interval_seconds,
+        wait_finetuned_step=args.wait_finetuned_step,
+        finetuned_step_name=args.finetuned_step_name,
+        finetuned_start_timeout_seconds=args.finetuned_start_timeout_seconds
     )

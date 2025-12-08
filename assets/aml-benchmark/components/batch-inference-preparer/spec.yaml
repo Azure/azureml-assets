@@ -1,0 +1,79 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: batch_inference_preparer
+display_name: Batch Inference Preparer
+description: Prepare the jsonl file and endpoint for batch inference component.
+version: 0.0.6.2
+
+inputs:
+  input_dataset: 
+    type: uri_folder
+    description: Input jsonl dataset that contains prompt. For the performance test, this one will be neglected.
+    optional: True
+  model_type:
+    type: string
+    description: Type of model. Can be one of ('aoai', 'oss', 'vision_oss', 'claude')
+    optional: True
+  batch_input_pattern:
+    type: string
+    description: >- 
+      The string for the batch input pattern. The input should be the payload format with substitution
+      for the key for the value put in the `###<key>`. For example, one can use the following format for
+      a llama text-gen model with a input dataset has `prompt` for the payload
+      and `_batch_request_metadata` storing the corresponding ground truth.
+      {"input_data": 
+        {
+          "input_string": ["###<prompt>"],
+          "parameters":
+          {
+            "temperature": 0.6,
+            "max_new_tokens": 100,
+            "do_sample": true
+          }
+        },
+        "_batch_request_metadata": ###<_batch_request_metadata>
+      }
+    optional: False
+  label_column_name:
+    type: string
+    optional: True
+    description: The label column name.
+  additional_columns:
+    type: string
+    optional: True
+    description: Name(s) of additional column(s) that could be useful to compute metrics, separated by comma (",").
+  is_performance_test:
+    type: boolean
+    default: False
+    description: If true, the performance test will be run.
+  endpoint_url:
+    type: string
+    optional: True
+    description: The endpoint name or url.
+  n_samples:
+    type: integer
+    description: The number of top samples send to endpoint.
+    optional: True
+outputs:
+  formatted_data:
+    type: mltable
+    description: Path to the folder where the payload will be stored.
+  ground_truth_metadata:
+    type: uri_folder
+    description: Path to the folder where the ground truth metadata will be stored.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+command: >-
+  python -m aml_benchmark.batch_inference_preparer.main
+  --batch_input_pattern '${{inputs.batch_input_pattern}}'
+  --formatted_data ${{outputs.formatted_data}}
+  --output_metadata ${{outputs.ground_truth_metadata}}
+  --is_performance_test ${{inputs.is_performance_test}}
+  $[[--model_type ${{inputs.model_type}}]]
+  $[[--input_dataset ${{inputs.input_dataset}}]]
+  $[[--n_samples ${{inputs.n_samples}}]]
+  $[[--endpoint_url ${{inputs.endpoint_url}}]]
+  $[[--label_key ${{inputs.label_column_name}}]]
+  $[[--additional_columns ${{inputs.additional_columns}}]]

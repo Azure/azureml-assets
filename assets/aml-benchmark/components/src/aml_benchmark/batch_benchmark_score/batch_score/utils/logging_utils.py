@@ -40,7 +40,7 @@ def setup_logger(log_level: str, app_insights_connection_string: str = None):
 
     _custom_dimensions = __calculate_custom_dimensions()
 
-    stream_formatter = UTCFormatter('%(asctime)s - %(message)s')
+    stream_formatter = UTCFormatter('SystemLog: %(asctime)s - %(message)s')
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(stream_formatter)
 
