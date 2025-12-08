@@ -173,6 +173,11 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         if isinstance(llm_output, dict):
             success = llm_output.get("success", False)
+            details = llm_output.get('details', {})
+
+            if "success" not in llm_output and "success" in details:
+                success = details.get("success", False)
+
             if isinstance(success, str):
                 success = success.upper() == "TRUE"
 
