@@ -3,7 +3,7 @@ name: rai_tabular_insight_gather
 display_name: Gather RAI Insights Dashboard
 description: Gather RAI Insights Dashboard [Learn 
   More](https://aka.ms/RAIComponents)
-version: 0.21.0
+version: 0.22.0
 type: command
 
 inputs:
@@ -29,7 +29,7 @@ outputs:
     type: path
 
 environment: 
-  azureml://registries/azureml/environments/responsibleai-tabular/versions/26
+  azureml://registries/azureml/environments/responsibleai-tabular/versions/28
 
 code: ../src/
 
