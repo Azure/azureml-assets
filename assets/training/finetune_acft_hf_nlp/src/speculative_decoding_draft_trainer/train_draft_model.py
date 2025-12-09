@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Entrypoint for training draft models."""
 import argparse
 import hashlib
 import logging
@@ -16,7 +17,7 @@ from datasets import load_dataset
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp import MixedPrecision, ShardingStrategy, StateDictType
 from tqdm import tqdm
-from transformers import AutoConfig, AutoModelForCausalLM, AutoProcessor, AutoTokenizer
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 from specforge import (
     AutoDraftModelConfig,
@@ -37,7 +38,7 @@ from specforge.distributed import (
     init_distributed,
 )
 from specforge.optimizer import BF16Optimizer
-from specforge.tracker import create_tracker, get_tracker_class, Tracker
+from specforge.tracker import get_tracker_class
 from specforge.utils import (
     create_draft_config_from_target,
     get_last_checkpoint,
@@ -99,11 +100,33 @@ def _log_system_error(message: str):
 
 
 def print_on_rank0(message):
+    """
+    Print a message only on rank 0 process in a distributed training environment.
+
+    This function is used to avoid duplicate logging messages when running distributed
+    training across multiple processes. Only the process with rank 0 will output the
+    message, preventing cluttered logs with repeated information.
+    Args:
+        message (str): The message to be logged/printed.
+    Returns:
+        None
+    Note:
+        Requires torch.distributed to be initialized before calling this function.
+        Uses the global logger instance for output.
+    """
     if dist.get_rank() == 0:
         logger.info(message)
 
 
 def print_with_rank(message):
+    """Print a message with the current process rank for distributed training.
+
+    Logs the message with rank information if distributed training is available
+    and initialized, otherwise logs with 'non-distributed' prefix.
+
+    Args:
+        message (str): The message to be logged.
+    """
     if dist.is_available() and dist.is_initialized():
         logger.info(f"rank {dist.get_rank()}: {message}")
     else:
@@ -113,11 +136,21 @@ def print_with_rank(message):
 class AzureMLTrackerAdapter:
     """
     AzureML tracker adapter for draft-model training.
+
     Integrates with Azure Machine Learning Run context for metrics logging.
     Based on AzureMLLogger implementation from aml_log_tracking.py.
     """
 
     def __init__(self, args, output_dir: str):
+        """Initialize the draft model trainer with AzureML logging capabilities.
+
+        Sets up distributed training rank, output directory, and AzureML run context
+        for metric logging. Handles offline mode detection and graceful fallback
+        when AzureML services are unavailable.
+        Args:
+            args: Training arguments object containing model configuration parameters.
+            output_dir (str): Directory path where training outputs will be saved.
+        """
         self.rank = dist.get_rank() if dist.is_initialized() else 0
         self.output_dir = output_dir
         self.azureml_run = None
@@ -158,7 +191,7 @@ class AzureMLTrackerAdapter:
                 self.azureml_run = None
 
     def _flatten_config(self, config, parent_key='', sep='_'):
-        """Flatten nested configuration dictionary"""
+        """Flatten nested configuration dictionary."""
         items = []
         if isinstance(config, dict):
             for k, v in config.items():
@@ -170,7 +203,7 @@ class AzureMLTrackerAdapter:
         return dict(items)
 
     def _should_log_to_parent(self):
-        """Check if we should log to parent pipeline run"""
+        """Check if we should log to parent pipeline run."""
         if not self.azureml_run:
             return None
 
@@ -191,7 +224,7 @@ class AzureMLTrackerAdapter:
             return None
 
     def log(self, log_dict, step=None):
-        """Log metrics to AzureML run"""
+        """Log metrics to AzureML run."""
         if self.rank != 0 or not self.azureml_run:
             return
 
@@ -231,7 +264,7 @@ class AzureMLTrackerAdapter:
             logger.warning(f"AzureML logging failed: {e}")
 
     def close(self):
-        """Cleanup method for AzureML tracker"""
+        """Cleanup method for AzureML tracker."""
         # AzureML runs are managed by the platform, no explicit cleanup needed
         if self.rank == 0:
             logger.info("AzureML tracker closed")
@@ -240,6 +273,7 @@ class AzureMLTrackerAdapter:
 def find_model_config_path(root_path):
     """
     Recursively search for config.json in the root_path and its subdirectories.
+
     Returns the directory containing config.json if found, otherwise returns the original path.
 
     Args:
@@ -282,6 +316,18 @@ def str_to_bool(value):
 
 
 def parse_args():
+    """Parse command line arguments for training a draft model with speculative decoding.
+
+    Returns:
+        tuple: A tuple containing (parser, args) where:
+            - parser (argparse.ArgumentParser): The argument parser instance
+            - args (argparse.Namespace): Parsed command line arguments
+    Raises:
+        SystemExit: If chat_template is not in TEMPLATE_REGISTRY or required arguments are missing
+    Note:
+        Sets hardcoded parameters: is_vlm=False, is_preformatted=False
+        Validates chat_template against TEMPLATE_REGISTRY before returning
+    """
     parser = argparse.ArgumentParser(description="Train a Draft Model with online data")
 
     # add model-related arguments
@@ -311,7 +357,8 @@ def parse_args():
         "--total_steps",
         type=int,
         default=-1,
-        help="Total training steps. Set to -1 or 0 to auto-calculate based on num_epochs and dataset size. If set to a positive value, will override num_epochs.",
+        help="Total training steps. Set to -1 or 0 to auto-calculate based on num_epochs and dataset size.\
+            If set to a positive value, will override num_epochs.",
     )
     parser.add_argument("--max_grad_norm", type=float, default=0.5)
     parser.add_argument(
@@ -393,6 +440,7 @@ def parse_args():
 
 
 def main():
+    """Train a draft model for speculative decoding using EAGLE3 architecture."""
     # Set TORCHINDUCTOR_CACHE_DIR
     script_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(script_dir)
@@ -569,10 +617,12 @@ def main():
             if os.path.isdir(args.resume_from_checkpoint)\
              and os.path.exists(os.path.join(args.resume_from_checkpoint, CONFIG_JSON)):
                 draft_model_last_checkpoint = args.resume_from_checkpoint
-                logger.info(f"Output directory does not exist. Using user-provided checkpoint: {draft_model_last_checkpoint}")
+                logger.info(f"Output directory does not exist.\
+                    Using user-provided checkpoint: {draft_model_last_checkpoint}")
                 logger.info(f"Using user-provided checkpoint: {draft_model_last_checkpoint}")
             else:
-                error_msg = f"ERROR: resume=True but user-provided checkpoint path is invalid: {args.resume_from_checkpoint}"
+                error_msg = f"ERROR: resume=True but user-provided\
+                    checkpoint path is invalid: {args.resume_from_checkpoint}"
                 _log_user_error(error_msg)
                 sys.exit(1)
 
@@ -585,8 +635,9 @@ def main():
     else:
         # When resume is false, check if user wants to initialize from a checkpoint
         if args.resume_from_checkpoint:
-            if os.path.isdir(args.resume_from_checkpoint)\
-                and os.path.exists(os.path.join(args.resume_from_checkpoint, CONFIG_JSON)):
+            if os.path.isdir(args.resume_from_checkpoint) and os.path.exists(os.path.join(
+                                                                            args.resume_from_checkpoint,
+                                                                            CONFIG_JSON)):
                 draft_model_last_checkpoint = args.resume_from_checkpoint
                 logger.info(f"Initializing draft model from user-provided checkpoint: {draft_model_last_checkpoint}")
             else:

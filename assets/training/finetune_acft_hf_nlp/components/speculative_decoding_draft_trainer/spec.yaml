@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: component_draft_model_trainer
+name: draft_model_trainer
 version: 0.0.1
 type: command
 
