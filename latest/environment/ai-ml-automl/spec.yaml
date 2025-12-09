@@ -4,7 +4,7 @@ description: >-
   An environment used by Azure ML AutoML for training models.
 
 name: "ai-ml-automl"
-version: "37"
+version: "38"
 
 build:
   path: "context"

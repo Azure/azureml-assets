@@ -43,7 +43,7 @@ RUN conda install pip -n base -y || true
 RUN conda install pip -n ptca -y || true
 
 RUN pip install \ 
-    'azureml-automl-dnn-nlp==1.61.0' \
+    'azureml-automl-dnn-nlp==1.61.0.post1' \
     'azureml-defaults==1.61.0'
 
 RUN pip uninstall -y onnxruntime

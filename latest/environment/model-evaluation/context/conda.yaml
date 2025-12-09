@@ -14,10 +14,10 @@ dependencies:
   - protobuf<7.0.0
   - psutil>=5.8,<5.9
   - pandas>=2.0.2,<2.1.0
-  - azureml-core==1.61.0
-  - azureml-automl-core==1.61.0
+  - azureml-core==1.61.0.post1
+  - azureml-automl-core==1.61.0.post1
   - azureml-defaults==1.61.0
-  - azureml-mlflow==1.61.0
+  - azureml-mlflow==1.61.0.post1
   - azureml-telemetry==1.61.0
   - azureml-acft-common-components[image]==0.0.84
   - azureml-evaluate-mlflow==0.0.84
