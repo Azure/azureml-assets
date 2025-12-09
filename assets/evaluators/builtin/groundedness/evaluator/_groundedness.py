@@ -301,7 +301,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             source=self._prompty_file,
             model=prompty_model_config,
             is_reasoning_model=self._is_reasoning_model,
-            token_credential=self._credential,)
+            token_credential=self._credential)
 
     def has_context(self, eval_input: dict) -> bool:
         """
