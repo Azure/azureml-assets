@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 """Class for online endpoint."""
-import sys
-import traceback
+
+
 from typing import Any, Optional
 from abc import abstractmethod
 from enum import Enum
@@ -246,7 +246,6 @@ class OnlineEndpoint:
             return True
         except Exception as e:
             logger.warning(f"Failed to create connections: {e}")
-            logger.error(traceback.format_exception(*sys.exc_info()))
             return False
 
     def _get_access_key_config(self) -> ApiKeyConfiguration:
@@ -409,61 +408,31 @@ class OnlineEndpoint:
 
     def _get_connections_by_name(self) -> dict:
         """Get a connection from a workspace."""
-        # if hasattr(self.curr_workspace._auth, "get_token"):
-        #     bearer_token = self.curr_workspace._auth.get_token(
-        #         "https://management.azure.com/.default").token
-        # else:
-        #     bearer_token = self.curr_workspace._auth.token
-
-
-        try:
-            from azure.identity import ManagedIdentityCredential
-
-            print(f"SystemLog: Getting token from ManagedIdentityCredential, connection_name: {self._connections_name}")
-            client_id = os.environ.get('DEFAULT_IDENTITY_CLIENT_ID')
-            credential = ManagedIdentityCredential(client_id=client_id)
-            bearer_token = credential.get_token('https://management.azure.com/.default').token
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            print(f"SystemLog: Failed to get token from ManagedIdentityCredential: {e}")
-            raise e
+        if hasattr(self.curr_workspace._auth, "get_token"):
+            bearer_token = self.curr_workspace._auth.get_token(
+                "https://management.azure.com/.default").token
+        else:
+            bearer_token = self.curr_workspace._auth.token
 
         endpoint = self.curr_workspace.service_context._get_endpoint("api")
-        #TODO: remove print
-        print(endpoint)
-        # url_list = [
-        #     endpoint,
-        #     "rp/workspaces/subscriptions",
-        #     self.curr_workspace.subscription_id,
-        #     "resourcegroups",
-        #     self.curr_workspace.resource_group,
-        #     "providers",
-        #     "Microsoft.MachineLearningServices",
-        #     "workspaces",
-        #     self.curr_workspace.name,
-        #     "connections",
-        #     self._connections_name,
-        #     "listsecrets?api-version=2023-02-01-preview"
-        # ]
-
-
-        # https://management.azure.com/subscriptions/95e0ae98-c287-4f51-b23e-4e2317b7e169/resourcegroups/EYESON.HERON.PROD.b816bb35-33ec-4d3f-82b2-6cb692a5679e/providers/Microsoft.MachineLearningServices/workspaces/amlworkspaceyu3zl4oks34ye/connections/b-689314967ddd45/listsecrets?api-version=2023-02-01-preview
-        final_url=f"https://management.azure.com/subscriptions/{self.curr_workspace.subscription_id}"\
-                   f"/resourcegroups/{self.curr_workspace.resource_group}"\
-                   f"/providers/Microsoft.MachineLearningServices/workspaces/{self.curr_workspace.name}"\
-                   f"/connections/{self._connections_name}/listsecrets?api-version=2024-01-01-preview"
-
-        try:
-            resp = self._send_post_request(final_url, {
-                "Authorization": f"Bearer {bearer_token}",
-                "content-type": "application/json"
-            }, {})
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            print(f"SystemLog: Failed to get connections by name: {e}")
-            raise e
+        url_list = [
+            endpoint,
+            "rp/workspaces/subscriptions",
+            self.curr_workspace.subscription_id,
+            "resourcegroups",
+            self.curr_workspace.resource_group,
+            "providers",
+            "Microsoft.MachineLearningServices",
+            "workspaces",
+            self.curr_workspace.name,
+            "connections",
+            self._connections_name,
+            "listsecrets?api-version=2023-02-01-preview"
+        ]
+        resp = self._send_post_request('/'.join(url_list), {
+            "Authorization": f"Bearer {bearer_token}",
+            "content-type": "application/json"
+        }, {})
 
         return resp.json()
 

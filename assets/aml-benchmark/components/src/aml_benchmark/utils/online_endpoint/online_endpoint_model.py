@@ -79,7 +79,7 @@ class OnlineEndpointModel:
                 finetuned_run = get_dependent_run(self.model_depend_step)
                 ws = Run.get_context().experiment.workspace
                 finetuned_run_id = self._get_model_registered_run_id(finetuned_run)
-            logger.info(f"Searching for model in worskpace {ws} run_id={finetuned_run_id} is {self._model_name}")
+                logger.info(f"Finetuned run id is {finetuned_run_id}")
             models = list(Model.list(ws, self._model_name, run_id=finetuned_run_id))
             if len(models) == 0:
                 raise BenchmarkUserException._with_error(

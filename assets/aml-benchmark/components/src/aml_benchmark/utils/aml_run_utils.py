@@ -180,14 +180,9 @@ def get_root_run() -> Run:
     """Get the root run."""
     current_run = Run.get_context()
     pipeline_run = current_run
-    logger.info(
-        f"pipeline_run id: {pipeline_run.id}, pipeline_run type: {type(pipeline_run)}"
-    )
     while pipeline_run.parent is not None:
         pipeline_run = pipeline_run.parent
-        logger.info(
-            f"using upper level runs {pipeline_run.id}, pipeline_run type: {type(pipeline_run)}"
-        )
+        logger.info(f"using upper level runs {pipeline_run.id}")
     return pipeline_run
 
 
@@ -199,9 +194,7 @@ def get_dependent_run(dependent_step) -> Optional[Run]:
         run_name = get_run_name(run)
         logger.info(f"Checking run {run.id} with module_name {run_name}.")
         if run_name == dependent_step:
-            logger.info(f"Found run with module_name {dependent_step}.")
             return run
-    logger.info(f"Could not find run with module_name {dependent_step}.")
     return None
 
 
