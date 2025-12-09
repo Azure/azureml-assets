@@ -241,7 +241,7 @@ outputs:
 jobs:
   draft_model_import:
     type: command
-    component: azureml:component_model_import:0.0.1
+    component: azureml:model_import_lite:0.0.1
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -251,7 +251,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   component_draft_model_trainer:
     type: command
-    component: azureml:component_draft_model_trainer:0.0.27
+    component: azureml:draft_model_trainer:0.0.1
     compute: '${{parent.inputs.compute_draft_model_training}}'
     distribution:
       type: pytorch

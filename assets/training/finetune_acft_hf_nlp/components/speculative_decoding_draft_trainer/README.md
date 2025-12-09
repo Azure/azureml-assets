@@ -2,7 +2,7 @@
 
 ### Name
 
-component_draft_model_trainer
+draft_model_trainer
 
 ### Version
 
