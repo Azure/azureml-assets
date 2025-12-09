@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: Environment used by Multimodal classification Finetune components
 
 name: "acft-multimodal-gpu"
-version: "64"
+version: "65"
 
 build:
   path: "context"

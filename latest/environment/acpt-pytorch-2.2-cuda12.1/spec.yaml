@@ -9,7 +9,7 @@ description: >-
   Registry:acptdev.azurecr.io/test/public/aifx/acpt/stable-ubuntu2004-cu121-py310-torch212
 
 name: "acpt-pytorch-2.2-cuda12.1"
-version: "44"
+version: "45"
 
 build:
   path: "context"

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch260@sha256:234612f6fed1a1ab9a8027396cfc76ba5cb68c966514a1a7c9faab74ff309018
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch260:biweekly.202512.1
 
 USER root:root
 

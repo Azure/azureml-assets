@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch27x@sha256:074ab9aa103bc624afc560c542da148ce5a9f4eda96207c36d9f1c4244fccc4a
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch27x:biweekly.202512.1
 
 WORKDIR /workspace
 
