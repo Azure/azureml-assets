@@ -42,6 +42,8 @@ RUN apt-get update && \
 RUN conda install pip -n base -y || true
 RUN conda install pip -n ptca -y || true
 
+# This ensures necessary torch dependencies are already installed
+RUN pip install --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
