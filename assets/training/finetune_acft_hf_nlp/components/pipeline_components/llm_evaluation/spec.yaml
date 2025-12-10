@@ -1,0 +1,223 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+name: pipeline_model_evaluation
+version: 0.0.1
+type: pipeline
+display_name: Pipeline Model Evaluation
+description: Pipeline for model response evaluation across multiple models.
+
+
+inputs:
+  # Infrastructure parameters
+  instance_type:
+    type: string
+    optional: true
+    default: Standard_NC24ads_A100_v4
+    description: Instance type for evaluation in case of serverless compute
+
+  num_nodes:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of nodes for evaluation
+
+  number_of_gpu_to_use:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of GPUs per node for evaluation
+
+  # Checkpoint sweep parameters
+  checkpoint_base_path_1:
+    type: uri_folder
+    description: Base path containing all checkpoints or LoRA adapters (optional if using only hf_model_id)
+    optional: true
+
+  checkpoint_base_path_2:
+    type: uri_folder
+    description: Second base path containing checkpoints or LoRA adapters (optional, for comparing models from different training runs)
+    optional: true
+
+  base_path_1_label:
+    type: string
+    description: Label to use as prefix in metrics for checkpoint_base_path_1 (e.g., 'experiment_a'). Defaults to 'base_path_1'
+    default: "base_path_1"
+    optional: true
+
+  base_path_2_label:
+    type: string
+    description: Label to use as prefix in metrics for checkpoint_base_path_2 (e.g., 'experiment_b'). Defaults to 'base_path_2'
+    default: "base_path_2"
+    optional: true
+
+  evaluate_base_model:
+    type: boolean
+    description: If true, also evaluate the base model after evaluating checkpoints
+    default: false
+    optional: true
+
+  explore_pattern_1:
+    type: string
+    description: Pattern to explore for checkpoint paths (e.g., global_step_{checkpoint}/actor/huggingface/). Only used with checkpoint_base_path_1
+    default: "global_step_{checkpoint}/actor/huggingface/"
+    optional: true
+
+  explore_pattern_2:
+    type: string
+    description: Pattern to explore for checkpoint paths in checkpoint_base_path_2 (e.g., global_step_{checkpoint}/actor/huggingface/). Only used with checkpoint_base_path_2
+    default: "global_step_{checkpoint}/actor/huggingface/"
+    optional: true
+
+  checkpoint_values_1:
+    type: string
+    description: Comma-separated list of checkpoint values to evaluate (e.g., '100,129,20'). Optional if using only hf_model_id
+    optional: true
+
+  checkpoint_values_2:
+    type: string
+    description: Comma-separated list of checkpoint values to evaluate from checkpoint_base_path_2 (e.g., '100,129,20'). Only used with checkpoint_base_path_2
+    optional: true
+
+  use_lora_adapters_1:
+    type: boolean
+    description: If true, checkpoints from checkpoint_base_path_1 are LoRA adapters to be loaded with base model
+    default: false
+    optional: true
+
+  use_lora_adapters_2:
+    type: boolean
+    description: If true, checkpoints from checkpoint_base_path_2 are LoRA adapters to be loaded with base model
+    default: false
+    optional: true
+
+  base_model_path:
+    type: uri_folder
+    description: Local base model path (used when use_lora_adapters is true). Mutually exclusive with hf_model_id
+    optional: true
+
+  hf_model_id:
+    type: string
+    description: Hugging Face model ID (e.g., 'meta-llama/Llama-2-7b-hf'). Can be used alone for direct evaluation or with use_lora_adapters for base model. Mutually exclusive with base_model_path when use_lora_adapters is true
+    optional: true
+
+  # Evaluation parameters
+  validation_file:
+    type: uri_file
+    description: Path to validation JSONL file for evaluation
+
+  max_prompt_length:
+    type: integer
+    default: 2048
+    optional: true
+
+  max_response_length:
+    type: integer
+    default: 1024
+    optional: true
+
+  batch_size:
+    type: integer
+    default: 16
+    optional: true
+
+  temperature:
+    type: number
+    default: 0.7
+    optional: true
+
+  top_p:
+    type: number
+    default: 0.9
+    optional: true
+
+  tensor_parallel_size:
+    type: integer
+    default: 1
+    optional: true
+
+  gpu_memory_utilization:
+    type: number
+    default: 0.8
+    optional: true
+
+  dtype:
+    type: string
+    enum:
+    - "float16"
+    - "bfloat16"
+    - "float32"
+    default: "bfloat16"
+    optional: true
+
+  extraction_method:
+    type: string
+    enum:
+    - "strict"
+    - "flexible"
+    default: "strict"
+    optional: true
+
+  number_of_trials:
+    type: integer
+    default: 1
+    optional: true
+    description: Number of evaluation trials per checkpoint
+
+  # Compute parameters
+  compute:
+    type: string
+    optional: true
+    default: serverless
+    description: Compute cluster name or 'serverless'
+
+outputs:
+  evaluation_results:
+    type: uri_folder
+    description: Directory containing all checkpoint evaluation results
+    mode: rw_mount
+
+  intermediate_folder:
+    type: uri_folder
+    description: Directory containing preprocessed checkpoints (with corrections applied)
+    mode: rw_mount
+
+jobs:
+  component_model_evaluation:
+    type: command
+    component: azureml:component_model_evaluation:0.0.1
+    compute: '${{parent.inputs.compute}}'
+    distribution:
+      type: pytorch
+    resources:
+      instance_count: '${{parent.inputs.num_nodes}}'
+      instance_type: '${{parent.inputs.instance_type}}'
+    inputs:
+      checkpoint_base_path_1: '${{parent.inputs.checkpoint_base_path_1}}'
+      checkpoint_base_path_2: '${{parent.inputs.checkpoint_base_path_2}}'
+      base_path_1_label: '${{parent.inputs.base_path_1_label}}'
+      base_path_2_label: '${{parent.inputs.base_path_2_label}}'
+      evaluate_base_model: '${{parent.inputs.evaluate_base_model}}'
+      explore_pattern_1: '${{parent.inputs.explore_pattern_1}}'
+      explore_pattern_2: '${{parent.inputs.explore_pattern_2}}'
+      checkpoint_values_1: '${{parent.inputs.checkpoint_values_1}}'
+      checkpoint_values_2: '${{parent.inputs.checkpoint_values_2}}'
+      validation_file: '${{parent.inputs.validation_file}}'
+      use_lora_adapters_1: '${{parent.inputs.use_lora_adapters_1}}'
+      use_lora_adapters_2: '${{parent.inputs.use_lora_adapters_2}}'
+      base_model_path: '${{parent.inputs.base_model_path}}'
+      hf_model_id: '${{parent.inputs.hf_model_id}}'
+      max_prompt_length: '${{parent.inputs.max_prompt_length}}'
+      max_response_length: '${{parent.inputs.max_response_length}}'
+      batch_size: '${{parent.inputs.batch_size}}'
+      temperature: '${{parent.inputs.temperature}}'
+      top_p: '${{parent.inputs.top_p}}'
+      tensor_parallel_size: '${{parent.inputs.tensor_parallel_size}}'
+      gpu_memory_utilization: '${{parent.inputs.gpu_memory_utilization}}'
+      dtype: '${{parent.inputs.dtype}}'
+      extraction_method: '${{parent.inputs.extraction_method}}'
+      n_gpus_per_node: '${{parent.inputs.number_of_gpu_to_use}}'
+      number_of_trials: '${{parent.inputs.number_of_trials}}'
+    outputs:
+      evaluation_results: '${{parent.outputs.evaluation_results}}'
+      intermediate_folder: '${{parent.outputs.intermediate_folder}}'
