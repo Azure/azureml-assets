@@ -114,7 +114,8 @@ class ReplicaManager:
                     f"Waiting for model to finish loading. Current worker pid: {os.getpid()}")
                 time.sleep(5)
             for engine in self.engine_replicas:
-                engine.wait_until_server_healthy(CommonConstants.HOST, "8000")
+                engine.wait_until_server_healthy(CommonConstants.HOST, os.getenv(
+                EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT)))
         else:
             try:
                 with open(flag_file_path, "x"):

@@ -7,7 +7,6 @@ OpenAI-compatible endpoints, content safety validation, and downstream engine pr
 """
 # flake8: noqa
 
-import torch
 import httpx
 import argparse
 import copy
@@ -20,6 +19,7 @@ import json
 import os
 import requests
 import argparse
+import asyncio
 from typing import Any, Dict, Generator, Dict, Union
 
 from torch.multiprocessing import set_start_method
@@ -57,6 +57,7 @@ DEFAULT_AACS_INFERENCE_URIS = [
 g_aacs_threshold = int(os.environ.get(
     EnvironmentVariables.CONTENT_SAFETY_THRESHOLD, CommonConstants.CONTENT_SAFETY_THERESHOLD_DEFAULT))
 g_aacs_client = None
+g_health_check_task = None  # Background task for periodic health checks
 
 TIMEOUT_KEEP_ALIVE = 30
 
@@ -340,16 +341,116 @@ async def all_exception_handler(request: Request, exc: Exception):
 
 
 @app.get("/")
-async def health():
-    """Health check endpoint.
-    
-    Used by readiness probes to verify server health.
+async def root():
+    """Root endpoint.
     
     Returns:
-        str: Health status message.
+        str: Simple health status message.
     """
-    print("health")
+    print("root endpoint called")
     return "healthy"
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint that verifies downstream engine health.
+    
+    This endpoint calls the downstream engine's /health endpoint to verify
+    the entire inference stack is healthy and ready to serve requests.
+    
+    Returns:
+        JSONResponse: Health status with 200 OK if downstream is healthy,
+                     503 Service Unavailable if downstream is unhealthy.
+    """
+    try:
+        health_path = os.getenv(EnvironmentVariables.HEALTH_CHECK_PATH)
+        downstream_url = get_downstream_url()
+        health_url = f"{downstream_url}{health_path}"
+
+        # Check downstream engine health with 5 second timeout
+        response = requests.get(health_url, timeout=5.0)
+        
+        if response.status_code == 200:
+            logger.debug("Downstream engine health check passed")
+            return JSONResponse(
+                content={"status": "healthy", "downstream": "ok"},
+                status_code=200
+            )
+        else:
+            logger.warning(f"Downstream engine health check failed with status {response.status_code}")
+            return JSONResponse(
+                content={"status": "unhealthy", "downstream": f"status_{response.status_code}"},
+                status_code=503
+            )
+    except requests.exceptions.ConnectionError:
+        logger.warning("Downstream engine health check failed: connection error")
+        return JSONResponse(
+            content={"status": "unhealthy", "downstream": "connection_error"},
+            status_code=503
+        )
+    except requests.exceptions.Timeout:
+        logger.warning("Downstream engine health check failed: timeout")
+        return JSONResponse(
+            content={"status": "unhealthy", "downstream": "timeout"},
+            status_code=503
+        )
+    except Exception as e:
+        logger.error(f"Downstream engine health check failed: {str(e)}")
+        return JSONResponse(
+            content={"status": "unhealthy", "downstream": "error", "error": str(e)},
+            status_code=503
+        )
+
+
+@app.get("/ready")
+async def ready():
+    """Readiness check endpoint that verifies downstream engine readiness.
+    
+    This endpoint calls the downstream engine's /ready endpoint to verify
+    the engine is ready to accept and process inference requests.
+    
+    Returns:
+        JSONResponse: Readiness status with 200 OK if downstream is ready,
+                     503 Service Unavailable if downstream is not ready.
+    """
+    try:
+        ready_path = os.getenv(EnvironmentVariables.CONTAINER_READY_CHECK_PATH)
+        downstream_url = get_downstream_url()
+        ready_url = f"{downstream_url}{ready_path}"
+        
+        # Check downstream engine readiness with 5 second timeout
+        response = requests.get(ready_url, timeout=5.0)
+        
+        if response.status_code == 200:
+            logger.debug("Downstream engine readiness check passed")
+            return JSONResponse(
+                content={"status": "ready", "downstream": "ok"},
+                status_code=200
+            )
+        else:
+            logger.warning(f"Downstream engine readiness check failed with status {response.status_code}")
+            return JSONResponse(
+                content={"status": "not_ready", "downstream": f"status_{response.status_code}"},
+                status_code=503
+            )
+    except requests.exceptions.ConnectionError:
+        logger.warning("Downstream engine readiness check failed: connection error")
+        return JSONResponse(
+            content={"status": "not_ready", "downstream": "connection_error"},
+            status_code=503
+        )
+    except requests.exceptions.Timeout:
+        logger.warning("Downstream engine readiness check failed: timeout")
+        return JSONResponse(
+            content={"status": "not_ready", "downstream": "timeout"},
+            status_code=503
+        )
+    except Exception as e:
+        logger.error(f"Downstream engine readiness check failed: {str(e)}")
+        return JSONResponse(
+            content={"status": "not_ready", "downstream": "error", "error": str(e)},
+            status_code=503
+        )
 
 
 @app.post("/score")
@@ -681,7 +782,7 @@ async def lifespan(app: FastAPI) -> Generator:
     Yields:
         None: Control is yielded during the application lifespan.
     """
-    global g_aacs_client
+    global g_aacs_client, g_health_check_task
     g_aacs_client = AACSValidator()
     AACS_error = g_aacs_client.aacs_setup()
 
@@ -689,6 +790,7 @@ async def lifespan(app: FastAPI) -> Generator:
     if init_error:
         logger.exception(init_error)
         raise init_error
+    
     yield
 
 app.router.lifespan_context = lifespan
@@ -712,6 +814,19 @@ def init_server(AACS_error: Union[None, Exception]):
         if azureml_model_dir is None:
             raise Exception(
                 f"{EnvironmentVariables.AZUREML_MODEL_DIR} environment variable is not set.")
+        
+        # Validate health check path environment variable
+        health_check_path = os.getenv(EnvironmentVariables.HEALTH_CHECK_PATH)
+        if health_check_path is None:
+            raise Exception(
+                f"{EnvironmentVariables.HEALTH_CHECK_PATH} environment variable is not set.")
+        
+        # Validate ready check path environment variable
+        ready_check_path = os.getenv(EnvironmentVariables.CONTAINER_READY_CHECK_PATH)
+        if ready_check_path is None:
+            raise Exception(
+                f"{EnvironmentVariables.CONTAINER_READY_CHECK_PATH} environment variable is not set.")
+        
         g_fmscorer = FMScore()
         g_fmscorer.init()
         logger.info("Server started successfully")
