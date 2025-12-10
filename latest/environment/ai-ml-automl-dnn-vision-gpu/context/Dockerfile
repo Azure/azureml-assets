@@ -101,7 +101,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # begin pip install
 
 # Install pip dependencies
-RUN pip install \
+RUN pip install --no-cache-dir \
                  # begin pypi dependencies
                 azureml-mlflow==1.61.0.post1 \
                 azureml-dataset-runtime==1.61.0 \
@@ -109,16 +109,19 @@ RUN pip install \
                 azureml-responsibleai==1.61.0 \
                 azureml-automl-core==1.61.0.post1 \
                 azureml-automl-runtime==1.61.0 \
-                azureml-train-automl-client==1.61.0.post1 \
                 azureml-defaults==1.61.0 \
                 azureml-interpret==1.61.0 \
-                azureml-train-automl-runtime==1.61.0 \
-                azureml-automl-dnn-vision==1.61.0.post1 \
                 'azureml-dataprep>=2.24.4' \
                 'requests>=2.32.5' \
                 'azure-identity>=1.25.1'
                 # end pypi dependencies
 
+# Install packages with torch packages separately to reduce layer size
+RUN pip install --no-cache-dir \
+                azureml-train-automl-client==1.61.0.post1 \
+                azureml-train-automl-runtime==1.61.0 \
+                azureml-automl-dnn-vision==1.61.0.post1
+                
 # Update cryptography and pyarow for fixing vulnerability. Doing it  separately from pip install to avoid conflict with other packages
 RUN pip install cryptography>=45.0.7 \
                 pyarrow==14.0.2 \

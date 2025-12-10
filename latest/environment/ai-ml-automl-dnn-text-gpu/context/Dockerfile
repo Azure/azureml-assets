@@ -99,15 +99,12 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # Install pip dependencies
 # Here, we pin sentencepiece since 0.1.98 breaks training. Earlier versions of horovod contain a sev2 vulnerability,
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
-RUN pip install \
+RUN pip install --no-cache-dir \
                 # begin pypi dependencies
                 azureml-core==1.61.0.post1 \
                 azureml-mlflow==1.61.0.post1 \
                 azureml-automl-core==1.61.0.post1 \
-                azureml-automl-dnn-nlp==1.61.0.post1 \
                 azureml-automl-runtime==1.61.0 \
-                azureml-train-automl-client==1.61.0.post1 \
-                azureml-train-automl-runtime==1.61.0 \
                 azureml-defaults==1.61.0 \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
@@ -116,6 +113,12 @@ RUN pip install \
                 'requests>=2.32.5' \
                 'certifi>=2025.11.12'
                 # end pypi dependencies
+
+# Install packages with torch packages separately to reduce layer size
+RUN pip install --no-cache-dir \
+                azureml-train-automl-client==1.61.0.post1 \
+                azureml-train-automl-runtime==1.61.0 \
+                azureml-automl-dnn-nlp==1.61.0.post1
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages

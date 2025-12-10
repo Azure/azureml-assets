@@ -74,7 +74,13 @@ COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
-    conda clean -a -y
+    conda clean -afy
+
+# Install packages with torch packages separately to reduce layer size
+RUN pip install --no-cache-dir \
+                azureml-train-automl-client==1.61.0.post1 \
+                azureml-train-automl-runtime==1.61.0 \
+                azureml-automl-dnn-vision==1.61.0.post1
 
 # vulnearbility fix
 RUN pip install pyarrow==14.0.2

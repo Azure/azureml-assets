@@ -42,13 +42,13 @@ RUN apt-get update && \
 RUN conda install pip -n base -y || true
 RUN conda install pip -n ptca -y || true
 
-RUN pip install \ 
+RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp==1.61.0.post1' \
     'azureml-defaults==1.61.0'
 
 RUN pip uninstall -y onnxruntime
 RUN pip uninstall -y torch torchvision torchaudio
-RUN pip install --upgrade torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
+RUN pip install --upgrade --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 
 # onnx and onnxruntime-training installation
 RUN pip install onnx==1.17.0
