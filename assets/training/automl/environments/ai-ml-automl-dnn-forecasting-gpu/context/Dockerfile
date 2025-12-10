@@ -68,7 +68,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # begin pip install
 # Install pip dependencies
 # GitPython>=3.1.41 is required for https://github.com/advisories/GHSA-2mqj-m65w-jghx and is not available in conda
-RUN pip install \
+RUN pip install --no-cache-dir \
                 # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
@@ -78,11 +78,7 @@ RUN pip install \
                 azureml-responsibleai=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
-                azureml-train-automl=={{latest-pypi-version}} \
-                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
                 'mlflow-skinny==2.15.1' \
@@ -96,6 +92,14 @@ RUN pip install \
                 'py-cpuinfo==5.0.0' \
                 "pillow>=12.0.0"
                 # end pypi dependencies
+
+# Install packages with torch packages separately to reduce layer size
+RUN pip install --no-cache-dir \
+                azureml-train-automl=={{latest-pypi-version}} \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}}
+
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3
