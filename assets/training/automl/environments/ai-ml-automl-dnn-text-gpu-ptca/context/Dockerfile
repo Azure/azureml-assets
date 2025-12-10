@@ -49,7 +49,6 @@ RUN pip install --no-cache-dir \
     'azureml-defaults=={{latest-pypi-version}}'
 
 RUN pip uninstall -y onnxruntime
-RUN pip uninstall -y torch torchvision torchaudio
 RUN pip install --upgrade --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 
 # onnx and onnxruntime-training installation
