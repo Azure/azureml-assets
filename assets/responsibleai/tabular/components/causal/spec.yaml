@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_tabular_causal
 display_name: Add Causal to RAI Insights Dashboard
 description: Add Causal to RAI Insights Dashboard [Learn More](https://aka.ms/RAIComponents)
-version: 0.21.0
+version: 0.22.0
 type: command
 
 inputs:
@@ -58,7 +58,7 @@ outputs:
 
 code: ../src/
 
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/26
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/28
 
 command: >-
   python create_causal.py

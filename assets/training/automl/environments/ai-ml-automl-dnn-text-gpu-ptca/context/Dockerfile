@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch260:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag}}
 
 USER root:root
 
@@ -42,24 +42,21 @@ RUN apt-get update && \
 RUN conda install pip -n base -y || true
 RUN conda install pip -n ptca -y || true
 
-RUN pip install \ 
+# This ensures necessary torch dependencies are already installed
+RUN pip install --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
+RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
 
-RUN pip uninstall -y onnxruntime
-RUN pip uninstall -y torch torchvision torchaudio
-RUN pip install torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
-# Install/upgrade torch in ptca env if it exists (fixes vulnerability)
-RUN /opt/conda/envs/ptca/bin/pip install --force-reinstall torch==2.8.0 torchvision==0.23.0 || true
-
 # onnx and onnxruntime-training installation
+RUN pip uninstall -y onnxruntime
 RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
 
 # Install numpy
-RUN pip install "numpy==1.23.5" --force-reinstall
-RUN /opt/conda/bin/pip install "numpy==1.23.5" --force-reinstall || true
+RUN pip install --upgrade "numpy==1.23.5"
+RUN /opt/conda/bin/pip install --upgrade "numpy==1.23.5" || true
 
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install

@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_tabular_insight_constructor
 display_name: RAI Insights Dashboard Constructor
 description: RAI Insights Dashboard Constructor [Learn More](https://aka.ms/RAIComponents)
-version: 0.21.0
+version: 0.22.0
 type: command
 inputs:
   title:
@@ -44,7 +44,7 @@ outputs:
   rai_insights_dashboard:
     type: path
 code: ../src/
-environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/26
+environment: azureml://registries/azureml/environments/responsibleai-tabular/versions/28
 command: >-
   python create_rai_insights.py
   --title '${{inputs.title}}'
