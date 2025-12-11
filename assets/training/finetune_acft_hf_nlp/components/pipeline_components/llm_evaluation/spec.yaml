@@ -157,6 +157,7 @@ inputs:
     - "flexible"
     default: "strict"
     optional: true
+    description: "Method for extracting model responses from generated text. 'strict' requires exact format matching, 'flexible' uses more lenient parsing"
 
   number_of_trials:
     type: integer
@@ -185,7 +186,7 @@ outputs:
 jobs:
   component_model_evaluation:
     type: command
-    component: azureml:component_model_evaluation:0.0.1
+    component: azureml:model_evaluation:0.0.1
     compute: '${{parent.inputs.compute}}'
     distribution:
       type: pytorch
