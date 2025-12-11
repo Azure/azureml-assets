@@ -10,9 +10,12 @@ Traditional segmentation models do segmentation alone, requiring a fully supervi
 
 In summary, MedImageParse 3D shows potential to be a building block for an all-in-one tool for biomedical image analysis by jointly solving segmentation, detection, and recognition. It is broadly applicable to different 3D image modalities through text prompting, which may pave a future path for efficient and accurate image-based biomedical discovery when built upon and integrated into an application.
 
+For example code and usage demonstrations, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
 ### Model Architecture
 
 MedImageParse 3D is built upon BiomedParse with the BoltzFormer architecture, optimized for locating small objects in 3D images. Leveraging Boltzmann attention sampling mechanisms, it excels at identifying subtle patterns corresponding to biomedical terminologies, as well as extracting contextually relevant information from dense scientific texts. The model is pre-trained on vast 3D medical image datasets, allowing it to generalize across various biomedical domains with high accuracy.
+
 
 ### Sample inputs and outputs (for real time inference)
 
@@ -117,3 +120,9 @@ plt.axis("off")
 plt.show()
 
 ```
+
+## Version History
+
+| Version | Date | Description |
+|---------|------|-------------|
+| 5 | 2025-12-10 | - Initial version tracking |
