@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch260:biweekly.202512.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202512.1.v1
 
 USER root:root
 
@@ -48,10 +48,8 @@ RUN pip install --no-cache-dir \
     'azureml-automl-dnn-nlp==1.61.0.post1' \
     'azureml-defaults==1.61.0'
 
-RUN pip uninstall -y onnxruntime
-RUN pip install --upgrade --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
-
 # onnx and onnxruntime-training installation
+RUN pip uninstall -y onnxruntime
 RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
