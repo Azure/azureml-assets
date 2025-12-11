@@ -83,7 +83,7 @@ outputs:
     type: uri_folder
     description: The output folder containing the benchmarking metrics.
 
-environment: azureml://registries/test_centralus/environments/acft-draft-model-training/versions/12
+environment: azureml://registries/azureml/environments/acft-rft-training/versions/1
 resources:
   instance_count: 1
 
