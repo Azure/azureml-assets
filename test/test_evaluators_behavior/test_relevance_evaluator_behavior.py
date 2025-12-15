@@ -7,6 +7,7 @@ Behavioral tests for Relevance Evaluator.
 
 import pytest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from assets.evaluators.builtin.relevance.evaluator._relevance import RelevanceEvaluator
 
 
 @pytest.mark.unittest
@@ -16,4 +17,4 @@ class TestRelevanceEvaluatorBehavior(BaseEvaluatorBehaviorTest):
     Tests different input formats and scenarios.
     """
 
-    evaluator_name = "relevance"
+    evaluator_type = RelevanceEvaluator

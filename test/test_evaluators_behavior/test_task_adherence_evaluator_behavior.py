@@ -7,6 +7,7 @@ Behavioral tests for Task Adherence Evaluator.
 
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from assets.evaluators.builtin.task_adherence.evaluator._task_adherence import TaskAdherenceEvaluator
 
 
 @pytest.mark.unittest
@@ -16,6 +17,6 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest):
     Tests different input formats and scenarios.
     """
 
-    evaluator_name = "task_adherence"
+    evaluator_type = TaskAdherenceEvaluator
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response

@@ -14,7 +14,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     """
     Base class for evaluator behavioral tests with query and response inputs.
     Subclasses should implement:
-    - evaluator_name: str - name of the evaluator (e.g., "relevance")
+    - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "Relevance")
     Subclasses may override:
     - requires_valid_format: bool - whether valid format is required for response
     - requires_query: bool - whether query is required
@@ -243,94 +243,82 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     
     # ==================== All Valid ====================
 
-    def test_all_valid_inputs(self, openai_client, model_deployment_name):
+    def test_all_valid_inputs(self):
         """All inputs valid and in correct format."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=self.VALID_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "All Valid")
+        result_data = self._extract_and_print_result(results, "All Valid")
 
         self.assert_pass(result_data)
 
     # ==================== QUERY TESTS ====================
 
-    def test_query_not_present(self, openai_client, model_deployment_name):
+    def test_query_not_present(self):
         """Query not present - evaluator raises exception."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=None,
             response=self.VALID_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "Query Not Present")
+        result_data = self._extract_and_print_result(results, "Query Not Present")
 
         if self.requires_query:
             self.assert_error(result_data)
         else:
             self.assert_pass(result_data)
 
-    def test_query_as_string(self, openai_client, model_deployment_name):
+    def test_query_as_string(self):
         """Query as string - should pass."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.STRING_QUERY,
             response=self.VALID_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "Query String")
+        result_data = self._extract_and_print_result(results, "Query String")
 
         self.assert_pass(result_data)
 
-    def test_query_invalid_format(self, openai_client, model_deployment_name):
+    def test_query_invalid_format(self):
         """Query in invalid format - should pass."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.INVALID_QUERY,
             response=self.VALID_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "Query Invalid")
+        result_data = self._extract_and_print_result(results, "Query Invalid")
 
         self.assert_pass(result_data)
 
     # ==================== RESPONSE TESTS ====================
 
-    def test_response_not_present(self, openai_client, model_deployment_name):
+    def test_response_not_present(self):
         """Response not present - should return not applicable."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=None,
             tool_calls=None,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "Response and Tool Calls Not Present")
+        result_data = self._extract_and_print_result(results, "Response and Tool Calls Not Present")
 
         self.assert_error(result_data)
 
-    def test_response_as_string(self, openai_client, model_deployment_name):
+    def test_response_as_string(self):
         """Response as string - should pass."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=self.STRING_RESPONSE,
             tool_calls=None,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "Response String without Tool Calls")
+        result_data = self._extract_and_print_result(results, "Response String without Tool Calls")
 
         if self.requires_valid_format:  # If Tool Calls Evaluator
             self.assert_not_applicable(result_data)
@@ -339,33 +327,29 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         else:
             self.assert_pass(result_data)
 
-    def test_response_invalid_format(self, openai_client, model_deployment_name):
+    def test_response_invalid_format(self):
         """Response in invalid format - should return not_applicable."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=self.INVALID_RESPONSE,
             tool_calls=None,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "Response Invalid without Tool Calls")
+        result_data = self._extract_and_print_result(results, "Response Invalid without Tool Calls")
 
         if self.requires_valid_format:
             self.assert_error(result_data)
         else:
             self.assert_pass(result_data)
     
-    def test_response_minimal_format(self, openai_client, model_deployment_name):
+    def test_response_minimal_format(self):
         """Response in minimal format - should pass."""
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=self.MINIMAL_RESPONSE,
             tool_calls=None,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, "Response Minimal without Tool Calls")
+        result_data = self._extract_and_print_result(results, "Response Minimal without Tool Calls")
 
         self.assert_pass(result_data)

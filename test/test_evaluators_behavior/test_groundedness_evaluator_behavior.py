@@ -7,6 +7,7 @@ Behavioral tests for Groundedness Evaluator.
 
 import pytest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from assets.evaluators.builtin.groundedness.evaluator._groundedness import GroundednessEvaluator
 
 
 @pytest.mark.unittest
@@ -16,7 +17,7 @@ class TestGroundednessEvaluatorBehavior(BaseEvaluatorBehaviorTest):
     Tests different input formats and scenarios.
     """
 
-    evaluator_name = "groundedness"
+    evaluator_type = GroundednessEvaluator
     
     # Test Configs
     requires_query = False

@@ -6,99 +6,87 @@ Base class for behavioral tests of evaluators using AIProjectClient.
 Runs evaluations for testing.
 """
 
-from typing import Any, Dict, List, Tuple
-import time
-from openai.types.evals.create_eval_jsonl_run_data_source_param import (
-    CreateEvalJSONLRunDataSourceParam,
-    SourceFileContent,
-    SourceFileContentContent,
-)
-from openai.types.eval_create_params import DataSourceConfigCustom
-from azure.ai.projects import AIProjectClient
-from openai import OpenAI
-from openai.types.evals.run_retrieve_response import RunRetrieveResponse
-from openai.types.evals.runs.output_item_list_response import OutputItemListResponse
+import os
+from typing import Any, Dict, List
+from unittest.mock import MagicMock
 
+from azure.ai.evaluation import AzureOpenAIModelConfiguration
+from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._exceptions import EvaluationException
+from azure.identity import DefaultAzureCredential
 
-class BaseEvaluatorRunner:
+from .evaluator_mock_config import get_flow_side_effect_for_evaluator
+
+class BaseEvaluatorRunner():
     """
     Base class for running evaluators for testing.
     Subclasses should implement:
-    - evaluator_name: str - name of the evaluator (e.g., "relevance")
+    - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "Relevance")
     """
 
     # Subclasses must implement
-    evaluator_name: str = None
+    evaluator_type: type[PromptyEvaluatorBase] = None
 
-    def _run_evaluation(self, evaluator_name: str, openai_client: OpenAI, model_deployment_name: str, query: List[Dict[str, Any]], response: List[Dict[str, Any]], tool_calls: List[Dict[str, Any]], tool_definitions: List[Dict[str, Any]]) -> Tuple[RunRetrieveResponse, List[OutputItemListResponse]]:
+    def _init_evaluator(self) -> PromptyEvaluatorBase:
+        """Helper to create evaluator instance."""
+        if self.evaluator_type is None:
+            raise ValueError("Evaluator type not set. Subclass must define evaluator_type.")
+
+        model_config = AzureOpenAIModelConfiguration(
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+            azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment")
+        )
+        credential = DefaultAzureCredential()
+
+        evaluator = self.evaluator_type(
+            model_config=model_config,
+            credential=credential
+        )
+        return evaluator
+
+    def _run_evaluation(
+        self,
+        query: List[Dict[str, Any]],
+        response: List[Dict[str, Any]],
+        tool_calls: List[Dict[str, Any]],
+        tool_definitions: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Helper to run evaluation and return results."""
-        data_source_config = DataSourceConfigCustom({
-            "type": "custom",
-            "item_schema": {
-                "type": "object",
-            },
-        })
-
-        testing_criteria = [{
-            "type": "azure_ai_evaluator",
-            "name": evaluator_name,
-            "evaluator_name": f"builtin.{evaluator_name}",
-            "initialization_parameters": {"deployment_name": model_deployment_name},
-            "data_mapping": {
-                "query": "{{item.query}}",
-                "response": "{{item.response}}",
-                "tool_calls": "{{item.tool_calls}}",
-                "tool_definitions": "{{item.tool_definitions}}",
-            },
-        }]
-
-        eval_obj = openai_client.evals.create(
-            name=f"{evaluator_name} Behavioral Test",
-            data_source_config=data_source_config,
-            testing_criteria=testing_criteria,
-        )
-
-        eval_run = openai_client.evals.runs.create(
-            eval_id=eval_obj.id,
-            name="test_run",
-            data_source=CreateEvalJSONLRunDataSourceParam(
-                type="jsonl",
-                source=SourceFileContent(
-                    type="file_content",
-                    content=[SourceFileContentContent(item={
-                        "query": query,
-                        "response": response,
-                        "tool_calls": tool_calls,
-                        "tool_definitions": tool_definitions,
-                    })],
-                ),
-            ),
-        )
-
-        # Wait for completion
-        for _ in range(30):  # 60 seconds max
-            run = openai_client.evals.runs.retrieve(run_id=eval_run.id, eval_id=eval_obj.id)
-            if run.status in ["completed", "failed"]:
-                outputs = list(openai_client.evals.runs.output_items.list(run_id=run.id, eval_id=eval_obj.id))
-                return run, outputs
-            time.sleep(2)
+        evaluator_name = self.evaluator_type._RESULT_KEY
+        evaluator = self._init_evaluator()
         
-        raise TimeoutError("Evaluation did not complete")
+        # Mock the flow with appropriate side effect based on evaluator type
+        evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
+        
+        # Special handling for groundedness evaluator to disable flow reloading
+        if evaluator_name == "groundedness":
+            evaluator._ensure_query_prompty_loaded = MagicMock()
+        
+        try:
+            results = evaluator(
+                query=query,
+                response=response,
+                tool_calls=tool_calls,
+                tool_definitions=tool_definitions
+            )
+            return results
+        except EvaluationException as e:
+            print(f"Error during evaluation: {e}")
+            return {
+                f"{evaluator_name}_error_message": e.message,
+                f"{evaluator_name}_error_code": e.category.name
+            }
 
-    def _extract_and_print_result(self, run: RunRetrieveResponse, outputs: List[OutputItemListResponse], test_label: str) -> Dict[str, Any]:
+    def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
         """Helper to extract result fields and print them."""
-        result = outputs[0].results[0]
-        label = result.model_extra.get("label")
-        reason = result.model_extra.get("reason")
-        is_passed = result.passed
-        score = result.score
-        error = result.sample.get("error", {}) if result.sample else {}
-        error_message = error.get("message")
-        error_code = error.get("code")
-        status = run.status
+        evaluator_name = self.evaluator_type._RESULT_KEY
+        label = results.get(f"{evaluator_name}_result")
+        reason = results.get(f"{evaluator_name}_reason")
+        score = results.get(f"{evaluator_name}")
+        error_message = results.get(f"{evaluator_name}_error_message")
+        error_code = results.get(f"{evaluator_name}_error_code")
 
-        print(f"\n[{test_label}] Status: {status}")
-        print(f"  Result: {label}")
+        print(f"\n[{test_label}] Result: {label}")
         print(f"  Score: {score}")
         print(f"  Reason: {reason}")
         if error_message or error_code:
@@ -106,10 +94,8 @@ class BaseEvaluatorRunner:
             print(f"  Error Code: {error_code}")
 
         return {
-            "status": status,
             "label": label,
             "reason": reason,
-            "is_passed": is_passed,
             "score": score,
             "error_message": error_message,
             "error_code": error_code,
@@ -117,39 +103,32 @@ class BaseEvaluatorRunner:
 
     def assert_pass(self, result_data: Dict[str, Any]):
         """Helper to assert a passing result."""
-        assert result_data["status"] == "completed"
         assert result_data["label"] == "pass"
-        assert result_data["is_passed"] is True
-        assert type(result_data["score"]) is float
+        score_type = type(result_data["score"])
+        assert score_type is float or score_type is int
         assert result_data["score"] >= 1.0
     
     def assert_fail(self, result_data: Dict[str, Any]):
         """Helper to assert a failing result."""
-        assert result_data["status"] == "completed"
         assert result_data["label"] == "fail"
-        assert result_data["is_passed"] is False
-        assert type(result_data["score"]) is float
+        score_type = type(result_data["score"])
+        assert score_type is float or score_type is int
         assert result_data["score"] == 0.0
 
     def assert_pass_or_fail(self, result_data):
         """Helper to assert a pass or fail result."""
-        assert result_data["status"] == "completed"
         assert result_data["label"] in ["pass", "fail"]
-        assert result_data["is_passed"] in [True, False]
-        assert type(result_data["score"]) is float
+        score_type = type(result_data["score"])
+        assert score_type is float or score_type is int
         assert result_data["score"] >= 0.0
     
     def assert_error(self, result_data: Dict[str, Any], error_code: str="FAILED_EXECUTION"):
         """Helper to assert an error result."""
-        assert result_data["status"] == "completed"
         assert result_data["label"] is None
-        assert result_data["is_passed"] is None
         assert result_data["score"] is None
         assert result_data["error_code"] == error_code
 
     def assert_not_applicable(self, result_data: Dict[str, Any]):
         """Helper to assert a not applicable result."""
-        assert result_data["status"] == "completed"
         assert result_data["label"] == "pass"  # TODO: this should be not applicable?
-        assert result_data["is_passed"] == True  # TODO: this should be false?
         assert result_data["score"] == "not applicable"

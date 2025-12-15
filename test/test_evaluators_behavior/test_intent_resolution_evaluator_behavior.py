@@ -7,6 +7,7 @@ Behavioral tests for Intent Resolution Evaluator.
 
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from assets.evaluators.builtin.intent_resolution.evaluator._intent_resolution import IntentResolutionEvaluator
 
 
 @pytest.mark.unittest
@@ -16,4 +17,4 @@ class TestIntentResolutionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest):
     Tests different input formats and scenarios.
     """
 
-    evaluator_name = "intent_resolution"
+    evaluator_type = IntentResolutionEvaluator

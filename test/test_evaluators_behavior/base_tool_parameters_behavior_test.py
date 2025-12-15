@@ -14,7 +14,7 @@ class BaseToolParametersBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     Base class for tool parameters behavioral tests in tool_calls.
     Extends BaseToolsEvaluatorBehaviorTest with tool call support.
     Subclasses should implement:
-    - evaluator_name: str - name of the evaluator (e.g., "tool_selection")
+    - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "ToolSelection")
     Subclasses may override:
     - requires_arguments: bool - whether tool calls need arguments to be valid
     - requires_tool_definitions: bool - whether tool definitions are required
@@ -36,7 +36,7 @@ class BaseToolParametersBehaviorTest(BaseToolsEvaluatorBehaviorTest):
         
         return response
 
-    def test_response_missing_parameters_without_tool_calls(self, openai_client, model_deployment_name, parameter: str, requires_parameter: bool):
+    def test_response_missing_parameters_without_tool_calls(self, parameter: str, requires_parameter: bool):
         """
         Response is missing a specific parameter - should return not_applicable or pass depending on requires_parameter flag.
         :parameter: The parameter to remove from the response.
@@ -44,15 +44,13 @@ class BaseToolParametersBehaviorTest(BaseToolsEvaluatorBehaviorTest):
         """
         response = self.remove_parameter_from_response(parameter)
         
-        run, outputs = self._run_evaluation(
-            self.evaluator_name,
-            openai_client, model_deployment_name,
+        results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=response,
             tool_calls=None,
             tool_definitions=self.VALID_TOOL_DEFINITIONS,
         )
-        result_data = self._extract_and_print_result(run, outputs, f"Response Missing {parameter} Parameter Without Tool Calls")
+        result_data = self._extract_and_print_result(results, f"Response Missing {parameter} Parameter Without Tool Calls")
 
         if requires_parameter:
             self.assert_error(result_data)
@@ -61,26 +59,23 @@ class BaseToolParametersBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     # =================== PARAMETERS TESTS ====================
     
-    def test_response_missing_type_parameters_without_tool_calls(self, openai_client, model_deployment_name):
+    def test_response_missing_type_parameters_without_tool_calls(self):
         """Response is missing name parameter - should return not_applicable."""
         self.test_response_missing_parameters_without_tool_calls(
-            openai_client, model_deployment_name,
             parameter="type",
             requires_parameter=True
         )
 
-    def test_response_missing_name_parameters_without_tool_calls(self, openai_client, model_deployment_name):
+    def test_response_missing_name_parameters_without_tool_calls(self):
         """Response is missing name parameter - should return not_applicable."""
         self.test_response_missing_parameters_without_tool_calls(
-            openai_client, model_deployment_name,
             parameter="name",
             requires_parameter=True
         )
 
-    def test_response_missing_arguments_parameters_without_tool_calls(self, openai_client, model_deployment_name):
+    def test_response_missing_arguments_parameters_without_tool_calls(self):
         """Response is missing arguments parameter - should return not_applicable."""
         self.test_response_missing_parameters_without_tool_calls(
-            openai_client, model_deployment_name,
             parameter="arguments",
             requires_parameter=self.requires_arguments
         )

@@ -8,6 +8,7 @@ Tests various input scenarios: query, response, tool_definitions, and tool_calls
 
 import pytest
 from base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
+from assets.evaluators.builtin.tool_call_accuracy.evaluator._tool_call_accuracy import ToolCallAccuracyEvaluator
 
 
 @pytest.mark.unittest
@@ -17,6 +18,5 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest):
     Tests different input formats and scenarios.
     """
 
-    evaluator_name = "tool_call_accuracy"
-    
+    evaluator_type = ToolCallAccuracyEvaluator
     MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.weather_tool_call_and_assistant_response
