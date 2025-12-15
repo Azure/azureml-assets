@@ -1095,6 +1095,7 @@ def validate_early_stop_settings(args: Namespace) -> None:
 
 def validate_optimiser_name(args: Namespace) -> None:
     """Validate optimiser name."""
+    optim = args.optim.lower()
     valid_optimisers = [
          'adamw_torch', 'adafactor', 'adamw_torch_xla', 'adamw_torch_npu_fused', 'adamw_apex_fused', 'adamw_torch_fused', 
          'adamw_anyprecision','adamw_torch_4bit', 'adamw_torch_8bit', 'ademamix', 'sgd', 'adagrad',
@@ -1105,12 +1106,12 @@ def validate_optimiser_name(args: Namespace) -> None:
         'lomo', 'adalomo', 'grokadamw', 'schedule_free_radam', 'schedule_free_adamw', 'schedule_free_sgd',
         'apollo_adamw', 'apollo_adamw_layerwise', 'stable_adamw'
     ]
-    if args.optim not in valid_optimisers:
+    if optim not in valid_optimisers:
         raise ACFTValidationException._with_error(
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid optimiser name '{args.optim}'. "
+                    f"Invalid optimiser name '{optim}'. "
                     f"Please select one of: {', '.join(valid_optimisers)}."
                 )
             )
