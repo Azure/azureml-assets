@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: chat_completion_pipeline
-version: 0.0.80
+version: 0.0.86
 type: pipeline
 display_name: Chat Completion Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for chat completion task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/chat_completion_pipeline) to learn more.
