@@ -55,11 +55,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     tqdm \
     setuptools=78.1.1 \
     wheel=0.44.0 \
-    # Install pytorch separately to speed up image build
     -c conda-forge -c pytorch -c anaconda && \
-    conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    pytorch=2.8.0 \
-    -c pytorch -c nvidia -c conda-forge -y && \
     # end conda dependencies
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
@@ -68,7 +64,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # begin pip install
 # Install pip dependencies
 # GitPython>=3.1.41 is required for https://github.com/advisories/GHSA-2mqj-m65w-jghx and is not available in conda
-RUN pip install \
+RUN pip install --no-cache-dir \
                 # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
@@ -78,11 +74,7 @@ RUN pip install \
                 azureml-responsibleai=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
-                azureml-train-automl=={{latest-pypi-version}} \
-                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
                 'mlflow-skinny==2.15.1' \
@@ -96,15 +88,24 @@ RUN pip install \
                 'py-cpuinfo==5.0.0' \
                 "pillow>=12.0.0"
                 # end pypi dependencies
+
+# Install packages with torch packages separately to reduce layer size
+RUN pip install --no-cache-dir \
+                azureml-train-automl=={{latest-pypi-version}} \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}}
+
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3
 RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' 'h2>=4.3.0'
-RUN pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0
+RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
  export HOROVOD_BUILD_CUDA_CC_LIST='60,61,70,75,80,86,89,90' && \
+ HOROVOD_WITHOUT_TENSORFLOW=1 \
  HOROVOD_WITH_PYTORCH=1 \
  HOROVOD_CUDA_HOME=/usr/local/cuda \
  CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
