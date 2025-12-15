@@ -1095,26 +1095,15 @@ def validate_early_stop_settings(args: Namespace) -> None:
 
 
 def validate_optimiser_name(args: Namespace) -> None:
-    """Validate optimiser name."""
-    optim = args.optim.lower()
-    valid_optimisers = [
-        'adamw_torch', 'adafactor', 'adamw_torch_xla', 'adamw_torch_npu_fused', 'adamw_apex_fused',
-        'adamw_torch_fused', 'adamw_anyprecision', 'adamw_torch_4bit', 'adamw_torch_8bit', 'ademamix', 'sgd',
-        'adagrad', 'adamw_bnb_8bit', 'adamw_8bit', 'ademamix_8bit', 'lion_8bit', 'lion_32bit', 'paged_adamw_32bit',
-        'paged_adamw_8bit', 'paged_ademamix_32bit', 'paged_ademamix_8bit', 'paged_lion_32bit', 'paged_lion_8bit',
-        'rmsprop', 'rmsprop_bnb', 'rmsprop_bnb_8bit', 'rmsprop_bnb_32bit', 'galore_adamw', 'galore_adamw_8bit',
-        'galore_adafactor', 'galore_adamw_layerwise', 'galore_adamw_8bit_layerwise', 'galore_adafactor_layerwise',
-        'lomo', 'adalomo', 'grokadamw', 'schedule_free_radam', 'schedule_free_adamw', 'schedule_free_sgd',
-        'apollo_adamw', 'apollo_adamw_layerwise', 'stable_adamw'
-    ]
-    if optim not in valid_optimisers:
+    """Validate optimiser name allowing only 'adamw_torch' and 'adafactor'."""
+    optim = str(args.optim).lower()
+    if optim not in ("adamw_torch", "adafactor"):
         raise ACFTValidationException._with_error(
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid optimiser name '{optim}'. "
-                    f"Please select one of: {', '.join(valid_optimisers)}."
-                )
+                    f"Invalid optimiser name '{optim}'. Please select one of: adamw_torch, adafactor."
+                ),
             )
         )
 
