@@ -4,7 +4,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-text-gpu
 # Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -99,22 +99,26 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # Install pip dependencies
 # Here, we pin sentencepiece since 0.1.98 breaks training. Earlier versions of horovod contain a sev2 vulnerability,
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
-RUN pip install \
+RUN pip install --no-cache-dir \
                 # begin pypi dependencies
                 azureml-core=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 azureml-automl-core=={{latest-pypi-version}} \
-                azureml-automl-dnn-nlp=={{latest-pypi-version}} \
                 azureml-automl-runtime=={{latest-pypi-version}} \
-                azureml-train-automl-client=={{latest-pypi-version}} \
-                azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
+                'mlflow-skinny==2.15.1' \
                 'cryptography>=45.0.7'\
                 'requests>=2.32.5' \
                 'certifi>=2025.11.12'
                 # end pypi dependencies
+
+# Install packages with torch packages separately to reduce layer size
+RUN pip install --no-cache-dir \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-automl-dnn-nlp=={{latest-pypi-version}}
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages
@@ -128,7 +132,7 @@ RUN pip list && \
                 aiohttp==3.12.14
 
 # Upgrade torch and torchvision
-RUN pip install torch==2.8.0 torchvision==0.23.0 
+RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
 
 # Upgrade starlette and urllib3
