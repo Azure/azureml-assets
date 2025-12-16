@@ -47,7 +47,9 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["response"]
+  anyOf:
+  - required: ["response", "context"]
+  - required: ["response", "tool_definitions"]
 outputSchema:
   groundedness:
     type: "ordinal"
