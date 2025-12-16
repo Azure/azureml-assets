@@ -1095,15 +1095,17 @@ def validate_early_stop_settings(args: Namespace) -> None:
 
 
 def validate_optimiser_name(args: Namespace) -> None:
-    """Validate optimiser name allowing only 'adamw_torch' and 'adafactor'."""
-    optim = str(args.optim).lower()
-    if optim not in ("adamw_torch", "adafactor"):
+    """Validate optimiser name."""
+    optim = args.optim.lower()
+    valid_optimisers = [ 'adamw_torch', 'adafactor']
+    if optim not in valid_optimisers:
         raise ACFTValidationException._with_error(
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
-                    f"Invalid optimiser name '{optim}'. Please select one of: adamw_torch, adafactor."
-                ),
+                    f"Invalid optimiser name '{optim}'. "
+                    f"Please select one of: {', '.join(valid_optimisers)}."
+                )
             )
         )
 
