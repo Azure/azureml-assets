@@ -11,4 +11,4 @@ dependencies:
   - azure-storage-blob==12.27.1
   - azure-identity==1.25.1
   - numpy
-  - joblib==1.5.2
+  - joblib==1.5.3

@@ -4,7 +4,7 @@ description: >-
   Environment used by Draft Model Training Pipeline
 
 name: "acft-draft-model-training"
-version: "1"
+version: "2"
 
 build:
   path: "context"
