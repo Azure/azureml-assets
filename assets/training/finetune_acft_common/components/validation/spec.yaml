@@ -8,7 +8,7 @@ description: Component to validate the finetune job against Validation Service
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acpt-pytorch-2.2-cuda12.1/labels/latest
+environment: azureml://registries/azureml/environments/acpt-pytorch-2.8-cuda12.6/labels/latest
 
 code: ../../src/validation
 
