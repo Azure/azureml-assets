@@ -1097,7 +1097,7 @@ def validate_early_stop_settings(args: Namespace) -> None:
 def validate_optimiser_name(args: Namespace) -> None:
     """Validate optimiser name."""
     optim = args.optim.lower()
-    valid_optimisers = [ 'adamw_torch', 'adafactor']
+    valid_optimisers = ['adamw_torch', 'adafactor']
     if optim not in valid_optimisers:
         raise ACFTValidationException._with_error(
             AzureMLError.create(
