@@ -30,7 +30,7 @@ dependencies:
   - pandas>=1 # explicitly install for [data_generation] [document_parsing]
   - pymilvus>=2.3.0 # explicitly install for [milvus]
   - pymongo # explicitly install for [azure_cosmos_mongo_vcore]
-  - pypdf~=6.1.3 # explicitly install for [document_parsing]
+  - pypdf~=6.4.0 # explicitly install for [document_parsing]
   - starlette>=0.49.1 # security update
   - tika~=2.6.0 # explicitly install for [document_parsing]
   - unstructured # explicitly install for [document_parsing]
