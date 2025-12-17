@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/foundry-local-missing/qwen2.5-coder-3b-instruct/onnx/cuda/cuda-int4-rtn-block-32
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/tool_calling/qwen2.5-coder-3b-instruct-cuda-gpu/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md

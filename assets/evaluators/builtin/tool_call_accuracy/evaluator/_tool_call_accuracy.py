@@ -253,6 +253,19 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Dict
         """
+        if eval_input.get("query") is None:
+            raise EvaluationException(
+                message=(
+                    "Query is a required input to the Tool Call Accuracy evaluator."
+                ),
+                internal_message=(
+                    "Query is a required input to the Tool Call Accuracy evaluator."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
+            )
+
         # Single LLM call for all tool calls
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", {})
@@ -366,10 +379,9 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                         # This is a built-in tool from converter, already handled above
                         continue
                     elif tool_name:
-                        # This is a regular function tool from converter
+                        # This is a regular function tool from converter or built-in tool from agent v2
                         tool_definition_exists = any(
-                            tool.get("name") == tool_name and tool.get("type", "function") == "function"
-                            for tool in tool_definitions_expanded
+                            tool.get("name") == tool_name for tool in tool_definitions_expanded
                         )
                         if not tool_definition_exists:
                             raise EvaluationException(

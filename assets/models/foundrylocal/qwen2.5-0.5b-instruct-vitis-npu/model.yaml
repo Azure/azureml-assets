@@ -1,7 +1,7 @@
 path:
-  container_name: amd-npu-models
-  container_path: AMD_NPU_LLM_Models/Qwen2.5-0.5B-Instruct-vai
-  storage_name: sunghchostorageaccount
+  container_name: models
+  container_path: foundrylocal/tool_calling/qwen2.5-0.5b-instruct-vitis-npu/v3
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md
