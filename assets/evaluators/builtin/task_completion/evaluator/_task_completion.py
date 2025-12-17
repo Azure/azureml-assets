@@ -186,7 +186,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             if isinstance(llm_output.get("success", ""), str):
                 success = 1 if llm_output.get("success", "").lower() == "true" else 0
             else:
-                success = 1 if llm_output.get("success", False) == True else 0
+                success = 1 if llm_output.get("success", False) is True else 0
             success_result = "pass" if success == 1 else "fail"
             reason = llm_output.get("explanation", "")
             return {
