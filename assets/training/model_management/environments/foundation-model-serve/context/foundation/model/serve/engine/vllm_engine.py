@@ -62,7 +62,7 @@ class VLLMEngine(BaseEngine):
             EnvironmentError: If required environment variables are not set.
         """
         azureml_model_dir = os.getenv(EnvironmentVariables.AZUREML_MODEL_DIR)
-        aml_model = os.getenv(EnvironmentVariables.AML_MODEL)
+        aml_model = os.getenv(EnvironmentVariables.AML_MODEL_PATH)
         engine_port = os.getenv(
             EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT))
 
@@ -82,4 +82,21 @@ class VLLMEngine(BaseEngine):
 
         os.environ[EnvironmentVariables.AML_MODEL] = final_model_path
 
-        return final_model_path
+        # Set tensor parallel size only if not already set
+        if not os.getenv(EnvironmentVariables.AML_TENSOR_PARALLEL_SIZE):
+            # Try using torch first
+            try:
+                import torch
+                gpu_count = torch.cuda.device_count()
+            except Exception:
+                # Fallback: try using nvidia-smi
+                try:
+                    gpu_info = subprocess.check_output(["nvidia-smi", "-L"]).decode()
+                    gpu_count = gpu_info.count("UUID")
+                except Exception:
+                    gpu_count = 0  # No GPU detected
+            os.environ[EnvironmentVariables.AML_TENSOR_PARALLEL_SIZE] = str(gpu_count)
+            logger.info(f"Set {EnvironmentVariables.AML_TENSOR_PARALLEL_SIZE} to {gpu_count}")
+        else:
+            logger.info(f"{EnvironmentVariables.AML_TENSOR_PARALLEL_SIZE} already set to "
+                        f"{os.getenv(EnvironmentVariables.AML_TENSOR_PARALLEL_SIZE)}")

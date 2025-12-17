@@ -2,11 +2,11 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-ta
 
 USER root
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-gpu
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-gpu
 # Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -43,7 +43,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.9 pip=22.1.2 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=25.3 -y
 
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 
@@ -69,6 +69,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     wheel=0.44.0 \
     scipy=1.10.1 \
     joblib=1.2.0 \
+    ncurses=6.5 \
     # end conda dependencies
     -c conda-forge -c anaconda
 
@@ -94,10 +95,12 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'azure-identity>=1.16.1' --no-cache-dir
+                'mlflow-skinny==2.15.1' \
+                'azure-identity>=1.25.1' --no-cache-dir
 
 RUN pip install \
                 'inference-schema' \
+                'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'pytorch-transformers==1.0.0' --no-cache-dir
 
@@ -106,33 +109,37 @@ RUN pip install \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
                 'psutil>5.0.0,<6.0.0' \
-                'requests>=2.32.4' \
-                'certifi>=2023.07.22' \
-                'cryptography>=42.0.5' \
+                'requests>=2.32.5' \
+                'certifi>=2025.11.12' \
+                'cryptography>=45.0.7' \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
-RUN HOROVOD_WITH_PYTORCH=1 pip install --no-cache-dir git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d
-
 # Fix vulnerabilities
-RUN pip install --force-reinstall torch==2.8.0 --no-cache-dir
-RUN pip install --force-reinstall torchvision==0.23.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.4'
-RUN pip install --upgrade 'urllib3==2.5.0'
-RUN pip install --upgrade 'pillow==11.3.0'
+RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0'
 
 # If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
+
 # --- End Vulnerability Fixes ---
+
 # --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install 'numpy==1.26.4' --force-reinstall && \
-    pip install 'numpy==1.26.4' --force-reinstall && \
-    /opt/conda/bin/pip install 'numpy==1.26.4' --force-reinstall || true
-RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip install --upgrade 'h2>=4.3.0'
+RUN pip install --upgrade 'numpy==1.23.5' 'h2>=4.3.0'
+
+RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
+ export CUDACXX=/usr/local/cuda/bin/nvcc && \
+ export HOROVOD_BUILD_CUDA_CC_LIST='60,61,70,75,80,86,89,90' && \
+ HOROVOD_WITH_PYTORCH=1 \
+ HOROVOD_CUDA_HOME=/usr/local/cuda \
+ CMAKE_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda-12.6/targets/x86_64-linux/lib \
+ pip install --no-cache-dir --no-build-isolation \
+ git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
+
 RUN rm -rf /opt/miniconda/pkgs/
 
+# Verify installation
+RUN conda list
 
-ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
-
+ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
