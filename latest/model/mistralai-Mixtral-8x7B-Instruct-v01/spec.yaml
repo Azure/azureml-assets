@@ -22,7 +22,7 @@ tags:
   task: chat-completion
   author: "Mistral AI"
   benchmark: "quality"
-version: 10
+version: 11
 description: |
   The Mixtral-8x7B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts. The Mixtral-8x7B outperforms Llama 2 70B on most benchmarks with 6x faster inference.
 
