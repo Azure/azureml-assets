@@ -181,11 +181,12 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", {})
-        if isinstance(llm_output, dict):
-            success = llm_output.get("success", False)
-            if isinstance(success, str):
-                success = 1 if success.upper() == "TRUE" else 0
 
+        if isinstance(llm_output, dict):
+            if isinstance(llm_output.get("success", ""), str):
+                success = 1 if llm_output.get("success", "").lower() == "true" else 0
+            else:
+                success = 1 if llm_output.get("success", False) == True else 0
             success_result = "pass" if success == 1 else "fail"
             reason = llm_output.get("explanation", "")
             return {
