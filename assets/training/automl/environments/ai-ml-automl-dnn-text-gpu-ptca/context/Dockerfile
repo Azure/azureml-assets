@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch260:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag}}
 
 USER root:root
 
@@ -42,15 +42,14 @@ RUN apt-get update && \
 RUN conda install pip -n base -y || true
 RUN conda install pip -n ptca -y || true
 
+# This ensures necessary torch dependencies are already installed
+RUN pip install --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
 
-RUN pip uninstall -y onnxruntime
-RUN pip uninstall -y torch torchvision torchaudio
-RUN pip install --upgrade --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
-
 # onnx and onnxruntime-training installation
+RUN pip uninstall -y onnxruntime
 RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
