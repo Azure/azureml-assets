@@ -5,7 +5,7 @@ type: pipeline
 name: model_performance_signal_monitor
 display_name: Model Performance - Signal Monitor
 description: Computes the model performance
-version: 0.0.29
+version: 0.0.30
 is_deterministic: true
 inputs:
   task:
@@ -56,7 +56,7 @@ jobs:
   compute_metrics:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.27
+      azureml://registries/azureml/components/model_performance_compute_metrics/versions/0.0.28
     inputs:
       task: ${{parent.inputs.task}}
       baseline_data_target_column: 
@@ -84,7 +84,7 @@ jobs:
   output_signal_metrics:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
+      azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.37
     inputs:
       signal_metrics:
         type: mltable
@@ -106,7 +106,7 @@ jobs:
   evaluate_metric_thresholds:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
+      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.34
     inputs:
       signal_metrics:
         type: mltable

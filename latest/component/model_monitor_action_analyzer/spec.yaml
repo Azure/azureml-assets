@@ -5,7 +5,7 @@ type: pipeline
 name: model_monitor_action_analyzer
 display_name: Model Monitor - Action Analyzer
 description: Generate and output actions to the default datastore.
-version: 0.0.26
+version: 0.0.27
 is_deterministic: true
 inputs:
   signal_output:
@@ -54,7 +54,7 @@ jobs:
   identify_problem_traffic:
     type: spark
     component: 
-      azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.25
+      azureml://registries/azureml/components/action_analyzer_identify_problem_traffic/versions/0.0.26
     inputs:
       signal_output:
         type: uri_folder
@@ -78,7 +78,7 @@ jobs:
   metrics_calculation:
     type: spark
     component: 
-      azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.22
+      azureml://registries/azureml/components/action_analyzer_metrics_calculation/versions/0.0.23
     inputs:
       data_with_groups:
         type: mltable
@@ -97,7 +97,7 @@ jobs:
   correlation_test:
     type: spark
     component: 
-      azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.22
+      azureml://registries/azureml/components/action_analyzer_correlation_test/versions/0.0.23
     inputs:
       data_with_action_metric_score:
         type: mltable
@@ -114,7 +114,7 @@ jobs:
   output_actions:
     type: spark
     component: 
-      azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.25
+      azureml://registries/azureml/components/action_analyzer_output_actions/versions/0.0.26
     inputs:
       action_data:
         type: mltable

@@ -5,7 +5,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.5.28
+version: 0.5.29
 is_deterministic: true
 inputs:
   monitor_name:
@@ -112,7 +112,7 @@ jobs:
   input_schema_adaptor:
     type: spark
     component: 
-      azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.25
+      azureml://registries/azureml/components/gsq_input_schema_adaptor/versions/0.0.26
     inputs:
       production_dataset:
         type: mltable
@@ -128,7 +128,7 @@ jobs:
   compute_histogram:
     type: spark
     component: 
-      azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.37
+      azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.38
     inputs:
       production_dataset:
         type: mltable
@@ -176,7 +176,7 @@ jobs:
   compute_metrics:
     type: spark
     component: 
-      azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.30
+      azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.4.31
     inputs:
       annotation_histogram:
         type: mltable
@@ -203,7 +203,7 @@ jobs:
   output_signal_metrics:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.36
+      azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.37
     inputs:
       signal_metrics:
         type: mltable
@@ -226,7 +226,7 @@ jobs:
   evaluate_metric_thresholds:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
+      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.34
     inputs:
       signal_metrics:
         type: mltable

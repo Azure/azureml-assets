@@ -6,7 +6,7 @@ name: data_quality_signal_monitor
 display_name: Data Quality - Signal Monitor
 description: Computes the data quality of a target dataset with reference to a 
   baseline.
-version: 0.3.53
+version: 0.3.54
 is_deterministic: true
 
 inputs:
@@ -66,7 +66,7 @@ jobs:
   compute_feature_importances:
     type: spark
     component: 
-      azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.32
+      azureml://registries/azureml/components/feature_importance_metrics/versions/0.3.33
     inputs:
       baseline_data:
         type: mltable
@@ -88,7 +88,7 @@ jobs:
   feature_selection:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.29
+      azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.30
     inputs:
       input_data_1:
         type: mltable
@@ -111,7 +111,7 @@ jobs:
   compute_baseline_data_statistics:
     type: spark
     component: 
-      azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.28
+      azureml://registries/azureml/components/data_quality_data_statistics/versions/0.3.29
     inputs:
       baseline_data:
         type: mltable
@@ -131,7 +131,7 @@ jobs:
   compute_baseline_data_quality:
     type: spark
     component: 
-      azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.33
+      azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.34
     inputs:
       input_data:
         type: mltable
@@ -160,7 +160,7 @@ jobs:
   compute_target_data_quality:
     type: spark
     component: 
-      azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.33
+      azureml://registries/azureml/components/data_quality_compute_metrics/versions/0.3.34
     inputs:
       input_data:
         type: mltable
@@ -187,7 +187,7 @@ jobs:
   join_data_quality_metrics:
     type: spark
     component: 
-      azureml://registries/azureml/components/data_quality_metrics_joiner/versions/0.3.26
+      azureml://registries/azureml/components/data_quality_metrics_joiner/versions/0.3.27
     inputs:
       baseline_metrics:
         type: mltable
@@ -210,7 +210,7 @@ jobs:
   output_signal_metrics:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.33
+      azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.34
     inputs:
       signal_metrics:
         type: mltable
@@ -234,7 +234,7 @@ jobs:
   evaluate_metric_thresholds:
     type: spark
     component: 
-      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.33
+      azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.34
     inputs:
       signal_metrics:
         type: mltable

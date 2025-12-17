@@ -5,7 +5,7 @@ name: data_drift_compute_metrics
 display_name: Data Drift - Compute Metrics
 description: Compute data drift metrics given a baseline and a deployment's 
   model data input.
-version: 0.3.34
+version: 0.3.35
 is_deterministic: true
 
 code: ../../src
@@ -66,10 +66,10 @@ conf:
       - defaults
     dependencies:
       - pip:
-        - azure-storage-file-datalake~=12.11.0
-        - azure-ai-ml~=1.26.3
-        - azureml-mlflow~=1.59.0
-        - mltable~=1.6.1
+        - azure-storage-file-datalake~=12.13.2
+        - azure-ai-ml~=1.30.0
+        - azureml-mlflow~=1.61.0
+        - mltable~=1.6.3
         - azureml-fsspec~=1.3.1
         - fsspec~=2023.4.0
         - numpy<2.0.0
