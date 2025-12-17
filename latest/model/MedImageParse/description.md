@@ -16,6 +16,8 @@ This model is intended and provided as-is for research and model development exp
 
 For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageParseDocs.
 
+For example code, usage demonstrations, and fine-tuning capabilities, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
 ### Model Architecture
 MedImageParse is built upon a transformer-based architecture, optimized for processing large biomedical corpora. Leveraging multi-head attention mechanisms, it excels at identifying and understanding biomedical terminology, as well as extracting contextually relevant information from dense scientific texts. The model is pre-trained on vast biomedical datasets, allowing it to generalize across various biomedical domains with high accuracy.
 
@@ -123,3 +125,10 @@ data = {
 ultrasound: breast: benign tumor, malignant tumor, tumor
             heart: left heart atrium, left heart ventricle
             transperineal: fetal head, public symphysis
+
+
+## Version History
+
+| Version | Date | Description |
+|---------|------|-------------|
+| 16 | 2025-12-10 | - Initial version tracking <br>- Remove V100 support|

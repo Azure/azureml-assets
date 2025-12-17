@@ -6,8 +6,7 @@ path: ./
 properties:
   inference-min-sku-spec: 4|1|28|64
   inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 
-    Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC6s_v3, 
-    Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, 
+    Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
     Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
     Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
@@ -25,13 +24,12 @@ tags:
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list: [Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 
-      Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC6s_v3, 
-      Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, 
+      Standard_NC16as_T4_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, 
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
       Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
       Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 10
-description: |
+version: 11
+description: |-
   Most medical imaging AI today is narrowly built to detect a small set of individual findings on a single modality like chest X-rays. This training approach is data- and computationally inefficient, requiring ~6-12 months per finding1, and often fails to generalize in real world environments. By further training existing multimodal foundation models on medical images and associated text data, Microsoft and Nuance created a multimodal foundation model that shows evidence of generalizing across various medical imaging modalities, anatomies, locations, severities, and types of medical data. The training methods learn to map the medical text and images into a unified numerical vector representation space, which makes it easy for computers to understand the relationships between those modalities.
 
   Embeddings are an important building block in AI research and development for retrieval, search, comparison, classification, and tagging tasks, and developers and researchers can now use MedImageInsight embeddings in the medical domain. MedImageInsight embeddings is open source allowing developers to customize and adapt to their specific use cases.
@@ -45,6 +43,8 @@ description: |
   Please see https://aka.ms/medimageinsightpaper for more details.
 
   For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageInsightDocs.
+
+  For example code, usage demonstrations, and fine-tuning capabilities, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
 
   [^1]: [2022.12.07.22283216v3.full.pdf (medrxiv.org)](https://www.medrxiv.org/content/10.1101/2022.12.07.22283216v3.full.pdf)
 
@@ -198,3 +198,9 @@ description: |
     }
   ]
   ```
+
+  ## Version History
+
+  | Version | Date | Description |
+  |---------|------|-------------|
+  | 11 | 2025-12-10 | - Initial version tracking <br>- Remove V100 support|

@@ -26,7 +26,7 @@ tags:
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
       Standard_ND96amsr_A100_v4, Standard_NC40ads_H100_v5, 
       Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
-version: 9
+version: 10
 description: |
   ## Overview
 
@@ -38,6 +38,10 @@ description: |
   You bear sole responsibility and liability for any use of CXRReportGen, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals. 
 
   For documentation and example Jupyter Notebooks, visit: https://aka.ms/CXRReportGenDocs.
+
+  For example code and usage demonstrations, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
+  CXRReportGen fine-tuning is available through our private preview program. If you would like to try fine-tuning CXRReportGen, please contact us by submitting your information into this form and we will reach out with further instructions: https://aka.ms/cxrrg-fine-tuning-request.
 
   ### Training information
 
@@ -162,3 +166,9 @@ description: |
   While testing the model with images and/or text, ensure the the data is PHI free and that there are no patient information or information that can be tracked to a patient identity.
 
   For detailed guidelines on ethical use, refer to Microsoft’s [Responsible AI Principles](https://www.microsoft.com/en-us/ai/responsible-ai)
+
+  ## Version History
+
+  | Version | Date | Description |
+  |---------|------|-------------|
+  | 10 | 2025-12-10 | - Initial version tracking |

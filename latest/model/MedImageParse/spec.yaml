@@ -4,9 +4,8 @@ name: MedImageParse
 path: ./
 
 properties:
-  inference-min-sku-spec: 6|1|112|64
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 
-    Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2, Standard_NC40ads_H100_v5, Standard_NC80adis_H100_v5, 
     Standard_ND96isr_H100_v5
@@ -23,13 +22,12 @@ tags:
   author: Microsoft
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
-  inference_compute_allow_list: [Standard_NC6s_v3, Standard_NC12s_v3, 
-      Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
-      Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
-      Standard_ND40rs_v2, Standard_NC40ads_H100_v5, Standard_NC80adis_H100_v5, 
-      Standard_ND96isr_H100_v5]
-version: 15
-description: |
+  inference_compute_allow_list: [Standard_NC24ads_A100_v4, 
+      Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
+      Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
+      Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
+version: 16
+description: |-
   Biomedical image analysis is fundamental for biomedical discovery in cell biology, pathology, radiology, and many other biomedical domains. MedImageParse is a biomedical foundation model for imaging parsing that can jointly conduct segmentation, detection, and recognition across 9 imaging modalities. Through joint learning, we can improve accuracy for individual tasks and enable novel applications such as segmenting all relevant objects in an image through a text prompt, rather than requiring users to laboriously specify the bounding box for each object. 
 
   MedImageParse is broadly applicable, performing image segmentation across 9 imaging modalities. 
@@ -47,6 +45,8 @@ description: |
   This model is intended and provided as-is for research and model development exploration. MedImageParse is not designed or intended to be deployed in clinical settings as-is nor is it intended for use in the diagnosis or treatment of any health or medical condition, and the model’s performance for such purposes has not been established. You bear sole responsibility and liability for any use of MedImageParse, including verification of outputs and incorporation into any product or service intended for a medical purpose or to inform clinical decision-making, compliance with applicable healthcare laws and regulations, and obtaining any necessary clearances or approvals.
 
   For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageParseDocs.
+
+  For example code, usage demonstrations, and fine-tuning capabilities, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
 
   ### Model Architecture
   MedImageParse is built upon a transformer-based architecture, optimized for processing large biomedical corpora. Leveraging multi-head attention mechanisms, it excels at identifying and understanding biomedical terminology, as well as extracting contextually relevant information from dense scientific texts. The model is pre-trained on vast biomedical datasets, allowing it to generalize across various biomedical domains with high accuracy.
@@ -155,3 +155,10 @@ description: |
   ultrasound: breast: benign tumor, malignant tumor, tumor
               heart: left heart atrium, left heart ventricle
               transperineal: fetal head, public symphysis
+
+
+  ## Version History
+
+  | Version | Date | Description |
+  |---------|------|-------------|
+  | 16 | 2025-12-10 | - Initial version tracking <br>- Remove V100 support|
