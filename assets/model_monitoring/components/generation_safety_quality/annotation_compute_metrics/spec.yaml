@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_metrics
 display_name: Annotation - Compute Metrics
 description: Compute annotation metrics given a deployment's model data input.
-version: 0.4.30
+version: 0.4.31
 is_deterministic: True
 inputs:
   annotation_histogram: 
@@ -71,15 +71,16 @@ conf:
       - pip:
         - azure-cli-core~=2.66.0
         - azure-ai-evaluation~=1.0.1
-        - azure-ai-ml~=1.26.3
+        - azure-ai-ml~=1.30.0
         - openai~=1.56.2
         - json5==0.9.11
-        - mltable~=1.6.1
+        - mltable~=1.6.3
         - keyrings.alt~=5.0.0
-        - mlflow~=2.17.2
-        - protobuf<5.29.0
+        - mlflow~=2.22.4
+        - protobuf~=6.32.1
         - azureml-fsspec~=1.3.1
         - fsspec~=2023.4.0
+        - tiktoken~=0.11.0
     name: momo-gsq-spark
 code: ../../src
 
