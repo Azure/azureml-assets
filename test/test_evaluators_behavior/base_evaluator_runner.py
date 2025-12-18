@@ -15,7 +15,7 @@ from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import EvaluationException
 from azure.identity import DefaultAzureCredential
 
-from .evaluator_mock_config import get_flow_side_effect_for_evaluator
+from evaluator_mock_config import get_flow_side_effect_for_evaluator
 
 class BaseEvaluatorRunner():
     """
