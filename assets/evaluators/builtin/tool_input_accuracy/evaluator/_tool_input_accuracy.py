@@ -572,7 +572,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
     async def _real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Perform the asynchronous call for the real end-to-end evaluation logic.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
