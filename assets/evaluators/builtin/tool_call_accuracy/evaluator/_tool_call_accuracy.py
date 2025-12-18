@@ -236,7 +236,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         if not isinstance(tool_calls, list):
             tool_calls = [tool_calls]
-        
+
         # Validate that all tool calls have the "arguments" key
         for tool_call in tool_calls:
             if isinstance(tool_call, dict):
@@ -247,7 +247,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                         target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
                         blame=ErrorBlame.USER_ERROR,
                     )
-        
+
         if not isinstance(tool_definitions, list):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
@@ -310,7 +310,9 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE,
             ):
                 raise EvaluationException(
-                    message=f"Invalid score value: {score}. Expected a number in range [{ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE}, {ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE}].",
+                    message=f"Invalid score value: {score}. Expected a number in range \
+                                    [{ToolCallAccuracyEvaluator._MIN_TOOL_CALL_ACCURACY_SCORE}, \
+                                    {ToolCallAccuracyEvaluator._MAX_TOOL_CALL_ACCURACY_SCORE}].",
                     internal_message="Invalid score value.",
                     category=ErrorCategory.INVALID_VALUE,
                     target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
