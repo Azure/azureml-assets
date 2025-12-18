@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: huggingface/distilbert-base-cased/1708342013/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  storage_name: modelonboardingresources
   type: azureblob
 publish:
   description: description.md

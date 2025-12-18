@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: huggingface/microsoft-Orca-2-7b/1702300877/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  storage_name: modelonboardingresources
   type: azureblob
 publish:
   description: description.md
