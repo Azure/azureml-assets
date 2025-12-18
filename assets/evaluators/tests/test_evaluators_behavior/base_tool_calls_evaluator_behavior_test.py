@@ -1,8 +1,9 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 Base class for behavioral tests of tool calls evaluators.
+
 Tests various input scenarios: query, response, tool_definitions, and tool_calls.
 """
 
@@ -12,6 +13,7 @@ from base_tool_parameters_behavior_test import BaseToolParametersBehaviorTest
 class BaseToolCallEvaluatorBehaviorTest(BaseToolParametersBehaviorTest):
     """
     Base class for tool call evaluator behavioral tests with tool_calls.
+
     Extends BaseToolParametersBehaviorTest with tool call support.
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "ToolSelection")
@@ -22,31 +24,31 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolParametersBehaviorTest):
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     """
-    
+
     # Test Configs
     requires_valid_format: bool = True
     requires_tool_definitions: bool = True
-    
+
     MINIMAL_RESPONSE = [
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "tool_call",
-                        "name": "fetch_weather",
-                    }
-                ],
-            },
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "tool_call",
-                        "name": "send_email",
-                    }
-                ],
-            },
-        ]
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "name": "fetch_weather",
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "name": "send_email",
+                }
+            ],
+        },
+    ]
 
     # Tool call test data
     VALID_TOOL_CALLS = [
@@ -96,7 +98,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolParametersBehaviorTest):
         result_data = self._extract_and_print_result(results, "Response Not Present with Tool Calls")
 
         self.assert_pass(result_data)
-    
+
     def test_response_as_string_with_tool_calls(self):
         """Response as string - should pass with explicit tool_calls."""
         results = self._run_evaluation(

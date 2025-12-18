@@ -1,19 +1,20 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
-"""
-Behavioral tests for Intent Resolution Evaluator.
-"""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Behavioral tests for Intent Resolution Evaluator."""
 
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
-from assets.evaluators.builtin.intent_resolution.evaluator._intent_resolution import IntentResolutionEvaluator
+from assets.evaluators.builtin.intent_resolution.evaluator._intent_resolution import (
+    IntentResolutionEvaluator,
+)
 
 
 @pytest.mark.unittest
 class TestIntentResolutionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest):
     """
     Behavioral tests for Intent Resolution Evaluator.
+
     Tests different input formats and scenarios.
     """
 

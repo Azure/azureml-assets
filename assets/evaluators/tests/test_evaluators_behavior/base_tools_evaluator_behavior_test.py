@@ -1,8 +1,9 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 Base class for behavioral tests of for tools evaluators.
+
 Tests various input scenarios: query, response, and tool_definitions.
 """
 
@@ -12,6 +13,7 @@ from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     """
     Base class for tools evaluator behavioral tests with tool_definitions.
+
     Extends BaseEvaluatorBehaviorTest with tool definition support.
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "ToolOutputUtilization")

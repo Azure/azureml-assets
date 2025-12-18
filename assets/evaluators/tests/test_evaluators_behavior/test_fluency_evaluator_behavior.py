@@ -1,9 +1,7 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
-"""
-Behavioral tests for Fluency Evaluator.
-"""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Behavioral tests for Fluency Evaluator."""
 
 import pytest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
@@ -14,6 +12,7 @@ from assets.evaluators.builtin.fluency.evaluator._fluency import FluencyEvaluato
 class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest):
     """
     Behavioral tests for Fluency Evaluator.
+
     Tests different input formats and scenarios.
     """
 

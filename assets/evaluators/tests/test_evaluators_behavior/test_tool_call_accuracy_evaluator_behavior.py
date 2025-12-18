@@ -1,20 +1,24 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 Behavioral tests for Tool Call Accuracy Evaluator using AIProjectClient.
+
 Tests various input scenarios: query, response, tool_definitions, and tool_calls.
 """
 
 import pytest
 from base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
-from assets.evaluators.builtin.tool_call_accuracy.evaluator._tool_call_accuracy import ToolCallAccuracyEvaluator
+from assets.evaluators.builtin.tool_call_accuracy.evaluator._tool_call_accuracy import (
+    ToolCallAccuracyEvaluator,
+)
 
 
 @pytest.mark.unittest
 class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest):
     """
     Behavioral tests for Tool Call Accuracy Evaluator.
+
     Tests different input formats and scenarios.
     """
 

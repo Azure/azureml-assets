@@ -1,8 +1,9 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 Base class for behavioral tests of evaluators.
+
 Tests various input scenarios: query, and response.
 """
 
@@ -13,6 +14,7 @@ from base_evaluator_runner import BaseEvaluatorRunner
 class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     """
     Base class for evaluator behavioral tests with query and response inputs.
+
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "Relevance")
     Subclasses may override:
@@ -29,105 +31,105 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     tools_evaluator: bool = False
 
     MINIMAL_RESPONSE: List[Dict[str, Any]] = [
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
-                    }
-                ],
-            },
-        ]
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                }
+            ],
+        },
+    ]
 
     weather_tool_call_and_assistant_response: List[Dict[str, Any]] = [
-            {
-                "tool_call_id": "call_1",
-                "role": "tool",
-                "content": [{"type": "tool_result", "tool_result": {"weather": "Rainy, 14\u00b0C"}}],
-            },
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
-                    }
-                ],
-            },
-        ]
+        {
+            "tool_call_id": "call_1",
+            "role": "tool",
+            "content": [{"type": "tool_result", "tool_result": {"weather": "Rainy, 14\u00b0C"}}],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                }
+            ],
+        },
+    ]
 
     email_tool_call_and_assistant_response: List[Dict[str, Any]] = [
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "tool_call",
-                        "tool_call_id": "call_2",
-                        "name": "send_email",
-                        "arguments": {
-                            "recipient": "your_email@example.com",
-                            "subject": "Weather Information for Seattle",
-                            "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
-                        },
-                    }
-                ],
-            },
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
-                    }
-                ],
-            },
-        ]
-    
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "tool_call_id": "call_2",
+                    "name": "send_email",
+                    "arguments": {
+                        "recipient": "your_email@example.com",
+                        "subject": "Weather Information for Seattle",
+                        "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                }
+            ],
+        },
+    ]
+
     tool_results_without_arguments: List[Dict[str, Any]] = [
-            {
-                "tool_call_id": "call_1",
-                "role": "tool",
-                "content": [{"type": "tool_result", "tool_result": {"weather": "Rainy, 14\u00b0C"}}],
-            },
-            {
-                "tool_call_id": "call_2",
-                "role": "tool",
-                "content": [
-                    {
-                        "type": "tool_result",
-                        "tool_result": {"message": "Email successfully sent to your_email@example.com."},
-                    }
-                ],
-            },
-        ]
+        {
+            "tool_call_id": "call_1",
+            "role": "tool",
+            "content": [{"type": "tool_result", "tool_result": {"weather": "Rainy, 14\u00b0C"}}],
+        },
+        {
+            "tool_call_id": "call_2",
+            "role": "tool",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_result": {"message": "Email successfully sent to your_email@example.com."},
+                }
+            ],
+        },
+    ]
 
     tool_results_with_arguments: List[Dict[str, Any]] = [
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "tool_call",
-                        "name": "fetch_weather",
-                        "arguments": {"location": "Seattle"},
-                    }
-                ],
-            },
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "tool_call",
-                        "name": "send_email",
-                        "arguments": {
-                            "recipient": "your_email@example.com",
-                            "subject": "Weather Information for Seattle",
-                            "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
-                        },
-                    }
-                ],
-            },
-        ]
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "name": "fetch_weather",
+                    "arguments": {"location": "Seattle"},
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "name": "send_email",
+                    "arguments": {
+                        "recipient": "your_email@example.com",
+                        "subject": "Weather Information for Seattle",
+                        "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
+                    },
+                }
+            ],
+        },
+    ]
 
     # Tool-related test data (can be overridden by subclasses)
     VALID_TOOL_CALLS: List[Dict[str, Any]] = None
@@ -137,71 +139,73 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     # Common test data for query and response
     STRING_QUERY: str = "Can you send me an email to your_email@example.com with weather information for Seattle?"
-    
-    STRING_RESPONSE: str = "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C."
-    
+
+    STRING_RESPONSE: str = (
+        "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C."
+    )
+
     VALID_QUERY: List[Dict[str, Any]] = [
         {
             "role": "user",
             "content": {
                 "type": "text",
                 "text": "Can you send me an email to your_email@example.com with weather information for Seattle?",
-            }
+            },
         },
     ]
 
     VALID_RESPONSE: List[Dict[str, Any]] = [
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "tool_call",
-                        "tool_call_id": "call_1",
-                        "name": "fetch_weather",
-                        "arguments": {"location": "Seattle"},
-                    }
-                ],
-            },
-            {
-                "tool_call_id": "call_1",
-                "role": "tool",
-                "content": [{"type": "tool_result", "tool_result": {"weather": "Rainy, 14\u00b0C"}}],
-            },
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "tool_call",
-                        "tool_call_id": "call_2",
-                        "name": "send_email",
-                        "arguments": {
-                            "recipient": "your_email@example.com",
-                            "subject": "Weather Information for Seattle",
-                            "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
-                        },
-                    }
-                ],
-            },
-            {
-                "tool_call_id": "call_2",
-                "role": "tool",
-                "content": [
-                    {
-                        "type": "tool_result",
-                        "tool_result": {"message": "Email successfully sent to your_email@example.com."},
-                    }
-                ],
-            },
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
-                    }
-                ],
-            },
-        ]
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "tool_call_id": "call_1",
+                    "name": "fetch_weather",
+                    "arguments": {"location": "Seattle"},
+                }
+            ],
+        },
+        {
+            "tool_call_id": "call_1",
+            "role": "tool",
+            "content": [{"type": "tool_result", "tool_result": {"weather": "Rainy, 14\u00b0C"}}],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "tool_call_id": "call_2",
+                    "name": "send_email",
+                    "arguments": {
+                        "recipient": "your_email@example.com",
+                        "subject": "Weather Information for Seattle",
+                        "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
+                    },
+                }
+            ],
+        },
+        {
+            "tool_call_id": "call_2",
+            "role": "tool",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_result": {"message": "Email successfully sent to your_email@example.com."},
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                }
+            ],
+        },
+    ]
 
     INVALID_QUERY: List[Dict[str, Any]] = [
         {
@@ -210,37 +214,37 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     ]
 
     INVALID_RESPONSE: List[Dict[str, Any]] = [
-            {
-                "tool_call": [
-                    {
-                        "name": "fetch_weather",
-                        "arguments": {"location": "Seattle"},
-                    }
-                ],
-            },
-            {
-                "tool_result": {"weather": "Rainy, 14\u00b0C"},
-            },
-            {
-                "tool_call": [
-                    {
-                        "name": "send_email",
-                        "arguments": {
-                            "recipient": "your_email@example.com",
-                            "subject": "Weather Information for Seattle",
-                            "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
-                        },
-                    }
-                ],
-            },
-            {
-                "tool_result": {"message": "Email successfully sent to your_email@example.com."},
-            },
-            {
-                "assistant": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
-            },
-        ]
-    
+        {
+            "tool_call": [
+                {
+                    "name": "fetch_weather",
+                    "arguments": {"location": "Seattle"},
+                }
+            ],
+        },
+        {
+            "tool_result": {"weather": "Rainy, 14\u00b0C"},
+        },
+        {
+            "tool_call": [
+                {
+                    "name": "send_email",
+                    "arguments": {
+                        "recipient": "your_email@example.com",
+                        "subject": "Weather Information for Seattle",
+                        "body": "The current weather in Seattle is rainy with a temperature of 14\u00b0C.",
+                    },
+                }
+            ],
+        },
+        {
+            "tool_result": {"message": "Email successfully sent to your_email@example.com."},
+        },
+        {
+            "assistant": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+        },
+    ]
+
     # ==================== All Valid ====================
 
     def test_all_valid_inputs(self):
@@ -341,7 +345,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
             self.assert_error(result_data)
         else:
             self.assert_pass(result_data)
-    
+
     def test_response_minimal_format(self):
         """Response in minimal format - should pass."""
         results = self._run_evaluation(
