@@ -116,14 +116,14 @@ def _extract_needed_tool_definitions(
                         raise EvaluationException(
                             message=f"Tool definition for {tool_name} not found",
                             blame=ErrorBlame.USER_ERROR,
-                            category=ErrorCategory.INVALID_VALUE,
+                            category=ErrorCategory.NOT_APPLICABLE,
                             target=error_target,
                         )
                 else:
                     raise EvaluationException(
                         message=f"Tool call missing name: {tool_call}",
                         blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
+                        category=ErrorCategory.MISSING_FIELD,
                         target=error_target,
                     )
             else:
@@ -437,11 +437,30 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Extract tool calls from response
         if not response:
-            return {"error_message": "Response parameter is required to extract tool calls."}
+            raise EvaluationException(
+                message="Response is required for tool input accuracy evaluation.",
+                category=ErrorCategory.MISSING_FIELD,
+                target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                blame=ErrorBlame.USER_ERROR,
+            )
 
-        tool_calls = self._parse_tools_from_response(response)
+        try:
+            tool_calls = self._parse_tools_from_response(response)
+        except EvaluationException as e:
+            raise EvaluationException(
+                    message=e.message,
+                    category=e.category,
+                    target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                    blame=ErrorBlame.USER_ERROR,
+            ) from e
+
         if not tool_calls:
-            return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
+            raise EvaluationException(
+                message=self._NO_TOOL_CALLS_MESSAGE,
+                category=ErrorCategory.NOT_APPLICABLE,
+                target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                blame=ErrorBlame.USER_ERROR,
+            )
 
         if not isinstance(tool_calls, list):
             tool_calls = [tool_calls]
@@ -455,14 +474,17 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 tool_calls_typed, tool_definitions, ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
             )
         except EvaluationException:
-            # Check if this is because no tool definitions were provided at all
-            if len(tool_definitions) == 0:
-                return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
-            else:
-                return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
+            # Re-raise the exception from _extract_needed_tool_definitions as it already has specific error details
+            raise
 
+        # Check if no tool definitions were found at all (including built-in tools)
         if len(needed_tool_definitions) == 0:
-            return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
+            raise EvaluationException(
+                message=self._NO_TOOL_DEFINITIONS_MESSAGE,
+                category=ErrorCategory.NOT_APPLICABLE,
+                target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                blame=ErrorBlame.USER_ERROR,
+            )
 
         # Get agent response with tool calls and results using _get_agent_response
         agent_response_with_tools = _get_agent_response(response, include_tool_messages=True)
@@ -494,7 +516,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
-                target=ErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
+                target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
             )
 
         # Format conversation history for cleaner evaluation
@@ -512,7 +534,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 raise EvaluationException(
                     message=f"Invalid result value: {result}. Expected 0 or 1.",
                     internal_message="Invalid result value.",
-                    category=ErrorCategory.FAILED_EXECUTION,
+                    category=ErrorCategory.INVALID_VALUE,
                     blame=ErrorBlame.SYSTEM_ERROR,
                 )
 
@@ -550,7 +572,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
     async def _real_call(self, **kwargs):
-        """Perform the asynchronous call for the real end-to-end evaluation logic.
+        """The asynchronous call where real end-to-end evaluation logic is performed.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
@@ -559,10 +581,6 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
-        if isinstance(eval_input, dict) and eval_input.get("error_message"):
-            # If there is an error message, return not applicable result
-            error_message = eval_input.get("error_message", "Unknown error")
-            return self._not_applicable_result(error_message, 1)
         # Do the evaluation
         result = await self._do_eval(eval_input)
         # Return the result
@@ -584,27 +602,6 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         accuracy = (correct_parameters / total_parameters) * 100
         return round(accuracy, 2)
-
-    def _not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable.
-
-        :param error_message: The error message explaining why evaluation is not applicable.
-        :type error_message: str
-        :param threshold: The threshold value for the evaluator.
-        :type threshold: Union[int, float]
-        :return: A dictionary containing the result of the evaluation.
-        :rtype: Dict[str, Union[str, float, Dict]]
-        """
-        # If no tool calls were made or tool call type is not supported, return not applicable result
-        return {
-            self._result_key: self._NOT_APPLICABLE_RESULT,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": error_message,
-            f"{self._result_key}_details": {},
-        }
 
     @override
     def __call__(  # pylint: disable=docstring-missing-param
