@@ -156,7 +156,7 @@ tags:
       Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5]
   inference_supported_envs:
   - hf
-version: 4
+version: 5
 description: |-
   <!-- DO NOT CHANGE MARKDOWN HEADERS. IF CHANGED, MODEL CARD MAY BE REJECTED BY A REVIEWER -->
 
