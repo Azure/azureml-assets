@@ -8,7 +8,7 @@ Tests various input scenarios: query, response, tool_definitions, and tool_calls
 """
 
 import pytest
-from base_tool_parameters_behavior_test import BaseToolParametersBehaviorTest
+from .base_tool_parameters_behavior_test import BaseToolParametersBehaviorTest
 from ...builtin.tool_selection.evaluator._tool_selection import (
     ToolSelectionEvaluator,
 )

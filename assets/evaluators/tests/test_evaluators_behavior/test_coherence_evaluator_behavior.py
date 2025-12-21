@@ -4,7 +4,7 @@
 """Behavioral tests for Coherence Evaluator."""
 
 import pytest
-from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.coherence.evaluator._coherence import CoherenceEvaluator
 
 

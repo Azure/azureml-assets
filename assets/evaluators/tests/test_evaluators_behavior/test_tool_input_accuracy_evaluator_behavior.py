@@ -4,7 +4,7 @@
 """Behavioral tests for Tool Input Accuracy Evaluator."""
 
 import pytest
-from base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
+from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from ...builtin.tool_input_accuracy.evaluator._tool_input_accuracy import (
     ToolInputAccuracyEvaluator,
 )

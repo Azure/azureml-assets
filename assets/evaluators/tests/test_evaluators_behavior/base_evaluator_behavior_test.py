@@ -8,7 +8,7 @@ Tests various input scenarios: query, and response.
 """
 
 from typing import Any, Dict, List
-from base_evaluator_runner import BaseEvaluatorRunner
+from .base_evaluator_runner import BaseEvaluatorRunner
 
 
 class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):

@@ -7,7 +7,7 @@ Base class for behavioral tests of tool calls evaluators.
 Tests Parameters in tool calls: type, name, arguments.
 """
 
-from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 
 
 class BaseToolParametersBehaviorTest(BaseToolsEvaluatorBehaviorTest):

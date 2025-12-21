@@ -4,7 +4,7 @@
 """Behavioral tests for Fluency Evaluator."""
 
 import pytest
-from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
 
 

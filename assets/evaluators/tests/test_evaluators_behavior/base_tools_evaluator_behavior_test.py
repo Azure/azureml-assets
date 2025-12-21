@@ -7,7 +7,7 @@ Base class for behavioral tests of for tools evaluators.
 Tests various input scenarios: query, response, and tool_definitions.
 """
 
-from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 
 
 class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):

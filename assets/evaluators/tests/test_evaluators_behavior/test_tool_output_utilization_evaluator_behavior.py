@@ -4,8 +4,8 @@
 """Behavioral tests for Tool Output Utilization Evaluator."""
 
 import pytest
-from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
-from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (
     ToolOutputUtilizationEvaluator,
 )

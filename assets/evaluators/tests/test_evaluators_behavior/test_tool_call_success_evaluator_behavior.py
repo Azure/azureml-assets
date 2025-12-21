@@ -4,7 +4,7 @@
 """Behavioral tests for Tool Call Success Evaluator."""
 
 import pytest
-from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from ...builtin.tool_call_success.evaluator._tool_call_success import (
     ToolCallSuccessEvaluator,
 )

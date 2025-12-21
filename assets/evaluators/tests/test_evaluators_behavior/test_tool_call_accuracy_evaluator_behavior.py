@@ -8,7 +8,7 @@ Tests various input scenarios: query, response, tool_definitions, and tool_calls
 """
 
 import pytest
-from base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
+from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import (
     ToolCallAccuracyEvaluator,
 )

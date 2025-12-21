@@ -4,7 +4,7 @@
 """Behavioral tests for Task Completion Evaluator."""
 
 import pytest
-from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
 )

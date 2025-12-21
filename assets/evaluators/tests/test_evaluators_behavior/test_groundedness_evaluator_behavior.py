@@ -4,7 +4,7 @@
 """Behavioral tests for Groundedness Evaluator."""
 
 import pytest
-from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
+from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.groundedness.evaluator._groundedness import (
     GroundednessEvaluator,
 )

@@ -4,7 +4,7 @@
 """Behavioral tests for Task Adherence Evaluator."""
 
 import pytest
-from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
+from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from ...builtin.task_adherence.evaluator._task_adherence import (
     TaskAdherenceEvaluator,
 )
