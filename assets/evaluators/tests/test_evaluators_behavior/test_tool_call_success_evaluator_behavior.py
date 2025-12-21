@@ -5,7 +5,7 @@
 
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
-from assets.evaluators.builtin.tool_call_success.evaluator._tool_call_success import (
+from ...builtin.tool_call_success.evaluator._tool_call_success import (
     ToolCallSuccessEvaluator,
 )
 

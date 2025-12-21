@@ -5,7 +5,7 @@
 
 import pytest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
-from assets.evaluators.builtin.relevance.evaluator._relevance import RelevanceEvaluator
+from ...builtin.relevance.evaluator._relevance import RelevanceEvaluator
 
 
 @pytest.mark.unittest

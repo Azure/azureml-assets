@@ -5,7 +5,7 @@
 
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
-from assets.evaluators.builtin.task_adherence.evaluator._task_adherence import (
+from ...builtin.task_adherence.evaluator._task_adherence import (
     TaskAdherenceEvaluator,
 )
 

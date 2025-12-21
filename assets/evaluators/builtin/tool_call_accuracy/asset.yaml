@@ -2,8 +2,8 @@ type: evaluator
 spec: spec.yaml
 categories:
 - Evaluator
-
-pytest:
-  enabled: true
-  conda_environment: ../../tests/conda.yaml
-  tests_dir: ../../tests/test_evaluators_behavior/test_tool_call_accuracy_evaluator_behavior.py
+test:
+  pytest:
+    enabled: true
+    conda_environment: ../../tests/conda.yaml
+    tests_dir: ../../tests/test_evaluators_behavior/test_tool_call_accuracy_evaluator_behavior.py

@@ -5,7 +5,7 @@
 
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
-from assets.evaluators.builtin.intent_resolution.evaluator._intent_resolution import (
+from ...builtin.intent_resolution.evaluator._intent_resolution import (
     IntentResolutionEvaluator,
 )
 

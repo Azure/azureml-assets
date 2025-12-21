@@ -6,7 +6,7 @@
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
-from assets.evaluators.builtin.tool_output_utilization.evaluator._tool_output_utilization import (
+from ...builtin.tool_output_utilization.evaluator._tool_output_utilization import (
     ToolOutputUtilizationEvaluator,
 )
 

@@ -5,7 +5,7 @@
 
 import pytest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
-from assets.evaluators.builtin.groundedness.evaluator._groundedness import (
+from ...builtin.groundedness.evaluator._groundedness import (
     GroundednessEvaluator,
 )
 

@@ -5,7 +5,7 @@
 
 import pytest
 from base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
-from assets.evaluators.builtin.tool_input_accuracy.evaluator._tool_input_accuracy import (
+from ...builtin.tool_input_accuracy.evaluator._tool_input_accuracy import (
     ToolInputAccuracyEvaluator,
 )
 

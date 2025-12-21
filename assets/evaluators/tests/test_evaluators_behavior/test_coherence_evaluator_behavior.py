@@ -5,7 +5,7 @@
 
 import pytest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
-from assets.evaluators.builtin.coherence.evaluator._coherence import CoherenceEvaluator
+from ...builtin.coherence.evaluator._coherence import CoherenceEvaluator
 
 
 @pytest.mark.unittest

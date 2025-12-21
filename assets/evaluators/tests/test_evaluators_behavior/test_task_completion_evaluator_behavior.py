@@ -5,7 +5,7 @@
 
 import pytest
 from base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
-from assets.evaluators.builtin.task_completion.evaluator._task_completion import (
+from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
 )
 

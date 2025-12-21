@@ -5,7 +5,7 @@
 
 import pytest
 from base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
-from assets.evaluators.builtin.fluency.evaluator._fluency import FluencyEvaluator
+from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
 
 
 @pytest.mark.unittest
