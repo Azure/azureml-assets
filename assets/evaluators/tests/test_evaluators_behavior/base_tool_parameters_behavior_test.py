@@ -40,7 +40,7 @@ class BaseToolParametersBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     def test_response_missing_parameters_without_tool_calls(self, parameter: str, requires_parameter: bool):
         """
-        Response is missing a specific parameter - should return not_applicable or pass depending on requires_parameter flag.
+        Response is missing given parameter. Should return not_applicable or pass depending on requires_parameter flag.
 
         :parameter: The parameter to remove from the response.
         :requires_parameter: Whether the evaluator requires this parameter to be present.

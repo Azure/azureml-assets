@@ -36,7 +36,8 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
             "content": [
                 {
                     "type": "text",
-                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. \
+                        The current weather is rainy with a temperature of 14\u00b0C.",
                 }
             ],
         },
@@ -53,7 +54,8 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
             "content": [
                 {
                     "type": "text",
-                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. \
+                        The current weather is rainy with a temperature of 14\u00b0C.",
                 }
             ],
         },
@@ -80,7 +82,8 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
             "content": [
                 {
                     "type": "text",
-                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. \
+                        The current weather is rainy with a temperature of 14\u00b0C.",
                 }
             ],
         },
@@ -141,7 +144,8 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     STRING_QUERY: str = "Can you send me an email to your_email@example.com with weather information for Seattle?"
 
     STRING_RESPONSE: str = (
-        "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C."
+        "I have successfully sent you an email with the weather information for Seattle. "
+        "The current weather is rainy with a temperature of 14\u00b0C."
     )
 
     VALID_QUERY: List[Dict[str, Any]] = [
@@ -201,7 +205,8 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
             "content": [
                 {
                     "type": "text",
-                    "text": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+                    "text": "I have successfully sent you an email with the weather information for Seattle. \
+                        The current weather is rainy with a temperature of 14\u00b0C.",
                 }
             ],
         },
@@ -241,7 +246,8 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
             "tool_result": {"message": "Email successfully sent to your_email@example.com."},
         },
         {
-            "assistant": "I have successfully sent you an email with the weather information for Seattle. The current weather is rainy with a temperature of 14\u00b0C.",
+            "assistant": "I have successfully sent you an email with the weather information for Seattle. \
+                The current weather is rainy with a temperature of 14\u00b0C.",
         },
     ]
 
