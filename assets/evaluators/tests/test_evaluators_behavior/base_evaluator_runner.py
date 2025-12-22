@@ -59,7 +59,7 @@ class BaseEvaluatorRunner:
         evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
 
         # Special handling for groundedness evaluator to disable flow reloading
-        if evaluator_name == "groundedness":
+        if hasattr(evaluator, "_ensure_query_prompty_loaded"):
             evaluator._ensure_query_prompty_loaded = MagicMock()
 
         try:
@@ -75,6 +75,11 @@ class BaseEvaluatorRunner:
             return {
                 f"{evaluator_name}_error_message": e.message,
                 f"{evaluator_name}_error_code": e.category.name,
+            }
+        except Exception as e:
+            print(f"Unexpected error during evaluation: {e}")
+            return {
+                f"{evaluator_name}_error_message": str(e),
             }
 
     def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
