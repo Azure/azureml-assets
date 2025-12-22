@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.groundedness"
-version: 5
+version: 6
 displayName: "Groundedness-Evaluator"
 description: "Assesses whether the response stays true to the given context in a retrieval-augmented
   generation scenario. It’s best used for retrieval-augmented generation (RAG) scenarios,
