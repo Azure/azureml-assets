@@ -7,6 +7,7 @@ Base class for behavioral tests of for tools evaluators.
 Tests various input scenarios: query, response, and tool_definitions.
 """
 
+from flask import json
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 
 
@@ -18,15 +19,15 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "ToolOutputUtilization")
     Subclasses may override:
-    - requires_tool_definitions: bool - whether tool definitions are required
+    - requires_tool_definitions: bool - whether tool definitions are required or optional
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     """
 
     # Test Configs
     requires_tool_definitions: bool = False
-    tools_evaluator: bool = True
 
+    # region Test Data
     # Tool definition test data
     VALID_TOOL_DEFINITIONS = [
         {
@@ -76,34 +77,107 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         },
     ]
 
+    INVALID_TOOL_DEFINITIONS_AS_STRING: str = json.dumps(INVALID_TOOL_DEFINITIONS)
+    # endregion
+
     # ==================== TOOL DEFINITIONS TESTS ====================
 
-    def test_tool_definitions_not_present(self):
-        """Tool definitions not present - should return not_applicable."""
+    def test_tool_definitions(
+        self, input_tool_definitions, description: str, assert_type: BaseEvaluatorBehaviorTest.AssertType
+    ):
+        """Helper method to test various tool definitions inputs."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=self.VALID_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=None,
+            tool_definitions=input_tool_definitions,
         )
-        result_data = self._extract_and_print_result(results, "Tool Definitions Not Present")
+        result_data = self._extract_and_print_result(results, description)
 
-        if self.requires_tool_definitions:
-            self.assert_error(result_data)
-        else:
-            self.assert_pass(result_data)
+        expected_behavior = assert_type
+        if not self.requires_tool_definitions and assert_type != self.AssertType.INVALID_VALUE:
+            expected_behavior = self.AssertType.PASS
+
+        self.assert_expected_behavior(expected_behavior, result_data)
+
+    def test_tool_definitions_not_present(self):
+        """Tool definitions not present - should raise missing field error."""
+        self.test_tool_definitions(
+            input_tool_definitions=None,
+            description="Tool Definitions Not Present",
+            assert_type=self.AssertType.MISSING_FIELD,
+        )
+
+    def test_tool_definitions_as_string(self):
+        """Tool definitions as string - should pass."""
+        self.test_tool_definitions(
+            input_tool_definitions=self.STRING_TOOL_DEFINITIONS,
+            description="Tool Definitions String",
+            assert_type=self.AssertType.PASS,
+        )
+
+    def test_tool_definitions_invalid_format_as_string(self):
+        """Tool definitions as string - should pass."""
+        self.test_tool_definitions(
+            input_tool_definitions=self.INVALID_TOOL_DEFINITIONS_AS_STRING,
+            description="Tool Definitions Invalid Format as String",
+            assert_type=self.AssertType.PASS,
+        )
 
     def test_tool_definitions_invalid_format(self):
-        """Tool definitions in invalid format - should return not_applicable."""
-        results = self._run_evaluation(
-            query=self.VALID_QUERY,
-            response=self.VALID_RESPONSE,
-            tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.INVALID_TOOL_DEFINITIONS,
+        """Tool definitions in invalid format - should raise invalid value error."""
+        self.test_tool_definitions(
+            input_tool_definitions=self.INVALID_TOOL_DEFINITIONS,
+            description="Tool Definitions Invalid Format",
+            assert_type=self.AssertType.INVALID_VALUE,
         )
-        result_data = self._extract_and_print_result(results, "Tool Definitions Invalid")
 
-        if self.requires_valid_format:
-            self.assert_error(result_data)
-        else:
-            self.assert_pass(result_data)
+    def test_tool_definitions_wrong_type(self):
+        """Tool definitions in wrong type - should raise invalid value error."""
+        self.test_tool_definitions(
+            input_tool_definitions=self.WRONG_TYPE,
+            description="Tool Definitions Wrong Type",
+            assert_type=self.AssertType.INVALID_VALUE,
+        )
+
+    def test_tool_definitions_empty_list(self):
+        """Tool definitions as empty list - should raise missing field error."""
+        self.test_tool_definitions(
+            input_tool_definitions=self.EMPTY_LIST,
+            description="Tool Definitions Empty List",
+            assert_type=self.AssertType.MISSING_FIELD,
+        )
+
+    # ==================== TOOL DEFINITIONS PARAMETER TESTS ====================
+    def test_tool_definitions_missing_name_parameter(self):
+        """Tool definitions missing 'name' parameter - should raise invalid value error."""
+        modified_tool_definitions = self.remove_parameter_from_input(
+            input_data=self.VALID_TOOL_DEFINITIONS, parameter_name="name"
+        )
+        self.test_tool_definitions(
+            input_tool_definitions=modified_tool_definitions,
+            description="Tool Definitions Missing 'name'",
+            assert_type=self.AssertType.INVALID_VALUE,
+        )
+
+    def test_tool_definitions_missing_parameters_parameter(self):
+        """Tool definitions missing 'parameters' parameter - should raise invalid value error."""
+        modified_tool_definitions = self.remove_parameter_from_input(
+            input_data=self.VALID_TOOL_DEFINITIONS, parameter_name="parameters"
+        )
+        self.test_tool_definitions(
+            input_tool_definitions=modified_tool_definitions,
+            description="Tool Definitions Missing 'parameters'",
+            assert_type=self.AssertType.INVALID_VALUE,
+        )
+
+    def test_tool_definitions_invalid_parameters_type(self):
+        """Tool definitions with invalid 'parameters' type - should raise invalid value error."""
+        modified_tool_definitions = self.update_parameter_in_input(
+            input_data=self.VALID_TOOL_DEFINITIONS, parameter_name="parameters", parameter_value=self.WRONG_TYPE
+        )
+        self.test_tool_definitions(
+            input_tool_definitions=modified_tool_definitions,
+            description="Tool Definitions Invalid 'parameters' Type",
+            assert_type=self.AssertType.INVALID_VALUE,
+        )

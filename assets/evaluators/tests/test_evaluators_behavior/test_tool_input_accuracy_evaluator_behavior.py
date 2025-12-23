@@ -4,14 +4,14 @@
 """Behavioral tests for Tool Input Accuracy Evaluator."""
 
 import pytest
-from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
+from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from ...builtin.tool_input_accuracy.evaluator._tool_input_accuracy import (
     ToolInputAccuracyEvaluator,
 )
 
 
 @pytest.mark.unittest
-class TestToolInputAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest):
+class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest):
     """
     Behavioral tests for Tool Input Accuracy Evaluator.
 
@@ -20,4 +20,7 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest):
 
     evaluator_type = ToolInputAccuracyEvaluator
 
-    MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.tool_results_with_arguments
+    # Test Configs
+    requires_tool_definitions = True
+
+    MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_results_with_arguments

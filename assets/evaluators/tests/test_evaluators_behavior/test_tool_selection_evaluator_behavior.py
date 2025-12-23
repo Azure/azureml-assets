@@ -8,14 +8,14 @@ Tests various input scenarios: query, response, tool_definitions, and tool_calls
 """
 
 import pytest
-from .base_tool_parameters_behavior_test import BaseToolParametersBehaviorTest
+from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from ...builtin.tool_selection.evaluator._tool_selection import (
     ToolSelectionEvaluator,
 )
 
 
 @pytest.mark.unittest
-class TestToolSelectionEvaluatorBehavior(BaseToolParametersBehaviorTest):
+class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest):
     """
     Behavioral tests for Tool Selection Evaluator.
 
@@ -23,8 +23,3 @@ class TestToolSelectionEvaluatorBehavior(BaseToolParametersBehaviorTest):
     """
 
     evaluator_type = ToolSelectionEvaluator
-
-    # Test Configs
-    requires_valid_format = True
-    requires_tool_definitions = True
-    needs_arguments = False

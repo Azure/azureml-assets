@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory
 from azure.identity import DefaultAzureCredential
 
 from .evaluator_mock_config import get_flow_side_effect_for_evaluator
@@ -127,11 +127,19 @@ class BaseEvaluatorRunner:
         assert score_type is float or score_type is int
         assert result_data["score"] >= 0.0
 
-    def assert_error(self, result_data: Dict[str, Any], error_code: str = "FAILED_EXECUTION"):
+    def assert_error(self, result_data: Dict[str, Any], error_code: str):
         """Assert an error result."""
         assert result_data["label"] is None
         assert result_data["score"] is None
         assert result_data["error_code"] == error_code
+
+    def assert_missing_field_error(self, result_data: Dict[str, Any]):
+        """Assert a missing field error result."""
+        self.assert_error(result_data, ErrorCategory.MISSING_FIELD.name)
+
+    def assert_invalid_value_error(self, result_data: Dict[str, Any]):
+        """Assert an invalid format error result."""
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
 
     def assert_not_applicable(self, result_data: Dict[str, Any]):
         """Assert a not applicable result."""
