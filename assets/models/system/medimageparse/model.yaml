@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: huggingface/MedImageParse/mlflow_model_folder
-  storage_name: modelonboardingresources
+  container_path: MedImageParse/mlflow_model_folder
+  storage_name: hlsmodelonboarding
   type: azureblob
 publish:
   description: description.md
