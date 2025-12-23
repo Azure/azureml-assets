@@ -108,8 +108,8 @@ RUN pip install \
                 # end pypi dependencies
 
 # Upgrade requests, urllib3, pip, starlette in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'
-RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'|| true
+RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' 'h2>=4.3.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' 'h2>=4.3.0'|| true
 
 RUN rm -rf /opt/miniconda/pkgs/
 
