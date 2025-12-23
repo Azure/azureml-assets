@@ -136,9 +136,9 @@ RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
 
 # Upgrade starlette and urllib3
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' || true
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
 
 # Patch for pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0' || true
