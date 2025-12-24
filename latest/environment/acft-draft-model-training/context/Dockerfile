@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install xgrammar==0.1.27
 RUN pip install transformers==4.57.1
+RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py

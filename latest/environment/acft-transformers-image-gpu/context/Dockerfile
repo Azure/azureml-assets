@@ -7,3 +7,6 @@ RUN apt-get -y update && apt-get install -y expat libc-bin libc-bin libc-dev loc
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+
+# vulnerabilities
+RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
