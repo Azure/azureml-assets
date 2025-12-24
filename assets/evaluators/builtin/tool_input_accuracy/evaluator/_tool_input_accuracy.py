@@ -6,6 +6,7 @@ from itertools import chain
 from typing import Dict, List, Union, TypeVar, cast
 from typing_extensions import override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._common.utils import reformat_agent_response
 from azure.ai.evaluation._exceptions import (
     ErrorMessage,
     ErrorBlame,
@@ -297,48 +298,6 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         return query
 
 
-def _get_agent_response(agent_response_msgs, include_tool_messages=False):
-    """Extract formatted agent response including text, and optionally tool calls/results."""
-    agent_response_text = []
-    tool_results = {}
-
-    # First pass: collect tool results
-    if include_tool_messages:
-        for msg in agent_response_msgs:
-            if msg.get("role") == "tool" and "tool_call_id" in msg:
-                for content in msg.get("content", []):
-                    if content.get("type") == "tool_result":
-                        result = content.get("tool_result")
-                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
-
-    # Second pass: parse assistant messages and tool calls
-    for msg in agent_response_msgs:
-        if "role" in msg and msg.get("role") == "assistant" and "content" in msg:
-            text = _extract_text_from_content(msg["content"])
-            if text:
-                agent_response_text.extend(text)
-            if include_tool_messages:
-                for content in msg.get("content", []):
-                    # Todo: Verify if this is the correct way to handle tool calls
-                    if content.get("type") == "tool_call":
-                        if "tool_call" in content and "function" in content.get("tool_call", {}):
-                            tc = content.get("tool_call", {})
-                            func_name = tc.get("function", {}).get("name", "")
-                            args = tc.get("function", {}).get("arguments", {})
-                            tool_call_id = tc.get("id")
-                        else:
-                            tool_call_id = content.get("tool_call_id")
-                            func_name = content.get("name", "")
-                            args = content.get("arguments", {})
-                        args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
-                        call_line = f"[TOOL_CALL] {func_name}({args_str})"
-                        agent_response_text.append(call_line)
-                        if tool_call_id in tool_results:
-                            agent_response_text.append(tool_results[tool_call_id])
-
-    return agent_response_text
-
-
 @experimental
 class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """The Tool Input Accuracy evaluator performs an evaluations of parameters passed to tool calls.
@@ -464,8 +423,8 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if len(needed_tool_definitions) == 0:
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
-        # Get agent response with tool calls and results using _get_agent_response
-        agent_response_with_tools = _get_agent_response(response, include_tool_messages=True)
+        # Get agent response with tool calls and results using reformat_agent_response
+        agent_response_with_tools = reformat_agent_response(response, include_tool_messages=True)
 
         return {
             "query": query,
