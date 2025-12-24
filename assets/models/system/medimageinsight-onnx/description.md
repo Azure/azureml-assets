@@ -10,6 +10,8 @@ You bear sole responsibility and liability for any use of MedImageInsight-onnx, 
 
 Please see https://aka.ms/medimageinsightpaper for more details.
 
+For example code, usage demonstrations, and fine-tuning capabilities, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
 [1]: [2022.12.07.22283216v3.full.pdf (medrxiv.org)](https://www.medrxiv.org/content/10.1101/2022.12.07.22283216v3.full.pdf)
 
 ### Sample inputs and outputs (for real time inference)
@@ -51,3 +53,10 @@ data =  {
   }
 ]
 ```
+
+
+## Version History
+
+| Version | Date | Description |
+|---------|------|-------------|
+| 2 | 2025-12-10 | - Initial version tracking <br>- Remove V100 support|

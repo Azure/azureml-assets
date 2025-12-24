@@ -9,7 +9,7 @@ inference-schema
 MarkupSafe
 regex
 pybind11
-urllib3
+urllib3>=2.6.0
 requests
 pillow
 transformers

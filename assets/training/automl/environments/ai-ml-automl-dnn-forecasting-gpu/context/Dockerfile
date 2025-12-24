@@ -99,7 +99,7 @@ RUN pip install --no-cache-dir \
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' 'h2>=4.3.0'
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' 'h2>=4.3.0'
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

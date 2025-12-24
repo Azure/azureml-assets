@@ -39,4 +39,4 @@ tags:
     ]
   inference_supported_envs:
     - hf
-version: 4
+version: 5

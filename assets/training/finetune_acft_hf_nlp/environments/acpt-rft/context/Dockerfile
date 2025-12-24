@@ -48,12 +48,9 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install verl==0.6.0
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
-COPY vllm_async_server dest/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
-
 
 RUN pip install --no-cache-dir accelerate==1.10.0
 RUN pip install --no-cache-dir sglang==0.5.4
-
 RUN pip install --no-cache-dir sgl-kernel==0.3.16.post3
 
 RUN pip uninstall -y mlflow || true
@@ -62,10 +59,11 @@ RUN pip install --no-cache-dir starlette==0.49.1
 RUN pip install --no-cache-dir "cryptography>=43.0.0"
 # Upgrade wandb to fix golang.org/x/crypto vulnerabilities (CVE-2025-47914, CVE-2025-58181)
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
-RUN pip install vllm==0.11.0
+RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
+RUN pip install vllm==0.11.1
+COPY vllm_async_server dest/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 RUN pip install --no-cache-dir triton==3.4.0
 RUN pip install xgrammar==0.1.27
-RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults

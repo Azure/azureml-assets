@@ -117,11 +117,11 @@ RUN pip install \
 
 # Fix vulnerabilities
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0'
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0'
 
 # If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' || true
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' || true
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' || true
 
 # --- End Vulnerability Fixes ---
 
