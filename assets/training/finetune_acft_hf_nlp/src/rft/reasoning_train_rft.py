@@ -48,12 +48,100 @@ PIP_EXECUTABLE = f"{CONDA_ENV_PATH}/bin/pip"
 os.environ["RAY_LOG_TO_STDERR"] = "1"
 os.environ["RAY_BACKEND_LOG_LEVEL"] = "error"
 os.environ["RAY_DISABLE_IMPORT_WARNING"] = "1"
+# Disable vLLM symmetric memory to avoid initialization errors
+os.environ["VLLM_ALLREDUCE_USE_SYMM_MEM"] = "0"
 
 # 'logger' is used before ray initialization happens
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.rft.trainer")
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(stream_handler)
+
+
+def apply_patches(patch_folder: str):
+    """Apply file patches from patch.json in the specified folder.
+
+    Patches are simple file replacements: source_file from patch_folder
+    is copied to destination_path.
+
+    Special handling for custom_grader type:
+    - If patch has type="custom_grader", destination is automatically set to:
+      /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/<source_file>
+
+    Args:
+        patch_folder (str): Path to folder containing patch.json and source files
+    """
+    if not patch_folder or not os.path.exists(patch_folder):
+        logger.info(f"Patch folder not provided or doesn't exist: {patch_folder}")
+        return
+
+    patch_file = os.path.join(patch_folder, "patch.json")
+    if not os.path.exists(patch_file):
+        logger.warning(f"patch.json not found in {patch_folder}, skipping patches")
+        return
+
+    logger.info(f"Reading patch configuration from {patch_file}")
+    try:
+        with open(patch_file, 'r') as f:
+            patch_config = json.load(f)
+
+        patches = patch_config.get("patches", [])
+        logger.info(f"Found {len(patches)} patch(es) to apply")
+
+        for idx, patch in enumerate(patches, 1):
+            description = patch.get("description", f"Patch #{idx}")
+            source_file = patch.get("source_file")
+            patch_type = patch.get("type", "")
+            destination_path = patch.get("destination_path")
+
+            # Handle custom_grader type with fixed destination
+            if patch_type == "custom_grader":
+                destination_path = f"/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/{source_file}"
+                logger.info(f"Applying custom grader patch {idx}/{len(patches)}: {description}")
+                logger.info(f"  Type: custom_grader (auto-destination)")
+            else:
+                logger.info(f"Applying patch {idx}/{len(patches)}: {description}")
+
+            logger.info(f"  Source file: {source_file}")
+            logger.info(f"  Destination: {destination_path}")
+
+            # Full path to source file in patch folder
+            source_path = os.path.join(patch_folder, source_file)
+
+            if not os.path.exists(source_path):
+                logger.error(f"  Source file does not exist: {source_path}")
+                continue
+
+            if not destination_path:
+                logger.error(f"  Destination path not specified for patch #{idx}")
+                continue
+
+            if not os.path.exists(destination_path):
+                logger.warning(f"  Destination file does not exist: {destination_path}")
+                logger.warning(f"  Will create it at the specified location")
+
+            # Create destination directory if needed
+            dest_dir = os.path.dirname(destination_path)
+            if dest_dir and not os.path.exists(dest_dir):
+                logger.info(f"  Creating destination directory: {dest_dir}")
+                os.makedirs(dest_dir, exist_ok=True)
+
+            # Copy source to destination
+            try:
+                shutil.copy2(source_path, destination_path)
+                logger.info(f"  Successfully copied {source_file} to {destination_path}")
+            except Exception as e:
+                logger.error(f"  Failed to copy file: {e}")
+                continue
+
+        logger.info("Patch application completed")
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse patch.json: {e}")
+    except Exception as e:
+        logger.error(f"Error applying patches: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 
 def parse_args():
@@ -64,6 +152,10 @@ def parse_args():
     parser.add_argument("--pypi_packages_override", type=str, default=None,
                         help="Comma-separated list of PyPI packages\
                         to override (e.g., transformers==4.30.0,torch==2.3.1)")
+
+    # Custom grader folder
+    parser.add_argument("--custom_grader", type=str, default=None,
+                        help="Folder containing patch.json file that specifies file patches to apply")
 
     # Data arguments
     parser.add_argument("--data_train_files", type=str, required=True, help="Path to the training parquet file")
@@ -718,6 +810,14 @@ def main():
         else:
             logger.info("No PyPI package overrides to install (value is None, empty, or whitespace)")
 
+        # Apply patches from custom_grader folder if provided
+        logger.info("Checking for patches to apply...")
+        if args.custom_grader:
+            logger.info(f"Custom grader folder provided: {args.custom_grader}")
+            apply_patches(args.custom_grader)
+        else:
+            logger.info("No custom grader folder provided, skipping patch application")
+
         logger.info(f"Starting {args.algorithm_adv_estimator} component")
         logger.info("Arguments parsed successfully")
 
@@ -810,7 +910,7 @@ def main():
             f"actor_rollout_ref.rollout.max_num_batched_tokens={args.rollout_max_num_batched_tokens}",
             f"actor_rollout_ref.rollout.max_num_seqs={args.rollout_max_num_seqs}",
             f"actor_rollout_ref.rollout.disable_log_stats={bool_to_str(args.rollout_disable_log_stats)}",
-            f"actor_rollout_ref.rollout.do_sample={bool_to_str(args.rollout_do_sample)}",
+            r"actor_rollout_ref.rollout.do_sample=True",
             f"actor_rollout_ref.rollout.load_format={args.rollout_load_format}",
             f"actor_rollout_ref.rollout.layered_summon={bool_to_str(args.rollout_layered_summon)}",
             f"actor_rollout_ref.rollout.val_kwargs.top_k={args.rollout_val_top_k}",
@@ -1000,8 +1100,7 @@ def main():
             error_msg = f"Command failed with return code {return_code}"
             logger.error(error_msg)
             logger.error(f"Command: {' '.join(cmd)}")
-            _log_user_error(error_msg)
-            sys.exit(return_code)
+            _log_system_error(error_msg)
 
         logger.info("Command executed successfully")
         logger.info(f"Return code: {return_code}")
@@ -1015,8 +1114,7 @@ def main():
             if not os.path.exists(latest_iteration_file):
                 error_msg = f"{CHECKPOINT_FILE_NAME} not found at {latest_iteration_file}"
                 logger.error(error_msg)
-                _log_user_error(error_msg)
-                sys.exit(1)
+                _log_system_error(error_msg)
 
             with open(latest_iteration_file, 'r') as f:
                 iteration_number = f.read().strip()
@@ -1031,7 +1129,6 @@ def main():
                 error_msg = f"Checkpoint folder {checkpoint_folder} not found at {source_path}"
                 logger.error(error_msg)
                 _log_user_error(error_msg)
-                sys.exit(1)
 
             logger.info(f"Copying contents from {source_path} to {args.output_dir}")
 
@@ -1054,7 +1151,6 @@ def main():
             error_msg = f"Failed to copy checkpoint to model_output: {str(e)}"
             logger.error(error_msg)
             _log_system_error(error_msg)
-            sys.exit(1)
 
         return return_code
 
@@ -1065,7 +1161,6 @@ def main():
         if hasattr(e, 'stderr') and e.stderr:
             logger.error(f"STDERR:\n{e.stderr}")
         _log_system_error(error_msg)
-        sys.exit(e.returncode)
     except ValueError as e:
         _log_user_error(f"ValueError occurred while running RFT training script.{e}")
     except KeyError as e:
@@ -1073,7 +1168,6 @@ def main():
     except Exception as e:
         error_msg = f"Unexpected error occurred: {str(e)}"
         _log_system_error(error_msg)
-        sys.exit(1)
 
 
 if __name__ == "__main__":

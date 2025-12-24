@@ -301,13 +301,6 @@ inputs:
     description: "Top-k sampling limit. Use -1 (disabled) for vLLM rollout, 0 for HuggingFace rollout.\
                   Positive values limit vocabulary to top-k tokens."
 
-  rollout_do_sample:
-    type: boolean
-    default: true
-    optional: true
-    description: "Enable sampling during generation. Use true for RL training (stochastic sampling),\
-                  false for greedy decoding (always pick most probable token). Standard is true."
-
   rollout_val_temperature:
     type: number
     default: 0.7
@@ -391,6 +384,13 @@ inputs:
     description: "Comma-separated list of PyPI packages to override before starting the run (e.g., transformers==4.30.0,torch==2.3.1).\
                   These will be installed using pip before the component starts."
 
+  custom_grader:
+    type: uri_folder
+    optional: true
+    description: "Folder containing patch.json file that specifies file patches to apply after PyPI package installation.\
+                  The patch.json file should contain operations for modifying installed package files.\
+                  For custom grader files, use type:'custom_grader' to automatically copy to the verl reward_score directory."
+
 outputs:
   intermediate_folder:
     type: uri_folder
@@ -402,6 +402,7 @@ outputs:
 command: >-
   python reasoning_train_rft.py
   $[[--pypi_packages_override '${{inputs.pypi_packages_override}}']]
+  $[[--custom_grader '${{inputs.custom_grader}}']]
   --data_train_files '${{inputs.data_train_files}}'
   --data_val_files '${{inputs.data_val_files}}'
   $[[--data_train_batch_size '${{inputs.data_train_batch_size}}']]
@@ -437,7 +438,6 @@ command: >-
   $[[--rollout_temperature '${{inputs.rollout_temperature}}']]
   $[[--rollout_top_p '${{inputs.rollout_top_p}}']]
   $[[--rollout_top_k '${{inputs.rollout_top_k}}']]
-  $[[--rollout_do_sample '${{inputs.rollout_do_sample}}']]
   $[[--rollout_val_temperature '${{inputs.rollout_val_temperature}}']]
   $[[--rollout_val_top_p '${{inputs.rollout_val_top_p}}']]
   $[[--rollout_val_top_k '${{inputs.rollout_val_top_k}}']]

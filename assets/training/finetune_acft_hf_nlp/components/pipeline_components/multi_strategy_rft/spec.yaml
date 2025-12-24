@@ -3,7 +3,7 @@ name: pipeline_rl_finetune
 version: 0.0.1
 type: pipeline
 display_name: Pipeline RFT Trainer (Preview)
-description: Pipeline for Multi-Strategy Reinforcement Learning Training of Large Language Models.
+description: Pipeline for Multi-Strategy Reinforcement Learning Training of LLMs Powered by Verl(https://github.com/volcengine/verl).
 
 inputs:
   # Infrastructure parameters
@@ -328,13 +328,6 @@ inputs:
     description: "Top-k sampling limit. Use -1 (disabled) for vLLM rollout, 0 for HuggingFace rollout.\
                   Positive values limit vocabulary to top-k tokens."
 
-  rollout_do_sample:
-    type: boolean
-    default: true
-    optional: true
-    description: "Enable sampling during generation. Use true for RL training (stochastic sampling),\
-                  false for greedy decoding (always pick most probable token). Standard is true."
-
   rollout_val_temperature:
     type: number
     default: 0.7
@@ -418,6 +411,11 @@ inputs:
     optional: true
     description: "Comma-separated list of PyPI packages to override before starting the run (e.g., transformers==4.30.0,torch==2.3.1). These will be installed using pip before each component starts."
 
+  custom_grader:
+    type: uri_folder
+    optional: true
+    description: "Folder containing patch.json file that specifies file patches to apply after PyPI package installation. The patch.json file should contain operations for modifying installed package files. For custom grader files, use type:'custom_grader' to automatically copy to the verl reward_score directory."
+
   # Compute parameters
   compute_model_import:
     type: string
@@ -500,7 +498,6 @@ jobs:
       rollout_temperature: '${{parent.inputs.rollout_temperature}}'
       rollout_top_p: '${{parent.inputs.rollout_top_p}}'
       rollout_top_k: '${{parent.inputs.rollout_top_k}}'
-      rollout_do_sample: '${{parent.inputs.rollout_do_sample}}'
       rollout_val_temperature: '${{parent.inputs.rollout_val_temperature}}'
       rollout_val_top_p: '${{parent.inputs.rollout_val_top_p}}'
       rollout_val_top_k: '${{parent.inputs.rollout_val_top_k}}'
@@ -516,6 +513,7 @@ jobs:
       trainer_total_epochs: '${{parent.inputs.trainer_total_epochs}}'
       total_training_steps: '${{parent.inputs.total_training_steps}}'
       pypi_packages_override: '${{parent.inputs.pypi_packages_override}}'
+      custom_grader: '${{parent.inputs.custom_grader}}'
     outputs:
       intermediate_folder: '${{parent.outputs.intermediate_folder}}'
       model_output: '${{parent.outputs.model_output}}'
