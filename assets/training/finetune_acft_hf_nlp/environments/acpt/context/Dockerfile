@@ -22,4 +22,3 @@ RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerab
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
-
