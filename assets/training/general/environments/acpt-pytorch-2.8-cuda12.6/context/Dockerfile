@@ -29,3 +29,6 @@ EXPOSE 5001 8883 8888
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
+
+# vulnerabilities
+RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
