@@ -27,5 +27,3 @@ catalogue==2.0.10
 cryptography==44.0.1
 setuptools==78.1.1
 requests==2.32.4
-fastmcp>=2.14.0
-
