@@ -96,14 +96,15 @@ def apply_patches(patch_folder: str):
 
             # Handle custom_grader type with fixed destination
             if patch_type == "custom_grader":
-                destination_path = f"/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/{source_file}"
+                destination_path = f"/opt/conda/envs/ptca/lib/python3.10\
+                    /site-packages/verl/utils/reward_score/{source_file}"
                 logger.info(f"Applying custom grader patch {idx}/{len(patches)}: {description}")
-                logger.info(f"  Type: custom_grader (auto-destination)")
+                logger.info(r"Type: custom_grader (auto-destination)")
             else:
                 logger.info(f"Applying patch {idx}/{len(patches)}: {description}")
 
-            logger.info(f"  Source file: {source_file}")
-            logger.info(f"  Destination: {destination_path}")
+            logger.info(f"Source file: {source_file}")
+            logger.info(f"Destination: {destination_path}")
 
             # Full path to source file in patch folder
             source_path = os.path.join(patch_folder, source_file)
@@ -117,21 +118,21 @@ def apply_patches(patch_folder: str):
                 continue
 
             if not os.path.exists(destination_path):
-                logger.warning(f"  Destination file does not exist: {destination_path}")
-                logger.warning(f"  Will create it at the specified location")
+                logger.warning(f"Destination file does not exist: {destination_path}")
+                logger.warning(r"Will create it at the specified location")
 
             # Create destination directory if needed
             dest_dir = os.path.dirname(destination_path)
             if dest_dir and not os.path.exists(dest_dir):
-                logger.info(f"  Creating destination directory: {dest_dir}")
+                logger.info(f"Creating destination directory: {dest_dir}")
                 os.makedirs(dest_dir, exist_ok=True)
 
             # Copy source to destination
             try:
                 shutil.copy2(source_path, destination_path)
-                logger.info(f"  Successfully copied {source_file} to {destination_path}")
+                logger.info(f"Successfully copied {source_file} to {destination_path}")
             except Exception as e:
-                logger.error(f"  Failed to copy file: {e}")
+                logger.error(f"Failed to copy file: {e}")
                 continue
 
         logger.info("Patch application completed")
