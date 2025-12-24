@@ -4,9 +4,9 @@ WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && apt-get install wget nscd python3-idna git git-lfs libxml2 -y
 
-RUN wget https://go.dev/dl/go1.24.9.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.24.9.linux-amd64.tar.gz && \
-    rm go1.24.9.linux-amd64.tar.gz
+RUN wget https://go.dev/dl/go1.24.11.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.24.11.linux-amd64.tar.gz && \
+    rm go1.24.11.linux-amd64.tar.gz
 
 ENV PATH="/usr/local/go/bin:$PATH"
 
