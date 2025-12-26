@@ -13,8 +13,8 @@ COPY finetune_run.py /azureml/finetune/run.py
 RUN pip install -r requirements.txt --no-cache-dir
 
 # pip dependency resolver will break if this is added to requirements.txt
-RUN pip install mcp>=1.23.0
 RUN pip install mlflow==3.1.0
+RUN pip install mcp>=1.23.0
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
@@ -25,3 +25,4 @@ RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
+
