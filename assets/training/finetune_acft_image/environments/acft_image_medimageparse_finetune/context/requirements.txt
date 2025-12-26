@@ -30,4 +30,5 @@ appdirs==1.4.4
 ffmpeg==1.4
 wheel==0.41.2
 lightning==2.5.5
+urllib3>=2.6.0
 azureml-acft-image-components[mip]=={{latest-pypi-version}}

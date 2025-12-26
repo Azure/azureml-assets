@@ -12,6 +12,3 @@ RUN pip install transformers==4.56.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
-
-# vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'

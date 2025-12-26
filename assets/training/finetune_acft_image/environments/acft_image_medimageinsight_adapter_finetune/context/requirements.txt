@@ -13,3 +13,4 @@ pydicom~=2.4.0
 pandas==2.2.3
 mlflow==3.1.0
 setuptools==78.1.1
+urllib3>=2.6.0

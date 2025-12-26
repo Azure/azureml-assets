@@ -5,6 +5,3 @@ USER root
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN pip install --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
-
-# vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'

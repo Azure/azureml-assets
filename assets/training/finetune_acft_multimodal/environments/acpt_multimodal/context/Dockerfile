@@ -13,6 +13,3 @@ RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
-
-# vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
