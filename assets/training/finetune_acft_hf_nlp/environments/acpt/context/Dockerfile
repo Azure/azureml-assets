@@ -19,8 +19,10 @@ RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --n
 RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
 
 # vulnerabilities, cannot be added to requirements.txt as it causes pip dependency resolver to break
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
 RUN pip install --upgrade --no-cache-dir 'mcp>=1.23.0'
+
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
