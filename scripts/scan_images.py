@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """
 Single/Ad‑hoc Image Scanner.
 
@@ -18,8 +19,10 @@ Differences vs batch_image_scan.py:
 
 Examples:
   python scan_images.py myregistry.azurecr.io/public/azureml/base:1.0.0
-  python scan_images.py --ignore-qid 123456 789012 --auth interactive mcr.microsoft.com/public/azureml/base:2.0.0
-  python scan_images.py --config custom.yaml --output ./scan-out myreg.azurecr.io/ns/image:tag other.azurecr.io/x/y:latest
+  python scan_images.py --ignore-qid 123456 789012 --auth \
+      interactive mcr.microsoft.com/public/azureml/base:2.0.0
+  python scan_images.py --config custom.yaml \
+      --output ./scan-out myreg.azurecr.io/ns/image:tag other.azurecr.io/x/y:latest
 """
 
 import argparse
@@ -141,7 +144,11 @@ def ensure_dir(path: str):
     os.makedirs(path, exist_ok=True)
 
 
-def scan_image(fqin: str, settings: Settings, auth_method: str, ignore_qids: Optional[List[str]], output_dir: str) -> ImageScanResult:
+def scan_image(fqin: str,
+               settings: Settings,
+               auth_method: str,
+               ignore_qids: Optional[List[str]],
+               output_dir: str) -> ImageScanResult:
     """Execute the full scan workflow for a single image.
 
     Steps performed:
@@ -337,14 +344,17 @@ def main():
         Process exit code (0 = all compliant, 1 = any non-compliance or failure).
     """
     parser = argparse.ArgumentParser(
-        description="Scan one or more fully qualified container images (attach SBOM if needed, download, scan, evaluate)",
+        description="Scan one or more fully qualified container \
+            images (attach SBOM if needed, download, scan, evaluate)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__
     )
 
     parser.add_argument('images', nargs='+', help='Fully qualified image names (registry/repository[:tag])')
-    parser.add_argument('--ignore-qid', nargs='*', help='QIDs to ignore during vulnerability evaluation (space-separated list)')
-    parser.add_argument('--auth', choices=['default', 'interactive'], default='default', help='Authentication method for CoMET (default: default)')
+    parser.add_argument('--ignore-qid', nargs='*', help='QIDs to ignore during vulnerability\
+        evaluation (space-separated list)')
+    parser.add_argument('--auth', choices=['default', 'interactive'], default='default',
+                        help='Authentication method for CoMET (default: default)')
     parser.add_argument('--config', help='Optional settings override YAML')
     parser.add_argument('--output', help='Output directory (default: temp)')
     parser.add_argument('--workers', type=int, default=4, help='Maximum parallel workers (default: 4)')
