@@ -8,5 +8,5 @@ RUN apt-get -y update && apt-get install -y expat libc-bin libc-bin libc-dev loc
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0

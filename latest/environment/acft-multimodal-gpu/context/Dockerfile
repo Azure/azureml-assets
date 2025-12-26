@@ -14,5 +14,5 @@ RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 RUN pip install azureml-acft-common-components==0.0.84
 RUN pip install azureml-acft-accelerator==0.0.84
 
-# vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0
