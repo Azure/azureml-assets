@@ -72,8 +72,44 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e $scripts_azureml_assets_dir
-          # Install vienna-container-management for CoMET vulnerability scanning
-          pip install vienna-container-management
+          
+      - name: Install CoMET scanning dependencies (optional)
+        id: install-vienna
+        run: |
+          # Install vienna-container-management from Azure Artifacts feed
+          # Uses Azure AD authentication (same as local VstsCredentialProvider MSAL)
+          
+          # Check if Azure CLI is authenticated (from previous step)
+          if az account show > /dev/null 2>&1; then
+            echo "✅ Using Azure AD authentication for Azure Artifacts..."
+            
+            # Get access token from Azure AD (resource ID for Azure DevOps)
+            TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken -o tsv 2>/dev/null)
+            
+            if [ -n "$TOKEN" ]; then
+              echo "Installing Azure Artifacts Credential Provider..."
+              wget -qO- https://aka.ms/install-artifacts-credprovider.sh | bash
+              
+              # Configure authentication with Azure AD token
+              export VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/\", \"password\":\"$TOKEN\"}]}"
+              
+              echo "Installing vienna-container-management..."
+              if pip install vienna-container-management --index-url https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/ --no-cache-dir; then
+                echo "vienna_available=true" >> $GITHUB_OUTPUT
+                echo "✅ vienna-container-management installed successfully"
+              else
+                echo "vienna_available=false" >> $GITHUB_OUTPUT
+                echo "⚠️ Failed to install vienna-container-management"
+              fi
+            else
+              echo "⚠️ Could not obtain Azure AD token"
+              echo "vienna_available=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "ℹ️  Azure authentication not available, skipping CoMET scan"
+            echo "vienna_available=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
       
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
@@ -93,7 +129,7 @@ jobs:
 
       - name: CoMET vulnerability scan
         id: comet-scan
-        if: steps.build-changed-images.outputs.built_images != ''
+        if: steps.build-changed-images.outputs.built_images != '' && steps.install-vienna.outputs.vienna_available == 'true'
         run: |
           set -e
           echo "Preparing image list for CoMET vulnerability scan"
@@ -127,6 +163,14 @@ jobs:
           echo "Running CoMET vulnerability scan: python -u ./scripts/scan_images.py $image_args $ignore_args --output $scan_output"
           python -u ./scripts/scan_images.py $image_args $ignore_args --output "$scan_output"
         continue-on-error: true
+
+      - name: CoMET scan skipped notification
+        if: steps.build-changed-images.outputs.built_images != '' && steps.install-vienna.outputs.vienna_available != 'true'
+        run: |
+          echo "⚠️  CoMET vulnerability scan skipped - vienna-container-management not available"
+          echo "This requires Azure AD authentication to be configured."
+          echo ""
+          echo "ℹ️  Trivy scan results are still available in build logs"
 
       - name: Upload CoMET scan results
         uses: actions/upload-artifact@v4
