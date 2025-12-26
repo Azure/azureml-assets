@@ -110,14 +110,7 @@ jobs:
               pip install --upgrade keyring artifacts-keyring
               
               # Store the token in keyring for artifacts-keyring to use
-              python -c "
-import keyring
-from artifacts_keyring.auth import ArtifactBasicAuth
-keyring.set_password(
-    'https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/',
-    'VssSessionToken',
-    '$TOKEN'
-)"
+              python -c "import keyring; keyring.set_password('https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/', 'VssSessionToken', '$TOKEN')"
               
               echo "Installing vienna-container-management..."
               # artifacts-keyring will automatically use the stored token
