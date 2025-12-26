@@ -21,7 +21,7 @@ RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --n
 RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
 
 # we dont use base env, remove vulnerable package from it for permanent fix
-RUN conda remove -n base urllib3
+RUN conda remove -n base urllib3 -y
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
