@@ -15,4 +15,4 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 
 # vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir "urllib3>=2.6.0"

@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 
 # vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir "urllib3>=2.6.0"

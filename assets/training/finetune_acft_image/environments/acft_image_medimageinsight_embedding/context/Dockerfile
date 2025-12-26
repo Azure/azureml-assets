@@ -12,4 +12,4 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir "urllib3>=2.6.0"
