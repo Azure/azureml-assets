@@ -70,7 +70,10 @@ jobs:
           python-version: '3.12'
     
       - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir
+        run: |
+          pip install -e $scripts_azureml_assets_dir
+          # Install vienna-container-management for CoMET vulnerability scanning
+          pip install vienna-container-management
       
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
@@ -87,6 +90,50 @@ jobs:
       - name: Validate build logs for additional deprecated dependencies
         id: validate-build-logs
         run: python -u $scripts_environment_dir/validate_build_logs.py -l '${{ runner.temp }}'/$build_logs_artifact_name
+
+      - name: CoMET vulnerability scan
+        id: comet-scan
+        if: steps.build-changed-images.outputs.built_images != ''
+        run: |
+          set -e
+          echo "Preparing image list for CoMET vulnerability scan"
+          
+          # Get built images from build step output
+          built_images="${{ steps.build-changed-images.outputs.built_images }}"
+          
+          if [ -z "$built_images" ]; then
+            echo "No images built; skipping CoMET vulnerability scan."
+            exit 0
+          fi
+          
+          # Construct fully qualified image names
+          acr_fqdn="${container_registry}.azurecr.io"
+          image_args=""
+          for img in $(echo $built_images | tr ',' ' '); do
+            image_args="$image_args $acr_fqdn/$img"
+          done
+          
+          # Optional: Add ignore QIDs if configured
+          ignore_args=""
+          if [ -n "${{ vars.VULN_IGNORE_QIDS || '' }}" ]; then
+            ignore_args="--ignore-qid $(echo ${{ vars.VULN_IGNORE_QIDS }} | tr ',' ' ')"
+            echo "Ignoring QIDs: ${{ vars.VULN_IGNORE_QIDS }}"
+          fi
+          
+          # Set output directory for scan results
+          scan_output="${{ runner.temp }}/comet-scan-results"
+          mkdir -p "$scan_output"
+          
+          echo "Running CoMET vulnerability scan: python -u ./scripts/scan_images.py $image_args $ignore_args --output $scan_output"
+          python -u ./scripts/scan_images.py $image_args $ignore_args --output "$scan_output"
+        continue-on-error: true
+
+      - name: Upload CoMET scan results
+        uses: actions/upload-artifact@v4
+        if: always() && steps.comet-scan.outcome != 'skipped'
+        with:
+          name: comet-scan-results
+          path: ${{ runner.temp }}/comet-scan-results
 
       - name: Upload build logs
         uses: actions/upload-artifact@v4
