@@ -91,6 +91,17 @@ jobs:
           if az account show > /dev/null 2>&1; then
             echo "✅ Using Azure AD authentication for Azure Artifacts..."
             
+            # Get current Azure AD account info
+            ACCOUNT_INFO=$(az account show --query '{subscription:id, tenant:tenantId, user:user.name}' -o json)
+            echo "📋 Azure Account Info:"
+            echo "$ACCOUNT_INFO" | jq '.'
+            
+            # Get the service principal client ID
+            CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
+            echo "🔑 Service Principal Client ID: $CLIENT_ID"
+            echo "   ⚠️  This service principal needs 'Reader' access to Vienna feed"
+            echo "   📍 Add it here: https://dev.azure.com/msdata/_packaging?_a=settings&feed=Vienna&view=permissions"
+            
             # Get access token from Azure AD (resource ID for Azure DevOps)
             TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken -o tsv 2>/dev/null)
             
@@ -98,11 +109,21 @@ jobs:
               echo "Installing azure-artifacts-keyring for pip authentication..."
               pip install --upgrade keyring artifacts-keyring
               
-              # Configure pip to use the authenticated feed URL with embedded token
-              # This approach works with pip without needing credential provider
+              # Store the token in keyring for artifacts-keyring to use
+              python -c "
+import keyring
+from artifacts_keyring.auth import ArtifactBasicAuth
+keyring.set_password(
+    'https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/',
+    'VssSessionToken',
+    '$TOKEN'
+)"
+              
               echo "Installing vienna-container-management..."
-              PIP_INDEX_URL="https://build:${TOKEN}@pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/" \
-              pip install vienna-container-management --no-cache-dir
+              # artifacts-keyring will automatically use the stored token
+              pip install vienna-container-management \
+                --index-url https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/ \
+                --no-cache-dir
               
               if [ $? -eq 0 ]; then
                 echo "vienna_available=true" >> $GITHUB_OUTPUT
@@ -110,6 +131,7 @@ jobs:
               else
                 echo "vienna_available=false" >> $GITHUB_OUTPUT
                 echo "⚠️ Failed to install vienna-container-management"
+                echo "💡 If you see 401 error, the service principal needs Vienna feed access"
               fi
             else
               echo "⚠️ Could not obtain Azure AD token"
