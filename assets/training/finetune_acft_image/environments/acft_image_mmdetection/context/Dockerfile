@@ -17,5 +17,5 @@ RUN mim install mmdet==3.3.0
 RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html --no-cache-dir
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
-# vulnerabilities
-RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir "urllib3>=2.6.0"
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0

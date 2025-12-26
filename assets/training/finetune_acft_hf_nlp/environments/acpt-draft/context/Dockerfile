@@ -8,7 +8,7 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null || true && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN conda install pip==25.3 -y
-RUN conda run -n base python -m pip install --upgrade pip==25.3
+RUN conda run -n base python -m pip install --upgrade pip==25.3 urllib3>=2.6.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -22,7 +22,6 @@ RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install xgrammar==0.1.27
 RUN pip install transformers==4.57.1
-RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir "urllib3>=2.6.0"
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py

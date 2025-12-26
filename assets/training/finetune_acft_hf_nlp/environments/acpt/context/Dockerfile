@@ -20,8 +20,8 @@ RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
 RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
 
-# vulnerabilities
-RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir "urllib3>=2.6.0"
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
