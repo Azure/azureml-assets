@@ -72,7 +72,15 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e $scripts_azureml_assets_dir
-          
+      
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+
       - name: Install CoMET scanning dependencies (optional)
         id: install-vienna
         run: |
@@ -110,14 +118,6 @@ jobs:
             echo "vienna_available=false" >> $GITHUB_OUTPUT
           fi
         continue-on-error: true
-      
-      - name: Log in to Azure and create resources
-        uses: ./.github/actions/create-azure-resources
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
       - name: Build and test changed images
         id: build-changed-images
