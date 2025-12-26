@@ -95,14 +95,16 @@ jobs:
             TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken -o tsv 2>/dev/null)
             
             if [ -n "$TOKEN" ]; then
-              echo "Installing Azure Artifacts Credential Provider..."
-              wget -qO- https://aka.ms/install-artifacts-credprovider.sh | bash
+              echo "Installing azure-artifacts-keyring for pip authentication..."
+              pip install --upgrade keyring artifacts-keyring
               
-              # Configure authentication with Azure AD token
-              export VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/\", \"password\":\"$TOKEN\"}]}"
-              
+              # Configure pip to use the authenticated feed URL with embedded token
+              # This approach works with pip without needing credential provider
               echo "Installing vienna-container-management..."
-              if pip install vienna-container-management --index-url https://pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/ --no-cache-dir; then
+              PIP_INDEX_URL="https://build:${TOKEN}@pkgs.dev.azure.com/msdata/_packaging/Vienna/pypi/simple/" \
+              pip install vienna-container-management --no-cache-dir
+              
+              if [ $? -eq 0 ]; then
                 echo "vienna_available=true" >> $GITHUB_OUTPUT
                 echo "✅ vienna-container-management installed successfully"
               else
