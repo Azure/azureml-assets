@@ -13,7 +13,7 @@ COPY finetune_run.py /azureml/finetune/run.py
 RUN pip install -r requirements.txt --no-cache-dir
 
 # pip dependency resolver will break if this is added to requirements.txt
-RUN pip install fastmcp>=2.14.0
+RUN pip install mcp>=1.23.0
 RUN pip install mlflow==3.1.0
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
