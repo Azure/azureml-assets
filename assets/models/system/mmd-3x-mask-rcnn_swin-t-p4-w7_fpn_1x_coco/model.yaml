@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-image-models
   container_path: mmdetection-3.x-mlflow/mask-rcnn_swin-t-p4-w7_fpn_1x_coco/1732881371/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  storage_name: modelonboardingresources
   type: azureblob
 publish:
   description: description.md

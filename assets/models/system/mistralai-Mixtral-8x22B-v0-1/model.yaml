@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: huggingface/mistralai-Mixtral-8x22B-v0-1/1713456151/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  storage_name: modelonboardingresources
   type: azureblob
 publish:
   description: description.md
