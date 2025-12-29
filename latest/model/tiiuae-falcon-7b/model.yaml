@@ -1,9 +1,8 @@
 path:
   container_name: models
   container_path: huggingface/tiiuae-falcon-7b/20240502/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  storage_name: modelonboardingresources
   type: azureblob
 publish:
   description: description.md
   type: mlflow_model
-  
