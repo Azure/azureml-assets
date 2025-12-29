@@ -11,5 +11,5 @@ RUN apt-get -y install unzip libc-bin libc-bin libc-dev locales libc6 dpkg-dev d
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0

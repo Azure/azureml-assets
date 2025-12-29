@@ -6,5 +6,5 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN pip install --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
 
-# vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'urllib3>=2.6.0'
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0
