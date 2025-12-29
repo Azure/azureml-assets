@@ -39,7 +39,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
 RUN conda install pip==25.3 -y
-RUN conda run -n base python -m pip install --upgrade pip==25.3
+RUN conda run -n base python -m pip install --upgrade pip==25.3 urllib3>=2.6.0
 # Remove all old pip metadata after upgrade
 COPY requirements.txt .
 
@@ -64,7 +64,6 @@ RUN pip install vllm==0.11.1
 COPY vllm_async_server dest/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 RUN pip install --no-cache-dir triton==3.4.0
 RUN pip install xgrammar==0.1.27
-RUN pip install --no-cache-dir --upgrade 'urllib3==2.6.0'
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
