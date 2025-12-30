@@ -47,6 +47,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install verl==0.6.1
+RUN pip install sacrebleu==2.5.1
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
 
 RUN pip install --no-cache-dir accelerate==1.10.0
