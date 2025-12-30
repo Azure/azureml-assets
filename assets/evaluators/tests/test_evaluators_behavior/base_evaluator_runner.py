@@ -35,6 +35,7 @@ class BaseEvaluatorRunner:
         if self.evaluator_type is None:
             raise ValueError("Evaluator type not set. Subclass must define evaluator_type.")
 
+        # Dummy model config and credential for testing - not used since flow is mocked
         model_config = AzureOpenAIModelConfiguration(
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
             azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
