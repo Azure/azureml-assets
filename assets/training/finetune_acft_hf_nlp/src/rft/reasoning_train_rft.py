@@ -96,8 +96,9 @@ def apply_patches(patch_folder: str):
 
             # Handle custom_grader type with fixed destination
             if patch_type == "custom_grader":
-                destination_path = f"/opt/conda/envs/ptca/lib/python3.10\
-                    /site-packages/verl/utils/reward_score/{source_file}"
+                destination_path = (
+                    f"/opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/{source_file}"
+                )
                 logger.info(f"Applying custom grader patch {idx}/{len(patches)}: {description}")
                 logger.info(r"Type: custom_grader (auto-destination)")
             else:
