@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/parallelComponent.schema.json
 type: parallel
-version: 0.0.10
+version: 0.0.11
 
 name: automl_hts_data_aggregation_step
 display_name: AutoML HTS - Training Data Aggregation
@@ -62,7 +62,7 @@ task:
   type: run_function
   code: ../../src/data_agg
   entry_script: data_agg.py
-  environment: azureml://registries/azureml/environments/automl-gpu/versions/54
+  environment: azureml://registries/azureml/environments/automl-gpu/versions/63
   program_arguments: >-
     --input-metadata ${{inputs.metadata}}
     --error_threshold -1

@@ -1,7 +1,7 @@
 $schema: 
   https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_classification_model_import
-version: 0.0.79
+version: 0.0.80
 type: command
 
 is_deterministic: true
@@ -12,7 +12,7 @@ description: Component to import PyTorch / MLFlow model. See
   learn more.
 
 environment: 
-  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
+  azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/109
 
 code: ../../../src/model_selector
 

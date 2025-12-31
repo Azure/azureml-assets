@@ -2,7 +2,7 @@ $schema:
   https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.26
+version: 0.0.27
 name: image_object_detection_pipeline
 display_name: Image Object Detection Pipeline
 description: Pipeline component for image object detection.
@@ -366,7 +366,7 @@ jobs:
 
   finetune_common_validation:
     type: command
-    component: azureml:finetune_common_validation:0.0.9
+    component: azureml:finetune_common_validation:0.0.10
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       train_mltable_path: ${{parent.inputs.training_data}}
@@ -380,7 +380,7 @@ jobs:
 
   framework_selector:
     type: command
-    component: azureml:image_framework_selector:0.0.21
+    component: azureml:image_framework_selector:0.0.22
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: ${{parent.inputs.task_type}}
@@ -442,7 +442,7 @@ jobs:
   mm_detection_model_import:
     type: command
     component: 
-      azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.21
+      azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.22
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'MmDetectionImage'
@@ -454,7 +454,7 @@ jobs:
   mm_detection_finetune:
     type: command
     component: 
-      azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.23
+      azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.24
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -498,7 +498,7 @@ jobs:
 
   output_selector:
     type: command
-    component: azureml:image_model_output_selector:0.0.20
+    component: azureml:image_model_output_selector:0.0.21
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: 
