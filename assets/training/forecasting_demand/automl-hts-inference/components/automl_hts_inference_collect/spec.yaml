@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_hts_inference_collect_step
-version: 0.0.10
+version: 0.0.11
 display_name: AutoML HTS - Inference Collect
 type: command
 
@@ -32,7 +32,7 @@ outputs:
     description: 'jsonl used for evaluation component.'
 
 code: ../../src/collect
-environment: azureml://registries/azureml/environments/automl-gpu/versions/54
+environment: azureml://registries/azureml/environments/automl-gpu/versions/63
 
 command: >-
   python collect.py 
