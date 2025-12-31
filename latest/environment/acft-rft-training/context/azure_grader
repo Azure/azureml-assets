@@ -1,0 +1,299 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+"""
+Azure AI Foundry Graders Implementation
+
+Supports two types of grading:
+1. String Checker - Exact or partial string matching
+2. Text Similarity - Semantic similarity using HuggingFace evaluate library (BLEU, ROUGE, METEOR, etc.)
+"""
+
+import re
+from typing import Any, Dict, Optional
+
+# Try to import evaluate library
+try:
+    import evaluate
+    EVALUATE_AVAILABLE = True
+except ImportError:
+    EVALUATE_AVAILABLE = False
+    print("Warning: 'evaluate' library not found. Install with: pip install evaluate")
+    print("Falling back to simple text similarity metrics.")
+
+
+def string_checker(solution_str: str, ground_truth: str, match_type: str = "exact", case_sensitive: bool = True) -> float:
+    """
+    String checker grader for exact or partial matching.
+
+    Args:
+        solution_str: The solution string to evaluate
+        ground_truth: The expected/reference string
+        match_type: Type of matching - "exact", "partial", or "pattern"
+        case_sensitive: Whether to perform case-sensitive matching
+
+    Returns:
+        float: 1.0 if match succeeds, 0.0 otherwise
+    """
+    if not case_sensitive:
+        solution_str = solution_str.lower()
+        ground_truth = ground_truth.lower()
+
+    if match_type == "exact":
+        return 1.0 if solution_str.strip() == ground_truth.strip() else 0.0
+    elif match_type == "partial":
+        return 1.0 if ground_truth in solution_str else 0.0
+    elif match_type == "pattern":
+        try:
+            pattern = re.compile(ground_truth)
+            return 1.0 if pattern.search(solution_str) else 0.0
+        except re.error:
+            # If ground_truth is not a valid regex, fall back to partial match
+            return 1.0 if ground_truth in solution_str else 0.0
+    else:
+        raise ValueError(f"Invalid match_type: {match_type}. Must be 'exact', 'partial', or 'pattern'")
+
+
+def text_similarity(
+    solution_str: str,
+    ground_truth: str,
+    metric: str = "bleu",
+    pass_threshold: float = 0.5
+) -> float:
+    """
+    Text similarity grader using HuggingFace evaluate library or fallback metrics.
+
+    Args:
+        solution_str: The solution string to evaluate
+        ground_truth: The expected/reference string
+        metric: Similarity metric - "bleu", "rouge", "rouge1", "rouge2", "rougeL",
+                "meteor", "sacrebleu", "chrf", "ter", "fuzzy", or "cosine"
+        pass_threshold: Threshold for passing score (0.0 to 1.0)
+
+    Returns:
+        float: Similarity score between 0.0 and 1.0
+    """
+    if EVALUATE_AVAILABLE:
+        # Use HuggingFace evaluate library for proper metrics
+        if metric in ["bleu", "sacrebleu"]:
+            return _compute_hf_bleu(solution_str, ground_truth, metric, pass_threshold)
+        elif metric in ["rouge", "rouge1", "rouge2", "rougeL"]:
+            return _compute_hf_rouge(solution_str, ground_truth, metric, pass_threshold)
+        elif metric == "meteor":
+            return _compute_hf_meteor(solution_str, ground_truth, pass_threshold)
+        elif metric == "chrf":
+            return _compute_hf_chrf(solution_str, ground_truth, pass_threshold)
+        elif metric == "ter":
+            return _compute_hf_ter(solution_str, ground_truth, pass_threshold)
+        elif metric == "fuzzy":
+            return _compute_fuzzy_match(solution_str, ground_truth, pass_threshold)
+        elif metric == "cosine":
+            return _compute_cosine_similarity(solution_str, ground_truth, pass_threshold)
+        else:
+            # Default to BLEU for unknown metrics
+            return _compute_hf_bleu(solution_str, ground_truth, "bleu", pass_threshold)
+    else:
+        # Fallback to simple implementations if evaluate is not available
+        if metric in ["bleu", "sacrebleu"]:
+            return _compute_simple_bleu(solution_str, ground_truth, pass_threshold)
+        elif metric in ["rouge", "rouge1", "rouge2", "rougeL"]:
+            return _compute_simple_rouge(solution_str, ground_truth, pass_threshold)
+        elif metric == "fuzzy":
+            return _compute_fuzzy_match(solution_str, ground_truth, pass_threshold)
+        elif metric == "cosine":
+            return _compute_cosine_similarity(solution_str, ground_truth, pass_threshold)
+        else:
+            return _compute_simple_bleu(solution_str, ground_truth, pass_threshold)
+
+
+def _compute_hf_bleu(solution: str, reference: str, metric_name: str, threshold: float) -> float:
+    """Compute BLEU score using HuggingFace evaluate library."""
+    try:
+        if metric_name == "sacrebleu":
+            bleu = evaluate.load("sacrebleu")
+            results = bleu.compute(predictions=[solution], references=[[reference]])
+            score = results["score"] / 100.0  # Convert to 0-1 range
+        else:
+            bleu = evaluate.load("bleu")
+            results = bleu.compute(predictions=[solution], references=[[reference]])
+            score = results["bleu"]
+        print(f"BLEU score: {score}")
+        return 1.0 if score >= threshold else score
+    except Exception as e:
+        print(f"Error computing BLEU: {e}. Falling back to simple implementation.")
+        return _compute_simple_bleu(solution, reference, threshold)
+
+
+def _compute_hf_rouge(solution: str, reference: str, metric_name: str, threshold: float) -> float:
+    """Compute ROUGE score using HuggingFace evaluate library."""
+    try:
+        rouge = evaluate.load("rouge")
+        results = rouge.compute(predictions=[solution], references=[reference])
+
+        # Select the appropriate ROUGE variant
+        if metric_name == "rouge1":
+            score = results["rouge1"]
+        elif metric_name == "rouge2":
+            score = results["rouge2"]
+        elif metric_name == "rougeL":
+            score = results["rougeL"]
+        else:  # default to rouge1
+            score = results["rouge1"]
+        print(f"ROUGE score: {score}")
+        return 1.0 if score >= threshold else score
+    except Exception as e:
+        print(f"Error computing ROUGE: {e}. Falling back to simple implementation.")
+        return _compute_simple_rouge(solution, reference, threshold)
+
+
+def _compute_hf_meteor(solution: str, reference: str, threshold: float) -> float:
+    """Compute METEOR score using HuggingFace evaluate library."""
+    try:
+        meteor = evaluate.load("meteor")
+        results = meteor.compute(predictions=[solution], references=[reference])
+        score = results["meteor"]
+        print(f"METEOR score: {score}")
+        return 1.0 if score >= threshold else score
+    except Exception as e:
+        print(f"Error computing METEOR: {e}. Falling back to simple implementation.")
+        return _compute_simple_bleu(solution, reference, threshold)
+
+
+def _compute_hf_chrf(solution: str, reference: str, threshold: float) -> float:
+    """Compute chrF score using HuggingFace evaluate library."""
+    try:
+        chrf = evaluate.load("chrf")
+        results = chrf.compute(predictions=[solution], references=[[reference]])
+        score = results["score"] / 100.0  # Convert to 0-1 range
+        print(f"chrF score: {score}")
+        return 1.0 if score >= threshold else score
+    except Exception as e:
+        print(f"Error computing chrF: {e}. Falling back to simple implementation.")
+        return _compute_simple_bleu(solution, reference, threshold)
+
+
+def _compute_hf_ter(solution: str, reference: str, threshold: float) -> float:
+    """Compute TER score using HuggingFace evaluate library."""
+    try:
+        ter = evaluate.load("ter")
+        results = ter.compute(predictions=[solution], references=[[reference]])
+        # TER is an error rate, so we invert it: lower TER = higher score
+        score = max(0.0, 1.0 - (results["score"] / 100.0))
+        print(f"TER score: {score}")
+        return 1.0 if score >= threshold else score
+
+    except Exception as e:
+        print(f"Error computing TER: {e}. Falling back to simple implementation.")
+        return _compute_simple_bleu(solution, reference, threshold)
+
+
+def _compute_simple_bleu(solution: str, reference: str, threshold: float) -> float:
+    """Simple BLEU-like scoring based on word overlap (fallback)."""
+    solution_words = set(solution.lower().split())
+    reference_words = set(reference.lower().split())
+
+    if not reference_words:
+        return 0.0
+
+    intersection = solution_words.intersection(reference_words)
+    score = len(intersection) / len(reference_words)
+    print(f"Simple BLEU score: {score}")
+    return 1.0 if score >= threshold else score
+
+
+def _compute_simple_rouge(solution: str, reference: str, threshold: float) -> float:
+    """Simple ROUGE-like scoring based on word overlap (fallback)."""
+    solution_words = solution.lower().split()
+    reference_words = reference.lower().split()
+
+    if not reference_words:
+        return 0.0
+
+    # Simple word-level overlap ratio
+    matches = sum(1 for word in solution_words if word in reference_words)
+    score = matches / len(reference_words)
+    print(f"Simple ROUGE score: {score}")
+    return 1.0 if score >= threshold else score
+
+
+def _compute_fuzzy_match(solution: str, reference: str, threshold: float) -> float:
+    """Fuzzy string matching using character-level similarity."""
+    solution = solution.lower().strip()
+    reference = reference.lower().strip()
+
+    if solution == reference:
+        return 1.0
+
+    # Character-level Levenshtein-like distance
+    len_s, len_r = len(solution), len(reference)
+    if len_s == 0 or len_r == 0:
+        return 0.0
+
+    # Simple character overlap ratio
+    common_chars = sum(1 for c in set(solution) if c in reference)
+    score = common_chars / len(set(reference))
+    print(f"Fuzzy match score: {score}")
+    return 1.0 if score >= threshold else score
+
+
+def _compute_cosine_similarity(solution: str, reference: str, threshold: float) -> float:
+    """Cosine similarity based on word frequency vectors."""
+    solution_words = solution.lower().split()
+    reference_words = reference.lower().split()
+
+    # Build word frequency dictionaries
+    from collections import Counter
+    solution_freq = Counter(solution_words)
+    reference_freq = Counter(reference_words)
+
+    # Get all unique words
+    all_words = set(solution_freq.keys()).union(set(reference_freq.keys()))
+
+    if not all_words:
+        return 0.0
+
+    # Compute dot product and magnitudes
+    dot_product = sum(solution_freq[word] * reference_freq[word] for word in all_words)
+    mag_solution = sum(count ** 2 for count in solution_freq.values()) ** 0.5
+    mag_reference = sum(count ** 2 for count in reference_freq.values()) ** 0.5
+
+    if mag_solution == 0 or mag_reference == 0:
+        return 0.0
+
+    score = dot_product / (mag_solution * mag_reference)
+    print(f"Cosine similarity score: {score}")
+    return 1.0 if score >= threshold else score
+
+
+def compute_score(
+    solution_str: str,
+    ground_truth: str,
+    grader_type: str = "string_checker",
+    grader_config: Optional[Dict[str, Any]] = None
+) -> float:
+    """
+    Main entry point for Azure grader scoring.
+
+    Args:
+        solution_str: The solution string to evaluate
+        ground_truth: The expected/reference string
+        grader_type: Type of grader - "string_checker" or "text_similarity"
+        grader_config: Configuration dict for the specific grader type
+
+    Returns:
+        float: Score between 0.0 and 1.0
+    """
+    if grader_config is None:
+        grader_config = {}
+
+    if grader_type == "string_checker":
+        match_type = grader_config.get('match_type', 'exact')
+        case_sensitive = grader_config.get('case_sensitive', True)
+        return string_checker(solution_str, ground_truth, match_type, case_sensitive)
+
+    elif grader_type == "text_similarity":
+        metric = grader_config.get('metric', 'bleu')
+        threshold = grader_config.get('pass_threshold', 0.5)
+        return text_similarity(solution_str, ground_truth, metric, threshold)
+
+    else:
+        raise ValueError(f"Unknown grader_type: {grader_type}. Must be 'string_checker' or 'text_similarity'")

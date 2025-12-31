@@ -5,7 +5,7 @@ dependencies:
   - python=3.10
   - pip:
     - pip==25.3
-    - azure-ai-ml==1.30.0
+    - azure-ai-ml==1.31.0
     - azure-identity==1.25.1
     - cryptography==46.0.3
     - certifi==2025.11.12
