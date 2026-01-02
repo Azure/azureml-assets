@@ -30,4 +30,5 @@ EXPOSE 5001 8883 8888
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
 
-RUN pip list
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0

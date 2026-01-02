@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-image-models
   container_path: mmdetection-3.x-mlflow/deformable-detr_refine_twostage_r50_16xb2-50e_coco/1714409971_v2/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  storage_name: modelonboardingresources
   type: azureblob
 publish:
   description: description.md

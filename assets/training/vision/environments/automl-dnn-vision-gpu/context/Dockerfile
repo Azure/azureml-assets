@@ -5,7 +5,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -74,17 +74,23 @@ COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
-    conda clean -a -y
+    conda clean -afy
+
+# Install packages with torch packages separately to reduce layer size
+RUN pip install --no-cache-dir \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-automl-dnn-vision=={{latest-pypi-version}}
 
 # vulnearbility fix
 RUN pip install pyarrow==14.0.2
-RUN pip install torch==2.8.0 torchvision==0.23.0
-RUN pip install --upgrade urllib3==2.5.0
+RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
+RUN pip install --upgrade urllib3==2.6.0
 
 # Update conda base and ptca envs
 RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
-RUN /opt/conda/envs/ptca/bin/pip install torch==2.8.0 torchvision==0.23.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3==2.5.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3==2.6.0 || true
 
 # Patch pillow vulnerability
 RUN pip install --upgrade pillow==12.0.0

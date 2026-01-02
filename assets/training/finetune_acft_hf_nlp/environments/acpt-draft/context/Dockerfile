@@ -8,7 +8,7 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null || true && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN conda install pip==25.3 -y
-RUN conda run -n base python -m pip install --upgrade pip==25.3
+RUN conda run -n base python -m pip install --upgrade pip==25.3 urllib3>=2.6.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 

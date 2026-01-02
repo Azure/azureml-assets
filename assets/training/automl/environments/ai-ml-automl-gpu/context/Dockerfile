@@ -6,7 +6,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn-gpu
 # Prepend path to AzureML conda environment
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -97,6 +97,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.25.1' \
+                'mlflow-skinny==2.15.1' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
                 'cmdstanpy==1.0.4' \
@@ -107,8 +108,8 @@ RUN pip install \
                 # end pypi dependencies
 
 # Upgrade requests, urllib3, pip, starlette in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'
-RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.5.0' 'pillow==12.0.0' 'h2>=4.3.0'|| true
+RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' 'h2>=4.3.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' 'h2>=4.3.0'|| true
 
 RUN rm -rf /opt/miniconda/pkgs/
 

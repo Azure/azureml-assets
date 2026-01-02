@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -70,5 +70,5 @@ RUN pip install \
 
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
-RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.5.0'
+RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.6.0'
 # end pip ad-hoc

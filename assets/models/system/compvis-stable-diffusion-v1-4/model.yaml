@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-image-models
   container_path: HuggingFace-mlflow/compvis-stable-diffusion-v1-4/1714136920/mlflow_model_folder
-  storage_name: automlcesdkdataresources
+  storage_name: modelonboardingresources
   type: azureblob
 publish:
   description: description.md
