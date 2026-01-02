@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-models
   container_path: AutoML-mlflow/AutoML-Text-Classification/1701458187/mlflow_model_folder/mlflow-model
-  storage_name: modelonboardingresources
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md
