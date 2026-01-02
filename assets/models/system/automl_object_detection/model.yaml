@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-image-models
   container_path: AutoML-mlflow/AutoML-Image-Object-Detection/1700614828/mlflow_model_folder
-  storage_name: modelonboardingresources
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md
