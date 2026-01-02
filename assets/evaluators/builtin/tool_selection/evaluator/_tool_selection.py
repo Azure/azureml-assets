@@ -135,14 +135,14 @@ def _extract_needed_tool_definitions(
                         raise EvaluationException(
                             message=f"Tool definition for {tool_name} not found",
                             blame=ErrorBlame.USER_ERROR,
-                            category=ErrorCategory.INVALID_VALUE,
+                            category=ErrorCategory.NOT_APPLICABLE,
                             target=error_target,
                         )
                 else:
                     raise EvaluationException(
                         message=f"Tool call missing name: {tool_call}",
                         blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
+                        category=ErrorCategory.MISSING_FIELD,
                         target=error_target,
                     )
             else:
@@ -447,7 +447,12 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 tool_calls = parsed_tool_calls
 
         if not tool_calls:
-            return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
+            raise EvaluationException(
+                message=self._NO_TOOL_CALLS_MESSAGE,
+                category=ErrorCategory.NOT_APPLICABLE,
+                target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
+                blame=ErrorBlame.USER_ERROR,
+            )
 
         if not isinstance(tool_calls, list):
             tool_calls = [tool_calls]
@@ -456,16 +461,20 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         try:
             needed_tool_definitions = _extract_needed_tool_definitions(
-                            tool_calls, tool_definitions, ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
+                tool_calls, tool_definitions, ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR
+            )
         except EvaluationException:
-            # Check if this is because no tool definitions were provided at all
-            if len(tool_definitions) == 0:
-                return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
-            else:
-                return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
+            # Re-raise the exception from _extract_needed_tool_definitions as it already has specific error details
+            raise
 
+        # Check if no tool definitions were found at all (including built-in tools)
         if len(needed_tool_definitions) == 0:
-            return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
+            raise EvaluationException(
+                message=self._NO_TOOL_DEFINITIONS_MESSAGE,
+                category=ErrorCategory.NOT_APPLICABLE,
+                target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
+                blame=ErrorBlame.USER_ERROR,
+            )
 
         # Extract only tool names from tool calls, removing parameters and results
         tool_names = _extract_tool_names_from_calls(tool_calls)
@@ -495,7 +504,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
-                target=ErrorTarget.TOOL_SELECTION_EVALUATOR,
+                target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,
             )
 
         # Format conversation history for cleaner evaluation
@@ -513,7 +522,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 raise EvaluationException(
                     message=f"Invalid score value: {score}. Expected 0 or 1.",
                     internal_message="Invalid score value.",
-                    category=ErrorCategory.FAILED_EXECUTION,
+                    category=ErrorCategory.INVALID_VALUE,
                     blame=ErrorBlame.SYSTEM_ERROR,
                 )
 
@@ -562,33 +571,9 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
-        if isinstance(eval_input, dict) and eval_input.get("error_message"):
-            return self._not_applicable_result(eval_input.get("error_message"), 1)
-
         result = await self._do_eval(eval_input)
 
         return result
-
-    def _not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable.
-
-        :param error_message: The error message explaining why evaluation is not applicable.
-        :type error_message: str
-        :param threshold: The threshold value for the evaluator.
-        :type threshold: Union[int, float]
-        :return: A dictionary containing the result of the evaluation.
-        :rtype: Dict[str, Union[str, float, Dict]]
-        """
-        # If no tool calls were made or tool call type is not supported, return not applicable result
-        return {
-            self._result_key: self._NOT_APPLICABLE_RESULT,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": error_message,
-            f"{self._result_key}_details": {},
-        }
 
     def _calculate_tool_selection_accuracy(self, details):
         """Calculate tool selection accuracy from the evaluation details.
