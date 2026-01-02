@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: huggingface/t5-base/1702378490/mlflow_model_folder
-  storage_name: modelonboardingresources
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md
