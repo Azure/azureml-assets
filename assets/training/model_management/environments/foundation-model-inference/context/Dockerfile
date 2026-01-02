@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.8.0-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -35,12 +35,16 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.45 --no-cache-dir
-
 # torch installation
-RUN pip install --no-cache-dir torch==2.8.0
+# --- Install PyTorch 2.8.0 FIRST with CUDA 12.8 support (compatible with vLLM 0.13.0) ---
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
+    torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
+    
+# When copied to assets repo, change to install from public pypi
+RUN pip install llm-optimized-inference==0.2.47 --no-cache-dir
 
+
+    
 # Direct pip install from URL; avoids temporary file
 # RUN pip install --no-cache-dir https://automlsamplenotebookdata.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
 
