@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: parallel
-version: 0.0.10
+version: 0.0.11
 
 name: automl_hts_prs_inference_step
 display_name: AutoML HTS - Inference Step
@@ -58,7 +58,7 @@ task:
   type: run_function
   code: ../../src/inference
   entry_script: inference.py
-  environment: azureml://registries/azureml/environments/automl-gpu/versions/54
+  environment: azureml://registries/azureml/environments/automl-gpu/versions/63
   program_arguments: >-
     --setup-metadata ${{inputs.metadata}}
     --error_threshold -1

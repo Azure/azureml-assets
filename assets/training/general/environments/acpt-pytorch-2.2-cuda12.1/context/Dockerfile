@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest
 
 # Upgrade base conda packages
 RUN conda install -n base -c conda-forge pip=25.3 -y
+RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0
 RUN conda list -n base
 
 # Upgrade ptca environment conda packages
