@@ -8,7 +8,6 @@ Tests various input scenarios: query, and response.
 """
 
 from typing import Any, Dict, List
-from enum import Enum
 import json
 from .base_evaluator_runner import BaseEvaluatorRunner
 
@@ -263,22 +262,6 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     INVALID_RESPONSE_AS_STRING: str = json.dumps(INVALID_RESPONSE)
     # endregion
 
-    # Helper Methods and Enums
-    class AssertType(Enum):
-        MISSING_FIELD = "MISSING_FIELD"
-        INVALID_VALUE = "INVALID_VALUE"
-        PASS = "PASS"
-
-    def assert_expected_behavior(self, assert_type: AssertType, result_data: Dict[str, Any]):
-        if assert_type == self.AssertType.MISSING_FIELD:
-            self.assert_missing_field_error(result_data)
-        elif assert_type == self.AssertType.INVALID_VALUE:
-            self.assert_invalid_value_error(result_data)
-        elif assert_type == self.AssertType.PASS:
-            self.assert_pass(result_data)
-        else:
-            raise ValueError(f"Unknown assert type: {assert_type}")
-
     def remove_parameter_from_input_content(self, input_data: List[Dict], parameter_name: str) -> List[Dict]:
         """Remove a parameter from the content field of all items in the input data."""
         input_data_copy = input_data.copy()
@@ -341,7 +324,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     # ==================== QUERY TESTS ====================
 
-    def test_query(self, input_query, description: str, assert_type: AssertType):
+    def test_query(self, input_query, description: str, assert_type: BaseEvaluatorRunner.AssertType):
         """Helper method to test various query inputs."""
         results = self._run_evaluation(
             query=input_query,
@@ -492,7 +475,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     # ==================== RESPONSE TESTS ====================
 
-    def test_response(self, input_response, description: str, assert_type: AssertType):
+    def test_response(self, input_response, description: str, assert_type: BaseEvaluatorRunner.AssertType):
         """Helper method to test various query inputs."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,

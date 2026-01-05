@@ -8,6 +8,7 @@ Runs evaluations for testing.
 """
 
 import os
+from enum import Enum
 from typing import Any, Dict, List
 from unittest.mock import MagicMock
 
@@ -106,6 +107,22 @@ class BaseEvaluatorRunner:
             "error_message": error_message,
             "error_code": error_code,
         }
+
+    # Helper Methods and Enums
+    class AssertType(Enum):
+        MISSING_FIELD = "MISSING_FIELD"
+        INVALID_VALUE = "INVALID_VALUE"
+        PASS = "PASS"
+
+    def assert_expected_behavior(self, assert_type: AssertType, result_data: Dict[str, Any]):
+        if assert_type == self.AssertType.MISSING_FIELD:
+            self.assert_missing_field_error(result_data)
+        elif assert_type == self.AssertType.INVALID_VALUE:
+            self.assert_invalid_value_error(result_data)
+        elif assert_type == self.AssertType.PASS:
+            self.assert_pass(result_data)
+        else:
+            raise ValueError(f"Unknown assert type: {assert_type}")
 
     def assert_pass(self, result_data: Dict[str, Any]):
         """Assert a passing result."""
