@@ -113,7 +113,8 @@ RUN pip install --no-cache-dir \
                 azureml-interpret=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
                 'requests>=2.32.5' \
-                'azure-identity>=1.25.1'
+                'azure-identity>=1.25.1' \
+                'fileloack>=3.20.1'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size

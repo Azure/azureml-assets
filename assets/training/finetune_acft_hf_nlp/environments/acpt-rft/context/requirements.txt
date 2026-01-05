@@ -28,3 +28,4 @@ torchvision==0.23.0
 transformers==4.57.3
 uvicorn==0.35.0
 zmq==0.0.0
+filelock>=3.20.1
