@@ -93,7 +93,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     def run_tool_calls_test(
         self, input_tool_calls, description: str, assert_type: BaseToolsEvaluatorBehaviorTest.AssertType
     ):
-        """Helper method to test various tool calls inputs."""
+        """Test various tool calls inputs."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=None,
@@ -139,7 +139,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     # ==================== RESPONSE WITH VALID TOOL CALLS TESTS ====================
 
     def run_response_with_valid_tool_calls_test(self, input_response, description: str):
-        """Helper method to test various response inputs with valid tool calls."""
+        """Test various response inputs with valid tool calls."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=input_response,
@@ -190,7 +190,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     # ==================== TOOL CALLS WITH VALID RESPONSE TESTS ====================
 
     def run_tool_calls_with_valid_response_test(self, input_tool_calls, description: str):
-        """Helper method to test various tool call inputs with valid response."""
+        """Test various tool call inputs with valid response."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=self.VALID_RESPONSE,

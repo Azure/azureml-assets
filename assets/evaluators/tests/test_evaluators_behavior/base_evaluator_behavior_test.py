@@ -325,7 +325,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     # ==================== QUERY TESTS ====================
 
     def run_query_test(self, input_query, description: str, assert_type: BaseEvaluatorRunner.AssertType):
-        """Helper method to test various query inputs."""
+        """Test various query inputs."""
         results = self._run_evaluation(
             query=input_query,
             response=self.VALID_RESPONSE,
@@ -484,7 +484,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     # ==================== RESPONSE TESTS ====================
 
     def run_response_test(self, input_response, description: str, assert_type: BaseEvaluatorRunner.AssertType):
-        """Helper method to test various query inputs."""
+        """Test various response inputs."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=input_response,
@@ -626,7 +626,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_invalid_type_parameter_in_content(self):
         """Response has invalid type parameter in content - should raise invalid value error."""
         modified_response = self.VALID_RESPONSE.copy()
-        modified_response[-1]["content"]["type"] = "invalid_type"
+        modified_response[-1]["content"][0]["type"] = "invalid_type"
         self.run_response_test(
             input_response=modified_response,
             description="Response Invalid Type Parameter in Content",
@@ -636,7 +636,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_valid_type_parameter_in_content(self):
         """Response has valid type parameter in content - should pass."""
         modified_response = self.VALID_RESPONSE.copy()
-        modified_response[-1]["content"]["type"] = "text"
+        modified_response[-1]["content"][0]["type"] = "text"
         self.run_response_test(
             input_response=modified_response,
             description="Response Valid Type Parameter in Content",

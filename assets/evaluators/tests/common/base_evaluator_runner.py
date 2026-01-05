@@ -117,6 +117,7 @@ class BaseEvaluatorRunner:
             INVALID_VALUE: Indicates test should assert an invalid value error.
             PASS: Indicates test should assert a passing result.
         """
+
         MISSING_FIELD = "MISSING_FIELD"
         INVALID_VALUE = "INVALID_VALUE"
         PASS = "PASS"

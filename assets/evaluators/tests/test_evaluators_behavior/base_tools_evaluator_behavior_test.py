@@ -85,7 +85,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     def run_tool_definitions_test(
         self, input_tool_definitions, description: str, assert_type: BaseEvaluatorBehaviorTest.AssertType
     ):
-        """Helper method to test various tool definitions inputs."""
+        """Test various tool definitions inputs."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
             response=self.VALID_RESPONSE,
