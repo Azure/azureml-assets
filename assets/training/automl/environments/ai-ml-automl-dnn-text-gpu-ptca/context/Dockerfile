@@ -78,7 +78,7 @@ RUN pip install \
     'requests==2.32.5' \
     'urllib3==2.6.0' \
     'mlflow-skinny==2.15.1' \
-    'fileloack>=3.20.1'
+    'filelock>=3.20.1'
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0'
