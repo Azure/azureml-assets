@@ -111,7 +111,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     def test_tool_definitions_as_string(self):
         """Tool definitions as string - should pass."""
         self.run_tool_definitions_test(
-            input_tool_definitions=self.STRING_TOOL_DEFINITIONS,
+            input_tool_definitions=self.INVALID_TOOL_DEFINITIONS_AS_STRING,
             description="Tool Definitions String",
             assert_type=self.AssertType.PASS,
         )

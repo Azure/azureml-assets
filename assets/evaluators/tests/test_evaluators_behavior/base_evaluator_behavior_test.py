@@ -341,11 +341,19 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_query_not_present(self):
         """Query not present - should raise missing field error."""
-        self.run_query_test(input_query=None, description="Query Not Present", assert_type=self.AssertType.MISSING_FIELD)
+        self.run_query_test(
+            input_query=None,
+            description="Query Not Present",
+            assert_type=self.AssertType.MISSING_FIELD
+        )
 
     def test_query_as_string(self):
         """Query as string - should pass."""
-        self.run_query_test(input_query=self.STRING_QUERY, description="Query String", assert_type=self.AssertType.PASS)
+        self.run_query_test(
+            input_query=self.STRING_QUERY,
+            description="Query String",
+            assert_type=self.AssertType.PASS
+        )
 
     def test_query_invalid_format_as_string(self):
         """Query as string - should pass."""
@@ -590,7 +598,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_valid_content_parameter(self):
         """Response has valid content parameter - should pass."""
         modified_response = self.VALID_RESPONSE.copy()
-        modified_response = modified_response[-1]["content"] = self.STRING_RESPONSE
+        modified_response[-1]["content"] = self.STRING_RESPONSE
         self.run_response_test(
             input_response=modified_response,
             description="Response Valid Content Parameter",
@@ -618,7 +626,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_invalid_type_parameter_in_content(self):
         """Response has invalid type parameter in content - should raise invalid value error."""
         modified_response = self.VALID_RESPONSE.copy()
-        modified_response = modified_response[-1]["content"]["type"] = "invalid_type"
+        modified_response[-1]["content"]["type"] = "invalid_type"
         self.run_response_test(
             input_response=modified_response,
             description="Response Invalid Type Parameter in Content",
@@ -628,7 +636,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_valid_type_parameter_in_content(self):
         """Response has valid type parameter in content - should pass."""
         modified_response = self.VALID_RESPONSE.copy()
-        modified_response = modified_response[-1]["content"]["type"] = "text"
+        modified_response[-1]["content"]["type"] = "text"
         self.run_response_test(
             input_response=modified_response,
             description="Response Valid Type Parameter in Content",
