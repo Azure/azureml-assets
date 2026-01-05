@@ -508,7 +508,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
         assert result_data["details"]["precision_score"] == 0.0
         assert result_data["details"]["recall_score"] == 0.0
         assert result_data["details"]["f1_score"] == 0.0
-    
+
     def test_string_actions(self):
         """Test with actions as a string (should error)."""
         results = self._run_evaluation(
@@ -518,7 +518,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
         )
         result_data = self._extract_and_print_result(results, "String Actions")
         self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
-    
+
     def test_none_actions(self):
         """Test with None actions (should error)."""
         results = self._run_evaluation(
@@ -555,9 +555,18 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
         """Test precision, recall, F1 with partial match."""
         # Actions has 2 correct and 1 extra, expected has 3
         partial_actions = [
-            {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_1", "name": "call_tool_A", "arguments": {}}]},
-            {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_2", "name": "call_tool_B", "arguments": {}}]},
-            {"role": "assistant", "content": [{"type": "tool_call", "tool_call_id": "call_3", "name": "extra_tool", "arguments": {}}]},
+            {
+                "role": "assistant",
+                "content": [{"type": "tool_call", "tool_call_id": "call_1", "name": "call_tool_A", "arguments": {}}]
+            },
+            {
+                "role": "assistant",
+                "content": [{"type": "tool_call", "tool_call_id": "call_2", "name": "call_tool_B", "arguments": {}}]
+            },
+            {
+                "role": "assistant",
+                "content": [{"type": "tool_call", "tool_call_id": "call_3", "name": "extra_tool", "arguments": {}}]
+            },
         ]
         expected = ["call_tool_A", "call_tool_B", "call_tool_C"]
 

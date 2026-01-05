@@ -9,7 +9,7 @@ Tests various input scenarios: query, and response.
 
 from typing import Any, Dict, List
 import json
-from .base_evaluator_runner import BaseEvaluatorRunner
+from ..common.base_evaluator_runner import BaseEvaluatorRunner
 
 
 class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
