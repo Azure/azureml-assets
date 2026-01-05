@@ -9,6 +9,7 @@ Tests various input scenarios: query, and response.
 
 from typing import Any, Dict, List
 import json
+import copy
 from ..common.base_evaluator_runner import BaseEvaluatorRunner
 
 
@@ -157,10 +158,12 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     VALID_QUERY: List[Dict[str, Any]] = [
         {
             "role": "user",
-            "content": {
-                "type": "input_text",
-                "text": "Can you send me an email to your_email@example.com with weather information for Seattle?",
-            },
+            "content": [
+                {
+                    "type": "input_text",
+                    "text": "Can you send me an email to your_email@example.com with weather information for Seattle?",
+                }
+            ],
         },
     ]
 
@@ -264,7 +267,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def remove_parameter_from_input_content(self, input_data: List[Dict], parameter_name: str) -> List[Dict]:
         """Remove a parameter from the content field of all items in the input data."""
-        input_data_copy = input_data.copy()
+        input_data_copy = copy.deepcopy(input_data)
 
         for message in input_data_copy:
             for content in message.get("content", []):
@@ -275,7 +278,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def remove_parameter_from_input(self, input_data: List[Dict], parameter_name: str) -> List[Dict]:
         """Remove a parameter from all items in the input data."""
-        input_data_copy = input_data.copy()
+        input_data_copy = copy.deepcopy(input_data)
 
         for message in input_data_copy:
             if parameter_name in message:
@@ -287,7 +290,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         self, input_data: List[Dict], parameter_name: str, parameter_value: Any
     ) -> List[Dict]:
         """Update parameter value for the content field of all items in the input data."""
-        input_data_copy = input_data.copy()
+        input_data_copy = copy.deepcopy(input_data)
 
         for message in input_data_copy:
             for content in message.get("content", []):
@@ -300,7 +303,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         self, input_data: List[Dict], parameter_name: str, parameter_value: Any
     ) -> List[Dict]:
         """Update parameter value for all items in the input data."""
-        input_data_copy = input_data.copy()
+        input_data_copy = copy.deepcopy(input_data)
 
         for message in input_data_copy:
             if parameter_name in message:
@@ -597,7 +600,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_valid_content_parameter(self):
         """Response has valid content parameter - should pass."""
-        modified_response = self.VALID_RESPONSE.copy()
+        modified_response = copy.deepcopy(self.VALID_RESPONSE)
         modified_response[-1]["content"] = self.STRING_RESPONSE
         self.run_response_test(
             input_response=modified_response,
@@ -625,7 +628,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_invalid_type_parameter_in_content(self):
         """Response has invalid type parameter in content - should raise invalid value error."""
-        modified_response = self.VALID_RESPONSE.copy()
+        modified_response = copy.deepcopy(self.VALID_RESPONSE)
         modified_response[-1]["content"][0]["type"] = "invalid_type"
         self.run_response_test(
             input_response=modified_response,
@@ -635,7 +638,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_valid_type_parameter_in_content(self):
         """Response has valid type parameter in content - should pass."""
-        modified_response = self.VALID_RESPONSE.copy()
+        modified_response = copy.deepcopy(self.VALID_RESPONSE)
         modified_response[-1]["content"][0]["type"] = "text"
         self.run_response_test(
             input_response=modified_response,
