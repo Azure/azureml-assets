@@ -324,7 +324,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     # ==================== QUERY TESTS ====================
 
-    def test_query(self, input_query, description: str, assert_type: BaseEvaluatorRunner.AssertType):
+    def run_query_test(self, input_query, description: str, assert_type: BaseEvaluatorRunner.AssertType):
         """Helper method to test various query inputs."""
         results = self._run_evaluation(
             query=input_query,
@@ -341,15 +341,15 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_query_not_present(self):
         """Query not present - should raise missing field error."""
-        self.test_query(input_query=None, description="Query Not Present", assert_type=self.AssertType.MISSING_FIELD)
+        self.run_query_test(input_query=None, description="Query Not Present", assert_type=self.AssertType.MISSING_FIELD)
 
     def test_query_as_string(self):
         """Query as string - should pass."""
-        self.test_query(input_query=self.STRING_QUERY, description="Query String", assert_type=self.AssertType.PASS)
+        self.run_query_test(input_query=self.STRING_QUERY, description="Query String", assert_type=self.AssertType.PASS)
 
     def test_query_invalid_format_as_string(self):
         """Query as string - should pass."""
-        self.test_query(
+        self.run_query_test(
             input_query=self.INVALID_QUERY_AS_STRING,
             description="Query Invalid Format as String",
             assert_type=self.AssertType.PASS,
@@ -357,7 +357,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_query_invalid_format(self):
         """Query in invalid format - should raise invalid value error."""
-        self.test_query(
+        self.run_query_test(
             input_query=self.INVALID_QUERY,
             description="Query Invalid Format",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -365,13 +365,13 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_query_wrong_type(self):
         """Query in wrong type - should raise invalid value error."""
-        self.test_query(
+        self.run_query_test(
             input_query=self.WRONG_TYPE, description="Query Wrong Type", assert_type=self.AssertType.INVALID_VALUE
         )
 
     def test_query_empty_list(self):
         """Query as empty list - should raise missing field error."""
-        self.test_query(
+        self.run_query_test(
             input_query=self.EMPTY_LIST, description="Query Empty List", assert_type=self.AssertType.MISSING_FIELD
         )
 
@@ -380,7 +380,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_missing_role_parameter(self):
         """Query is missing role parameter - should raise invalid value error."""
         modified_query = self.remove_parameter_from_input_content(self.VALID_QUERY, "role")
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Missing Role Parameter",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -389,7 +389,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_valid_system_role_parameter(self):
         """Query with system role parameter - should pass."""
         modified_query = self.update_parameter_in_input(self.VALID_QUERY, "role", "system")
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Valid System Role Parameter",
             assert_type=self.AssertType.PASS,
@@ -399,14 +399,14 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         """Query with invalid role parameter - should raise invalid value error."""
         modified_query = self.update_parameter_in_input(self.VALID_QUERY, "role", "invalid_role")
         # TODO: Should this be INVALID_VALUE instead of PASS?
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query, description="Query Invalid Role Parameter", assert_type=self.AssertType.PASS
         )
 
     def test_query_missing_content_parameter(self):
         """Query is missing content parameter - should raise invalid value error."""
         modified_query = self.remove_parameter_from_input(self.VALID_QUERY, "content")
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Missing Content Parameter",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -415,7 +415,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_empty_content_parameter(self):
         """Query has empty content parameter - should raise invalid value error."""
         modified_query = self.update_parameter_in_input(self.VALID_QUERY, "content", self.EMPTY_LIST)
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Empty Content Parameter",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -424,7 +424,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_invalid_content_parameter_type(self):
         """Query has invalid content parameter type - should raise invalid value error."""
         modified_query = self.update_parameter_in_input(self.VALID_QUERY, "content", self.WRONG_TYPE)
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Invalid Content Parameter Type",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -433,14 +433,14 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_valid_content_parameter(self):
         """Query has valid content parameter - should pass."""
         modified_query = self.update_parameter_in_input(self.VALID_QUERY, "content", self.STRING_QUERY)
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query, description="Query Valid Content Parameter", assert_type=self.AssertType.PASS
         )
 
     def test_query_missing_text_parameter_in_content(self):
         """Query is missing text parameter in content - should raise invalid value error."""
         modified_query = self.remove_parameter_from_input_content(self.VALID_QUERY, "text")
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Missing Text Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -449,7 +449,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_missing_type_parameter_in_content(self):
         """Query is missing type parameter in content - should raise invalid value error."""
         modified_query = self.remove_parameter_from_input_content(self.VALID_QUERY, "type")
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Missing Type Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -458,7 +458,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_invalid_type_parameter_in_content(self):
         """Query has invalid type parameter in content - should raise invalid value error."""
         modified_query = self.update_parameter_in_input_content(self.VALID_QUERY, "type", "invalid_type")
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Invalid Type Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -467,7 +467,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_query_valid_type_parameter_in_content(self):
         """Query has valid type parameter in content - should pass."""
         modified_query = self.update_parameter_in_input_content(self.VALID_QUERY, "type", "text")
-        self.test_query(
+        self.run_query_test(
             input_query=modified_query,
             description="Query Valid Type Parameter in Content",
             assert_type=self.AssertType.PASS,
@@ -475,7 +475,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     # ==================== RESPONSE TESTS ====================
 
-    def test_response(self, input_response, description: str, assert_type: BaseEvaluatorRunner.AssertType):
+    def run_response_test(self, input_response, description: str, assert_type: BaseEvaluatorRunner.AssertType):
         """Helper method to test various query inputs."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
@@ -489,19 +489,19 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_not_present(self):
         """Response not present - should raise missing field error."""
-        self.test_response(
+        self.run_response_test(
             input_response=None, description="Response Not Present", assert_type=self.AssertType.MISSING_FIELD
         )
 
     def test_response_as_string(self):
         """Response as string - should pass."""
-        self.test_response(
+        self.run_response_test(
             input_response=self.STRING_RESPONSE, description="Response String", assert_type=self.AssertType.PASS
         )
 
     def test_response_invalid_format_as_string(self):
         """Response as string - should pass."""
-        self.test_response(
+        self.run_response_test(
             input_response=self.INVALID_RESPONSE_AS_STRING,
             description="Response Invalid Format as String",
             assert_type=self.AssertType.PASS,
@@ -509,7 +509,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_invalid_format(self):
         """Response in invalid format - should raise invalid value error."""
-        self.test_response(
+        self.run_response_test(
             input_response=self.INVALID_RESPONSE,
             description="Response Invalid Format",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -517,7 +517,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_wrong_type(self):
         """Response in wrong type - should raise invalid value error."""
-        self.test_response(
+        self.run_response_test(
             input_response=self.WRONG_TYPE,
             description="Response Wrong Type",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -525,7 +525,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_empty_list(self):
         """Response as empty list - should raise missing field error."""
-        self.test_response(
+        self.run_response_test(
             input_response=self.EMPTY_LIST,
             description="Response Empty List",
             assert_type=self.AssertType.MISSING_FIELD,
@@ -533,7 +533,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_minimal_format(self):
         """Response in minimal format - should pass."""
-        self.test_response(
+        self.run_response_test(
             input_response=self.MINIMAL_RESPONSE,
             description="Response Minimal without Tool Calls",
             assert_type=self.AssertType.PASS,
@@ -544,7 +544,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_role_parameter(self):
         """Response is missing role parameter - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "role")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing Role Parameter",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -554,7 +554,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         """Response with invalid role parameter - should raise invalid value error."""
         modified_response = self.update_parameter_in_input(self.VALID_RESPONSE, "role", "invalid_role")
         # TODO: Should this be INVALID_VALUE instead of PASS?
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Invalid Role Parameter",
             assert_type=self.AssertType.PASS,
@@ -563,7 +563,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_content_parameter(self):
         """Response is missing content parameter - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input(self.VALID_RESPONSE, "content")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing Content Parameter",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -572,7 +572,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_empty_content_parameter(self):
         """Response has empty content parameter - should raise invalid value error."""
         modified_response = self.update_parameter_in_input(self.VALID_RESPONSE, "content", self.EMPTY_LIST)
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Empty Content Parameter",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -581,7 +581,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_invalid_content_parameter_type(self):
         """Response has invalid content parameter type - should raise invalid value error."""
         modified_response = self.update_parameter_in_input(self.VALID_RESPONSE, "content", self.WRONG_TYPE)
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Invalid Content Parameter Type",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -591,7 +591,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         """Response has valid content parameter - should pass."""
         modified_response = self.VALID_RESPONSE.copy()
         modified_response = modified_response[-1]["content"] = self.STRING_RESPONSE
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Valid Content Parameter",
             assert_type=self.AssertType.PASS,
@@ -600,7 +600,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_text_parameter_in_content(self):
         """Response is missing text parameter in content - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "text")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing Text Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -609,7 +609,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_type_parameter_in_content(self):
         """Response is missing type parameter in content - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "type")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing Type Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -619,7 +619,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         """Response has invalid type parameter in content - should raise invalid value error."""
         modified_response = self.VALID_RESPONSE.copy()
         modified_response = modified_response[-1]["content"]["type"] = "invalid_type"
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Invalid Type Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -629,7 +629,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         """Response has valid type parameter in content - should pass."""
         modified_response = self.VALID_RESPONSE.copy()
         modified_response = modified_response[-1]["content"]["type"] = "text"
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Valid Type Parameter in Content",
             assert_type=self.AssertType.PASS,
@@ -638,7 +638,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_tool_call_id_parameter(self):
         """Response is missing tool_call_id parameter - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input(self.VALID_RESPONSE, "tool_call_id")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing tool_call_id Parameter",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -647,7 +647,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_tool_result_parameter_in_content(self):
         """Response is missing tool_result parameter in content - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "tool_result")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing tool_result Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -656,7 +656,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_invalid_tool_result_parameter_in_content(self):
         """Response has invalid tool_result parameter in content - should raise invalid value error."""
         modified_response = self.update_parameter_in_input_content(self.VALID_RESPONSE, "tool_result", self.WRONG_TYPE)
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Invalid tool_result Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -665,7 +665,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_tool_call_id_parameter_in_content(self):
         """Response is missing tool_call_id parameter in content - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "tool_call_id")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing tool_call_id Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -674,7 +674,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_name_parameter_in_content(self):
         """Response is missing name parameter in content - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "name")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing name Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -683,7 +683,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_missing_arguments_parameter_in_content(self):
         """Response is missing arguments parameter in content - should raise invalid value error."""
         modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "arguments")
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Missing arguments Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -692,7 +692,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     def test_response_invalid_arguments_parameter_in_content(self):
         """Response has invalid arguments parameter in content - should raise invalid value error."""
         modified_response = self.update_parameter_in_input_content(self.VALID_RESPONSE, "arguments", self.WRONG_TYPE)
-        self.test_response(
+        self.run_response_test(
             input_response=modified_response,
             description="Response Invalid arguments Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,

@@ -90,7 +90,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     # ==================== TOOL CALLS WITHOUT RESPONSE TESTS ====================
 
-    def test_tool_calls(
+    def run_tool_calls_test(
         self, input_tool_calls, description: str, assert_type: BaseToolsEvaluatorBehaviorTest.AssertType
     ):
         """Helper method to test various tool calls inputs."""
@@ -106,7 +106,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     def test_tool_calls_invalid_format_as_string(self):
         """Tool calls as string - should pass."""
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=self.INVALID_TOOL_CALLS_AS_STRING,
             description="Tool Calls Invalid Format as String",
             assert_type=self.AssertType.PASS,
@@ -114,7 +114,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     def test_tool_calls_invalid_format(self):
         """Tool calls in invalid format - should raise invalid value error."""
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=self.INVALID_TOOL_CALLS,
             description="Tool Calls Invalid Format",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -122,7 +122,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     def test_tool_calls_wrong_type(self):
         """Tool calls in wrong type - should raise invalid value error."""
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=self.WRONG_TYPE,
             description="Tool Calls Wrong Type",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -130,7 +130,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     def test_tool_calls_empty_list(self):
         """Tool calls as empty list - should raise missing field error."""
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=self.EMPTY_LIST,
             description="Tool Calls Empty List",
             assert_type=self.AssertType.MISSING_FIELD,
@@ -138,7 +138,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     # ==================== RESPONSE WITH VALID TOOL CALLS TESTS ====================
 
-    def test_response_with_valid_tool_calls(self, input_response, description: str):
+    def run_response_with_valid_tool_calls_test(self, input_response, description: str):
         """Helper method to test various response inputs with valid tool calls."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
@@ -152,44 +152,44 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     def test_response_not_present_with_valid_tool_calls(self):
         """Response not present with valid tool calls - should pass."""
-        self.test_response_with_valid_tool_calls(
+        self.run_response_with_valid_tool_calls_test(
             input_response=None, description="Response Not Present with Valid Tool Calls"
         )
 
     def test_response_as_string_with_valid_tool_calls(self):
         """Response as string with valid tool calls - should pass."""
-        self.test_response_with_valid_tool_calls(
+        self.run_response_with_valid_tool_calls_test(
             input_response=self.STRING_RESPONSE, description="Response String with Valid Tool Calls"
         )
 
     def test_response_invalid_format_as_string_with_valid_tool_calls(self):
         """Response as string with valid tool calls - should pass."""
-        self.test_response_with_valid_tool_calls(
+        self.run_response_with_valid_tool_calls_test(
             input_response=self.INVALID_RESPONSE_AS_STRING,
             description="Response Invalid Format as String with Valid Tool Calls",
         )
 
     def test_response_invalid_format_with_valid_tool_calls(self):
         """Response in invalid format with valid tool calls - should pass."""
-        self.test_response_with_valid_tool_calls(
+        self.run_response_with_valid_tool_calls_test(
             input_response=self.INVALID_RESPONSE, description="Response Invalid Format with Valid Tool Calls"
         )
 
     def test_response_wrong_type_with_valid_tool_calls(self):
         """Response in wrong type with valid tool calls - should pass."""
-        self.test_response_with_valid_tool_calls(
+        self.run_response_with_valid_tool_calls_test(
             input_response=self.WRONG_TYPE, description="Response Wrong Type with Valid Tool Calls"
         )
 
     def test_response_empty_list_with_valid_tool_calls(self):
         """Response as empty list with valid tool calls - should pass."""
-        self.test_response_with_valid_tool_calls(
+        self.run_response_with_valid_tool_calls_test(
             input_response=self.EMPTY_LIST, description="Response Empty List with Valid Tool Calls"
         )
 
     # ==================== TOOL CALLS WITH VALID RESPONSE TESTS ====================
 
-    def test_tool_calls_with_valid_response(self, input_tool_calls, description: str):
+    def run_tool_calls_with_valid_response_test(self, input_tool_calls, description: str):
         """Helper method to test various tool call inputs with valid response."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,
@@ -203,32 +203,32 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
 
     def test_tool_calls_not_present_with_valid_response(self):
         """Tool calls not present with valid response - should pass."""
-        self.test_tool_calls_with_valid_response(
+        self.run_tool_calls_with_valid_response_test(
             input_tool_calls=None, description="Tool Calls Not Present with Valid Response"
         )
 
     def test_tool_calls_invalid_format_as_string_with_valid_response(self):
         """Tool calls as string with valid response - should pass."""
-        self.test_tool_calls_with_valid_response(
+        self.run_tool_calls_with_valid_response_test(
             input_tool_calls=self.INVALID_TOOL_CALLS_AS_STRING,
             description="Tool Calls Invalid Format as String with Valid Response",
         )
 
     def test_tool_calls_invalid_format_with_valid_response(self):
         """Tool calls in invalid format with valid response - should pass."""
-        self.test_tool_calls_with_valid_response(
+        self.run_tool_calls_with_valid_response_test(
             input_tool_calls=self.INVALID_TOOL_CALLS, description="Tool Calls Invalid Format with Valid Response"
         )
 
     def test_tool_calls_wrong_type_with_valid_response(self):
         """Tool calls in wrong type with valid response - should pass."""
-        self.test_tool_calls_with_valid_response(
+        self.run_tool_calls_with_valid_response_test(
             input_tool_calls=self.WRONG_TYPE, description="Tool Calls Wrong Type with Valid Response"
         )
 
     def test_tool_calls_empty_list_with_valid_response(self):
         """Tool calls as empty list with valid response - should pass."""
-        self.test_tool_calls_with_valid_response(
+        self.run_tool_calls_with_valid_response_test(
             input_tool_calls=self.EMPTY_LIST, description="Tool Calls Empty List with Valid Response"
         )
 
@@ -237,7 +237,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     def test_tool_definitions_missing_type_parameter(self):
         """Tool calls missing 'type' parameter - should raise invalid value error."""
         modified_tool_calls = self.remove_parameter_from_input(input_data=self.VALID_TOOL_CALLS, parameter_name="type")
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=modified_tool_calls,
             description="Tool Calls Missing 'type'",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -248,7 +248,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
         modified_tool_calls = self.update_parameter_in_input(
             input_data=self.VALID_TOOL_CALLS, parameter_name="type", parameter_value="invalid_type"
         )
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=modified_tool_calls,
             description="Tool Calls Invalid 'type'",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -259,7 +259,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
         modified_tool_calls = self.remove_parameter_from_input(
             input_data=self.VALID_TOOL_CALLS, parameter_name="tool_call_id"
         )
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=modified_tool_calls,
             description="Tool Calls Missing 'tool_call_id'",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -268,7 +268,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     def test_tool_calls_missing_name_parameter(self):
         """Tool calls missing 'name' parameter - should raise invalid value error."""
         modified_tool_calls = self.remove_parameter_from_input(input_data=self.VALID_TOOL_CALLS, parameter_name="name")
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=modified_tool_calls,
             description="Tool Calls Missing 'name'",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -279,7 +279,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
         modified_tool_calls = self.remove_parameter_from_input(
             input_data=self.VALID_TOOL_CALLS, parameter_name="arguments"
         )
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=modified_tool_calls,
             description="Tool Calls Missing 'arguments'",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -290,7 +290,7 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
         modified_tool_calls = self.update_parameter_in_input(
             input_data=self.VALID_TOOL_CALLS, parameter_name="arguments", parameter_value=self.WRONG_TYPE
         )
-        self.test_tool_calls(
+        self.run_tool_calls_test(
             input_tool_calls=modified_tool_calls,
             description="Tool Calls Invalid 'arguments' Type",
             assert_type=self.AssertType.INVALID_VALUE,

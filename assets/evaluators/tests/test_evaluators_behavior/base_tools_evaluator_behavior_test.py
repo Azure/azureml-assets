@@ -82,7 +82,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     # ==================== TOOL DEFINITIONS TESTS ====================
 
-    def test_tool_definitions(
+    def run_tool_definitions_test(
         self, input_tool_definitions, description: str, assert_type: BaseEvaluatorBehaviorTest.AssertType
     ):
         """Helper method to test various tool definitions inputs."""
@@ -102,7 +102,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     def test_tool_definitions_not_present(self):
         """Tool definitions not present - should raise missing field error."""
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=None,
             description="Tool Definitions Not Present",
             assert_type=self.AssertType.MISSING_FIELD,
@@ -110,7 +110,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     def test_tool_definitions_as_string(self):
         """Tool definitions as string - should pass."""
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=self.STRING_TOOL_DEFINITIONS,
             description="Tool Definitions String",
             assert_type=self.AssertType.PASS,
@@ -118,7 +118,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     def test_tool_definitions_invalid_format_as_string(self):
         """Tool definitions as string - should pass."""
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=self.INVALID_TOOL_DEFINITIONS_AS_STRING,
             description="Tool Definitions Invalid Format as String",
             assert_type=self.AssertType.PASS,
@@ -126,7 +126,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     def test_tool_definitions_invalid_format(self):
         """Tool definitions in invalid format - should raise invalid value error."""
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=self.INVALID_TOOL_DEFINITIONS,
             description="Tool Definitions Invalid Format",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -134,7 +134,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     def test_tool_definitions_wrong_type(self):
         """Tool definitions in wrong type - should raise invalid value error."""
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=self.WRONG_TYPE,
             description="Tool Definitions Wrong Type",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -142,7 +142,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     def test_tool_definitions_empty_list(self):
         """Tool definitions as empty list - should raise missing field error."""
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=self.EMPTY_LIST,
             description="Tool Definitions Empty List",
             assert_type=self.AssertType.MISSING_FIELD,
@@ -154,7 +154,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         modified_tool_definitions = self.remove_parameter_from_input(
             input_data=self.VALID_TOOL_DEFINITIONS, parameter_name="name"
         )
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=modified_tool_definitions,
             description="Tool Definitions Missing 'name'",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -165,7 +165,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         modified_tool_definitions = self.remove_parameter_from_input(
             input_data=self.VALID_TOOL_DEFINITIONS, parameter_name="parameters"
         )
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=modified_tool_definitions,
             description="Tool Definitions Missing 'parameters'",
             assert_type=self.AssertType.INVALID_VALUE,
@@ -176,7 +176,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
         modified_tool_definitions = self.update_parameter_in_input(
             input_data=self.VALID_TOOL_DEFINITIONS, parameter_name="parameters", parameter_value=self.WRONG_TYPE
         )
-        self.test_tool_definitions(
+        self.run_tool_definitions_test(
             input_tool_definitions=modified_tool_definitions,
             description="Tool Definitions Invalid 'parameters' Type",
             assert_type=self.AssertType.INVALID_VALUE,
