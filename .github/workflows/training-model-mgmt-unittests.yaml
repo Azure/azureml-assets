@@ -13,13 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  conda_env_prefix: /opt/conda/envs/model_mgmt
-  model_mgmt_root_dir: assets/training/model_management
-  model_mgmt_src_dir: assets/training/model_management/src/azureml/
-  model_mgmt_test_dir: assets/training/model_management/tests
-  model_mgmt_unittests_dir: assets/training/model_management/tests/unittests
-  model_mgmt_test_req: assets/training/model_management/tests/dev_requirements.txt
-  model_mgmt_conda_yaml: assets/training/model_management/tests/dev_conda_env.yaml
+
   pytest_reports: pytest-reports
 
 jobs:
