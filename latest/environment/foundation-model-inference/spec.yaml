@@ -3,7 +3,7 @@ description: Environment used for deploying model to use DS-MII or vLLM for
   inference
 
 name: "foundation-model-inference"
-version: "86"
+version: "87"
 
 build:
   path: "context"
