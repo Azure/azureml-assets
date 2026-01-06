@@ -7,7 +7,7 @@ Base class for behavioral tests of for tools evaluators.
 Tests various input scenarios: query, response, and tool_definitions.
 """
 
-from flask import json
+import json
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 
 
