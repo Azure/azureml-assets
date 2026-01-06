@@ -124,7 +124,6 @@ torchvision==0.22.1+cu126
 tqdm==4.67.1
 transformers==4.52.1
 triton==3.3.1
-tutel==0.3
 typing_extensions==4.14.1
 typing-inspection==0.4.1
 tzdata==2025.2
