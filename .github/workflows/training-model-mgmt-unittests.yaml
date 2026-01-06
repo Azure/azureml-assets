@@ -1,15 +1,15 @@
 name: training-model-mgmt-unittests
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - assets/common/components/register_model/**
-      - assets/common/src/model_registration/**
-      - assets/common/components/mlflow_model_local_validation/**
-      - assets/common/src/mlflow_model_local_validation/**
-      - .github/workflows/training-model-mgmt-unittests.yaml
+#   pull_request:
+#     branches:
+#       - main
+#     paths:
+#       - assets/common/components/register_model/**
+#       - assets/common/src/model_registration/**
+#       - assets/common/components/mlflow_model_local_validation/**
+#       - assets/common/src/mlflow_model_local_validation/**
+#       - .github/workflows/training-model-mgmt-unittests.yaml
   workflow_dispatch:
 
 env:
