@@ -542,14 +542,14 @@ def setup_ray_cluster():
         if host_list[0] == current_ip:
             logger.info("This node is the Ray head node")
             try:
-                # Start Ray head node using subprocess with agent mode and minimal logging
+                # Start Ray head node using subprocess with agent mode
                 import subprocess
                 result = subprocess.run([
                     "ray", "start", "--head",
                     f"--port={RAY_PORT}",
                     "--disable-usage-stats",
                     "--include-dashboard=false",
-                    "--log-style=minimal",
+                    "--log-style=auto",
                     "--autoscaling-config={}",
                     "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\
                     \"periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"\
@@ -584,7 +584,7 @@ def setup_ray_cluster():
                         "ray", "start",
                         f"--address={head_ip}:{RAY_PORT}",
                         "--disable-usage-stats",
-                        "--log-style=minimal",
+                        "--log-style=auto",
                         "--autoscaling-config={}",
                         "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\"\
                         periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"\
