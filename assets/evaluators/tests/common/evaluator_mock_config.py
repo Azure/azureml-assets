@@ -50,12 +50,12 @@ EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
     "relevance": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "response_completeness": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "task_completion": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
-    "task_adherence": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
-    "tool_call_accuracy": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
+    "task_adherence": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
+    "tool_call_accuracy": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "tool_input_accuracy": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
     "tool_output_utilization": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
     "tool_selection": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
-    "tool_call_success": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
+    "tool_call_success": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
 }
 
 
@@ -88,6 +88,7 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
         "llm_output": {
             "score": score,
             "label": "pass",
+            "flagged": False,
             "success": BINARY_SUCCESS_SCORE,
             "tool_calls_success_level": GRADERS_SUCCESS_SCORE,
             "result": score,
