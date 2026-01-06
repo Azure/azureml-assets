@@ -2,6 +2,10 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.100 (2026-01-06)
+### 🐛 Bugs Fixed
+- [#4714](https://github.com/Azure/azureml-assets/pull/4714) Fix AttributeError when updating metadata for asset types without _system_metadata attribute
+
 ## 1.16.99 (2025-11-24)
 ### 🐛 Bugs Fixed
 - [#4636](https://github.com/Azure/azureml-assets/pull/4636) Handle non-JSON content from Azure CLI responses
