@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: pipeline_rl_finetune
-version: 0.0.1
+version: 0.0.2
 type: pipeline
 display_name: Pipeline RFT Trainer (Preview)
 description: Pipeline for Multi-Strategy Reinforcement Learning Training of LLMs Powered by Verl(https://github.com/volcengine/verl).
@@ -451,7 +451,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   component_rl_trainer:
     type: command
-    component: azureml:rft_trainer:0.0.1
+    component: azureml:rft_trainer:0.0.2
     compute: '${{parent.inputs.compute_finetune}}'
     environment_variables:
       _AZUREML_CR_ENABLE_ITP_CAP: "false"

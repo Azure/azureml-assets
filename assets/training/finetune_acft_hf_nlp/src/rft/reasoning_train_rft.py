@@ -53,9 +53,6 @@ os.environ["VLLM_ALLREDUCE_USE_SYMM_MEM"] = "0"
 
 # 'logger' is used before ray initialization happens
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.rft.trainer")
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-logger.addHandler(stream_handler)
 
 
 def apply_patches(patch_folder: str):
@@ -549,11 +546,12 @@ def setup_ray_cluster():
                     f"--port={RAY_PORT}",
                     "--disable-usage-stats",
                     "--include-dashboard=false",
-                    "--log-style=minimal",
+                    "--log-style=auto",
                     "--autoscaling-config={}",
-                    "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\
-                    \"periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"\
-                    automatic_object_spilling_enabled\":false,\"enable_object_reconstruction\":false}",
+                    # Head node not starting with system-config, commenting out for now
+                    # "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\
+                    # \"periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\
+                    # \"enable_object_reconstruction\":false}",
                 ], stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True, env={**os.environ, "RAY_LOG_TO_STDERR": "0"})
@@ -584,11 +582,12 @@ def setup_ray_cluster():
                         "ray", "start",
                         f"--address={head_ip}:{RAY_PORT}",
                         "--disable-usage-stats",
-                        "--log-style=minimal",
+                        "--log-style=auto",
                         "--autoscaling-config={}",
-                        "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\"\
-                        periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\"\
-                        automatic_object_spilling_enabled\":false,\"enable_object_reconstruction\":false}",
+                        # ValueError: System config parameters can only be set on the head node.
+                        # "--system-config={\"enable_stats\":false,\"enable_timeline\":false,\
+                        # \"periodic_stats_print_interval_ms\":-1,\"enable_autoscaler_v2\":false,\
+                        # \"enable_object_reconstruction\":false}",
                     ],  stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         text=True,

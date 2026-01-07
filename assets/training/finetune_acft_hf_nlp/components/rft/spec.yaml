@@ -1,11 +1,12 @@
 
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: rft_trainer
-version: 0.0.1
+version: 0.0.2
 type: command
 is_deterministic: true
 display_name: Component RL Trainer (Preview)
 description: Component for Multi-Strategy Reinforcement Learning Training of Large Language Models.
+#FixMe: Update environment version to the latest before merging
 environment: azureml://registries/azureml/environments/acft-rft-training/versions/4
 code: ../../src/rft
 
