@@ -389,7 +389,7 @@ outputs:
 jobs:
   finetune_common_validation:
     type: command
-    component: azureml:finetune_common_validation:0.0.8
+    component: azureml:finetune_common_validation:0.0.10
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_path: ${{parent.inputs.mlflow_model}}
@@ -412,7 +412,7 @@ jobs:
 
   image_classification_model_import:
     type: command
-    component: azureml:transformers_image_classification_model_import:0.0.20
+    component: azureml:transformers_image_classification_model_import:0.0.22
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -424,7 +424,7 @@ jobs:
 
   image_classification_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.22
+    component: azureml:transformers_image_classification_finetune:0.0.23
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch

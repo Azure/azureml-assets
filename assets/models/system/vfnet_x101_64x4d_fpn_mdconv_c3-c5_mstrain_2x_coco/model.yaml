@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-image-models
   container_path: mmdetection-mlflow/vfnet_x101_64x4d_fpn_mdconv_c3-c5_mstrain_2x_coco/11f3ca2/mlflow_model_folder
-  storage_name: modelonboardingresources
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md

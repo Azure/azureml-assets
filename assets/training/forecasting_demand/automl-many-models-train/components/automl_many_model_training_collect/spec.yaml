@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_many_models_training_collection_step
-version: 0.0.10
+version: 0.0.11
 display_name: AutoML Many Models - Collection Training Results
 is_deterministic: false
 type: command
@@ -25,7 +25,7 @@ outputs:
 
 
 code: ../../src/collect
-environment: azureml://registries/azureml/environments/automl-gpu/versions/54
+environment: azureml://registries/azureml/environments/automl-gpu/versions/63
 
 command: >-
   python collect.py 

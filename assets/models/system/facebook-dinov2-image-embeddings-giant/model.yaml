@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-image-models
   container_path: HuggingFace-mlflow/Facebook-DinoV2-Image-Embeddings-ViT-Giant/1714456617/mlflow_model_folder
-  storage_name: modelonboardingresources
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md

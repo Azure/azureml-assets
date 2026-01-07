@@ -1,7 +1,7 @@
 path:
   container_name: finetuning-image-models
   container_path: mmdetection-3.x-mlflow/yolof_r50_c5_8x8_1x_coco/1714405380/mlflow_model_folder
-  storage_name: modelonboardingresources
+  storage_name: automlcesdkdataresources
   type: azureblob
 publish:
   description: description.md
