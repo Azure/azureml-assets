@@ -111,7 +111,8 @@ RUN pip install --no-cache-dir \
                 'mlflow-skinny==2.15.1' \
                 'cryptography>=45.0.7'\
                 'requests>=2.32.5' \
-                'certifi>=2025.11.12'
+                'certifi>=2025.11.12' \
+                'filelock>=3.20.1'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
