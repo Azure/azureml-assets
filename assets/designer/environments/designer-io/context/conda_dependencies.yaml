@@ -4,4 +4,6 @@ channels:
 dependencies:
   - python=3.12.8
   - pip:
+      - pip>=25.3
+      - urllib3>=2.6.0
       - azureml-designer-dataio-modules==0.0.88

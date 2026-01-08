@@ -14,4 +14,4 @@ os_type: linux
 
 tags:
   Python: 3.12.8
-  OS: Ubuntu22.04
+  OS: Ubuntu24.04
