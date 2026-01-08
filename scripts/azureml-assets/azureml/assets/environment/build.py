@@ -22,7 +22,7 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 TASK_FILENAME = "_acr_build_task.yaml"
-BUILD_STEP_TIMEOUT_SECONDS = 60 * 180
+BUILD_STEP_TIMEOUT_SECONDS = 60 * 240
 SCAN_STEP_TIMEOUT_SECONDS = 60 * 20
 DEFAULT_STEP_TIMEOUT_SECONDS = 60 * 30
 TRIVY_TIMEOUT = "15m0s"
