@@ -5,7 +5,7 @@ type: pipeline
 name: automl_hts_training
 display_name: AutoML Hierarchical Timeseries Forecasting - Training
 description: Enables AutoML Training for hts components.
-version: 0.0.11
+version: 0.0.12
 is_deterministic: false
 
 inputs:
@@ -43,7 +43,7 @@ outputs:
 jobs:
   automl_hts_train_setup_step:
     type: command
-    component: azureml:automl_hts_training_setup_step:0.0.11
+    component: azureml:automl_hts_training_setup_step:0.0.12
     inputs:
       raw_Data: ${{parent.inputs.raw_data}}
       automl_config: ${{parent.inputs.automl_config}}
@@ -60,7 +60,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_hts_data_aggregation_step:
     type: parallel
-    component: azureml:automl_hts_data_aggregation_step:0.0.11
+    component: azureml:automl_hts_data_aggregation_step:0.0.12
     inputs:
       partitioned_data: 
         ${{parent.jobs.automl_hts_train_setup_step.outputs.processed_data}}
@@ -86,7 +86,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_hts_automl_training_step:
     type: parallel
-    component: azureml:automl_hts_automl_training_step:0.0.11
+    component: azureml:automl_hts_automl_training_step:0.0.12
     inputs:
       aggregated_data: 
         ${{parent.jobs.automl_hts_data_aggregation_step.outputs.aggregated_data}}
@@ -114,7 +114,7 @@ jobs:
     compute: ${{parent.inputs.compute_name}}
   automl_hts_train_collect_step:
     type: command
-    component: azureml:automl_hts_training_collect_step:0.0.11
+    component: azureml:automl_hts_training_collect_step:0.0.12
     inputs:
       setup_metadata: 
         ${{parent.jobs.automl_hts_train_setup_step.outputs.metadata}}
