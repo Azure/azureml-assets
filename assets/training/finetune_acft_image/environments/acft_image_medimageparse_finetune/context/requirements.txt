@@ -31,3 +31,4 @@ ffmpeg==1.4
 wheel==0.41.2
 lightning==2.5.5
 azureml-acft-image-components[mip]=={{latest-pypi-version}}
+filelock>=3.20.1
