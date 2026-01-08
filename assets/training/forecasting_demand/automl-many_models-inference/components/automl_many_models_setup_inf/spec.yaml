@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: automl_many_models_inference_setup_step
-version: 0.0.11
+version: 0.0.12
 display_name: AutoML Many Models - Inference Setup Step
 is_deterministic: false
 type: command
@@ -87,7 +87,7 @@ outputs:
     description: 'The processed data after setup step.'
 
 code: ../src/setup
-environment: azureml://registries/azureml/environments/automl-gpu/versions/63
+environment: azureml://registries/azureml/environments/automl-gpu/versions/64
 
 command: >-
   python setup.py 
