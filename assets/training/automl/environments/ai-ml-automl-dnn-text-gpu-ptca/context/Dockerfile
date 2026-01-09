@@ -70,14 +70,15 @@ RUN pip install \
     deepspeed~=0.15.1
 
 # Address vulnerabilities
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.5.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.6.0' || true
 RUN pip install \
     'pyarrow==14.0.1' \
     'aiohttp==3.12.14' \
     'idna==3.7' \
     'requests==2.32.5' \
-    'urllib3==2.5.0' \
-    'mlflow-skinny==2.15.1'
+    'urllib3==2.6.0' \
+    'mlflow-skinny==2.15.1' \
+    'filelock>=3.20.1'
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0'

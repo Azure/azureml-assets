@@ -113,7 +113,8 @@ RUN pip install --no-cache-dir \
                 azureml-interpret=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
                 'requests>=2.32.5' \
-                'azure-identity>=1.25.1'
+                'azure-identity>=1.25.1' \
+                'filelock>=3.20.1'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -128,9 +129,9 @@ RUN pip install cryptography>=45.0.7 \
                 aiohttp>=3.12.14
 
 # Patch for pillow, requests, urllib3 vulnerability and update pip/starlette
-RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.5.0'
+RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.0'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.0' 'filelock>=3.20.1'
 
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0

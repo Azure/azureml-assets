@@ -6,4 +6,3 @@ path:
 publish:
   description: description.md
   type: mlflow_model
-  

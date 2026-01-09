@@ -20,7 +20,7 @@ pyarrow==21.0.0
 pybind11==3.0.0
 pylatexenc==2.10
 qwen-vl-utils==0.0.10
-ray[default]==2.51.1
+ray[default]==2.52.0
 tensorboard==2.20.0
 tensordict==0.9.1
 torchdata==0.11.0
@@ -28,3 +28,4 @@ torchvision==0.23.0
 transformers==4.57.3
 uvicorn==0.35.0
 zmq==0.0.0
+filelock>=3.20.1

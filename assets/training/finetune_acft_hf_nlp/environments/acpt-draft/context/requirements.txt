@@ -4,3 +4,4 @@ datasets==3.6.0
 pillow==11.3.0
 sglang==0.5.5
 git+https://github.com/sgl-project/SpecForge.git@34b58831caabdd8a4862258b380f9e49fbfe1b54
+filelock>=3.20.1
