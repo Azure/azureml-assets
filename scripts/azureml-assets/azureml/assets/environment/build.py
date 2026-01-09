@@ -22,9 +22,9 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 TASK_FILENAME = "_acr_build_task.yaml"
-BUILD_STEP_TIMEOUT_SECONDS = 60 * 420  # 7 hours - leave room for other steps (max total is 8 hours)
-SCAN_STEP_TIMEOUT_SECONDS = 60 * 10  # Reduced to 10 minutes
-DEFAULT_STEP_TIMEOUT_SECONDS = 60 * 10  # Reduced to 10 minutes
+BUILD_STEP_TIMEOUT_SECONDS = 60 * 90
+SCAN_STEP_TIMEOUT_SECONDS = 60 * 20
+DEFAULT_STEP_TIMEOUT_SECONDS = 60 * 30
 TRIVY_TIMEOUT = "15m0s"
 TRIVY_VERSION = "v0.64.1-1"
 ORAS_VERSION = "v1.2.3-2"
@@ -117,7 +117,7 @@ def create_acr_task(image_name: str,
         )
         task['steps'].append({
             'id': "scan",
-            'timeout': 600,  # 10 minute timeout for scanning
+            'timeout': 1200,  # 20 minute timeout for scanning
             'cmd': post_scan_cmd,
             'ignoreErrors': True,  # Don't fail build if scan fails
             'privileged': True     # Required for some scan operations
@@ -135,7 +135,7 @@ def create_acr_task(image_name: str,
         )
         task['steps'].append({
             'id': "export-image",
-            'timeout': 180,  # 3 minute timeout for SBOM attachment
+            'timeout': 300,  # 5 minute timeout for SBOM attachment
             'cmd': oras_cmd,
             'ignoreErrors': True  # Don't fail build if SBOM attachment fails
         })
