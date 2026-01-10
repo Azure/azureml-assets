@@ -111,7 +111,8 @@ RUN pip install --no-cache-dir \
                 'mlflow-skinny==2.15.1' \
                 'cryptography>=45.0.7'\
                 'requests>=2.32.5' \
-                'certifi>=2025.11.12'
+                'certifi>=2025.11.12' \
+                'filelock>=3.20.1'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -135,10 +136,10 @@ RUN pip list && \
 RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
 
-# Upgrade starlette and urllib3
+# Upgrade starlette, urllib3 & filelock
 RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
 RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' 'filelock>=3.20.1' || true
 
 # Patch for pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0' || true
