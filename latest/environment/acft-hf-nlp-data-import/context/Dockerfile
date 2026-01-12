@@ -1,5 +1,5 @@
 # openmpi image
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20251214.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260111.v1
 
 USER root
 
