@@ -50,7 +50,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
     ]
 
     # Common test data
-    weather_tool_call_and_assistant_response: List[Dict[str, Any]] = [
+    weather_tool_result_and_assistant_response: List[Dict[str, Any]] = [
         {
             "tool_call_id": "call_1",
             "role": "tool",
@@ -114,7 +114,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
         },
     ]
 
-    tool_results_with_arguments: List[Dict[str, Any]] = [
+    tool_calls_with_arguments: List[Dict[str, Any]] = [
         {
             "role": "assistant",
             "content": [
@@ -122,6 +122,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
                     "type": "tool_call",
                     "name": "fetch_weather",
                     "arguments": {"location": "Seattle"},
+                    "tool_call_id": "call_1",
                 }
             ],
         },
@@ -131,6 +132,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
                 {
                     "type": "tool_call",
                     "name": "send_email",
+                    "tool_call_id": "call_2",
                     "arguments": {
                         "recipient": "your_email@example.com",
                         "subject": "Weather Information for Seattle",
@@ -311,6 +313,19 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
         return input_data_copy
 
+    def add_parameter_to_copy_in_input(
+        self, input_data: List[Dict], parameter_name: str, parameter_value: Any
+    ) -> List[Dict]:
+        """Add a parameter to a copy of all items in the input data."""
+        input_data_copy = copy.deepcopy(input_data)
+        modified_input = copy.deepcopy(input_data)
+
+        for message in modified_input:
+            if parameter_name in message:
+                message[parameter_name] = parameter_value
+
+        return input_data_copy + modified_input
+
     # ==================== All Valid ====================
 
     def test_all_valid_inputs(self):
@@ -390,7 +405,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_query_missing_role_parameter(self):
         """Query is missing role parameter - should raise invalid value error."""
-        modified_query = self.remove_parameter_from_input_content(self.VALID_QUERY, "role")
+        modified_query = self.remove_parameter_from_input(self.VALID_QUERY, "role")
         self.run_query_test(
             input_query=modified_query,
             description="Query Missing Role Parameter",
@@ -554,7 +569,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_missing_role_parameter(self):
         """Response is missing role parameter - should raise invalid value error."""
-        modified_response = self.remove_parameter_from_input_content(self.VALID_RESPONSE, "role")
+        modified_response = self.remove_parameter_from_input(self.VALID_RESPONSE, "role")
         self.run_response_test(
             input_response=modified_response,
             description="Response Missing Role Parameter",
@@ -563,7 +578,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     def test_response_invalid_role_parameter(self):
         """Response with invalid role parameter - should raise invalid value error."""
-        modified_response = self.update_parameter_in_input(self.VALID_RESPONSE, "role", "invalid_role")
+        modified_response = self.add_parameter_to_copy_in_input(self.VALID_RESPONSE, "role", "invalid_role")
         # TODO: Should this be INVALID_VALUE instead of PASS?
         self.run_response_test(
             input_response=modified_response,

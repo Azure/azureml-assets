@@ -36,6 +36,8 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
                 {
                     "type": "tool_call",
                     "name": "fetch_weather",
+                    "arguments": {"location": "Seattle"},
+                    "tool_call_id": "call_1",
                 }
             ],
         },
@@ -45,6 +47,8 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
                 {
                     "type": "tool_call",
                     "name": "send_email",
+                    "arguments": {},
+                    "tool_call_id": "call_2",
                 }
             ],
         },

@@ -23,4 +23,4 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest):
     """
 
     evaluator_type = ToolCallAccuracyEvaluator
-    MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.weather_tool_call_and_assistant_response
+    MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.email_tool_call_and_assistant_response

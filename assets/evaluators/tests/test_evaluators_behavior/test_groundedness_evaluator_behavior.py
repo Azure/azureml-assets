@@ -20,7 +20,4 @@ class TestGroundednessEvaluatorBehavior(BaseEvaluatorBehaviorTest):
 
     evaluator_type = GroundednessEvaluator
 
-    # Test Configs
-    requires_query = False
-
-    MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.weather_tool_call_and_assistant_response
+    MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.weather_tool_result_and_assistant_response

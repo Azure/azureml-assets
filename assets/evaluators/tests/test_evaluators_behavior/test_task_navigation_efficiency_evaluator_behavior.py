@@ -24,6 +24,11 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
 
     # region Test Data
     VALID_ACTIONS: List[Dict[str, Any]] = [
+        # Allow extra non-tool-call messages
+        {
+            "role": "user",
+            "content": "query",
+        },
         {
             "role": "assistant",
             "content": [
@@ -241,7 +246,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
     ]
 
     EMPTY_ACTIONS: List[Dict[str, Any]] = []
-    INVALID_ACTIONS: List[Dict[str, Any]] = [{"role": "user", "content": "test"}]
+    INVALID_ACTIONS: List[Dict[str, Any]] = [{"role": "assistant", "content": "test"}]
     EMPTY_EXPECTED_ACTIONS: List[str] = []
     INVALID_EXPECTED_ACTIONS = {"not": "a list"}
     STRING_ACTIONS: str = "assistant used tools A and B"
@@ -537,7 +542,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
             matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
         )
         result_data = self._extract_and_print_result(results, "Invalid Actions")
-        self.assert_fail(result_data)
+        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
 
     def test_invalid_matching_mode_string(self):
         """Test with invalid matching mode string."""

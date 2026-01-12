@@ -23,4 +23,4 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest):
     # Test Configs
     requires_tool_definitions = True
 
-    MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_results_with_arguments
+    MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_calls_with_arguments
