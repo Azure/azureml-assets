@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 name: automl_forecasting_inference
 display_name: AutoML Forecasting Inference
 description: Inference component for AutoML Forecasting.
-version: 0.0.14
+version: 0.0.15
 type: command
 
 inputs:
@@ -41,7 +41,7 @@ outputs:
     description: "The evaluation config file which can be consumed by the compute metrics component."
 
 code: ../../src
-environment: azureml://registries/azureml/environments/automl-gpu/versions/63
+environment: azureml://registries/azureml/environments/automl-gpu/versions/64
 
 command: >-
   python inference.py

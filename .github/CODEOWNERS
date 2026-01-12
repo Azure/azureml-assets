@@ -17,3 +17,4 @@
 /assets/training/model_management/environments/foundation-model-inference @azure/aml-assets @Azure/aml-maap
 /assets/training/model_management/environments/foundation-model-serve @azure/aml-assets @Azure/aml-maap
 /scripts/promptflow-ci/ @Azure/promptflow-builtin @azure/aml-assets
+/assets/inference/environments/ @Azure/amlinferenceimages @azure/aml-assets

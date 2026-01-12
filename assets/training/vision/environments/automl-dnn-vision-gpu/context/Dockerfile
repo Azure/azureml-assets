@@ -90,7 +90,7 @@ RUN pip install --upgrade urllib3==2.6.0
 # Update conda base and ptca envs
 RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3==2.6.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3==2.6.0 filelock>=3.20.1|| true
 
 # Patch pillow vulnerability
 RUN pip install --upgrade pillow==12.0.0

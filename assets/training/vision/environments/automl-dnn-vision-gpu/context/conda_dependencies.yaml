@@ -27,3 +27,4 @@ dependencies:
   - azureml-dataprep>=2.24.4
   - azure-identity>=1.16.1
   - mlflow-skinny==2.15.1
+  - filelock>=3.20.1

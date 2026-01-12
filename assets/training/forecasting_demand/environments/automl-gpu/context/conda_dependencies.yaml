@@ -29,6 +29,8 @@ dependencies:
   - azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}}
   - https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz
   - scipy==1.10.1
+  - xgboost==1.5.2
+  - cmdstanpy==1.0.4
   - spacy==3.7.4
   - prophet==1.1.4
   - GitPython>=3.1.41
