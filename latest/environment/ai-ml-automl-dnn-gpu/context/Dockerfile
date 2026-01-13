@@ -51,7 +51,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
 # Pre-Build LightGBM
 ###############################
 RUN pip install --upgrade lightgbm==4.6.0
-                
+
 ###############################
 # Install GPU LightGBM and XgBoost
 ###############################
@@ -117,11 +117,11 @@ RUN pip install \
 
 # Fix vulnerabilities
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0'
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 
 # If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' || true
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.0' 'pillow==12.0.0' || true
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 
 # --- End Vulnerability Fixes ---
 

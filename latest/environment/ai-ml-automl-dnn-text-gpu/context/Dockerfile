@@ -130,21 +130,21 @@ RUN pip list && \
     pip install pyarrow==14.0.2 \
                 accelerate==1.12.0 \
                 'transformers[sentencepiece,torch]==4.53.0' \
-                aiohttp==3.12.14
+                aiohttp==3.13.3
 
 # Upgrade torch and torchvision
-RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
+RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0
 
-# Upgrade starlette, urllib3 & filelock
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' 'filelock>=3.20.1' || true
+# Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.0' 'filelock>=3.20.1'
 
 # Patch for pillow vulnerability
-RUN pip install --upgrade 'pillow==12.0.0' || true
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' || true
+RUN pip install --upgrade 'pillow==12.0.0'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0'
 
 RUN pip install --upgrade 'h2>=4.3.0'
 
