@@ -405,12 +405,15 @@ def init():
     """Init."""
     _logger.info("Initializing MLflow scoring script")
     global inputs_collector, outputs_collector
-    try:
-        inputs_collector = Collector(name='model_inputs')
-        outputs_collector = Collector(name='model_outputs')
-        _logger.info("Input and output collector initialized")
-    except Exception as e:
-        _logger.error("Error initializing model_inputs collector and model_outputs collector. {}".format(e))
+    enable_mdc = os.getenv("ENABLE_MDC")
+    if (enable_mdc):
+        _logger.info("MDC is enabled. Initializing collectors.")
+        try:
+            inputs_collector = Collector(name='model_inputs')
+            outputs_collector = Collector(name='model_outputs')
+            _logger.info("Input and output collector initialized")
+        except Exception as e:
+            _logger.error("Error initializing model_inputs collector and model_outputs collector. {}".format(e))
 
 
 @input_schema("input_data", input_param)
