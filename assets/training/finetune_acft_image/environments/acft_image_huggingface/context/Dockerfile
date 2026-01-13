@@ -9,4 +9,4 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3>=2.6.0
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
