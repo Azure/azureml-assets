@@ -5,6 +5,7 @@ dependencies:
 - python=3.9
 - pip=25.3
 - pip:
+  - urllib3>=2.6.0
   - azure-ml-component==0.9.18.post2
   - azureml-defaults==1.61.0
   - pyarrow>=14.0.1
