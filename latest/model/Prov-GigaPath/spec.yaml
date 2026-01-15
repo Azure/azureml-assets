@@ -26,7 +26,7 @@ tags:
       Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, 
       Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
       Standard_ND40rs_v2]
-version: 2
+version: 3
 description: |
   ### Description
   Digital pathology poses unique computational challenges, as a standard gigapixel slide may comprise tens of thousands of image tiles[^1],[^2],[^3]. Previous models often rely predominantly on tile-level predictions, which can overlook critical slide-level context and spatial dependencies[^4]. Here we present Prov-GigaPath, a whole-slide pathology foundation model pretrained on 1.3 billion 256 × 256 pathology image tiles in 171,189 whole slides from Providence, a large U.S. health network comprising 28 cancer centers.
