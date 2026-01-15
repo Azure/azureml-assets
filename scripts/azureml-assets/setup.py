@@ -39,4 +39,3 @@ setup(
         'Changelog': "https://github.com/Azure/azureml-assets/blob/main/scripts/azureml-assets/CHANGELOG.md",
     },
 )
-
