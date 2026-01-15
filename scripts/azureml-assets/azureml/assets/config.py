@@ -141,7 +141,7 @@ EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
 GENERIC_ASSET_TYPES = [AssetType.EVALUATIONRESULT, AssetType.PROMPT, AssetType.AGENTBLUEPRINT, AssetType.EVALUATOR,
-                       AssetType.APPTEMPLATE]
+                       AssetType.APPTEMPLATE, AssetType.BENCHMARKSPEC]
 OTHER_ASSET_TYPES = [AssetType.AGENTMANIFEST]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
@@ -1524,4 +1524,5 @@ class AssetConfig(Config):
         """Directory containing pytest scripts, appended to parent directory of asset config."""
         tests_dir = self.pytest_tests_dir
         return self._append_to_file_path(tests_dir) if tests_dir else None
+
 
