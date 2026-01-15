@@ -44,6 +44,7 @@ class AssetType(Enum):
     PROMPT = 'prompt'
     AGENTBLUEPRINT = 'agentblueprint'
     EVALUATOR = 'evaluator'
+    BENCHMARKSPEC = 'benchmarkspec'
     AGENTMANIFEST = 'agentmanifest'
     APPTEMPLATE = 'apptemplate'
 
@@ -1523,3 +1524,4 @@ class AssetConfig(Config):
         """Directory containing pytest scripts, appended to parent directory of asset config."""
         tests_dir = self.pytest_tests_dir
         return self._append_to_file_path(tests_dir) if tests_dir else None
+
