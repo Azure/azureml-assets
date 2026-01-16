@@ -1,0 +1,5 @@
+type: DataFrameDirectory
+extension: {}
+format: Parquet
+data: _data.parquet
+schema: schema/_schema.json

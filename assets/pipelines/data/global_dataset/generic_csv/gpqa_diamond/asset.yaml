@@ -1,0 +1,6 @@
+name: gpqa_diamond
+version: 1
+type: data
+spec: spec.yaml
+categories:
+  - pipeline
