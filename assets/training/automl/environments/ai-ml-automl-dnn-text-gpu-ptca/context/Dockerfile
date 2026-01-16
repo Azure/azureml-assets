@@ -56,7 +56,7 @@ RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packagi
 
 # Install numpy
 RUN pip install --upgrade "numpy==1.23.5"
-RUN /opt/conda/bin/pip install --upgrade "numpy==1.23.5" || true
+RUN /opt/conda/bin/pip install --upgrade "numpy==1.23.5" 
 
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
@@ -70,7 +70,7 @@ RUN pip install \
     deepspeed~=0.15.1
 
 # Address vulnerabilities
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.6.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.6.3' 
 RUN pip install \
     'pyarrow==14.0.1' \
     'aiohttp==3.12.14' \
@@ -82,9 +82,9 @@ RUN pip install \
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 
 
 # Fix security vulnerabilities
-RUN pip install --upgrade 'urllib3==2.6.3' 'aiohttp==3.13.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'aiohttp==3.13.3' 'bokeh==3.8.2' 
 
 RUN pip list

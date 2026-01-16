@@ -18,4 +18,4 @@ RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/to
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3

@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install mlflow==3.1.0 "starlette>=0.49.1"
 
 # Security vulnerability fixes
-RUN pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+RUN pip install --upgrade PyNaCl==1.6.2
