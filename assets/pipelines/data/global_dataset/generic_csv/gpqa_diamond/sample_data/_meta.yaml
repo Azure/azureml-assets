@@ -1,5 +1,5 @@
 type: DataFrameDirectory
 extension: {}
-format: Parquet
-data: _data.parquet
+format: CSV
+data: _data.csv
 schema: schema/_schema.json
