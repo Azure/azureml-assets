@@ -128,10 +128,10 @@ RUN pip install cryptography>=45.0.7 \
                 pyarrow==14.0.2 \
                 aiohttp>=3.13.3
 
-# Patch for pillow, requests, urllib3, bokeh, PyNaCl vulnerability and update pip/starlette
-RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'filelock>=3.20.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+# Patch for pillow, requests, urllib3, bokeh, vulnerability and update pip/starlette
+RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'filelock>=3.20.1' 'bokeh==3.8.2' 
 
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0

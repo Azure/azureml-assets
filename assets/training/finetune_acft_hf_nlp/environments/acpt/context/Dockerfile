@@ -22,7 +22,7 @@ RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerab
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
