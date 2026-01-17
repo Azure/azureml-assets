@@ -25,4 +25,4 @@ ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Temp fix for env vuln
 RUN pip install mlflow==3.8.1
-RUN pip install transformers==4.57.5
+RUN pip install transformers==4.57.6
