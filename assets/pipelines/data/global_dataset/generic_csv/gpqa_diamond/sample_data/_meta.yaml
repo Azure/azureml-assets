@@ -1,5 +1,5 @@
 type: DataFrameDirectory
 extension: {}
 format: CSV
-data: _data.csv
+data: gpqa_diamond.csv
 schema: schema/_schema.json
