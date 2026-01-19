@@ -77,10 +77,14 @@ RUN pip install \
     'idna==3.7' \
     'requests==2.32.5' \
     'urllib3==2.6.0' \
-    'mlflow-skinny==2.15.1'
+    'mlflow-skinny==2.15.1' \
+    'filelock>=3.20.1'
 
 # Patch for Pillow vulnerability
 RUN pip install --upgrade 'pillow==12.0.0'
 RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
+
+# Fix security vulnerabilities
+RUN pip install --upgrade 'urllib3==2.6.3' 'aiohttp==3.13.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 
 RUN pip list

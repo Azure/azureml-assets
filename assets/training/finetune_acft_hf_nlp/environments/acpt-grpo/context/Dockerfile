@@ -12,3 +12,6 @@ RUN pip install transformers==4.56.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
+
+# vulnerability in base conda env
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
