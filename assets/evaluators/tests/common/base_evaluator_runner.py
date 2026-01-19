@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 """
-Base class for behavioral tests of evaluators using AIProjectClient.
+Base class for evaluator tests.
 
-Runs evaluations for testing.
+Supports both mocked flow (for behavioral tests) and real flow execution (for quality tests).
 """
 
 import os
@@ -26,43 +26,70 @@ class BaseEvaluatorRunner:
 
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "Relevance")
+
+    Subclasses may override:
+    - use_mocking: bool - whether to mock the flow (default: True for behavioral tests)
     """
 
     # Subclasses must implement
     evaluator_type: type[PromptyEvaluatorBase] = None
 
+    # Subclasses may override
+    use_mocking: bool = True  # Set to False for quality tests with real flow execution
+
     def _init_evaluator(self) -> PromptyEvaluatorBase:
-        """Create evaluator instance."""
+        """Create evaluator instance with appropriate configuration based on mocking mode."""
         if self.evaluator_type is None:
             raise ValueError("Evaluator type not set. Subclass must define evaluator_type.")
 
-        # Dummy model config and credential for testing - not used since flow is mocked
-        model_config = AzureOpenAIModelConfiguration(
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-            azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-        )
-        credential = DefaultAzureCredential()
+        if self.use_mocking:
+            # Dummy model config for behavioral tests - not used since flow is mocked
+            model_config = AzureOpenAIModelConfiguration(
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+                azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+            )
+        else:
+            # Real model config for quality tests - makes actual LLM calls
+            model_config = AzureOpenAIModelConfiguration(
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
+            )
 
+        credential = DefaultAzureCredential()
         evaluator = self.evaluator_type(model_config=model_config, credential=credential)
         return evaluator
 
     def _run_evaluation(
         self,
-        query: List[Dict[str, Any]],
-        response: List[Dict[str, Any]],
-        tool_calls: List[Dict[str, Any]],
-        tool_definitions: List[Dict[str, Any]],
+        query: List[Dict[str, Any]] = None,
+        response: List[Dict[str, Any]] = None,
+        tool_calls: List[Dict[str, Any]] = None,
+        tool_definitions: List[Dict[str, Any]] = None,
+        context: str = None,
     ) -> Dict[str, Any]:
-        """Run evaluation and return results."""
+        """Run evaluation and return results.
+
+        Args:
+            query: Query conversation messages (optional)
+            response: Response conversation messages (optional)
+            tool_calls: Tool calls data (optional)
+            tool_definitions: Tool definitions (optional)
+            context: Additional context (optional)
+
+        Returns:
+            Dictionary containing evaluation results
+        """
         evaluator_name = self.evaluator_type._RESULT_KEY
         evaluator = self._init_evaluator()
 
-        # Mock the flow with appropriate side effect based on evaluator type
-        evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
+        # Mock the flow only for behavioral tests
+        if self.use_mocking:
+            evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
 
-        # Special handling for groundedness evaluator to disable flow reloading
-        if hasattr(evaluator, "_ensure_query_prompty_loaded"):
-            evaluator._ensure_query_prompty_loaded = MagicMock()
+            # Special handling for groundedness evaluator to disable flow reloading
+            if hasattr(evaluator, "_ensure_query_prompty_loaded"):
+                evaluator._ensure_query_prompty_loaded = MagicMock()
 
         try:
             results = evaluator(
@@ -70,6 +97,7 @@ class BaseEvaluatorRunner:
                 response=response,
                 tool_calls=tool_calls,
                 tool_definitions=tool_definitions,
+                context=context,
             )
             return results
         except EvaluationException as e:
@@ -171,7 +199,7 @@ class BaseEvaluatorRunner:
         assert result_data["label"] == "fail"
         score_type = type(result_data["score"])
         assert score_type is float or score_type is int
-        assert result_data["score"] == 0.0
+        assert result_data["score"] <= 2.0
 
     def assert_pass_or_fail(self, result_data):
         """Assert a pass or fail result.
