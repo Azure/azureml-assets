@@ -41,7 +41,7 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu12
     torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
     
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.47 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.48 --no-cache-dir
 
 
     
