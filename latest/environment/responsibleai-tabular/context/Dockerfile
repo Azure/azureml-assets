@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260115.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260121.v1
 
 # Install wkhtmltopdf for pdf rendering from html
 RUN apt-get -y update && apt-get -y install wkhtmltopdf

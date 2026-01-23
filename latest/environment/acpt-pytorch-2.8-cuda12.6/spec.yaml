@@ -9,7 +9,7 @@ description: >-
   Registry:acptdev.azurecr.io/test/public/aifx/acpt/stable-ubuntu2004-cu121-py310-torch212
 
 name: "acpt-pytorch-2.8-cuda12.6"
-version: "4"
+version: "5"
 
 build:
   path: "context"
@@ -27,4 +27,3 @@ tags:
   DeepSpeed: "0.13.1"
   ONNXRuntime: "1.17.1"
   torch_ORT: "1.17.0"
-  Checkpointing:Nebula: "0.16.10"

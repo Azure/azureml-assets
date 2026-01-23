@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "gpqa_diamond"
+version: "1"
+tags:
+  azureml.Designer: true
+  azureml.Designer.name: GPQA Diamond
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: GPQA Diamond
+type: uri_folder
+path: sample_data/
