@@ -1,0 +1,12 @@
+name: builtin_evaluators_tests
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pandas
+  - pip:
+      - -r requirements.txt
+      - promptflow
+      - pytest
