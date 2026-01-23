@@ -6,7 +6,7 @@ properties:
   SHA: e4c1ffc92762d12946e850e765b866b0ab2d864b
   datasets: ''
   inference-min-sku-spec: 6|1|112|64
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en, es, ca
 tags:
   SharedComputeCapacityEnabled: ''
@@ -14,9 +14,6 @@ tags:
   huggingface_model_id: projecte-aina/aguila-7b
   inference_compute_allow_list:
    [
-      Standard_NC6s_v3,
-      Standard_NC12s_v3,
-      Standard_NC24s_v3,
       Standard_NC24ads_A100_v4,
       Standard_NC48ads_A100_v4,
       Standard_NC96ads_A100_v4,
