@@ -183,7 +183,7 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        llm_output = result.get("llm_output") if isinstance(result, dict) else result
+        llm_output = result.get("llm_output", result) if isinstance(result, dict) else result
 
         score = math.nan
         llm_output_is_dict = isinstance(llm_output, dict)
