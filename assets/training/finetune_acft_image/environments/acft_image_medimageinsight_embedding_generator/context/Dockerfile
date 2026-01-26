@@ -11,5 +11,5 @@ RUN apt-get -y install unzip libc-bin libc-bin libc-dev locales libc6 dpkg-dev d
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# Upgrade requests in the system Python (3.13) for fixing vulnerability
-RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests urllib3 || true
+# Upgrade requests, urllib3, aiohttp in the system Python (3.13) for fixing vulnerability
+RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests urllib3==2.6.3 aiohttp==3.13.3
