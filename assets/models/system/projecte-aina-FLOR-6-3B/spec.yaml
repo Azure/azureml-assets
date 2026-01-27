@@ -5,7 +5,7 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: ed6840476f5e9dc1ec693406ab7a45e8acfc2aca
   datasets: ''
-  inference-min-sku-spec: 6|1|112|64
+  inference-min-sku-spec: 4|1|440|80
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en, es, ca
 tags:
