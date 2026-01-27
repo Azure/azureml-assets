@@ -72,7 +72,7 @@ RUN python3 -m pip install --upgrade pip setuptools wheel
 RUN pip install vllm==0.13.0
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
-RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade --force-reinstall flash-attn==2.8.3 --no-build-isolation
+RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
