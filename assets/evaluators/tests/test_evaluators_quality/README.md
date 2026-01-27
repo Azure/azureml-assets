@@ -1,10 +1,13 @@
 # Quality Tests for Evaluators
 
-This directory contains quality tests for evaluators that execute real LLM flows without mocking.
+This directory contains quality tests for evaluators that execute real LLM flows
+without mocking.
 
 ## Overview
 
-Quality tests validate the actual behavior of evaluators by making real calls to Azure OpenAI models, ensuring that the evaluators work correctly in production scenarios.
+Quality tests validate the actual behavior of evaluators by making real calls to
+Azure OpenAI models, ensuring that the evaluators work correctly in production
+scenarios.
 
 ## Key Differences from Behavior Tests
 
@@ -19,22 +22,42 @@ Quality tests validate the actual behavior of evaluators by making real calls to
 
 ### Base Classes
 
-- **`BaseEvaluatorRunner`** (`common/base_evaluator_runner.py`): 
-  - Core base class for all evaluator tests
-  - Controlled by `use_mocking` flag (default: `True`)
-  - Handles both mocked and real evaluator initialization
-  - Provides assertion methods: `assert_pass()`, `assert_fail()`, `assert_pass_or_fail()`
+- **`BaseEvaluatorRunner`** (`common/base_evaluator_runner.py`):
+    - Core base class for all evaluator tests
+    - Controlled by `use_mocking` flag (default: `True`)
+    - Handles both mocked and real evaluator initialization
+    - Provides assertion methods: `assert_pass()`, `assert_fail()`, `assert_pass_or_fail()`
 
-- **`BaseQualityEvaluatorRunner`** (`common/base_quality_evaluator_runner.py`): 
-  - Thin wrapper around `BaseEvaluatorRunner`
-  - Sets `use_mocking = False` for real LLM calls
-  - Use this for quality tests to avoid repeating the flag and for clearer intent
+- **`BaseQualityEvaluatorRunner`** (`common/base_quality_evaluator_runner.py`):
+    - Thin wrapper around `BaseEvaluatorRunner`
+    - Sets `use_mocking = False` for real LLM calls
+    - Use this for quality tests to avoid repeating the flag and for clearer intent
 
 ### Test Files
 
-- **`test_groundedness_evaluator_quality.py`**: Quality tests for Groundedness evaluator
-- **`test_coherence_evaluator_quality.py`**: Quality tests for Coherence evaluator (stub)
-- **`test_relevance_evaluator_quality.py`**: Quality tests for Relevance evaluator (stub)
+| File | Evaluator | Description |
+|------|-----------|-------------|
+| `test_coherence_evaluator_quality.py` | Coherence | Tests response coherence and logical flow |
+| `test_fluency_evaluator_quality.py` | Fluency | Tests language fluency and readability |
+| `test_relevance_evaluator_quality.py` | Relevance | Tests response relevance to query |
+| `test_groundedness_evaluator_quality.py` | Groundedness | Tests if responses are grounded in context |
+| `test_intent_resolution_evaluator_quality.py` | Intent Resolution | Tests user intent understanding |
+| `test_task_adherence_evaluator_quality.py` | Task Adherence | Tests adherence to task instructions |
+| `test_task_completion_evaluator_quality.py` | Task Completion | Tests if tasks are fully completed |
+| `test_tool_call_success_evaluator_quality.py` | Tool Call Success | Tests successful tool execution |
+| `test_tool_call_accuracy_evaluator_quality.py` | Tool Call Accuracy | Tests accuracy of tool calls |
+| `test_tool_selection_evaluator_quality.py` | Tool Selection | Tests appropriate tool selection |
+| `test_tool_input_accuracy_evaluator_quality.py` | Tool Input Accuracy | Tests accuracy of tool inputs |
+| `test_tool_output_utilization_evaluator_quality.py` | Tool Output Utilization | Tests proper use of tool outputs |
+
+### Common Test Data
+
+The `common_test_data.py` module provides shared resources:
+
+- **`ToolDefinitions`**: Reusable tool definitions (e.g., `SEND_EMAIL`, `CALCULATE`)
+- **`ToolDefinitionSets`**: Pre-configured tool sets (e.g., `EMAIL_AND_FILE`, `SHOPPING`)
+- **`ResponseTexts`**: Common response texts for testing coherence and fluency
+- **Helper functions**: `create_user_message()`, `create_tool_call()`, etc.
 
 ## Prerequisites
 
@@ -50,21 +73,26 @@ export AZURE_OPENAI_API_VERSION="2024-08-01-preview"
 
 ### Authentication
 
-Quality tests use `DefaultAzureCredential()` for authentication. Ensure you have valid Azure credentials configured (e.g., via Azure CLI login, managed identity, or environment variables).
+Quality tests use `DefaultAzureCredential()` for authentication. Ensure you have
+valid Azure credentials configured (e.g., via Azure CLI login, managed identity,
+or environment variables).
 
 ## Running Tests
 
 ### Run all quality tests
+
 ```bash
 pytest assets/evaluators/tests/test_evaluators_quality/ -m quality
 ```
 
 ### Run specific evaluator quality tests
+
 ```bash
 pytest assets/evaluators/tests/test_evaluators_quality/test_groundedness_evaluator_quality.py -m quality
 ```
 
 ### Run with verbose output
+
 ```bash
 pytest assets/evaluators/tests/test_evaluators_quality/ -m quality -v
 ```
@@ -76,26 +104,32 @@ To create a new quality test:
 1. **Create test file**: `test_<evaluator_name>_evaluator_quality.py`
 
 2. **Import required classes**:
+
 ```python
 import pytest
 from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner
 from ...builtin.<evaluator_name>.evaluator._<evaluator_name> import <EvaluatorClass>
+from .common_test_data import ToolDefinitions, ToolDefinitionSets
 ```
 
 3. **Define test class**:
+
 ```python
 @pytest.mark.quality
 class Test<EvaluatorName>EvaluatorQuality(BaseQualityEvaluatorRunner):
     evaluator_type = <EvaluatorClass>
     # No need to set use_mocking - it's already False in the base class
     
-    def test_case_name(self):
+    def test_pass_case_name(self) -> None:
         # Prepare test data
         query = [...]
         response = [...]
+        tool_definitions = ToolDefinitionSets.EMAIL_AND_FILE  # Use shared definitions
         
         # Run evaluation (real LLM call)
-        results = self._run_evaluation(query=query, response=response)
+        results = self._run_evaluation(
+            query=query, response=response, tool_definitions=tool_definitions
+        )
         result_data = self._extract_and_print_result(results, "Test case description")
         
         # Assert expected outcome
@@ -104,11 +138,20 @@ class Test<EvaluatorName>EvaluatorQuality(BaseQualityEvaluatorRunner):
 
 4. **Update `__init__.py`**: Add your test class to the exports
 
+## Test Naming Convention
+
+Follow this naming pattern for test methods:
+
+- `test_pass_*` - Tests expected to pass evaluation
+- `test_fail_*` - Tests expected to fail evaluation
+- `test_edge_case_*` - Tests for boundary conditions
+
 ## Test Case Guidelines
 
 ### Input Format
 
 Use standard conversation format:
+
 ```python
 query = [
     {"role": "system", "content": "System message"},
@@ -128,47 +171,63 @@ response = [
 
 ### Test Markers
 
-All quality tests should be marked with `@pytest.mark.quality` to enable selective test execution.
+All quality tests should be marked with `@pytest.mark.quality` to enable selective
+test execution.
 
 ## Example Test Cases
 
-### Groundedness - Hallucinated Response (Expected: Fail)
+### Tool Selection - Correct Tool (Expected: Pass)
+
 ```python
-def test_fail_hallucinated_response(self):
+def test_pass_single_correct_tool(self) -> None:
+    query = [
+        {"role": "user", "content": [{"type": "text", "text": "Send email"}]}
+    ]
+    response = [
+        {"role": "assistant", "content": [
+            {"type": "tool_call", "tool_call_id": "call_1",
+             "name": "send_email", "arguments": {"to": "john@example.com"}}
+        ]}
+    ]
+    tool_definitions = ToolDefinitionSets.EMAIL_AND_FILE
+    
+    results = self._run_evaluation(
+        query=query, response=response, tool_definitions=tool_definitions
+    )
+    result_data = self._extract_and_print_result(results, "PASS-single-correct-tool")
+    
+    self.assert_pass(result_data)
+```
+
+### Groundedness - Hallucinated Response (Expected: Fail)
+
+```python
+def test_fail_hallucinated_response(self) -> None:
     query = [...]  # User asks about ungrounded information
     response = [...]  # Assistant provides hallucinated content
     
     results = self._run_evaluation(query=query, response=response)
-    result_data = self._extract_and_print_result(results, "FAIL-Hallucinated response")
+    result_data = self._extract_and_print_result(results, "FAIL-hallucinated-response")
     
     self.assert_fail(result_data)
-```
-
-### Groundedness - Grounded Response (Expected: Pass)
-```python
-def test_success_grounded_response(self):
-    query = [...]  # User asks a question
-    response = [...]  # Assistant provides grounded response with tool results
-    
-    results = self._run_evaluation(query=query, response=response)
-    result_data = self._extract_and_print_result(results, "SUCCESS-Grounded response")
-    
-    self.assert_pass(result_data)
 ```
 
 ## Troubleshooting
 
 ### Authentication Errors
+
 - Ensure you're logged in to Azure CLI: `az login`
 - Verify your credentials have access to the Azure OpenAI resource
 - Check that environment variables are correctly set
 
 ### API Errors
+
 - Verify the deployment name matches your Azure OpenAI deployment
 - Ensure the API version is supported by your deployment
 - Check rate limits and quotas for your Azure OpenAI resource
 
 ### Timeout Issues
+
 - Quality tests make real API calls and may take longer to execute
 - Consider increasing pytest timeout: `pytest --timeout=300`
 

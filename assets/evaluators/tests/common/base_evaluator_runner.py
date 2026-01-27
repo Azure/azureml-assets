@@ -17,7 +17,7 @@ from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory
 from azure.identity import DefaultAzureCredential
 
-from .evaluator_mock_config import get_flow_side_effect_for_evaluator
+from .evaluator_mock_config import EVALUATOR_CONFIGS, get_flow_side_effect_for_evaluator
 
 
 class BaseEvaluatorRunner:
@@ -129,6 +129,7 @@ class BaseEvaluatorRunner:
             print(f"  Error Code: {error_code}")
 
         return {
+            "evaluator": evaluator_name,
             "label": label,
             "reason": reason,
             "score": score,
@@ -149,6 +150,13 @@ class BaseEvaluatorRunner:
         MISSING_FIELD = "MISSING_FIELD"
         INVALID_VALUE = "INVALID_VALUE"
         PASS = "PASS"
+
+    def _get_threshold(self, result_data: Dict[str, Any]) -> float:
+        """Get the threshold score for passing from the evaluator type."""
+        evaluator_name = result_data["evaluator"]
+        grader_score = EVALUATOR_CONFIGS[evaluator_name].score
+        threshold = float(grader_score) / 2.0
+        return threshold
 
     def assert_expected_behavior(self, assert_type: AssertType, result_data: Dict[str, Any]):
         """Assert the expected behavior based on the assert type.
@@ -183,7 +191,8 @@ class BaseEvaluatorRunner:
         assert result_data["label"] == "pass"
         score_type = type(result_data["score"])
         assert score_type is float or score_type is int
-        assert result_data["score"] >= 1.0
+        threshold = self._get_threshold(result_data)
+        assert result_data["score"] >= threshold
 
     def assert_fail(self, result_data: Dict[str, Any]):
         """Assert a failing result.
@@ -199,9 +208,10 @@ class BaseEvaluatorRunner:
         assert result_data["label"] == "fail"
         score_type = type(result_data["score"])
         assert score_type is float or score_type is int
-        assert result_data["score"] <= 2.0
+        threshold = self._get_threshold(result_data)
+        assert result_data["score"] < threshold
 
-    def assert_pass_or_fail(self, result_data):
+    def assert_pass_or_fail(self, result_data: Dict[str, Any]):
         """Assert a pass or fail result.
 
         Validates that the result has either a 'pass' or 'fail' label and a score >= 0.0.

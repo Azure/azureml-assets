@@ -4,7 +4,7 @@
 """Quality tests for Groundedness Evaluator with real flow execution."""
 
 import pytest
-from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner
+from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner, ExpectedResult
 from ...builtin.groundedness.evaluator._groundedness import GroundednessEvaluator
 
 
@@ -115,7 +115,7 @@ class TestGroundednessEvaluatorQuality(BaseQualityEvaluatorRunner):
         "Treasury secretary Scott Bessent, and Bern had believed that a provisional deal of closer to 10 per\n\ncent had been reached."
     )
 
-    def test_fail_hallucinated_response(self):
+    def test_fail_hallucinated_response(self) -> None:
         """Test case: FAIL-Hallucinated response.
         
         The assistant hallucinates that the trip was to sign a final agreement eliminating tariffs,
@@ -211,13 +211,16 @@ class TestGroundednessEvaluatorQuality(BaseQualityEvaluatorRunner):
             }
         ]
         
-        results = self._run_evaluation(query=query, response=response, tool_definitions=self.file_search_tool_definitions)
-        result_data = self._extract_and_print_result(results, "FAIL-Hallucinated response")
-        
-        self.assert_fail(result_data)
+        self.run_quality_test(
+            test_label="FAIL-Hallucinated response",
+            expected=ExpectedResult.FAIL,
+            query=query,
+            response=response,
+            tool_definitions=self.file_search_tool_definitions,
+        )
 
-    def test_success_grounded_response(self):
-        """Test case: SUCCESS-Grounded response.
+    def test_pass_grounded_response(self) -> None:
+        """Test case: PASS-Grounded response.
         
         The assistant provides information properly grounded in the tool search results,
         accurately describing the purpose of the Washington trip.
@@ -348,8 +351,11 @@ class TestGroundednessEvaluatorQuality(BaseQualityEvaluatorRunner):
             }
         ]
         
-        results = self._run_evaluation(query=query, response=response, tool_definitions=self.file_search_tool_definitions)
-        result_data = self._extract_and_print_result(results, "SUCCESS-Grounded response")
-        
-        self.assert_pass(result_data)
+        self.run_quality_test(
+            test_label="SUCCESS-Grounded response",
+            expected=ExpectedResult.PASS,
+            query=query,
+            response=response,
+            tool_definitions=self.file_search_tool_definitions,
+        )
 
