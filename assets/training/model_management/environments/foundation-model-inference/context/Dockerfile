@@ -41,12 +41,14 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu12
     torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
     
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.48 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.49 --no-cache-dir
 
-
-    
-# Direct pip install from URL; avoids temporary file
-# RUN pip install --no-cache-dir https://automlsamplenotebookdata.blob.core.windows.net/flash-attn/flash_attn-2.7.4.post1-cp310-cp310-linux_x86_64.whl
+# Patch Ray bundled vulnerabilities:
+# - CVE-2025-68161: log4j-core 2.17.1 in ray_dist.jar
+# - CVE-2025-69223 through CVE-2025-69230: aiohttp 3.13.2 bundled by Ray
+RUN rm -f $(python -c "import ray;print(ray.__path__[0])")/jars/ray_dist.jar && \
+    rm -rf $(python -c "import ray;print(ray.__path__[0])")/_private/runtime_env/agent/thirdparty_files/*aiohttp* && \
+    pip install --no-cache-dir --force-reinstall aiohttp==3.13.3
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
