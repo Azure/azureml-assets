@@ -1,0 +1,41 @@
+type: "evaluator"
+name: "builtin.regex_match"
+version: 1
+displayName: "Regex-Match-Evaluator"
+description: "Extracts a value from the model response using regular expression pattern(s) and compares it against the ground truth. The evaluator applies regex only to the response to extract the answer, then compares the extracted value directly to the ground truth. Supports multiple regex patterns tried sequentially. Useful for benchmarking tasks like GPQA where model answers follow a specific pattern (e.g., 'ANSWER: A')."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    patterns:
+      anyOf:
+        - type: "string"
+          description: "A single regular expression pattern with at least one capture group."
+        - type: "array"
+          items:
+            type: "string"
+          description: "A list of regular expression patterns to try sequentially. Each must contain at least one capture group."
+    ignore_case:
+      type: "boolean"
+      description: "If true, perform case-insensitive comparison of extracted value against ground truth. Default is true."
+      default: true
+  required: ["patterns"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    ground_truth:
+      type: "string"
+    response:
+      type: "string"
+  required: ["ground_truth", "response"]
+outputSchema:
+  regex_match:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator
