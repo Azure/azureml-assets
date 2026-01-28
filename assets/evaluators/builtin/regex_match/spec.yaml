@@ -1,0 +1,36 @@
+type: "evaluator"
+name: "builtin.regex_match"
+version: 1
+displayName: "Regex-Match-Evaluator"
+description: "Evaluates whether a model response matches one or more regex patterns. Patterns can include row-level column references (e.g., {{item.correct_answer}}) that are resolved before evaluation. Returns a binary accuracy score: 1.0 if any pattern matches, 0.0 otherwise. Designed for benchmarking tasks where correctness is determined by pattern matching."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    patterns:
+      anyOf:
+        - type: "string"
+          description: "A single regex pattern to match against the response. May include column references like {{item.correct_answer}}."
+        - type: "array"
+          items:
+            type: "string"
+          description: "A list of regex patterns to try sequentially. Evaluation stops at the first match."
+  required: ["patterns"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    response:
+      type: "string"
+      description: "The raw model output text to evaluate."
+  required: ["response"]
+outputSchema:
+  regex_match:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator
