@@ -57,7 +57,8 @@ class BaseEvaluatorRunner:
             )
 
         credential = DefaultAzureCredential()
-        evaluator = self.evaluator_type(model_config=model_config, credential=credential)
+        is_reasoning_model = os.getenv("AZURE_OPENAI_IS_REASONING_MODEL", "false").lower() == "true"
+        evaluator = self.evaluator_type(model_config=model_config, credential=credential, is_reasoning_model=is_reasoning_model)
         return evaluator
 
     def _run_evaluation(
