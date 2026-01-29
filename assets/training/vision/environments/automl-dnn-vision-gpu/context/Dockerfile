@@ -96,7 +96,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20
 RUN pip install --upgrade pillow==12.0.0
 RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 || true
-
-
+RUN $AZUREML_CONDA_ENVIRONMENT_PATH/bin/python -m pip install bokeh==3.8.2 || true
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 # dummy number to change when needing to force rebuild without changing the definition: 1
