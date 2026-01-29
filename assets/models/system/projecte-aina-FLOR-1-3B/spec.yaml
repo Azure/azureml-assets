@@ -5,8 +5,8 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: 1ac454ba769556f37b085b1ab5d171945884d1fa
   datasets: ''
-  inference-min-sku-spec: 6|1|112|64
-  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  inference-min-sku-spec: 24|1|220|64
+  inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en, es, ca
 tags:
   SharedComputeCapacityEnabled: ''
@@ -14,9 +14,6 @@ tags:
   huggingface_model_id: projecte-aina/FLOR-1.3B
   inference_compute_allow_list:
    [
-      Standard_NC6s_v3,
-      Standard_NC12s_v3,
-      Standard_NC24s_v3,
       Standard_NC24ads_A100_v4,
       Standard_NC48ads_A100_v4,
       Standard_NC96ads_A100_v4,
@@ -28,4 +25,4 @@ tags:
   license: apache-2.0
   disable-batch: "true"
   task: text-generation
-version: 1
+version: 2
