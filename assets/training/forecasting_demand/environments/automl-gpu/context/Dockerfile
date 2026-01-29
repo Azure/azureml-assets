@@ -12,7 +12,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 # Upgrade critical system and python packages
-sudo apt-get update && sudo apt-get install --only-upgrade 
 RUN apt-get update && \
     apt-get install -y --only-upgrade \
         systemd \
