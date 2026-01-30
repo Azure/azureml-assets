@@ -1,5 +1,5 @@
-azureml-acft-common-components==0.0.84
-azureml-acft-contrib-hf-nlp==0.0.84
+azureml-acft-common-components==0.0.85
+azureml-acft-contrib-hf-nlp==0.0.85
 mlflow==3.5.0
 cloudpickle==2.2.1
 colorama==0.4.6

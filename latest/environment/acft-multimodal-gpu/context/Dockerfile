@@ -11,8 +11,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Removing it from requirements.txt to avoid conflict with scikit-learn version
 RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 
-RUN pip install azureml-acft-common-components==0.0.84
-RUN pip install azureml-acft-accelerator==0.0.84
+RUN pip install azureml-acft-common-components==0.0.85
+RUN pip install azureml-acft-accelerator==0.0.85
 
 # vulnerability in base conda env
 RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2

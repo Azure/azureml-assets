@@ -12,9 +12,9 @@ RUN conda run -n base python -m pip install --upgrade pip==25.3 urllib3==2.6.3 a
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install azureml-acft-common-components==0.0.84
+RUN pip install azureml-acft-common-components==0.0.85
 RUN pip install numpy==2.2.5
-RUN pip install azureml-evaluate-mlflow==0.0.84
+RUN pip install azureml-evaluate-mlflow==0.0.85
 
 # following are for vulnerability overrides at later\
 # release of following packages consider moving then to requirements.txt
