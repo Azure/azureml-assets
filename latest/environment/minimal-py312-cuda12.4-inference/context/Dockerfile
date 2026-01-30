@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/inference-base-cuda12.4-ubuntu22.04:20260119.v1
+FROM mcr.microsoft.com/azureml/inference-base-cuda12.4-ubuntu22.04:20260129.v4
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/minimal
