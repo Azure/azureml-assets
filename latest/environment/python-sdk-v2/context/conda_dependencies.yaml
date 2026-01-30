@@ -13,3 +13,5 @@ dependencies:
     - paramiko==4.0.0
     - idna==3.11
     - tqdm==4.67.1
+    - wheel>=0.46.2
+    - setuptools>=75.8.0
