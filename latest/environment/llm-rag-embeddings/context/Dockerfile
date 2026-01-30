@@ -8,10 +8,16 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Create conda environment
 COPY conda_dependencies.yaml .
+COPY pip_constraints.txt /pip_constraints.txt
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
-    rm conda_dependencies.yaml && \
+    rm conda_dependencies.yaml /pip_constraints.txt && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
+
+# Patch vulnerable Python packages shipped in the base image's Miniconda (outside the AzureML conda env)
+RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
+    urllib3==2.6.3 \
+    setuptools==80.10.2
 
 # Sentence Transformers CPU only install
 RUN pip install torch==2.7.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cpu && \
@@ -106,8 +112,8 @@ RUN python3 -m nltk.downloader punkt && \
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
 # Install tika server
-RUN downloadUrl='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.2.2/tika-server-standard-3.2.2.jar'; \
-    downloadMd5='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.2.2/tika-server-standard-3.2.2.jar.md5'; \
+RUN downloadUrl='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.2.3/tika-server-standard-3.2.3.jar'; \
+    downloadMd5='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.2.3/tika-server-standard-3.2.3.jar.md5'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
     # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
     wget -O tika-server.jar.md5 "$downloadMd5"; \
