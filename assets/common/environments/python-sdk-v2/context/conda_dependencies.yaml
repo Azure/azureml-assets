@@ -5,11 +5,13 @@ dependencies:
   - python=3.10
   - pip:
     - pip==25.3
-    - azure-ai-ml=={{latest-pypi-version}}
-    - azure-identity=={{latest-pypi-version}}
-    - cryptography=={{latest-pypi-version}}
-    - certifi=={{latest-pypi-version}}
-    - urllib3=={{latest-pypi-version}}
-    - paramiko=={{latest-pypi-version}}
-    - idna=={{latest-pypi-version}}
-    - tqdm=={{latest-pypi-version}}
+    - azure-ai-ml
+    - azure-identity
+    - cryptography
+    - certifi
+    - urllib3
+    - paramiko
+    - idna
+    - tqdm
+    - wheel>=0.46.2
+    - setuptools>=75.8.0
