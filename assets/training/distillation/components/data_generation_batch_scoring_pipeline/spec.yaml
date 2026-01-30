@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_distillation_batchscoring_datagen_pipeline
-version: 0.0.1
+version: 0.0.4
 type: pipeline
 
 
@@ -345,23 +345,7 @@ jobs:
       BATCH_SCORE_INITIAL_REQUEST_TIMEOUT: '180'
       BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST: 'False'
       BATCH_SCORE_MAX_REQUEST_TIMEOUT: '300'
-
-  validation_file_path_exists:
-    type: command
-    component: azureml:oss_distillation_data_generation_validation_file_checker:0.0.1
-    compute: '${{parent.inputs.compute_pipeline_validation}}'
-    resources:
-      instance_type: '${{parent.inputs.instance_type_pipeline_validation}}'
-    identity:
-      type: user_identity
-    inputs:
-      validation_file_path: '${{parent.inputs.validation_file_path}}'
-
-  validation_succeeded: 
-    type: if_else
-    condition: ${{parent.jobs.validation_file_path_exists.outputs.output}}
-    true_block: ${{parent.jobs.oss_distillation_validation_data_batch_score}}
-
+      
   # Batch score job
   oss_distillation_validation_data_batch_score:
     type: parallel
