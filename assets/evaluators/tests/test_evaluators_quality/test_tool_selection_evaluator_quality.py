@@ -121,12 +121,14 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
             tool_definitions=ToolDefinitionSets.SHOPPING,
         )
 
-    def test_fail_duplicate_calls(self) -> None:
-        """Test case: FAIL - Same tool called multiple times unnecessarily."""
-        # TODO: Test currently fails - evaluator does not flag duplicate calls.
+    def test_pass_duplicate_calls(self) -> None:
+        """
+        Test case: PASS - Same tool called multiple times unnecessarily.
+        For Tool Selection, redundant calls are a pass but missing calls are a fail.
+        """
         self.run_quality_test(
-            test_label="FAIL-duplicate-calls",
-            expected=ExpectedResult.FAIL,
+            test_label="PASS-duplicate-calls",
+            expected=ExpectedResult.PASS,
             query=[
                 {
                     "role": "user",

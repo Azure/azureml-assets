@@ -638,7 +638,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Send email to john@example.com"
+                            "text": "Send email to john@example.com to congratulate him on his newborn"
                         }
                     ]
                 }
@@ -653,8 +653,8 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "send_email",
                             "arguments": {
                                 "to": "john@example.com",
-                                "subject": "Hello",
-                                "body": "Hi John"
+                                "subject": "Congratulations!",
+                                "body": "Hi John, Congratulations on your newborn!"
                             }
                         }
                     ]
@@ -682,8 +682,8 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "send_email",
                             "arguments": {
                                 "to": "john@example.com",
-                                "subject": "Hello",
-                                "body": "Hi John"
+                                "subject": "Congratulations!",
+                                "body": "Hi John, Congratulations on your newborn!"
                             }
                         }
                     ]
