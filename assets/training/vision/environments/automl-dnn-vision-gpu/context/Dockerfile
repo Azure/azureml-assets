@@ -87,8 +87,7 @@ RUN pip install pyarrow==14.0.2
 
 # Patch pillow vulnerability
 RUN pip install --upgrade pillow==12.0.0
-RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 || true
+RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0
 RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3
 # ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 # dummy number to change when needing to force rebuild without changing the definition: 1
