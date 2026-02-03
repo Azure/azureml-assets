@@ -153,12 +153,6 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_tool_calls_in_history(self) -> None:
         """Test case: EDGE - Necessary tools already called in conversation history."""
-        # TODO: Test fails - evaluator expects fetch_items_in_cart to be called again in response.
-        # Reason: "The agent did not call the 'fetch_items_in_cart' tool again, which is essential to retrieve
-        # the items in the cart before calculating the total... the agent should have ensured that the necessary
-        # data was available for the 'calculate_total' tool."
-        # Decision needed: Should the evaluator recognize tools already called in conversation history,
-        # or is this expected behavior that response should include all necessary tools?
         self.run_quality_test(
             test_label="EDGE-tool-calls-in-history",
             expected=ExpectedResult.PASS,

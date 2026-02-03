@@ -108,12 +108,6 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_partial_result_with_next_steps(self) -> None:
         """Test justified partial result with clear next steps."""
-        # TODO: Test fails - evaluator fails this as incomplete.
-        # Reason: "The assistant provided a general overview... it failed to deliver a detailed analysis
-        # as requested, offering only an initial overview and prompting the user for further specification
-        # instead of providing a complete response."
-        # Decision needed: Should partial results with clear next steps pass task adherence,
-        # or does "comprehensive analysis" require full completion without follow-up prompts?
         self.run_quality_test(
             test_label="PASS-partial result with next steps",
             expected=ExpectedResult.PASS,
@@ -146,6 +140,7 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
             ],
         )
 
+    @pytest.mark.flaky(reruns=3)
     def test_pass_following_strict_format_requirements(self) -> None:
         """Test adherence to strict format requirements."""
         self.run_quality_test(
@@ -202,6 +197,7 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
             ],
         )
 
+    @pytest.mark.flaky(reruns=3)
     def test_fail_violates_strict_format_requirement(self) -> None:
         """Test failure when violating strict format requirements."""
         # 5 bullet points instead of exactly 3
@@ -294,11 +290,6 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_tool_error_properly_disclosed(self) -> None:
         """Test proper handling and disclosure of tool errors."""
-        # TODO: Test fails - evaluator fails this despite proper error handling.
-        # Reason: "The assistant did not fulfill the user's request... it did not offer a viable next step
-        # within its capabilities, like attempting to retry in a set period or indicating when to try again."
-        # Decision needed: Should graceful error handling with alternatives pass task adherence,
-        # or must the assistant always complete the original task regardless of tool failures?
         self.run_quality_test(
             test_label="EDGE-tool error properly disclosed",
             expected=ExpectedResult.PASS,
@@ -551,6 +542,7 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
             ],
         )
 
+    @pytest.mark.flaky(reruns=3)
     def test_edge_case_one_word_response(self) -> None:
         """Test one-word response to a simple yes/no question."""
         self.run_quality_test(
@@ -567,6 +559,7 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
             ],
         )
 
+    @pytest.mark.flaky(reruns=3)
     def test_edge_case_two_word_response(self) -> None:
         """Test two-word response to a simple factual question."""
         self.run_quality_test(

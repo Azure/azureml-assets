@@ -70,11 +70,6 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_minor_incompletion(self) -> None:
         """Test case: FAIL - Task mostly completed but missing seat numbers in email."""
-        # TODO: Test fails - evaluator passes this despite missing seat numbers.
-        # Reason: "The agent successfully booked the flight and sent a confirmation email with the details,
-        # meeting all user requirements."
-        # Decision needed: Should minor omissions (missing seat numbers) cause task to fail,
-        # or is the evaluator correctly passing because core task (booking + email) was completed?
         self.run_quality_test(
             test_label="FAIL-minor-incompletion",
             expected=ExpectedResult.FAIL,
