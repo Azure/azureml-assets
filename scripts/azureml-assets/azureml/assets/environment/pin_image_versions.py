@@ -21,6 +21,17 @@ LATEST_TAG = "latest"
 # Handles registry/image_name:{{latest-image-tag}} and registry/image_name:{{latest-image-tag:regex}}
 LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag(?::(.+))?\}\}")
 
+# Keep this list in sync with ORAS (oras-go) default manifest Accept header.
+# See: oras-go/registry/remote/manifest.go (defaultManifestMediaTypes)
+MANIFEST_ACCEPT_MEDIA_TYPES = (
+    "application/vnd.docker.distribution.manifest.v2+json",
+    "application/vnd.docker.distribution.manifest.list.v2+json",
+    "application/vnd.oci.image.manifest.v1+json",
+    "application/vnd.oci.image.index.v1+json",
+    "application/vnd.oci.artifact.manifest.v1+json",
+)
+MANIFEST_ACCEPT_HEADER = ", ".join(MANIFEST_ACCEPT_MEDIA_TYPES)
+
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(5),
        retry=(retry_if_not_exception_type(HTTPError) & retry_if_not_exception_message(match=r".*404.*")))
@@ -50,7 +61,7 @@ def get_manifest(tag: str, hostname: str, repo: str):
     encoded_tag = urllib.parse.quote(tag, safe="")
     request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
                       method="HEAD",
-                      headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
+                      headers={"Accept": MANIFEST_ACCEPT_HEADER})
 
     return _urlopen_with_retries(request)
 

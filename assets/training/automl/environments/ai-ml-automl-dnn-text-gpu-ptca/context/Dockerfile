@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root:root
 
@@ -70,13 +70,13 @@ RUN pip install \
     deepspeed~=0.15.1
 
 # Address vulnerabilities
-RUN /opt/conda/bin/pip install --upgrade 'urllib3==2.6.0' || true
+RUN /opt/conda/bin/pip install --upgrade 'urllib3>=2.6.3' || true
 RUN pip install \
     'pyarrow==14.0.1' \
-    'aiohttp==3.12.14' \
+    'aiohttp>=3.13.3' \
     'idna==3.7' \
     'requests==2.32.5' \
-    'urllib3==2.6.0' \
+    'urllib3>=2.6.3' \
     'mlflow-skinny==2.15.1' \
     'filelock>=3.20.1'
 
@@ -85,6 +85,6 @@ RUN pip install --upgrade 'pillow==12.0.0'
 RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
 
 # Fix security vulnerabilities
-RUN pip install --upgrade 'urllib3==2.6.3' 'aiohttp==3.13.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 
 RUN pip list
