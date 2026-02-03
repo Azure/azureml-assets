@@ -77,9 +77,10 @@ class TestRelevanceEvaluatorQuality(BaseQualityEvaluatorRunner):
             response=(
                 "The most effective approach is to combine structured learning with hands-on practice. "
                 "Start with official documentation or a beginner course to understand syntax and concepts. "
-                "Then build small projects that interest you - this reinforces learning and builds portfolio work. "
-                "Join communities like Stack Overflow or Discord for help and code reviews. "
-                "Consistency matters more than intensity; even 30 minutes daily yields better results than sporadic long sessions."
+                "Then build small projects that interest you - this reinforces learning and builds "
+                "portfolio work. Join communities like Stack Overflow or Discord for help and code reviews. "
+                "Consistency matters more than intensity; even 30 minutes daily yields better results "
+                "than sporadic long sessions."
             ),
         )
 
@@ -89,7 +90,10 @@ class TestRelevanceEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="PASS-direct factual answer",
             expected=ExpectedResult.PASS,
             query="What is the capital of France?",
-            response="The capital of France is Paris. It's the largest city in France and serves as the country's political, economic, and cultural center.",
+            response=(
+                "The capital of France is Paris. It's the largest city in France and serves "
+                "as the country's political, economic, and cultural center."
+            ),
         )
 
     @pytest.mark.flaky(reruns=3)
@@ -152,7 +156,9 @@ class TestRelevanceEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="FAIL-random unrelated facts",
             expected=ExpectedResult.FAIL,
             query="How do I configure the database connection?",
-            response="The Great Wall of China is over 13,000 miles long and was built over many centuries.",
+            response=(
+                "The Great Wall of China is over 13,000 miles long and was built over many centuries."
+            ),
         )
 
     def test_fail_deflection_without_info(self) -> None:
@@ -215,13 +221,15 @@ class TestRelevanceEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.PASS,
             query="What is Python?",
             response=(
-                "Python is a high-level, interpreted programming language created by Guido van Rossum in 1991. "
-                "It emphasizes code readability with significant whitespace and supports multiple programming paradigms "
-                "including procedural, object-oriented, and functional programming. Python has a comprehensive standard "
-                "library and a vast ecosystem of third-party packages available through PyPI. It's widely used in web "
-                "development (Django, Flask), data science (pandas, NumPy, scikit-learn), machine learning (TensorFlow, "
-                "PyTorch), automation, and scripting. Python 3 is the current major version, with Python 2 having reached "
-                "end of life in 2020. The language is known for its gentle learning curve and is often recommended for beginners."
+                "Python is a high-level, interpreted programming language created by Guido van Rossum "
+                "in 1991. It emphasizes code readability with significant whitespace and supports "
+                "multiple programming paradigms including procedural, object-oriented, and functional "
+                "programming. Python has a comprehensive standard library and a vast ecosystem of "
+                "third-party packages available through PyPI. It's widely used in web development "
+                "(Django, Flask), data science (pandas, NumPy, scikit-learn), machine learning "
+                "(TensorFlow, PyTorch), automation, and scripting. Python 3 is the current major "
+                "version, with Python 2 having reached end of life in 2020. The language is known "
+                "for its gentle learning curve and is often recommended for beginners."
             ),
         )
 
@@ -319,7 +327,10 @@ class TestRelevanceEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="EDGE-list format response",
             expected=ExpectedResult.PASS,
             query="What are the primary colors?",
-            response="The primary colors are: 1) Red, 2) Blue, 3) Yellow. These cannot be created by mixing other colors.",
+            response=(
+                "The primary colors are: 1) Red, 2) Blue, 3) Yellow. "
+                "These cannot be created by mixing other colors."
+            ),
         )
 
     def test_edge_case_honest_limitation(self) -> None:

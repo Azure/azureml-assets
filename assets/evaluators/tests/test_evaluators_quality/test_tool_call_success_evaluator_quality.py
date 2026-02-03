@@ -32,7 +32,12 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "What's 25 * 4?"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What's 25 * 4?",
+                        }
+                    ],
                 }
             ],
             response=[
@@ -43,19 +48,33 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "calculate",
-                            "arguments": {"operation": "multiply", "a": 25, "b": 4}
+                            "arguments": {
+                                "operation": "multiply",
+                                "a": 25,
+                                "b": 4,
+                            },
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": "100"}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "100",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "25 * 4 = 100"}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "25 * 4 = 100",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.CALCULATE],
         )
@@ -68,7 +87,12 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "List files in /empty folder"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "List files in /empty folder",
+                        }
+                    ],
                 }
             ],
             response=[
@@ -79,19 +103,31 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "GetFilesInFolder",
-                            "arguments": {"path": "/empty"}
+                            "arguments": {
+                                "path": "/empty",
+                            },
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": []}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": [],
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "The folder is empty."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "The folder is empty.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_FILES_IN_FOLDER],
         )
@@ -106,7 +142,12 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "What's 25 / 0?"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What's 25 / 0?",
+                        }
+                    ],
                 }
             ],
             response=[
@@ -117,19 +158,33 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "calculate",
-                            "arguments": {"operation": "divide", "a": 25, "b": 0}
+                            "arguments": {
+                                "operation": "divide",
+                                "a": 25,
+                                "b": 0,
+                            },
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": "Error: Division by zero"}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "Error: Division by zero",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "I can't divide by zero."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "I can't divide by zero.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.CALCULATE],
         )
@@ -142,40 +197,89 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Calculate 10+5, 20/0, and 3*7"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Calculate 10+5, 20/0, and 3*7",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "calculate",
-                         "arguments": {"operation": "add", "a": 10, "b": 5}},
-                        {"type": "tool_call", "tool_call_id": "call_2", "name": "calculate",
-                         "arguments": {"operation": "divide", "a": 20, "b": 0}},
-                        {"type": "tool_call", "tool_call_id": "call_3", "name": "calculate",
-                         "arguments": {"operation": "multiply", "a": 3, "b": 7}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "calculate",
+                            "arguments": {
+                                "operation": "add",
+                                "a": 10,
+                                "b": 5,
+                            },
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "calculate",
+                            "arguments": {
+                                "operation": "divide",
+                                "a": 20,
+                                "b": 0,
+                            },
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_3",
+                            "name": "calculate",
+                            "arguments": {
+                                "operation": "multiply",
+                                "a": 3,
+                                "b": 7,
+                            },
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": "15"}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "15",
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_2",
-                    "content": [{"type": "tool_result", "tool_result": "Error: Division by zero"}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "Error: Division by zero",
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_3",
-                    "content": [{"type": "tool_result", "tool_result": "21"}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "21",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "10+5=15, cannot divide by zero, 3*7=21"}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "10+5=15, cannot divide by zero, 3*7=21",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.CALCULATE],
         )
@@ -188,25 +292,45 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Get current time"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get current time",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "GetCurrentTime", "arguments": {}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "GetCurrentTime",
+                            "arguments": {},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": ""}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Unable to get current time."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Unable to get current time.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_CURRENT_TIME],
         )
@@ -225,26 +349,49 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Get user profile for user 12345"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get user profile for user 12345",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "get_user",
-                         "arguments": {"user_id": 12345}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_user",
+                            "arguments": {"user_id": 12345},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": {"name": "", "email": "", "status": ""}}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": {
+                                "name": "",
+                                "email": "",
+                                "status": "",
+                            },
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "The user profile appears to be empty."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "The user profile appears to be empty.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_USER],
         )
@@ -257,32 +404,49 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Get order details for ORD-999"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get order details for ORD-999",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "get_order",
-                         "arguments": {"order_id": "ORD-999"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_order",
+                            "arguments": {"order_id": "ORD-999"},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
                     "content": [
-                        {"type": "tool_result", "tool_result": {
-                            "error": "OrderNotFoundException",
-                            "message": "Order ORD-999 not found",
-                            "code": 404
-                        }}
-                    ]
+                        {
+                            "type": "tool_result",
+                            "tool_result": {
+                                "error": "OrderNotFoundException",
+                                "message": "Order ORD-999 not found",
+                                "code": 404,
+                            },
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Order ORD-999 was not found."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Order ORD-999 was not found.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_ORDER],
         )
@@ -295,29 +459,45 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Book appointment for tomorrow"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Book appointment for tomorrow",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "book_appointment",
-                         "arguments": {"date": "2024-01-15"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "book_appointment",
+                            "arguments": {"date": "2024-01-15"},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
                     "content": [
-                        {"type": "tool_result",
-                         "tool_result": "Exception: AppointmentServiceUnavailable - Service temporarily down"}
-                    ]
+                        {
+                            "type": "tool_result",
+                            "tool_result": "Exception: AppointmentServiceUnavailable - Service temporarily down",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Unable to book appointment. Service is temporarily unavailable."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Unable to book appointment. Service is temporarily unavailable.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.BOOK_APPOINTMENT],
         )
@@ -330,28 +510,48 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Get order status for ORD-12345"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get order status for ORD-12345",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "get_order_status",
-                         "arguments": {"order_id": "ORD-12345"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_order_status",
+                            "arguments": {"order_id": "ORD-12345"},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
                     "content": [
-                        {"type": "tool_result", "tool_result": {"status": 500, "message": "Internal Server Error"}}
-                    ]
+                        {
+                            "type": "tool_result",
+                            "tool_result": {
+                                "status": 500,
+                                "message": "Internal Server Error",
+                            },
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Unable to retrieve order status due to server error."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Unable to retrieve order status due to server error.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_ORDER_STATUS],
         )
@@ -364,26 +564,45 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Get weather in Seattle"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get weather in Seattle",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "GetWeather",
-                         "arguments": {"location": "Seattle"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "GetWeather",
+                            "arguments": {"location": "Seattle"},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": None}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": None,
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Unable to retrieve weather data."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Unable to retrieve weather data.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_WEATHER],
         )
@@ -396,28 +615,45 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Search for laptop products"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Search for laptop products",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "product_search",
-                         "arguments": {"query": "laptop"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "product_search",
+                            "arguments": {"query": "laptop"},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
                     "content": [
-                        {"type": "tool_result", "tool_result": "Error: Request timed out after 30 seconds"}
-                    ]
+                        {
+                            "type": "tool_result",
+                            "tool_result": "Error: Request timed out after 30 seconds",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Search timed out. Please try again."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Search timed out. Please try again.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.PRODUCT_SEARCH],
         )
@@ -432,25 +668,45 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Get recent orders for my account"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get recent orders for my account",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "get_recent_orders", "arguments": {}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_recent_orders",
+                            "arguments": {},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": []}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": [],
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "You have no recent orders."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "You have no recent orders.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_RECENT_ORDERS],
         )
@@ -464,25 +720,45 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "List all month names"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "List all month names",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "GetMonthNamesList", "arguments": {}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "GetMonthNamesList",
+                            "arguments": {},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": []}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": [],
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Unable to retrieve month names."}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Unable to retrieve month names.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_MONTH_NAMES_LIST],
         )
@@ -503,39 +779,70 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Get weather data"}]
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get weather data",
+                        }
+                    ],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "GetWeather",
-                         "arguments": {"location": "Seattle", "units": "fahrenheit"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "GetWeather",
+                            "arguments": {"location": "Seattle", "units": "fahrenheit"},
+                        }
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_1",
-                    "content": [{"type": "tool_result", "tool_result": "Error: Temporary network issue"}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "Error: Temporary network issue",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "text", "text": "Let me retry that."},
-                        {"type": "tool_call", "tool_call_id": "call_2", "name": "GetWeather",
-                         "arguments": {"location": "Seattle", "units": "fahrenheit"}}
-                    ]
+                        {
+                            "type": "text",
+                            "text": "Let me retry that.",
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "GetWeather",
+                            "arguments": {"location": "Seattle", "units": "fahrenheit"},
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
                     "tool_call_id": "call_2",
-                    "content": [{"type": "tool_result", "tool_result": "Temperature: 65F, Conditions: Partly cloudy"}]
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": "Temperature: 65F, Conditions: Partly cloudy",
+                        }
+                    ],
                 },
                 {
                     "role": "assistant",
-                    "content": [{"type": "text", "text": "Weather in Seattle: 65°F, partly cloudy"}]
-                }
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Weather in Seattle: 65°F, partly cloudy",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[ToolDefinitions.GET_WEATHER],
         )

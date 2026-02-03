@@ -15,10 +15,10 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
     Quality tests for Coherence Evaluator.
 
     Tests actual LLM evaluation with real flow execution (no mocking).
-    
+
     Coherence measures the logical and orderly presentation of ideas in a response,
     allowing the reader to easily follow and understand the writer's train of thought.
-    
+
     Rating scale (default threshold=3):
     - 1: Incoherent - disjointed words/phrases, no logical connection
     - 2: Poorly coherent - fragmented sentences, limited connection
@@ -33,7 +33,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_highly_coherent_response(self) -> None:
         """Test case: PASS - Highly coherent response (expected score: 5).
-        
+
         Response demonstrates exceptional organization with sophisticated flow,
         excellent use of transitional phrases, and clear connections between concepts.
         """
@@ -46,7 +46,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_coherent_response_with_clear_structure(self) -> None:
         """Test case: PASS - Coherent response with clear structure (expected score: 4).
-        
+
         Response is well-organized with clear connections between sentences,
         appropriate transitions, and smooth flow.
         """
@@ -60,7 +60,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_pass_partially_coherent_at_threshold(self) -> None:
         """Test case: PASS - Partially coherent response at threshold (expected score: 3).
-        
+
         Response addresses the question with relevant information but has some
         issues with logical flow. Connections between sentences may be unclear.
         """
@@ -78,7 +78,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_short_but_coherent_response(self) -> None:
         """Test case: PASS - Short but coherent response (edge case).
-        
+
         A brief response that still maintains logical flow and directly addresses
         the question in a coherent manner.
         """
@@ -95,7 +95,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_technical_coherent_response(self) -> None:
         """Test case: PASS - Technical but coherent response.
-        
+
         Response uses technical language but maintains logical structure and
         clear connections between concepts.
         """
@@ -120,7 +120,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_incoherent_response(self) -> None:
         """Test case: FAIL - Completely incoherent response (expected score: 1).
-        
+
         Response consists of disjointed words or phrases that do not form
         meaningful sentences with no logical connection to the question.
         """
@@ -134,7 +134,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_fail_poorly_coherent_fragmented(self) -> None:
         """Test case: FAIL - Poorly coherent fragmented response (expected score: 2).
-        
+
         Response shows minimal coherence with fragmented sentences and
         limited logical structure.
         """
@@ -142,12 +142,14 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="FAIL-poorly-coherent-fragmented",
             expected=ExpectedResult.FAIL,
             query="How does vaccination work?",
-            response="Vaccines protect disease. Immune system fight. Health better. Antibodies made. Doctor gives shot.",
+            response=(
+                "Vaccines protect disease. Immune system fight. Health better. Antibodies made. Doctor gives shot."
+            ),
         )
 
     def test_fail_response_with_random_topic_jumps(self) -> None:
         """Test case: FAIL - Response with random topic jumps.
-        
+
         Response starts addressing the question but randomly jumps to
         unrelated topics without any logical transitions.
         """
@@ -164,7 +166,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_contradictory_statements(self) -> None:
         """Test case: FAIL - Response with contradictory statements.
-        
+
         Response contains self-contradicting information that breaks
         logical coherence.
         """
@@ -184,7 +186,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_list_format_coherent(self) -> None:
         """Test case: Edge case - List format response.
-        
+
         Response uses a list format but maintains coherence through
         logical ordering and clear connections.
         """
@@ -205,7 +207,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_case_starts_coherent_loses_coherence(self) -> None:
         """Test case: Edge case - Starts coherent but loses coherence.
-        
+
         Response begins with good coherence but progressively becomes
         more disjointed and loses logical flow.
         """
@@ -224,7 +226,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_repetitive_but_coherent(self) -> None:
         """Test case: Edge case - Repetitive but coherent response.
-        
+
         Response repeats ideas but maintains logical coherence throughout.
         Tests whether repetition affects coherence scoring.
         """
@@ -243,7 +245,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_complex_sentence_structure(self) -> None:
         """Test case: Edge case - Complex nested sentence structure.
-        
+
         Response uses complex, nested sentences that are still coherent
         but require careful reading to follow.
         """
@@ -265,7 +267,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_single_sentence_response(self) -> None:
         """Test case: Edge case - Single sentence response.
-        
+
         A minimal single-sentence response that is coherent but very brief.
         """
         self.run_quality_test(
@@ -277,7 +279,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_one_word_correct_response(self) -> None:
         """Test case: Edge case - One word correct response.
-        
+
         A single word response that directly and coherently answers the question,
         testing the minimum possible coherent response.
         """
@@ -290,7 +292,7 @@ class TestCoherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_two_word_correct_response(self) -> None:
         """Test case: Edge case - Two word correct response.
-        
+
         A two-word response that coherently addresses the question,
         testing minimal but valid coherent expression.
         """

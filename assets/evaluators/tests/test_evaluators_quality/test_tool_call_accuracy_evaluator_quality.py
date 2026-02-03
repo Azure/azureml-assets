@@ -20,7 +20,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_single_call(self) -> None:
         """Test case: PASS - Single call with correct parameters.
-        
+
         A single tool call with correct parameters.
         """
         self.run_quality_test(
@@ -32,9 +32,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "What's the weather in Seattle?"
+                            "text": "What's the weather in Seattle?",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -43,7 +43,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Let me check the weather for you."
+                            "text": "Let me check the weather for you.",
                         },
                         {
                             "type": "tool_call",
@@ -51,9 +51,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "get_weather",
                             "arguments": {
                                 "location": "Seattle"
-                            }
-                        }
-                    ]
+                            },
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -61,19 +61,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Temperature: 65F, Conditions: Partly cloudy"
+                            "tool_result": "Temperature: 65F, Conditions: Partly cloudy",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "The weather in Seattle is 65°F and partly cloudy."
+                            "text": "The weather in Seattle is 65°F and partly cloudy.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -84,7 +84,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "location": {
                                 "type": "string",
-                                "description": "City name"
+                                "description": "City name",
                             }
                         },
                         "required": ["location"]
@@ -95,7 +95,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_single_call_wrong_param_value(self) -> None:
         """Test case: FAIL - Single call with wrong parameter value.
-        
+
         A single tool call with incorrect parameter value.
         """
         self.run_quality_test(
@@ -107,9 +107,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "What's the weather in Seattle?"
+                            "text": "What's the weather in Seattle?",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -118,17 +118,15 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Let me check the weather for you."
+                            "text": "Let me check the weather for you.",
                         },
                         {
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "get_weather",
-                            "arguments": {
-                                "location": "Portland"
-                            }
-                        }
-                    ]
+                            "arguments": {"location": "Portland"},
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -136,19 +134,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Temperature: 68F, Conditions: Rainy"
+                            "tool_result": "Temperature: 68F, Conditions: Rainy",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "The weather in Portland is 68°F and rainy."
+                            "text": "The weather in Portland is 68°F and rainy.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -159,7 +157,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "location": {
                                 "type": "string",
-                                "description": "City name"
+                                "description": "City name",
                             }
                         },
                         "required": ["location"]
@@ -170,7 +168,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_single_call_unexpected_param(self) -> None:
         """Test case: FAIL - Single call with unexpected parameter.
-        
+
         A single tool call with an unexpected parameter.
         """
         self.run_quality_test(
@@ -182,9 +180,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Get current server time"
+                            "text": "Get current server time",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -193,17 +191,15 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Let me get the server time."
+                            "text": "Let me get the server time.",
                         },
                         {
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "get_server_time",
-                            "arguments": {
-                                "timezone": "PST"
-                            }
-                        }
-                    ]
+                            "arguments": {"timezone": "PST"},
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -211,35 +207,32 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Error: Unexpected parameter 'timezone'"
+                            "tool_result": "Error: Unexpected parameter 'timezone'",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "I encountered an error getting the server time."
+                            "text": "I encountered an error getting the server time.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
                     "name": "get_server_time",
                     "description": "Get current server timestamp",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
+                    "parameters": {"type": "object", "properties": {}},
                 }
             ],
         )
 
     def test_fail_single_call_output_error(self) -> None:
         """Test case: FAIL - Single call with output error.
-        
+
         A single tool call that results in an error.
         """
         self.run_quality_test(
@@ -251,9 +244,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Delete file report.pdf"
+                            "text": "Delete file report.pdf",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -262,17 +255,15 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "I'll delete that file."
+                            "text": "I'll delete that file.",
                         },
                         {
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "delete_file",
-                            "arguments": {
-                                "filename": "report.pdf"
-                            }
-                        }
-                    ]
+                            "arguments": {"filename": "report.pdf"},
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -280,19 +271,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Error: File not found"
+                            "tool_result": "Error: File not found",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "I couldn't find the file report.pdf."
+                            "text": "I couldn't find the file report.pdf.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -305,15 +296,15 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                                 "type": "string"
                             }
                         },
-                        "required": ["filename"]
-                    }
+                        "required": ["filename"],
+                    },
                 }
             ],
         )
 
     def test_fail_single_call_irrelevant(self) -> None:
         """Test case: FAIL - Single call irrelevant to query.
-        
+
         A tool call that doesn't address the user's query.
         """
         self.run_quality_test(
@@ -325,9 +316,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "What's the weather in Seattle?"
+                            "text": "What's the weather in Seattle?",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -336,7 +327,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Let me check that for you."
+                            "text": "Let me check that for you.",
                         },
                         {
                             "type": "tool_call",
@@ -344,9 +335,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "calculate_distance",
                             "arguments": {
                                 "city1": "Seattle",
-                                "city2": "Portland"
-                            }
-                        }
+                                "city2": "Portland",
+                            },
+                        },
                     ]
                 },
                 {
@@ -355,19 +346,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Distance: 173 miles"
+                            "tool_result": "Distance: 173 miles",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "The distance between Seattle and Portland is 173 miles."
+                            "text": "The distance between Seattle and Portland is 173 miles.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -375,13 +366,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "description": "Get current weather",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["location"]
-                    }
+                        "properties": {"location": {"type": "string"}},
+                        "required": ["location"],
+                    },
                 },
                 {
                     "name": "calculate_distance",
@@ -394,7 +381,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             },
                             "city2": {
                                 "type": "string"
-                            }
+                            },
                         },
                         "required": ["city1", "city2"]
                     }
@@ -404,7 +391,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_missing_calls(self) -> None:
         """Test case: FAIL - Missing required calls.
-        
+
         Required tool calls are missing to complete the task.
         """
         self.run_quality_test(
@@ -416,9 +403,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "What's the distance between Seattle and Portland?"
+                            "text": "What's the distance between Seattle and Portland?",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -427,25 +414,21 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "I'll get the coordinates for both cities."
+                            "text": "I'll get the coordinates for both cities.",
                         },
                         {
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "get_coordinates",
-                            "arguments": {
-                                "city": "Seattle"
-                            }
+                            "arguments": {"city": "Seattle"},
                         },
                         {
                             "type": "tool_call",
                             "tool_call_id": "call_2",
                             "name": "get_coordinates",
-                            "arguments": {
-                                "city": "Portland"
-                            }
-                        }
-                    ]
+                            "arguments": {"city": "Portland"},
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -453,9 +436,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "47.6062, -122.3321"
+                            "tool_result": "47.6062, -122.3321",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
@@ -463,19 +446,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "45.5152, -122.6784"
+                            "tool_result": "45.5152, -122.6784",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Seattle is at 47.6062, -122.3321 and Portland is at 45.5152, -122.6784."
+                            "text": "Seattle is at 47.6062, -122.3321 and Portland is at 45.5152, -122.6784.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -497,29 +480,21 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "lat1": {
-                                "type": "number"
-                            },
-                            "lon1": {
-                                "type": "number"
-                            },
-                            "lat2": {
-                                "type": "number"
-                            },
-                            "lon2": {
-                                "type": "number"
-                            }
+                            "lat1": {"type": "number"},
+                            "lon1": {"type": "number"},
+                            "lat2": {"type": "number"},
+                            "lon2": {"type": "number"},
                         },
-                        "required": ["lat1", "lon1", "lat2", "lon2"]
-                    }
-                }
+                        "required": ["lat1", "lon1", "lat2", "lon2"],
+                    },
+                },
             ],
         )
 
     @pytest.mark.flaky(reruns=3)
     def test_fail_retrial_failed(self) -> None:
         """Test case: FAIL - Retrial also failed.
-        
+
         A tool call fails and retry also fails.
         """
         self.run_quality_test(
@@ -531,9 +506,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Send email to john@example.com"
+                            "text": "Send email to john@example.com",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -547,8 +522,8 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "arguments": {
                                 "to": "john@example.com",
                                 "subject": "Hello",
-                                "body": "Hi John"
-                            }
+                                "body": "Hi John",
+                            },
                         }
                     ]
                 },
@@ -558,16 +533,16 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Error: SMTP connection timeout"
+                            "tool_result": "Error: SMTP connection timeout",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Let me retry that."
+                            "text": "Let me retry that.",
                         },
                         {
                             "type": "tool_call",
@@ -576,8 +551,8 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "arguments": {
                                 "to": "john@example.com",
                                 "subject": "Hello",
-                                "body": "Hi John"
-                            }
+                                "body": "Hi John",
+                            },
                         }
                     ]
                 },
@@ -587,19 +562,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Error: SMTP connection timeout"
+                            "tool_result": "Error: SMTP connection timeout",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "I'm unable to send the email due to connection issues."
+                            "text": "I'm unable to send the email due to connection issues.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -608,25 +583,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "to": {
-                                "type": "string"
-                            },
-                            "subject": {
-                                "type": "string"
-                            },
-                            "body": {
-                                "type": "string"
-                            }
+                            "to": {"type": "string"},
+                            "subject": {"type": "string"},
+                            "body": {"type": "string"},
                         },
-                        "required": ["to", "subject", "body"]
-                    }
+                        "required": ["to", "subject", "body"],
+                    },
                 }
             ],
         )
 
     def test_pass_retrial_succeeded(self) -> None:
         """Test case: PASS - Retrial succeeded.
-        
+
         A tool call fails but retry succeeds.
         """
         self.run_quality_test(
@@ -638,9 +607,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Send email to john@example.com to congratulate him on his newborn"
+                            "text": "Send email to john@example.com to congratulate him on his newborn",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -654,10 +623,10 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "arguments": {
                                 "to": "john@example.com",
                                 "subject": "Congratulations!",
-                                "body": "Hi John, Congratulations on your newborn!"
-                            }
+                                "body": "Hi John, Congratulations on your newborn!",
+                            },
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
@@ -665,16 +634,16 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Error: Temporary server issue"
+                            "tool_result": "Error: Temporary server issue",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Let me retry that."
+                            "text": "Let me retry that.",
                         },
                         {
                             "type": "tool_call",
@@ -683,10 +652,10 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "arguments": {
                                 "to": "john@example.com",
                                 "subject": "Congratulations!",
-                                "body": "Hi John, Congratulations on your newborn!"
-                            }
-                        }
-                    ]
+                                "body": "Hi John, Congratulations on your newborn!",
+                            },
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -694,19 +663,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Email sent successfully"
+                            "tool_result": "Email sent successfully",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Email sent successfully to john@example.com."
+                            "text": "Email sent successfully to john@example.com.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -715,25 +684,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "to": {
-                                "type": "string"
-                            },
-                            "subject": {
-                                "type": "string"
-                            },
-                            "body": {
-                                "type": "string"
-                            }
+                            "to": {"type": "string"},
+                            "subject": {"type": "string"},
+                            "body": {"type": "string"},
                         },
-                        "required": ["to", "subject", "body"]
-                    }
+                        "required": ["to", "subject", "body"],
+                    },
                 }
             ],
         )
 
     def test_edge_case_duplicate_calls(self) -> None:
         """Test case: EDGE - Duplicate calls.
-        
+
         The same tool call is made multiple times with identical parameters.
         """
         self.run_quality_test(
@@ -745,9 +708,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "What's the weather in Seattle?"
+                            "text": "What's the weather in Seattle?",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -760,7 +723,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "get_weather",
                             "arguments": {
                                 "location": "Seattle"
-                            }
+                            },
                         },
                         {
                             "type": "tool_call",
@@ -768,7 +731,7 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "get_weather",
                             "arguments": {
                                 "location": "Seattle"
-                            }
+                            },
                         }
                     ]
                 },
@@ -778,9 +741,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Temperature: 65F"
+                            "tool_result": "Temperature: 65F",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
@@ -788,19 +751,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Temperature: 65F"
+                            "tool_result": "Temperature: 65F",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "The weather in Seattle is 65°F."
+                            "text": "The weather in Seattle is 65°F.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -808,20 +771,16 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "description": "Get current weather",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["location"]
-                    }
+                        "properties": {"location": {"type": "string"}},
+                        "required": ["location"],
+                    },
                 }
             ],
         )
 
     def test_fail_unnecessary_incorrect_tool(self) -> None:
         """Test case: FAIL - Unnecessary incorrect tool.
-        
+
         An unnecessary tool call is made alongside the required one.
         """
         self.run_quality_test(
@@ -833,9 +792,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "What's the weather in Seattle?"
+                            "text": "What's the weather in Seattle?",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -846,19 +805,15 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "get_weather",
-                            "arguments": {
-                                "location": "Seattle"
-                            }
+                            "arguments": {"location": "Seattle"},
                         },
                         {
                             "type": "tool_call",
                             "tool_call_id": "call_2",
                             "name": "get_timezone",
-                            "arguments": {
-                                "location": "Seattle"
-                            }
-                        }
-                    ]
+                            "arguments": {"location": "Seattle"},
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -866,9 +821,9 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Temperature: 65F"
+                            "tool_result": "Temperature: 65F",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
@@ -876,19 +831,19 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Timezone: PST"
+                            "tool_result": "Timezone: PST",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "The weather in Seattle is 65°F."
+                            "text": "The weather in Seattle is 65°F.",
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {

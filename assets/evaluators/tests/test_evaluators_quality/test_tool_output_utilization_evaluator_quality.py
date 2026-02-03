@@ -34,18 +34,33 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.PASS,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "What's the weather in Seattle?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_weather",
-                     "arguments": {"location": "Seattle"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"city": "Seattle", "temp": 65, "condition": "Partly cloudy"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_weather",
+                            "arguments": {"location": "Seattle"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"city": "Seattle", "temp": 65, "condition": "Partly cloudy"}',
+                        }
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "The weather in Seattle is 65°F and partly cloudy."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "The weather in Seattle is 65°F and partly cloudy."}],
+                }
             ],
             tool_definitions=[
                 {
@@ -56,8 +71,8 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "location": {"type": "string", "description": "City name"}
                         },
-                        "required": ["location"]
-                    }
+                        "required": ["location"],
+                    },
                 }
             ],
         )
@@ -68,30 +83,86 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="PASS-correct-account-transfer",
             expected=ExpectedResult.PASS,
             query=[
-                {"role": "user", "content": [{"type": "text", "text": "Can you transfer $500 from my checking to my savings account?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_account_balances",
-                     "arguments": {"user_id": "USER456"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"accounts": [{"account_id": "CHK001", "type": "checking", "balance": 1250.75}, {"account_id": "SAV001", "type": "savings", "balance": 3400.20}]}'}
-                ]},
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "You have $1,250.75 in checking and $3,400.20 in savings. You have enough for the transfer."}
-                ]},
-                {"role": "user", "content": [{"type": "text", "text": "Great, please go ahead."}]}
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Can you transfer $500 from my checking to my savings account?"}
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_account_balances",
+                            "arguments": {"user_id": "USER456"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"accounts": [{"account_id": "CHK001", "type": "checking", '
+                                '"balance": 1250.75}, {"account_id": "SAV001", "type": "savings", '
+                                '"balance": 3400.20}]}'
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "You have $1,250.75 in checking and $3,400.20 in savings. "
+                                "You have enough for the transfer."
+                            ),
+                        }
+                    ],
+                },
+                {"role": "user", "content": [{"type": "text", "text": "Great, please go ahead."}]},
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_2", "name": "transfer_funds",
-                     "arguments": {"from_account": "CHK001", "to_account": "SAV001", "amount": 500}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_2", "content": [
-                    {"type": "tool_result", "tool_result": '{"transaction_id": "TXN789123", "status": "completed", "from_account": "CHK001", "to_account": "SAV001", "amount": 500, "new_balances": {"CHK001": 750.75, "SAV001": 3900.20}}'}
-                ]},
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "Transfer completed successfully. Checking now has $750.75 and savings $3,900.20."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "transfer_funds",
+                            "arguments": {"from_account": "CHK001", "to_account": "SAV001", "amount": 500},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_2",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"transaction_id": "TXN789123", "status": "completed", '
+                                '"from_account": "CHK001", "to_account": "SAV001", "amount": 500, '
+                                '"new_balances": {"CHK001": 750.75, "SAV001": 3900.20}}'
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Transfer completed successfully. Checking now has $750.75 and savings $3,900.20.",
+                        }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -102,8 +173,8 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "user_id": {"type": "string", "description": "User ID"}
                         },
-                        "required": ["user_id"]
-                    }
+                        "required": ["user_id"],
+                    },
                 },
                 {
                     "name": "transfer_funds",
@@ -113,11 +184,11 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "from_account": {"type": "string", "description": "Source account ID"},
                             "to_account": {"type": "string", "description": "Destination account ID"},
-                            "amount": {"type": "number", "description": "Amount to transfer"}
+                            "amount": {"type": "number", "description": "Amount to transfer"},
                         },
-                        "required": ["from_account", "to_account", "amount"]
-                    }
-                }
+                        "required": ["from_account", "to_account", "amount"],
+                    },
+                },
             ],
         )
 
@@ -128,18 +199,45 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.PASS,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "What's the status of my order #12345?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_order_status",
-                     "arguments": {"order_id": "12345"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"order_id": "12345", "status": "shipped", "tracking_number": "1Z999AA10123456784", "estimated_delivery": "2025-02-05"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_order_status",
+                            "arguments": {"order_id": "12345"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"order_id": "12345", "status": "shipped", '
+                                '"tracking_number": "1Z999AA10123456784", '
+                                '"estimated_delivery": "2025-02-05"}'
+                            ),
+                        }
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "Your order #12345 has been shipped. The tracking number is 1Z999AA10123456784 and the estimated delivery date is February 5, 2025."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Your order #12345 has been shipped. The tracking number is "
+                                "1Z999AA10123456784 and the estimated delivery date is February 5, 2025."
+                            ),
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.GET_ORDER_STATUS],
         )
@@ -151,23 +249,57 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.PASS,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "Compare the weather in Seattle and Portland"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_weather",
-                     "arguments": {"location": "Seattle"}},
-                    {"type": "tool_call", "tool_call_id": "call_2", "name": "get_weather",
-                     "arguments": {"location": "Portland"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"city": "Seattle", "temp": 58, "condition": "Cloudy"}'}
-                ]},
-                {"role": "tool", "tool_call_id": "call_2", "content": [
-                    {"type": "tool_result", "tool_result": '{"city": "Portland", "temp": 62, "condition": "Sunny"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_weather",
+                            "arguments": {"location": "Seattle"},
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "get_weather",
+                            "arguments": {"location": "Portland"},
+                        },
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"city": "Seattle", "temp": 58, "condition": "Cloudy"}',
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_2",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"city": "Portland", "temp": 62, "condition": "Sunny"}',
+                        }
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "Seattle is currently 58°F and cloudy, while Portland is 62°F and sunny. Portland is slightly warmer today."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Seattle is currently 58°F and cloudy, while Portland is 62°F and sunny. "
+                                "Portland is slightly warmer today."
+                            ),
+                        }
+                    ],
+                }
             ],
             tool_definitions=[
                 {
@@ -178,8 +310,8 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "location": {"type": "string", "description": "City name"}
                         },
-                        "required": ["location"]
-                    }
+                        "required": ["location"],
+                    },
                 }
             ],
         )
@@ -193,18 +325,30 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.FAIL,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "What's the current temperature in Rome?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "weather_api",
-                     "arguments": {"city": "Rome"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"city": "Rome", "temp": 28, "condition": "Sunny"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "weather_api",
+                            "arguments": {"city": "Rome"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {"type": "tool_result", "tool_result": '{"city": "Rome", "temp": 28, "condition": "Sunny"}'}
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "It's currently 28°F and sunny in Rome."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "It's currently 28°F and sunny in Rome."}],
+                }
             ],
             tool_definitions=[
                 {
@@ -215,8 +359,8 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "city": {"type": "string", "description": "City name"}
                         },
-                        "required": ["city"]
-                    }
+                        "required": ["city"],
+                    },
                 }
             ],
         )
@@ -228,30 +372,45 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.FAIL,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "Can you check if item B123 is available?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "inventory_api",
-                     "arguments": {"item_id": "B123"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"item_id": "B123", "qty": 0, "eta": "2025-10-07"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "inventory_api",
+                            "arguments": {"item_id": "B123"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {"type": "tool_result", "tool_result": '{"item_id": "B123", "qty": 0, "eta": "2025-10-07"}'}
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "The item is in stock till the 7th of October."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "The item is in stock till the 7th of October."}],
+                }
             ],
             tool_definitions=[
                 {
                     "name": "inventory_api",
-                    "description": "Check inventory for an item. Returns quantity available and expected availability date if out of stock.",
+                    "description": (
+                        "Check inventory for an item. Returns quantity available and expected "
+                        "availability date if out of stock."
+                    ),
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "item_id": {"type": "string", "description": "Item ID"}
                         },
-                        "required": ["item_id"]
-                    }
+                        "required": ["item_id"],
+                    },
                 }
             ],
         )
@@ -263,29 +422,74 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.FAIL,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "Show my latest account transactions."}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_account_list",
-                     "arguments": {"user_id": "U123"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"accounts": [{"id": "CHK100", "type": "checking"}, {"id": "SAV200", "type": "savings"}]}'}
-                ]},
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "You have two accounts: CHK100 (checking) and SAV200 (savings). Which one do you want transactions for?"}
-                ]},
-                {"role": "user", "content": [{"type": "text", "text": "Please get the transaction history for my checking account."}]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_account_list",
+                            "arguments": {"user_id": "U123"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"accounts": [{"id": "CHK100", "type": "checking"}, '
+                                '{"id": "SAV200", "type": "savings"}]}'
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "You have two accounts: CHK100 (checking) and SAV200 (savings). "
+                                "Which one do you want transactions for?"
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Please get the transaction history for my checking account."}
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_2", "name": "get_transactions",
-                     "arguments": {"account_id": "SAV200"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_2", "content": [
-                    {"type": "tool_result", "tool_result": '{"transactions": [{"id": "T1", "amount": 100}]}'}
-                ]},
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "The latest transactions for your checking account are: T1 - $100."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "get_transactions",
+                            "arguments": {"account_id": "SAV200"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_2",
+                    "content": [
+                        {"type": "tool_result", "tool_result": '{"transactions": [{"id": "T1", "amount": 100}]}'}
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": "The latest transactions for your checking account are: T1 - $100."}
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -293,23 +497,19 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "description": "Get list of accounts for a user",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "user_id": {"type": "string", "description": "User ID"}
-                        },
-                        "required": ["user_id"]
-                    }
+                        "properties": {"user_id": {"type": "string", "description": "User ID"}},
+                        "required": ["user_id"],
+                    },
                 },
                 {
                     "name": "get_transactions",
                     "description": "Get transaction history for an account",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "account_id": {"type": "string", "description": "Account ID"}
-                        },
-                        "required": ["account_id"]
-                    }
-                }
+                        "properties": {"account_id": {"type": "string", "description": "Account ID"}},
+                        "required": ["account_id"],
+                    },
+                },
             ],
         )
 
@@ -320,18 +520,28 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.FAIL,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "What's my account balance?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_balance",
-                     "arguments": {"user_id": "USER123"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"balance": 1523.47, "currency": "USD"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_balance",
+                            "arguments": {"user_id": "USER123"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [{"type": "tool_result", "tool_result": '{"balance": 1523.47, "currency": "USD"}'}],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "Your current account balance is $2,523.47."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "Your current account balance is $2,523.47."}],
+                }
             ],
             tool_definitions=[
                 {
@@ -339,11 +549,9 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "description": "Get account balance for a user",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "user_id": {"type": "string", "description": "User ID"}
-                        },
-                        "required": ["user_id"]
-                    }
+                        "properties": {"user_id": {"type": "string", "description": "User ID"}},
+                        "required": ["user_id"],
+                    },
                 }
             ],
         )
@@ -355,18 +563,41 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.FAIL,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "Get details about product SKU-789"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_product",
-                     "arguments": {"sku": "SKU-789"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"sku": "SKU-789", "name": "Wireless Mouse", "price": 29.99}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_product",
+                            "arguments": {"sku": "SKU-789"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"sku": "SKU-789", "name": "Wireless Mouse", "price": 29.99}',
+                        }
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "Product SKU-789 is a Wireless Mouse priced at $29.99. It has a 4.5 star rating and comes with free shipping."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Product SKU-789 is a Wireless Mouse priced at $29.99. "
+                                "It has a 4.5 star rating and comes with free shipping."
+                            ),
+                        }
+                    ],
+                }
             ],
             tool_definitions=[
                 {
@@ -374,11 +605,9 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "description": "Get product details by SKU",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "sku": {"type": "string", "description": "Product SKU"}
-                        },
-                        "required": ["sku"]
-                    }
+                        "properties": {"sku": {"type": "string", "description": "Product SKU"}},
+                        "required": ["sku"],
+                    },
                 }
             ],
         )
@@ -390,18 +619,44 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.FAIL,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "Compare flights from NYC to LA"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "search_flights",
-                     "arguments": {"from": "NYC", "to": "LA"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"flights": [{"airline": "United", "price": 350, "duration": "5h 30m"}, {"airline": "Delta", "price": 420, "duration": "5h 15m"}]}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "search_flights",
+                            "arguments": {"from": "NYC", "to": "LA"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"flights": [{"airline": "United", "price": 350, "duration": "5h 30m"}, '
+                                '{"airline": "Delta", "price": 420, "duration": "5h 15m"}]}'
+                            ),
+                        }
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "I found two flights. United costs $420 with a 5h 15m flight time, and Delta costs $350 with a 5h 30m duration."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "I found two flights. United costs $420 with a 5h 15m flight time, "
+                                "and Delta costs $350 with a 5h 30m duration."
+                            ),
+                        }
+                    ],
+                }
             ],
             tool_definitions=[
                 {
@@ -411,10 +666,10 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "type": "object",
                         "properties": {
                             "from": {"type": "string", "description": "Departure city"},
-                            "to": {"type": "string", "description": "Destination city"}
+                            "to": {"type": "string", "description": "Destination city"},
                         },
-                        "required": ["from", "to"]
-                    }
+                        "required": ["from", "to"],
+                    },
                 }
             ],
         )
@@ -426,18 +681,35 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.FAIL,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "Is my payment processed?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "check_payment",
-                     "arguments": {"payment_id": "PAY001"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"payment_id": "PAY001", "status": "pending", "amount": 150.00}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "check_payment",
+                            "arguments": {"payment_id": "PAY001"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"payment_id": "PAY001", "status": "pending", "amount": 150.00}',
+                        }
+                    ],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "Yes, your payment of $150.00 has been successfully processed!"}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": "Yes, your payment of $150.00 has been successfully processed!"}
+                    ],
+                }
             ],
             tool_definitions=[
                 {
@@ -445,11 +717,9 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "description": "Check payment status",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "payment_id": {"type": "string", "description": "Payment ID"}
-                        },
-                        "required": ["payment_id"]
-                    }
+                        "properties": {"payment_id": {"type": "string", "description": "Payment ID"}},
+                        "required": ["payment_id"],
+                    },
                 }
             ],
         )
@@ -463,30 +733,38 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.PASS,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "What time does the store close?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_store_hours",
-                     "arguments": {"store_id": "STORE001"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"store_id": "STORE001", "open": "09:00", "close": "21:00"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_store_hours",
+                            "arguments": {"store_id": "STORE001"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"store_id": "STORE001", "open": "09:00", "close": "21:00"}',
+                        }
+                    ],
+                },
             ],
-            response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "The store closes at 9 PM."}
-                ]}
-            ],
+            response=[{"role": "assistant", "content": [{"type": "text", "text": "The store closes at 9 PM."}]}],
             tool_definitions=[
                 {
                     "name": "get_store_hours",
                     "description": "Get store operating hours",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "store_id": {"type": "string", "description": "Store ID"}
-                        },
-                        "required": ["store_id"]
-                    }
+                        "properties": {"store_id": {"type": "string", "description": "Store ID"}},
+                        "required": ["store_id"],
+                    },
                 }
             ],
         )
@@ -498,30 +776,41 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.PASS,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "What's the price of the laptop?"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_product",
-                     "arguments": {"product_id": "LAPTOP001"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"product_id": "LAPTOP001", "name": "ProBook 15", "price": 999.99, "weight": "2.1kg", "color": "Silver", "warranty": "2 years"}'}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_product",
+                            "arguments": {"product_id": "LAPTOP001"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"product_id": "LAPTOP001", "name": "ProBook 15", "price": 999.99, '
+                                '"weight": "2.1kg", "color": "Silver", "warranty": "2 years"}'
+                            ),
+                        }
+                    ],
+                },
             ],
-            response=[
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "The laptop costs $999.99."}
-                ]}
-            ],
+            response=[{"role": "assistant", "content": [{"type": "text", "text": "The laptop costs $999.99."}]}],
             tool_definitions=[
                 {
                     "name": "get_product",
                     "description": "Get product details",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "product_id": {"type": "string", "description": "Product ID"}
-                        },
-                        "required": ["product_id"]
-                    }
+                        "properties": {"product_id": {"type": "string", "description": "Product ID"}},
+                        "required": ["product_id"],
+                    },
                 }
             ],
         )
@@ -533,29 +822,75 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             expected=ExpectedResult.PASS,
             query=[
                 {"role": "user", "content": [{"type": "text", "text": "Search for hotels in Paris"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "search_hotels",
-                     "arguments": {"city": "Paris"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [
-                    {"type": "tool_result", "tool_result": '{"hotels": [{"id": "H1", "name": "Grand Paris", "price": 200}, {"id": "H2", "name": "Eiffel View", "price": 350}]}'}
-                ]},
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "I found two hotels: Grand Paris at $200/night and Eiffel View at $350/night."}
-                ]},
-                {"role": "user", "content": [{"type": "text", "text": "Book the cheaper one"}]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "search_hotels",
+                            "arguments": {"city": "Paris"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"hotels": [{"id": "H1", "name": "Grand Paris", "price": 200}, '
+                                '{"id": "H2", "name": "Eiffel View", "price": 350}]}'
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "I found two hotels: Grand Paris at $200/night and Eiffel View at $350/night.",
+                        }
+                    ],
+                },
+                {"role": "user", "content": [{"type": "text", "text": "Book the cheaper one"}]},
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_2", "name": "book_hotel",
-                     "arguments": {"hotel_id": "H1"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_2", "content": [
-                    {"type": "tool_result", "tool_result": '{"confirmation": "CONF123", "hotel": "Grand Paris", "total": 200}'}
-                ]},
-                {"role": "assistant", "content": [
-                    {"type": "text", "text": "I've booked the Grand Paris for you. Your confirmation number is CONF123 and the total is $200."}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "book_hotel",
+                            "arguments": {"hotel_id": "H1"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_2",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": '{"confirmation": "CONF123", "hotel": "Grand Paris", "total": 200}',
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "I've booked the Grand Paris for you. Your confirmation number is "
+                                "CONF123 and the total is $200."
+                            ),
+                        }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -563,22 +898,18 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "description": "Search for hotels in a city",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "city": {"type": "string", "description": "City name"}
-                        },
-                        "required": ["city"]
-                    }
+                        "properties": {"city": {"type": "string", "description": "City name"}},
+                        "required": ["city"],
+                    },
                 },
                 {
                     "name": "book_hotel",
                     "description": "Book a hotel",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "hotel_id": {"type": "string", "description": "Hotel ID"}
-                        },
-                        "required": ["hotel_id"]
-                    }
-                }
+                        "properties": {"hotel_id": {"type": "string", "description": "Hotel ID"}},
+                        "required": ["hotel_id"],
+                    },
+                },
             ],
         )

@@ -38,9 +38,9 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Send an email to john@example.com with subject 'Meeting'"
+                            "text": "Send an email to john@example.com with subject 'Meeting'",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -53,10 +53,10 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "send_email",
                             "arguments": {
                                 "to": "john@example.com",
-                                "subject": "Meeting"
-                            }
+                                "subject": "Meeting",
+                            },
                         }
-                    ]
+                    ],
                 }
             ],
             tool_definitions=ToolDefinitionSets.EMAIL_AND_FILE,
@@ -75,9 +75,9 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Send an email to john@example.com"
+                            "text": "Send an email to john@example.com",
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -90,9 +90,9 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "delete_file",
                             "arguments": {
                                 "filename": "email.txt"
-                            }
+                            },
                         }
-                    ]
+                    ],
                 }
             ],
             tool_definitions=ToolDefinitionSets.EMAIL_AND_FILE,
@@ -106,16 +106,20 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Search for iPhone 15 and add it to my cart"}]
+                    "content": [{"type": "text", "text": "Search for iPhone 15 and add it to my cart"}],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "product_search",
-                         "arguments": {"query": "iPhone 15"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "product_search",
+                            "arguments": {"query": "iPhone 15"},
+                        }
+                    ],
                 }
             ],
             tool_definitions=ToolDefinitionSets.SHOPPING,
@@ -132,18 +136,26 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Send email to john@example.com"}]
+                    "content": [{"type": "text", "text": "Send email to john@example.com"}],
                 }
             ],
             response=[
                 {
                     "role": "assistant",
                     "content": [
-                        {"type": "tool_call", "tool_call_id": "call_1", "name": "send_email",
-                         "arguments": {"to": "john@example.com"}},
-                        {"type": "tool_call", "tool_call_id": "call_2", "name": "send_email",
-                         "arguments": {"to": "john@example.com"}}
-                    ]
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "send_email",
+                            "arguments": {"to": "john@example.com"},
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "send_email",
+                            "arguments": {"to": "john@example.com"},
+                        },
+                    ],
                 }
             ],
             tool_definitions=[ToolDefinitions.SEND_EMAIL_BASIC],
@@ -162,9 +174,9 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Calculate total for items in my cart"
+                            "text": "Calculate total for items in my cart",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
@@ -173,9 +185,9 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "type": "tool_call",
                             "tool_call_id": "call_1",
                             "name": "fetch_items_in_cart",
-                            "arguments": {}
+                            "arguments": {},
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
@@ -183,24 +195,24 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Items: iPhone ($999), Case ($49)"
+                            "tool_result": "Items: iPhone ($999), Case ($49)",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
                     "content": [
                         {
                             "type": "text",
-                            "text": "You have iPhone and Case in your cart."
+                            "text": "You have iPhone and Case in your cart.",
                         },
                         {
                             "type": "tool_call",
                             "tool_call_id": "call_2",
                             "name": "calculate_total",
-                            "arguments": {}
-                        }
-                    ]
+                            "arguments": {},
+                        },
+                    ],
                 }
             ],
             response=[
@@ -211,9 +223,9 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "type": "tool_call",
                             "tool_call_id": "call_2",
                             "name": "calculate_total",
-                            "arguments": {}
+                            "arguments": {},
                         }
-                    ]
+                    ],
                 }
             ],
             tool_definitions=ToolDefinitionSets.CART_OPERATIONS,
@@ -227,7 +239,7 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
             query=[
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": "Process payment for my order"}]
+                    "content": [{"type": "text", "text": "Process payment for my order"}],
                 }
             ],
             response=[
@@ -236,11 +248,16 @@ class TestToolSelectionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {"type": "tool_call", "tool_call_id": "call_1", "name": "validate_card", "arguments": {}},
                         {"type": "tool_call", "tool_call_id": "call_2", "name": "check_balance", "arguments": {}},
-                        {"type": "tool_call", "tool_call_id": "call_3", "name": "process_transaction", "arguments": {}},
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_3",
+                            "name": "process_transaction",
+                            "arguments": {},
+                        },
                         {"type": "tool_call", "tool_call_id": "call_4", "name": "send_receipt", "arguments": {}},
                         {"type": "tool_call", "tool_call_id": "call_5", "name": "log_transaction", "arguments": {}},
-                        {"type": "tool_call", "tool_call_id": "call_6", "name": "notify_user", "arguments": {}}
-                    ]
+                        {"type": "tool_call", "tool_call_id": "call_6", "name": "notify_user", "arguments": {}},
+                    ],
                 }
             ],
             tool_definitions=ToolDefinitionSets.PAYMENT_PROCESSING,

@@ -7,13 +7,9 @@ import pytest
 from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner, ExpectedResult
 from ...builtin.task_completion.evaluator._task_completion import TaskCompletionEvaluator
 from .common_test_data import (
-    ToolDefinitions,
     ToolDefinitionSets,
     create_user_message,
     create_assistant_text_message,
-    create_tool_call,
-    create_assistant_tool_call_message,
-    create_tool_result_message,
 )
 
 
@@ -47,7 +43,7 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Fix my Python code won't run: def greet()\n    print('Hello')"
+                            "text": "Fix my Python code won't run: def greet()\n    print('Hello')",
                         }
                     ]
                 }
@@ -58,9 +54,12 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "I found the issue - you're missing a colon after the function definition. Here's the corrected code:\n\ndef greet():\n    print('Hello')"
+                            "text": (
+                                "I found the issue - you're missing a colon after the function "
+                                "definition. Here's the corrected code:\n\ndef greet():\n    print('Hello')"
+                            ),
                         }
-                    ]
+                    ],
                 }
             ],
             tool_definitions=[],
@@ -79,9 +78,12 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Book a round-trip flight from NYC to LA on March 15-20 and email me the confirmation with seat numbers"
+                            "text": (
+                                "Book a round-trip flight from NYC to LA on March 15-20 and email me "
+                                "the confirmation with seat numbers"
+                            ),
                         }
-                    ]
+                    ],
                 }
             ],
             response=[
@@ -97,8 +99,8 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                                 "to": "LA",
                                 "departure_date": "2026-03-15",
                                 "return_date": "2026-03-20",
-                                "trip_type": "round-trip"
-                            }
+                                "trip_type": "round-trip",
+                            },
                         },
                         {
                             "type": "tool_call",
@@ -106,10 +108,13 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "send_email",
                             "arguments": {
                                 "subject": "Flight Confirmation",
-                                "body": "Your round-trip flight is confirmed! NYC to LA departing March 15 at 9:00 AM, returning March 20 at 6:00 PM. Confirmation #FL8392"
-                            }
-                        }
-                    ]
+                                "body": (
+                                    "Your round-trip flight is confirmed! NYC to LA departing March 15 "
+                                    "at 9:00 AM, returning March 20 at 6:00 PM. Confirmation #FL8392"
+                                ),
+                            },
+                        },
+                    ],
                 },
                 {
                     "role": "tool",
@@ -117,7 +122,7 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Flight booked successfully. Confirmation #FL8392"
+                            "tool_result": "Flight booked successfully. Confirmation #FL8392",
                         }
                     ]
                 },
@@ -127,7 +132,7 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Email sent"
+                            "tool_result": "Email sent",
                         }
                     ]
                 },
@@ -136,10 +141,14 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Your round-trip flight is confirmed! NYC to LA departing March 15 at 9:00 AM, returning March 20 at 6:00 PM. Confirmation #FL8392 sent to your email."
+                            "text": (
+                                "Your round-trip flight is confirmed! NYC to LA departing March 15 "
+                                "at 9:00 AM, returning March 20 at 6:00 PM. Confirmation #FL8392 "
+                                "sent to your email."
+                            ),
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=ToolDefinitionSets.FLIGHT_BOOKING,
         )
@@ -155,7 +164,7 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Show me quarterly revenue trends and explain the Q3 dip"
+                            "text": "Show me quarterly revenue trends and explain the Q3 dip",
                         }
                     ]
                 }
@@ -170,9 +179,9 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "name": "get_revenue_data",
                             "arguments": {
                                 "period": "quarterly"
-                            }
+                            },
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
@@ -180,8 +189,8 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Q1: $2.4M, Q2: $2.8M, Q3: $2.1M, Q4: $3.1M"
-                        }
+                            "tool_result": "Q1: $2.4M, Q2: $2.8M, Q3: $2.1M, Q4: $3.1M",
+                        },
                     ]
                 },
                 {
@@ -189,9 +198,9 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Quarterly Revenue:\nQ1: $2.4M\nQ2: $2.8M\nQ3: $2.1M\nQ4: $3.1M"
+                            "text": "Quarterly Revenue:\nQ1: $2.4M\nQ2: $2.8M\nQ3: $2.1M\nQ4: $3.1M",
                         }
-                    ]
+                    ],
                 }
             ],
             tool_definitions=[
@@ -201,8 +210,8 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "parameters": {
                         "type": "object",
                         "properties": {"period": {"type": "string"}},
-                        "required": ["period"]
-                    }
+                        "required": ["period"],
+                    },
                 }
             ],
         )
@@ -218,7 +227,7 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Transfer $1,000 from checking to savings account"
+                            "text": "Transfer $1,000 from checking to savings account",
                         }
                     ]
                 }
@@ -234,10 +243,10 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "arguments": {
                                 "from_account": "checking",
                                 "to_account": "savings",
-                                "amount": 1000
-                            }
+                                "amount": 1000,
+                            },
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "tool",
@@ -245,9 +254,9 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_result": "Error: Transfer failed due to system error"
+                            "tool_result": "Error: Transfer failed due to system error",
                         }
-                    ]
+                    ],
                 },
                 {
                     "role": "assistant",
@@ -258,10 +267,10 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                                 "I attempted to process the transfer but encountered an error. "
                                 "Your checking account has sufficient funds. Please try the transfer "
                                 "through the mobile app or contact support."
-                            )
+                            ),
                         }
-                    ]
-                }
+                    ],
+                },
             ],
             tool_definitions=[
                 {
@@ -272,10 +281,10 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "from_account": {"type": "string"},
                             "to_account": {"type": "string"},
-                            "amount": {"type": "number"}
+                            "amount": {"type": "number"},
                         },
-                        "required": ["from_account", "to_account", "amount"]
-                    }
+                        "required": ["from_account", "to_account", "amount"],
+                    },
                 }
             ],
         )
@@ -302,10 +311,10 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "appointment_id": {"type": "string"},
                             "time": {"type": "string"},
-                            "date": {"type": "string"}
+                            "date": {"type": "string"},
                         },
-                        "required": ["appointment_id"]
-                    }
+                        "required": ["appointment_id"],
+                    },
                 }
             ],
         )

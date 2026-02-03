@@ -28,9 +28,17 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": [{"type": "text", "text": "Search for iPhone 15"}]}
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "product_search", "arguments": {"query": "iPhone 15"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "product_search",
+                            "arguments": {"query": "iPhone 15"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.PRODUCT_SEARCH],
         )
@@ -41,12 +49,23 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="PASS-correct-format",
             expected=ExpectedResult.PASS,
             query=[
-                {"role": "user", "content": [{"type": "text", "text": "Book appointment for January 5, 2025"}]}
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Book appointment for January 5, 2025"}],
+                }
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "book_appointment", "arguments": {"date": "2025-01-05"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "book_appointment",
+                            "arguments": {"date": "2025-01-05"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.BOOK_APPOINTMENT],
         )
@@ -60,9 +79,17 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": [{"type": "text", "text": "Book appointment for January 5, 2025"}]}
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "book_appointment", "arguments": {"date": "2025-01-05"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "book_appointment",
+                            "arguments": {"date": "2025-01-05"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[
                 {
@@ -73,8 +100,8 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "properties": {
                             "date": {"type": "string", "description": "Date in DD-MM-YYYY format"}
                         },
-                        "required": ["date"]
-                    }
+                        "required": ["date"],
+                    },
                 }
             ],
         )
@@ -85,12 +112,23 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="FAIL-missing-parameter",
             expected=ExpectedResult.FAIL,
             query=[
-                {"role": "user", "content": [{"type": "text", "text": "Send email to john@example.com with subject 'Hello'"}]}
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Send email to john@example.com with subject 'Hello'"}],
+                }
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "send_email", "arguments": {"to": "john@example.com"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "send_email",
+                            "arguments": {"to": "john@example.com"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.SEND_EMAIL_BASIC],
         )
@@ -104,9 +142,17 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": [{"type": "text", "text": "Get server time"}]}
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_server_time", "arguments": {"timezone": "PST", "format": "12h"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_server_time",
+                            "arguments": {"timezone": "PST", "format": "12h"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.GET_SERVER_TIME],
         )
@@ -120,9 +166,17 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": [{"type": "text", "text": "Search for iPhone 15"}]}
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "product_search", "arguments": {"query": "Samsung Galaxy"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "product_search",
+                            "arguments": {"query": "Samsung Galaxy"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.PRODUCT_SEARCH],
         )
@@ -133,18 +187,50 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="FAIL-param-not-grounded-from-tool-result",
             expected=ExpectedResult.FAIL,
             query=[
-                {"role": "user", "content": [{"type": "text", "text": "Calculate distance between Seattle and Portland"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_coordinates", "arguments": {"city": "Seattle"}},
-                    {"type": "tool_call", "tool_call_id": "call_2", "name": "get_coordinates", "arguments": {"city": "Portland"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [{"type": "tool_result", "tool_result": "1, 2"}]},
-                {"role": "tool", "tool_call_id": "call_2", "content": [{"type": "tool_result", "tool_result": "3, 4"}]}
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Calculate distance between Seattle and Portland"}],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_coordinates",
+                            "arguments": {"city": "Seattle"},
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "get_coordinates",
+                            "arguments": {"city": "Portland"},
+                        },
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [{"type": "tool_result", "tool_result": "1, 2"}],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_2",
+                    "content": [{"type": "tool_result", "tool_result": "3, 4"}],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_3", "name": "calculate_distance", "arguments": {"lat1": 1, "lon1": 1, "lat2": 3, "lon2": 4}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_3",
+                            "name": "calculate_distance",
+                            "arguments": {"lat1": 1, "lon1": 1, "lat2": 3, "lon2": 4},
+                        }
+                    ],
+                }
             ],
             tool_definitions=ToolDefinitionSets.COORDINATES_AND_DISTANCE,
         )
@@ -152,27 +238,59 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
     def test_pass_param_grounded_from_tool_result(self) -> None:
         """Test case: PASS - Parameter correctly grounded from previous tool result."""
         # TODO: Test fails - evaluator fails due to type mismatch (string vs number).
-        # Reason: "The tool definition for 'calculate_distance' specifies lat1, lon1, lat2, lon2 must be of type 'number'.
-        # However, the parameters passed are strings (e.g., lat1='1' is a string, not a number).
-        # This fails the type compliance criterion."
+        # Reason: "The tool definition for 'calculate_distance' specifies lat1, lon1, lat2, lon2
+        # must be of type 'number'. However, the parameters passed are strings (e.g., lat1='1'
+        # is a string, not a number). This fails the type compliance criterion."
         # Decision needed: Fix test to pass numeric values instead of string representations,
         # or update the test input format to match expected types.
         self.run_quality_test(
             test_label="PASS-param-grounded-from-tool-result",
             expected=ExpectedResult.PASS,
             query=[
-                {"role": "user", "content": [{"type": "text", "text": "Calculate distance between Seattle and Portland"}]},
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_coordinates", "arguments": {"city": "Seattle"}},
-                    {"type": "tool_call", "tool_call_id": "call_2", "name": "get_coordinates", "arguments": {"city": "Portland"}}
-                ]},
-                {"role": "tool", "tool_call_id": "call_1", "content": [{"type": "tool_result", "tool_result": "1, 2"}]},
-                {"role": "tool", "tool_call_id": "call_2", "content": [{"type": "tool_result", "tool_result": "3, 4"}]}
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Calculate distance between Seattle and Portland"}],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_coordinates",
+                            "arguments": {"city": "Seattle"},
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "get_coordinates",
+                            "arguments": {"city": "Portland"},
+                        },
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [{"type": "tool_result", "tool_result": "1, 2"}],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_2",
+                    "content": [{"type": "tool_result", "tool_result": "3, 4"}],
+                },
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_3", "name": "calculate_distance", "arguments": {"lat1": 1, "lon1": 2, "lat2": 3, "lon2": 4}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_3",
+                            "name": "calculate_distance",
+                            "arguments": {"lat1": 1, "lon1": 2, "lat2": 3, "lon2": 4},
+                        }
+                    ],
+                }
             ],
             tool_definitions=ToolDefinitionSets.COORDINATES_AND_DISTANCE,
         )
@@ -186,9 +304,17 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": [{"type": "text", "text": "Show me my recent orders"}]}
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_order", "arguments": {"order_id": "789"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_order",
+                            "arguments": {"order_id": "789"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.GET_ORDER, ToolDefinitions.GET_RECENT_ORDERS],
         )
@@ -202,9 +328,17 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": [{"type": "text", "text": "Get user with ID 123"}]}
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "get_user", "arguments": {"user_id": "123"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_user",
+                            "arguments": {"user_id": "123"},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.GET_USER],
         )
@@ -215,13 +349,29 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
             test_label="FAIL-multiple-calls-missing-param",
             expected=ExpectedResult.FAIL,
             query=[
-                {"role": "user", "content": [{"type": "text", "text": "Send email to john@example.com and sarah@example.com"}]}
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Send email to john@example.com and sarah@example.com"}],
+                }
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "send_email", "arguments": {"to": "john@example.com"}},
-                    {"type": "tool_call", "tool_call_id": "call_2", "name": "send_email", "arguments": {"to": "sarah@example.com"}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "send_email",
+                            "arguments": {"to": "john@example.com"},
+                        },
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_2",
+                            "name": "send_email",
+                            "arguments": {"to": "sarah@example.com"},
+                        },
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.SEND_EMAIL_BASIC],
         )
@@ -235,9 +385,17 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {"role": "user", "content": [{"type": "text", "text": "Search for products"}]}
             ],
             response=[
-                {"role": "assistant", "content": [
-                    {"type": "tool_call", "tool_call_id": "call_1", "name": "product_search", "arguments": {"query": None}}
-                ]}
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "product_search",
+                            "arguments": {"query": None},
+                        }
+                    ],
+                }
             ],
             tool_definitions=[ToolDefinitions.PRODUCT_SEARCH],
         )

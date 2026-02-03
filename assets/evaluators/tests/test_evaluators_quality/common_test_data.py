@@ -30,10 +30,10 @@ class ToolDefinitions:
             "properties": {
                 "to": {"type": "string", "description": "Recipient email address"},
                 "subject": {"type": "string", "description": "Email subject"},
-                "body": {"type": "string", "description": "Email body content"}
+                "body": {"type": "string", "description": "Email body content"},
             },
-            "required": ["to", "subject"]
-        }
+            "required": ["to", "subject"],
+        },
     }
 
     SEND_EMAIL_BASIC: ToolDefinition = {
@@ -45,7 +45,7 @@ class ToolDefinitions:
                 "to": {"type": "string"},
                 "subject": {"type": "string"}
             },
-            "required": ["to", "subject"]
+            "required": ["to", "subject"],
         }
     }
 
@@ -58,10 +58,10 @@ class ToolDefinitions:
             "properties": {
                 "operation": {"type": "string", "description": "Math operation (add, subtract, multiply, divide)"},
                 "a": {"type": "number", "description": "First operand"},
-                "b": {"type": "number", "description": "Second operand"}
+                "b": {"type": "number", "description": "Second operand"},
             },
-            "required": ["operation", "a", "b"]
-        }
+            "required": ["operation", "a", "b"],
+        },
     }
 
     # File Operations
@@ -73,7 +73,7 @@ class ToolDefinitions:
             "properties": {
                 "filename": {"type": "string", "description": "Name of the file to delete"}
             },
-            "required": ["filename"]
+            "required": ["filename"],
         }
     }
 
@@ -85,7 +85,7 @@ class ToolDefinitions:
             "properties": {
                 "path": {"type": "string", "description": "Folder path"}
             },
-            "required": ["path"]
+            "required": ["path"],
         }
     }
 
@@ -98,7 +98,7 @@ class ToolDefinitions:
             "properties": {
                 "query": {"type": "string", "description": "Search query"}
             },
-            "required": ["query"]
+            "required": ["query"],
         }
     }
 
@@ -110,7 +110,7 @@ class ToolDefinitions:
             "properties": {
                 "product_id": {"type": "string", "description": "Product ID to add"}
             },
-            "required": ["product_id"]
+            "required": ["product_id"],
         }
     }
 
@@ -122,10 +122,10 @@ class ToolDefinitions:
             "type": "object",
             "properties": {
                 "location": {"type": "string", "description": "Location to get weather for"},
-                "units": {"type": "string", "description": "Temperature units (celsius, fahrenheit)"}
+                "units": {"type": "string", "description": "Temperature units (celsius, fahrenheit)"},
             },
-            "required": ["location"]
-        }
+            "required": ["location"],
+        },
     }
 
     # Time Tools
@@ -134,7 +134,7 @@ class ToolDefinitions:
         "description": "Get current time",
         "parameters": {
             "type": "object",
-            "properties": {}
+            "properties": {},
         }
     }
 
@@ -146,7 +146,7 @@ class ToolDefinitions:
             "properties": {
                 "timezone": {"type": "string", "description": "Timezone (e.g., PST, EST, UTC)"}
             },
-            "required": ["timezone"]
+            "required": ["timezone"],
         }
     }
 
@@ -161,10 +161,10 @@ class ToolDefinitions:
                 "to": {"type": "string", "description": "Destination city"},
                 "departure_date": {"type": "string", "description": "Departure date"},
                 "return_date": {"type": "string", "description": "Return date (for round-trip)"},
-                "trip_type": {"type": "string", "description": "Trip type (one-way, round-trip)"}
+                "trip_type": {"type": "string", "description": "Trip type (one-way, round-trip)"},
             },
-            "required": ["from", "to", "departure_date"]
-        }
+            "required": ["from", "to", "departure_date"],
+        },
     }
 
     BOOK_APPOINTMENT: ToolDefinition = {
@@ -175,7 +175,7 @@ class ToolDefinitions:
             "properties": {
                 "date": {"type": "string", "format": "date", "description": "Date in YYYY-MM-DD format"}
             },
-            "required": ["date"]
+            "required": ["date"],
         }
     }
 
@@ -188,7 +188,7 @@ class ToolDefinitions:
             "properties": {
                 "user_id": {"type": "integer", "description": "User ID"}
             },
-            "required": ["user_id"]
+            "required": ["user_id"],
         }
     }
 
@@ -201,7 +201,7 @@ class ToolDefinitions:
             "properties": {
                 "order_id": {"type": "string", "description": "Order ID"}
             },
-            "required": ["order_id"]
+            "required": ["order_id"],
         }
     }
 
@@ -210,7 +210,7 @@ class ToolDefinitions:
         "description": "Get recent orders",
         "parameters": {
             "type": "object",
-            "properties": {}
+            "properties": {},
         }
     }
 
@@ -222,7 +222,7 @@ class ToolDefinitions:
             "properties": {
                 "order_id": {"type": "string", "description": "Order ID"}
             },
-            "required": ["order_id"]
+            "required": ["order_id"],
         }
     }
 
@@ -235,7 +235,7 @@ class ToolDefinitions:
             "properties": {
                 "city": {"type": "string", "description": "City name"}
             },
-            "required": ["city"]
+            "required": ["city"],
         }
     }
 
@@ -248,10 +248,10 @@ class ToolDefinitions:
                 "lat1": {"type": "number", "description": "Latitude of first point"},
                 "lon1": {"type": "number", "description": "Longitude of first point"},
                 "lat2": {"type": "number", "description": "Latitude of second point"},
-                "lon2": {"type": "number", "description": "Longitude of second point"}
+                "lon2": {"type": "number", "description": "Longitude of second point"},
             },
-            "required": ["lat1", "lon1", "lat2", "lon2"]
-        }
+            "required": ["lat1", "lon1", "lat2", "lon2"],
+        },
     }
 
     # Cart Tools
@@ -260,7 +260,7 @@ class ToolDefinitions:
         "description": "Fetch cart items",
         "parameters": {
             "type": "object",
-            "properties": {}
+            "properties": {},
         }
     }
 
@@ -269,7 +269,7 @@ class ToolDefinitions:
         "description": "Calculate cart total",
         "parameters": {
             "type": "object",
-            "properties": {}
+            "properties": {},
         }
     }
 
@@ -279,7 +279,7 @@ class ToolDefinitions:
         "description": "Get list of all month names",
         "parameters": {
             "type": "object",
-            "properties": {}
+            "properties": {},
         }
     }
 
@@ -287,37 +287,37 @@ class ToolDefinitions:
     VALIDATE_CARD: ToolDefinition = {
         "name": "validate_card",
         "description": "Validate credit card",
-        "parameters": {"type": "object"}
+        "parameters": {"type": "object"},
     }
 
     CHECK_BALANCE: ToolDefinition = {
         "name": "check_balance",
         "description": "Check account balance",
-        "parameters": {"type": "object"}
+        "parameters": {"type": "object"},
     }
 
     PROCESS_TRANSACTION: ToolDefinition = {
         "name": "process_transaction",
         "description": "Process payment",
-        "parameters": {"type": "object"}
+        "parameters": {"type": "object"},
     }
 
     SEND_RECEIPT: ToolDefinition = {
         "name": "send_receipt",
         "description": "Send receipt",
-        "parameters": {"type": "object"}
+        "parameters": {"type": "object"},
     }
 
     LOG_TRANSACTION: ToolDefinition = {
         "name": "log_transaction",
         "description": "Log transaction",
-        "parameters": {"type": "object"}
+        "parameters": {"type": "object"},
     }
 
     NOTIFY_USER: ToolDefinition = {
         "name": "notify_user",
         "description": "Notify user",
-        "parameters": {"type": "object"}
+        "parameters": {"type": "object"},
     }
 
 
@@ -325,32 +325,33 @@ class ToolDefinitions:
 # COMMON TOOL DEFINITION SETS
 # =============================================================================
 
+
 class ToolDefinitionSets:
     """Pre-configured sets of tool definitions for common test scenarios."""
 
     EMAIL_AND_FILE: List[ToolDefinition] = [
         ToolDefinitions.SEND_EMAIL_BASIC,
-        ToolDefinitions.DELETE_FILE
+        ToolDefinitions.DELETE_FILE,
     ]
 
     SHOPPING: List[ToolDefinition] = [
         ToolDefinitions.PRODUCT_SEARCH,
-        ToolDefinitions.ADD_TO_CART
+        ToolDefinitions.ADD_TO_CART,
     ]
 
     FLIGHT_BOOKING: List[ToolDefinition] = [
         ToolDefinitions.BOOK_FLIGHT,
-        ToolDefinitions.SEND_EMAIL
+        ToolDefinitions.SEND_EMAIL,
     ]
 
     COORDINATES_AND_DISTANCE: List[ToolDefinition] = [
         ToolDefinitions.GET_COORDINATES,
-        ToolDefinitions.CALCULATE_DISTANCE
+        ToolDefinitions.CALCULATE_DISTANCE,
     ]
 
     CART_OPERATIONS: List[ToolDefinition] = [
         ToolDefinitions.FETCH_ITEMS_IN_CART,
-        ToolDefinitions.CALCULATE_TOTAL
+        ToolDefinitions.CALCULATE_TOTAL,
     ]
 
     PAYMENT_PROCESSING: List[ToolDefinition] = [
@@ -359,13 +360,14 @@ class ToolDefinitionSets:
         ToolDefinitions.PROCESS_TRANSACTION,
         ToolDefinitions.SEND_RECEIPT,
         ToolDefinitions.LOG_TRANSACTION,
-        ToolDefinitions.NOTIFY_USER
+        ToolDefinitions.NOTIFY_USER,
     ]
 
 
 # =============================================================================
 # COMMON RESPONSE TEXTS
 # =============================================================================
+
 
 class ResponseTexts:
     """Common response texts used across tests."""
@@ -401,11 +403,12 @@ class ResponseTexts:
 # HELPER FUNCTIONS
 # =============================================================================
 
+
 def create_user_message(text: str) -> Dict[str, Any]:
     """Create a standard user message format."""
     return {
         "role": "user",
-        "content": [{"type": "text", "text": text}]
+        "content": [{"type": "text", "text": text}],
     }
 
 
@@ -413,21 +416,17 @@ def create_assistant_text_message(text: str) -> Dict[str, Any]:
     """Create a standard assistant text message format."""
     return {
         "role": "assistant",
-        "content": [{"type": "text", "text": text}]
+        "content": [{"type": "text", "text": text}],
     }
 
 
-def create_tool_call(
-    tool_call_id: str,
-    name: str,
-    arguments: Dict[str, Any]
-) -> Dict[str, Any]:
+def create_tool_call(tool_call_id: str, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Create a tool call content item."""
     return {
         "type": "tool_call",
         "tool_call_id": tool_call_id,
         "name": name,
-        "arguments": arguments
+        "arguments": arguments,
     }
 
 
@@ -435,17 +434,14 @@ def create_assistant_tool_call_message(tool_calls: List[Dict[str, Any]]) -> Dict
     """Create an assistant message with tool calls."""
     return {
         "role": "assistant",
-        "content": tool_calls
+        "content": tool_calls,
     }
 
 
-def create_tool_result_message(
-    tool_call_id: str,
-    result: Any
-) -> Dict[str, Any]:
+def create_tool_result_message(tool_call_id: str, result: Any) -> Dict[str, Any]:
     """Create a tool result message."""
     return {
         "role": "tool",
         "tool_call_id": tool_call_id,
-        "content": [{"type": "tool_result", "tool_result": result}]
+        "content": [{"type": "tool_result", "tool_result": result}],
     }

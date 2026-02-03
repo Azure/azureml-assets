@@ -6,7 +6,6 @@
 import pytest
 from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner, ExpectedResult
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
-from .common_test_data import ResponseTexts
 
 
 @pytest.mark.quality
@@ -15,18 +14,18 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     Quality tests for Fluency Evaluator.
 
     Tests actual LLM evaluation with real flow execution (no mocking).
-    
+
     Fluency measures the effectiveness and clarity of written communication,
     focusing on grammatical accuracy, vocabulary range, sentence complexity,
     coherence, and overall readability.
-    
+
     Rating scale (default threshold=3):
     - 1: Emergent Fluency - minimal command, pervasive errors, fragmented sentences
     - 2: Basic Fluency - simple ideas, frequent errors, limited vocabulary
     - 3: Competent Fluency - clear ideas, occasional errors, adequate vocabulary
     - 4: Proficient Fluency - well-articulated, good grammar, varied vocabulary
     - 5: Exceptional Fluency - sophisticated vocabulary, flawless grammar, eloquent
-    
+
     Note: Fluency evaluator only requires a response (no query needed).
     """
 
@@ -36,7 +35,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_exceptional_fluency(self) -> None:
         """Test case: PASS - Exceptional fluency (expected score: 5).
-        
+
         Response demonstrates exceptional command of language with sophisticated
         vocabulary, complex varied sentence structures, flawless grammar, and eloquent style.
         """
@@ -57,7 +56,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_proficient_fluency(self) -> None:
         """Test case: PASS - Proficient fluency (expected score: 4).
-        
+
         Response is well-articulated with good control of grammar, varied vocabulary,
         and complex well-structured sentences. Minor errors may occur but don't affect understanding.
         """
@@ -77,7 +76,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_pass_competent_fluency_at_threshold(self) -> None:
         """Test case: PASS - Competent fluency at threshold (expected score: 3).
-        
+
         Response clearly conveys ideas with occasional grammatical errors.
         Vocabulary is adequate but not extensive. Sentences are generally correct
         but may lack complexity and variety.
@@ -95,7 +94,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_technical_language_fluent(self) -> None:
         """Test case: PASS - Technical language with fluent expression.
-        
+
         Response uses technical terminology but maintains grammatical correctness
         and clear expression.
         """
@@ -114,7 +113,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_pass_simple_but_grammatically_correct(self) -> None:
         """Test case: PASS - Simple but grammatically correct response.
-        
+
         Response uses simple vocabulary and sentence structures but maintains
         grammatical correctness throughout.
         """
@@ -133,7 +132,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_emergent_fluency_fragmented(self) -> None:
         """Test case: FAIL - Emergent fluency with fragmented sentences (expected score: 1).
-        
+
         Response shows minimal command of language with pervasive grammatical errors,
         extremely limited vocabulary, and fragmented incoherent sentences.
         """
@@ -146,7 +145,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_fail_basic_fluency_frequent_errors(self) -> None:
         """Test case: FAIL - Basic fluency with frequent errors (expected score: 2).
-        
+
         Response communicates simple ideas but has frequent grammatical errors
         and limited vocabulary. Sentences are short and improperly constructed.
         """
@@ -162,7 +161,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_severe_grammatical_errors(self) -> None:
         """Test case: FAIL - Severe grammatical errors throughout.
-        
+
         Response has subject-verb disagreement, wrong tenses, and missing articles
         that significantly impair readability.
         """
@@ -179,7 +178,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_fail_incomprehensible_word_salad(self) -> None:
         """Test case: FAIL - Incomprehensible word arrangement.
-        
+
         Response consists of words that don't form meaningful sentences,
         making the message largely incomprehensible.
         """
@@ -192,7 +191,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_fail_missing_function_words(self) -> None:
         """Test case: FAIL - Missing essential function words.
-        
+
         Response lacks articles, prepositions, and auxiliary verbs,
         making it read like a telegram.
         """
@@ -210,7 +209,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_single_eloquent_sentence(self) -> None:
         """Test case: Edge case - Single eloquent sentence.
-        
+
         A single sentence that is grammatically perfect and sophisticated.
         """
         self.run_quality_test(
@@ -224,7 +223,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_very_short_simple_response(self) -> None:
         """Test case: Edge case - Very short simple response.
-        
+
         A minimal response that is grammatically correct but provides little
         content to evaluate.
         """
@@ -237,7 +236,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_case_one_word_correct_response(self) -> None:
         """Test case: Edge case - One word correct response.
-        
+
         A single word response that is grammatically valid in context,
         testing the minimum possible fluent response.
         """
@@ -249,7 +248,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_two_word_correct_response(self) -> None:
         """Test case: Edge case - Two word correct response.
-        
+
         A two-word response that is grammatically complete,
         testing minimal but valid fluent expression.
         """
@@ -262,7 +261,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_case_mixed_fluency_levels(self) -> None:
         """Test case: Edge case - Mixed fluency levels within response.
-        
+
         Response starts with good fluency but degrades to poor grammar,
         testing how the evaluator handles inconsistent quality.
         """
@@ -279,7 +278,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_formal_academic_style(self) -> None:
         """Test case: Edge case - Formal academic writing style.
-        
+
         Response uses formal academic language with complex sentence structures
         and specialized vocabulary.
         """
@@ -299,7 +298,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     def test_edge_case_conversational_informal_style(self) -> None:
         """Test case: Edge case - Conversational informal style.
-        
+
         Response uses casual, conversational language that is grammatically
         acceptable in informal contexts.
         """
@@ -317,15 +316,16 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_case_run_on_sentences(self) -> None:
         """Test case: Edge case - Run-on sentences.
-        
+
         Response consists of overly long sentences that lack proper punctuation
         and sentence boundaries. The evaluator penalizes this as basic fluency
         due to lack of clarity and coherence.
         """
         # TODO: Test fails - evaluator scores 3 (Competent Fluency) for run-on sentences.
-        # Reason: "The sentence is long but syntactically correct with standard past-tense verbs and clear meaning.
-        # It lacks punctuation, creating a run-on style, but readability remains high.
-        # Vocabulary is simple and appropriate. Overall coherence is good with minimal errors, aligning with Fluency 3 (Competent Fluency)"
+        # Reason: "The sentence is long but syntactically correct with standard past-tense verbs
+        # and clear meaning. It lacks punctuation, creating a run-on style, but readability
+        # remains high. Vocabulary is simple and appropriate. Overall coherence is good with
+        # minimal errors, aligning with Fluency 3 (Competent Fluency)"
         self.run_quality_test(
             test_label="EDGE-run-on-sentences",
             expected=ExpectedResult.PASS_OR_FAIL,
@@ -340,7 +340,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_case_non_native_speaker_patterns(self) -> None:
         """Test case: Edge case - Common non-native speaker error patterns.
-        
+
         Response contains typical errors made by non-native English speakers
         such as article misuse and preposition errors. The evaluator considers
         this competent fluency since ideas are clearly conveyed despite errors.
@@ -360,7 +360,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_case_repetitive_vocabulary(self) -> None:
         """Test case: Edge case - Correct grammar but limited vocabulary range.
-        
+
         Response is grammatically correct but uses excessive repetition.
         The evaluator considers this basic fluency due to limited vocabulary
         affecting clarity and engagement.
