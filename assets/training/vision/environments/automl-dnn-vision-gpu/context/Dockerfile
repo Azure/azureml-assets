@@ -1,16 +1,5 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag}}
      
-
-# ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn-vision-gpu
-# Prepend path to AzureML conda environment
-# ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
-
-ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
-
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
@@ -70,11 +59,7 @@ RUN conda install pip -n base -y && conda install pip -n ptca -y
 
 # Create conda environment
 COPY conda_dependencies.yaml .
-RUN conda env update --file conda_dependencies.yaml --prune && rm conda_dependencies.yaml && conda clean -afy
-# RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
-#     rm conda_dependencies.yaml && \
-#     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
-#     conda clean -afy
+RUN conda env update --name base --file conda_dependencies.yaml --prune && rm conda_dependencies.yaml && conda clean -afy
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
@@ -83,11 +68,4 @@ RUN pip install --no-cache-dir \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
 
 # vulnearbility fix
-RUN pip install pyarrow==14.0.2
-
-# Patch pillow vulnerability
-RUN pip install --upgrade pillow==12.0.0
-RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3
-# ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
-# dummy number to change when needing to force rebuild without changing the definition: 1
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 pillow==12.0.0 pyarrow==14.0.2
