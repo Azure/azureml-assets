@@ -1,9 +1,5 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:{{latest-image-tag}}
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/automl
-# Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
@@ -46,13 +42,11 @@ RUN apt-get update && \
         libarchive13 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create conda environment
+# Update base conda environment with dependencies
 COPY conda_dependencies.yaml .
-RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
+RUN conda env update --name base -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
+    conda run --name base pip cache purge && \
+    # dependency on the azureml-train-automl-runtime
+    conda run --name base pip install bokeh==3.8.2 && \
     conda clean -a -y
-# dummy number to change when needing to force rebuild without changing the definition: 2
-
-# Avoid ImportError: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.29' not found
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$AZUREML_CONDA_ENVIRONMENT_PATH/lib
