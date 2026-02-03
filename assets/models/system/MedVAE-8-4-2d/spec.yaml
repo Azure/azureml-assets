@@ -16,7 +16,7 @@ tags:
   licenseDescription: "This model is provided under the License Terms available at <https://github.com/StanfordMIMI/MedVAE/blob/main/LICENSE>."
   inference_supported_envs:
     - hf
-  license: mit
+  license: MIT
   author: "StanfordMIMI"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""

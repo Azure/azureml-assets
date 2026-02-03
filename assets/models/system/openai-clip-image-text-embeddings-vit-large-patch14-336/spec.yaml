@@ -20,7 +20,7 @@ tags:
     Preview: ''
     huggingface_model_id: openai/clip-vit-large-patch14-336
     SharedComputeCapacityEnabled: ''
-    license: mit
+    license: MIT
     task: embeddings
     hiddenlayerscanned: ""
     inference_compute_allow_list:

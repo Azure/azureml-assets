@@ -19,7 +19,7 @@ tags:
   industry: manufacturing
   inference_supported_envs:
     - vllm
-  license: mit
+  license: MIT
   task: chat-completion
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""

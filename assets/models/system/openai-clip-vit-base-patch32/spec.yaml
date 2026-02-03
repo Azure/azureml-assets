@@ -19,7 +19,7 @@ properties:
         Standard_ND40rs_v2
 tags:
    Preview: ''
-   license: mit
+   license: MIT
    task: zero-shot-image-classification
    huggingface_model_id: openai/clip-vit-base-patch32
    SharedComputeCapacityEnabled: ''

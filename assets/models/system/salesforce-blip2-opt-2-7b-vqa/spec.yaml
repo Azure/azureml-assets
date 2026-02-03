@@ -17,7 +17,7 @@ properties:
         Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
 tags:
    Preview: ''
-   license: mit
+   license: MIT
    task: visual-question-answering
    SharedComputeCapacityEnabled: ""
    huggingface_model_id: Salesforce/blip2-opt-2.7b

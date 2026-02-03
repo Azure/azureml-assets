@@ -13,7 +13,7 @@ properties:
   finetuning-tasks: text-classification, token-classification
   languages: fr
 tags:
-  license: mit
+  license: MIT
   task: token-classification
   hiddenlayerscanned: ""
   training_datasets: Jean-Baptiste/wikiner_fr

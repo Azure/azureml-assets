@@ -19,7 +19,7 @@ tags:
   industry: financial-services
   inference_supported_envs:
     - vllm
-  license: mit
+  license: MIT
   task: chat-completion
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""

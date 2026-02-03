@@ -33,7 +33,7 @@ tags:
   huggingface_model_id: ""
   maas-inference: "true"
   deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
-  license: mit
+  license: MIT
   disable-batch: "true"
   task: chat-completion
   author: Microsoft

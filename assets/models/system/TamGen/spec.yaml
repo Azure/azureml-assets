@@ -15,7 +15,7 @@ tags:
   disable-batch: "true"
   Preview: ""
   inference_supported_envs:
-  license: mit
+  license: MIT
   author: Microsoft
   notes: "notes.md"
   hiddenlayerscanned: "true"

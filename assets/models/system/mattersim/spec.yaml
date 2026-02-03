@@ -12,7 +12,7 @@ tags:
   task: materials-design
   disable-batch: "true"
   Preview: ""
-  license: mit
+  license: MIT
   author: Microsoft
   evaluation: "evaluation.md"
   notes: "notes.md"

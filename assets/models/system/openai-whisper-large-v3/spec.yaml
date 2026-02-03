@@ -45,7 +45,7 @@ tags:
       Standard_ND96amsr_A100_v4,
       Standard_ND40rs_v2,    
     ]
-  license: mit
+  license: MIT
   SharedComputeCapacityEnabled: ""
   task: automatic-speech-recognition
 version: 8

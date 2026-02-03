@@ -34,7 +34,7 @@ tags:
   SharedComputeCapacityEnabled: ''
   maas-inference: "true"
   hiddenlayerscanned : ""
-  license: mit
+  license: MIT
   disable-batch: "true"
   task: chat-completion
   author: Microsoft

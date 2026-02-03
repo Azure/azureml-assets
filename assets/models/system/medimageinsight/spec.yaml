@@ -14,7 +14,7 @@ tags:
   Preview: ""
   inference_supported_envs:
     - hf
-  license: mit
+  license: MIT
   author: Microsoft
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""

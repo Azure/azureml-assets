@@ -15,7 +15,7 @@ properties:
 tags:
   SharedComputeCapacityEnabled: ''
   task: fill-mask
-  license: mit
+  license: MIT
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   datasets: bookcorpus, wikipedia
   huggingface_model_id: bert-base-cased
