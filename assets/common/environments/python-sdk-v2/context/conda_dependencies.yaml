@@ -13,3 +13,5 @@ dependencies:
     - paramiko=={{latest-pypi-version}}
     - idna=={{latest-pypi-version}}
     - tqdm=={{latest-pypi-version}}
+    - wheel>=0.46.2
+    - setuptools>=75.8.0
