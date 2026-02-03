@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-Base class for quality tests of evaluators with real flow execution (no mocking).
-"""
+"""Base class for quality tests of evaluators with real flow execution (no mocking)."""
 
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
