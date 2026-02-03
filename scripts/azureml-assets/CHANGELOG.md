@@ -2,6 +2,10 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.102 (2026-01-23)
+### 🚀 New Features
+- [#4740](https://github.com/Azure/azureml-assets/pull/4740) Update media manifest headers list for registry/manifests call
+
 ## 1.16.101 (2026-01-15)
 ### 🚀 New Features
 - [#4731](https://github.com/Azure/azureml-assets/pull/4731) Add BenchmarkSpec to asset types

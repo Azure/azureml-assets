@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-0.6b-pp-finetuned-generic-cpu
-version: 3
+version: 4
 path: ./
 tags:
   foundryLocal: "pp_finetuned"
@@ -12,8 +12,9 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen3-0.6b-pp-finetuned
-  directoryPath: v3
+  directoryPath: v4
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:
@@ -23,5 +24,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 529863287
-    vRamFootprintBytes: 529863287
+    fileSizeBytes: 499521912
+    vRamFootprintBytes: 499521912
