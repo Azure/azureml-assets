@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.73
+version: 0.0.79
 name: llm_rag_data_import_acs
 display_name: LLM - Import Data from ACS
 is_deterministic: false
@@ -38,7 +38,7 @@ outputs:
     type: uri_folder
     description: "Uri folder containing an MLIndex yaml representing the ACS Index. Can be used with azureml-rag package"
 
-environment: azureml:llm-rag-embeddings@latest
+environment: azureml:llm-rag-embeddings:76
 code: '../src/embeddings/'
 
 command: >-

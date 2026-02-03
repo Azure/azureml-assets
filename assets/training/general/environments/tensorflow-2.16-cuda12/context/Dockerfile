@@ -1,16 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20240327.v1 AS inferencing-assets
+FROM mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 AS inferencing-assets
 
-# Tag: 12.3.2-cudnn9-devel-ubuntu20.04
-# Env: CUDA_VERSION=12.3.2
+# Tag: 12.8.1-cudnn-devel-ubuntu22.04
+# Env: CUDA_VERSION=12.8.1
 # Env: NCCL_VERSION=2.12.7-1
 # Env: NV_CUDNN_VERSION=9
 
 # DisableDockerDetector "Preferred to use nvidia registry over MCR mirror"
 
-FROM nvcr.io/nvidia/cuda:12.3.2-cudnn9-devel-ubuntu20.04
+FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 
 USER root:root
 
@@ -28,119 +28,98 @@ ENV HOROVOD_GPU_ALLREDUCE=NCCL
 # Install Common Dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    # SSH and RDMA
-    #added openssl - 1.1.1 package to mitigate vulnerabilites after cuda upgdrade, will remove this package
-    libuuid1 \
-    libblkid1 \
-    util-linux \
-    fdisk \
-    libfdisk1 \
-    mount \
-    libmount1 \
-    libsmartcols1 \
-    login \
-    passwd \
-    libldap-common \
-    libldap-2.4-2 \
-    openssl - 1.1.1 \
-    procps \
-    libprocps8 \
-    libmlx4-1 \
-    libmlx5-1 \
-    librdmacm1 \
-    libibverbs1 \
-    libmthca1 \
-    libdapl2 \
-    libgnutls30 \
-    libtiff5 \
-    dapl2-utils \
-    openssh-client \
-    openssh-server \
-    redis \
-    iproute2 && \
-    # rdma-core dependencies
-    apt-get install -y \
-    udev \
-    libudev-dev \
-    libnl-3-dev \
-    libnl-route-3-dev \
-    gcc \
-    ninja-build \
-    pkg-config \
-    valgrind \
-    cython3 \
-    python3-docutils \
-    pandoc \
-    dh-python \
-    python3-dev && \
-    # Others
-    apt-get install -y \
-    build-essential \
-    bzip2 \
-    libbz2-1.0 \
-    systemd \
     curl \
     git \
     wget \
-    cpio \
-	pciutils \
-	libnuma-dev \
-	ibutils \
-	ibverbs-utils \ 
-	rdmacm-utils \
-	infiniband-diags \
-	perftest \
+    zlib1g-dev \
 	librdmacm-dev \
 	libibverbs-dev \
-    libsm6 \
-    libxext6 \
-    libssl1.1 \
-    libxrender-dev \
-    libglib2.0-0 \
     dh-make \
-    libc-bin \
-    libx11-dev \
-    libgcrypt20 \
-    binutils-multiarch \
-    nginx \
-    e2fsprogs \
-    e2fsck-static \
-    fuse2fs \
-    logsave \
-    libss2 \
-    libcom-err2 \
-    gnupg \
-    gnupg2 \
-    gpg \
-    libdpkg-perl \
-    dpkg \
-    libpcre3 \
-    libpcre2-8-0 \
-    sqlite3 \
-    uidmap \
-    libkrb5-26-heimdal \             
-    libhcrypto4-heimdal \         
-    libheimntlm0-heimdal \
-    libheimbase1-heimdal \
-    libasn1-8-heimdal \
-    libgssapi3-heimdal \
-    libhx509-5-heimdal \
-    libroken18-heimdal \
-    libwind0-heimdal \
-    libksba8 \
-    libpam-modules \
-    libpam-modules-bin \
-    libpam0g \
-    libpam-runtime \
-    tar \
-    ncurses-bin \
-    ncurses-base \
-    libncursesw5 \
-    libctf-nobfd0 \
+    # Vulnerability fixes
+    libgnutls30 \
+    libgssapi-krb5-2 \
+    libpam-cap \
+    libtasn1-6 \
+    libk5crypto3 \
+    libcap2  \
+    gpgconf \
+    # Perl vulnerability fixes
+    perl-modules-5.34 \
     perl \
-    fuse && \
+    perl-base \
+    libperl5.34 && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* 
+
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        libsqlite3-0 \
+        libc6 \
+        libc6-dev \
+        libc-bin \
+        libc-dev-bin \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        dpkg \
+        dpkg-dev \
+        libbinutils \
+        binutils \
+        binutils-common \
+        binutils-multiarch \
+        binutils-x86-64-linux-gnu \
+        libctf0 \
+        libctf-nobfd0 \
+        libdpkg-perl \
+        libssh-4 \
+        libxml2 \
+        linux-libc-dev \
+        linux-headers-generic \
+        locales \
+        openssl \
+        gnupg2 \
+        systemd \
+        systemd-sysv \
+        systemd-timesyncd \
+        libsystemd0 \
+        libnss-systemd \
+        libudev1 \
+        udev \
+        libpam-systemd \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        libarchive13 \
+        # Vulnerabiltiy fixes
+        cpp-11 \
+        libtsan0 \
+        libstdc++-11-dev \
+        gcc-11 \
+        libgcc-11-dev \
+        g++-11 \
+        libasan6 \
+        gcc-11-base \
+        libquadmath0 \
+        libstdc++6 \
+        libatomic1 \
+        liblsan0 \
+        libubsan1 \
+        libcc1-0 \
+        libgcc-s1 \
+        libgomp1 \
+        gcc-12-base \
+        libitm1 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
                
 # Update to latest redis       
 RUN apt-get update && apt-get install -y lsb-release && \
@@ -151,7 +130,18 @@ RUN apt-get update && apt-get install -y lsb-release && \
 # Inference
 # Copy logging utilities, nginx and rsyslog configuration files, IOT server binary, etc.
 COPY --from=inferencing-assets /artifacts /var/
-RUN /var/requirements/install_system_requirements.sh && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libcurl4 \
+        liblttng-ust1 \
+        libunwind8 \
+        libxml++2.6-2v5 \
+        nginx-light \
+        psmisc \
+        rsyslog \
+        runit \
+        unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
@@ -176,9 +166,9 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
 # Open-MPI-UCX installation
 RUN mkdir /tmp/ucx && \
     cd /tmp/ucx && \
-        wget -q https://github.com/openucx/ucx/releases/download/v1.9.0/ucx-1.9.0.tar.gz && \
-        tar zxf ucx-1.9.0.tar.gz && \
-	cd ucx-1.9.0 && \
+        wget -q https://github.com/openucx/ucx/releases/download/v1.17.0/ucx-1.17.0.tar.gz && \
+        tar zxf ucx-1.17.0.tar.gz && \
+	cd ucx-1.17.0 && \
         ./configure --prefix=/usr/local --enable-optimizations --disable-assertions --disable-params-check --enable-mt && \
         make -j $(nproc --all) && \
         make install && \
@@ -186,8 +176,7 @@ RUN mkdir /tmp/ucx && \
 
 # Open-MPI installation
 ENV OPENMPI_VERSION 4.1.0
-RUN mkdir /tmp/openmpi && \
-    cd /tmp/openmpi && \
+RUN mkdir /tmp/openmpi && cd /tmp/openmpi && \
     wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OPENMPI_VERSION}.tar.gz && \
     tar zxf openmpi-${OPENMPI_VERSION}.tar.gz && \
     cd openmpi-${OPENMPI_VERSION} && \
@@ -199,7 +188,7 @@ RUN mkdir /tmp/openmpi && \
     	
 # Msodbcsql17 installation
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
-    curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
 
@@ -207,14 +196,14 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
 RUN apt-get update && \
     apt-get install -y cmake
 
-# rdma-core v30.0 for Mlnx_ofed_5_1_2 as user space driver
-RUN mkdir /tmp/rdma-core && \
-    cd /tmp/rdma-core && \
-    git clone --branch v30.0 https://github.com/linux-rdma/rdma-core && \
-    cd /tmp/rdma-core/rdma-core && \
-    debian/rules binary && \
-    dpkg -i ../*.deb && \
-    rm -rf /tmp/rdma-core
+# rdma-core
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends rdma-core && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# remove unused packages
+RUN apt-get autoremove -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #Install latest version of nccl-rdma-sharp-plugins
 RUN cd /tmp && \
@@ -237,8 +226,10 @@ ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # Enable debug
-RUN apt-get update
-RUN apt-get install -y openssh-server openssh-client
+RUN apt-get update && \
+    apt-get install --reinstall -y openssl libssl-dev openssh-server openssh-client && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -249,7 +240,13 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
 
 RUN conda run -p $CONDA_PREFIX
 
-RUN HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
+RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --no-cache-dir --no-build-isolation horovod["tensorflow"]==0.28.1
+
+# Reinstall OpenSSL inside Conda
+RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
+
+# Security vulnerability fixes
+RUN conda run -p $CONDA_PREFIX pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH

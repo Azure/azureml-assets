@@ -1,0 +1,57 @@
+type: "evaluator"
+name: "builtin.rouge_score"
+version: 1
+displayName: "Rouge-Score-Evaluator"
+description: "Compares the overlap of words or phrases between model output and reference text. Higher scores indicate closer alignment. Reccomended use cases include text summarization and document comparison, especially when focusing on recall and the ability to capture relevant information from the reference text."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    rouge_type:
+      type: "string"
+      enum: ["rouge1", "rouge2", "rouge3", "rouge4", "rouge5", "rougeL"]
+    f1_score_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 0.1
+    precision_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 0.1
+    recall_threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 0.1
+  required: ["rouge_type", "f1_score_threshold", "precision_threshold", "recall_threshold"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    ground_truth:
+      type: "string"
+    response:
+      type: "string"
+  required: ["ground_truth", "response"]
+outputSchema:
+  rouge_precision:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  rouge_recall:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+  rouge_f1_score:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator

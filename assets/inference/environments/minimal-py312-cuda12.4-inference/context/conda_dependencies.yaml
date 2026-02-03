@@ -1,0 +1,10 @@
+name: minimal
+channels:
+- conda-forge
+- anaconda
+dependencies:
+- python=3.12
+- pip=25.3
+- pip:
+  - azureml-inference-server-http=={{latest-pypi-version}}
+  - numpy=={{latest-pypi-version}}

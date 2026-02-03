@@ -5,7 +5,7 @@ description: Component to finetune AutoML legacy models for object detection.
 
 name: train_object_detection_model
 display_name: Image Object Detection AutoML Legacy Model Finetune
-version: 0.0.13
+version: 0.0.15
 
 is_deterministic: false
 
@@ -230,7 +230,7 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/labels/latest
+environment: azureml://registries/azureml/environments/automl-dnn-vision-gpu/versions/74
 
 command: >-
   python -m object_detection.run

@@ -1,0 +1,44 @@
+type: "evaluator"
+name: "builtin.relevance"
+version: 6
+displayName: "Relevance-Evaluator"
+description: "Assesses how well the response matches the user’s intent or question. Higher scores mean better alignment with the prompt. It’s best used for generative business writing such as summarizing meeting notes, creating marketing materials, and drafting email."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality", "agents"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    response:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+  required: ["query", "response"]
+outputSchema:
+  relevance:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator

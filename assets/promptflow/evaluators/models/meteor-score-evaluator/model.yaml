@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/MeteorScoreEvaluator/v3/MeteorScoreEvaluator
+  container_path: models/evaluators/MeteorScoreEvaluator/v4/MeteorScoreEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:

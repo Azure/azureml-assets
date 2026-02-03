@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_model_converter
-version: 0.0.70
+version: 0.0.79
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
 display_name: Common Model Converter
 description: Component to convert the finetune job output to pytorch and mlflow model
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/81
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/model_converter
 
@@ -17,6 +17,12 @@ inputs:
     type: uri_folder
     optional: false
     description: Pytorch model asset path. Pass the finetune job pytorch model output.
+    mode: rw_mount
+
+  model_import_output:
+    type: uri_folder
+    optional: true
+    description: Path to output directory which contains the component metadata and the model artifacts folder
     mode: rw_mount
 
   # Validation parameters
@@ -32,4 +38,6 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python model_converter.py --model_path '${{inputs.model_path}}' $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}'
+  python model_converter.py --model_path '${{inputs.model_path}}' 
+  $[[--model_import_output '${{inputs.model_import_output}}']]
+  $[[--system_properties '${{inputs.system_properties}}']] --output_dir '${{outputs.mlflow_model_folder}}'

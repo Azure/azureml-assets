@@ -32,7 +32,6 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
-
 from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
 from azureml.acft.common_components.model_selector.constants import ModelSelectorDefaults
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
@@ -54,6 +53,8 @@ COMPONENT_NAME = "ACFT-Finetune"
 
 PHI3_MINI_4K_INSTRUCT_MODEL_TYPE = "phi3mini"
 
+LLAMA_SCOUT_MODEL_TYPE = "llama4"
+
 DEFAULT_DEEPSPEED_STAGE2_CONFIG = str(Path(__file__).parent.resolve() / "zero2.json")
 DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.json")
 
@@ -62,6 +63,7 @@ DEFAULT_DEEPSPEED_STAGE3_CONFIG = str(Path(__file__).parent.resolve() / "zero3.j
 REFINED_WEB = "RefinedWeb"
 MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 MISTRAL = "mistral"
+GPT_OSS = "gpt_oss"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -151,6 +153,7 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.FALCON,
     HfModelTypes.REFINEDWEBMODEL,  # falcon
     HfModelTypes.MIXTRAL,
+    LLAMA_SCOUT_MODEL_TYPE,
 ]
 
 
@@ -160,6 +163,7 @@ QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.FALCON,
     REFINED_WEB,
     HfModelTypes.MIXTRAL,
+    GPT_OSS,
 ]
 
 
@@ -177,7 +181,8 @@ ACFT_REGEX_PREFIX = "acft_regex:"
 
 DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
     Tasks.TEXT_GENERATION,
-    Tasks.CHAT_COMPLETION
+    Tasks.CHAT_COMPLETION,
+    Tasks.VISUAL_QUESTION_ANSWERING,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
@@ -191,6 +196,7 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.MIXTRAL,
     HfModelTypes.PHI_LONGROPE,
     PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
+    LLAMA_SCOUT_MODEL_TYPE,
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
@@ -204,6 +210,7 @@ FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
     HfModelTypes.MIXTRAL,
     HfModelTypes.PHI_LONGROPE,
     PHI3_MINI_4K_INSTRUCT_MODEL_TYPE,
+    LLAMA_SCOUT_MODEL_TYPE,
 ]
 
 FORCE_FLASH_ATTENTION_2_MODEL_TYPES = [
@@ -298,7 +305,7 @@ def get_parser():
             " `train_batch_size` by afactor of 2 till the OOM is fixed."
         ),
     )
-    # -- optimizer options adamw_hf, adamw_torch, adamw_apex_fused, adafactor
+    # -- optimizer options adamw_torch, adamw_torch, adamw_apex_fused, adafactor
     parser.add_argument(
         "--optim",
         default="adamw_torch",
@@ -436,7 +443,15 @@ def get_parser():
         help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
     )
     parser.add_argument(
-        "--evaluation_strategy", type=str, default="epoch", help="The evaluation strategy to adopt during training",
+        "--evaluation_strategy",
+        type=str,
+        default="epoch",
+        choices=(
+                    "disable",
+                    "steps",
+                    "epoch",
+                ),
+        help="The evaluation strategy to adopt during training",
     )
     parser.add_argument(
         "--evaluation_steps_interval",
@@ -477,7 +492,7 @@ def get_parser():
     parser.add_argument(
         "--save_strategy",
         type=str,
-        default=SaveStrategy.EVALUATION_STRATEGY,
+        default="no",
         help="The checkpoint save strategy to adopt during training.",
     )
     parser.add_argument(
@@ -970,6 +985,21 @@ def set_flash_attention(args: Namespace):
     else:
         setattr(args, "apply_flash_attention", False)
         setattr(args, "flash_attention_version", -1)
+    if args.precision == 32 and (args
+                                 .finetune_config
+                                 .get("load_model_kwargs", {})
+                                 .get("use_flash_attention_2", False) is True):
+        # Flash attention is not supported with 32-bit precision
+        logger.warning("Flash Attention is not supported with 32-bit precision.")
+        raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            "Flash Attention is not supported with 32-bit precision."
+                        )
+                    )
+                )
+
     logger.info(f"enable Flash attention: {getattr(args, 'apply_flash_attention', None)}")
     logger.info(f"Using Flash Attention version: {getattr(args, 'flash_attention_version', None)}")
     logger.info(f"Flash Attention model load kwargs: {flash_attention_load_model_kwargs}")
@@ -1037,6 +1067,49 @@ def _get_model_flavor(mlflow_flavors: list, mlmodel_data: dict) -> str:
     return None
 
 
+def validate_learning_rate(args: Namespace) -> None:
+    """Validate learning rate."""
+    if args.learning_rate <= 0:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Invalid learning rate. Learning rate should be greater than 0."
+                )
+            )
+        )
+
+
+def validate_early_stop_settings(args: Namespace) -> None:
+    """Validate early stop settings."""
+    if args.apply_early_stopping is True and args.eval_strategy not in (SaveStrategy.EPOCH, SaveStrategy.STEPS):
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Set evaluation_strategy to one of steps or epoch when apply_early_stopping is True."
+                    f"Current evaluation_strategy is {args.eval_strategy}."
+                )
+            )
+        )
+
+
+def validate_optimiser_name(args: Namespace) -> None:
+    """Validate optimiser name."""
+    optim = args.optim.lower()
+    valid_optimisers = ['adamw_torch', 'adafactor']
+    if optim not in valid_optimisers:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    f"Invalid optimiser name '{optim}'. "
+                    f"Please select one of: {', '.join(valid_optimisers)}."
+                )
+            )
+        )
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
@@ -1092,6 +1165,9 @@ def finetune(args: Namespace):
             if "lora_target_modules" in ft_config:
                 logger.info(f'Setting lora_target_modules to: {ft_config.get("lora_target_modules")}')
                 setattr(args, "lora_target_modules", ft_config.get("lora_target_modules"))
+            if "lora_target_parameters" in ft_config:
+                logger.info(f'Setting lora_target_parameters to: {ft_config.get("lora_target_parameters")}')
+                setattr(args, "lora_target_parameters", ft_config.get("lora_target_parameters"))
             # Read leaf modules for MoE models from finetune config
             if "leaf_modules_of_moe_models" in ft_config:
                 logger.info(f'Setting leaf_modules_of_moe_models to: {ft_config.get("leaf_modules_of_moe_models")}')
@@ -1221,6 +1297,19 @@ def finetune(args: Namespace):
     # set gradient-checkpointing
     set_gradient_checkpointing(args)
 
+    validate_learning_rate(args)
+
+    validate_optimiser_name(args)
+
+    # Fix: Ev2 rollout fails when using no as string in the spec.
+    if args.evaluation_strategy == 'disable':
+        args.evaluation_strategy = 'no'
+
+    if not hasattr(args, "eval_strategy"):
+        args.eval_strategy = args.evaluation_strategy
+    # validate early stop settings
+    validate_early_stop_settings(args)
+
     if args.finetune_in_8bit or args.finetune_in_4bit:
         if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
             raise ACFTValidationException._with_error(
@@ -1265,7 +1354,6 @@ def finetune(args: Namespace):
         args.evaluation_steps_interval = 0.0
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
-
     if args.save_strategy == SaveStrategy.EVALUATION_STRATEGY:
         logger.info(f"Setting save strategy to evaluation strategy: {args.evaluation_strategy}, {args.eval_steps}")
         args.save_strategy = args.evaluation_strategy
@@ -1292,6 +1380,11 @@ def finetune(args: Namespace):
             shutil.copy(str(conda_file_path), args.output_dir)
             logger.info(f"Copied {MLFlowHFFlavourConstants.CONDA_YAML_FILE} file to output dir.")
 
+        # copy pre-processor config files
+        preprocessor_config_file = Path(args.model_selector_output, "default_model_name", "preprocessor_config.json")
+        if preprocessor_config_file.is_file():
+            shutil.copy(str(preprocessor_config_file), args.output_dir)
+            logger.info("Copied preprocessor_config.json file to output dir.")
         # copy inference config files
         mlflow_ml_configs_dir = Path(args.model_selector_output, "ml_configs")
         ml_config_dir = Path(args.output_dir, "ml_configs")

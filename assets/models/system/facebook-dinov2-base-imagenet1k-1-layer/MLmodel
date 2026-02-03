@@ -1,32 +1,35 @@
 flavors:
-  hftransformersv2:
-    code: code
-    hf_config_class: AutoConfig
-    hf_predict_module: predict
-    hf_pretrained_class: AutoModelForImageClassification
-    hf_tokenizer_class: AutoImageProcessor
-    huggingface_id: facebook/dinov2-base-imagenet1k-1-layer
-    model_data: data
-    pytorch_version: 1.13.1
-    task_type: image-classification
-    train_label_list:
-      path_list: train_label_list.npy
-    transformers_version: 4.37.2
   python_function:
-    code: code
-    data: data
-    env: conda.yaml
-    loader_module: azureml.evaluate.mlflow.hftransformers
-    python_version: 3.8.18
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.transformers
+    python_version: 3.9.19
+  transformers:
+    code: null
+    components:
+    - image_processor
+    framework: pt
+    image_processor_type: BitImageProcessor
+    instance_type: ImageClassificationPipeline
+    model_binary: model
+    pipeline_model_type: Dinov2ForImageClassification
+    source_model_name: /mnt/azureml/cr/j/b8c0818eb55c4967a844e5a113b5a995/cap/data-capability/wd/INPUT_model_path
+    task: image-classification
+    torch_dtype: torch.float32
+    transformers_version: 4.44.2
 metadata:
   base_model_name: facebook/dinov2-base-imagenet1k-1-layer
   base_model_task: image-classification
   is_acft_model: true
   is_finetuned_model: false
-mlflow_version: 2.9.2
-model_uuid: ddab417ee8cb4bfdbb7d38e40675785f
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
+mlflow_version: 2.15.1
+model_size_bytes: 352554886
+model_uuid: b9eff51aa5c54b4089824783d116fb8b
 signature:
-  inputs: '[{"type": "binary", "name": "image"}]'
-  outputs: '[{"type": "string", "name": "probs"}, {"type": "string", "name": "labels"}]'
+  inputs: '[{"type": "string", "required": true}]'
+  outputs: '[{"type": "string", "name": "label", "required": true}, {"type": "double",
+    "name": "score", "required": true}]'
   params: null
-utc_time_created: '2024-03-06 11:32:18.360703'
+utc_time_created: '2024-11-04 05:58:42.691836'

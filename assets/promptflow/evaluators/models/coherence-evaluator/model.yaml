@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/CoherenceEvaluator/v5/CoherenceEvaluator
+  container_path: models/evaluators/CoherenceEvaluator/v6/CoherenceEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:

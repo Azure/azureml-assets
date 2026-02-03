@@ -2,7 +2,8 @@ name: project_environment
 channels:
   - conda-forge
 dependencies:
-  - pip=23.3
-  - python=3.9.18
+  - python=3.12.8
   - pip:
-      - azureml-designer-recommender-modules==0.0.70
+      - pip>=25.3
+      - urllib3>=2.6.0
+      - azureml-designer-recommender-modules==0.0.76

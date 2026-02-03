@@ -4,7 +4,7 @@ path: ./
 properties:
   SharedComputeCapacityEnabled: "True"
   SHA: 76fa59362cd95eb633a4e419c24364c90674966c
-  inference-min-sku-spec: 96|12|1900|1024
+  inference-min-sku-spec: 96|8|1900|1024
   inference-recommended-sku:  Standard_ND96isr_H100_v5
   languages: moe, fr, it, de, es, en
 tags:
@@ -21,4 +21,4 @@ tags:
    ]
   inference_supported_envs:
   - vllm
-version: 1
+version: 2

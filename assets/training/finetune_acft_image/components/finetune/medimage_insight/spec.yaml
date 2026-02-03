@@ -1,14 +1,18 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: medimgage_embedding_finetune
+
+name: medimageinsight_embedding_finetune
 version: 0.0.1
+
 
 type: command
 
 is_deterministic: True
 
-display_name: Medical Image Insight Embedding Finetune
+display_name: MedImageInsight Embedding Finetune
 description: Component to finetune the model using the medical image data
-environment : azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/1
+
+environment: azureml://registries/azureml/environments/acft-medimageinsight-embedding/versions/8
+
 code: ../../../src/medimage_insight_embedding_finetune
 
 distribution:
@@ -31,6 +35,18 @@ inputs:
     type: uri_file
     optional: false
     description: Path to the evaluation text TSV file.
+    mode: ro_mount
+
+  eval_train_image_tsv:
+    type: uri_file
+    optional: true
+    description: Optional path used for the evaluation task. If not specified, will use the training path.
+    mode: ro_mount
+
+  eval_train_text_tsv:
+    type: uri_file
+    optional: true
+    description: Optional path used for the evaluation task. If not specified, will use the training path.
     mode: ro_mount
 
   image_tsv:
@@ -75,6 +91,8 @@ command: >-
   --mlflow_model_folder '${{inputs.mlflow_model_path}}'
   --eval_image_tsv "${{inputs.eval_image_tsv}}"
   --eval_text_tsv "${{inputs.eval_text_tsv}}"
+  $[[--eval_train_image_tsv "${{inputs.eval_train_image_tsv}}"]]
+  $[[--eval_train_text_tsv "${{inputs.eval_train_text_tsv}}"]]
   --image_tsv "${{inputs.image_tsv}}"
   --text_tsv "${{inputs.text_tsv}}"
   --label_file "${{inputs.label_file}}"

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 WORKDIR /
 
@@ -18,6 +18,5 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y 
 
-RUN conda run -p $CONDA_PREFIX conda remove -p $CONDA_PREFIX --yes r-bslib
 RUN rm -rf /opt/miniconda/pkgs/
 

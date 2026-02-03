@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/parallelComponent.schema.json
 type: parallel
-version: 0.0.8
+version: 0.0.12
 
 name: automl_hts_automl_training_step
 display_name: AutoML HTS - AutoML Training
@@ -58,7 +58,7 @@ task:
   type: run_function
   code: ../../src/train
   entry_script: train.py
-  environment: azureml://registries/azureml/environments/automl-gpu/versions/42
+  environment: azureml://registries/azureml/environments/automl-gpu/versions/64
   program_arguments: >-
     --input-metadata ${{inputs.metadata}}
     --error_threshold -1

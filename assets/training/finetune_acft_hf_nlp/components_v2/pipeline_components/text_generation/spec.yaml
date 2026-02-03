@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: oss_text_generation_pipeline
-version: 0.0.27
+version: 0.0.28
 type: pipeline
 display_name: OSS Text Generation Pipeline
 description: FTaaS Pipeline component for text generation
@@ -138,7 +138,7 @@ outputs:
 jobs:
   oss_text_generation_data_import:
     type: command
-    component: azureml:oss_text_generation_data_import:0.0.27
+    component: azureml:oss_text_generation_data_import:0.0.28
     compute: '${{parent.inputs.compute_data_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_data_import}}'
@@ -157,7 +157,7 @@ jobs:
       user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
   oss_text_generation_finetune:
     type: command
-    component: azureml:oss_text_generation_finetune:0.0.27
+    component: azureml:oss_text_generation_finetune:0.0.28
     compute: '${{parent.inputs.compute_finetune}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_finetune}}'
@@ -188,7 +188,7 @@ jobs:
       per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       per_device_eval_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
       auto_find_batch_size: "false"
-      optim: adamw_hf
+      optim: adamw_torch
       learning_rate: '${{parent.inputs.learning_rate}}'
       warmup_steps: 0
       weight_decay: 0.1

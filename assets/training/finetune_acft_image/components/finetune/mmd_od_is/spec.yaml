@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.21
+version: 0.0.24
 name: mmdetection_image_objectdetection_instancesegmentation_finetune
 display_name: Image Object Detection and Instance Segmentation MMDetection Model Finetune
 description: Component to finetune MMDetection models for image object detection and instance segmentation.
 
 is_deterministic: false
 
-environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/labels/latest
+environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/75
 
 code: ../../../src/finetune
 
@@ -121,7 +121,7 @@ inputs:
     optional: true
     description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size' goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct batch size by iteratively reducing 'per_device_train_batch_size' by a factor of 2 till the OOM is fixed.
 
-  # learning rate and learning rate scheduler 
+  # learning rate and learning rate scheduler
   learning_rate:
     type: number
     optional: true
@@ -192,7 +192,7 @@ inputs:
     type: number
     optional: true
     description: IOU threshold used during inference in non-maximum suppression post processing.
-  
+
   box_score_threshold:
     type: number
     optional: true
@@ -302,7 +302,7 @@ outputs:
 
 command: >-
 
-  python finetune.py 
+  python finetune.py
   --model_path ${{inputs.model_path}}
   --train_mltable_path ${{inputs.training_data}}
   $[[--valid_mltable_path ${{inputs.validation_data}}]]
@@ -315,9 +315,9 @@ command: >-
   $[[--apply_deepspeed ${{inputs.apply_deepspeed}}]]
   $[[--deepspeed_config ${{inputs.deepspeed_config}}]]
   $[[--apply_ort ${{inputs.apply_ort}}]]
-  $[[--num_train_epochs ${{inputs.number_of_epochs}}]] 
-  $[[--max_steps ${{inputs.max_steps}}]] 
-  $[[--per_device_train_batch_size ${{inputs.training_batch_size}}]] 
+  $[[--num_train_epochs ${{inputs.number_of_epochs}}]]
+  $[[--max_steps ${{inputs.max_steps}}]]
+  $[[--per_device_train_batch_size ${{inputs.training_batch_size}}]]
   $[[--per_device_eval_batch_size ${{inputs.validation_batch_size}}]]
   $[[--auto_find_batch_size ${{inputs.auto_find_batch_size}}]]
   $[[--learning_rate ${{inputs.learning_rate}}]]

@@ -1,0 +1,37 @@
+type: "evaluator"
+name: "builtin.indirect_attack"
+version: 2
+displayName: "Indirect-Attack-Evaluator"
+description: "Identifies subtle or indirect attacks toward individuals or groups. Lower scores indicate more respectful and non‑aggressive tone."
+evaluatorType: "builtin"
+evaluatorSubType: "service"
+categories: ["safety", "agents"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    azure_ai_project:
+      type: "string"
+  required: ["azure_ai_project"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+    response:
+      type: "string"
+  required: ["query", "response"]
+outputSchema:
+  xpia:
+    type: "boolean"
+    desirable_direction: "decrease"
+  xpia_manipulated_content:
+    type: "boolean"
+    desirable_direction: "decrease"
+  xpia_intrusion:
+    type: "boolean"
+    desirable_direction: "decrease"
+  xpia_information_gathering:
+    type: "boolean"
+    desirable_direction: "decrease"

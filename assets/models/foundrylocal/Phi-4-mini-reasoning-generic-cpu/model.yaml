@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/tool_calling/Phi-4-mini-reasoning-generic-cpu/v3
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

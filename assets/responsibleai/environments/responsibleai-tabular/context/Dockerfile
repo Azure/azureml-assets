@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 # Install wkhtmltopdf for pdf rendering from html
 RUN apt-get -y update && apt-get -y install wkhtmltopdf
@@ -17,7 +17,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 RUN conda list
 
-RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
+RUN pip install --pre 'azure-ai-ml>=1.26.3' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
 # score card rendering is using domonic only for the html elements composer which does not involve requests or urllib3
@@ -30,10 +30,11 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
 
 # Install azureml packages
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
-                'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-telemetry=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.6'
+
+RUN pip install 'azureml-telemetry==1.60.0' --no-deps \
+                'applicationinsights'
 
 # azureml-dataset-runtime[fuse] upper bound for pyarrow is 11.0.0
 # so we install pyarrow in extra step to avoid conflict
@@ -46,9 +47,13 @@ RUN pip install 'cryptography>=43.0.1'
 RUN pip install 'rai-core-flask==0.7.6'
 
 # To resolve vulnerability issue
+RUN pip install 'mlflow>=3.2.0,<=3.5.0'
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'
+# vulnerability of requests GHSA-9hjg-9r4m-mvj7
+RUN pip install 'requests>=2.32.4'
+RUN pip install 'mcp>=1.23.0'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \

@@ -30,4 +30,4 @@ tags:
   author: "Deci AI"
   huggingface_model_id: Deci/DeciCoder-1b
   datasets: bigcode/starcoderdata
-version: 5
+version: 7

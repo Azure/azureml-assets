@@ -4,7 +4,7 @@ type: spark
 name: data_quality_metrics_joiner
 display_name:  Data Quality - Metrics Joiner
 description: Join baseline and target data quality metrics into a single output.
-version: 0.3.24
+version: 0.3.27
 is_deterministic: true
 
 inputs:
@@ -42,11 +42,11 @@ conf:
       - defaults
     dependencies:
       - pip:
-        - azure-storage-file-datalake~=12.8.0
-        - azure-ai-ml~=1.23.1
-        - azureml-mlflow~=1.49.0
-        - mltable~=1.3.0
-        - azureml-fsspec~=1.0.0
+        - azure-storage-file-datalake~=12.13.2
+        - azure-ai-ml~=1.30.0
+        - azureml-mlflow~=1.61.0
+        - mltable~=1.6.3
+        - azureml-fsspec~=1.3.1
         - fsspec~=2023.4.0
         - numpy<2.0.0
     name: momo-base-spark

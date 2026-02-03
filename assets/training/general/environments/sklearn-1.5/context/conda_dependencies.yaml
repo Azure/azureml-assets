@@ -4,7 +4,7 @@ channels:
 - anaconda
 dependencies:
 - python=3.10
-- pip=21.3.1
+- pip=25.3
 - pandas~=1.5.3
 - scipy~=1.10.0
 - numpy~=1.22.0
@@ -26,3 +26,4 @@ dependencies:
   - tqdm~=4.66.3
   - py-cpuinfo==5.0.0
   - torch-tb-profiler~=0.4.0
+  - starlette>=0.49.1

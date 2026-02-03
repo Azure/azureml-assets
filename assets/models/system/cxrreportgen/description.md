@@ -9,6 +9,10 @@ You bear sole responsibility and liability for any use of CXRReportGen, includin
 
 For documentation and example Jupyter Notebooks, visit: https://aka.ms/CXRReportGenDocs.
 
+For example code and usage demonstrations, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
+CXRReportGen fine-tuning is available through our private preview program. If you would like to try fine-tuning CXRReportGen, please contact us by submitting your information into this form and we will reach out with further instructions: https://aka.ms/cxrrg-fine-tuning-request.
+
 ### Training information
 
 | **Training Dataset**   | **Details**        | 
@@ -133,7 +137,8 @@ While testing the model with images and/or text, ensure the the data is PHI free
 
 For detailed guidelines on ethical use, refer to Microsoft’s [Responsible AI Principles](https://www.microsoft.com/en-us/ai/responsible-ai)
 
-## Hardware Requirement for Compute Instances
-- Supports CPU and GPU
-- Default: Single A100 GPU or Intel CPU
-- Minimum: Single GPU instance with 24Gb Memory (Fastest) or CPU
+## Version History
+
+| Version | Date | Description |
+|---------|------|-------------|
+| 10 | 2025-12-10 | - Initial version tracking |

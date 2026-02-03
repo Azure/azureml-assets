@@ -1,0 +1,8 @@
+path:
+  container_name: whisper-models
+  container_path: whisper-large-v3-turbo/cpu-fp32/v2
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

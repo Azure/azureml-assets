@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: token_classification_finetune
-version: 0.0.70
+version: 0.0.79
 type: command
 
 is_deterministic: false
@@ -8,7 +8,7 @@ is_deterministic: false
 display_name: Token Classification Finetune
 description: Component to finetune Hugging Face pretrained models for token classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/token_classification_finetune) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/80
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/finetune
 
@@ -21,8 +21,8 @@ inputs:
   apply_lora:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If "true" enables lora.
@@ -30,8 +30,8 @@ inputs:
   merge_lora_weights:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: If "true", the lora weights are merged with the base Hugging Face model weights before saving.
@@ -85,21 +85,19 @@ inputs:
   auto_find_batch_size:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to "true" and if the provided 'per_device_train_batch_size' goes into Out Of Memory (OOM) auto_find_batch_size will find the correct batch size by iteratively reducing batch size by a factor of 2 till the OOM is fixed
 
   optim:
     type: string
-    default: adamw_hf
+    default: adamw_torch
     optional: true
     enum:
-      - adamw_hf
-      - adamw_torch
-      # - adamw_apex_fused
-      - adafactor
+    - adamw_torch      # - adamw_apex_fused
+    - adafactor
     description: Optimizer to be used while training
 
   learning_rate:
@@ -155,19 +153,19 @@ inputs:
     default: linear
     optional: true
     enum:
-      - linear
-      - cosine
-      - cosine_with_restarts
-      - polynomial
-      - constant
-      - constant_with_warmup
+    - linear
+    - cosine
+    - cosine_with_restarts
+    - polynomial
+    - constant
+    - constant_with_warmup
     description: learning rate scheduler to use.
 
   precision:
     type: string
     enum:
-      - "32"
-      - "16"
+    - "32"
+    - "16"
     default: "32"
     optional: true
     description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
@@ -181,8 +179,8 @@ inputs:
   enable_full_determinism:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: Ensure reproducible behavior during distributed training. Check this link https://pytorch.org/docs/stable/notes/randomness.html for more details.
@@ -196,8 +194,8 @@ inputs:
   ignore_mismatched_sizes:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: Not setting this flag will raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model.
@@ -213,8 +211,8 @@ inputs:
     default: epoch
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The evaluation strategy to adopt during training. If set to "steps", either the `evaluation_steps_interval` or `eval_steps` needs to be specified, which helps to determine the step at which the model evaluation needs to be computed else evaluation happens at end of each epoch.
 
   evaluation_steps_interval:
@@ -234,8 +232,8 @@ inputs:
     default: steps
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The logging strategy to adopt during training. If set to "steps", the `logging_steps` will decide the frequency of logging else logging happens at the end of epoch.
 
   logging_steps:
@@ -249,11 +247,11 @@ inputs:
     default: loss
     optional: true
     enum:
-      - loss
-      - f1
-      - accuracy
-      - precision
-      - recall
+    - loss
+    - f1
+    - accuracy
+    - precision
+    - recall
     description: metric to use to compare two different model checkpoints
 
   resume_from_checkpoint:
@@ -261,8 +259,8 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: If set to "true", resumes the training from last saved checkpoint. Along with loading the saved weights, saved optimizer, scheduler and random states will be loaded if exist. The default value is "false"
 
   save_total_limit:
@@ -277,8 +275,8 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: If set to "true", early stopping is enabled.
 
   early_stopping_patience:
@@ -299,8 +297,8 @@ inputs:
   apply_deepspeed:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will enable deepspeed for training
@@ -316,8 +314,8 @@ inputs:
     optional: true
     default: "2"
     enum:
-       - "2"
-       - "3"
+    - "2"
+    - "3"
     description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
 
   # ORT Parameters
@@ -325,8 +323,8 @@ inputs:
   apply_ort:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will use the ONNXRunTime training

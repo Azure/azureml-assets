@@ -4,7 +4,7 @@ type: pipeline
 name: prediction_drift_signal_monitor
 display_name: Prediction Drift - Signal Monitor
 description: Computes the prediction drift between a baseline and a target data assets.
-version: 0.4.29
+version: 0.4.32
 is_deterministic: true
 
 inputs:
@@ -57,7 +57,7 @@ outputs:
 jobs:
   feature_selection:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.27
+    component: azureml://registries/azureml/components/model_monitor_feature_selector/versions/0.3.30
     inputs:
       input_data_1:
         type: mltable
@@ -72,12 +72,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_drift_metrics:
     type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.32
+    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.35
     inputs:
       production_dataset:
         type: mltable
@@ -99,12 +99,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_histogram_buckets:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.26
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets/versions/0.3.29
     inputs:
       input_data_1:
         type: mltable
@@ -119,12 +119,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_baseline_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.26
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.29
     inputs:
       input_data:
         type: mltable
@@ -139,12 +139,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   compute_target_histogram:
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.26
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram/versions/0.3.29
     inputs:
       input_data:
         type: mltable
@@ -159,12 +159,12 @@ jobs:
         type: mltable
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   output_signal_metrics: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.31
+    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.34
     inputs:
       signal_metrics:
         type: mltable
@@ -186,12 +186,12 @@ jobs:
         mode: direct
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token
   evaluate_metric_thresholds: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.31
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold/versions/0.3.34
     inputs:
       signal_metrics: 
         type: mltable
@@ -200,6 +200,6 @@ jobs:
       signal_name: ${{parent.inputs.signal_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
-      runtime_version: "3.3"
+      runtime_version: "3.4"
     identity:
       type: aml_token

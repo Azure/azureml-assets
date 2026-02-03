@@ -19,7 +19,7 @@ from azureml.assets.model.registry_utils import CopyUpdater, prepare_model, upda
     prepare_data, RegistryUtils
 from azureml.assets.util import logger
 from azureml.assets.util.util import resolve_from_file_for_asset
-from azure.ai.ml import MLClient
+from azure.ai.ml import MLClient, load_model
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
 
@@ -39,6 +39,29 @@ def sanitize_output(input: str) -> str:
     return sanitized_output
 
 
+def extract_json_from_output(text: str) -> Union[Dict, List, None]:
+    """Extract and parse JSON from text that may contain non-JSON content.
+
+    :param text: Text containing JSON, possibly with warnings or other output
+    :type text: str
+    :return: Parsed JSON object or None if not found/invalid
+    :rtype: Union[Dict, List, None]
+    """
+    # Try to match JSON object {...} or array [...]
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    if not match:
+        logger.log_error("No JSON object or array found in output")
+        return None
+
+    json_str = match.group(0)
+
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        logger.log_error(f"Invalid JSON detected: {e}")
+        return None
+
+
 def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
@@ -51,6 +74,9 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
+        # Preserve system_metadata due to SDK bug (_to_dict() doesn't include it)
+        if hasattr(asset, '_system_metadata') and asset._system_metadata:
+            asset_dict["system_metadata"] = asset._system_metadata
         util.dump_yaml(asset_dict, spec_path)
         return True
     except Exception as e:
@@ -190,6 +216,13 @@ def validate_and_prepare_pipeline_component(
             logger.print(f"Workspace asset URI was used, using component from registry {registry}")
             registry = registry_name
 
+        if not version:
+            logger.log_error(
+                f"Component {name} parsed label {label} from the asset URI. Labels are not supported "
+                f"for job components. Please specify a valid version instead."
+            )
+            return False
+
         # Check if component's env exists
         final_version = util.apply_version_template(version, version_template)
         asset_details = None
@@ -302,7 +335,7 @@ def validate_update_component(
     :return: True for successful validation and update
     :rtype: bool
     """
-    with open(spec_path) as f:
+    with open(spec_path, encoding='utf-8') as f:
         try:
             component_dict = YAML().load(f)
         except Exception:
@@ -397,6 +430,21 @@ def create_asset_cli(
     return True
 
 
+def create_asset_sdk(
+    ml_client: MLClient,
+    asset: AssetConfig
+) -> bool:
+    """Create asset in registry."""
+    try:
+        model = load_model(source=asset.spec_with_path)
+        ml_client.models.create_or_update(model)
+    except Exception as e:
+        redacted_err = sanitize_output(str(e))
+        logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
+        return False
+    return True
+
+
 def get_asset_versions(
     asset_type: str,
     asset_name: str,
@@ -412,7 +460,11 @@ def get_asset_versions(
     if result.returncode != 0:
         logger.log_error(f"Failed to list assets: {result.stderr}")
         return []
-    return [a['version'] for a in json.loads(result.stdout)]
+
+    parsed_output = extract_json_from_output(result.stdout)
+    if parsed_output is None:
+        return []
+    return [a['version'] for a in parsed_output]
 
 
 def get_asset_details(
@@ -428,6 +480,7 @@ def get_asset_details(
         "--name", asset_name,
         "--version", asset_version,
         "--registry-name", registry_name,
+        "--only-show-errors",
     ]
     result = run_command(cmd)
     if result.returncode != 0:
@@ -435,7 +488,7 @@ def get_asset_details(
             # Don't show the error if it's expected for new assets
             logger.log_error(f"Failed to get asset details: {result.stderr}")
         return None
-    return json.loads(result.stdout)
+    return extract_json_from_output(result.stdout)
 
 
 def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[str, str, str, str]:
@@ -479,10 +532,11 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
 
         tags_to_update = None
         try:
-            with open(spec_path) as f:
+            with open(spec_path, encoding='utf-8') as f:
                 asset_spec = YAML().load(f)
                 tags = asset_spec.get("tags", {})
                 properties = asset_spec.get("properties", {})
+                system_metadata = asset_spec.get("system_metadata", {})
 
                 if asset.type == AssetType.MODEL:
                     model_config = asset.extra_config_as_object()
@@ -492,8 +546,10 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 # convert tags, properties value to string
                 tags = stringify_dictionary(tags)
                 properties = stringify_dictionary(properties)
+                system_metadata = stringify_dictionary(system_metadata)
                 tags_to_update = {"replace": tags}
                 properties_to_update = {"add": properties}
+                system_metadata_to_update = {"replace": system_metadata}
 
                 if asset.type in [AssetType.COMPONENT, AssetType.DATA]:
                     description = asset_spec.get("description", None)
@@ -507,7 +563,8 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_u
                 versions=[asset_version],
                 tags=tags_to_update,
                 properties=properties_to_update,
-                description=description
+                description=description,
+                system_metadata=system_metadata_to_update
             ),
             ml_client=ml_client,
             asset_type=asset.type,
@@ -573,6 +630,13 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
                                                  copy_updater, output_level):
                 logger.log_error("Failed to prepare data asset")
                 return False
+
+        # Create asset using SDK (Models only)
+        if asset.type == AssetType.MODEL:
+            return create_asset_sdk(
+                ml_client=ml_client,
+                asset=asset
+            )
 
         # Create asset
         return create_asset_cli(

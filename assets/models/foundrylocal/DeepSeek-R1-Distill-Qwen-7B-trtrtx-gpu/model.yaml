@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/olive-trt-models/deepseek-ai-DeepSeek-R1-Distill-Qwen-7B
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

@@ -48,16 +48,17 @@ def main():
             "azureml-evaluate-mlflow",
             "azureml_metrics",
             "azureml-metrics",
-            "torchvision",
+            ]
+        install_deps = [
+            "azure-ai-ml",
         ]
-        install_deps = []
+        logger.info(f"Reading from {reqs_file}")
         with open(reqs_file, "r") as f:
             for line in f.readlines():
                 if any(dep in line.strip() for dep in ignore_deps):
                     continue
                 install_deps += [line.strip()]
 
-        install_deps += ["torchvision==0.17.2"]
         no_install = []
         if len(install_deps) > 0:
             try:

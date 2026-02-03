@@ -1,5 +1,114 @@
 ## 1.17.0 (Unreleased)
 ### 🚀 New Features
+### 🐛 Bugs Fixed
+
+## 1.16.102 (2026-01-23)
+### 🚀 New Features
+- [#4740](https://github.com/Azure/azureml-assets/pull/4740) Update media manifest headers list for registry/manifests call
+
+## 1.16.101 (2026-01-15)
+### 🚀 New Features
+- [#4731](https://github.com/Azure/azureml-assets/pull/4731) Add BenchmarkSpec to asset types
+
+## 1.16.100 (2026-01-06)
+### 🐛 Bugs Fixed
+- [#4714](https://github.com/Azure/azureml-assets/pull/4714) Fix AttributeError when updating metadata for asset types without _system_metadata attribute
+
+## 1.16.99 (2025-11-24)
+### 🐛 Bugs Fixed
+- [#4636](https://github.com/Azure/azureml-assets/pull/4636) Handle non-JSON content from Azure CLI responses
+
+## 1.16.98 (2025-11-19)
+### 🚀 New Features
+- [#4629](https://github.com/Azure/azureml-assets/pull/4629) Enforce encoding for file read and write operations
+
+## 1.16.97 (2025-10-22)
+### 🚀 New Features
+- [#4535](https://github.com/Azure/azureml-assets/pull/4535) Add missing generic asset types to GENERIC_ASSET_TYPES
+
+## 1.16.96 (2025-10-21)
+### 🚀 New Features
+- [#4533](https://github.com/Azure/azureml-assets/pull/4533) Push images for vulnerability scanning
+
+## 1.16.95 (2025-10-17)
+### 🚀 New Features
+- [#4528](https://github.com/Azure/azureml-assets/pull/4528) Allow Azure- prefix for models
+
+## 1.16.94 (2025-10-03)
+### 🚀 New Features
+- [#4483](https://github.com/Azure/azureml-assets/pull/4483) Add APPTEMPLATE to AssetType
+
+## 1.16.93 (2025-10-01)
+### 🚀 New Features
+- [#4477](https://github.com/Azure/azureml-assets/pull/4477) Onboard AgentManifest asset type
+
+## 1.16.92 (2025-09-26)
+### 🚀 New Features
+- [#4460](https://github.com/Azure/azureml-assets/pull/4460) Skip validation for unsupported SDK fields
+
+## 1.16.91 (2025-09-19)
+### 🚀 New Features
+- [#4448](https://github.com/Azure/azureml-assets/pull/4448) Add EVALUATOR to AssetType
+
+## 1.16.90 (2025-09-12)
+### 🚀 New Features
+- [#4434](https://github.com/Azure/azureml-assets/pull/4434) Support system_metadata by using the SDK for model create and update
+
+## 1.16.89 (2025-08-18)
+### 🐛 Bugs Fixed
+- [#4391](https://github.com/Azure/azureml-assets/pull/4391) Pass in correct uri to LocalAssetPath from ModelConfig
+
+## 1.16.88 (2025-08-12)
+### 🚀 New Features
+- [#4383](https://github.com/Azure/azureml-assets/pull/4383) Add ACR task post-push Trivy SBOM scan and SBOM attachment steps
+
+## 1.16.87 (2025-08-08)
+### 🚀 New Features
+- [#4378](https://github.com/Azure/azureml-assets/pull/4378) Release version 1.16.87
+
+## 1.16.87b1 (2025-08-05)
+### 🚀 New Features
+- [#4370](https://github.com/Azure/azureml-assets/pull/4370) Bump ruamel.yaml to 0.18.10
+
+## 1.16.86 (2025-07-28)
+### 🚀 New Features
+- [#4352](https://github.com/Azure/azureml-assets/pull/4352) Detect if MLFlow model is brand new
+
+## 1.16.85 (2025-06-11)
+### 🚀 New Features
+- [#4256](https://github.com/Azure/azureml-assets/pull/4256) Surface improved error message if job component version is None
+
+## 1.16.84 (2025-05-29)
+### 🚀 New Features
+- [#4207](https://github.com/Azure/azureml-assets/pull/4207) Detect if MLFlow model was updated
+
+## 1.16.83 (2025-05-22)
+### 🐛 Bugs Fixed
+- [#4208](https://github.com/Azure/azureml-assets/pull/4208) Fix for python 3.9 - remove union typing
+
+## 1.16.82 (2025-05-22)
+### 🚀 New Features
+- [#4206](https://github.com/Azure/azureml-assets/pull/4206) Print azcopy log if output_level==default
+
+## 1.16.81 (2025-05-15)
+### 🐛 Bugs Fixed
+- [#4184](https://github.com/Azure/azureml-assets/pull/4184) Generate SAS token instead of checking container access
+
+## 1.16.80 (2025-05-13)
+### 🚀 New Features
+- [#4172](https://github.com/Azure/azureml-assets/pull/4172) Make asset validation work with new schema validation in ADO
+
+## 1.16.79 (2025-04-22)
+### 🚀 New Features
+- [#4117](https://github.com/Azure/azureml-assets/pull/4117) Update spec with modelVariant info after validating
+
+## 1.16.78 (2025-04-21)
+### 🚀 New Features
+- [#4113](https://github.com/Azure/azureml-assets/pull/4113) Skip validating modelVariant section of asset spec
+
+## 1.16.77 (2025-04-01)
+### 🚀 New Features
+- [#4029](https://github.com/Azure/azureml-assets/pull/4029) Add AGENTBLUEPRINT to AssetType
 
 ## 1.16.76 (2025-03-11)
 ### 🚀 New Features
@@ -10,11 +119,11 @@
 - [#3928](https://github.com/Azure/azureml-assets/pull/3928) Fix validate assets for updated task in quality evaluationresult assets
 
 ## 1.16.74 (2025-02-28)
-### 🐛 Bugs Fixed
+### 🚀 New Features
 - [#3887](https://github.com/Azure/azureml-assets/pull/3887) Add support for component and data metadata updates
 
 ## 1.16.73 (2025-02-21)
-### 🐛 Bugs Fixed
+### 🚀 New Features
 - [#3853](https://github.com/Azure/azureml-assets/pull/3853) Add H100 GPU to supported_inference_skus.json
 
 ## 1.16.72 (2025-02-19)
@@ -22,11 +131,11 @@
 - [#3846](https://github.com/Azure/azureml-assets/pull/3846) Update account_uri when storage_name is updated for AzureBlobstoreAssetPath
 
 ## 1.16.71 (2025-02-12)
-### 🐛 Bugs Fixed
+### 🚀 New Features
 - [#3838](https://github.com/Azure/azureml-assets/pull/3838) Add setter for AzureBlobstoreAssetPath storage_name
 
 ## 1.16.70 (2025-02-06)
-### 🐛 Bugs Fixed
+### 🚀 New Features
 - [#3825](https://github.com/Azure/azureml-assets/pull/3825) Pick up latest dependency changes
 
 ## 1.16.69 (2025-01-21)
@@ -170,15 +279,15 @@
 
 ## 1.16.35 (2024-02-28)
 ### 🐛 Bugs Fixed
-- [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration 
+- [#2407](https://github.com/Azure/azureml-assets/pull/2407) Surface properties in the spec configuration
 
 ## 1.16.34 (2024-01-29)
 ### 🐛 Bugs Fixed
-- [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models 
+- [#2196](https://github.com/Azure/azureml-assets/pull/2196) Allow evaluation results to have names similar to models
 
 ## 1.16.33 (2024-01-22)
 ### 🐛 Bugs Fixed
-- [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation 
+- [#2161](https://github.com/Azure/azureml-assets/pull/2161) Fix credential not found issue for asset validation
 
 ## 1.16.32 (2024-01-19)
 ### 🐛 Bugs Fixed
@@ -428,3 +537,5 @@
 ## 1.0.0 (2023-05-16)
 ### 🚀 New Features
 - [#663](https://github.com/Azure/azureml-assets/pull/663) Initial release to PyPI
+
+

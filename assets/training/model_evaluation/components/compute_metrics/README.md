@@ -1,28 +1,28 @@
 ## Compute Metrics Component
 
-### Name 
+### Name
 
 compute_metrics
 
-### Version 
+### Version
 
-0.0.28
+0.0.36
 
-### Type 
+### Type
 
 command
 
-### Description 
+### Description
 
 This component enables user to evaluate a model by providing generated predictions and true values to return generated metrics. (Scores the predictions provided by user. No model is required in this case).
 
-## Inputs 
+## Inputs
 
 
 | Name               | Description                                                                         | Type    | Optional |
-| ------------------ | ----------------------------------------------------------------------------------- | ------- | ------- | 
-| task         | Task type for which model is trained                                                                       | string  |  True     | 
-| ground_truth | Actual ground truth to evaluate predictions against. The file should be of JSON lines format containing only one key. | uri_file  |  True     | 
+| ------------------ | ----------------------------------------------------------------------------------- | ------- | ------- |
+| task         | Task type for which model is trained                                                                       | string  |  True     |
+| ground_truth | Actual ground truth to evaluate predictions against. The file should be of JSON lines format containing only one key. | uri_file  |  True     |
 | ground_truth_column_name             | Column name which contains ground truths in provided uri file for ground_truths.                                                                    | string | True     |                   |
 | prediction      | Actual predictions which are to be evaluated. They should be in json lines too with only one key.                                                                  | uri_file  | True     |                   |
 | prediction_column_name                 | Column name which contains predictions in provided uri file for predictions.                                               | string   | True     |                                                                                                |
@@ -30,7 +30,7 @@ This component enables user to evaluate a model by providing generated predictio
 | evaluation_config          | Additional config file required by metrics package. This data asset should contain a JSON Config file. | uri_file    | True     |                                                |
 | evaluation_config_params                       | JSON Serielized string of evaluation_config            | string | True                                                     |
 
-## Outputs 
+## Outputs
 
 | Name                 | Description                                              | Type         |
 | -------------------- | -------------------------------------------------------- | ------------ |

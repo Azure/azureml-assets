@@ -19,12 +19,13 @@ flavors:
     data: data
     env: conda.yaml
     loader_module: azureml.evaluate.mlflow.hftransformers
-    python_version: 3.8.18
+    python_version: 3.9.23
 metadata:
   base_model_name: Deci/DeciLM-7B
   base_model_task: text-generation
   is_acft_model: true
   is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:1
 mlflow_version: 2.6.0
 model_uuid: 209d8ac9ffdb4c5881a34143dac3217b
 utc_time_created: '2023-12-13 11:38:47.400961'

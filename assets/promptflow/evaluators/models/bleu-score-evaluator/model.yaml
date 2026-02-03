@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/BleuScoreEvaluator/v3/BleuScoreEvaluator
+  container_path: models/evaluators/BleuScoreEvaluator/v4/BleuScoreEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:

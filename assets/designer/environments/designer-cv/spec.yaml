@@ -13,5 +13,5 @@ build:
 os_type: linux
 
 tags:
-  Python: 3.8.10
-  OS: Ubuntu22.04
+  Python: 3.12.8
+  OS: Ubuntu24.04

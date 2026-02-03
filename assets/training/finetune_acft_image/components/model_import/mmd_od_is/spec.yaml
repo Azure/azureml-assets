@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-version: 0.0.20
+version: 0.0.22
 name: mmdetection_image_objectdetection_instancesegmentation_model_import
 display_name: Image Object Detection and Instance Segmentation MMDetection Model Import
 description: Import PyTorch / MLflow model
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/labels/latest
+environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/75
 
 code: ../../../src/model_selector
 

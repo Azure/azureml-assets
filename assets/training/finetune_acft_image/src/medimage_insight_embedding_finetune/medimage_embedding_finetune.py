@@ -23,8 +23,11 @@ import azureml.acft.image.components.mainzvision as mv
 COMPONENT_NAME = "ACFT-MedImage-Embedding-Finetune"
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.medimage_embedding_finetune")
 CHECKPOINT_PATH = "artifacts/checkpoints/vision_model/medimageinsigt-v1.0.0.pt"
+LANG_ENCODER_PATH = "artifacts/checkpoints/language_model/clip_tokenizer_4.16.2"
 EVAL_IMAGE_TSV = 'EVAL_IMAGE_TSV'
 EVAL_TEXT_TSV = 'EVAL_TEXT_TSV'
+EVAL_TRAIN_IMAGE_TSV = 'EVAL_TRAIN_IMAGE_TSV'
+EVAL_TRAIN_TEXT_TSV = 'EVAL_TRAIN_TEXT_TSV'
 IMAGE_TSV = 'IMAGE_TSV'
 TEXT_TSV = 'TEXT_TSV'
 LABEL_FILE = 'LABEL_FILE'
@@ -41,7 +44,7 @@ SET_SAMPLER_EPOCH = 'SET_SAMPLER_EPOCH'
 
 
 def add_env_parser_to_yaml() -> None:
-    """Adding ability of resolving environment variables to the yaml SafeLoader.
+    """Add ability of resolving environment variables to the yaml SafeLoader.
 
     Environment variables in the form of "${<env_var_name>}" can be resolved as strings.
     If the <env_var_name> is not in the env, <env_var_name> itself would be used.
@@ -264,6 +267,20 @@ def get_parser() -> argparse.ArgumentParser:
         help='Path to evaluation text TSV file.'
     )
     parser.add_argument(
+        '--eval_train_image_tsv',
+        type=str,
+        help='Optional path used for the evaluation task. If not specified, will use the training path.',
+        default="",
+        required=False
+    )
+    parser.add_argument(
+        '--eval_train_text_tsv',
+        type=str,
+        help='Optional path used for the evaluation task. If not specified, will use the training path.',
+        default="",
+        required=False
+    )
+    parser.add_argument(
         '--image_tsv',
         type=str,
         help='Path to training image TSV file.'
@@ -356,6 +373,10 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
         os.makedirs(SAVE_DIR, exist_ok=True)
         new_path = os.path.join(SAVE_DIR, "medimageinsigt-v1.0.0-native.pt")
         torch.save(safe_model, new_path)
+
+        opt['LANG_ENCODER']['PRETRAINED_TOKENIZER'] = os.path.join(
+            cmdline_args[MLFLOW_MODEL_FOLDER], LANG_ENCODER_PATH)
+
         if UNICL_MODEL in opt and PRETRAINED in opt[UNICL_MODEL]:
             opt[UNICL_MODEL][PRETRAINED] = new_path
 
@@ -364,6 +385,12 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
     image_tsv = copy_tsv(cmdline_args[IMAGE_TSV], opt[SAVE_DIR])
     text_tsv = copy_tsv(cmdline_args[TEXT_TSV], opt[SAVE_DIR])
     label_file = copy_tsv(cmdline_args[LABEL_FILE], opt[SAVE_DIR])
+    eval_train_image_tsv = image_tsv
+    eval_train_text_tsv = text_tsv
+    if cmdline_args.get(EVAL_TRAIN_IMAGE_TSV):
+        eval_train_image_tsv = copy_tsv(cmdline_args[EVAL_TRAIN_IMAGE_TSV], opt[SAVE_DIR])
+    if cmdline_args.get(EVAL_TRAIN_TEXT_TSV):
+        eval_train_text_tsv = copy_tsv(cmdline_args[EVAL_TRAIN_TEXT_TSV], opt[SAVE_DIR])
 
     if DATASET in opt and ROOT in opt[DATASET]:
         opt[DATASET]["TRAIN_TSV_LIST"] = [image_tsv, text_tsv]
@@ -374,8 +401,8 @@ def load_opt_command(cmdline_args: argparse.Namespace) -> Tuple[Dict[str, Any], 
         if key.startswith('EVALDATASET_'):
             opt[key][EVAL_IMAGE_TSV] = eval_image_tsv
             opt[key][EVAL_TEXT_TSV] = eval_text_tsv
-            opt[key][IMAGE_TSV] = image_tsv
-            opt[key][TEXT_TSV] = text_tsv
+            opt[key][IMAGE_TSV] = eval_train_image_tsv
+            opt[key][TEXT_TSV] = eval_train_text_tsv
             opt[key][LABEL_FILE] = label_file
 
     opt[USER_DIR] = os.path.dirname(mv.__file__)

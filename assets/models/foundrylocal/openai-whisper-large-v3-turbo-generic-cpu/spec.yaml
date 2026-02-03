@@ -1,0 +1,27 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: openai-whisper-large-v3-turbo-generic-cpu
+version: 2
+path: ./
+tags:
+  foundryLocal: ""
+  license: apache-2.0
+  licenseDescription: "This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html."
+  author: Microsoft
+  inputModalities: audio
+  outputModalities: text
+  task: automatic-speech-recognition
+  maxOutputTokens: 2048
+  alias: whisper-large-v3-turbo
+  directoryPath: v2
+  promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/openai-whisper-large-v3-turbo/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'cpu'
+    executionProvider: 'CPUExecutionProvider'
+    fileSizeBytes: 9438190632
+    vRamFootprintBytes: 9438528266

@@ -29,4 +29,4 @@ tags:
   task: chat-completion
   author: "Mistral AI"
   benchmark: "quality"
-version: 6
+version: 7

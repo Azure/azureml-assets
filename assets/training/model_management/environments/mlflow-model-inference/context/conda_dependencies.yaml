@@ -1,0 +1,19 @@
+name: mlflow
+channels:
+- conda-forge
+- anaconda
+dependencies:
+- python=3.12
+- h2>=4.3.0
+- pip:
+  - pip==25.3
+  - azureml-inference-server-http==1.4.1
+  - mlflow
+  - scikit-learn
+  - cloudpickle
+  - psutil
+  - pandas
+  - numpy
+  - joblib
+  - h2==4.3.0
+  - fastmcp==2.14.0

@@ -1,0 +1,51 @@
+type: "evaluator"
+name: "builtin.tool_selection"
+version: 6
+displayName: "Tool-Selection-Evaluator"
+description: "Evaluates whether an AI agent selected the most appropriate and efficient tools for a given task, avoiding redundancy or missing essentials. Use it to assess tool choice quality in agent-based systems, orchestration platforms, and AI assistants that must pick the right tools from available options."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["agents"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    response:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    tool_calls:
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+    tool_definitions:
+      anyOf:
+        - type: "object"
+        - type: "array"
+          items:
+            type: "object"
+  required: ["query", "tool_definitions"]
+outputSchema:
+  tool_selection:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator

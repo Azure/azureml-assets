@@ -2,9 +2,9 @@ flavors:
   python_function:
     artifacts:
       model_dir:
-        path: artifacts/v1.0.0
-        uri: /home/mablonde/medical/HLSRadDeployment/checkpoints/v1.0.0
-    cloudpickle_version: 3.0.0
+        path: artifacts/checkpoints
+        uri: /__w/1/s/checkpoints
+    cloudpickle_version: 2.2.1
     code: code
     env:
       conda: conda.yaml
@@ -13,9 +13,15 @@ flavors:
     python_model: python_model.pkl
     python_version: 3.10.14
     streamable: false
-mlflow_version: 2.16.2
+metadata:
+  base_model_name: CxrReportGen
+  base_model_task: image-text-to-text
+  is_acft_model: true
+  is_finetuned_model: false
+  azureml.base_image: mcr.microsoft.com/azureml/curated/mlflow-model-inference:5
+mlflow_version: 2.19.0
 model_size_bytes: 15761478249
-model_uuid: e4adcb9729184787b9cc663abc6cd92f
+model_uuid: 7b77fbf3853c4d52a76bc09a021dcc87
 signature:
   inputs: '[{"type": "binary", "name": "frontal_image", "required": true}, {"type":
     "binary", "name": "lateral_image", "required": false}, {"type": "binary", "name":
@@ -25,4 +31,4 @@ signature:
     "required": false}]'
   outputs: '[{"type": "string", "name": "output", "required": true}]'
   params: null
-utc_time_created: '2024-10-04 19:15:32.643224'
+utc_time_created: '2025-01-15 18:07:29.638822'

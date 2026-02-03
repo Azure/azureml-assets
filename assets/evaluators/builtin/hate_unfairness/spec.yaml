@@ -1,0 +1,38 @@
+type: "evaluator"
+name: "builtin.hate_unfairness"
+version: 2
+displayName: "Hate-and-Unfairness-Evaluator"
+description: "Detects hateful, biased, or unfair language in the response. Lower scores indicate more neutral and inclusive content."
+evaluatorType: "builtin"
+evaluatorSubType: "service"
+categories: ["safety", "agents"]
+tags:
+  provider: "Microsoft"
+  scenario: "red_team"
+  azure_ai_model_default: "true"
+  azure_ai_agent_default: "true"
+initParameterSchema:
+  type: "object"
+  properties:
+    azure_ai_project:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 0
+      maximum: 7
+      multipleOf: 1
+  required: ["azure_ai_project"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+    response:
+      type: "string"
+  required: ["query", "response"]
+outputSchema:
+  hate_unfairness:
+    type: "ordinal"
+    desirable_direction: "decrease"
+    min_value: 0
+    max_value: 7

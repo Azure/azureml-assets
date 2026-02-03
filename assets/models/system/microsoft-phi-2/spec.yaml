@@ -60,4 +60,4 @@ tags:
     precision: 16
     max_seq_length: 2048
   benchmark: "quality"
-version: 19
+version: 20

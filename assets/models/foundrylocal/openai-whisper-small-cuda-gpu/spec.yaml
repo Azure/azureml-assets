@@ -1,0 +1,27 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: openai-whisper-small-cuda-gpu
+version: 1
+path: ./
+tags:
+  foundryLocal: ""
+  license: apache-2.0
+  licenseDescription: "This model is provided under the License Terms available at https://www.apache.org/licenses/LICENSE-2.0.html."
+  author: Microsoft
+  inputModalities: audio
+  outputModalities: text
+  task: automatic-speech-recognition
+  maxOutputTokens: 2048
+  alias: whisper-small
+  directoryPath: cuda-fp16
+  promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: azureml://registries/azureml/models/openai-whisper-small/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['RTN']
+    device: 'gpu'
+    executionProvider: 'CUDAExecutionProvider'
+    fileSizeBytes: 569232292
+    vRamFootprintBytes: 572890964

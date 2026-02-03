@@ -3,14 +3,8 @@ channels:
   - conda-forge
   - pytorch
 dependencies:
-  - cpuonly
-  - pip=23.3
-  - python=3.9.18
-  - setuptools=70
-  - cython=0.29.24
-  - numpy==1.23.5
-  - scipy==1.10.0
-  - pytorch=2.3.1
-  - torchvision=0.18.1
+  - python=3.12.8
   - pip:
-      - azureml-designer-cv-modules==0.0.66
+      - pip>=25.3
+      - urllib3>=2.6.0
+      - azureml-designer-cv-modules==0.0.72

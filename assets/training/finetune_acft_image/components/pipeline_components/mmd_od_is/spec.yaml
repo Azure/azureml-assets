@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.26
+version: 0.0.28
 name: mmdetection_image_objectdetection_instancesegmentation_pipeline
 display_name: Image Object Detection and Instance Segmentation MMDetection Pipeline
 description: Pipeline component for image object detection and instance segmentation using MMDetection models.
@@ -391,7 +391,7 @@ outputs:
 jobs:
   finetune_common_validation:
     type: command
-    component: azureml:finetune_common_validation:0.0.8
+    component: azureml:finetune_common_validation:0.0.10
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_path: ${{parent.inputs.mlflow_model}}
@@ -414,7 +414,7 @@ jobs:
 
   image_od_is_model_import:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.20
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.22
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -426,7 +426,7 @@ jobs:
 
   image_od_is_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.21
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.24
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -482,7 +482,7 @@ jobs:
 
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.35
+    component: azureml:model_prediction:0.0.37
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
@@ -497,7 +497,7 @@ jobs:
 
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.35
+    component: azureml:compute_metrics:0.0.36
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'

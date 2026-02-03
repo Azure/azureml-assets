@@ -16,21 +16,23 @@ This model is intended and provided as-is for research and model development exp
 
 For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageParseDocs.
 
+For example code, usage demonstrations, and fine-tuning capabilities, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
 ### Model Architecture
 MedImageParse is built upon a transformer-based architecture, optimized for processing large biomedical corpora. Leveraging multi-head attention mechanisms, it excels at identifying and understanding biomedical terminology, as well as extracting contextually relevant information from dense scientific texts. The model is pre-trained on vast biomedical datasets, allowing it to generalize across various biomedical domains with high accuracy.
 
 ### License and where to send questions or comments about the model
-The license for MedImageParse is the MIT license. Please cite our paper if you use the model for your research https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf.
+The license for MedImageParse is the MIT license. Please cite our paper if you use the model for your research https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf and https://openaccess.thecvf.com/content/CVPR2025/papers/Zhao_Boltzmann_Attention_Sampling_for_Image_Analysis_with_Small_Objects_CVPR_2025_paper.pdf .
 For questions or comments, please contact: hlsfrontierteam@microsoft.com
 
 ### Training information
 
 MedImageParse was trained on a large dataset comprising over six million triples of image, segmentation mask, and textual description.
 
-MedImageParse used 16 NVIDIA A100-SXM4-40GB GPUs for a duration of 58 hours.
+MedImageParse used 40 NVIDIA A100-SXM4-80GB GPUs for a duration of 48 hours. 
 
 ### Evaluation Results
-Please see the paper for detailed information about methods and results. https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf
+Please see the paper for detailed information about methods and results. https://microsoft.github.io/BiomedParse/assets/BiomedParse_arxiv.pdf as well as https://openaccess.thecvf.com/content/CVPR2025/papers/Zhao_Boltzmann_Attention_Sampling_for_Image_Analysis_with_Small_Objects_CVPR_2025_paper.pdf.
 
 Bar plot comparing the Dice score between our method and competing methods on 102,855 test instances (image-mask-label
 triples) across 9 modalities. MedSAM and SAM require bounding box as input. 
@@ -124,6 +126,9 @@ ultrasound: breast: benign tumor, malignant tumor, tumor
             heart: left heart atrium, left heart ventricle
             transperineal: fetal head, public symphysis
 
-**Hardware Requirement for Compute Instances** 
-- Default: Single V100 GPU 
-- Minimum: Single GPU instance with 8Gb Memory
+
+## Version History
+
+| Version | Date | Description |
+|---------|------|-------------|
+| 16 | 2025-12-10 | - Initial version tracking <br>- Remove V100 support|

@@ -307,8 +307,6 @@ def main():
     """
     parser = get_parser()
     args, _ = parser.parse_known_args()
-    logger.info("Parsed arguments: %s", args)
-
     set_logging_parameters(
         task_type=args.task_name,
         acft_custom_dimensions={
@@ -318,6 +316,8 @@ def main():
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
+    logger.info("Parsed arguments: %s", args)
+
     train_data, validation_data = load_data(args.train_data_path, args.validation_data_path)
     train_data, validation_data = merge_data_with_text(train_data,
                                                        validation_data,

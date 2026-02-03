@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
-version: 0.0.70
+version: 0.0.79
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/81
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/105
 
 code: ../../../src/validation
 
@@ -23,25 +23,19 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for finetune component eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+    description: compute to be used for finetune component eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
   compute_model_import:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model import component eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+    description: compute to be used for model import component eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
   compute_data_preprocess:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for data preprocess component eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+    description: compute to be used for data preprocess component eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value. If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
   task_name:
     type: string
@@ -61,7 +55,7 @@ inputs:
     optional: true
     default: 1
     description: Number of GPUs to use for finetuning
-  
+
   train_file_path:
     type: uri_file
     optional: true
@@ -105,7 +99,7 @@ inputs:
     type: string
     optional: true
     description: Validation parameters propagated from pipeline.
-  
+
   num_train_epochs:
     type: integer
     optional: true
@@ -129,8 +123,8 @@ inputs:
   auto_find_batch_size:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will enable auto_find_batch_size for training
@@ -158,8 +152,8 @@ inputs:
   apply_deepspeed:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will enable deepspeed for training
@@ -167,8 +161,8 @@ inputs:
   precision:
     type: string
     enum:
-      - "32"
-      - "16"
+    - "32"
+    - "16"
     default: "32"
     optional: true
     description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
@@ -176,8 +170,8 @@ inputs:
   apply_lora:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If "true" enables lora.
@@ -185,8 +179,8 @@ inputs:
   apply_ort:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will use the ONNXRunTime training
@@ -196,15 +190,15 @@ inputs:
     optional: true
     default: "2"
     enum:
-      - "2"
-      - "3"
+    - "2"
+    - "3"
     description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
 
   ignore_mismatched_sizes:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: Not setting this flag will raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model.

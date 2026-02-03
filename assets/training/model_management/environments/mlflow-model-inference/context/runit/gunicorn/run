@@ -1,0 +1,194 @@
+#!/bin/bash
+
+
+SCRIPT_PATH=$(dirname $(realpath -s "$0"))
+
+# Error handling that sleeps so logs are properly sent
+handle_error () {
+  echo "Error occurred. Sleeping to send error logs."
+  # Sleep 45 seconds
+  sleep 45
+  exit 95
+}
+
+format_print () {
+    echo "$(date -uIns) | gunicorn/run | $1"
+}
+
+echo "`date -uIns` - gunicorn/run $@"
+
+format_print ""
+format_print "###############################################"
+format_print "AzureML Container Runtime Information"
+format_print "###############################################"
+format_print ""
+
+
+if [[ -z "${AZUREML_CONDA_ENVIRONMENT_PATH}" ]]; then
+    # If AZUREML_CONDA_ENVIRONMENT_PATH exists, add to the front of the LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH="$(conda info --root)/lib:$LD_LIBRARY_PATH"
+else
+    # Otherwise, take the conda root and add that to the front of the LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH="$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH"
+fi
+
+if [[ -f "/IMAGE_INFORMATION" ]]; then
+    format_print ""
+    format_print "AzureML image information: $(cat /IMAGE_INFORMATION)"
+    format_print ""
+fi
+
+format_print ""
+format_print "PATH environment variable: $PATH"
+format_print "PYTHONPATH environment variable: $PYTHONPATH"
+format_print ""
+export CONDAPATH="$(conda info --root)"
+format_print "CONDAPATH environment variable: $CONDAPATH"
+echo 
+echo "$(conda info -e)"
+echo
+format_print ""
+format_print "Pip Dependencies (before dynamic installation)"
+echo
+pip freeze
+echo
+
+if [[ -n "$AZUREML_ENTRY_SCRIPT" ]]; then
+    # Remove leading forward slash if it exists and then append the directory to the AML_APP_ROOT
+    export ENTRY_SCRIPT_DIR="${AML_APP_ROOT:-/var/azureml-app}/$(dirname "${AZUREML_ENTRY_SCRIPT#/}")"
+else 
+    export ENTRY_SCRIPT_DIR=${AML_APP_ROOT:-/var/azureml-app}
+fi
+
+format_print ""
+format_print "Entry script directory: $ENTRY_SCRIPT_DIR"
+format_print ""
+format_print "###############################################"
+format_print "Dynamic Python Package Installation"
+format_print "###############################################"
+format_print ""
+
+ENV_MLFLOW_MODEL_FOLDER="mlflow_model_folder"
+if [[ -n "$MLFLOW_MODEL_FOLDER" ]]; then
+    ENV_MLFLOW_MODEL_FOLDER="${MLFLOW_MODEL_FOLDER}"
+fi
+export AZUREML_EXTRA_CONDA_YAML_ABS_PATH="${AZUREML_MODEL_DIR}/${ENV_MLFLOW_MODEL_FOLDER}/conda.yaml"
+echo "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH"
+
+
+if [[ -n "$AZUREML_EXTRA_PYTHON_LIB_PATH" ]]; then
+    # Pre-installed mounted dependencies, check for the variable and if the folder exists.
+
+    export EXTRA_PYTHON_LIB_FULL_PATH="${ENTRY_SCRIPT_DIR}/${AZUREML_EXTRA_PYTHON_LIB_PATH}"
+
+    if [[ -d $EXTRA_PYTHON_LIB_FULL_PATH ]]; then 
+        format_print "Adding ${EXTRA_PYTHON_LIB_FULL_PATH} in PYTHONPATH"
+        export PYTHONPATH="${EXTRA_PYTHON_LIB_FULL_PATH}:$PYTHONPATH"
+    else
+        format_print "Expected folder with pre-installed packages not found: ${EXTRA_PYTHON_LIB_FULL_PATH}. Exiting with error ..."
+        exit 97
+    fi
+elif [[ -n "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH" || -n "$AZUREML_EXTRA_CONDA_YAML" ]]; then 
+    # Dynamic installation conda.yml, check for the variable and if the file exists for relative and absolute paths.
+    # Need the absolute path for the MLFlow scenario where yaml could exist outside of azureml-app folder.
+
+    if [[ -n "$AZUREML_EXTRA_CONDA_YAML_ABS_PATH" ]]; then
+        export CONDA_FULL_PATH="$AZUREML_EXTRA_CONDA_YAML_ABS_PATH"
+    else 
+        export CONDA_FULL_PATH="${ENTRY_SCRIPT_DIR}/${AZUREML_EXTRA_CONDA_YAML}"
+    fi 
+
+    ENV_DYNAMIC_DEP_INSTALLATION="true"
+    if [[ -n "$DYNAMIC_DEP_INSTALLATION" ]]; then
+        ENV_DYNAMIC_DEP_INSTALLATION="${DYNAMIC_DEP_INSTALLATION}"
+    fi
+    echo "Dynamic dependency installation enabled : $ENV_DYNAMIC_DEP_INSTALLATION"
+
+    # Valiated dynamic package installation
+    if [ "$ENV_DYNAMIC_DEP_INSTALLATION" = "true" ]; then
+        # NOTE: This may take a very long time if existing dependencies are added! 
+        # Source: https://stackoverflow.com/questions/53250933/conda-takes-20-minutes-to-solve-environment-when-package-is-already-installed
+        if [[ -f $CONDA_FULL_PATH ]]; then
+            format_print "Updating conda environment from ${CONDA_FULL_PATH} !"
+
+            # Extract version from amlenv
+            # If this is not installed, the value is empty. There will be a Warning output that states that the package is not installed.
+            SERVER_VERSION="$(pip show azureml-inference-server-http | grep Version | sed -e 's/.*: //')"
+
+            if [ -z "$SERVER_VERSION" ]; then
+                format_print "azureml-inference-server-http not installed"
+                exit 96
+            fi
+
+            # Copy user conda.yml to tmp folder since we don't have write access to user folder
+            # Write access to folder is required for conda env create, and tmp folder has write access
+            export CONDA_FILENAME="${TMPDIR:=/tmp}/copied_env_$(date +%s%N).yaml"
+
+            cp "${CONDA_FULL_PATH}" "${CONDA_FILENAME}"
+
+            # Create a userenv from the conda yaml that replaces the existing amlenv
+            conda env create -n userenv -f "${CONDA_FILENAME}" || { handle_error ; }
+
+            export AZUREML_CONDA_ENVIRONMENT_PATH="/opt/miniconda/envs/userenv"
+            export PATH="/opt/miniconda/envs/userenv/bin:$PATH"
+            export LD_LIBRARY_PATH="$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH"
+                
+            # Check if http server is installed as part of user conda.yml. If the value is empty then the server is not installed.
+            SERVER_INSTALLED_VERSION="$(pip show azureml-inference-server-http | grep Version | sed -e 's/.*: //')"
+
+            if [ -z "$SERVER_INSTALLED_VERSION" ]; then
+                format_print "Install azureml-inference-server-http version ${SERVER_VERSION}"
+                # Install the same version of the http server from the default conda environment
+                pip install azureml-inference-server-http || { handle_error ; }
+            fi
+        else
+            format_print "Dynamic Python packages installation is enabled but expected conda yaml file not found: ${CONDA_FULL_PATH}. Exiting with error ..."
+            exit 98
+        fi
+    fi
+elif [[ -n "$AZUREML_EXTRA_REQUIREMENTS_TXT" ]]; then
+    # Dynamic installation requirements.txt, check for the variable and if the file exists for relative and absolute paths.
+        
+    export REQUIREMENTS_TXT_FULL_PATH="${ENTRY_SCRIPT_DIR}/${AZUREML_EXTRA_REQUIREMENTS_TXT}"
+
+    if [[ -f $REQUIREMENTS_TXT_FULL_PATH ]]; then
+        format_print "Installing Python packages from ${REQUIREMENTS_TXT_FULL_PATH} !"
+        pip install -r "$REQUIREMENTS_TXT_FULL_PATH" || { handle_error ; }
+    else
+        format_print "Dynamic Python packages installation is enabled but expected requirements file not found: ${REQUIREMENTS_TXT_FULL_PATH}. Exiting with error ..."
+        exit 99
+    fi
+else
+    format_print "Dynamic Python package installation is disabled."
+fi
+
+format_print ""
+format_print "###############################################"
+format_print "Checking if the Python package azureml-inference-server-http is installed"
+format_print "###############################################"
+format_print ""
+if [[ -z "$(pip show azureml-inference-server-http 2>/dev/null)" ]]; then
+    format_print "A required package azureml-inference-server-http is missing. Please install azureml-inference-server-http before trying again"
+    exit 100
+fi
+
+format_print "" 
+format_print "###############################################"
+format_print "AzureML Inference Server"
+format_print "###############################################"
+format_print ""
+
+cd "${AML_APP_ROOT:-/var/azureml-app}"
+
+format_print "Starting AzureML Inference Server HTTP."
+
+# Ensure the presence of debugpy if the user enabled local debugging. See ensure_debugpy.py for more details.
+if [[ -n $AZUREML_DEBUG_PORT ]]; then
+    python $SCRIPT_PATH/ensure_debugpy.py
+    if [[ $? -ne 0 ]]; then
+        format_print "Exiting because debugpy cannot be not injected into entry.py."
+        exit 94
+    fi
+fi
+
+exec azmlinfsrv --entry_script "${AZUREML_ENTRY_SCRIPT:-main.py}" --port 31311

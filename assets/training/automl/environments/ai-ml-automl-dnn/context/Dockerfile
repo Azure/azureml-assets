@@ -1,10 +1,10 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/azureml-automl-dnn
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-automl-dnn
 # Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20230306.v3 /var/mlflow_resources/mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
+COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # ENV AML_APP_ROOT="/var/mlflow_resources"
@@ -12,13 +12,34 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Upgrade system-level packages to fix known vulnerabilities (systemd, python3.12, pam)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        systemd-dev \
+        libudev1 \
+        systemd-timesyncd \
+        systemd \
+        systemd-resolved \
+        libsystemd0 \
+        libsystemd-shared \
+        libpython3.12-minimal \
+        python3.12-minimal \
+        libpython3.12-stdlib \
+        python3.12 \
+        libpam0g \
+        libpam-modules-bin \
+        libpam-modules \
+        libpam-runtime && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
-    python=3.9 \
-    pip=22.1.2 \
-    numpy~=1.23.5 \
+    python=3.10 \
+    pip=25.3 \
+    numpy~=1.23.5\
     py-cpuinfo=5.0.0 \
     joblib=1.2.0 \
     cloudpickle=1.6.0 \
@@ -26,9 +47,9 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     pandas~=1.5.3 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=72.1.0 \
+    setuptools=78.1.1 \
     wheel=0.44.0 \
-    pytorch=2.2.2 \
+    pytorch=2.8.0 \
     scipy=1.10.1 \
     cudatoolkit=10.0.130 \
     'psutil>5.0.0,<6.0.0' \
@@ -56,16 +77,22 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 'inference-schema' \
+                'mlflow-skinny==2.15.1' \
+                'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'xgboost==1.5.2' \
-                'cryptography>=42.0.5' \
+                'cryptography>=45.0.7' \
                 'mltable>=1.0.0' \
                 'pytorch-transformers==1.0.0' \
                 'GitPython>=3.1.41' \
                 'spacy==3.7.4' \
+                'pillow>=12.0.0' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
                 # end pypi dependencies
 # end pip install
 
-ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+# Fix vulnerabilities - upgrade pip, starlette, urllib3, bokeh
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN rm -rf /opt/miniconda/pkgs/
 
+ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

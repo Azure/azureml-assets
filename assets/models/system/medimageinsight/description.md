@@ -12,6 +12,8 @@ Please see https://aka.ms/medimageinsightpaper for more details.
 
 For documentation and example Jupyter Notebooks, visit: https://aka.ms/MedImageInsightDocs.
 
+For example code, usage demonstrations, and fine-tuning capabilities, visit the [Healthcare AI Examples repository](https://aka.ms/HealthcareAIExamples).
+
 [^1]: [2022.12.07.22283216v3.full.pdf (medrxiv.org)](https://www.medrxiv.org/content/10.1101/2022.12.07.22283216v3.full.pdf)
 
 ### Model Architecture
@@ -165,7 +167,8 @@ data =  {
 ]
 ```
 
-## Hardware Requirement for Compute Instances
-- Supports CPU and GPU
-- Default: Single V100 GPU or Intel CPU
-- Minimum: Single GPU instance with 8Gb Memory (Fastest) or CPU
+## Version History
+
+| Version | Date | Description |
+|---------|------|-------------|
+| 11 | 2025-12-10 | - Initial version tracking <br>- Remove V100 support|

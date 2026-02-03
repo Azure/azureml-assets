@@ -9,9 +9,18 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
+# Update package lists and reinstall system OpenSSL & OpenSSH
+RUN apt-get update && \
+    apt-get install --reinstall -y openssl libssl-dev openssh-server && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create conda environment
 COPY conda_dependencies.yaml .
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
+
+# Security vulnerability fixes
+RUN conda run -p $CONDA_PREFIX pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2

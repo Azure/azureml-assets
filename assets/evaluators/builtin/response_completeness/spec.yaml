@@ -1,0 +1,36 @@
+type: "evaluator"
+name: "builtin.response_completeness"
+version: 4
+displayName: "Response-Completeness-Evaluator"
+description: "Assesses whether the response covers all key aspects of the question. Higher scores indicate more thorough and complete answers. This evaluator is useful when evaluating chatbots, virtual assistants, and QA systems where full and informative responses are critical."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+    threshold:
+      type: "number"
+      minimum: 1
+      maximum: 5
+      multipleOf: 1
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    ground_truth:
+      type: "string"
+    response:
+      type: "string"
+  required: ["ground_truth", "response"]
+outputSchema:
+  response_completeness:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 1
+    max_value: 5
+path: ./evaluator

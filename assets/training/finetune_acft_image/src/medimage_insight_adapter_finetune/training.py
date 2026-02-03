@@ -12,9 +12,9 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 from tqdm import tqdm
 import time
-import logging
+from azureml.acft.common_components import get_logger_app
 
-logger = logging.getLogger(__name__)
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.src.train.training")
 
 
 class feature_loader(data.Dataset):

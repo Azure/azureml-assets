@@ -1,0 +1,28 @@
+type: "evaluator"
+name: "builtin.protected_material"
+version: 2
+displayName: "Protected-Material-Evaluator"
+description: "Detects use of copyrighted or proprietary content in responses. Ensures generated text stays within acceptable use boundaries."
+evaluatorType: "builtin"
+evaluatorSubType: "service"
+categories: ["safety", "agents"]
+tags:
+  provider: "Microsoft"
+initParameterSchema:
+  type: "object"
+  properties:
+    azure_ai_project:
+      type: "string"
+  required: ["azure_ai_project"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      type: "string"
+    response:
+      type: "string"
+  required: ["query", "response"]
+outputSchema:
+  protected_material:
+    type: "boolean"
+    desirable_direction: "decrease"

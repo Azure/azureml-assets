@@ -1,6 +1,6 @@
 path:
   container_name: rai-eval-flows
-  container_path: models/evaluators/QAEvaluator/v1/QAEvaluator
+  container_path: models/evaluators/QAEvaluator/v2/QAEvaluator
   storage_name: amlraipfmodels
   type: azureblob
 publish:

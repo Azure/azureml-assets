@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/development/commandComponent.schema.json
 type: command
 
-version: 0.0.20
+version: 0.0.22
 name: image_framework_selector
 display_name: Framework Selector for Image Tasks
 description: Framework selector control flow component for image tasks
 
 is_deterministic: true
 
-environment: azureml://registries/azureml/environments/acpt-automl-image-framework-selector-gpu/labels/latest
+environment: azureml://registries/azureml/environments/acpt-automl-image-framework-selector-gpu/versions/67
 
 code: ../../src/framework_selector
 
