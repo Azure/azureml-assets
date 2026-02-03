@@ -68,4 +68,4 @@ RUN pip install --no-cache-dir \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
 
 # vulnearbility fix
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 pillow==12.0.0 pyarrow==14.0.2
+RUN conda run -n base python -m pip install --upgrade aiohttp==3.13.3 pillow==12.0.0 pyarrow==14.0.2 'bokeh>=3.8.2'
