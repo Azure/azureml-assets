@@ -20,7 +20,7 @@ tags:
   author: CompVis
   training_dataset: LAION-5B
   inference_supported_envs:
-  - ds-mii
+  - ds_mii
   inference_compute_allow_list:
     [
       Standard_NC6s_v3,
