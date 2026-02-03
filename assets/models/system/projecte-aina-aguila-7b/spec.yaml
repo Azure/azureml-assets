@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: projecte-aina-aguila-7b
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: e4c1ffc92762d12946e850e765b866b0ab2d864b
   datasets: ''
   inference-min-sku-spec: 24|1|220|64

@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-mini-128k-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   languages: en
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
@@ -31,8 +31,7 @@ tags:
   playgroundRateLimitTier:  "low"
   Featured: ""
   huggingface_model_id: ""
-  maas-inference: true
-  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
+  maas-inference: "true"
   license: mit
   disable-batch: "true"
   task: chat-completion

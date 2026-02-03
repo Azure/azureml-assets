@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: distilroberta-base
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: d5411c3ee9e1793fd9ef58390b40a80a4c10df32
   datasets: openwebtext
   evaluation-min-sku-spec: 4|0|28|56

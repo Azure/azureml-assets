@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: facebook-bart-large-cnn
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 37f520fa929c961707657b28798b30c003dd100b
   evaluation-min-sku-spec: 4|0|28|56
   inference-min-sku-spec: 4|0|28|56

@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: compvis-stable-diffusion-v1-4
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 133a221b8aa7292a167afc5127cb63fb5005638b
   finetuning-tasks: text-to-image
   finetune-min-sku-spec: 6|1|112|736

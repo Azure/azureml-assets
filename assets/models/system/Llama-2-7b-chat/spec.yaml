@@ -13,8 +13,7 @@ properties:
   finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: chat-completion
   azureml.copyRegistryFilesToWorkspace: true
-  SharedComputeCapacityEnabled: true
-
+  SharedComputeCapacityEnabled: "True"
 tags:
   Featured: ""
   license: custom
@@ -27,7 +26,7 @@ tags:
   FinetuneRetirementDate: '2025-06-30'
   hiddenlayerscanned: ""
   disable-batch: "true"
-  maas-inference: true
+  maas-inference: "true"
   SharedComputeCapacityEnabled: ""
   training_datasets: Publicly available sources
   finetune_compute_allow_list:
