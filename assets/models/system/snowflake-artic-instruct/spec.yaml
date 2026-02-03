@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: snowflake-arctic-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   inference-min-sku-spec: 96|12|1900|1024
   inference-recommended-sku: Standard_ND96isr_H100_v5
 tags:

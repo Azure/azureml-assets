@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: roberta-base-openai-detector
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: f5444000d615d1366ab9432a981035c58c57d55f
   evaluation-min-sku-spec: 4|0|28|56
   inference-min-sku-spec: 2|0|8|32

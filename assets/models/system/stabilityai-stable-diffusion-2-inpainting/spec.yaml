@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: stabilityai-stable-diffusion-2-inpainting
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 81a84f49b15956b60b4272a405ad3daef3da4590
   inference-min-sku-spec: 6|1|112|736
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4

@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Facebook-DinoV2-Image-Embeddings-ViT-Giant
 path: ./
 properties:
-    SharedComputeCapacityEnabled: true
+    SharedComputeCapacityEnabled: "True"
     inference-min-sku-spec: 4|0|14|28
     inference-recommended-sku: Standard_DS3_v2,
         Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
