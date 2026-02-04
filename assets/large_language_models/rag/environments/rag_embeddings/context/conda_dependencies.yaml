@@ -3,7 +3,7 @@ channels:
 - conda-forge
 - anaconda
 dependencies:
-- python=3.9
+- python=3.10
 - pip=25.3
 - pip:
   - -c /pip_constraints.txt
@@ -37,9 +37,7 @@ dependencies:
   - unstructured # explicitly install for [document_parsing]
     # Other public packages
   - datasets~=2.10.1
-  # NOTE: ShaVulnMgmt currently recommends mlflow>=3.5.0 for GHSA-pgqp-8h46-6x4j,
-  # but public PyPI only provides up to 3.1.4 at time of writing.
-  - mlflow>=3.1.4
+  - mlflow>=3.5.0
   - polling2~=0.5.0
   - psutil~=5.8.0
   - pymssql==2.2.7
