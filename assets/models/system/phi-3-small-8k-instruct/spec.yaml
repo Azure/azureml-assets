@@ -30,7 +30,6 @@ tags:
   playgroundRateLimitTier:  "low"
   Featured: ""
   maas-inference: "true"
-  huggingface_model_id: ""
   license: MIT
   disable-batch: "true"
   task: chat-completion

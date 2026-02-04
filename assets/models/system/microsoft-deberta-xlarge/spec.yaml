@@ -17,7 +17,6 @@ tags:
   model_specific_defaults : {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   SharedComputeCapacityEnabled: ''
   task: fill-mask
-  datasets: ""
   huggingface_model_id: microsoft/deberta-xlarge
   hiddenlayerscanned: ""
   inference_compute_allow_list:

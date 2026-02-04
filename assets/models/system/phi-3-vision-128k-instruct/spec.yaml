@@ -13,7 +13,6 @@ tags:
   FinetuneDeprecationDate: '2025-06-30'
   FinetuneRetirementDate: '2025-08-30'
   Featured: ""
-  huggingface_model_id: ""
   license: MIT
   disable-batch: "true"
   deploymentOptions: "UnifiedEndpointMaaS, MaaP"
