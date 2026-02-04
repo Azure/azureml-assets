@@ -12,6 +12,6 @@ dependencies:
     - urllib3==2.6.3
     - paramiko==4.0.0
     - idna==3.11
-    - tqdm==4.67.2
+    - tqdm==4.67.3
     - wheel>=0.46.2
     - setuptools>=75.8.0
