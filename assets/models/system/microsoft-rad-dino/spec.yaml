@@ -27,5 +27,5 @@ tags:
   author: Microsoft
   task: embeddings
   industry: health-and-life-sciences
-  hiddenlayerscanned: "true"
+  hiddenlayerscanned: ""
 version: 3

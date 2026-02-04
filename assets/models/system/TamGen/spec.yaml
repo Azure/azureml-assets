@@ -18,7 +18,7 @@ tags:
   license: MIT
   author: Microsoft
   notes: "notes.md"
-  hiddenlayerscanned: "true"
+  hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
     [

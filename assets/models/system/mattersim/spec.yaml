@@ -16,7 +16,7 @@ tags:
   author: Microsoft
   evaluation: "evaluation.md"
   notes: "notes.md"
-  hiddenlayerscanned: "true"
+  hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
     [
