@@ -4,8 +4,6 @@
 """Behavioral tests for METEOR Score Evaluator."""
 
 import pytest
-from typing import Any, Dict
-from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.meteor_score.evaluator._meteor import MeteorScoreEvaluator
 
@@ -34,35 +32,35 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # region Test Data
     # Perfect match scenarios
     IDENTICAL_TEXT = "The quick brown fox jumps over the lazy dog."
-    
+
     # Synonym scenarios - METEOR should recognize these
     SYNONYM_GROUND_TRUTH = "The cat sat on the couch."
     SYNONYM_RESPONSE = "The cat sat on the sofa."  # sofa = synonym of couch
-    
+
     # Stemming scenarios - METEOR should recognize word stems
     STEM_GROUND_TRUTH = "The runner is running in the race."
     STEM_RESPONSE = "The runner ran in the race."  # ran = stem of running
-    
+
     # High similarity scenarios
     REFERENCE_TEXT = "The cat sat on the mat."
     SIMILAR_RESPONSE = "The cat is sitting on the mat."
-    
+
     # Low similarity scenarios
     DIFFERENT_RESPONSE = "A dog runs through the park quickly."
-    
+
     # Partial match scenarios
     PARTIAL_MATCH_GROUND_TRUTH = "Machine learning is a subset of artificial intelligence."
     PARTIAL_MATCH_RESPONSE = "Machine learning is part of AI technology."
-    
+
     # Multi-sentence scenarios
     MULTI_SENTENCE_GROUND_TRUTH = "Hello world. This is a test. Testing is important."
     MULTI_SENTENCE_RESPONSE = "Hello world. This is a test. Testing is crucial."
-    
+
     # Word order matters for METEOR (fragmentation penalty)
     ORDERED_GROUND_TRUTH = "The quick brown fox"
     ORDERED_RESPONSE = "The quick brown fox"
     REORDERED_RESPONSE = "brown quick The fox"  # Fragmented
-    
+
     # Edge cases
     EMPTY_STRING = ""
     SINGLE_WORD = "Hello"
@@ -70,29 +68,29 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     WHITESPACE_ONLY = "   "
     PUNCTUATION_ONLY = ".,!?;:"
     NUMBERS_ONLY = "12345"
-    
+
     # Case variations
     MIXED_CASE_LOWER = "hello world"
     MIXED_CASE_UPPER = "HELLO WORLD"
     MIXED_CASE_MIXED = "Hello World"
-    
+
     # Special characters
     SPECIAL_CHARS_TEXT = "Hello! How are you? I'm fine, thanks."
     UNICODE_TEXT = "café résumé naïve"
-    
+
     # Long text scenarios
     LONG_TEXT = "This is a very long text that contains many words and sentences. " * 10
-    
+
     # Technical text
     CODE_TEXT = "def hello_world(): print('Hello, World!')"
-    
+
     # Numeric text
     NUMERIC_TEXT = "The year 2024 has 365 days and 12 months."
-    
+
     # Paraphrase scenarios - METEOR should handle these well
     PARAPHRASE_GROUND_TRUTH = "The boy quickly ran to the store."
     PARAPHRASE_RESPONSE = "The boy ran quickly to the store."
-    
+
     # Complex synonym scenarios
     SYNONYM_COMPLEX_GROUND_TRUTH = "The automobile was fast."
     SYNONYM_COMPLEX_RESPONSE = "The car was quick."  # automobile=car, fast=quick (synonyms)
@@ -215,10 +213,10 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.ORDERED_GROUND_TRUTH,
             threshold=0.3,
         )
-        
+
         result_ordered = self._extract_and_print_result(results_ordered, "Ordered")
         result_reordered = self._extract_and_print_result(results_reordered, "Reordered")
-        
+
         # Ordered should have higher score than fragmented
         assert result_ordered["score"] > result_reordered["score"]
 
@@ -226,7 +224,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """Test completely reversed word order."""
         ground_truth = "one two three four five"
         reversed_response = "five four three two one"
-        
+
         results = self._run_evaluation(
             response=reversed_response,
             ground_truth=ground_truth,
@@ -276,10 +274,10 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             beta=1.0,
             threshold=0.1,
         )
-        
+
         result_high = self._extract_and_print_result(results_high_beta, "High Beta (5.0)")
         result_low = self._extract_and_print_result(results_low_beta, "Low Beta (1.0)")
-        
+
         self.assert_score_in_range(result_high)
         self.assert_score_in_range(result_low)
 
@@ -297,10 +295,10 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             gamma=0.2,
             threshold=0.1,
         )
-        
+
         result_high = self._extract_and_print_result(results_high_gamma, "High Gamma (0.8)")
         result_low = self._extract_and_print_result(results_low_gamma, "Low Gamma (0.2)")
-        
+
         self.assert_score_in_range(result_high)
         self.assert_score_in_range(result_low)
 

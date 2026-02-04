@@ -23,7 +23,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     - ROUGE-4: 4-gram overlap
     - ROUGE-5: 5-gram overlap
     - ROUGE-L: Longest common subsequence
-    
+
     Returns three metrics: precision, recall, and F1 score (each with separate thresholds).
     Scores range from 0 to 1, with higher being better.
     """
@@ -36,37 +36,37 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # region Test Data
     # Perfect match scenarios
     IDENTICAL_TEXT = "The quick brown fox jumps over the lazy dog."
-    
+
     # High similarity scenarios
     REFERENCE_TEXT = "The cat sat on the mat."
     SIMILAR_RESPONSE = "The cat is sitting on the mat."
-    
+
     # Low similarity scenarios
     DIFFERENT_RESPONSE = "A dog runs through the park quickly."
-    
+
     # Partial match scenarios
     PARTIAL_MATCH_GROUND_TRUTH = "Machine learning is a subset of artificial intelligence."
     PARTIAL_MATCH_RESPONSE = "Machine learning is part of AI technology."
-    
+
     # Multi-sentence scenarios
     MULTI_SENTENCE_GROUND_TRUTH = "Hello world. This is a test. Testing is important."
     MULTI_SENTENCE_RESPONSE = "Hello world. This is a test. Testing is crucial."
-    
+
     # N-gram specific test data
     # For ROUGE-2 (bigram) testing
     BIGRAM_GROUND_TRUTH = "the cat sat on the mat"
     BIGRAM_PERFECT_RESPONSE = "the cat sat on the mat"
     BIGRAM_PARTIAL_RESPONSE = "the cat ran on the floor"  # "the cat" and "on the" match
     BIGRAM_NO_MATCH_RESPONSE = "a dog walks in a park"  # No bigram matches
-    
+
     # For ROUGE-L (longest common subsequence) testing
     LCS_GROUND_TRUTH = "police killed the gunman"
     LCS_RESPONSE = "police kill the gunman"  # LCS = "police the gunman"
-    
+
     # Word order matters for n-grams
     ORDERED_TEXT = "apple banana cherry date elderberry"
     REVERSED_TEXT = "elderberry date cherry banana apple"
-    
+
     # Edge cases
     EMPTY_STRING = ""
     SINGLE_WORD = "Hello"
@@ -74,28 +74,28 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     WHITESPACE_ONLY = "   "
     PUNCTUATION_ONLY = ".,!?;:"
     NUMBERS_ONLY = "12345"
-    
+
     # Short texts for higher n-gram tests
     SHORT_TEXT = "cat sat"  # Only 2 words - no trigrams possible
     THREE_WORD_TEXT = "the cat sat"  # 3 words - exactly 1 trigram
-    
+
     # Case variations
     MIXED_CASE_LOWER = "hello world test"
     MIXED_CASE_UPPER = "HELLO WORLD TEST"
     MIXED_CASE_MIXED = "Hello World Test"
-    
+
     # Special characters
     SPECIAL_CHARS_TEXT = "Hello! How are you? I'm fine, thanks."
     UNICODE_TEXT = "café résumé naïve"
-    
+
     # Long text scenarios
     LONG_TEXT = "This is a very long text that contains many words and sentences. " * 10
-    
+
     # Precision vs Recall test data
     # Short response (high precision, low recall)
     HIGH_PRECISION_RESPONSE = "cat sat"
     HIGH_PRECISION_GROUND_TRUTH = "the big fluffy cat sat on the soft mat"
-    
+
     # Long response (low precision, high recall)
     LOW_PRECISION_RESPONSE = "the big fluffy cat sat on the soft mat with many extra words added"
     LOW_PRECISION_GROUND_TRUTH = "cat sat mat"
@@ -313,10 +313,10 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.REFERENCE_TEXT,
             rouge_type=RougeType.ROUGE_2,
         )
-        
+
         result1 = self._extract_and_print_result(results_rouge1, "Higher N-gram ROUGE-1")
         result2 = self._extract_and_print_result(results_rouge2, "Higher N-gram ROUGE-2")
-        
+
         # ROUGE-1 should generally have higher or equal score than ROUGE-2 for partial matches
         assert result1["f1_score"] >= result2["f1_score"]
 
@@ -369,12 +369,12 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             f1_score_threshold=0.5,    # Medium
         )
         result_data = self._extract_and_print_result(results, "Separate Thresholds")
-        
+
         # Check thresholds are stored correctly
         assert result_data["precision_threshold"] == 0.1
         assert result_data["recall_threshold"] == 0.9
         assert result_data["f1_threshold"] == 0.5
-        
+
         # Precision should pass with low threshold
         assert result_data["precision_result"] == "pass"
         # Recall should fail with high threshold
@@ -411,7 +411,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """Test with default thresholds (0.5 for all)."""
         evaluator = RougeScoreEvaluator(rouge_type=RougeType.ROUGE_1)
         results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
-        
+
         assert results["rouge_precision_threshold"] == 0.5
         assert results["rouge_recall_threshold"] == 0.5
         assert results["rouge_f1_score_threshold"] == 0.5
@@ -431,10 +431,10 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.ORDERED_TEXT,
             rouge_type=RougeType.ROUGE_2,
         )
-        
+
         result_ordered = self._extract_and_print_result(results_ordered, "Word Order - Ordered")
         result_reversed = self._extract_and_print_result(results_reversed, "Word Order - Reversed")
-        
+
         # Ordered should have perfect score
         assert result_ordered["f1_score"] == 1.0
         # Reversed should have lower score for bigrams
@@ -452,10 +452,10 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.ORDERED_TEXT,
             rouge_type=RougeType.ROUGE_2,
         )
-        
+
         result1 = self._extract_and_print_result(results_rouge1, "Order Effect ROUGE-1")
         result2 = self._extract_and_print_result(results_rouge2, "Order Effect ROUGE-2")
-        
+
         # ROUGE-1 (unigrams) should still be perfect for reversed words
         assert result1["f1_score"] == 1.0
         # ROUGE-2 (bigrams) should be much lower
@@ -492,7 +492,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.EMPTY_STRING,
             rouge_type=RougeType.ROUGE_1,
         )
-        result_data = self._extract_and_print_result(results, "Both Empty")
+        self._extract_and_print_result(results, "Both Empty")
         # Both empty - scores may be 0 or NaN
 
     def test_single_word(self):
@@ -512,7 +512,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.SINGLE_WORD,
             rouge_type=RougeType.ROUGE_2,
         )
-        result_data = self._extract_and_print_result(results, "Single Word ROUGE-2")
+        self._extract_and_print_result(results, "Single Word ROUGE-2")
         # No bigrams in single word
 
     def test_short_text_higher_ngrams(self):
@@ -523,7 +523,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.SHORT_TEXT,
             rouge_type=RougeType.ROUGE_3,
         )
-        result_data = self._extract_and_print_result(results, "Short Text ROUGE-3")
+        self._extract_and_print_result(results, "Short Text ROUGE-3")
         # No trigrams possible in 2-word text
 
     def test_whitespace_only(self):
@@ -533,7 +533,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.REFERENCE_TEXT,
             rouge_type=RougeType.ROUGE_1,
         )
-        result_data = self._extract_and_print_result(results, "Whitespace Only")
+        self._extract_and_print_result(results, "Whitespace Only")
 
     def test_punctuation_only(self):
         """Test with punctuation-only text."""
@@ -542,7 +542,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.PUNCTUATION_ONLY,
             rouge_type=RougeType.ROUGE_1,
         )
-        result_data = self._extract_and_print_result(results, "Punctuation Only")
+        self._extract_and_print_result(results, "Punctuation Only")
 
     # ==================== CASE SENSITIVITY TESTS ====================
 
@@ -734,11 +734,11 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             rouge_type=RougeType.ROUGE_1,
         )
         result_data = self._extract_and_print_result(results, "F1 Harmonic Mean")
-        
+
         p = result_data["precision"]
         r = result_data["recall"]
         f1 = result_data["f1_score"]
-        
+
         if p > 0 and r > 0:
             expected_f1 = 2 * (p * r) / (p + r)
             assert abs(f1 - expected_f1) < 0.0001
@@ -757,8 +757,8 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.REFERENCE_TEXT,
             rouge_type=RougeType.ROUGE_1,
         )
-        
+
         result_similar = self._extract_and_print_result(results_similar, "Similar Text")
         result_different = self._extract_and_print_result(results_different, "Different Text")
-        
+
         assert result_similar["f1_score"] > result_different["f1_score"]

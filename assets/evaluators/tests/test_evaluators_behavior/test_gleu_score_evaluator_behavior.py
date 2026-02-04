@@ -4,8 +4,6 @@
 """Behavioral tests for GLEU Score Evaluator."""
 
 import pytest
-from typing import Any, Dict
-from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.gleu_score.evaluator._gleu import GleuScoreEvaluator
 
@@ -27,22 +25,22 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # region Test Data
     # Perfect match scenarios
     IDENTICAL_TEXT = "The quick brown fox jumps over the lazy dog."
-    
+
     # High similarity scenarios
     REFERENCE_TEXT = "The cat sat on the mat."
     SIMILAR_RESPONSE = "The cat is sitting on the mat."
-    
+
     # Low similarity scenarios
     DIFFERENT_RESPONSE = "A dog runs through the park quickly."
-    
+
     # Partial match scenarios
     PARTIAL_MATCH_REFERENCE = "Machine learning is a subset of artificial intelligence."
     PARTIAL_MATCH_RESPONSE = "Machine learning is part of AI technology."
-    
+
     # Multi-sentence scenarios
     MULTI_SENTENCE_REFERENCE = "Hello world. This is a test. Testing is important."
     MULTI_SENTENCE_RESPONSE = "Hello world. This is a test. Testing is crucial."
-    
+
     # Edge cases
     EMPTY_STRING = ""
     SINGLE_WORD = "Hello"
@@ -50,35 +48,35 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     WHITESPACE_ONLY = "   "
     PUNCTUATION_ONLY = ".,!?;:"
     NUMBERS_ONLY = "12345"
-    
+
     # Case sensitivity
     MIXED_CASE_LOWER = "hello world"
     MIXED_CASE_UPPER = "HELLO WORLD"
     MIXED_CASE_MIXED = "Hello World"
-    
+
     # Special characters
     SPECIAL_CHARS_TEXT = "Hello! How are you? I'm fine, thanks."
     UNICODE_TEXT = "こんにちは世界"  # Japanese "Hello World"
     UNICODE_TEXT_SIMILAR = "こんにちは"  # Japanese "Hello"
     EMOJI_TEXT = "Hello 👋 World 🌍"
-    
+
     # Long text scenarios
     LONG_REFERENCE = "This is a very long reference text that contains many words and sentences. " * 10
     LONG_RESPONSE = "This is a very long reference text that contains many words and sentences. " * 10
-    
+
     # Technical text
     CODE_REFERENCE = "def hello_world(): print('Hello, World!')"
     CODE_RESPONSE = "def hello_world(): print('Hello, World!')"
-    
+
     # Numeric text
     NUMERIC_REFERENCE = "The year 2024 has 365 days and 12 months."
     NUMERIC_RESPONSE = "The year 2024 has 365 days and 12 months."
-    
+
     # N-gram specific tests
     BIGRAM_TEST_REF = "the cat sat"
     BIGRAM_TEST_SIMILAR = "the cat sat down"
     BIGRAM_TEST_DIFFERENT = "sat cat the"  # Same words but different n-grams
-    
+
     # Word order matters for GLEU (n-gram based)
     ORDERED_TEXT = "apple banana cherry date"
     REVERSED_TEXT = "date cherry banana apple"
@@ -175,7 +173,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_ordered = self._extract_and_print_result(results_ordered, "Ordered Text")
         result_reversed = self._extract_and_print_result(results_reversed, "Reversed Text")
-        
+
         # Ordered should have perfect score
         assert result_ordered["score"] >= 0.9
         # Reversed should have lower score due to n-gram mismatch
@@ -609,11 +607,11 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """Test that GLEU behaves as expected (balances precision and recall)."""
         # GLEU should give credit for both precision and recall
         # Unlike BLEU which focuses mainly on precision
-        
+
         # Short response with perfect precision but low recall
         short_response = "cat"
         long_ground_truth = "the cat sat on the mat in the house"
-        
+
         results = self._run_evaluation(
             response=short_response,
             ground_truth=long_ground_truth,
@@ -636,7 +634,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result1 = self._extract_and_print_result(results1, "GLEU Order 1")
         result2 = self._extract_and_print_result(results2, "GLEU Order 2")
-        
+
         # Both should have valid scores (may not be identical due to GLEU's formula)
         self.assert_score_in_range(result1)
         self.assert_score_in_range(result2)

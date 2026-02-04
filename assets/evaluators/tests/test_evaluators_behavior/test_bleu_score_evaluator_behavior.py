@@ -4,7 +4,6 @@
 """Behavioral tests for BLEU Score Evaluator."""
 
 import pytest
-from typing import Any, Dict
 from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.bleu_score.evaluator._bleu import BleuScoreEvaluator
@@ -24,22 +23,22 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # region Test Data
     # Perfect match scenarios
     IDENTICAL_TEXT = "The quick brown fox jumps over the lazy dog."
-    
+
     # High similarity scenarios
     REFERENCE_TEXT = "The cat sat on the mat."
     SIMILAR_RESPONSE = "The cat is sitting on the mat."
-    
+
     # Low similarity scenarios
     DIFFERENT_RESPONSE = "A dog runs through the park quickly."
-    
+
     # Partial match scenarios
     PARTIAL_MATCH_REFERENCE = "Machine learning is a subset of artificial intelligence."
     PARTIAL_MATCH_RESPONSE = "Machine learning is part of AI technology."
-    
+
     # Multi-sentence scenarios
     MULTI_SENTENCE_REFERENCE = "Hello world. This is a test. Testing is important."
     MULTI_SENTENCE_RESPONSE = "Hello world. This is a test. Testing is crucial."
-    
+
     # Edge cases
     EMPTY_STRING = ""
     SINGLE_WORD = "Hello"
@@ -50,21 +49,21 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     MIXED_CASE_LOWER = "hello world"
     MIXED_CASE_UPPER = "HELLO WORLD"
     MIXED_CASE_MIXED = "Hello World"
-    
+
     # Special characters
     SPECIAL_CHARS_TEXT = "Hello! How are you? I'm fine, thanks."
     UNICODE_TEXT = "こんにちは世界"  # Japanese "Hello World"
     UNICODE_TEXT_SIMILAR = "こんにちは"  # Japanese "Hello"
     EMOJI_TEXT = "Hello 👋 World 🌍"
-    
+
     # Long text scenarios
     LONG_REFERENCE = "This is a very long reference text that contains many words and sentences. " * 10
     LONG_RESPONSE = "This is a very long reference text that contains many words and sentences. " * 10
-    
+
     # Technical text
     CODE_REFERENCE = "def hello_world(): print('Hello, World!')"
     CODE_RESPONSE = "def hello_world(): print('Hello, World!')"
-    
+
     # Numeric text
     NUMERIC_REFERENCE = "The year 2024 has 365 days and 12 months."
     NUMERIC_RESPONSE = "The year 2024 has 365 days and 12 months."

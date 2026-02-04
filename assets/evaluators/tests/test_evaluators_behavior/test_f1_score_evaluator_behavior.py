@@ -4,8 +4,6 @@
 """Behavioral tests for F1 Score Evaluator."""
 
 import pytest
-from typing import Any, Dict
-from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.f1_score.evaluator._f1_score import F1ScoreEvaluator
 
@@ -30,64 +28,64 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # region Test Data
     # Perfect match scenarios
     IDENTICAL_TEXT = "The quick brown fox jumps over the lazy dog."
-    
+
     # High similarity scenarios
     REFERENCE_TEXT = "The cat sat on the mat."
     SIMILAR_RESPONSE = "The cat is sitting on the mat."
-    
+
     # Low similarity scenarios
     DIFFERENT_RESPONSE = "A dog runs through the park quickly."
-    
+
     # Partial overlap scenarios
     PARTIAL_OVERLAP_GROUND_TRUTH = "Machine learning is a subset of artificial intelligence."
     PARTIAL_OVERLAP_RESPONSE = "Machine learning is used in artificial systems."
-    
+
     # Articles test (a, an, the are removed)
     WITH_ARTICLES = "The cat sat on a mat and ate an apple."
     WITHOUT_ARTICLES = "cat sat on mat and ate apple."
-    
+
     # Punctuation test
     WITH_PUNCTUATION = "Hello, world! How are you? I'm fine, thanks."
     WITHOUT_PUNCTUATION = "Hello world How are you Im fine thanks"
-    
+
     # Case sensitivity test
     UPPER_CASE = "HELLO WORLD"
     LOWER_CASE = "hello world"
     MIXED_CASE = "HeLLo WoRLd"
-    
+
     # Word order test (F1 is bag-of-words, order doesn't matter)
     ORIGINAL_ORDER = "apple banana cherry"
     REVERSED_ORDER = "cherry banana apple"
-    
+
     # Duplicate words test
     WITH_DUPLICATES = "the cat cat cat sat on the mat mat"
-    
+
     # Empty and whitespace
     EMPTY_STRING = ""
     WHITESPACE_ONLY = "   "
     SINGLE_WORD = "hello"
-    
+
     # Numbers
     NUMERIC_TEXT = "The year 2024 has 365 days and 12 months."
-    
+
     # Special characters
     SPECIAL_CHARS_TEXT = "Hello! How are you? I'm fine, thanks."
-    
+
     # Long text
     LONG_TEXT = "This is a very long text that contains many words. " * 10
-    
+
     # Subset scenarios
     SUBSET_GROUND_TRUTH = "cat mat"
     SUPERSET_RESPONSE = "the big fluffy cat sat on the soft mat"
-    
+
     # No overlap
     NO_OVERLAP_TEXT1 = "apple banana cherry"
     NO_OVERLAP_TEXT2 = "dog elephant frog"
-    
+
     # Single common word
     SINGLE_COMMON_1 = "hello world"
     SINGLE_COMMON_2 = "hello universe"
-    
+
     # Unicode text
     UNICODE_TEXT = "café résumé naïve"
     # endregion

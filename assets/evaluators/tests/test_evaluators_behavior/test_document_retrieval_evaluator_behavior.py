@@ -155,8 +155,8 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             test_label: Descriptive label for the test (printed in output).
         """
         result = super()._extract_and_print_result(results, test_label)
-        
-        # Document Retrieval Evaluator specific fields        
+
+        # Document Retrieval Evaluator specific fields
         ndcg = results.get("ndcg@3")
         xdcg = results.get("xdcg@3")
         fidelity = results.get("fidelity")
@@ -194,7 +194,6 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             print(f"  Total Ground Truth Documents: {total_ground_truth}")
             result["total_ground_truth"] = total_ground_truth
         return result
-
 
     def assert_valid_metrics(self, result_data: Dict[str, Any]):
         """Assert that all metrics are present and valid."""

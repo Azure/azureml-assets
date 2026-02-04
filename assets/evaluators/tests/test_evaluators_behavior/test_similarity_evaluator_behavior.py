@@ -42,7 +42,9 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
     # High similarity scenario (score 5)
     HIGH_SIM_GROUND_TRUTH = "Regular exercise can help maintain a healthy weight, increase muscle strength."
-    HIGH_SIM_RESPONSE = "Routine physical activity can contribute to maintaining ideal body weight, enhancing muscle strength."
+    HIGH_SIM_RESPONSE = (
+        "Routine physical activity can contribute to maintaining ideal body weight, enhancing muscle strength."
+    )
 
     # Moderate similarity scenario (score 3-4)
     MODERATE_SIM_GROUND_TRUTH = "The Earth orbits the Sun, causing seasons due to axial tilt."
