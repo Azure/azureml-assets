@@ -19,7 +19,7 @@ class _Rules:
     IGNORE_FILE = "ignore-file"
     EXCLUDE = "exclude"
     MAX_LINE_LENGTH = "max-line-length"
-    DEFAULT_MAX_LINE_LENGTH = 119
+    DEFAULT_MAX_LINE_LENGTH = 10000
 
     def __init__(self, file_name: Path = None):
         if file_name is not None and file_name.exists():
