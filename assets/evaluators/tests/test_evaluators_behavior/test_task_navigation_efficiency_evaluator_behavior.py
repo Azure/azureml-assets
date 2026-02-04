@@ -4,8 +4,9 @@
 """Behavioral tests for Task Navigation Efficiency Evaluator."""
 
 import pytest
-from typing import Any, Dict, List
+from typing import Any, Dict, List, override
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory
+from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.task_navigation_efficiency.evaluator._task_navigation_efficiency import (
     TaskNavigationEfficiencyEvaluator,
     TaskNavigationEfficiencyMatchingMode,
@@ -13,7 +14,7 @@ from ...builtin.task_navigation_efficiency.evaluator._task_navigation_efficiency
 
 
 @pytest.mark.unittest
-class TestTaskNavigationEfficiencyEvaluatorBehavior:
+class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
     """
     Behavioral tests for Task Navigation Efficiency Evaluator.
 
@@ -21,6 +22,8 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
     """
 
     evaluator_type = TaskNavigationEfficiencyEvaluator
+    result_key = "task_navigation_efficiency"
+    constructor_arg_names = ["matching_mode"]
 
     # region Test Data
     VALID_ACTIONS: List[Dict[str, Any]] = [
@@ -252,36 +255,17 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
     STRING_ACTIONS: str = "assistant used tools A and B"
     # endregion
 
-    def _init_evaluator(
-        self, matching_mode: TaskNavigationEfficiencyMatchingMode = TaskNavigationEfficiencyMatchingMode.EXACT_MATCH
-    ) -> TaskNavigationEfficiencyEvaluator:
-        """Create evaluator instance."""
-        return TaskNavigationEfficiencyEvaluator(matching_mode=matching_mode)
-
-    def _run_evaluation(
-        self, actions: List[Dict[str, Any]], expected_actions, matching_mode: TaskNavigationEfficiencyMatchingMode
-    ) -> Dict[str, Any]:
-        """Run evaluation and return results."""
-        evaluator = self._init_evaluator(matching_mode=matching_mode)
-
-        try:
-            results = evaluator(actions=actions, expected_actions=expected_actions)
-            return results
-        except EvaluationException as e:
-            print(f"Error during evaluation: {e}")
-            return {
-                "task_navigation_efficiency_error_message": str(e),
-                "task_navigation_efficiency_error_type": e.category.name,
-            }
-        except Exception as e:
-            print(f"Unexpected error during evaluation: {e}")
-            return {
-                "task_navigation_efficiency_error_message": str(e),
-                "task_navigation_efficiency_error_type": type(e).__name__,
-            }
-
+    @override
     def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
-        """Extract result fields and print them."""
+        """Extract result fields specific for Task Navigation Efficiency Evaluator and print them.
+
+        Args:
+            results: Raw evaluation results from the evaluator.
+            test_label: Label for the test (used in print output).
+
+        Returns:
+            Dictionary with standardized result fields.
+        """
         label = results.get("task_navigation_efficiency_label")
         result = results.get("task_navigation_efficiency_result")
         details = results.get("task_navigation_efficiency_details")
@@ -303,6 +287,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
             "error_type": error_type,
         }
 
+    @override
     def assert_pass(self, result_data: Dict[str, Any]):
         """Assert a passing result."""
         assert result_data["result"] == "pass"
@@ -312,12 +297,14 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
         assert "recall_score" in result_data["details"]
         assert "f1_score" in result_data["details"]
 
+    @override
     def assert_fail(self, result_data: Dict[str, Any]):
         """Assert a failing result."""
         assert result_data["result"] == "fail"
         assert result_data["label"] is False
         assert result_data["details"] is not None
 
+    @override
     def assert_error(self, result_data: Dict[str, Any], error_type: str = None):
         """Assert an error result."""
         assert result_data["label"] is None

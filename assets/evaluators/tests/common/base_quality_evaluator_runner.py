@@ -6,7 +6,7 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from .base_evaluator_runner import BaseEvaluatorRunner
+from .base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 
 
 # Type aliases for clarity
@@ -24,11 +24,11 @@ class ExpectedResult(Enum):
     PASS_OR_FAIL = "pass_or_fail"
 
 
-class BaseQualityEvaluatorRunner(BaseEvaluatorRunner):
+class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
     """
     Base class for quality tests that use real LLM flow execution.
 
-    This is a thin wrapper around BaseEvaluatorRunner that disables mocking
+    This is a thin wrapper around BasePromptyEvaluatorRunner that disables mocking
     and provides convenience methods for quality testing.
 
     Subclasses should implement:
