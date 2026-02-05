@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Salesforce-BLIP-2-opt-2-7b-vqa
 path: ./
 properties:
-    SharedComputeCapacityEnabled: true
+    SharedComputeCapacityEnabled: "True"
     SHA: 6e723d92ee91ebcee4ba74d7017632f11ff4217b
     inference-min-sku-spec: 4|0|32|64
     inference-recommended-sku: Standard_DS5_v2, Standard_D8a_v4, Standard_D8as_v4,
@@ -17,7 +17,7 @@ properties:
         Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
 tags:
    Preview: ''
-   license: mit
+   license: MIT
    task: visual-question-answering
    SharedComputeCapacityEnabled: ""
    huggingface_model_id: Salesforce/blip2-opt-2.7b
