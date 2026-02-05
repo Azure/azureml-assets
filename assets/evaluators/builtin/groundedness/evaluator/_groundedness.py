@@ -6,7 +6,11 @@ import logging
 from typing import Dict, List, Optional, Union, Any
 
 from typing_extensions import overload, override
-from azure.ai.evaluation._legacy._adapters._flows import AsyncPrompty
+
+if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
+    from promptflow.core._flow import AsyncPrompty
+else:
+    from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
