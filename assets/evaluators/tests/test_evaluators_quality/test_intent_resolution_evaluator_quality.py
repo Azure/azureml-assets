@@ -382,12 +382,9 @@ class TestIntentResolutionEvaluatorQuality(BaseQualityEvaluatorRunner):
         Note: This may score low since the actual intent (booking) was not fulfilled,
         even though the response was helpful given the constraints.
         """
-        # The evaluator may score this low since the booking intent was not fulfilled,
-        # even though the response was helpful. This is a valid interpretation.
-        # TODO: Decide if this should pass or fail based on intended behavior.
         self.run_quality_test(
             test_label="Edge case-Polite inability with alternative",
-            expected=ExpectedResult.PASS_OR_FAIL,
+            expected=ExpectedResult.FAIL,
             query="Book me a table at The French Laundry for tonight.",
             response=(
                 "I'm unable to make reservations directly, but The French Laundry typically "

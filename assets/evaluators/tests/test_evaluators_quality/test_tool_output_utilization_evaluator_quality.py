@@ -316,6 +316,71 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
             ],
         )
 
+    def test_pass_order_status_with_system_message(self) -> None:
+        """Test case: PASS - Agent correctly reports order status from tool output with system message."""
+        self.run_quality_test(
+            test_label="PASS-order-status-with-system-message",
+            expected=ExpectedResult.PASS,
+            query=[
+                {
+                    "role": "system",
+                    "content": "You are a customer service assistant helping with order inquiries.",
+                },
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "What's the status of order #12345?"}],
+                },
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_456",
+                            "name": "get_order_status",
+                            "arguments": {"order_id": "12345"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_456",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"order_id": "12345", "status": "shipped", '
+                                '"tracking_number": "1Z999AA1234567890", "estimated_delivery": "2024-10-03"}'
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Your order #12345 has been shipped! The tracking number is 1Z999AA1234567890 "
+                                "and it's estimated to arrive on October 3rd, 2024."
+                            ),
+                        }
+                    ],
+                },
+            ],
+            tool_definitions=[
+                {
+                    "name": "get_order_status",
+                    "description": "Retrieves current status and details for an order",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"order_id": {"type": "string"}},
+                    },
+                }
+            ],
+        )
+
     # ==================== FAIL CASES ====================
 
     def test_fail_unit_misinterpretation(self) -> None:
@@ -719,6 +784,146 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "type": "object",
                         "properties": {"payment_id": {"type": "string", "description": "Payment ID"}},
                         "required": ["payment_id"],
+                    },
+                }
+            ],
+        )
+
+    def test_fail_selective_reporting_medical_results(self) -> None:
+        """Test case: FAIL - Agent selectively reports only normal values, ignoring high glucose."""
+        self.run_quality_test(
+            test_label="FAIL-selective-reporting-medical-results",
+            expected=ExpectedResult.FAIL,
+            query=[
+                {
+                    "role": "system",
+                    "content": "You are a medical assistant helping patients understand their test results.",
+                },
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "What do my latest blood test results show?"}],
+                },
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_303",
+                            "name": "get_lab_results",
+                            "arguments": {"patient_id": "PAT123", "test_type": "comprehensive_metabolic_panel"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_303",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"patient_id": "PAT123", "test_date": "2024-09-25", '
+                                '"results": {"glucose": {"value": 180, "unit": "mg/dL", '
+                                '"reference_range": "70-100", "status": "HIGH"}, '
+                                '"cholesterol": {"value": 95, "unit": "mg/dL", '
+                                '"reference_range": "less than 200", "status": "NORMAL"}}}'
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Your blood test results from September 25th show that your cholesterol level is "
+                                "95 mg/dL, which is in the normal range (should be less than 200). "
+                                "Everything looks good!"
+                            ),
+                        }
+                    ],
+                },
+            ],
+            tool_definitions=[
+                {
+                    "name": "get_lab_results",
+                    "description": "Retrieves laboratory test results for a patient",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "patient_id": {"type": "string"},
+                            "test_type": {"type": "string"},
+                        },
+                    },
+                }
+            ],
+        )
+
+    def test_fail_fabricates_after_tool_error(self) -> None:
+        """Test case: FAIL - Agent fabricates availability info after tool returns error."""
+        self.run_quality_test(
+            test_label="FAIL-fabricates-after-tool-error",
+            expected=ExpectedResult.FAIL,
+            query=[
+                {
+                    "role": "system",
+                    "content": "You are an e-commerce assistant helping customers check product availability.",
+                },
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "Is the blue iPhone 15 Pro in stock?"}],
+                },
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_101",
+                            "name": "check_inventory",
+                            "arguments": {"product_id": "iphone15pro-blue", "color": "blue"},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_101",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '{"error": "Error executing function \'check_inventory\': '
+                                'Network timeout while accessing inventory service"}'
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Yes, the blue iPhone 15 Pro is currently available but in limited stock. "
+                                "Would you like me to help you place an order before it sells out?"
+                            ),
+                        }
+                    ],
+                },
+            ],
+            tool_definitions=[
+                {
+                    "name": "check_inventory",
+                    "description": "Checks current inventory status for a product",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "product_id": {"type": "string"},
+                            "color": {"type": "string"},
+                        },
                     },
                 }
             ],

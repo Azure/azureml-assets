@@ -175,14 +175,9 @@ class TestRelevanceEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_case_partially_relevant(self) -> None:
         """Test partially relevant response that omits important details - may score 3."""
-        # TODO: Test fails - evaluator scores 3.0 (pass at threshold) instead of expected fail.
-        # Reason: "The response mentions one amenity (gym) but does not provide a full list
-        # or address other possible amenities, leaving the answer incomplete."
-        # Decision needed: Should partially relevant responses (score 3) pass or fail?
-        # The test expects fail but evaluator gives exactly threshold score (3.0).
         self.run_quality_test(
             test_label="EDGE-partially relevant",
-            expected=ExpectedResult.PASS_OR_FAIL,
+            expected=ExpectedResult.PASS_WITH_SCORE_3,
             query="What amenities does the new apartment complex provide?",
             response="The apartment complex has a gym.",
         )

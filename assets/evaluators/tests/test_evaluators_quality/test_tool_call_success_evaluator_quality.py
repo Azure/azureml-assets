@@ -132,6 +132,62 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
             tool_definitions=[ToolDefinitions.GET_FILES_IN_FOLDER],
         )
 
+    @pytest.mark.flaky(reruns=3)
+    def test_pass_empty_json_fields(self) -> None:
+        """Test case: PASS - Tool returns JSON object with all empty fields."""
+        self.run_quality_test(
+            test_label="Pass-empty-json-fields",
+            expected=ExpectedResult.PASS,
+            query=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Get user profile for user 12345",
+                        }
+                    ],
+                }
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_user",
+                            "arguments": {"user_id": 12345},
+                        }
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": {
+                                "name": "",
+                                "email": "",
+                                "status": "",
+                            },
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "The user profile appears to be empty.",
+                        }
+                    ],
+                },
+            ],
+            tool_definitions=[ToolDefinitions.GET_USER],
+        )
+
     # ==================== FAIL CASES ====================
 
     def test_fail_single_call_error(self) -> None:
@@ -333,67 +389,6 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
                 },
             ],
             tool_definitions=[ToolDefinitions.GET_CURRENT_TIME],
-        )
-
-    @pytest.mark.flaky(reruns=3)
-    def test_fail_empty_json_fields(self) -> None:
-        """Test case: FAIL - Tool returns JSON object with all empty fields."""
-        # TODO: Test fails - score: 1
-        # Reason: "The tool result contains no error indicators
-        # (no exception, timeout, or explicit error message);
-        # it returns an empty object with expected fields,
-        # which is treated as a technical success."
-        self.run_quality_test(
-            test_label="FAIL-empty-json-fields",
-            expected=ExpectedResult.PASS_OR_FAIL,
-            query=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "Get user profile for user 12345",
-                        }
-                    ],
-                }
-            ],
-            response=[
-                {
-                    "role": "assistant",
-                    "content": [
-                        {
-                            "type": "tool_call",
-                            "tool_call_id": "call_1",
-                            "name": "get_user",
-                            "arguments": {"user_id": 12345},
-                        }
-                    ],
-                },
-                {
-                    "role": "tool",
-                    "tool_call_id": "call_1",
-                    "content": [
-                        {
-                            "type": "tool_result",
-                            "tool_result": {
-                                "name": "",
-                                "email": "",
-                                "status": "",
-                            },
-                        }
-                    ],
-                },
-                {
-                    "role": "assistant",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "The user profile appears to be empty.",
-                        }
-                    ],
-                },
-            ],
-            tool_definitions=[ToolDefinitions.GET_USER],
         )
 
     def test_fail_exception_object(self) -> None:
@@ -766,16 +761,9 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
     @pytest.mark.flaky(reruns=3)
     def test_edge_retry_after_failure(self) -> None:
         """Test case: EDGE - Tool call fails then retried successfully."""
-        # TODO: Test fails - Score: 0.
-        # Reason: "One of the tool calls to GetWeather failed with an error
-        # (Temporary network issue), indicating a technical fault.
-        # Although the second call returned valid weather data, any failed tool makes the overall evaluation fail.
-        # {'failed_tools': 'GetWeather'}"
-        # Decision needed: Should a successful retry after initial failure pass,
-        # or does any failed tool call in the conversation mean overall failure?
         self.run_quality_test(
             test_label="EDGE-retry-after-failure",
-            expected=ExpectedResult.PASS_OR_FAIL,
+            expected=ExpectedResult.FAIL,
             query=[
                 {
                     "role": "user",

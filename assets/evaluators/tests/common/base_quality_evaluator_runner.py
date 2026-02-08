@@ -22,6 +22,7 @@ class ExpectedResult(Enum):
     PASS = "pass"
     FAIL = "fail"
     PASS_OR_FAIL = "pass_or_fail"
+    PASS_WITH_SCORE_3 = "pass_with_score_3"
 
 
 class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
@@ -56,7 +57,7 @@ class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
 
         Args:
             test_label: Descriptive label for the test (printed in output).
-            expected: Expected result (PASS, FAIL, or PASS_OR_FAIL).
+            expected: Expected result (PASS, FAIL, PASS_OR_FAIL, or PASS_WITH_SCORE_3).
             query: User query - either a simple string or conversation format
                    (list of message dicts).
             response: Assistant response - either a simple string or conversation
@@ -108,5 +109,6 @@ class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
             self.assert_fail(result_data)
         elif expected == ExpectedResult.PASS_OR_FAIL:
             self.assert_pass_or_fail(result_data)
-
+        elif expected == ExpectedResult.PASS_WITH_SCORE_3:
+            self.assert_score_in_range(result_data, min_score=3, max_score=3)
         return result_data
