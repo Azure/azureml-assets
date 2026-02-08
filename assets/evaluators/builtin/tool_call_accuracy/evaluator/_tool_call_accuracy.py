@@ -326,26 +326,29 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
             # If there is an error message, return not applicable result
-            return self._not_applicable_result(eval_input.get("error_message"))
+            return self._not_applicable_result(eval_input.get("error_message"), self.threshold)
         # Do the evaluation
         result = await self._do_eval(eval_input)
         # Return the result
         return result
 
-    def _not_applicable_result(self, error_message):
+    def _not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict]]:
         """Return a result indicating that the tool call is not applicable for evaluation.
 
-        :param eval_input: The input to the evaluator.
-        :type eval_input: Dict
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float]]
         """
-        # If no tool calls were made or tool call type is not supported, return not applicable result
         return {
-            self._result_key: self._NOT_APPLICABLE_RESULT,
+            self._result_key: threshold,
             f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": self.threshold,
-            f"{self._result_key}_reason": error_message,
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_details": {},
         }
 

@@ -556,12 +556,11 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, Dict]]
         """
-        # If no tool calls were made or tool call type is not supported, return not applicable result
         return {
-            self._result_key: self._NOT_APPLICABLE_RESULT,
+            self._result_key: threshold,
             f"{self._result_key}_result": "pass",
             f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": error_message,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_details": {},
         }
 
