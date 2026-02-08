@@ -24,3 +24,5 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest):
     requires_tool_definitions = True
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.tool_calls_with_arguments
+
+    _additional_expected_field_suffixes = ["details"]

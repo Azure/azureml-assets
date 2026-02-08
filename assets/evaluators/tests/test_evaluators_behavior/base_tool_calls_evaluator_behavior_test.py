@@ -24,6 +24,8 @@ class BaseToolCallEvaluatorBehaviorTest(BaseToolsEvaluatorBehaviorTest):
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     """
 
+    _additional_expected_field_suffixes = ["details"]
+
     # Test Configs
     requires_tool_definitions = True
 

@@ -21,3 +21,5 @@ class TestTaskCompletionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest):
     evaluator_type = TaskCompletionEvaluator
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response
+
+    _additional_expected_field_suffixes = ["details"]

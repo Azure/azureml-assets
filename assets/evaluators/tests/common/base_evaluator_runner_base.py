@@ -137,12 +137,13 @@ class AbstractBaseEvaluatorRunner(ABC):
         Returns:
             Dictionary with standardized result fields.
         """
-        if f"{self.result_key}_error_message" not in results:
+        score = results.get(self.result_key)
+
+        if f"{self.result_key}_error_message" not in results and score != "not applicable":
             for field in self.expected_result_fields:
                 if field not in results:
                     raise ValueError(f"Expected result field '{field}' not found in results.")
 
-        score = results.get(self.result_key)
         label = results.get(f"{self._result_prefix}_result")
 
         error_message = results.get(f"{self.result_key}_error_message")
