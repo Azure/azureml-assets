@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:{{latest-image-tag}}
 
+# Fix vulnerability in base Miniconda (wheel GHSA-8rrh-rw8j-w5fx)
+RUN /opt/miniconda/bin/pip install --upgrade wheel>=0.46.2 setuptools>=75.8.0
+
 RUN apt-get update -y && apt-get install wget nscd git cpio less libglib2.0-0 libglib2.0-data util-linux binutils libnghttp2-14 libssh-4 libsqlite3-0 libpam-modules linux-libc-dev libldap-common libc-bin libc-dev-bin libc6 libc6-dev libcurl3-gnutls libgnutls30 tar openssh-server openssh-client openssl curl -y
 
 WORKDIR /
@@ -20,3 +23,7 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q --solver=cla
         
 ## Vulnerability fix
 RUN pip install tqdm requests==2.32.4
+
+
+## Vulnerability fix for libxml2 (USN-7974-1)
+RUN apt-get update && apt-get install -y --only-upgrade libxml2
