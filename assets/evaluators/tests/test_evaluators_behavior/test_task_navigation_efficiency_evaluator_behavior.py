@@ -286,21 +286,21 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
         result = results.get("task_navigation_efficiency_result")
         details = results.get("task_navigation_efficiency_details")
         error_message = results.get("task_navigation_efficiency_error_message")
-        error_type = results.get("task_navigation_efficiency_error_type")
+        error_code = results.get("task_navigation_efficiency_error_code")
 
         print(f"\n[{test_label}] Result: {result}")
         print(f"  Label: {label}")
         print(f"  Details: {details}")
-        if error_message or error_type:
+        if error_message or error_code:
             print(f"  Error Message: {error_message}")
-            print(f"  Error Type: {error_type}")
+            print(f"  Error Code: {error_code}")
 
         return {
             "label": label,
             "result": result,
             "details": details,
             "error_message": error_message,
-            "error_type": error_type,
+            "error_code": error_code,
         }
 
     def assert_pass(self, result_data: Dict[str, Any]):
@@ -318,13 +318,13 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
         assert result_data["label"] is False
         assert result_data["details"] is not None
 
-    def assert_error(self, result_data: Dict[str, Any], error_type: str = None):
+    def assert_error(self, result_data: Dict[str, Any], error_code: str = None):
         """Assert an error result."""
         assert result_data["label"] is None
         assert result_data["result"] is None
         assert result_data["error_message"] is not None
-        if error_type:
-            assert result_data["error_type"] == error_type
+        if error_code:
+            assert result_data["error_code"] == error_code
 
     # ==================== EXACT MATCH MODE TESTS ====================
 
