@@ -2,6 +2,18 @@
 ### 🚀 New Features
 ### 🐛 Bugs Fixed
 
+## 1.16.102 (2026-01-23)
+### 🚀 New Features
+- [#4740](https://github.com/Azure/azureml-assets/pull/4740) Update media manifest headers list for registry/manifests call
+
+## 1.16.101 (2026-01-15)
+### 🚀 New Features
+- [#4731](https://github.com/Azure/azureml-assets/pull/4731) Add BenchmarkSpec to asset types
+
+## 1.16.100 (2026-01-06)
+### 🐛 Bugs Fixed
+- [#4714](https://github.com/Azure/azureml-assets/pull/4714) Fix AttributeError when updating metadata for asset types without _system_metadata attribute
+
 ## 1.16.99 (2025-11-24)
 ### 🐛 Bugs Fixed
 - [#4636](https://github.com/Azure/azureml-assets/pull/4636) Handle non-JSON content from Azure CLI responses
@@ -525,4 +537,5 @@
 ## 1.0.0 (2023-05-16)
 ### 🚀 New Features
 - [#663](https://github.com/Azure/azureml-assets/pull/663) Initial release to PyPI
+
 

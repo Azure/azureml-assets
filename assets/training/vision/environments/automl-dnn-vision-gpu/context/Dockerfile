@@ -85,12 +85,12 @@ RUN pip install --no-cache-dir \
 # vulnearbility fix
 RUN pip install pyarrow==14.0.2
 RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
-RUN pip install --upgrade urllib3==2.5.0
+RUN pip install --upgrade urllib3>=2.6.3
 
 # Update conda base and ptca envs
 RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3==2.5.0 || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20.1|| true
 
 # Patch pillow vulnerability
 RUN pip install --upgrade pillow==12.0.0

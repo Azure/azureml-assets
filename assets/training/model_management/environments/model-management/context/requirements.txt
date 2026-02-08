@@ -1,10 +1,10 @@
-azure-core==1.35.0
+azure-core==1.38.0
 azure-ai-ml==1.28.1
 azure-identity==1.23.1
 azureml-evaluate-mlflow==0.0.77
 ffmpeg-python==0.2.0
 langcodes==3.5.0
-sentencepiece==0.2.0
+sentencepiece==0.2.1
 accelerate==1.9.0
 wget==3.2
 applicationinsights==0.11.10
@@ -18,7 +18,7 @@ cryptography==44.0.2
 ####
 #torch==2.8.0
 #torchaudio==2.8.0
-setuptools==78.1.1
+setuptools==80.0.0
 Pillow==10.3.0
 gunicorn==23.0.0
 onnx==1.17.0 
@@ -27,9 +27,11 @@ tqdm==4.67.1
 requests==2.32.4
 tornado==6.5
 certifi==2024.07.04 
-urllib3==2.5.0
+urllib3==2.6.3
 scikit-learn==1.5.1 
-mlflow==3.1.0
-mlflow-skinny==3.1.0
-marshmallow==3.23.2
+mlflow==3.6.0
+mlflow-skinny==3.6.0
+marshmallow==3.26.2
 transformers==4.55.2
+filelock==3.20.3
+protobuf>=6.33.5

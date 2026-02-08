@@ -91,8 +91,8 @@ RUN pip install \
                 # end pypi dependencies
 # end pip install
 
-# Fix vulnerabilities - upgrade pip, starlette, urllib3
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.5.0' 'h2>=4.3.0'
+# Fix vulnerabilities - upgrade pip, starlette, urllib3, bokeh
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
