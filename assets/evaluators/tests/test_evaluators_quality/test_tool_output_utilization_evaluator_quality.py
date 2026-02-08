@@ -839,7 +839,8 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                             "type": "text",
                             "text": (
                                 "Your blood test results from September 25th show that your cholesterol level is "
-                                "95 mg/dL, which is in the normal range (should be less than 200). Everything looks good!"
+                                "95 mg/dL, which is in the normal range (should be less than 200). "
+                                "Everything looks good!"
                             ),
                         }
                     ],
