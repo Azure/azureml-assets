@@ -263,6 +263,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return {
                 f"{self._result_key}": score,
                 f"{self._result_key}_result": score_result,
+                f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_reason": reasoning,
                 f"{self._result_key}_details": llm_output.get("details", ""),
                 f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
