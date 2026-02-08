@@ -230,6 +230,25 @@ class BaseEvaluatorRunner:
         assert score_type is float or score_type is int
         assert result_data["score"] >= 0.0
 
+    def assert_score_in_range(self, result_data: Dict[str, Any], min_score: float = 0.0, max_score: float = 1.0):
+        """Assert that score is within expected range.
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+            min_score: Minimum expected score (inclusive).
+            max_score: Maximum expected score (inclusive).
+
+        Raises:
+            AssertionError: If the score is outside the expected range.
+        """
+        score_key = "score"
+        assert result_data[score_key] is not None, "Score should not be None"
+        score = result_data[score_key]
+        score_type = type(score)
+        assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
+        assert min_score <= result_data[score_key] <= max_score, \
+            f"Score {result_data[score_key]} should be in range [{min_score}, {max_score}]"
+
     def assert_error(self, result_data: Dict[str, Any], error_code: str):
         """Assert an error result.
 
