@@ -395,6 +395,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             credential=credential,
+            threshold=threshold,
             **kwargs,
         )
 
