@@ -8,6 +8,7 @@ Tests various input scenarios: query, response, and tool_definitions.
 """
 
 import json
+from typing import List
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 
 
@@ -23,6 +24,23 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     """
+
+    @property
+    def expected_result_fields(self) -> List[str]:
+        return [
+            f"{self._result_prefix}",
+            f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_result",
+            f"{self._result_prefix}_details",
+            f"{self._result_prefix}_prompt_tokens",
+            f"{self._result_prefix}_completion_tokens",
+            f"{self._result_prefix}_total_tokens",
+            f"{self._result_prefix}_finish_reason",
+            f"{self._result_prefix}_model",
+            f"{self._result_prefix}_sample_input",
+            f"{self._result_prefix}_sample_output",
+        ]
 
     # Test Configs
     requires_tool_definitions: bool = False

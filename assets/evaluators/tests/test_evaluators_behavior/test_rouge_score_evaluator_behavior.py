@@ -5,7 +5,7 @@
 
 import pytest
 import math
-from typing import Any, Dict, override
+from typing import Any, Dict, List, override
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.rouge_score.evaluator._rouge import RougeScoreEvaluator, RougeType
 
@@ -32,6 +32,20 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     result_key = "rouge_f1_score"
     result_prefix = "rouge"
     constructor_arg_names = ["rouge_type", "precision_threshold", "recall_threshold", "f1_score_threshold"]
+
+    @property
+    def expected_result_fields(self) -> List[str]:
+        return [
+            f"{self.result_prefix}_precision",
+            f"{self.result_prefix}_recall",
+            f"{self.result_prefix}_f1_score",
+            f"{self.result_prefix}_precision_result",
+            f"{self.result_prefix}_recall_result",
+            f"{self.result_prefix}_f1_score_result",
+            f"{self.result_prefix}_precision_threshold",
+            f"{self.result_prefix}_recall_threshold",
+            f"{self.result_prefix}_f1_score_threshold",
+        ]
 
     # region Test Data
     # Perfect match scenarios
@@ -112,6 +126,11 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         Returns:
             Dictionary with standardized result fields.
         """
+        if f"{self.result_key}_error_message" not in results:
+            for field in self.expected_result_fields:
+                if field not in results:
+                    raise ValueError(f"Expected result field '{field}' not found in results.")
+
         precision = results.get("rouge_precision")
         recall = results.get("rouge_recall")
         f1_score = results.get("rouge_f1_score")

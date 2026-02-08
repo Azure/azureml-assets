@@ -25,6 +25,15 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
     result_key = "task_navigation_efficiency"
     constructor_arg_names = ["matching_mode"]
 
+    @property
+    def expected_result_fields(self) -> List[str]:
+        """Expected result fields for Task Navigation Efficiency Evaluator."""
+        return [
+            "task_navigation_efficiency_label",
+            "task_navigation_efficiency_result",
+            "task_navigation_efficiency_details",
+        ]
+
     # region Test Data
     VALID_ACTIONS: List[Dict[str, Any]] = [
         # Allow extra non-tool-call messages
@@ -266,6 +275,11 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         Returns:
             Dictionary with standardized result fields.
         """
+        if f"{self.result_key}_error_message" not in results:
+            for field in self.expected_result_fields:
+                if field not in results:
+                    raise ValueError(f"Expected result field '{field}' not found in results.")
+
         label = results.get("task_navigation_efficiency_label")
         result = results.get("task_navigation_efficiency_result")
         details = results.get("task_navigation_efficiency_details")

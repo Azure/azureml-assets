@@ -7,7 +7,7 @@ Base class for code-based evaluator tests.
 Supports deterministic evaluators that don't require LLM calls (e.g., BLEU, F1, ROUGE, METEOR, GLEU).
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from .base_evaluator_runner_base import AbstractBaseEvaluatorRunner
 
@@ -30,6 +30,10 @@ class BaseCodeEvaluatorRunner(AbstractBaseEvaluatorRunner):
 
     # Subclasses may override
     constructor_arg_names = ["threshold"]
+
+    @property
+    def expected_result_fields(self) -> List[str]:
+        return [f"{self._result_prefix}_score", f"{self._result_prefix}_result", f"{self._result_prefix}_threshold"]
 
     # ==================== CODE-SPECIFIC ASSERTION HELPERS ====================
 

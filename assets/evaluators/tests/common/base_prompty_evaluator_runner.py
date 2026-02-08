@@ -37,6 +37,10 @@ class BasePromptyEvaluatorRunner(AbstractBaseEvaluatorRunner):
     use_mocking: bool = True  # Set to False for quality tests with real flow execution
 
     @property
+    def expected_result_fields(self) -> List[str]:
+        return [f"{self._result_prefix}", f"{self._result_prefix}_reason", f"{self._result_prefix}_result", f"{self._result_prefix}_threshold"]
+
+    @property
     def result_key(self) -> str:
         """Get the result key from the evaluator type."""
         return self.evaluator_type._RESULT_KEY

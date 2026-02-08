@@ -24,6 +24,12 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
                              "xdcg_threshold", "fidelity_threshold", "top1_relevance_threshold",
                              "top3_max_relevance_threshold"]
 
+    @property
+    def expected_result_fields(self) -> List[str]:
+        return ["ndcg@3", "xdcg@3", "fidelity", "top1_relevance",
+        "top3_max_relevance", "holes", "holes_ratio",
+        "total_retrieved_documents", "total_ground_truth_documents"]
+
     # region Test Data
     # Perfect retrieval scenario - top 3 documents match ideal ranking
     PERFECT_GROUND_TRUTH: List[Dict[str, Any]] = [

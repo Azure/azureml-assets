@@ -46,6 +46,10 @@ class AbstractBaseEvaluatorRunner(ABC):
     use_mocking: bool = False
 
     @property
+    def expected_result_fields(self) -> List[str]:
+        return []
+
+    @property
     def _result_prefix(self) -> str:
         """Get the result prefix, auto-deriving from result_key if not explicitly set."""
         if self.result_prefix is not None:
@@ -132,6 +136,11 @@ class AbstractBaseEvaluatorRunner(ABC):
         Returns:
             Dictionary with standardized result fields.
         """
+        if f"{self.result_key}_error_message" not in results:
+            for field in self.expected_result_fields:
+                if field not in results:
+                    raise ValueError(f"Expected result field '{field}' not found in results.")
+
         score = results.get(self.result_key)
         label = results.get(f"{self._result_prefix}_result")
 
