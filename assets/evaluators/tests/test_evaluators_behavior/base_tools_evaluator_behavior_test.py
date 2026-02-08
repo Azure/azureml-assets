@@ -27,6 +27,7 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
     @property
     def expected_result_fields(self) -> List[str]:
+        """Get the expected result fields for tools evaluators."""
         return [
             f"{self._result_prefix}",
             f"{self._result_prefix}_reason",

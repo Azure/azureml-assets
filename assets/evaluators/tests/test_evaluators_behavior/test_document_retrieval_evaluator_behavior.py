@@ -26,9 +26,12 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     @property
     def expected_result_fields(self) -> List[str]:
-        return ["ndcg@3", "xdcg@3", "fidelity", "top1_relevance",
-        "top3_max_relevance", "holes", "holes_ratio",
-        "total_retrieved_documents", "total_ground_truth_documents"]
+        """Get the expected result fields for document retrieval evaluator."""
+        return [
+            "ndcg@3", "xdcg@3", "fidelity", "top1_relevance",
+            "top3_max_relevance", "holes", "holes_ratio",
+            "total_retrieved_documents", "total_ground_truth_documents"
+        ]
 
     # region Test Data
     # Perfect retrieval scenario - top 3 documents match ideal ranking

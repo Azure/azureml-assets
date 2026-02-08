@@ -47,6 +47,7 @@ class AbstractBaseEvaluatorRunner(ABC):
 
     @property
     def expected_result_fields(self) -> List[str]:
+        """Get the expected result fields for the evaluator."""
         return []
 
     @property

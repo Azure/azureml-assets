@@ -38,7 +38,13 @@ class BasePromptyEvaluatorRunner(AbstractBaseEvaluatorRunner):
 
     @property
     def expected_result_fields(self) -> List[str]:
-        return [f"{self._result_prefix}", f"{self._result_prefix}_reason", f"{self._result_prefix}_result", f"{self._result_prefix}_threshold"]
+        """Get the expected result fields for prompty evaluators."""
+        return [
+            f"{self._result_prefix}",
+            f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_result",
+            f"{self._result_prefix}_threshold"
+        ]
 
     @property
     def result_key(self) -> str:

@@ -33,6 +33,7 @@ class BaseCodeEvaluatorRunner(AbstractBaseEvaluatorRunner):
 
     @property
     def expected_result_fields(self) -> List[str]:
+        """Get the expected result fields for code evaluators."""
         return [f"{self._result_prefix}_score", f"{self._result_prefix}_result", f"{self._result_prefix}_threshold"]
 
     # ==================== CODE-SPECIFIC ASSERTION HELPERS ====================

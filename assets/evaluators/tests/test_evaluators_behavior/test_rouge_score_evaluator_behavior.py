@@ -35,6 +35,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     @property
     def expected_result_fields(self) -> List[str]:
+        """Get the expected result fields for ROUGE score evaluator."""
         return [
             f"{self.result_prefix}_precision",
             f"{self.result_prefix}_recall",
