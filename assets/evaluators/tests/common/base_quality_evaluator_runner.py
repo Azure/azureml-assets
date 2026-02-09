@@ -48,6 +48,7 @@ class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
         tool_definitions: Optional[List[Dict[str, Any]]] = None,
         tool_calls: Optional[List[Dict[str, Any]]] = None,
         context: Optional[str] = None,
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Run a quality test with the given inputs and assert the expected result.
@@ -97,6 +98,7 @@ class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
             tool_definitions=tool_definitions,
             tool_calls=tool_calls,
             context=context,
+            **kwargs,
         )
 
         # Extract and print results
