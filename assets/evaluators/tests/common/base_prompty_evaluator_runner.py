@@ -16,10 +16,10 @@ from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import ErrorCategory
 from azure.identity import DefaultAzureCredential
 
-from .base_evaluator_runner_base import AbstractBaseEvaluatorRunner
+from .base_evaluator_runner import BaseEvaluatorRunner
 
 
-class BasePromptyEvaluatorRunner(AbstractBaseEvaluatorRunner):
+class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
     """
     Base class for running prompty-based evaluators for testing.
 

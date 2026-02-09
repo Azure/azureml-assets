@@ -16,7 +16,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .evaluator_mock_config import EVALUATOR_CONFIGS, get_flow_side_effect_for_evaluator
 
 
-class AbstractBaseEvaluatorRunner(ABC):
+class BaseEvaluatorRunner(ABC):
     """
     Abstract base class for running evaluators for testing.
 

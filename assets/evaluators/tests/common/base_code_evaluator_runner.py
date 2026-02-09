@@ -9,10 +9,10 @@ Supports deterministic evaluators that don't require LLM calls (e.g., BLEU, F1, 
 
 from typing import Any, Dict, List
 
-from .base_evaluator_runner_base import AbstractBaseEvaluatorRunner
+from .base_evaluator_runner import BaseEvaluatorRunner
 
 
-class BaseCodeEvaluatorRunner(AbstractBaseEvaluatorRunner):
+class BaseCodeEvaluatorRunner(BaseEvaluatorRunner):
     """
     Base class for running code-based evaluators for testing.
 
