@@ -11,8 +11,8 @@ tags:
   summary: "ALLaM is a series of powerful language models designed to advance Arabic Language Technology."
   disable-batch: "true"
   maxOutputTokens: 4096
-  hiddenlayerscanned : "true"
-  languages: "AR, EN"
+  hiddenlayerscanned: ""
+  languages: "ar, en"
   inputModalities: "text"
   outputModalities: "text"
   SharedComputeCapacityEnabled : ""
