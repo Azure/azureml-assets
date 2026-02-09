@@ -587,6 +587,13 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_details": {},
+            f"{self._result_key}_prompt_tokens": 0,
+            f"{self._result_key}_completion_tokens": 0,
+            f"{self._result_key}_total_tokens": 0,
+            f"{self._result_key}_finish_reason": "",
+            f"{self._result_key}_model": "",
+            f"{self._result_key}_sample_input": "",
+            f"{self._result_key}_sample_output": "",
         }
 
     def _calculate_tool_selection_accuracy(self, details):
