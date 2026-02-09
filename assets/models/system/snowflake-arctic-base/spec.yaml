@@ -10,7 +10,7 @@ properties:
 tags:
   Featured: ''
   huggingface_model_id: Snowflake/snowflake-arctic-base
-  license: apache2.0
+  license: apache-2.0
   disable-batch: 'true'
   task: text-generation
   SharedComputeCapacityEnabled: ''

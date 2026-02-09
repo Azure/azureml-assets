@@ -7,7 +7,7 @@ properties:
   inference-recommended-sku: Standard_ND96isr_H100_v5
 tags:
   huggingface_model_id: Snowflake/snowflake-arctic-instruct
-  license: apache2.0
+  license: apache-2.0
   disable-batch: "true"
   task: chat-completion
   SharedComputeCapacityEnabled: ""
