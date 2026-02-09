@@ -81,7 +81,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Identical Text")
         self.assert_pass(result_data)
         # Identical text should have perfect or near-perfect BLEU score
-        assert result_data["score"] >= 0.9
+        self.assert_score_in_range(result_data, min_score=0.9)
 
     def test_identical_single_word(self):
         """Test with identical single word."""
@@ -91,7 +91,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Identical Single Word")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.9)
 
     # ==================== SIMILARITY TESTS ====================
 
@@ -103,9 +103,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "High Similarity")
-        self.assert_score_in_range(result_data)
-        # Similar texts should have moderate to high BLEU score
-        assert result_data["score"] > 0.0
+        # Similar texts should have moderate BLEU score (BLEU is harsh on non-exact matches)
+        self.assert_score_in_range(result_data, min_score=0.3, max_score=0.5)
 
     def test_low_similarity(self):
         """Test with texts having low similarity."""
@@ -115,9 +114,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Low Similarity")
-        self.assert_score_in_range(result_data)
-        # Different texts should have low BLEU score
-        assert result_data["score"] < 0.5
+        self.assert_score_in_range(result_data, max_score=0.2)
 
     def test_partial_match(self):
         """Test with partial matching texts."""
@@ -127,7 +124,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Partial Match")
-        self.assert_score_in_range(result_data)
+        # BLEU scores are generally low for partial matches due to n-gram precision
+        self.assert_score_in_range(result_data, min_score=0.1, max_score=0.4)
 
     def test_multi_sentence(self):
         """Test with multi-sentence texts."""
@@ -137,9 +135,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Multi-Sentence")
-        self.assert_score_in_range(result_data)
-        # Most words match, should have moderate to high score
-        assert result_data["score"] > 0.3
+        self.assert_score_in_range(result_data, min_score=0.3)
 
     # ==================== THRESHOLD TESTS ====================
 
@@ -185,7 +181,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Threshold One")
         # Only perfect match should pass
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
         assert result_data["threshold"] == 1.0
 
     def test_default_threshold(self):
@@ -194,6 +190,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
         result_data = self._extract_and_print_result(results, "Default Threshold")
         assert result_data["threshold"] == 0.5
+        self.assert_pass(result_data)
 
     # ==================== EDGE CASE TESTS ====================
 
@@ -206,7 +203,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Empty Response")
         # Empty response should have zero BLEU score
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, max_score=0.0)
         assert result_data["score"] == 0.0
 
     def test_empty_ground_truth(self):
@@ -218,7 +215,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Empty Ground Truth")
         # Empty ground truth should result in zero BLEU score
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, max_score=0.0)
 
     def test_both_empty(self):
         """Test with both empty strings."""
@@ -228,7 +225,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Both Empty")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, max_score=0.0)
 
     def test_whitespace_only_response(self):
         """Test with whitespace-only response."""
@@ -238,7 +235,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Whitespace Only Response")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, max_score=0.0)
 
     def test_single_character(self):
         """Test with single character texts."""
@@ -248,7 +245,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Single Character")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0)
 
     def test_punctuation_only(self):
         """Test with punctuation-only text."""
@@ -258,7 +255,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Punctuation Only")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0)
 
     def test_numbers_only(self):
         """Test with numbers-only text."""
@@ -268,7 +265,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Numbers Only")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0)
 
     # ==================== CASE SENSITIVITY TESTS ====================
 
@@ -280,7 +277,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Case Sensitivity Lower-Upper")
-        self.assert_score_in_range(result_data)
+        # BLEU is case-sensitive, so different cases yield a score of 0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_case_sensitivity_lower_mixed(self):
         """Test case sensitivity between lower and mixed case."""
@@ -290,7 +288,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Case Sensitivity Lower-Mixed")
-        self.assert_score_in_range(result_data)
+        # BLEU is case-sensitive, so different cases yield a score of 0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     # ==================== SPECIAL CHARACTERS TESTS ====================
 
@@ -312,17 +311,18 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Unicode Text")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0)
 
     def test_unicode_partial_match(self):
         """Test with partial Unicode match."""
+        # TODO: Support Unicode tokenization in BLEU evaluation and adjust expected score range accordingly
         results = self._run_evaluation(
             response=self.UNICODE_TEXT_SIMILAR,
             ground_truth=self.UNICODE_TEXT,
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Unicode Partial Match")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.7)
 
     def test_emoji_text(self):
         """Test with emoji characters."""
@@ -332,7 +332,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Emoji Text")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0)
 
     # ==================== LONG TEXT TESTS ====================
 
@@ -345,7 +345,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Long Identical Text")
         self.assert_pass(result_data)
-        assert result_data["score"] >= 0.9
+        self.assert_score_in_range(result_data, min_score=0.9)
 
     def test_long_vs_short(self):
         """Test with long reference and short response."""
@@ -355,9 +355,9 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Long vs Short")
-        self.assert_score_in_range(result_data)
         # Short response compared to long reference should have low score
-        assert result_data["score"] < 0.5
+        self.assert_score_in_range(result_data, max_score=0.5)
+        self.assert_fail(result_data)
 
     # ==================== TECHNICAL TEXT TESTS ====================
 
@@ -370,6 +370,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Code Text")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.9)
 
     def test_numeric_text(self):
         """Test with numeric text."""
@@ -380,7 +381,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Numeric Text")
         self.assert_pass(result_data)
-        assert result_data["score"] >= 0.9
+        self.assert_score_in_range(result_data, min_score=0.9)
 
     # ==================== ERROR HANDLING TESTS ====================
 
@@ -448,9 +449,13 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """Test with negative threshold - evaluator accepts it but result may always pass."""
         # The evaluator accepts negative thresholds
         # TODO: Should we enforce threshold to be within [0,1]?
-        evaluator = self._init_evaluator(threshold=-0.5)
-        results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
+        results = self._run_evaluation(
+            response=self.DIFFERENT_RESPONSE,
+            ground_truth=self.IDENTICAL_TEXT,
+            threshold=-0.5,
+        )
         result_data = self._extract_and_print_result(results, "Negative Threshold")
+        self.assert_pass(result_data)
         # With negative threshold, any score >= -0.5 passes (which is always true for 0-1 scores)
         assert result_data["threshold"] == -0.5
 
@@ -458,41 +463,36 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """Test with threshold greater than 1."""
         # This might be allowed or might raise an error depending on implementation
         # TODO: Should we enforce threshold to be within [0,1]?
-        try:
-            evaluator = self._init_evaluator(threshold=1.5)
-            results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
-            result_data = self._extract_and_print_result(results, "Threshold > 1")
-            # If allowed, the result should be fail since max score is 1.0
-            assert result_data["label"] == "fail"
-        except (ValueError, EvaluationException):
-            # If not allowed, exception is expected
-            pass
+        results = self._run_evaluation(
+            response=self.IDENTICAL_TEXT,
+            ground_truth=self.IDENTICAL_TEXT,
+            threshold=1.5,
+        )
+        result_data = self._extract_and_print_result(results, "Threshold Greater Than One")
+        # If allowed, the result should be fail since max score is 1.0
+        self.assert_fail(result_data)
 
     def test_string_threshold_type(self):
         """Test with string threshold type - evaluator may accept it."""
         # The evaluator accepts string thresholds that can be converted to float
-        # TODO: Should we enforce threshold to be float type only?
-        try:
-            evaluator = self._init_evaluator(threshold="0.5")
-            results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
-            result_data = self._extract_and_print_result(results, "String Threshold")
-            self.assert_score_in_range(result_data)
-        except (TypeError, ValueError, EvaluationException):
-            # If not allowed, exception is expected
-            pass
+        results = self._run_evaluation(
+            response=self.IDENTICAL_TEXT,
+            ground_truth=self.IDENTICAL_TEXT,
+            threshold="0.5",
+        )
+        result_data = self._extract_and_print_result(results, "String Threshold")
+        self.assert_error(result_data)
 
     def test_none_threshold_type(self):
         """Test with None threshold type - evaluator uses default."""
         # The evaluator accepts None and uses default threshold
-        # TODO: Should we enforce threshold to be float type only?
-        try:
-            evaluator = self._init_evaluator(threshold=None)
-            results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
-            result_data = self._extract_and_print_result(results, "None Threshold")
-            self.assert_score_in_range(result_data)
-        except (TypeError, ValueError, EvaluationException):
-            # If not allowed, exception is expected
-            pass
+        results = self._run_evaluation(
+            response=self.IDENTICAL_TEXT,
+            ground_truth=self.IDENTICAL_TEXT,
+            threshold=None,
+        )
+        result_data = self._extract_and_print_result(results, "None Threshold")
+        self.assert_error(result_data)
 
     # ==================== WORD ORDER TESTS ====================
 
@@ -504,9 +504,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Same Words Different Order")
-        self.assert_score_in_range(result_data)
-        # BLEU considers n-gram order, so scrambled should have lower score
-        assert result_data["score"] < 0.8
+        # BLEU considers n-gram order, so scrambled text scores very low
+        self.assert_score_in_range(result_data, min_score=0.01, max_score=0.2)
 
     def test_reversed_sentence(self):
         """Test with reversed sentence."""
@@ -518,7 +517,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Reversed Sentence")
-        self.assert_score_in_range(result_data)
+        # Reversed word order destroys n-gram matches, yielding very low scores
+        self.assert_score_in_range(result_data, min_score=0.01, max_score=0.2)
 
     # ==================== REPETITION TESTS ====================
 
@@ -530,7 +530,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Repeated Words")
-        self.assert_score_in_range(result_data)
+        # Repetition with length mismatch triggers brevity penalty, yielding low scores
+        self.assert_score_in_range(result_data, min_score=0.01, max_score=0.15)
 
     def test_response_contains_ground_truth(self):
         """Test where response contains ground truth as substring."""
@@ -540,9 +541,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Response Contains Ground Truth")
-        self.assert_score_in_range(result_data)
         # Should have moderate score since all ground truth words are present
-        assert result_data["score"] > 0.3
+        self.assert_score_in_range(result_data, min_score=0.3, max_score=0.8)
 
     def test_ground_truth_contains_response(self):
         """Test where ground truth contains response as substring."""
@@ -554,7 +554,8 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Ground Truth Contains Response")
-        self.assert_score_in_range(result_data)
+        # Short response vs long reference triggers severe brevity penalty
+        self.assert_score_in_range(result_data, min_score=0.005, max_score=0.1)
 
     # ==================== OUTPUT STRUCTURE TESTS ====================
 

@@ -183,12 +183,20 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     def assert_scores_in_range(self, result_data: Dict[str, Any], min_score: float = 0.0, max_score: float = 1.0):
         """Assert that all scores are within expected range."""
-        if result_data["precision"] is not None and not math.isnan(result_data["precision"]):
-            assert min_score <= result_data["precision"] <= max_score
-        if result_data["recall"] is not None and not math.isnan(result_data["recall"]):
-            assert min_score <= result_data["recall"] <= max_score
-        if result_data["f1_score"] is not None and not math.isnan(result_data["f1_score"]):
-            assert min_score <= result_data["f1_score"] <= max_score
+        precision = result_data.get("precision")
+        recall = result_data.get("recall")
+        f1_score = result_data.get("f1_score")
+
+        if precision is None or math.isnan(precision):
+            raise ValueError(f"Precision score is missing or NaN: {precision}")
+        if recall is None or math.isnan(recall):
+            raise ValueError(f"Recall score is missing or NaN: {recall}")
+        if f1_score is None or math.isnan(f1_score):
+            raise ValueError(f"F1 score is missing or NaN: {f1_score}")
+
+        assert min_score <= precision <= max_score
+        assert min_score <= recall <= max_score
+        assert min_score <= f1_score <= max_score
 
     # ==================== PERFECT MATCH TESTS ====================
 

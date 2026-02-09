@@ -102,7 +102,7 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Identical Text")
         self.assert_pass(result_data)
         # Identical text should have perfect F1 score
-        assert result_data["score"] == 1.0
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_identical_single_word(self):
         """Test with identical single word."""
@@ -112,7 +112,9 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Identical Single Word")
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        # Identical single word should have perfect F1 score
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== NORMALIZATION TESTS ====================
 
@@ -125,7 +127,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data1 = self._extract_and_print_result(results1, "Case Insensitive Upper-Lower")
-        assert result_data1["score"] == 1.0
+        self.assert_pass(result_data1)
+        self.assert_score_in_range(result_data1, min_score=1.0, max_score=1.0)
 
         # Mixed vs lower
         results2 = self._run_evaluation(
@@ -134,7 +137,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data2 = self._extract_and_print_result(results2, "Case Insensitive Mixed-Lower")
-        assert result_data2["score"] == 1.0
+        self.assert_pass(result_data2)
+        self.assert_score_in_range(result_data2, min_score=1.0, max_score=1.0)
 
     def test_article_removal(self):
         """Test that articles (a, an, the) are removed during normalization."""
@@ -145,7 +149,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Article Removal")
         # After removing articles, texts should be identical
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_punctuation_removal(self):
         """Test that punctuation is removed during normalization."""
@@ -156,7 +161,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Punctuation Removal")
         # After removing punctuation, texts should be identical
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_whitespace_normalization(self):
         """Test that extra whitespace is normalized."""
@@ -168,7 +174,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Whitespace Normalization")
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== WORD ORDER TESTS (BAG OF WORDS) ====================
 
@@ -181,7 +188,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Word Order Irrelevant")
         # Same words, different order should have F1 = 1.0
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_scrambled_sentence(self):
         """Test with scrambled sentence (same words, random order)."""
@@ -194,7 +202,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Scrambled Sentence")
         # Same words should have F1 = 1.0 (after article removal)
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== DUPLICATE WORDS TESTS ====================
 
@@ -210,7 +219,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Duplicates in Response")
-        assert result_data["score"] == 0.5
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.5)
 
     def test_duplicate_words_in_ground_truth(self):
         """Test handling of duplicate words in ground truth."""
@@ -224,7 +234,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Duplicates in Ground Truth")
-        assert result_data["score"] == 0.5
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.5)
 
     def test_matching_duplicate_counts(self):
         """Test when both have same duplicate counts."""
@@ -234,7 +245,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Matching Duplicate Counts")
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== PARTIAL OVERLAP TESTS ====================
 
@@ -246,9 +258,9 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Partial Overlap")
-        self.assert_score_in_range(result_data)
         # Some overlap, but not perfect
-        assert 0.0 < result_data["score"] < 1.0
+        self.assert_score_in_range(result_data, min_score=0.3, max_score=0.7)
+        self.assert_pass(result_data)
 
     def test_subset_response(self):
         """Test when response is subset of ground truth."""
@@ -258,8 +270,9 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Subset Response")
-        self.assert_score_in_range(result_data)
         # High precision (all response words in ground truth), low recall
+        self.assert_score_in_range(result_data, min_score=0.3, max_score=0.7)
+        self.assert_pass(result_data)
 
     def test_superset_response(self):
         """Test when response is superset of ground truth."""
@@ -269,8 +282,9 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Superset Response")
-        self.assert_score_in_range(result_data)
         # Low precision, high recall
+        self.assert_score_in_range(result_data, min_score=0.3, max_score=0.7)
+        self.assert_pass(result_data)
 
     # ==================== NO OVERLAP TESTS ====================
 
@@ -282,7 +296,7 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "No Overlap")
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
         self.assert_fail(result_data)
 
     def test_single_common_word(self):
@@ -298,7 +312,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Single Common Word")
-        assert result_data["score"] == 0.5
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.5)
+        self.assert_pass(result_data)
 
     # ==================== THRESHOLD TESTS ====================
 
@@ -351,6 +366,7 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         evaluator = F1ScoreEvaluator()
         results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
         result_data = self._extract_and_print_result(results, "Default Threshold")
+        self.assert_pass(result_data)
         assert result_data["threshold"] == 0.5
 
     # ==================== EDGE CASE TESTS ====================
@@ -364,7 +380,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Empty Response")
         # Empty response means no tokens, F1 should be 0
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
+        self.assert_fail(result_data)
 
     def test_empty_ground_truth(self):
         """Test with empty ground truth string."""
@@ -375,7 +392,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Empty Ground Truth")
         # Empty ground truth means no tokens, F1 should be 0
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
+        self.assert_fail(result_data)
 
     def test_both_empty(self):
         """Test with both empty strings."""
@@ -386,7 +404,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Both Empty")
         # Both empty, no common tokens, F1 = 0
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
+        self.assert_fail(result_data)
 
     def test_whitespace_only_response(self):
         """Test with whitespace-only response."""
@@ -397,7 +416,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Whitespace Only Response")
         # Whitespace only normalizes to empty, F1 = 0
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
+        self.assert_fail(result_data)
 
     def test_articles_only_text(self):
         """Test with text containing only articles (a, an, the)."""
@@ -408,7 +428,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Articles Only")
         # All articles removed, no tokens left
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
+        self.assert_fail(result_data)
 
     def test_punctuation_only(self):
         """Test with punctuation-only text."""
@@ -419,7 +440,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Punctuation Only")
         # All punctuation removed, no tokens left
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
+        self.assert_fail(result_data)
 
     # ==================== NUMERIC TEXT TESTS ====================
 
@@ -432,7 +454,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Numeric Text")
         # Numbers should be preserved
-        assert result_data["score"] == 1.0
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
+        self.assert_pass(result_data)
 
     def test_numbers_as_words(self):
         """Test numbers are treated as words."""
@@ -442,18 +465,20 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Numbers As Words")
-        assert result_data["score"] == 1.0
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
+        self.assert_pass(result_data)
 
     def test_partial_numeric_overlap(self):
         """Test partial overlap with numbers."""
         results = self._run_evaluation(
             response="2024 is here",
             ground_truth="2024 has arrived",
-            threshold=0.3,
+            threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Partial Numeric Overlap")
         # Only "2024" in common
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.1, max_score=0.4)
+        self.assert_fail(result_data)
 
     # ==================== LONG TEXT TESTS ====================
 
@@ -465,7 +490,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Long Identical Text")
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_long_vs_short(self):
         """Test with long ground truth and short response."""
@@ -475,8 +501,9 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.1,
         )
         result_data = self._extract_and_print_result(results, "Long vs Short")
-        self.assert_score_in_range(result_data)
         # Short response will have low recall
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.1)
+        self.assert_fail(result_data)
 
     # ==================== UNICODE TEXT TESTS ====================
 
@@ -488,17 +515,19 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Unicode Text")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
+        self.assert_pass(result_data)
 
     def test_unicode_partial_match(self):
         """Test partial match with Unicode."""
         results = self._run_evaluation(
             response="café",
             ground_truth="café résumé",
-            threshold=0.3,
+            threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Unicode Partial Match")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.7)
+        self.assert_pass(result_data)
 
     # ==================== PRECISION AND RECALL CALCULATION TESTS ====================
 
@@ -513,7 +542,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Precision Recall Balance")
-        assert 0.66 <= result_data["score"] <= 0.67
+        self.assert_score_in_range(result_data, min_score=0.66, max_score=0.67)
+        self.assert_pass(result_data)
 
     def test_high_precision_low_recall(self):
         """Test scenario with high precision but low recall."""
@@ -527,7 +557,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "High Precision Low Recall")
         # Precision = 1/1 = 1.0, Recall = 1/5 = 0.2
         # F1 = 2 * (1.0 * 0.2) / (1.0 + 0.2) = 0.4 / 1.2 = 0.333
-        assert 0.33 <= result_data["score"] <= 0.34
+        self.assert_score_in_range(result_data, min_score=0.33, max_score=0.34)
+        self.assert_pass(result_data)
 
     def test_low_precision_high_recall(self):
         """Test scenario with low precision but high recall."""
@@ -540,7 +571,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Low Precision High Recall")
         # Precision = 1/5 = 0.2, Recall = 1/1 = 1.0
         # F1 = 2 * (0.2 * 1.0) / (0.2 + 1.0) = 0.4 / 1.2 = 0.333
-        assert 0.33 <= result_data["score"] <= 0.34
+        self.assert_score_in_range(result_data, min_score=0.33, max_score=0.34)
+        self.assert_pass(result_data)
 
     # ==================== ERROR HANDLING TESTS ====================
 
@@ -677,7 +709,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Article Boundary Cases")
         # These words should remain intact
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_standalone_articles_only(self):
         """Test that only standalone articles are removed."""
@@ -688,4 +721,5 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Standalone Articles Only")
-        assert result_data["score"] == 1.0
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)

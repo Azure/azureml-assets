@@ -108,7 +108,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Identical Text")
         self.assert_pass(result_data)
         # Identical text should have perfect METEOR score
-        assert result_data["score"] >= 0.99
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_identical_single_word(self):
         """Test with identical single word."""
@@ -118,9 +118,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Identical Single Word")
-        self.assert_score_in_range(result_data)
         # Single identical word returns 0.5 with METEOR due to fragmentation penalty
-        assert result_data["score"] >= 0.5
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.5)
         self.assert_pass(result_data)
 
     # ==================== SYNONYM RECOGNITION TESTS ====================
@@ -133,9 +132,9 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Synonym Recognition")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
         # METEOR should give credit for synonyms, score should be higher than exact match only
-        assert result_data["score"] > 0.5
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_complex_synonyms(self):
         """Test complex synonym scenarios (automobile/car, fast/quick)."""
@@ -145,7 +144,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Complex Synonyms")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.7, max_score=0.8)
         # Should have reasonable score due to synonym matching
 
     # ==================== STEMMING TESTS ====================
@@ -158,9 +158,9 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Stemming Recognition")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
         # METEOR should recognize stems, score should be good
-        assert result_data["score"] > 0.5
+        self.assert_score_in_range(result_data, min_score=0.85, max_score=0.9)
 
     def test_verb_conjugation_matching(self):
         """Test matching different verb conjugations."""
@@ -170,8 +170,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Verb Conjugation")
-        self.assert_score_in_range(result_data)
-        # Should have good score due to stemming
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_plural_matching(self):
         """Test matching singular/plural forms."""
@@ -181,7 +181,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Plural Matching")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     # ==================== PARAPHRASE TESTS ====================
 
@@ -193,9 +194,9 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Paraphrase Detection")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
         # Minor word order change should still have high score
-        assert result_data["score"] > 0.7
+        self.assert_score_in_range(result_data, min_score=0.9, max_score=0.95)
 
     # ==================== WORD ORDER (FRAGMENTATION) TESTS ====================
 
@@ -231,8 +232,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Complete Reversal")
-        self.assert_score_in_range(result_data)
-        # Should have some score (words match) but penalized for fragmentation
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.5)
 
     # ==================== PARAMETER TESTS ====================
 
@@ -245,7 +246,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "High Alpha (0.95)")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.8, max_score=0.85)
 
     def test_alpha_parameter_low(self):
         """Test with low alpha (more weight on recall)."""
@@ -256,7 +258,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Low Alpha (0.5)")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.75, max_score=0.8)
 
     def test_beta_parameter_effect(self):
         """Test beta parameter effect on fragmentation penalty."""
@@ -278,8 +281,10 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_high = self._extract_and_print_result(results_high_beta, "High Beta (5.0)")
         result_low = self._extract_and_print_result(results_low_beta, "Low Beta (1.0)")
 
-        self.assert_score_in_range(result_high)
-        self.assert_score_in_range(result_low)
+        self.assert_score_in_range(result_high, min_score=0.5, max_score=0.5)
+        self.assert_score_in_range(result_low, min_score=0.5, max_score=0.5)
+        self.assert_pass(result_high)
+        self.assert_pass(result_low)
 
     def test_gamma_parameter_effect(self):
         """Test gamma parameter effect on fragmentation weight."""
@@ -299,8 +304,10 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_high = self._extract_and_print_result(results_high_gamma, "High Gamma (0.8)")
         result_low = self._extract_and_print_result(results_low_gamma, "Low Gamma (0.2)")
 
-        self.assert_score_in_range(result_high)
-        self.assert_score_in_range(result_low)
+        self.assert_score_in_range(result_high, min_score=0.15, max_score=0.25)
+        self.assert_score_in_range(result_low, min_score=0.75, max_score=0.85)
+        self.assert_pass(result_high)
+        self.assert_pass(result_low)
 
     def test_default_parameters(self):
         """Test with default parameters (alpha=0.9, beta=3.0, gamma=0.5)."""
@@ -308,7 +315,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
         result_data = self._extract_and_print_result(results, "Default Parameters")
         assert result_data["threshold"] == 0.5
-        assert result_data["score"] >= 0.99
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     # ==================== THRESHOLD TESTS ====================
 
@@ -352,7 +360,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=1.0,
         )
         result_data = self._extract_and_print_result(results, "Threshold One")
-        self.assert_score_in_range(result_data)
+        self.assert_fail(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
         assert result_data["threshold"] == 1.0
 
     # ==================== SIMILARITY TESTS ====================
@@ -365,8 +374,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "High Similarity")
-        self.assert_score_in_range(result_data)
-        assert result_data["score"] > 0.3
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.8, max_score=0.85)
 
     def test_low_similarity(self):
         """Test with texts having low similarity."""
@@ -376,8 +385,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Low Similarity")
-        self.assert_score_in_range(result_data)
-        assert result_data["score"] < 0.5
+        self.assert_fail(result_data)
+        self.assert_score_in_range(result_data, min_score=0.1, max_score=0.2)
 
     def test_partial_match(self):
         """Test with partial matching texts."""
@@ -387,7 +396,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Partial Match")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.45, max_score=0.55)
 
     def test_multi_sentence(self):
         """Test with multi-sentence texts."""
@@ -397,7 +407,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Multi-Sentence")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.9, max_score=0.95)
 
     # ==================== EDGE CASE TESTS ====================
 
@@ -409,8 +420,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Empty Response")
-        self.assert_score_in_range(result_data)
-        assert result_data["score"] == 0.0
+        self.assert_fail(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_empty_ground_truth(self):
         """Test with empty ground truth string."""
@@ -420,7 +431,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Empty Ground Truth")
-        self.assert_score_in_range(result_data)
+        self.assert_fail(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_both_empty(self):
         """Test with both empty strings."""
@@ -430,7 +442,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Both Empty")
-        self.assert_score_in_range(result_data)
+        self.assert_fail(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_whitespace_only(self):
         """Test with whitespace-only text."""
@@ -440,7 +453,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Whitespace Only")
-        self.assert_score_in_range(result_data)
+        self.assert_fail(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_single_character(self):
         """Test with single character texts."""
@@ -450,7 +464,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Single Character")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.5)
 
     def test_punctuation_only(self):
         """Test with punctuation-only text."""
@@ -460,7 +475,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Punctuation Only")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_numbers_only(self):
         """Test with numbers-only text."""
@@ -470,7 +486,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Numbers Only")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.5)
 
     # ==================== CASE SENSITIVITY TESTS ====================
 
@@ -482,7 +499,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Case Handling")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.9, max_score=0.95)
 
     def test_case_mixed(self):
         """Test case handling with mixed case."""
@@ -492,7 +510,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Case Mixed")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.9, max_score=0.95)
 
     # ==================== SPECIAL CHARACTERS TESTS ====================
 
@@ -505,6 +524,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Special Characters")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_unicode_text(self):
         """Test with Unicode characters."""
@@ -514,7 +534,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Unicode Text")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     # ==================== LONG TEXT TESTS ====================
 
@@ -527,7 +548,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Long Identical Text")
         self.assert_pass(result_data)
-        assert result_data["score"] >= 0.99
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_long_vs_short(self):
         """Test with long ground truth and short response."""
@@ -537,9 +558,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Long vs Short")
-        self.assert_score_in_range(result_data)
-        # Short response should have low score
-        assert result_data["score"] < 0.5
+        self.assert_fail(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     # ==================== TECHNICAL TEXT TESTS ====================
 
@@ -552,6 +572,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Code Text")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_numeric_text(self):
         """Test with numeric text."""
@@ -562,6 +583,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Numeric Text")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     # ==================== ERROR HANDLING TESTS ====================
 
@@ -697,8 +719,9 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.2,
         )
         result_data = self._extract_and_print_result(results, "METEOR Synonym Advantage")
-        self.assert_score_in_range(result_data)
         # Should have some score due to synonym/stem matching
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.6, max_score=0.7)
 
     def test_subset_scenario(self):
         """Test response that is subset of ground truth."""
@@ -708,7 +731,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.2,
         )
         result_data = self._extract_and_print_result(results, "Subset Scenario")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.3, max_score=0.4)
 
     def test_superset_scenario(self):
         """Test response that is superset of ground truth."""
@@ -718,7 +742,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.2,
         )
         result_data = self._extract_and_print_result(results, "Superset Scenario")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.65, max_score=0.75)
 
     # ==================== LINGUISTIC FEATURE TESTS ====================
 
@@ -730,7 +755,8 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Contraction Handling")
-        self.assert_score_in_range(result_data)
+        self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.75, max_score=0.85)
 
     def test_possessive_handling(self):
         """Test handling of possessive forms."""
@@ -741,6 +767,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Possessive Handling")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.99, max_score=1.0)
 
     def test_hyphenated_words(self):
         """Test handling of hyphenated words."""
@@ -751,3 +778,4 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Hyphenated Words")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=0.9, max_score=0.95)

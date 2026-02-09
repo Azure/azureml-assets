@@ -93,8 +93,8 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Identical Text")
         self.assert_pass(result_data)
-        # Identical text should have perfect or near-perfect GLEU score
-        assert result_data["score"] >= 0.9
+        # Identical text should have perfect GLEU score
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_identical_single_word(self):
         """Test with identical single word."""
@@ -104,9 +104,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Identical Single Word")
-        self.assert_score_in_range(result_data)
-        # Single identical word should have high score
-        assert result_data["score"] >= 0.5
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== SIMILARITY TESTS ====================
 
@@ -118,9 +116,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "High Similarity")
-        self.assert_score_in_range(result_data)
-        # Similar texts should have moderate to high GLEU score
-        assert result_data["score"] > 0.0
+        self.assert_score_in_range(result_data, min_score=0.4, max_score=0.6)
 
     def test_low_similarity(self):
         """Test with texts having low similarity."""
@@ -130,9 +126,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Low Similarity")
-        self.assert_score_in_range(result_data)
-        # Different texts should have low GLEU score
-        assert result_data["score"] < 0.5
+        self.assert_score_in_range(result_data, min_score=0.05, max_score=0.1)
 
     def test_partial_match(self):
         """Test with partial matching texts."""
@@ -142,7 +136,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Partial Match")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.2, max_score=0.4)
 
     def test_multi_sentence(self):
         """Test with multi-sentence texts."""
@@ -152,9 +146,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Multi-Sentence")
-        self.assert_score_in_range(result_data)
-        # Most words match, should have moderate to high score
-        assert result_data["score"] > 0.3
+        self.assert_score_in_range(result_data, min_score=0.7, max_score=0.9)
 
     # ==================== N-GRAM ORDER TESTS ====================
 
@@ -175,9 +167,9 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_reversed = self._extract_and_print_result(results_reversed, "Reversed Text")
 
         # Ordered should have perfect score
-        assert result_ordered["score"] >= 0.9
+        self.assert_score_in_range(result_ordered, min_score=1.0, max_score=1.0)
         # Reversed should have lower score due to n-gram mismatch
-        assert result_reversed["score"] < result_ordered["score"]
+        self.assert_score_in_range(result_reversed, min_score=0.3, max_score=0.5)
 
     def test_bigram_overlap(self):
         """Test bigram overlap scenarios."""
@@ -188,7 +180,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Bigram Overlap")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.4, max_score=0.6)
         # Score should be lower than identical due to bigram mismatch
 
     def test_bigram_similar(self):
@@ -199,7 +191,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Bigram Similar")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.5, max_score=0.7)
         # Should have good score since bigrams like "the cat", "cat sat" are preserved
 
     # ==================== THRESHOLD TESTS ====================
@@ -246,7 +238,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Threshold One")
         # Only perfect match should pass
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
         assert result_data["threshold"] == 1.0
 
     def test_default_threshold(self):
@@ -267,8 +259,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Empty Response")
         # Empty response should have zero GLEU score
-        self.assert_score_in_range(result_data)
-        assert result_data["score"] == 0.0
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_empty_ground_truth(self):
         """Test with empty ground truth string."""
@@ -279,7 +270,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Empty Ground Truth")
         # Empty ground truth should result in zero GLEU score
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_both_empty(self):
         """Test with both empty strings."""
@@ -289,7 +280,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Both Empty")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_whitespace_only_response(self):
         """Test with whitespace-only response."""
@@ -299,7 +290,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Whitespace Only Response")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_single_character(self):
         """Test with single character texts."""
@@ -309,7 +300,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Single Character")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_punctuation_only(self):
         """Test with punctuation-only text."""
@@ -319,7 +310,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Punctuation Only")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_numbers_only(self):
         """Test with numbers-only text."""
@@ -329,7 +320,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Numbers Only")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== CASE SENSITIVITY TESTS ====================
 
@@ -341,7 +332,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Case Sensitivity Lower-Upper")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_case_sensitivity_lower_mixed(self):
         """Test case sensitivity between lower and mixed case."""
@@ -351,7 +342,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Case Sensitivity Lower-Mixed")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     # ==================== SPECIAL CHARACTERS TESTS ====================
 
@@ -373,7 +364,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Unicode Text")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_unicode_partial_match(self):
         """Test with partial Unicode match."""
@@ -383,7 +374,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Unicode Partial Match")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     def test_emoji_text(self):
         """Test with emoji characters."""
@@ -393,7 +384,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Emoji Text")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== LONG TEXT TESTS ====================
 
@@ -406,7 +397,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Long Identical Text")
         self.assert_pass(result_data)
-        assert result_data["score"] >= 0.9
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_long_vs_short(self):
         """Test with long reference and short response."""
@@ -416,9 +407,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         result_data = self._extract_and_print_result(results, "Long vs Short")
-        self.assert_score_in_range(result_data)
-        # Short response compared to long reference should have low score
-        assert result_data["score"] < 0.5
+        self.assert_score_in_range(result_data, min_score=0.0, max_score=0.0)
 
     # ==================== TECHNICAL TEXT TESTS ====================
 
@@ -441,7 +430,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Numeric Text")
         self.assert_pass(result_data)
-        assert result_data["score"] >= 0.9
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     # ==================== ERROR HANDLING TESTS ====================
 
@@ -515,7 +504,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Repeated Words")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.05, max_score=0.1)
 
     def test_response_contains_ground_truth(self):
         """Test where response contains ground truth as substring."""
@@ -525,7 +514,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Response Contains Ground Truth")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.6, max_score=0.8)
         # Should have moderate to good score since reference n-grams are present
 
     def test_ground_truth_contains_response(self):
@@ -538,7 +527,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.3,
         )
         result_data = self._extract_and_print_result(results, "Ground Truth Contains Response")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.1, max_score=0.2)
 
     # ==================== OUTPUT STRUCTURE TESTS ====================
 
@@ -618,7 +607,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.1,
         )
         result_data = self._extract_and_print_result(results, "GLEU Short Response")
-        self.assert_score_in_range(result_data)
+        self.assert_score_in_range(result_data, min_score=0.01, max_score=0.05)
 
     def test_symmetric_behavior(self):
         """Test GLEU behavior when swapping response and ground truth."""
@@ -636,8 +625,8 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result2 = self._extract_and_print_result(results2, "GLEU Order 2")
 
         # Both should have valid scores (may not be identical due to GLEU's formula)
-        self.assert_score_in_range(result1)
-        self.assert_score_in_range(result2)
+        self.assert_score_in_range(result1, min_score=0.1, max_score=0.3)
+        self.assert_score_in_range(result2, min_score=0.1, max_score=0.3)
 
     # ==================== TOKENIZATION TESTS ====================
 
@@ -650,6 +639,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Contractions")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_tokenization_handles_hyphenated_words(self):
         """Test that tokenization handles hyphenated words."""
@@ -660,6 +650,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Hyphenated Words")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)
 
     def test_tokenization_handles_numbers_with_text(self):
         """Test tokenization with mixed numbers and text."""
@@ -670,3 +661,4 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Numbers with Text")
         self.assert_pass(result_data)
+        self.assert_score_in_range(result_data, min_score=1.0, max_score=1.0)

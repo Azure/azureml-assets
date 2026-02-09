@@ -182,7 +182,7 @@ class AbstractBaseEvaluatorRunner(ABC):
             result["f1_score"] = f1_score
         if error_message or error_code:
             print(f"  Error Message: {error_message}")
-            print(f"  Error Type: {error_code}")
+            print(f"  Error Code: {error_code}")
             result["error_message"] = error_message
             result["error_code"] = error_code
 
