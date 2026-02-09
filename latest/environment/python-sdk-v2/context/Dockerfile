@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260121.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260208.v1
 
 # Fix vulnerability in base Miniconda (wheel GHSA-8rrh-rw8j-w5fx)
 RUN /opt/miniconda/bin/pip install --upgrade wheel>=0.46.2 setuptools>=75.8.0
