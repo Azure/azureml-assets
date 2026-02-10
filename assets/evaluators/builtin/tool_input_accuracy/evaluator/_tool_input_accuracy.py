@@ -154,12 +154,14 @@ def _extract_text_from_content(content):
             text.append(msg["text"])
     return text
 
+
 def _format_value(v):
     if v is None:
         return "None"
     if isinstance(v, str):
         return f'"{v}"'
     return v
+
 
 def _get_conversation_history(query, include_system_messages=False, include_tool_calls=False):
     all_user_queries = []

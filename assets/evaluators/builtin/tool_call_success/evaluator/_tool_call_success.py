@@ -236,12 +236,14 @@ def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):
             logger.warning(f"Failed to filter tool definitions, returning original list. Error: {e}")
         return tool_definitions
 
+
 def _format_value(v):
     if v is None:
         return "None"
     if isinstance(v, str):
         return f'"{v}"'
     return v
+
 
 def _get_tool_calls_results(agent_response_msgs):
     """Extract formatted agent tool calls and results from response."""
