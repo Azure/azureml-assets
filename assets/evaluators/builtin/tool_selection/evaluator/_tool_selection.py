@@ -173,6 +173,14 @@ def _extract_text_from_content(content):
     return text
 
 
+def _format_value(v):
+    if v is None:
+        return "None"
+    if isinstance(v, str):
+        return f'"{v}"'
+    return v
+
+
 def _get_conversation_history(query, include_system_messages=False, include_tool_calls=False):
     all_user_queries = []
     cur_user_query = []
@@ -237,7 +245,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
                             args = tc.get("function", {}).get("arguments", {})
                             tool_call_id = tc.get("id")
 
-                        args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                        args_str = ", ".join(f'{k}={_format_value(v)}' for k, v in args.items())
                         tool_call_text = f"[TOOL_CALL] {func_name}({args_str})"
                         cur_agent_response.append(tool_call_text)
 
@@ -581,13 +589,19 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, Dict]]
         """
-        # If no tool calls were made or tool call type is not supported, return not applicable result
         return {
-            self._result_key: self._NOT_APPLICABLE_RESULT,
+            self._result_key: threshold,
             f"{self._result_key}_result": "pass",
             f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": error_message,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_details": {},
+            f"{self._result_key}_prompt_tokens": 0,
+            f"{self._result_key}_completion_tokens": 0,
+            f"{self._result_key}_total_tokens": 0,
+            f"{self._result_key}_finish_reason": "",
+            f"{self._result_key}_model": "",
+            f"{self._result_key}_sample_input": "",
+            f"{self._result_key}_sample_output": "",
         }
 
     def _calculate_tool_selection_accuracy(self, details):
