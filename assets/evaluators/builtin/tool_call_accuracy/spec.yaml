@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_call_accuracy"
-version: 7
+version: 9
 displayName: "Tool-Call-Accuracy-Evaluator"
 description: "Measures whether the agent selects the correct tool calls, applies the correct parameters, and tracks inefficient or missing too calls, in order to resolve a user's request. This is an umbrella evaluators that assessing overall tool call quality. Use this metric in agent-based systems, and AI assistants that rely on tool integration."
 evaluatorType: "builtin"
