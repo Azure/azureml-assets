@@ -173,6 +173,14 @@ def _extract_text_from_content(content):
     return text
 
 
+def _format_value(v):
+    if v is None:
+        return "None"
+    if isinstance(v, str):
+        return f'"{v}"'
+    return v
+
+
 def _get_conversation_history(query, include_system_messages=False, include_tool_calls=False):
     all_user_queries = []
     cur_user_query = []
@@ -237,7 +245,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
                             args = tc.get("function", {}).get("arguments", {})
                             tool_call_id = tc.get("id")
 
-                        args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                        args_str = ", ".join(f'{k}={_format_value(v)}' for k, v in args.items())
                         tool_call_text = f"[TOOL_CALL] {func_name}({args_str})"
                         cur_agent_response.append(tool_call_text)
 
