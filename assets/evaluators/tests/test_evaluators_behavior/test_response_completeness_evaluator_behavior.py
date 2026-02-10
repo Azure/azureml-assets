@@ -5,7 +5,6 @@
 
 import pytest
 import math
-from azure.ai.evaluation._exceptions import ErrorCategory
 from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 from ...builtin.response_completeness.evaluator._response_completeness import ResponseCompletenessEvaluator
 
@@ -477,7 +476,7 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
         Tests handling when response is not a string. Currently expects graceful handling
         (e.g., automatic string conversion).
-        
+
         TODO: Decide if this should raise an error instead.
         """
         results = self._run_evaluation(
@@ -493,7 +492,7 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
         Tests handling when ground_truth is not a string. Currently expects graceful handling
         (e.g., automatic string conversion).
-        
+
         TODO: Decide if this should raise an error instead.
         """
         results = self._run_evaluation(
@@ -509,7 +508,7 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
         Tests handling when response is a list (conversation format not supported).
         Currently expects graceful handling (e.g., string conversion or processing).
-        
+
         TODO: Decide if this should raise an error for unsupported type.
         """
         results = self._run_evaluation(
@@ -525,7 +524,7 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
 
         Tests handling when ground_truth is a list (not supported for this evaluator).
         Currently expects graceful handling (e.g., string conversion or processing).
-        
+
         TODO: Decide if this should raise an error for unsupported type.
         """
         results = self._run_evaluation(

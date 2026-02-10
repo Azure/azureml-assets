@@ -24,7 +24,8 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
     - expected_result_fields: list - expected fields in the evaluation result
-    - _additional_expected_field_suffixes: list - additional expected result field suffixes specific to tools evaluators
+    - _additional_expected_field_suffixes: list - additional expected result field suffixes specific to
+      tools evaluators
     """
 
     _additional_expected_field_suffixes = []

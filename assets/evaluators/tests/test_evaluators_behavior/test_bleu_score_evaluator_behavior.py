@@ -4,7 +4,6 @@
 """Behavioral tests for BLEU Score Evaluator."""
 
 import pytest
-from azure.ai.evaluation._exceptions import EvaluationException
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.bleu_score.evaluator._bleu import BleuScoreEvaluator
 
