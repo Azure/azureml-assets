@@ -17,6 +17,19 @@ from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 logger = logging.getLogger(__name__)
 
 
+def _is_intermediate_response(response):
+    """Check if response is intermediate (last content item is a tool_call)."""
+    if isinstance(response, list) and len(response) > 0:
+        last_msg = response[-1]
+        if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+            content = last_msg.get("content", [])
+            if isinstance(content, list) and len(content) > 0:
+                last_content = content[-1]
+                if isinstance(last_content, dict) and last_content.get("type") == "tool_call":
+                    return True
+    return False
+
+
 class RelevanceEvaluator(PromptyEvaluatorBase):
     """
     Evaluates relevance score for a given query and response or a multi-turn conversation, including reasoning.
@@ -165,6 +178,24 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         """
         return super().__call__(*args, **kwargs)
 
+    def _not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict]]:
+        """Return a result indicating that the evaluation is not applicable."""
+        return {
+            self._result_key: threshold,
+            f"{self._result_key}_result": "pass",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_prompt_tokens": 0,
+            f"{self._result_key}_completion_tokens": 0,
+            f"{self._result_key}_total_tokens": 0,
+            f"{self._result_key}_finish_reason": "",
+            f"{self._result_key}_model": "",
+            f"{self._result_key}_sample_input": "",
+            f"{self._result_key}_sample_output": "",
+        }
+
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do a relevance evaluation.
 
@@ -182,6 +213,11 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=ErrorTarget.CONVERSATION,
+            )
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
             )
         if not isinstance(eval_input["query"], str):
             eval_input["query"] = reformat_conversation_history(eval_input["query"], logger)

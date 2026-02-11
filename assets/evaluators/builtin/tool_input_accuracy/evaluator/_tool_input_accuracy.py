@@ -306,6 +306,19 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         return query
 
 
+def _is_intermediate_response(response):
+    """Check if response is intermediate (last content item is a tool_call)."""
+    if isinstance(response, list) and len(response) > 0:
+        last_msg = response[-1]
+        if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+            content = last_msg.get("content", [])
+            if isinstance(content, list) and len(content) > 0:
+                last_content = content[-1]
+                if isinstance(last_content, dict) and last_content.get("type") == "tool_call":
+                    return True
+    return False
+
+
 @experimental
 class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """The Tool Input Accuracy evaluator performs an evaluations of parameters passed to tool calls.
@@ -524,6 +537,12 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        response = kwargs.get("response")
+        if _is_intermediate_response(response):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                1,
+            )
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
