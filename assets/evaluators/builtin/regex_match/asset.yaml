@@ -1,0 +1,9 @@
+type: evaluator
+spec: spec.yaml
+categories:
+- Evaluator
+test:
+  pytest:
+    enabled: true
+    tests_dir: ../tests/unit
+    pip_requirements: ../tests/requirements.txt

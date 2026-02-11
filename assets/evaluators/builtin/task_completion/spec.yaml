@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_completion"
-version: 5
+version: 6
 displayName: "Task-Completion-Evaluator"
 description: "Evaluates whether an AI agent successfully completed the requested task end to end by analyzing the conversation history and agent response to determine if all task requirements were met, ignoring rule adherence or intent understanding. This evaluator is useful for assessing agent effectiveness in task-oriented scenarios, workflow automation, and goal-oriented AI interactions."
 evaluatorType: "builtin"

@@ -403,6 +403,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             credential=credential,
+            threshold=threshold,
             **kwargs,
         )
 
@@ -455,28 +456,35 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 tool_calls = parsed_tool_calls
 
         if not tool_calls:
-            return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
+            # If no tool calls provided and response is string, use response string as tool calls as is
+            if response and isinstance(response, str):
+                tool_calls = response
+            else:
+                return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
 
-        if not isinstance(tool_calls, list):
+        if not isinstance(tool_calls, list) and not isinstance(tool_calls, str):
             tool_calls = [tool_calls]
-        if not isinstance(tool_definitions, list):
+        if not isinstance(tool_definitions, list) and not isinstance(tool_definitions, str):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
-        try:
-            needed_tool_definitions = _extract_needed_tool_definitions(
-                            tool_calls, tool_definitions, ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
-        except EvaluationException:
-            # Check if this is because no tool definitions were provided at all
-            if len(tool_definitions) == 0:
-                return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
-            else:
-                return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
+        if isinstance(tool_calls, str) or isinstance(tool_definitions, str):
+            needed_tool_definitions = tool_definitions
+        else:
+            try:
+                needed_tool_definitions = _extract_needed_tool_definitions(
+                                tool_calls, tool_definitions, ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR)
+            except EvaluationException:
+                # Check if this is because no tool definitions were provided at all
+                if len(tool_definitions) == 0:
+                    return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
+                else:
+                    return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
 
-        if len(needed_tool_definitions) == 0:
+        if not needed_tool_definitions:
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
-        # Extract only tool names from tool calls, removing parameters and results
-        tool_names = _extract_tool_names_from_calls(tool_calls)
+        # Extract only tool names from tool calls, removing parameters and results (skip for strings)
+        tool_names = tool_calls if isinstance(tool_calls, str) else _extract_tool_names_from_calls(tool_calls)
 
         return {
             "query": query,
@@ -513,7 +521,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Call the LLM to evaluate
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        llm_output = prompty_output_dict.get("llm_output", {})
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
             score = llm_output.get("score", None)

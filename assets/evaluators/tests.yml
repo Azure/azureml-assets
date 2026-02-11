@@ -1,0 +1,8 @@
+builtin_evaluators:
+  includes:
+  - ./builtin/tests/
+  jobs:
+    regex_match_evaluator:
+      pytest_job: ./builtin/tests/unit/test_regex_match_evaluator.py
+      assets:
+      - ./builtin/regex_match

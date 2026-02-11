@@ -6,7 +6,11 @@ import logging
 from typing import Dict, List, Optional, Union, Any
 
 from typing_extensions import overload, override
-from azure.ai.evaluation._legacy._adapters._flows import AsyncPrompty
+
+if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
+    from promptflow.core._flow import AsyncPrompty
+else:
+    from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
@@ -406,6 +410,11 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 category=ErrorCategory.INVALID_VALUE,
                 target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
             )
+
+        # If response is a string, we can skip the context extraction and just return the eval input
+        if response and isinstance(response, str):
+            return super()._convert_kwargs_to_eval_input(query=query, response=response, context=response)
+
         context = self._get_context_from_agent_response(response, tool_definitions)
 
         if not self._validate_context(context) and self._is_single_entry(response) and self._is_single_entry(query):
