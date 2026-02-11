@@ -37,7 +37,8 @@ def _is_intermediate_response(response):
             content = last_msg.get("content", [])
             if isinstance(content, list) and len(content) > 0:
                 last_content = content[-1]
-                if isinstance(last_content, dict) and last_content.get("type") in ("function_call", "mcp_approval_request"):
+                if (isinstance(last_content, dict) and
+                        last_content.get("type") in ("function_call", "mcp_approval_request")):
                     return True
     return False
 
