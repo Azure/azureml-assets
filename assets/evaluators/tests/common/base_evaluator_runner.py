@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 """
-Base class for behavioral tests of evaluators using AIProjectClient.
+Base class for evaluator tests.
 
-Runs evaluations for testing.
+Supports both mocked flow (for behavioral tests) and real flow execution (for quality tests).
 """
 
 import os
@@ -17,7 +17,7 @@ from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory
 from azure.identity import DefaultAzureCredential
 
-from .evaluator_mock_config import get_flow_side_effect_for_evaluator
+from .evaluator_mock_config import EVALUATOR_CONFIGS, get_flow_side_effect_for_evaluator
 
 
 class BaseEvaluatorRunner:
@@ -26,43 +26,73 @@ class BaseEvaluatorRunner:
 
     Subclasses should implement:
     - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "Relevance")
+
+    Subclasses may override:
+    - use_mocking: bool - whether to mock the flow (default: True for behavioral tests)
     """
 
     # Subclasses must implement
     evaluator_type: type[PromptyEvaluatorBase] = None
 
+    # Subclasses may override
+    use_mocking: bool = True  # Set to False for quality tests with real flow execution
+
     def _init_evaluator(self) -> PromptyEvaluatorBase:
-        """Create evaluator instance."""
+        """Create evaluator instance with appropriate configuration based on mocking mode."""
         if self.evaluator_type is None:
             raise ValueError("Evaluator type not set. Subclass must define evaluator_type.")
 
-        # Dummy model config and credential for testing - not used since flow is mocked
-        model_config = AzureOpenAIModelConfiguration(
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-            azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-        )
-        credential = DefaultAzureCredential()
+        if self.use_mocking:
+            # Dummy model config for behavioral tests - not used since flow is mocked
+            model_config = AzureOpenAIModelConfiguration(
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+                azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+            )
+        else:
+            # Real model config for quality tests - makes actual LLM calls
+            model_config = AzureOpenAIModelConfiguration(
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
+            )
 
-        evaluator = self.evaluator_type(model_config=model_config, credential=credential)
+        credential = DefaultAzureCredential()
+        is_reasoning_model = os.getenv("AZURE_OPENAI_IS_REASONING_MODEL", "false").lower() == "true"
+        evaluator = self.evaluator_type(
+            model_config=model_config, credential=credential, is_reasoning_model=is_reasoning_model
+        )
         return evaluator
 
     def _run_evaluation(
         self,
-        query: List[Dict[str, Any]],
-        response: List[Dict[str, Any]],
-        tool_calls: List[Dict[str, Any]],
-        tool_definitions: List[Dict[str, Any]],
+        query: List[Dict[str, Any]] = None,
+        response: List[Dict[str, Any]] = None,
+        tool_calls: List[Dict[str, Any]] = None,
+        tool_definitions: List[Dict[str, Any]] = None,
+        context: str = None,
     ) -> Dict[str, Any]:
-        """Run evaluation and return results."""
+        """Run evaluation and return results.
+
+        Args:
+            query: Query conversation messages (optional)
+            response: Response conversation messages (optional)
+            tool_calls: Tool calls data (optional)
+            tool_definitions: Tool definitions (optional)
+            context: Additional context (optional)
+
+        Returns:
+            Dictionary containing evaluation results
+        """
         evaluator_name = self.evaluator_type._RESULT_KEY
         evaluator = self._init_evaluator()
 
-        # Mock the flow with appropriate side effect based on evaluator type
-        evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
+        # Mock the flow only for behavioral tests
+        if self.use_mocking:
+            evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
 
-        # Special handling for groundedness evaluator to disable flow reloading
-        if hasattr(evaluator, "_ensure_query_prompty_loaded"):
-            evaluator._ensure_query_prompty_loaded = MagicMock()
+            # Special handling for groundedness evaluator to disable flow reloading
+            if hasattr(evaluator, "_ensure_query_prompty_loaded"):
+                evaluator._ensure_query_prompty_loaded = MagicMock()
 
         try:
             results = evaluator(
@@ -70,6 +100,7 @@ class BaseEvaluatorRunner:
                 response=response,
                 tool_calls=tool_calls,
                 tool_definitions=tool_definitions,
+                context=context,
             )
             return results
         except EvaluationException as e:
@@ -101,6 +132,7 @@ class BaseEvaluatorRunner:
             print(f"  Error Code: {error_code}")
 
         return {
+            "evaluator": evaluator_name,
             "label": label,
             "reason": reason,
             "score": score,
@@ -121,6 +153,13 @@ class BaseEvaluatorRunner:
         MISSING_FIELD = "MISSING_FIELD"
         INVALID_VALUE = "INVALID_VALUE"
         PASS = "PASS"
+
+    def _get_threshold(self, result_data: Dict[str, Any]) -> float:
+        """Get the threshold score for passing from the evaluator type."""
+        evaluator_name = result_data["evaluator"]
+        grader_score = EVALUATOR_CONFIGS[evaluator_name].score
+        threshold = float(grader_score) / 2.0
+        return threshold
 
     def assert_expected_behavior(self, assert_type: AssertType, result_data: Dict[str, Any]):
         """Assert the expected behavior based on the assert type.
@@ -155,7 +194,8 @@ class BaseEvaluatorRunner:
         assert result_data["label"] == "pass"
         score_type = type(result_data["score"])
         assert score_type is float or score_type is int
-        assert result_data["score"] >= 1.0
+        threshold = self._get_threshold(result_data)
+        assert result_data["score"] >= threshold
 
     def assert_fail(self, result_data: Dict[str, Any]):
         """Assert a failing result.
@@ -171,9 +211,10 @@ class BaseEvaluatorRunner:
         assert result_data["label"] == "fail"
         score_type = type(result_data["score"])
         assert score_type is float or score_type is int
-        assert result_data["score"] == 0.0
+        threshold = self._get_threshold(result_data)
+        assert result_data["score"] < threshold
 
-    def assert_pass_or_fail(self, result_data):
+    def assert_pass_or_fail(self, result_data: Dict[str, Any]):
         """Assert a pass or fail result.
 
         Validates that the result has either a 'pass' or 'fail' label and a score >= 0.0.
@@ -188,6 +229,25 @@ class BaseEvaluatorRunner:
         score_type = type(result_data["score"])
         assert score_type is float or score_type is int
         assert result_data["score"] >= 0.0
+
+    def assert_score_in_range(self, result_data: Dict[str, Any], min_score: float = 0.0, max_score: float = 1.0):
+        """Assert that score is within expected range.
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+            min_score: Minimum expected score (inclusive).
+            max_score: Maximum expected score (inclusive).
+
+        Raises:
+            AssertionError: If the score is outside the expected range.
+        """
+        score_key = "score"
+        assert result_data[score_key] is not None, "Score should not be None"
+        score = result_data[score_key]
+        score_type = type(score)
+        assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
+        assert min_score <= result_data[score_key] <= max_score, \
+            f"Score {result_data[score_key]} should be in range [{min_score}, {max_score}]"
 
     def assert_error(self, result_data: Dict[str, Any], error_code: str):
         """Assert an error result.

@@ -10,3 +10,4 @@ dependencies:
       - -r requirements.txt
       - promptflow
       - pytest
+      - pytest-rerunfailures

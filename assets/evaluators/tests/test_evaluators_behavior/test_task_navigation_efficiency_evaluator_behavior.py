@@ -562,15 +562,15 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior:
         partial_actions = [
             {
                 "role": "assistant",
-                "content": [{"type": "tool_call", "tool_call_id": "call_1", "name": "call_tool_A", "arguments": {}}]
+                "content": [{"type": "tool_call", "tool_call_id": "call_1", "name": "call_tool_A", "arguments": {}}],
             },
             {
                 "role": "assistant",
-                "content": [{"type": "tool_call", "tool_call_id": "call_2", "name": "call_tool_B", "arguments": {}}]
+                "content": [{"type": "tool_call", "tool_call_id": "call_2", "name": "call_tool_B", "arguments": {}}],
             },
             {
                 "role": "assistant",
-                "content": [{"type": "tool_call", "tool_call_id": "call_3", "name": "extra_tool", "arguments": {}}]
+                "content": [{"type": "tool_call", "tool_call_id": "call_3", "name": "extra_tool", "arguments": {}}],
             },
         ]
         expected = ["call_tool_A", "call_tool_B", "call_tool_C"]
