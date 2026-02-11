@@ -155,6 +155,14 @@ def _extract_text_from_content(content):
     return text
 
 
+def _format_value(v):
+    if v is None:
+        return "None"
+    if isinstance(v, str):
+        return f'"{v}"'
+    return v
+
+
 def _get_conversation_history(query, include_system_messages=False, include_tool_calls=False):
     all_user_queries = []
     cur_user_query = []
@@ -219,7 +227,7 @@ def _get_conversation_history(query, include_system_messages=False, include_tool
                             args = tc.get("function", {}).get("arguments", {})
                             tool_call_id = tc.get("id")
 
-                        args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                        args_str = ", ".join(f'{k}={_format_value(v)}' for k, v in args.items())
                         tool_call_text = f"[TOOL_CALL] {func_name}({args_str})"
                         cur_agent_response.append(tool_call_text)
 
@@ -394,37 +402,50 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         query = kwargs.get("query")
         response = kwargs.get("response")
 
-        # Extract tool calls from response
         if not response:
             return {"error_message": "Response parameter is required to extract tool calls."}
 
+        # Try to parse tool calls from response
         tool_calls = self._parse_tools_from_response(response)
-        if not tool_calls:
-            return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
 
-        if not isinstance(tool_calls, list):
+        if not tool_calls:
+            # If no tool calls found and response is string, use response string as tool calls as is
+            if isinstance(response, str):
+                tool_calls = response
+            else:
+                return {"error_message": self._NO_TOOL_CALLS_MESSAGE}
+
+        # Normalize tool_calls and tool_definitions (skip for strings)
+        if not isinstance(tool_calls, list) and not isinstance(tool_calls, str):
             tool_calls = [tool_calls]
-        if not isinstance(tool_definitions, list):
+        if not isinstance(tool_definitions, list) and not isinstance(tool_definitions, str):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
-        try:
-            # Type cast to satisfy static type checker
-            tool_calls_typed = cast(List[Dict], tool_calls)
-            needed_tool_definitions = _extract_needed_tool_definitions(
-                tool_calls_typed, tool_definitions, ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
-            )
-        except EvaluationException:
-            # Check if this is because no tool definitions were provided at all
-            if len(tool_definitions) == 0:
-                return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
-            else:
-                return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
+        # Cross-validation (skip when either is string)
+        if isinstance(tool_calls, str) or isinstance(tool_definitions, str):
+            needed_tool_definitions = tool_definitions
+        else:
+            try:
+                # Type cast to satisfy static type checker
+                tool_calls_typed = cast(List[Dict], tool_calls)
+                needed_tool_definitions = _extract_needed_tool_definitions(
+                    tool_calls_typed, tool_definitions, ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR
+                )
+            except EvaluationException:
+                # Check if this is because no tool definitions were provided at all
+                if len(tool_definitions) == 0:
+                    return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
+                else:
+                    return {"error_message": self._TOOL_DEFINITIONS_MISSING_MESSAGE}
 
-        if len(needed_tool_definitions) == 0:
+        if not needed_tool_definitions:
             return {"error_message": self._NO_TOOL_DEFINITIONS_MESSAGE}
 
-        # Get agent response with tool calls and results using reformat_agent_response
-        agent_response_with_tools = reformat_agent_response(response, include_tool_messages=True)
+        # Reformat response for LLM (skip for strings - already a string)
+        if isinstance(tool_calls, str):
+            agent_response_with_tools = tool_calls
+        else:
+            agent_response_with_tools = reformat_agent_response(response, include_tool_messages=True)
 
         return {
             "query": query,
@@ -463,7 +484,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Call the LLM to evaluate
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        llm_output = prompty_output_dict.get("llm_output", {})
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
             result = llm_output.get("result", None)
@@ -556,13 +577,19 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, Dict]]
         """
-        # If no tool calls were made or tool call type is not supported, return not applicable result
         return {
-            self._result_key: self._NOT_APPLICABLE_RESULT,
+            self._result_key: threshold,
             f"{self._result_key}_result": "pass",
             f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": error_message,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_details": {},
+            f"{self._result_key}_prompt_tokens": 0,
+            f"{self._result_key}_completion_tokens": 0,
+            f"{self._result_key}_total_tokens": 0,
+            f"{self._result_key}_finish_reason": "",
+            f"{self._result_key}_model": "",
+            f"{self._result_key}_sample_input": "",
+            f"{self._result_key}_sample_output": "",
         }
 
     @override

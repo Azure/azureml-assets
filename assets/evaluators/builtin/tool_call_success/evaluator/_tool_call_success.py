@@ -157,19 +157,28 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             )
 
-        eval_input["tool_calls"] = _reformat_tool_calls_results(eval_input["response"], logger)
+        # If response is a string, pass directly without reformatting
+        if isinstance(eval_input["response"], str):
+            # Unless tool calls are explicitly provided, then keep it as is
+            if "tool_calls" not in eval_input or not eval_input["tool_calls"]:
+                eval_input["tool_calls"] = eval_input["response"]
+        else:
+            eval_input["tool_calls"] = _reformat_tool_calls_results(eval_input["response"], logger)
 
-        if "tool_definitions" in eval_input:
+        # If tool definitions are string, pass directly without reformatting, else format it.
+        if "tool_definitions" in eval_input and not isinstance(eval_input["tool_definitions"], str):
             tool_definitions = eval_input["tool_definitions"]
-            filtered_tool_definitions = _filter_to_used_tools(
-                tool_definitions=tool_definitions,
-                msgs_list=eval_input["response"],
-                logger=logger,
-            )
-            eval_input["tool_definitions"] = _reformat_tool_definitions(filtered_tool_definitions, logger)
+            # Only if response is not a string, we filter tool definitions to only tools needed.
+            if not isinstance(eval_input["response"], str):
+                tool_definitions = _filter_to_used_tools(
+                    tool_definitions=tool_definitions,
+                    msgs_list=eval_input["response"],
+                    logger=logger,
+                )
+            eval_input["tool_definitions"] = _reformat_tool_definitions(tool_definitions, logger)
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        llm_output = prompty_output_dict.get("llm_output", "")
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
             success = llm_output.get("success", False)
@@ -237,6 +246,14 @@ def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):
         return tool_definitions
 
 
+def _format_value(v):
+    if v is None:
+        return "None"
+    if isinstance(v, str):
+        return f'"{v}"'
+    return v
+
+
 def _get_tool_calls_results(agent_response_msgs):
     """Extract formatted agent tool calls and results from response."""
     agent_response_text = []
@@ -267,7 +284,7 @@ def _get_tool_calls_results(agent_response_msgs):
                         tool_call_id = content.get("tool_call_id")
                         func_name = content.get("name", "")
                         args = content.get("arguments", {})
-                    args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                    args_str = ", ".join(f'{k}={_format_value(v)}' for k, v in args.items())
                     call_line = f"[TOOL_CALL] {func_name}({args_str})"
                     agent_response_text.append(call_line)
                     if tool_call_id in tool_results:
