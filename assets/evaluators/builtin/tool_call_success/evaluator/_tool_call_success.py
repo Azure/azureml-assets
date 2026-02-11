@@ -169,15 +169,13 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if "tool_definitions" in eval_input and not isinstance(eval_input["tool_definitions"], str):
             tool_definitions = eval_input["tool_definitions"]
             # Only if response is not a string, we filter tool definitions to only tools needed.
-            if isinstance(eval_input["response"], str):
-                eval_input["tool_definitions"] = _reformat_tool_definitions(tool_definitions, logger)
-            else:
-                filtered_tool_definitions = _filter_to_used_tools(
+            if not isinstance(eval_input["response"], str):
+                tool_definitions = _filter_to_used_tools(
                     tool_definitions=tool_definitions,
                     msgs_list=eval_input["response"],
                     logger=logger,
                 )
-                eval_input["tool_definitions"] = _reformat_tool_definitions(filtered_tool_definitions, logger)
+            eval_input["tool_definitions"] = _reformat_tool_definitions(tool_definitions, logger)
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
