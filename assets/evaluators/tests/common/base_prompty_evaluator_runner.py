@@ -191,18 +191,3 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
             AssertionError: If the result does not contain the expected invalid value error.
         """
         self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
-
-    def assert_not_applicable(self, result_data: Dict[str, Any]):
-        """Assert a not applicable result.
-
-        Validates that the result has a 'pass' label and 'not applicable' score.
-        Note: Currently validates as 'pass' label, but may need to be updated to a dedicated 'not applicable' label.
-
-        Args:
-            result_data: Dictionary containing evaluation result data with 'label' and 'score' keys.
-
-        Raises:
-            AssertionError: If the result does not match the not applicable criteria.
-        """
-        assert result_data["label"] == "pass"  # TODO: this should be not applicable?
-        assert result_data["score"] == "not applicable"
