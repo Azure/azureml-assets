@@ -8,6 +8,7 @@ Tests various input scenarios: query, response, and tool_definitions.
 """
 
 import json
+from typing import List
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 
 
@@ -22,7 +23,29 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
     - requires_tool_definitions: bool - whether tool definitions are required or optional
     - requires_query: bool - whether query is required
     - MINIMAL_RESPONSE: list - minimal valid response format for the evaluator
+    - expected_result_fields: list - expected fields in the evaluation result
+    - _additional_expected_field_suffixes: list - additional expected result field suffixes specific to
+      tools evaluators
     """
+
+    _additional_expected_field_suffixes = []
+
+    @property
+    def expected_result_fields(self) -> List[str]:
+        """Get the expected result fields for tools evaluators."""
+        return [
+            f"{self._result_prefix}",
+            f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_result",
+            f"{self._result_prefix}_prompt_tokens",
+            f"{self._result_prefix}_completion_tokens",
+            f"{self._result_prefix}_total_tokens",
+            f"{self._result_prefix}_finish_reason",
+            f"{self._result_prefix}_model",
+            f"{self._result_prefix}_sample_input",
+            f"{self._result_prefix}_sample_output",
+        ] + [f"{self._result_prefix}_{suffix}" for suffix in self._additional_expected_field_suffixes]
 
     # Test Configs
     requires_tool_definitions: bool = False

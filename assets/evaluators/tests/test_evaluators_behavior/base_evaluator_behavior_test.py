@@ -10,10 +10,10 @@ Tests various input scenarios: query, and response.
 from typing import Any, Dict, List
 import json
 import copy
-from ..common.base_evaluator_runner import BaseEvaluatorRunner
+from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 
 
-class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
+class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
     """
     Base class for evaluator behavioral tests with query and response inputs.
 
@@ -342,7 +342,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     # ==================== QUERY TESTS ====================
 
-    def run_query_test(self, input_query, description: str, assert_type: BaseEvaluatorRunner.AssertType):
+    def run_query_test(self, input_query, description: str, assert_type: BasePromptyEvaluatorRunner.AssertType):
         """Test various query inputs."""
         results = self._run_evaluation(
             query=input_query,
@@ -501,7 +501,7 @@ class BaseEvaluatorBehaviorTest(BaseEvaluatorRunner):
 
     # ==================== RESPONSE TESTS ====================
 
-    def run_response_test(self, input_response, description: str, assert_type: BaseEvaluatorRunner.AssertType):
+    def run_response_test(self, input_response, description: str, assert_type: BasePromptyEvaluatorRunner.AssertType):
         """Test various response inputs."""
         results = self._run_evaluation(
             query=self.VALID_QUERY,

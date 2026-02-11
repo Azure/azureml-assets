@@ -20,7 +20,8 @@ DEFAULT_EXPLANATION = "Success explanation"
 class OutputType(Enum):
     """Types of outputs that evaluators can produce."""
 
-    STRING = "string"
+    STRING = "string"  # XML format: <S0>...<S2>score</S2>
+    SIMPLE_STRING = "simple_string"  # Just the score as a string (e.g., "5")
     DICT = "dict"
 
 
@@ -46,6 +47,7 @@ EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
     "fluency": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.STRING),
     "coherence": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.STRING),
     "groundedness": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.STRING),
+    "similarity": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.SIMPLE_STRING),
     "intent_resolution": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "relevance": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "response_completeness": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
@@ -116,6 +118,8 @@ def create_flow_side_effect(
     async def flow_side_effect(timeout, **kwargs):
         if output_type == OutputType.STRING:
             return get_string_llm_output(score, explanation)
+        elif output_type == OutputType.SIMPLE_STRING:
+            return str(score)
         else:
             return get_dict_llm_output(score, explanation)
 

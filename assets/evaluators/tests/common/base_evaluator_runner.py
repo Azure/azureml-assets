@@ -2,233 +2,252 @@
 # Licensed under the MIT License.
 
 """
-Base class for evaluator tests.
+Base class for all evaluator tests.
 
-Supports both mocked flow (for behavioral tests) and real flow execution (for quality tests).
+Provides common interfaces and assertion helpers shared by both prompty-based and code-based evaluators.
 """
 
-import os
-from enum import Enum
-from typing import Any, Dict, List
+from abc import ABC
+from typing import Any, Dict, List, Type
 from unittest.mock import MagicMock
-
-from azure.ai.evaluation import AzureOpenAIModelConfiguration
-from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory
-from azure.identity import DefaultAzureCredential
+from azure.ai.evaluation._evaluators._common import EvaluatorBase
+from azure.ai.evaluation._exceptions import EvaluationException
 
 from .evaluator_mock_config import EVALUATOR_CONFIGS, get_flow_side_effect_for_evaluator
 
 
-class BaseEvaluatorRunner:
+class BaseEvaluatorRunner(ABC):
     """
-    Base class for running evaluators for testing.
+    Abstract base class for running evaluators for testing.
+
+    Provides common assertion helpers and interfaces that both prompty-based
+    and code-based evaluators can use.
 
     Subclasses should implement:
-    - evaluator_type: type[PromptyEvaluatorBase] - type of the evaluator (e.g., "Relevance")
+    - evaluator_type: The type of evaluator to test
+    - result_key: The key for the score in results
 
     Subclasses may override:
-    - use_mocking: bool - whether to mock the flow (default: True for behavioral tests)
+    - result_prefix: prefix for result/threshold keys
+    - constructor_arg_names: kwargs routed to constructor (rest go to evaluator call)
+    - use_mocking: if true, mock flow llm calls (only applicable for prompty evaluator)
+    - _init_evaluator(): Create an evaluator instance
+    - _run_evaluation(): Run the evaluator with inputs
+    - _extract_and_print_result(): Extract and format results
     """
 
     # Subclasses must implement
-    evaluator_type: type[PromptyEvaluatorBase] = None
+    evaluator_type: Type[EvaluatorBase] = None
+    result_key: str = None  # e.g., "bleu_score", "f1_score", "rouge_f1_score"
 
     # Subclasses may override
-    use_mocking: bool = True  # Set to False for quality tests with real flow execution
+    result_prefix: str = None  # e.g., "bleu", "f1", "rouge"
+    constructor_arg_names: List[str] = []
+    use_mocking: bool = False
 
-    def _init_evaluator(self) -> PromptyEvaluatorBase:
-        """Create evaluator instance with appropriate configuration based on mocking mode."""
+    @property
+    def expected_result_fields(self) -> List[str]:
+        """Get the expected result fields for the evaluator."""
+        return []
+
+    @property
+    def _result_prefix(self) -> str:
+        """Get the result prefix, auto-deriving from result_key if not explicitly set."""
+        if self.result_prefix is not None:
+            return self.result_prefix
+        if self.result_key is None:
+            return None
+        # Auto-derive: "bleu_score" -> "bleu", "f1_score" -> "f1"
+        if self.result_key.endswith("_score"):
+            return self.result_key[:-6]  # Strip "_score"
+        return self.result_key
+
+    def _init_evaluator(self, **kwargs) -> EvaluatorBase:
+        """Create evaluator instance with specified threshold.
+
+        Args:
+            **kwargs: Keyword arguments passed to the evaluator constructor.
+
+        Returns:
+            Configured evaluator instance.
+
+        Raises:
+            ValueError: If evaluator_type, or result_key is not set.
+        """
         if self.evaluator_type is None:
             raise ValueError("Evaluator type not set. Subclass must define evaluator_type.")
+        if self.result_key is None:
+            raise ValueError("Result key not set. Subclass must define result_key.")
 
-        if self.use_mocking:
-            # Dummy model config for behavioral tests - not used since flow is mocked
-            model_config = AzureOpenAIModelConfiguration(
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-                azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-            )
-        else:
-            # Real model config for quality tests - makes actual LLM calls
-            model_config = AzureOpenAIModelConfiguration(
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
-            )
+        return self.evaluator_type(**kwargs)
 
-        credential = DefaultAzureCredential()
-        is_reasoning_model = os.getenv("AZURE_OPENAI_IS_REASONING_MODEL", "false").lower() == "true"
-        evaluator = self.evaluator_type(
-            model_config=model_config, credential=credential, is_reasoning_model=is_reasoning_model
-        )
-        return evaluator
-
-    def _run_evaluation(
-        self,
-        query: List[Dict[str, Any]] = None,
-        response: List[Dict[str, Any]] = None,
-        tool_calls: List[Dict[str, Any]] = None,
-        tool_definitions: List[Dict[str, Any]] = None,
-        context: str = None,
-    ) -> Dict[str, Any]:
+    def _run_evaluation(self, **kwargs) -> Dict[str, Any]:
         """Run evaluation and return results.
 
         Args:
-            query: Query conversation messages (optional)
-            response: Response conversation messages (optional)
-            tool_calls: Tool calls data (optional)
-            tool_definitions: Tool definitions (optional)
-            context: Additional context (optional)
+            **kwargs: Keyword arguments. Args in constructor_arg_names are passed to
+                      evaluator constructor, remaining kwargs are passed to the evaluator call.
 
         Returns:
-            Dictionary containing evaluation results
+            Dictionary containing evaluation results.
         """
-        evaluator_name = self.evaluator_type._RESULT_KEY
-        evaluator = self._init_evaluator()
+        # Split kwargs into constructor args vs call args
+        constructor_kwargs = {}
+        call_kwargs = {}
+
+        for key, value in kwargs.items():
+            if key in self.constructor_arg_names:
+                constructor_kwargs[key] = value
+            else:
+                call_kwargs[key] = value
+
+        evaluator = self._init_evaluator(**constructor_kwargs)
 
         # Mock the flow only for behavioral tests
         if self.use_mocking:
-            evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
+            if hasattr(evaluator, "_flow"):
+                evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(self.result_key))
 
             # Special handling for groundedness evaluator to disable flow reloading
             if hasattr(evaluator, "_ensure_query_prompty_loaded"):
                 evaluator._ensure_query_prompty_loaded = MagicMock()
 
         try:
-            results = evaluator(
-                query=query,
-                response=response,
-                tool_calls=tool_calls,
-                tool_definitions=tool_definitions,
-                context=context,
-            )
+            results = evaluator(**call_kwargs)
             return results
         except EvaluationException as e:
             print(f"Error during evaluation: {e}")
             return {
-                f"{evaluator_name}_error_message": e.message,
-                f"{evaluator_name}_error_code": e.category.name,
+                f"{self.result_key}_error_message": e.message,
+                f"{self.result_key}_error_code": e.category.name,
             }
         except Exception as e:
             print(f"Unexpected error during evaluation: {e}")
             return {
-                f"{evaluator_name}_error_message": str(e),
+                f"{self.result_key}_error_message": str(e),
             }
 
     def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
-        """Extract result fields and print them."""
-        evaluator_name = self.evaluator_type._RESULT_KEY
-        label = results.get(f"{evaluator_name}_result")
-        reason = results.get(f"{evaluator_name}_reason")
-        score = results.get(f"{evaluator_name}")
-        error_message = results.get(f"{evaluator_name}_error_message")
-        error_code = results.get(f"{evaluator_name}_error_code")
+        """Extract result fields and print them.
 
-        print(f"\n[{test_label}] Result: {label}")
-        print(f"  Score: {score}")
-        print(f"  Reason: {reason}")
+        Args:
+            results: Raw evaluation results from the evaluator.
+            test_label: Label for the test (used in print output).
+
+        Returns:
+            Dictionary with standardized result fields.
+        """
+        score = results.get(self.result_key)
+
+        if f"{self.result_key}_error_message" not in results and score != "not applicable":
+            for field in self.expected_result_fields:
+                if field not in results:
+                    raise ValueError(f"Expected result field '{field}' not found in results.")
+
+        label = results.get(f"{self._result_prefix}_result")
+
+        error_message = results.get(f"{self.result_key}_error_message")
+        error_code = results.get(f"{self.result_key}_error_code")
+
+        # Optional fields
+        reason = results.get(f"{self.result_key}_reason")
+        threshold = results.get(f"{self._result_prefix}_threshold")
+        precision = results.get(f"{self._result_prefix}_precision")
+        recall = results.get(f"{self._result_prefix}_recall")
+        f1_score = results.get(f"{self._result_prefix}_f1_score")
+
+        result = {
+            "evaluator": self.result_key,
+            "score": score,
+            "label": label,
+        }
+
+        print(f"\nEvaluation Result for {self.result_key}:")
+        print(f"\n[{test_label}] Score: {score}")
+        print(f"  Result: {label}")
+        if reason is not None:
+            print(f"  Reason: {reason}")
+            result["reason"] = reason
+        if threshold is not None:
+            print(f"  Threshold: {threshold}")
+            result["threshold"] = threshold
+        if precision is not None:
+            print(f"  Precision: {precision}")
+            result["precision"] = precision
+        if recall is not None:
+            print(f"  Recall: {recall}")
+            result["recall"] = recall
+        if f1_score is not None:
+            print(f"  F1 Score: {f1_score}")
+            result["f1_score"] = f1_score
         if error_message or error_code:
             print(f"  Error Message: {error_message}")
             print(f"  Error Code: {error_code}")
+            result["error_message"] = error_message
+            result["error_code"] = error_code
 
-        return {
-            "evaluator": evaluator_name,
-            "label": label,
-            "reason": reason,
-            "score": score,
-            "error_message": error_message,
-            "error_code": error_code,
-        }
+        return result
 
-    # Helper Methods and Enums
-    class AssertType(Enum):
-        """Enumeration of assertion types for evaluator testing.
-
-        Attributes:
-            MISSING_FIELD: Indicates test should assert a missing field error.
-            INVALID_VALUE: Indicates test should assert an invalid value error.
-            PASS: Indicates test should assert a passing result.
-        """
-
-        MISSING_FIELD = "MISSING_FIELD"
-        INVALID_VALUE = "INVALID_VALUE"
-        PASS = "PASS"
-
-    def _get_threshold(self, result_data: Dict[str, Any]) -> float:
-        """Get the threshold score for passing from the evaluator type."""
-        evaluator_name = result_data["evaluator"]
-        grader_score = EVALUATOR_CONFIGS[evaluator_name].score
-        threshold = float(grader_score) / 2.0
-        return threshold
-
-    def assert_expected_behavior(self, assert_type: AssertType, result_data: Dict[str, Any]):
-        """Assert the expected behavior based on the assert type.
-
-        Args:
-            assert_type: Type of assertion to perform (MISSING_FIELD, INVALID_VALUE, or PASS).
-            result_data: Dictionary containing evaluation result data to validate.
-
-        Raises:
-            ValueError: If an unknown assert type is provided.
-        """
-        if assert_type == self.AssertType.MISSING_FIELD:
-            self.assert_missing_field_error(result_data)
-        elif assert_type == self.AssertType.INVALID_VALUE:
-            self.assert_invalid_value_error(result_data)
-        elif assert_type == self.AssertType.PASS:
-            self.assert_pass(result_data)
-        else:
-            raise ValueError(f"Unknown assert type: {assert_type}")
+    # ==================== COMMON ASSERTION HELPERS ====================
 
     def assert_pass(self, result_data: Dict[str, Any]):
         """Assert a passing result.
 
-        Validates that the result has a 'pass' label and a score >= 1.0.
-
         Args:
-            result_data: Dictionary containing evaluation result data with 'label' and 'score' keys.
+            result_data: Dictionary containing evaluation result data.
 
         Raises:
             AssertionError: If the result does not meet passing criteria.
         """
-        assert result_data["label"] == "pass"
-        score_type = type(result_data["score"])
-        assert score_type is float or score_type is int
+        score_key = "score"
+        label_key = "label"
         threshold = self._get_threshold(result_data)
-        assert result_data["score"] >= threshold
+        assert result_data[label_key] == "pass", f"Expected 'pass' but got '{result_data[label_key]}'"
+        assert result_data[score_key] is not None, "Score should not be None"
+        score = result_data[score_key]
+        score_type = type(score)
+        assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
+        assert result_data[score_key] >= threshold, \
+            f"Score {result_data[score_key]} should be >= threshold {threshold}"
 
     def assert_fail(self, result_data: Dict[str, Any]):
         """Assert a failing result.
 
-        Validates that the result has a 'fail' label and a score of 0.0.
-
         Args:
-            result_data: Dictionary containing evaluation result data with 'label' and 'score' keys.
+            result_data: Dictionary containing evaluation result data.
 
         Raises:
             AssertionError: If the result does not meet failing criteria.
         """
-        assert result_data["label"] == "fail"
-        score_type = type(result_data["score"])
-        assert score_type is float or score_type is int
+        score_key = "score"
+        label_key = "label"
         threshold = self._get_threshold(result_data)
-        assert result_data["score"] < threshold
+        assert result_data[label_key] == "fail", f"Expected 'fail' but got '{result_data[label_key]}'"
+        assert result_data[score_key] is not None, "Score should not be None"
+        score = result_data[score_key]
+        score_type = type(score)
+        assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
+        assert result_data[score_key] < threshold, \
+            f"Score {result_data[score_key]} should be < threshold {threshold}"
 
     def assert_pass_or_fail(self, result_data: Dict[str, Any]):
-        """Assert a pass or fail result.
-
-        Validates that the result has either a 'pass' or 'fail' label and a score >= 0.0.
+        """Assert a valid pass or fail result.
 
         Args:
-            result_data: Dictionary containing evaluation result data with 'label' and 'score' keys.
+            result_data: Dictionary containing evaluation result data.
 
         Raises:
-            AssertionError: If the result does not have a valid pass/fail label or score.
+            AssertionError: If the result is not a valid pass/fail.
         """
-        assert result_data["label"] in ["pass", "fail"]
-        score_type = type(result_data["score"])
-        assert score_type is float or score_type is int
-        assert result_data["score"] >= 0.0
+        score_key = "score"
+        label_key = "label"
+        assert result_data[label_key] in ["pass", "fail"], \
+            f"Expected 'pass' or 'fail' but got '{result_data[label_key]}'"
+        assert result_data[score_key] is not None, "Score should not be None"
+        score = result_data[score_key]
+        score_type = type(score)
+        assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
+        assert score >= 0.0, f"Score {score} should be >= 0.0"
 
     def assert_score_in_range(self, result_data: Dict[str, Any], min_score: float = 0.0, max_score: float = 1.0):
         """Assert that score is within expected range.
@@ -249,59 +268,40 @@ class BaseEvaluatorRunner:
         assert min_score <= result_data[score_key] <= max_score, \
             f"Score {result_data[score_key]} should be in range [{min_score}, {max_score}]"
 
-    def assert_error(self, result_data: Dict[str, Any], error_code: str):
+    def assert_error(self, result_data: Dict[str, Any], error_code: str = None):
         """Assert an error result.
 
-        Validates that the result contains an error with the expected error code and no label or score.
-
         Args:
             result_data: Dictionary containing evaluation result data.
-            error_code: Expected error code to validate against.
+            error_code: Expected error code.
 
         Raises:
-            AssertionError: If the result does not match the expected error state.
+            AssertionError: If no error is present or error type doesn't match.
         """
-        assert result_data["label"] is None
-        assert result_data["score"] is None
-        assert result_data["error_code"] == error_code
+        assert result_data.get("error_message") is not None, "Expected an error message"
+        if error_code is not None:
+            assert result_data["error_code"] == error_code, \
+                f"Expected error type/code '{error_code}' but got '{result_data['error_code']}'"
 
-    def assert_missing_field_error(self, result_data: Dict[str, Any]):
-        """Assert a missing field error result.
+    # ==================== HELPER METHODS ====================
 
-        Validates that the result contains a MISSING_FIELD error.
-
-        Args:
-            result_data: Dictionary containing evaluation result data.
-
-        Raises:
-            AssertionError: If the result does not contain the expected missing field error.
-        """
-        self.assert_error(result_data, ErrorCategory.MISSING_FIELD.name)
-
-    def assert_invalid_value_error(self, result_data: Dict[str, Any]):
-        """Assert an invalid value error result.
-
-        Validates that the result contains an INVALID_VALUE error.
+    def _get_threshold(self, result_data: Dict[str, Any]) -> float:
+        """Get the threshold for pass/fail determination.
 
         Args:
             result_data: Dictionary containing evaluation result data.
 
-        Raises:
-            AssertionError: If the result does not contain the expected invalid value error.
+        Returns:
+            Threshold value for pass/fail determination.
         """
-        self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+        # Default: try to get from result_data, fallback to 0.5
+        if "threshold" in result_data:
+            return result_data["threshold"]
 
-    def assert_not_applicable(self, result_data: Dict[str, Any]):
-        """Assert a not applicable result.
+        evaluator_name = result_data["evaluator"]
+        if evaluator_name in EVALUATOR_CONFIGS:
+            grader_score = EVALUATOR_CONFIGS[evaluator_name].score
+            threshold = float(grader_score) / 2.0
+            return threshold
 
-        Validates that the result has a 'pass' label and 'not applicable' score.
-        Note: Currently validates as 'pass' label, but may need to be updated to a dedicated 'not applicable' label.
-
-        Args:
-            result_data: Dictionary containing evaluation result data with 'label' and 'score' keys.
-
-        Raises:
-            AssertionError: If the result does not match the not applicable criteria.
-        """
-        assert result_data["label"] == "pass"  # TODO: this should be not applicable?
-        assert result_data["score"] == "not applicable"
+        return 0.5  # Default threshold if not provided

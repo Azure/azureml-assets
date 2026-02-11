@@ -6,7 +6,7 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from .base_evaluator_runner import BaseEvaluatorRunner
+from .base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 
 
 # Type aliases for clarity
@@ -25,11 +25,11 @@ class ExpectedResult(Enum):
     PASS_WITH_SCORE_3 = "pass_with_score_3"
 
 
-class BaseQualityEvaluatorRunner(BaseEvaluatorRunner):
+class BaseQualityEvaluatorRunner(BasePromptyEvaluatorRunner):
     """
     Base class for quality tests that use real LLM flow execution.
 
-    This is a thin wrapper around BaseEvaluatorRunner that disables mocking
+    This is a thin wrapper around BasePromptyEvaluatorRunner that disables mocking
     and provides convenience methods for quality testing.
 
     Subclasses should implement:
@@ -48,6 +48,7 @@ class BaseQualityEvaluatorRunner(BaseEvaluatorRunner):
         tool_definitions: Optional[List[Dict[str, Any]]] = None,
         tool_calls: Optional[List[Dict[str, Any]]] = None,
         context: Optional[str] = None,
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Run a quality test with the given inputs and assert the expected result.
@@ -97,6 +98,7 @@ class BaseQualityEvaluatorRunner(BaseEvaluatorRunner):
             tool_definitions=tool_definitions,
             tool_calls=tool_calls,
             context=context,
+            **kwargs,
         )
 
         # Extract and print results
