@@ -4,7 +4,12 @@
 """Behavioral tests for Task Navigation Efficiency Evaluator."""
 
 import pytest
-from typing import Any, Dict, List, override
+from typing import Any, Dict, List
+
+try:
+    from typing import override
+except ImportError:
+    from typing_extensions import override
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.task_navigation_efficiency.evaluator._task_navigation_efficiency import (
