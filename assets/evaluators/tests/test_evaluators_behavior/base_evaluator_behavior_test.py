@@ -267,6 +267,135 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
     INVALID_RESPONSE_AS_STRING: str = json.dumps(INVALID_RESPONSE)
     # endregion
 
+    # Intermediate/preprocessing test data
+    FUNCTION_CALL_ONLY_RESPONSE: List[Dict[str, Any]] = [
+        {
+            "run_id": "",
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "function_call",
+                    "tool_call_id": "call_15sVz7lMj1JbY4ea0Om8oigT",
+                    "name": "get_horoscope",
+                    "arguments": {"sign": "Aquarius"},
+                }
+            ],
+        }
+    ]
+
+    FUNCTION_CALL_FULL_RESPONSE: List[Dict[str, Any]] = [
+        {
+            "run_id": "",
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "function_call",
+                    "tool_call_id": "call_15sVz7lMj1JbY4ea0Om8oigT",
+                    "name": "get_horoscope",
+                    "arguments": {"sign": "Aquarius"},
+                }
+            ],
+        },
+        {
+            "run_id": "",
+            "tool_call_id": "call_15sVz7lMj1JbY4ea0Om8oigT",
+            "role": "tool",
+            "content": [
+                {
+                    "type": "function_call_output",
+                    "function_call_output": {
+                        "horoscope": "Aquarius: Next Tuesday you will befriend a baby otter."
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "Your horoscope for today as an Aquarius: "
+                    "Next Tuesday you will befriend a baby otter.",
+                }
+            ],
+        },
+    ]
+
+    MCP_APPROVAL_ONLY_RESPONSE: List[Dict[str, Any]] = [
+        {
+            "run_id": "",
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "mcp_approval_request",
+                    "tool_call_id": "mcpr_04f33cbf84783da400695a7330ed4c8190b37cc43c1ef54642",
+                    "name": "microsoft_docs_search",
+                    "arguments": {"query": "how Azure Functions work"},
+                }
+            ],
+        }
+    ]
+
+    MCP_APPROVAL_FULL_RESPONSE: List[Dict[str, Any]] = [
+        {
+            "run_id": "",
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "mcp_approval_request",
+                    "tool_call_id": "mcpr_04f33cbf84783da400695a7330ed4c8190b37cc43c1ef54642",
+                    "name": "microsoft_docs_search",
+                    "arguments": {"query": "how Azure Functions work"},
+                }
+            ],
+        },
+        {
+            "run_id": "",
+            "tool_call_id": "mcpr_04f33cbf84783da400695a7330ed4c8190b37cc43c1ef54642",
+            "role": "tool",
+            "content": [
+                {
+                    "type": "mcp_approval_response",
+                    "mcp_approval_response": True,
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "tool_call_id": "call_1",
+                    "name": "microsoft_docs_search",
+                    "arguments": {"query": "how Azure Functions work"},
+                }
+            ],
+        },
+        {
+            "tool_call_id": "call_1",
+            "role": "tool",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_result": {
+                        "title": "Azure Functions overview",
+                        "url": "https://learn.microsoft.com/azure/azure-functions/",
+                    },
+                }
+            ],
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "Azure Functions is a serverless compute service "
+                    "that lets you run event-triggered code.",
+                }
+            ],
+        },
+    ]
+
     def remove_parameter_from_input_content(self, input_data: List[Dict], parameter_name: str) -> List[Dict]:
         """Remove a parameter from the content field of all items in the input data."""
         input_data_copy = copy.deepcopy(input_data)
@@ -723,3 +852,49 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
             description="Response Invalid arguments Parameter in Content",
             assert_type=self.AssertType.INVALID_VALUE,
         )
+
+    # ==================== INTERMEDIATE RESPONSE / PREPROCESSING TESTS ====================
+
+    def test_function_call_response(self):
+        """Function call types: intermediate returns not-applicable, full response is preprocessed and passes."""
+        # Intermediate: function_call-only response -> not applicable
+        results = self._run_evaluation(
+            query=self.VALID_QUERY,
+            response=self.FUNCTION_CALL_ONLY_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        result_data = self._extract_and_print_result(results, "Function Call Only - Not Applicable")
+        self.assert_not_applicable(result_data)
+
+        # Full: function_call/function_call_output types preprocessed -> pass
+        results = self._run_evaluation(
+            query=self.VALID_QUERY,
+            response=self.FUNCTION_CALL_FULL_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        result_data = self._extract_and_print_result(results, "Function Call Full - Preprocessed")
+        self.assert_pass(result_data)
+
+    def test_mcp_approval_response(self):
+        """MCP approval types: intermediate returns not-applicable, full response is preprocessed and passes."""
+        # Intermediate: mcp_approval_request-only response -> not applicable
+        results = self._run_evaluation(
+            query=self.VALID_QUERY,
+            response=self.MCP_APPROVAL_ONLY_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        result_data = self._extract_and_print_result(results, "MCP Approval Only - Not Applicable")
+        self.assert_not_applicable(result_data)
+
+        # Full: mcp_approval messages dropped, remaining evaluated -> pass
+        results = self._run_evaluation(
+            query=self.VALID_QUERY,
+            response=self.MCP_APPROVAL_FULL_RESPONSE,
+            tool_calls=self.VALID_TOOL_CALLS,
+            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+        )
+        result_data = self._extract_and_print_result(results, "MCP Approval Full - Preprocessed")
+        self.assert_pass(result_data)

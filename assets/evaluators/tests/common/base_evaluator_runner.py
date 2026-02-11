@@ -190,8 +190,8 @@ class BaseEvaluatorRunner(ABC):
 
     # ==================== COMMON ASSERTION HELPERS ====================
 
-    def assert_pass(self, result_data: Dict[str, Any]):
-        """Assert a passing result.
+    def _assert_pass_result(self, result_data: Dict[str, Any]):
+        """Common validation logic for pass results.
 
         Args:
             result_data: Dictionary containing evaluation result data.
@@ -209,6 +209,30 @@ class BaseEvaluatorRunner(ABC):
         assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
         assert result_data[score_key] >= threshold, \
             f"Score {result_data[score_key]} should be >= threshold {threshold}"
+
+    def assert_pass(self, result_data: Dict[str, Any]):
+        """Assert a passing result.
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+
+        Raises:
+            AssertionError: If the result does not meet passing criteria.
+        """
+        self._assert_pass_result(result_data)
+
+    def assert_not_applicable(self, result_data: Dict[str, Any]):
+        """Assert a not-applicable result (intermediate response).
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+
+        Raises:
+            AssertionError: If the result is not a valid not-applicable result.
+        """
+        self._assert_pass_result(result_data)
+        assert "Not applicable" in result_data.get("reason", ""), \
+            f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
 
     def assert_fail(self, result_data: Dict[str, Any]):
         """Assert a failing result.
