@@ -1,3 +1,17 @@
+# This workflow triggers the Azure DevOps "AzureML-Assets-Unified-OneBranch" pipeline
+# when the "assets-release" workflow completes successfully on the main branch.
+#
+# Required secrets:
+# - AZURE_DEVOPS_ORG: Azure DevOps organization name
+# - AZURE_DEVOPS_PROJECT: Azure DevOps project name  
+# - AZURE_DEVOPS_PAT: Personal Access Token with Build (Read & execute) permissions
+#
+# Pipeline configuration:
+# - Branch: main
+# - Variables: pattern=environment/llm-rag.*/.+
+#
+# See .github/workflows/TRIGGER_ONEBRANCH_README.md for more details.
+
 name: Trigger OneBranch Pipeline
 
 on:
@@ -25,6 +39,12 @@ jobs:
           echo "Triggering Azure DevOps pipeline: $PIPELINE_NAME"
           echo "Branch: main"
           echo "Pattern: environment/llm-rag.*/.+"
+          
+          # Validate required secrets
+          if [ -z "$AZURE_DEVOPS_ORG" ] || [ -z "$AZURE_DEVOPS_PROJECT" ] || [ -z "$AZURE_DEVOPS_PAT" ]; then
+            echo "::error::Required secrets are not configured. Please set AZURE_DEVOPS_ORG, AZURE_DEVOPS_PROJECT, and AZURE_DEVOPS_PAT"
+            exit 1
+          fi
           
           # Get pipeline ID
           PIPELINE_ID=$(curl -s \
