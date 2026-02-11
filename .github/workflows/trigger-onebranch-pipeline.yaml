@@ -47,13 +47,29 @@ jobs:
           fi
           
           # Get pipeline ID
-          PIPELINE_ID=$(curl -s \
+          RESPONSE=$(curl -s -f \
             -u ":$AZURE_DEVOPS_PAT" \
-            "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines?api-version=7.1" \
-            | jq -r ".value[] | select(.name == \"$PIPELINE_NAME\") | .id")
+            "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines?api-version=7.1" 2>&1)
           
-          if [ -z "$PIPELINE_ID" ]; then
-            echo "::error::Pipeline '$PIPELINE_NAME' not found"
+          CURL_EXIT=$?
+          if [ $CURL_EXIT -ne 0 ]; then
+            echo "::error::Failed to connect to Azure DevOps API (curl exit code: $CURL_EXIT)"
+            echo "$RESPONSE"
+            exit 1
+          fi
+          
+          # Check if jq is available
+          if ! command -v jq &> /dev/null; then
+            echo "::error::jq is not installed"
+            exit 1
+          fi
+          
+          PIPELINE_ID=$(echo "$RESPONSE" | jq -r ".value[] | select(.name == \"$PIPELINE_NAME\") | .id")
+          
+          if [ -z "$PIPELINE_ID" ] || [ "$PIPELINE_ID" == "null" ]; then
+            echo "::error::Pipeline '$PIPELINE_NAME' not found in project $AZURE_DEVOPS_PROJECT"
+            echo "Available pipelines:"
+            echo "$RESPONSE" | jq -r '.value[].name' | head -10
             exit 1
           fi
           
@@ -82,6 +98,13 @@ jobs:
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
           BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          # Validate HTTP_CODE is numeric
+          if ! [[ "$HTTP_CODE" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid HTTP response received"
+            echo "$RESPONSE"
+            exit 1
+          fi
           
           if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
             RUN_ID=$(echo "$BODY" | jq -r '.id')
