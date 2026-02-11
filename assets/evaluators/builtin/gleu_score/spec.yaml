@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.gleu_score"
-version: 1
+version: 2
 displayName: "Gleu-Score-Evaluator"
 description: "Compares generated text to reference text for overlap and phrasing consistency. Higher scores suggest closer similarity. It’s best used for natural language processing (NLP) tasks. This balanced evaluation, designed for sentence-level assessment, makes it ideal for detailed analysis of translation quality, text summarization, and text generation."
 evaluatorType: "builtin"
@@ -15,7 +15,6 @@ initParameterSchema:
       type: "number"
       minimum: 0
       maximum: 1
-      multipleOf: 0.1
   required: []
 dataMappingSchema:
   type: "object"

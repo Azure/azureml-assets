@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.f1_score"
-version: 1
+version: 2
 displayName: "F1Score-Evaluator"
 description: "Balances correctness and completeness when comparing predictions to true results. Higher scores indicate better overall accuracy. It’s best used for natural language processing (NLP) tasks. Use the F1 score evaluator when you want a single comprehensive metric that combines both recall and precision in your model's responses."
 evaluatorType: "builtin"
@@ -15,7 +15,6 @@ initParameterSchema:
       type: "number"
       minimum: 0
       maximum: 1
-      multipleOf: 0.1
   required: []
 dataMappingSchema:
   type: "object"

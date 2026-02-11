@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.meteor_score"
-version: 1
+version: 2
 displayName: "Meteor-Score-Evaluator"
 description: "Evaluates similarity between generated and reference text using flexible matching. Higher scores indicate better linguistic overlap. It’s best used for natural language processing (NLP) tasks. It addresses limitations of other metrics like BLEU by considering synonyms, stemming, and paraphrasing."
 evaluatorType: "builtin"
@@ -15,7 +15,6 @@ initParameterSchema:
       type: "number"
       minimum: 0
       maximum: 1
-      multipleOf: 0.1
   required: []
 dataMappingSchema:
   type: "object"
