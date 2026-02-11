@@ -141,7 +141,7 @@ class ConversationValidator(ValidatorInterface):
             )
         if not isinstance(content_item["text"], str):
             return EvaluationException(
-                message=f"The 'text' field must be a string in content items.",
+                message="The 'text' field must be a string in content items.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=self.error_target,
@@ -176,7 +176,10 @@ class ConversationValidator(ValidatorInterface):
                 content_type = content_item["type"]
                 if content_type not in [ContentType.TEXT, ContentType.INPUT_TEXT]:
                     return EvaluationException(
-                        message=f"Invalid content type '{content_type}' for message with role '{role}'. Must be '{ContentType.TEXT.value}' or '{ContentType.INPUT_TEXT.value}'.",
+                        message=(
+                            f"Invalid content type '{content_type}' for message with role '{role}'. "
+                            f"Must be '{ContentType.TEXT.value}' or '{ContentType.INPUT_TEXT.value}'."
+                        ),
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
@@ -190,12 +193,17 @@ class ConversationValidator(ValidatorInterface):
         """Validate assistant message content."""
         content = message["content"]
         if isinstance(content, list):
+            valid_assistant_content_types = [ContentType.TEXT, ContentType.OUTPUT_TEXT, ContentType.TOOL_CALL]
+            valid_assistant_content_type_values = [t.value for t in valid_assistant_content_types]
             for content_item in content:
                 content_type = content_item["type"]
-                valid_assistant_content_types = [ContentType.TEXT, ContentType.OUTPUT_TEXT, ContentType.TOOL_CALL]
                 if content_type not in valid_assistant_content_types:
                     return EvaluationException(
-                        message=f"Invalid content type '{content_type}' for message with role '{MessageRole.ASSISTANT.value}'. Must be one of {[t.value for t in valid_assistant_content_types]}.",
+                        message=(
+                            f"Invalid content type '{content_type}' for message with "
+                            f"role '{MessageRole.ASSISTANT.value}'. "
+                            f"Must be one of {valid_assistant_content_type_values}."
+                        ),
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
@@ -215,7 +223,10 @@ class ConversationValidator(ValidatorInterface):
         content = message["content"]
         if not isinstance(content, list):
             return EvaluationException(
-                message=f"The 'content' field must be a list of dictionaries messages for role '{MessageRole.TOOL.value}'.",
+                message=(
+                    "The 'content' field must be a list of dictionaries messages "
+                    f"for role '{MessageRole.TOOL.value}'."
+                ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=self.error_target,
@@ -229,7 +240,10 @@ class ConversationValidator(ValidatorInterface):
             content_type = content_item["type"]
             if content_type != ContentType.TOOL_RESULT:
                 return EvaluationException(
-                    message=f"Invalid content type '{content_type}' for message with role '{MessageRole.TOOL.value}'. Must be '{ContentType.TOOL_RESULT.value}'.",
+                    message=(
+                        f"Invalid content type '{content_type}' for message with role '{MessageRole.TOOL.value}'. "
+                        f"Must be '{ContentType.TOOL_RESULT.value}'."
+                    ),
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
@@ -264,14 +278,14 @@ class ConversationValidator(ValidatorInterface):
         )
         if not content_is_string_or_list_of_dicts:
             return EvaluationException(
-                message=f"The 'content' field must be a string or a list of dictionaries messages.",
+                message="The 'content' field must be a string or a list of dictionaries messages.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=self.error_target,
             )
         if len(content) == 0:
             return EvaluationException(
-                message=f"The 'content' field can't be empty.",
+                message="The 'content' field can't be empty.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=self.error_target,
@@ -280,7 +294,7 @@ class ConversationValidator(ValidatorInterface):
             all_messages_have_type_field = all("type" in item for item in content)
             if not all_messages_have_type_field:
                 return EvaluationException(
-                    message=f"Each content item in the 'content' list must contain a 'type' field.",
+                    message="Each content item in the 'content' list must contain a 'type' field.",
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
@@ -474,6 +488,8 @@ def simplify_messages(messages, drop_system=True, drop_tool_calls=False, logger=
         if logger:
             logger.debug(f"Error simplifying messages: {str(ex)}. Returning original messages.")
         return messages
+
+
 # ```
 
 
@@ -555,12 +571,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE_NO_QUERY)  # Default to no query
 
         self._higher_is_better = True
-        
+
         # Initialize input validator
-        self._validator = ConversationValidator(
-            error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
-            requires_query=False
-        )
+        self._validator = ConversationValidator(error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=False)
 
         self._validator_with_query = ConversationValidator(
             error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=True
@@ -685,7 +698,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             source=self._prompty_file,
             model=prompty_model_config,
             is_reasoning_model=self._is_reasoning_model,
-            token_credential=self._credential)
+            token_credential=self._credential,
+        )
 
     def has_context(self, eval_input: dict) -> bool:
         """
@@ -788,7 +802,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             msg = (
                 f"{type(self).__name__}: Either 'conversation' or individual inputs must be provided. "
                 "For Agent groundedness 'query' and 'response' are required."
-                )
+            )
             raise EvaluationException(
                 message=msg,
                 blame=ErrorBlame.USER_ERROR,

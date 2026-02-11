@@ -13,13 +13,13 @@ from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common.utils import (
     check_score_is_valid,
     reformat_conversation_history,
-    reformat_agent_response
+    reformat_agent_response,
 )
 from azure.ai.evaluation._common._experimental import experimental
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 # region Validators
@@ -60,40 +60,92 @@ class ConversationValidator(ValidatorInterface):
     error_target: ErrorTarget
 
     def __init__(self, error_target: ErrorTarget, requires_query: bool = True):
+        """Initialize ConversationValidator."""
         self.requires_query = requires_query
         self.error_target = error_target
 
-    def _validate_string_field(self, item: Dict[str, Any], field_name: str, context: str) -> Optional[EvaluationException]:
+    def _validate_string_field(
+        self, item: Dict[str, Any], field_name: str, context: str
+    ) -> Optional[EvaluationException]:
         if field_name not in item:
-            return EvaluationException(message=f"Each {context} must contain a '{field_name}' field.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"Each {context} must contain a '{field_name}' field.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if not isinstance(item[field_name], str):
-            return EvaluationException(message=f"The '{field_name}' field must be a string in {context}.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"The '{field_name}' field must be a string in {context}.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         return None
 
-    def _validate_list_field(self, item: Dict[str, Any], field_name: str, context: str) -> Optional[EvaluationException]:
+    def _validate_list_field(
+        self, item: Dict[str, Any], field_name: str, context: str
+    ) -> Optional[EvaluationException]:
         if field_name not in item:
-            return EvaluationException(message=f"Each {context} must contain a '{field_name}' field.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"Each {context} must contain a '{field_name}' field.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if not isinstance(item[field_name], list):
-            return EvaluationException(message=f"The '{field_name}' field must be a list in {context}.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"The '{field_name}' field must be a list in {context}.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         return None
 
-    def _validate_dict_field(self, item: Dict[str, Any], field_name: str, context: str) -> Optional[EvaluationException]:
+    def _validate_dict_field(
+        self, item: Dict[str, Any], field_name: str, context: str
+    ) -> Optional[EvaluationException]:
         if field_name not in item:
-            return EvaluationException(message=f"Each {context} must contain a '{field_name}' field.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"Each {context} must contain a '{field_name}' field.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if not isinstance(item[field_name], dict):
-            return EvaluationException(message=f"The '{field_name}' field must be a dictionary in {context}.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"The '{field_name}' field must be a dictionary in {context}.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         return None
 
     def _validate_text_content_item(self, content_item: Dict[str, Any], role: str) -> Optional[EvaluationException]:
         if "text" not in content_item:
-            return EvaluationException(message=f"Each content item must contain a 'text' field for message with role '{role}'.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"Each content item must contain a 'text' field for message with role '{role}'.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if not isinstance(content_item["text"], str):
-            return EvaluationException(message=f"The 'text' field must be a string in content items.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="The 'text' field must be a string in content items.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         return None
 
     def _validate_tool_call_content_item(self, content_item: Dict[str, Any]) -> Optional[EvaluationException]:
         if "type" not in content_item or content_item["type"] != ContentType.TOOL_CALL:
-            return EvaluationException(message=f"The content item must be of type '{ContentType.TOOL_CALL.value}' in tool_call content item.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"The content item must be of type '{ContentType.TOOL_CALL.value}' in tool_call content item.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         error = self._validate_string_field(content_item, "name", "tool_call content items")
         if error:
             return error
@@ -111,7 +163,15 @@ class ConversationValidator(ValidatorInterface):
             for content_item in content:
                 content_type = content_item["type"]
                 if content_type not in [ContentType.TEXT, ContentType.INPUT_TEXT]:
-                    return EvaluationException(message=f"Invalid content type '{content_type}' for message with role '{role}'. Must be '{ContentType.TEXT.value}' or '{ContentType.INPUT_TEXT.value}'.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+                    return EvaluationException(
+                        message=(
+                            f"Invalid content type '{content_type}' for message with role '{role}'. "
+                            f"Must be '{ContentType.TEXT.value}' or '{ContentType.INPUT_TEXT.value}'."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
                 error = self._validate_text_content_item(content_item, role)
                 if error:
                     return error
@@ -120,11 +180,21 @@ class ConversationValidator(ValidatorInterface):
     def _validate_assistant_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
         content = message["content"]
         if isinstance(content, list):
+            valid_assistant_content_types = [ContentType.TEXT, ContentType.OUTPUT_TEXT, ContentType.TOOL_CALL]
+            valid_assistant_content_type_values = [t.value for t in valid_assistant_content_types]
             for content_item in content:
                 content_type = content_item["type"]
-                valid_assistant_content_types = [ContentType.TEXT, ContentType.OUTPUT_TEXT, ContentType.TOOL_CALL]
                 if content_type not in valid_assistant_content_types:
-                    return EvaluationException(message=f"Invalid content type '{content_type}' for message with role '{MessageRole.ASSISTANT.value}'. Must be one of {[t.value for t in valid_assistant_content_types]}.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+                    return EvaluationException(
+                        message=(
+                            f"Invalid content type '{content_type}' for message with "
+                            f"role '{MessageRole.ASSISTANT.value}'. "
+                            f"Must be one of {valid_assistant_content_type_values}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
                 if content_type in [ContentType.TEXT, ContentType.OUTPUT_TEXT]:
                     error = self._validate_text_content_item(content_item, MessageRole.ASSISTANT)
                     if error:
@@ -138,34 +208,81 @@ class ConversationValidator(ValidatorInterface):
     def _validate_tool_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
         content = message["content"]
         if not isinstance(content, list):
-            return EvaluationException(message=f"The 'content' field must be a list of dictionaries messages for role '{MessageRole.TOOL.value}'.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
-        error = self._validate_string_field(message, "tool_call_id", f"content items for role '{MessageRole.TOOL.value}'")
+            return EvaluationException(
+                message=(
+                    "The 'content' field must be a list of dictionaries messages "
+                    f"for role '{MessageRole.TOOL.value}'."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
+        error = self._validate_string_field(
+            message, "tool_call_id", f"content items for role '{MessageRole.TOOL.value}'"
+        )
         if error:
             return error
         for content_item in content:
             content_type = content_item["type"]
             if content_type != ContentType.TOOL_RESULT:
-                return EvaluationException(message=f"Invalid content type '{content_type}' for message with role '{MessageRole.TOOL.value}'. Must be '{ContentType.TOOL_RESULT.value}'.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
-            error = self._validate_dict_field(content_item, "tool_result", f"content items for role '{MessageRole.TOOL.value}'")
+                return EvaluationException(
+                    message=(
+                        f"Invalid content type '{content_type}' for message with role '{MessageRole.TOOL.value}'. "
+                        f"Must be '{ContentType.TOOL_RESULT.value}'."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            error = self._validate_dict_field(
+                content_item, "tool_result", f"content items for role '{MessageRole.TOOL.value}'"
+            )
             if error:
                 return error
         return None
 
     def _validate_message_dict(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
         if "role" not in message:
-            return EvaluationException(message="Each message must contain a 'role' field.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="Each message must contain a 'role' field.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if "content" not in message:
-            return EvaluationException(message="Each message must contain a 'content' field.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="Each message must contain a 'content' field.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         role = message["role"]
         content = message["content"]
-        content_is_string_or_list_of_dicts = isinstance(content, str) or (isinstance(content, list) and all(item and isinstance(item, dict) for item in content))
+        content_is_string_or_list_of_dicts = isinstance(content, str) or (
+            isinstance(content, list) and all(item and isinstance(item, dict) for item in content)
+        )
         if not content_is_string_or_list_of_dicts:
-            return EvaluationException(message=f"The 'content' field must be a string or a list of dictionaries messages.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="The 'content' field must be a string or a list of dictionaries messages.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if len(content) == 0:
-            return EvaluationException(message=f"The 'content' field can't be empty.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="The 'content' field can't be empty.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if isinstance(content, list):
             if not all("type" in item for item in content):
-                return EvaluationException(message=f"Each content item in the 'content' list must contain a 'type' field.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+                return EvaluationException(
+                    message="Each content item in the 'content' list must contain a 'type' field.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
         if role in [MessageRole.USER, MessageRole.SYSTEM]:
             error = self._validate_user_or_system_message(message, role)
             if error:
@@ -182,17 +299,42 @@ class ConversationValidator(ValidatorInterface):
 
     def _validate_input_messages_list(self, input_messages: Any, input_name: str) -> Optional[EvaluationException]:
         if input_messages is None:
-            return EvaluationException(message=f"{input_name} is a required input and cannot be None.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.MISSING_FIELD, target=self.error_target)
+            return EvaluationException(
+                message=f"{input_name} is a required input and cannot be None.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.MISSING_FIELD,
+                target=self.error_target,
+            )
         if isinstance(input_messages, str):
             if input_messages == "":
-                return EvaluationException(message=f"{input_name} string cannot be empty.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.MISSING_FIELD, target=self.error_target)
+                return EvaluationException(
+                    message=f"{input_name} string cannot be empty.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.MISSING_FIELD,
+                    target=self.error_target,
+                )
             return None
         if not isinstance(input_messages, list):
-            return EvaluationException(message=f"{input_name} must be a string or a list of messages.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"{input_name} must be a string or a list of messages.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         if len(input_messages) == 0:
-            return EvaluationException(message=f"{input_name} list cannot be empty.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.MISSING_FIELD, target=self.error_target)
+            return EvaluationException(
+                message=f"{input_name} list cannot be empty.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.MISSING_FIELD,
+                target=self.error_target,
+            )
         if not all(isinstance(message, dict) for message in input_messages):
-            return EvaluationException(message=f"Each message in the {input_name.lower()} list must be a dictionary.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message=f"Each message in the {input_name.lower()} list must be a dictionary.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         for message in input_messages:
             error = self._validate_message_dict(message)
             if error:
@@ -201,7 +343,12 @@ class ConversationValidator(ValidatorInterface):
 
     def _validate_conversation(self, conversation: Any) -> Optional[EvaluationException]:
         if not isinstance(conversation, dict):
-            return EvaluationException(message="Conversation must be a dictionary.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="Conversation must be a dictionary.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         error = self._validate_list_field(conversation, "messages", "Conversation")
         if error:
             return error
@@ -218,6 +365,7 @@ class ConversationValidator(ValidatorInterface):
 
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
+        """Validate evaluation input."""
         conversation = eval_input.get("conversation")
         if conversation:
             conversation_validation_exception = self._validate_conversation(conversation)
@@ -241,12 +389,18 @@ class ToolDefinitionsValidator(ConversationValidator):
     optional_tool_definitions: bool = True
 
     def __init__(self, error_target: ErrorTarget, requires_query: bool = True, optional_tool_definitions: bool = True):
+        """Initialize ToolDefinitionsValidator."""
         super().__init__(error_target, requires_query)
         self.optional_tool_definitions = optional_tool_definitions
 
     def _validate_tool_definition(self, tool_definition) -> Optional[EvaluationException]:
         if not isinstance(tool_definition, dict):
-            return EvaluationException(message="Each tool definition must be a dictionary.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="Each tool definition must be a dictionary.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         error = self._validate_string_field(tool_definition, "name", "tool definitions")
         if error:
             return error
@@ -258,16 +412,31 @@ class ToolDefinitionsValidator(ConversationValidator):
     def _validate_tool_definitions(self, tool_definitions) -> Optional[EvaluationException]:
         if not tool_definitions:
             if not self.optional_tool_definitions:
-                return EvaluationException(message="Tool definitions input is required but not provided.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.MISSING_FIELD, target=self.error_target)
+                return EvaluationException(
+                    message="Tool definitions input is required but not provided.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.MISSING_FIELD,
+                    target=self.error_target,
+                )
             else:
                 return None
         if isinstance(tool_definitions, str):
             return None
         if not isinstance(tool_definitions, list):
-            return EvaluationException(message="Tool definitions must be provided as a list of dictionaries.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+            return EvaluationException(
+                message="Tool definitions must be provided as a list of dictionaries.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
         for tool_definition in tool_definitions:
             if not isinstance(tool_definition, dict):
-                return EvaluationException(message="Each tool definition must be a dictionary.", blame=ErrorBlame.USER_ERROR, category=ErrorCategory.INVALID_VALUE, target=self.error_target)
+                return EvaluationException(
+                    message="Each tool definition must be a dictionary.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
             if tool_definition and tool_definition.get("type") == "openapi":
                 error = self._validate_list_field(tool_definition, "functions", "openapi tool definition")
                 if error:
@@ -285,6 +454,7 @@ class ToolDefinitionsValidator(ConversationValidator):
 
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
+        """Validate evaluation input with tool definitions."""
         if super().validate_eval_input(eval_input):
             tool_definitions = eval_input.get("tool_definitions")
             tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
@@ -359,8 +529,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        threshold_value = kwargs.pop('threshold', threshold)
-        higher_is_better_value = kwargs.pop('_higher_is_better', True)
+        threshold_value = kwargs.pop("threshold", threshold)
+        higher_is_better_value = kwargs.pop("_higher_is_better", True)
         self.threshold = threshold_value
 
         # Initialize input validator
@@ -485,7 +655,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     async def _real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Perform asynchronous call where real end-to-end evaluation logic is executed.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
@@ -513,7 +683,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             raise EvaluationException(
                 message="Both query and response must be provided as input to the intent resolution evaluator.",
                 internal_message="Both query and response must be provided as input to the intent resolution "
-                                 "evaluator.",
+                "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
@@ -534,8 +704,8 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             ):
                 raise EvaluationException(
                     message=f"Invalid score value: {score}. Expected a number in range "
-                            f"[{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, "
-                            f"{IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
+                    f"[{IntentResolutionEvaluator._MIN_INTENT_RESOLUTION_SCORE}, "
+                    f"{IntentResolutionEvaluator._MAX_INTENT_RESOLUTION_SCORE}].",
                     internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,

@@ -125,7 +125,10 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
                 content = action.get("content")
                 if not isinstance(content, list):
                     return EvaluationException(
-                        message=f"'content' field in assistant action at index {idx} must be a list, got {type(content).__name__}.",
+                        message=(
+                            f"'content' field in assistant action at index {idx} must be a list, "
+                            f"got {type(content).__name__}."
+                        ),
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
@@ -146,7 +149,10 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
                         # Validate required tool call fields
                         if "name" not in content_item:
                             return EvaluationException(
-                                message=f"Tool call in action {idx}, content {content_idx} must contain a 'name' field.",
+                                message=(
+                                    f"Tool call in action {idx}, content {content_idx} must contain "
+                                    "a 'name' field."
+                                ),
                                 blame=ErrorBlame.USER_ERROR,
                                 category=ErrorCategory.MISSING_FIELD,
                                 target=self.error_target,
@@ -172,7 +178,10 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
             # Validate tuple format: (list, dict)
             if len(expected_actions) != 2:
                 return EvaluationException(
-                    message="When 'expected_actions' is a tuple, it must contain exactly 2 elements: (tool_names_list, parameters_dict).",
+                    message=(
+                        "When 'expected_actions' is a tuple, it must contain exactly 2 elements: "
+                        "(tool_names_list, parameters_dict)."
+                    ),
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
@@ -200,7 +209,10 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
             for idx, name in enumerate(tool_names):
                 if not isinstance(name, str):
                     return EvaluationException(
-                        message=f"Tool name at index {idx} in 'expected_actions' must be a string, got {type(name).__name__}.",
+                        message=(
+                            f"Tool name at index {idx} in 'expected_actions' must be a string, "
+                            f"got {type(name).__name__}."
+                        ),
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
@@ -219,7 +231,10 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
             for tool_name, params in parameters.items():
                 if not isinstance(params, dict):
                     return EvaluationException(
-                        message=f"Parameters for tool '{tool_name}' in 'expected_actions' must be a dictionary, got {type(params).__name__}.",
+                        message=(
+                            f"Parameters for tool '{tool_name}' in 'expected_actions' must be "
+                            f"a dictionary, got {type(params).__name__}."
+                        ),
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
@@ -238,7 +253,10 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
             for idx, name in enumerate(expected_actions):
                 if not isinstance(name, str):
                     return EvaluationException(
-                        message=f"Expected action at index {idx} must be a string (tool name), got {type(name).__name__}.",
+                        message=(
+                            f"Expected action at index {idx} must be a string (tool name), "
+                            f"got {type(name).__name__}."
+                        ),
                         blame=ErrorBlame.USER_ERROR,
                         category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
@@ -246,7 +264,10 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
 
         else:
             return EvaluationException(
-                message="'expected_actions' must be either a list of tool names or a tuple of (tool_names_list, parameters_dict).",
+                message=(
+                    "'expected_actions' must be either a list of tool names or a tuple of "
+                    "(tool_names_list, parameters_dict)."
+                ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=self.error_target,
@@ -290,9 +311,9 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
 def _create_extended_error_target(ErrorTarget):
     """Create an extended ErrorTarget enum that includes TASK_NAVIGATION_EFFICIENCY_EVALUATOR."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members['TASK_NAVIGATION_EFFICIENCY_EVALUATOR'] = 'TaskNavigationEfficiencyEvaluator'
+    existing_members["TASK_NAVIGATION_EFFICIENCY_EVALUATOR"] = "TaskNavigationEfficiencyEvaluator"
 
-    ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
+    ExtendedErrorTarget = Enum("ExtendedErrorTarget", existing_members)
     return ExtendedErrorTarget
 
 
@@ -403,7 +424,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
     matching_mode: TaskNavigationEfficiencyMatchingMode
     """The matching mode to use."""
-    
+
     _validator: ValidatorInterface
 
     @override
@@ -448,7 +469,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
     @override
     async def _real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Perform asynchronous call where real end-to-end evaluation logic is executed.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
