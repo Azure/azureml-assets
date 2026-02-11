@@ -4,6 +4,6 @@ categories:
 - Evaluator
 test:
   pytest:
-    enabled: false
+    enabled: true
     conda_environment: ../../tests/conda.yaml
     tests_dir: ../../tests/test_evaluators_behavior/test_tool_call_success_evaluator_behavior.py
