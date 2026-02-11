@@ -237,6 +237,14 @@ def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):
         return tool_definitions
 
 
+def _format_value(v):
+    if v is None:
+        return "None"
+    if isinstance(v, str):
+        return f'"{v}"'
+    return v
+
+
 def _get_tool_calls_results(agent_response_msgs):
     """Extract formatted agent tool calls and results from response."""
     agent_response_text = []
@@ -267,7 +275,7 @@ def _get_tool_calls_results(agent_response_msgs):
                         tool_call_id = content.get("tool_call_id")
                         func_name = content.get("name", "")
                         args = content.get("arguments", {})
-                    args_str = ", ".join(f'{k}="{v}"' for k, v in args.items())
+                    args_str = ", ".join(f'{k}={_format_value(v)}' for k, v in args.items())
                     call_line = f"[TOOL_CALL] {func_name}({args_str})"
                     agent_response_text.append(call_line)
                     if tool_call_id in tool_results:
