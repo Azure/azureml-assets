@@ -166,9 +166,9 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["tool_calls"] = _reformat_tool_calls_results(eval_input["response"], logger)
 
         # If tool definitions are string, pass directly without reformatting, else format it.
-        # IF response is not a string, we filter tool definitions to only tools needed.
         if "tool_definitions" in eval_input and not isinstance(eval_input["tool_definitions"], str):
             tool_definitions = eval_input["tool_definitions"]
+            # Only if response is not a string, we filter tool definitions to only tools needed.
             if isinstance(eval_input["response"], str):
                 eval_input["tool_definitions"] = _reformat_tool_definitions(tool_definitions, logger)
             else:
