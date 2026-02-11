@@ -2,3 +2,8 @@ type: evaluator
 spec: spec.yaml
 categories:
 - Evaluator
+test:
+  pytest:
+    enabled: false
+    conda_environment: ../../tests/conda.yaml
+    tests_dir: ../../tests/test_evaluators_behavior/test_task_adherence_evaluator_behavior.py
