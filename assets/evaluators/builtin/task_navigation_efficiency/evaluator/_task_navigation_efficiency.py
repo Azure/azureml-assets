@@ -20,9 +20,9 @@ from azure.ai.evaluation._exceptions import (
 
 # Extend ErrorTarget enum if needed
 def _create_extended_error_target(ErrorTarget):
-    """Create an extended ErrorTarget enum that includes TOOL_INPUT_ACCURACY_EVALUATOR."""
+    """Create an extended ErrorTarget enum that includes TASK_NAVIGATION_EFFICIENCY_EVALUATOR."""
     existing_members = {member.name: member.value for member in ErrorTarget}
-    existing_members['TOOL_INPUT_ACCURACY_EVALUATOR'] = 'ToolInputAccuracyEvaluator'
+    existing_members['TASK_NAVIGATION_EFFICIENCY_EVALUATOR'] = 'TaskNavigationEfficiencyEvaluator'
 
     ExtendedErrorTarget = Enum('ExtendedErrorTarget', existing_members)
     return ExtendedErrorTarget
@@ -105,7 +105,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
                         {"type": "tool_call", "tool_call_id": "call_4", "name": "response_synthesis", "arguments": {}}
                     ]}
                 ],
-                expected_actions=["identify_tools_to_call", ""call_tool_A", "call_tool_B", "response_synthesis"]
+                expected_actions=["identify_tools_to_call", "call_tool_A", "call_tool_B", "response_synthesis"]
             )
 
             # Example 2: Using tool names with parameters (exact parameter matching required)
