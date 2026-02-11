@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_navigation_efficiency"
-version: 6
+version: 7
 displayName: "Task-Navigation-Efficiency-Evaluator"
 description: "Determines whether an agent’s sequence of steps (e.g., tool calls and
   parameters) matches an optimal or expected path of actions for completing a task.

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.intent_resolution"
-version: 3
+version: 4
 displayName: "Intent-Resolution-Evaluator"
 description: "Checks whether the model correctly interprets and resolves user intent.
   Ensures the response aligns with what the user asked. Use this metric in conversational
