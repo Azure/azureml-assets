@@ -1,0 +1,76 @@
+name: Trigger OneBranch Pipeline
+
+on:
+  workflow_run:
+    workflows: ["assets-release"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  trigger-onebranch:
+    name: Trigger AzureML-Assets-Unified-OneBranch Pipeline
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Trigger Azure DevOps Pipeline
+        env:
+          AZURE_DEVOPS_ORG: ${{ secrets.AZURE_DEVOPS_ORG }}
+          AZURE_DEVOPS_PROJECT: ${{ secrets.AZURE_DEVOPS_PROJECT }}
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+          PIPELINE_NAME: AzureML-Assets-Unified-OneBranch
+        run: |
+          echo "Triggering Azure DevOps pipeline: $PIPELINE_NAME"
+          echo "Branch: main"
+          echo "Pattern: environment/llm-rag.*/.+"
+          
+          # Get pipeline ID
+          PIPELINE_ID=$(curl -s \
+            -u ":$AZURE_DEVOPS_PAT" \
+            "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines?api-version=7.1" \
+            | jq -r ".value[] | select(.name == \"$PIPELINE_NAME\") | .id")
+          
+          if [ -z "$PIPELINE_ID" ]; then
+            echo "::error::Pipeline '$PIPELINE_NAME' not found"
+            exit 1
+          fi
+          
+          echo "Found pipeline ID: $PIPELINE_ID"
+          
+          # Trigger pipeline with variables
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -u ":$AZURE_DEVOPS_PAT" \
+            -H "Content-Type: application/json" \
+            "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/$PIPELINE_ID/runs?api-version=7.1" \
+            -d '{
+              "resources": {
+                "repositories": {
+                  "self": {
+                    "refName": "refs/heads/main"
+                  }
+                }
+              },
+              "variables": {
+                "pattern": {
+                  "value": "environment/llm-rag.*/.+"
+                }
+              }
+            }')
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
+            RUN_ID=$(echo "$BODY" | jq -r '.id')
+            RUN_URL=$(echo "$BODY" | jq -r '.url')
+            echo "✓ Pipeline triggered successfully"
+            echo "Run ID: $RUN_ID"
+            echo "Run URL: $RUN_URL"
+          else
+            echo "::error::Failed to trigger pipeline. HTTP $HTTP_CODE"
+            echo "$BODY"
+            exit 1
+          fi
