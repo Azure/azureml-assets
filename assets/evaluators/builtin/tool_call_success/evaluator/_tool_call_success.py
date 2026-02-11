@@ -241,16 +241,17 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         if isinstance(eval_input.get("response"), list):
             eval_input["response"] = _preprocess_messages(eval_input["response"])
-        if isinstance(eval_input.get("query"), list):
-            eval_input["query"] = _preprocess_messages(eval_input["query"])
-
         # If response is a string, pass directly without reformatting
-        if isinstance(eval_input["response"], str):
+        elif isinstance(eval_input["response"], str):
             # Unless tool calls are explicitly provided, then keep it as is
             if "tool_calls" not in eval_input or not eval_input["tool_calls"]:
                 eval_input["tool_calls"] = eval_input["response"]
         else:
             eval_input["tool_calls"] = _reformat_tool_calls_results(eval_input["response"], logger)
+
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
+        
 
         # If tool definitions are string, pass directly without reformatting, else format it.
         if "tool_definitions" in eval_input and not isinstance(eval_input["tool_definitions"], str):
