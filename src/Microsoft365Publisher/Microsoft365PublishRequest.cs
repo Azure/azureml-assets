@@ -16,19 +16,19 @@ namespace Microsoft365Publisher
         private readonly string _containerName;
 
         /// <summary>
-        /// Gets or sets the FooBar string value.
+        /// Gets the FooBar string value.
         /// </summary>
-        public string FooBar { get; set; }
+        public string FooBar { get; init; }
 
         /// <summary>
-        /// Gets or sets the unique identifier for this request.
+        /// Gets the unique identifier for this request.
         /// </summary>
-        public string Id { get; set; }
+        public string Id { get; init; }
 
         /// <summary>
-        /// Gets or sets the timestamp when this request was created.
+        /// Gets the timestamp when this request was created.
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime Timestamp { get; init; }
 
         /// <summary>
         /// Initializes a new instance of the Microsoft365PublishRequest class.
