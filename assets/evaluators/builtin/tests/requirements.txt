@@ -1,0 +1,3 @@
+azure-ai-evaluation
+typing_extensions
+pytest
