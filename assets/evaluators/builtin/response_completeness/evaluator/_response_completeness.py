@@ -151,8 +151,8 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        threshold_value = kwargs.pop('threshold', threshold)
-        higher_is_better_value = kwargs.pop('_higher_is_better', True)
+        threshold_value = kwargs.pop("threshold", threshold)
+        higher_is_better_value = kwargs.pop("_higher_is_better", True)
         self.threshold = threshold_value  # to be removed in favor of _threshold
         super().__init__(
             model_config=model_config,
@@ -254,7 +254,7 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             raise EvaluationException(
                 message="Both ground_truth and response must be provided as input to the completeness evaluator.",
                 internal_message="Both ground_truth and response must be provided as input to the completeness "
-                                 "evaluator.",
+                "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.COMPLETENESS_EVALUATOR,

@@ -9,7 +9,12 @@ Supports both mocked flow (for behavioral tests) and real flow execution (for qu
 
 import os
 from enum import Enum
-from typing import Any, Dict, List, Type, override
+from typing import Any, Dict, List, Type
+
+try:
+    from typing import override
+except ImportError:
+    from typing_extensions import override
 
 from azure.ai.evaluation import AzureOpenAIModelConfiguration
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
