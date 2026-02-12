@@ -1,4 +1,4 @@
-name: truthfulqa
+name: truthful_qa
 version: 1
 type: data
 spec: spec.yaml
