@@ -18,14 +18,17 @@ initParameterSchema:
       type: "number"
       minimum: 0
       maximum: 1
+      multipleOf: 0.1
     precision_threshold:
       type: "number"
       minimum: 0
       maximum: 1
+      multipleOf: 0.1
     recall_threshold:
       type: "number"
       minimum: 0
       maximum: 1
+      multipleOf: 0.1
   required: ["rouge_type"]
 dataMappingSchema:
   type: "object"
