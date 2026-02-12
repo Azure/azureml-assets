@@ -1,0 +1,203 @@
+type: "benchmarkspec"
+name: "builtin.gpqa_diamond"
+version: 1
+display_name: "GPQA Diamond Benchmark"
+description: "GPQA Diamond is a curated to be a higher-difficulty subset of the GPQA benchmark. (Graduate-Level Google-Proof Q&A) benchmark for evaluating model reasoning accuracy on multiple-choice science questions."
+benchmarkType: "builtin"
+categories: ["reasoning", "quality"]
+
+inference:
+  promptText: "Answer the following multiple choice question. Your response should be in the following format: '$ANSWER' (without quotes) where ANSWER is one of question choices, and it has to be strictly one of the provided options, don't output anything except only the '$ANSWER'. Think step by step before answering.\n\n{{item.Question}}\n\nChoices:\n\n{{item.Correct_Answer}}\n\n{{item.Incorrect_Answer_1}}\n\n{{item.Incorrect_Answer_2}}\n\n{{item.Incorrect_Answer_3}}"
+  inferenceParameters:
+    temperature: 0
+    top_p: 1
+    max_completion_tokens: 4096
+
+evaluator:
+  type: "azure_ai_evaluator"
+  name: "GPQA_Diamond"
+  evaluatorName: "builtin.f1_score"
+  version: "1"
+  id: "azureml://registries/azureml/evaluators/builtin.f1_score/versions/1"
+  dataMappingSchema:
+    response: "{{sample.output_text}}"
+    ground_truth: "{{item.Correct_Answer}}"
+  overrideInitParameterSchema:
+    threshold: 0.5
+
+dataset:
+  datasetName: "gpqa_diamond"
+  datasetType: "oss"
+  recordCount: "198"
+  license: "cc-by-4.0 (Creative Commons Attribution 4.0 International License)"
+  properties:
+    domain: "science"
+    source_paper: "https://arxiv.org/abs/2311.12022"
+    dataset_source: "https://github.com/idavidrein/gpqa"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/gpqa_diamond/versions/1"
+    sourceFormat: "csv"
+    properties:
+      file_name: "gpqa_diamond.csv"
+      type: "uri_folder"
+  datasetSchema:
+    item:
+      type: "object"
+      properties:
+        Pre_Revision_Question:
+          type: "string"
+        Pre_Revision_Correct_Answer:
+          type: "string"
+        Pre_Revision_Incorrect_Answer_1:
+          type: "string"
+        Pre_Revision_Incorrect_Answer_2:
+          type: "string"
+        Pre_Revision_Incorrect_Answer_3:
+          type: "string"
+        Pre_Revision_Explanation:
+          type: "string"
+        Self_reported_question_writing_time_(minutes):
+          type: "string"
+        Question:
+          type: "string"
+        Correct_Answer:
+          type: "string"
+        Incorrect_Answer_1:
+          type: "string"
+        Incorrect_Answer_2:
+          type: "string"
+        Incorrect_Answer_3:
+          type: "string"
+        Explanation:
+          type: "string"
+        Revision_Comments_(from_Question_Writer):
+          type: "string"
+        Subdomain:
+          type: "string"
+        Writer's_Difficulty_Estimate:
+          type: "string"
+        Extra_Revised_Question:
+          type: "string"
+        Extra_Revised_Explanation:
+          type: "string"
+        Extra_Revised_Correct_Answer:
+          type: "string"
+        Extra_Revised_Incorrect_Answer_1:
+          type: "string"
+        Extra_Revised_Incorrect_Answer_2:
+          type: "string"
+        Extra_Revised_Incorrect_Answer_3:
+          type: "string"
+        Non_Expert_Validator_Accuracy:
+          type: "string"
+        Majority_Non_Expert_Vals_Incorrect:
+          type: "string"
+        Expert_Validator_Accuracy:
+          type: "string"
+        Record_ID:
+          type: "string"
+        High_level_domain:
+          type: "string"
+        Question_Writer:
+          type: "string"
+        Feedback_EV_1:
+          type: "string"
+        Validator_Revision_Suggestion_EV_1:
+          type: "string"
+        Is_First_Validation_EV_1:
+          type: "string"
+        Post_hoc_agreement_EV_1:
+          type: "string"
+        Sufficient_Expertise?_EV_1:
+          type: "string"
+        Understand_the_question?_EV_1:
+          type: "string"
+        Question_Difficulty_EV_1:
+          type: "string"
+        Validator_Answered_Correctly_EV_1:
+          type: "string"
+        Self_reported_time_(minutes)_EV_1:
+          type: "string"
+        Probability_Correct_EV_1:
+          type: "string"
+        Manual_Correctness_Adjustment_EV_1:
+          type: "string"
+        Expert_Validator_EV_1:
+          type: "string"
+        Feedback_EV_2:
+          type: "string"
+        Validator_Revision_Suggestion_EV_2:
+          type: "string"
+        Is_First_Validation_EV_2:
+          type: "string"
+        Post_hoc_agreement_EV_2:
+          type: "string"
+        Sufficient_Expertise?_EV_2:
+          type: "string"
+        Understand_the_question?_EV_2:
+          type: "string"
+        Question_Difficulty_EV_2:
+          type: "string"
+        Validator_Answered_Correctly_EV_2:
+          type: "string"
+        Self_reported_time_(minutes)_EV_2:
+          type: "string"
+        Probability_Correct_EV_2:
+          type: "string"
+        Manual_Correctness_Adjustment_EV_2:
+          type: "string"
+        Expert_Validator_EV_2:
+          type: "string"
+        Feedback_NEV_1:
+          type: "string"
+        Validator_Answered_Correctly_NEV_1:
+          type: "string"
+        Explanation_NEV_1:
+          type: "string"
+        Self_reported_time_(minutes)_NEV_1:
+          type: "string"
+        Websites_visited_NEV_1:
+          type: "string"
+        Probability_Correct_NEV_1:
+          type: "string"
+        Manual_Correctness_Adjustment_NEV_1:
+          type: "string"
+        Non_Expert_Validator_NEV_1:
+          type: "string"
+        Feedback_NEV_2:
+          type: "string"
+        Validator_Answered_Correctly_NEV_2:
+          type: "string"
+        Explanation_NEV_2:
+          type: "string"
+        Self_reported_time_(minutes)_NEV_2:
+          type: "string"
+        Websites_visited_NEV_2:
+          type: "string"
+        Probability_Correct_NEV_2:
+          type: "string"
+        Manual_Correctness_Adjustment_NEV_2:
+          type: "string"
+        Non_Expert_Validator_NEV_2:
+          type: "string"
+        Feedback_NEV_3:
+          type: "string"
+        Validator_Answered_Correctly_NEV_3:
+          type: "string"
+        Explanation_NEV_3:
+          type: "string"
+        Self_reported_time_(minutes)_NEV_3:
+          type: "string"
+        Websites_visited_NEV_3:
+          type: "string"
+        Probability_Correct_NEV_3:
+          type: "string"
+        Manual_Correctness_Adjustment_NEV_3:
+          type: "string"
+        Non_Expert_Validator_NEV_3:
+          type: "string"
+        Expert_Validator_Disagreement_Category:
+          type: "string"
+        Canary_String:
+          type: "string"

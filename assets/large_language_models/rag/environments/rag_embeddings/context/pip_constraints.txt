@@ -1,0 +1,21 @@
+# Version constraints used during conda env creation to enforce security patch floors.
+# Notes:
+# - Constraints do NOT install new packages. They only constrain versions for packages
+#   that are already required (directly or transitively) by the environment.
+# - Keep this list focused on vulnerable/transitive deps that frequently trigger alerts.
+
+# Python deps from ShaVulnMgmt scan
+# (pins are minimum safe versions, not exact pins)
+aiohttp>=3.13.3
+azure-core>=1.38.0
+filelock>=3.20.3
+langchain-core>=0.3.81
+marshmallow>=3.26.2
+PyNaCl>=1.6.2
+urllib3>=2.6.3
+Werkzeug>=3.1.5
+pyasn1>=0.6.2
+wheel>=0.46.2
+
+# Vendored dependency inside setuptools (jaraco.context)
+setuptools>=80.10.2
