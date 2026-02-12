@@ -23,9 +23,11 @@ initParameterSchema:
     pass_threshold:
       type: "number"
       minimum: 0
-  required: ["type", "source"]
+  required: ["type", "source", "name"]
 dataMappingSchema: {}
 outputSchema:
-  score_model:
+  python_grader:
     type: "continuous"
     desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
