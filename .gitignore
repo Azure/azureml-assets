@@ -140,3 +140,20 @@ mlruns/
 
 # ignore config files
 config.json
+
+# C# / .NET build artifacts
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.userosscache
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.userprefs
+project.lock.json
+project.fragment.lock.json
+artifacts/
