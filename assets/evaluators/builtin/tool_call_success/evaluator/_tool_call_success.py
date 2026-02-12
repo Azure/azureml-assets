@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import math
 import os
 import logging
 from typing import Dict, Union, List, Optional
