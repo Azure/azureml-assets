@@ -10,3 +10,4 @@ croniter
 azure-monitor-opentelemetry
 promptflow-azure
 azure-identity
+typing_extensions>=4.0

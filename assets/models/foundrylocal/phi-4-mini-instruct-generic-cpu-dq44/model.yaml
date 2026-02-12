@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/models/phi-4-mini-instruct/onnx/cpu_and_mobile_dq44/v1
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

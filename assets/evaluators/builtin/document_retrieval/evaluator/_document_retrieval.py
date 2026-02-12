@@ -142,7 +142,6 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
 
         NDCG measures how well a document ranking compares to an ideal document ranking given a list of
         ground-truth documents.
-
         :param result_docs_groundtruth_labels: A list of retrieved documents' ground truth labels.
         :type result_docs_groundtruth_labels: List[int]
         :param ideal_docs_groundtruth_labels: A list of ideal documents' ground truth labels.
