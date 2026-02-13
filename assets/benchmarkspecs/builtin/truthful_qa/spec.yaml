@@ -41,7 +41,7 @@ dataset:
     sourceDatasetId: "azureml://registries/azureml/data/truthful_qa/versions/1"
     sourceFormat: "csv"
     properties:
-      file_name: "truthful_qa.csv"
+      file_name: "TruthfulQA.csv"
       type: "uri_folder"
   datasetSchema:
     item:
