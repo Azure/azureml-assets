@@ -1,0 +1,36 @@
+type: "evaluator"
+name: "builtin.python_grader"
+version: 1
+displayName: "Python-Grader-Evaluator"
+description: "This grader allows you to execute arbitrary python code to grade the
+  model output. The grader expects a grade function to be present that takes in two
+  arguments and outputs a float value. Any other result (exception, invalid float
+  value, etc.) will be marked as invalid and return a 0 grade."
+evaluatorType: "builtin"
+evaluatorSubType: "openai_graders"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+  enable_evaluation_ui: false
+initParameterSchema:
+  type: "object"
+  properties:
+    name:
+      type: "string"
+    type:
+      type: "string"
+    source:
+      type: "string"
+    image_tag:
+      type: "string"
+    pass_threshold:
+      type: "number"
+      minimum: 0
+  required: ["type", "source", "name"]
+dataMappingSchema: {}
+outputSchema:
+  python_grader:
+    type: "continuous"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
