@@ -906,11 +906,6 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
-        if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
-                "Intermediate response. Please provide the agent's final response for evaluation.",
-                self._threshold,
-            )
         if isinstance(eval_input.get("response"), list):
             eval_input["response"] = _preprocess_messages(eval_input["response"])
         if isinstance(eval_input.get("query"), list):
@@ -941,6 +936,12 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        # Check for intermediate responses before validation/context extraction
+        if _is_intermediate_response(kwargs.get("response")):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
         # Convert inputs into list of evaluable inputs.
         try:
             # Validate input before processing
