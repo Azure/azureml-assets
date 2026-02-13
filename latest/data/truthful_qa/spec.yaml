@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "truthful_qa"
+version: "1"
+tags:
+  azureml.Designer: true
+  azureml.Designer.name: TruthfulQA
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: TruthfulQA
+type: uri_folder
+path: sample_data/
