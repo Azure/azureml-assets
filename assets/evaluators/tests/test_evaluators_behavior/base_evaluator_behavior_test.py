@@ -814,7 +814,7 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
         self.run_response_test(
             input_response=modified_response,
             description="Response Invalid tool_result Parameter in Content",
-            assert_type=self.AssertType.INVALID_VALUE,
+            assert_type=self.AssertType.PASS,
         )
 
     def test_response_missing_tool_call_id_parameter_in_content(self):

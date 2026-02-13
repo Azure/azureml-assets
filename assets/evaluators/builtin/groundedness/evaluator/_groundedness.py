@@ -57,18 +57,56 @@ class ContentType(str, Enum):
     OUTPUT_TEXT = "output_text"
     TOOL_CALL = "tool_call"
     TOOL_RESULT = "tool_result"
+    FUNCTION_CALL = "function_call"
+    FUNCTION_CALL_OUTPUT = "function_call_output"
+    MCP_APPROVAL_REQUEST = "mcp_approval_request"
+    MCP_APPROVAL_RESPONSE = "mcp_approval_response"
+    OPENAPI_CALL = "openapi_call"
+    OPENAPI_CALL_OUTPUT = "openapi_call_output"
 
 
 class ConversationValidator(ValidatorInterface):
     """Validate conversation inputs (queries and responses) comprised of message lists."""
 
     requires_query: bool = True
+    check_for_unsupported_tools: bool = False
     error_target: ErrorTarget
 
-    def __init__(self, error_target: ErrorTarget, requires_query: bool = True):
+    UNSUPPORTED_TOOLS: List[str] = [
+        "web_search_call",
+        "code_interpreter_call",
+        "azure_ai_search_call",
+        "bing_grounding_call",
+        "bing_custom_search_preview_call",
+        "azure_fabric",
+        "sharepoint_grounding",
+        "browser_automation",
+        "openapi_call"
+    ]
+
+    def __init__(
+        self,
+        error_target: ErrorTarget,
+        requires_query: bool = True,
+        check_for_unsupported_tools: bool = False
+    ):
         """Initialize with error target and query requirement."""
         self.requires_query = requires_query
+        self.check_for_unsupported_tools = check_for_unsupported_tools
         self.error_target = error_target
+
+    def _validate_field_exists(
+        self, item: Dict[str, Any], field_name: str, context: str
+    ) -> Optional[EvaluationException]:
+        """Validate that a field exists in a dictionary."""
+        if field_name not in item:
+            return EvaluationException(
+                message=f"Each {context} must contain a '{field_name}' field.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
+        return None
 
     def _validate_string_field(
         self, item: Dict[str, Any], field_name: str, context: str
@@ -150,13 +188,27 @@ class ConversationValidator(ValidatorInterface):
 
     def _validate_tool_call_content_item(self, content_item: Dict[str, Any]) -> Optional[EvaluationException]:
         """Validate a tool_call content item."""
-        if "type" not in content_item or content_item["type"] != ContentType.TOOL_CALL:
+        valid_tool_call_content_types = [
+            ContentType.TOOL_CALL,
+            ContentType.FUNCTION_CALL,
+            ContentType.OPENAPI_CALL,
+            ContentType.MCP_APPROVAL_REQUEST
+        ]
+        valid_tool_call_content_types_as_strings = [t.value for t in valid_tool_call_content_types]
+        if "type" not in content_item or content_item["type"] not in valid_tool_call_content_types:
             return EvaluationException(
-                message=f"The content item must be of type '{ContentType.TOOL_CALL.value}' in tool_call content item.",
+                message=(
+                    f"The content item must be of type {valid_tool_call_content_types_as_strings} "
+                    "in tool_call content item."
+                ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=self.error_target,
             )
+
+        if content_item["type"] == ContentType.MCP_APPROVAL_REQUEST:
+            return None
+
         error = self._validate_string_field(content_item, "name", "tool_call content items")
         if error:
             return error
@@ -193,7 +245,14 @@ class ConversationValidator(ValidatorInterface):
         """Validate assistant message content."""
         content = message["content"]
         if isinstance(content, list):
-            valid_assistant_content_types = [ContentType.TEXT, ContentType.OUTPUT_TEXT, ContentType.TOOL_CALL]
+            valid_assistant_content_types = [
+                ContentType.TEXT,
+                ContentType.OUTPUT_TEXT,
+                ContentType.TOOL_CALL,
+                ContentType.FUNCTION_CALL,
+                ContentType.MCP_APPROVAL_REQUEST,
+                ContentType.OPENAPI_CALL
+            ]
             valid_assistant_content_type_values = [t.value for t in valid_assistant_content_types]
             for content_item in content:
                 content_type = content_item["type"]
@@ -212,10 +271,28 @@ class ConversationValidator(ValidatorInterface):
                     error = self._validate_text_content_item(content_item, MessageRole.ASSISTANT)
                     if error:
                         return error
-                else:
+                elif content_type in [ContentType.TOOL_CALL, ContentType.FUNCTION_CALL, ContentType.OPENAPI_CALL]:
                     error = self._validate_tool_call_content_item(content_item)
                     if error:
                         return error
+
+                    # Raise error in case of unsupported tools for evaluators that enabled check_for_unsupported_tools
+                    if self.check_for_unsupported_tools:
+                        if content_type == ContentType.TOOL_CALL or content_type == ContentType.OPENAPI_CALL:
+                            name = (
+                                "openapi_call" if content_type == ContentType.OPENAPI_CALL
+                                else content_item["name"].lower()
+                            )
+                            if name in self.UNSUPPORTED_TOOLS:
+                                return EvaluationException(
+                                    message=(
+                                        f"{name} tool call is currently not supported for "
+                                        f"{self.error_target} evaluator."
+                                    ),
+                                    blame=ErrorBlame.USER_ERROR,
+                                    category=ErrorCategory.NOT_APPLICABLE,
+                                    target=self.error_target,
+                                )
         return None
 
     def _validate_tool_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
@@ -238,21 +315,36 @@ class ConversationValidator(ValidatorInterface):
             return error
         for content_item in content:
             content_type = content_item["type"]
-            if content_type != ContentType.TOOL_RESULT:
+            valid_tool_content_types = [
+                ContentType.TOOL_RESULT,
+                ContentType.FUNCTION_CALL_OUTPUT,
+                ContentType.MCP_APPROVAL_RESPONSE,
+                ContentType.OPENAPI_CALL_OUTPUT
+            ]
+            valid_tool_content_types_as_strings = [t.value for t in valid_tool_content_types]
+            if content_type not in valid_tool_content_types:
                 return EvaluationException(
                     message=(
-                        f"Invalid content type '{content_type}' for message with role '{MessageRole.TOOL.value}'. "
-                        f"Must be '{ContentType.TOOL_RESULT.value}'."
+                        f"Invalid content type '{content_type}' for message with role "
+                        f"'{MessageRole.TOOL.value}'. Must be one of {valid_tool_content_types_as_strings}."
                     ),
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            error = self._validate_dict_field(
-                content_item, "tool_result", f"content items for role '{MessageRole.TOOL.value}'"
-            )
-            if error:
-                return error
+
+            if content_type in [ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT]:
+                error = self._validate_field_exists(
+                    content_item, "tool_result", f"content items for role '{MessageRole.TOOL.value}'"
+                )
+                if error:
+                    return error
+            elif content_type == ContentType.FUNCTION_CALL_OUTPUT:
+                error = self._validate_field_exists(
+                    content_item, "function_call_output", f"content items for role '{MessageRole.TOOL.value}'"
+                )
+                if error:
+                    return error
         return None
 
     def _validate_message_dict(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
@@ -633,7 +725,11 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self._higher_is_better = True
 
         # Initialize input validator
-        self._validator = ConversationValidator(error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=False)
+        self._validator = ConversationValidator(
+            error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+            requires_query=False,
+            check_for_unsupported_tools=True
+        )
 
         self._validator_with_query = ConversationValidator(
             error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=True
