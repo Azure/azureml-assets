@@ -14,18 +14,13 @@ inference:
     max_completion_tokens: 4096
 
 evaluator:
-  type: "azure_ai_evaluator"
-  name: "TruthfulQA"
-  evaluatorName: "builtin.string_check"
-  version: "2"
   id: "azureml://registries/azureml/evaluators/builtin.string_check/versions/2"
-  dataMappingSchema:
-    input: "{{sample.output_text}}"
-    reference: "{{item.Best_Answer}}"
-  overrideInitParameterSchema:
-    name: "TruthfulQA_StringCheck"
+  testingCriteria:
     type: "string_check"
+    input: "{{sample.output_text}}"
     operation: "eq"
+    reference: "{{item.Best_Answer}}"
+    name: "TruthfulQA"
 
 dataset:
   datasetName: "truthful_qa"
