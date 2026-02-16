@@ -4,5 +4,6 @@ channels:
 dependencies:
 - python=3.10
 - pip=25.3
+- setuptools<82
 - pip:
   - mldesigner=={{latest-pypi-version:pre}}
