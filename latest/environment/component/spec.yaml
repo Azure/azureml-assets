@@ -15,4 +15,4 @@ os_type: linux
 
 tags:
   OS: Ubuntu24.04
-  Python: 3.9
+  Python: 3.10
