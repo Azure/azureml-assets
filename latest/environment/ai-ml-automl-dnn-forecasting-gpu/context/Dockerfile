@@ -57,7 +57,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     wheel=0.44.0 \
     -c conda-forge -c pytorch -c anaconda && \
     # end conda dependencies
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
 # end conda create
 

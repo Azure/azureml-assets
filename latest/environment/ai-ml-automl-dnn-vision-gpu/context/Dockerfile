@@ -94,7 +94,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     tbb=2021.1.1 \
     # end conda dependencies
     -c conda-forge -c cerebis && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
 # end conda create
 

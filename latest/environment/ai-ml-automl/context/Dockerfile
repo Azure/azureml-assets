@@ -36,7 +36,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     pytorch=2.8.0 \
     # end conda dependencies
     -c conda-forge -c pytorch -c anaconda -c nvidia && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
 # end conda create
 
