@@ -27,7 +27,7 @@ RUN git clone --depth 1 --branch v${ORAS_VERSION} https://github.com/oras-projec
 # =========================================
 # Runtime: AzureML base + Docker + Trivy + conda
 # =========================================
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260208.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260217.v1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Docker APT repo + minimal install (no recommends) + cleanup

@@ -4,7 +4,7 @@ description: >-
   CPU based environment for pipelines (ML Designer).
 
 name: "mldesigner"
-version: "52"
+version: "53"
 
 build:
   path: "context"
