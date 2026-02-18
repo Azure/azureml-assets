@@ -571,7 +571,9 @@ class BuiltInToolData:
             "content": [
                 {
                     "type": "tool_result",
-                    "tool_result": {"documents": [{"title": "HR Policy 2024", "url": "https://sharepoint.example.com"}]},
+                    "tool_result": {
+                        "documents": [{"title": "HR Policy 2024", "url": "https://sharepoint.example.com"}]
+                    },
                 }
             ],
         },

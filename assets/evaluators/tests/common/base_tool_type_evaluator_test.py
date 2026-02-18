@@ -167,8 +167,10 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """
         flow_kwargs = self.get_flow_kwargs(call_index)
         actual_tool_definitions = flow_kwargs.get("tool_definitions")
-        assert actual_tool_definitions == expected_tool_definitions, \
-            f"Expected tool_definitions:\n{expected_tool_definitions}\n\nActual tool_definitions:\n{actual_tool_definitions}"
+        assert actual_tool_definitions == expected_tool_definitions, (
+            f"Expected tool_definitions:\n{expected_tool_definitions}"
+            f"\n\nActual tool_definitions:\n{actual_tool_definitions}"
+        )
 
     def assert_flow_tool_definitions_contain(
         self, expected_definition: Dict[str, Any], call_index: int = 0
