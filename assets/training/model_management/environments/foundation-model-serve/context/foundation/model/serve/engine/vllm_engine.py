@@ -62,13 +62,13 @@ class VLLMEngine(BaseEngine):
             EnvironmentError: If required environment variables are not set.
         """
         azureml_model_dir = os.getenv(EnvironmentVariables.AZUREML_MODEL_DIR)
-        aml_model = os.getenv(EnvironmentVariables.AML_MODEL_PATH)
+        aml_model = os.getenv(EnvironmentVariables.MODEL_SUB_PATH)
         engine_port = os.getenv(
             EnvironmentVariables.ENGINE_STARTUP_PORT, str(CommonConstants.DEFAULT_PORT))
 
         if not aml_model:
             raise EnvironmentError(
-                f"{EnvironmentVariables.AML_MODEL} environment variable is not set.")
+                f"{EnvironmentVariables.MODEL_SUB_PATH} environment variable is not set.")
 
         # Set AML port
         os.environ[EnvironmentVariables.AML_PORT] = engine_port
