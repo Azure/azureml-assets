@@ -319,7 +319,9 @@ class ConversationValidator(ValidatorInterface):
                     target=self.error_target,
                 )
 
-            if content_type in [ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT, ContentType.FUNCTION_CALL_OUTPUT]:
+            if content_type in [
+                ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT, ContentType.FUNCTION_CALL_OUTPUT
+            ]:
                 error = self._validate_field_exists(
                     content_item, content_type, f"content items for role '{MessageRole.TOOL.value}'"
                 )
