@@ -73,7 +73,6 @@ RUN conda install pip -n ptca -y || true
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -afy
 
 # Install packages with torch packages separately to reduce layer size

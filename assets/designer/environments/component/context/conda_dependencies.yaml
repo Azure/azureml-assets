@@ -2,8 +2,9 @@ name: component
 channels:
 - conda-forge
 dependencies:
-- python=3.9
+- python=3.10
 - pip=25.3
+- setuptools<82
 - pip:
   - urllib3>=2.6.0
   - azure-ml-component=={{latest-pypi-version}}
