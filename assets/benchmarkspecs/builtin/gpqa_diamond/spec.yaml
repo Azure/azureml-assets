@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.gpqa_diamond"
-version: 1
+version: 2
 display_name: "GPQA Diamond Benchmark"
 description: "GPQA Diamond is a curated to be a higher-difficulty subset of the GPQA benchmark. (Graduate-Level Google-Proof Q&A) benchmark for evaluating model reasoning accuracy on multiple-choice science questions."
 benchmarkType: "builtin"
@@ -14,16 +14,17 @@ inference:
     max_completion_tokens: 4096
 
 evaluator:
-  type: "azure_ai_evaluator"
-  name: "GPQA_Diamond"
-  evaluatorName: "builtin.f1_score"
-  version: "1"
   id: "azureml://registries/azureml/evaluators/builtin.f1_score/versions/1"
-  dataMappingSchema:
-    response: "{{sample.output_text}}"
-    ground_truth: "{{item.Correct_Answer}}"
-  overrideInitParameterSchema:
-    threshold: 0.5
+  testingCriteria:
+    type: "azure_ai_evaluator"
+    name: "GPQA_Diamond"
+    evaluator_name: "builtin.f1_score"
+    evaluator_version: "1"
+    initialization_parameters:
+      threshold: 0.5
+    data_mapping:
+      response: "{{sample.output_text}}"
+      ground_truth: "{{item.Correct_Answer}}"
 
 dataset:
   datasetName: "gpqa_diamond"
