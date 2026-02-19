@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.retrieval"
-version: 6
+version: 7
 displayName: "Retrieval-Evaluator"
 description: "Measures how effectively the system retrieves relevant data or content.
   Higher scores mean better recall of useful information. It’s best used for the quality
@@ -31,8 +31,6 @@ dataMappingSchema:
       type: "string"
     context:
       type: "string"
-    conversation:
-      type: "object"
   required: ["query", "context"]
 outputSchema:
   retrieval:

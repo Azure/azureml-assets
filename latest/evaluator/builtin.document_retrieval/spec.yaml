@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.document_retrieval"
-version: 1
+version: 2
 displayName: "Document-Retrieval-Evaluator"
 description: "Checks how accurately relevant documents are retrieved. Higher scores
   mean better matching to user intent. Use this metric when assessing search engines,
@@ -33,7 +33,7 @@ initParameterSchema:
       type: "integer"
     total_ground_truth_documents_threshold:
       type: "integer"
-  required: ["ground_truth_label_min", "ground_truth_label_max"]
+  required: []
 dataMappingSchema:
   type: "object"
   properties:

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.rouge_score"
-version: 1
+version: 2
 displayName: "Rouge-Score-Evaluator"
 description: "Compares the overlap of words or phrases between model output and reference
   text. Higher scores indicate closer alignment. Reccomended use cases include text
@@ -32,7 +32,7 @@ initParameterSchema:
       minimum: 0
       maximum: 1
       multipleOf: 0.1
-  required: ["rouge_type", "f1_score_threshold", "precision_threshold", "recall_threshold"]
+  required: ["rouge_type"]
 dataMappingSchema:
   type: "object"
   properties:

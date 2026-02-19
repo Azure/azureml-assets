@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.fluency"
-version: 4
+version: 5
 displayName: "Fluency-Evaluator"
 description: "Evaluates how natural and grammatically correct the response sounds.
   Higher scores indicate smoother and clearer language. It’s best used for generative
@@ -25,12 +25,8 @@ initParameterSchema:
 dataMappingSchema:
   type: "object"
   properties:
-    query:
-      type: "string"
     response:
       type: "string"
-    conversation:
-      type: "object"
   required: ["response"]
 outputSchema:
   fluency:

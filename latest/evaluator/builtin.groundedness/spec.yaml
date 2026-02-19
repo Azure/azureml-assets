@@ -49,7 +49,7 @@ dataMappingSchema:
           type: "object"
   anyOf:
   - required: ["response", "context"]
-  - required: ["response", "tool_definitions"]
+  - required: ["query", "response"]
 outputSchema:
   groundedness:
     type: "ordinal"

@@ -38,7 +38,7 @@ dataMappingSchema:
       - type: "array"
         items:
           type: "object"
-  required: ["query", "response"]
+  required: ["query", "response", "tool_definitions"]
 outputSchema:
   tool_output_utilization:
     type: "ordinal"
