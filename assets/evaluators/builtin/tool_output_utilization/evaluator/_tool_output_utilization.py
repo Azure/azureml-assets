@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import math
 import logging
 from enum import Enum
 from typing import Dict, Union, List
@@ -1035,13 +1034,9 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
                 f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
             }
-        if logger:
-            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
-
-        score = math.nan
-        binary_result = self._get_binary_result(score)
-        return {
-            self._result_key: float(score),
-            f"{self._result_key}_result": binary_result,
-            f"{self._result_key}_threshold": self._threshold,
-        }
+        raise EvaluationException(
+            message="Evaluator returned invalid output.",
+            blame=ErrorBlame.SYSTEM_ERROR,
+            category=ErrorCategory.FAILED_EXECUTION,
+            target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
+        )

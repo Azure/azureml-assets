@@ -2,12 +2,14 @@
 # Licensed under the MIT License.
 
 import logging
+import math
 import os
 from typing import Dict, List, Union
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._evaluators._common._base_prompty_eval import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 
 logger = logging.getLogger(__name__)
 
@@ -159,3 +161,23 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: :rtype: Dict[str, Union[float, Dict[str, List[str, float]]]]
         """
         return super().__call__(*args, **kwargs)
+
+    @override
+    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
+        """Do a retrieval evaluation.
+
+        :param eval_input: The input to the evaluator.
+        :type eval_input: Dict
+        :return: The evaluation result.
+        :rtype: Dict
+        """
+        result = await super()._do_eval(eval_input)
+        # Check if base returned nan (invalid output case)
+        if math.isnan(result.get(self._result_key, 0)):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.RETRIEVAL_EVALUATOR,
+            )
+        return result

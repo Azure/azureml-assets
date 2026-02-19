@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import math
 import os
 from typing import Dict
 
@@ -178,3 +179,23 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
             )
 
         return super()._convert_kwargs_to_eval_input(**kwargs)
+
+    @override
+    async def _do_eval(self, eval_input: Dict):  # type: ignore[override]
+        """Do a similarity evaluation.
+
+        :param eval_input: The input to the evaluator.
+        :type eval_input: Dict
+        :return: The evaluation result.
+        :rtype: Dict
+        """
+        result = await super()._do_eval(eval_input)
+        # Check if base returned nan (invalid output case)
+        if math.isnan(result.get(self._result_key, 0)):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
+        return result
