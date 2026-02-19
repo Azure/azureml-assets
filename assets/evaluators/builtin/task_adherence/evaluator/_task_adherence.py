@@ -64,15 +64,16 @@ class ConversationValidator(ValidatorInterface):
     error_target: ErrorTarget
 
     UNSUPPORTED_TOOLS: List[str] = [
-        "web_search_call",
-        "code_interpreter_call",
-        "azure_ai_search_call",
-        "bing_grounding_call",
-        "bing_custom_search_preview_call",
-        "azure_fabric",
-        "sharepoint_grounding",
+        "azure_ai_search",
+        "bing_custom_search",
+        "bing_grounding",
         "browser_automation",
-        "openapi_call"
+        "code_interpreter_call",
+        "computer_call",
+        "azure_fabric",
+        "openapi_call",
+        "sharepoint_grounding",
+        "web_search"
     ]
 
     def __init__(
@@ -271,7 +272,7 @@ class ConversationValidator(ValidatorInterface):
                                 return EvaluationException(
                                     message=(
                                         f"{name} tool call is currently not supported for "
-                                        f"{self.error_target} evaluator."
+                                        f"{self.error_target.value} evaluator."
                                     ),
                                     blame=ErrorBlame.USER_ERROR,
                                     category=ErrorCategory.NOT_APPLICABLE,
@@ -316,15 +317,11 @@ class ConversationValidator(ValidatorInterface):
                     target=self.error_target,
                 )
 
-            if content_type in [ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT]:
+            if content_type in [
+                ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT, ContentType.FUNCTION_CALL_OUTPUT
+            ]:
                 error = self._validate_field_exists(
-                    content_item, "tool_result", f"content items for role '{MessageRole.TOOL.value}'"
-                )
-                if error:
-                    return error
-            elif content_type == ContentType.FUNCTION_CALL_OUTPUT:
-                error = self._validate_field_exists(
-                    content_item, "function_call_output", f"content items for role '{MessageRole.TOOL.value}'"
+                    content_item, content_type, f"content items for role '{MessageRole.TOOL.value}'"
                 )
                 if error:
                     return error

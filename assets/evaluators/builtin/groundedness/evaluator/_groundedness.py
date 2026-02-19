@@ -74,15 +74,16 @@ class ConversationValidator(ValidatorInterface):
     error_target: ErrorTarget
 
     UNSUPPORTED_TOOLS: List[str] = [
-        "web_search_call",
-        "code_interpreter_call",
-        "azure_ai_search_call",
-        "bing_grounding_call",
-        "bing_custom_search_preview_call",
-        "azure_fabric",
-        "sharepoint_grounding",
+        "azure_ai_search",
+        "bing_custom_search",
+        "bing_grounding",
         "browser_automation",
-        "openapi_call"
+        "code_interpreter_call",
+        "computer_call",
+        "azure_fabric",
+        "openapi_call",
+        "sharepoint_grounding",
+        "web_search"
     ]
 
     def __init__(
@@ -288,7 +289,7 @@ class ConversationValidator(ValidatorInterface):
                                 return EvaluationException(
                                     message=(
                                         f"{name} tool call is currently not supported for "
-                                        f"{self.error_target} evaluator."
+                                        f"{self.error_target.value} evaluator."
                                     ),
                                     blame=ErrorBlame.USER_ERROR,
                                     category=ErrorCategory.NOT_APPLICABLE,
@@ -334,15 +335,11 @@ class ConversationValidator(ValidatorInterface):
                     target=self.error_target,
                 )
 
-            if content_type in [ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT]:
+            if content_type in [
+                ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT, ContentType.FUNCTION_CALL_OUTPUT
+            ]:
                 error = self._validate_field_exists(
-                    content_item, "tool_result", f"content items for role '{MessageRole.TOOL.value}'"
-                )
-                if error:
-                    return error
-            elif content_type == ContentType.FUNCTION_CALL_OUTPUT:
-                error = self._validate_field_exists(
-                    content_item, "function_call_output", f"content items for role '{MessageRole.TOOL.value}'"
+                    content_item, content_type, f"content items for role '{MessageRole.TOOL.value}'"
                 )
                 if error:
                     return error
@@ -733,7 +730,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         )
 
         self._validator_with_query = ConversationValidator(
-            error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=True
+            error_target=ErrorTarget.GROUNDEDNESS_EVALUATOR, requires_query=True,
+            check_for_unsupported_tools=True
         )
 
         super().__init__(
@@ -777,7 +775,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *,
         query: str | List[dict],
         response: str | List[dict],
-        tool_definitions: List[dict],
+        tool_definitions: Optional[List[dict]] = None,
     ) -> Dict[str, Union[str, float]]:
         """Evaluate groundedness for agent response with tool calls. Only file_search tool is supported.
 
@@ -785,8 +783,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :paramtype query: str
         :keyword response: The response from the agent to be evaluated.
         :paramtype response: List[dict]
-        :keyword tool_definitions: The tool definitions used by the agent.
-        :paramtype tool_definitions: List[dict]
+        :keyword tool_definitions: Optional tool definitions used by the agent.
+        :paramtype tool_definitions: Optional[List[dict]]
         :return: The groundedness score.
         :rtype: Dict[str, Union[str, float]]
         """
@@ -955,30 +953,30 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
-        # Check for intermediate responses before validation/context extraction
-        if _is_intermediate_response(kwargs.get("response")):
-            return self._not_applicable_result(
-                "Intermediate response. Please provide the agent's final response for evaluation.",
-                self._threshold,
-            )
+        # Validate input before processing
+        if kwargs.get("query"):
+            self._validator_with_query.validate_eval_input(kwargs)
+        else:
+            self._validator.validate_eval_input(kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
-            # Validate input before processing
-            if kwargs.get("context") or kwargs.get("conversation"):
-                self._validator.validate_eval_input(kwargs)
-            else:
-                self._validator_with_query.validate_eval_input(kwargs)
             return await super()._real_call(**kwargs)
         except EvaluationException as ex:
             if ex.category == ErrorCategory.NOT_APPLICABLE:
                 return {
-                    self._result_key: self._NOT_APPLICABLE_RESULT,
+                    self._result_key: self.threshold,
                     f"{self._result_key}_result": "pass",
                     f"{self._result_key}_threshold": self.threshold,
-                    f"{self._result_key}_reason": (
-                        "Supported tools were not called. "
-                        f"Supported tools for groundedness are {self._SUPPORTED_TOOLS}."
-                    ),
+                    f"{self._result_key}_reason": f"Not applicable: {ex.message}",
+                    f"{self._result_key}_details": {},
+                    f"{self._result_key}_prompt_tokens": 0,
+                    f"{self._result_key}_completion_tokens": 0,
+                    f"{self._result_key}_total_tokens": 0,
+                    f"{self._result_key}_finish_reason": "",
+                    f"{self._result_key}_model": "",
+                    f"{self._result_key}_sample_input": "",
+                    f"{self._result_key}_sample_output": "",
                 }
             else:
                 raise ex
@@ -1020,7 +1018,11 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         context = self._get_context_from_agent_response(response, tool_definitions)
 
         if not self._validate_context(context) and self._is_single_entry(response) and self._is_single_entry(query):
-            msg = f"{type(self).__name__}: No valid context provided or could be extracted from the query or response."
+            msg = (
+                f"{type(self).__name__}: No valid context provided or could be extracted from the query or response. "
+                "Please either provide valid context or pass the full items list for 'response' and 'query' "
+                "to extract context from tool calls."
+            )
             raise EvaluationException(
                 message=msg,
                 blame=ErrorBlame.USER_ERROR,
