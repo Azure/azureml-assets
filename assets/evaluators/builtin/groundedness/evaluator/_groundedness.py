@@ -3,6 +3,7 @@
 
 import os
 import logging
+import math
 from typing import Dict, List, Optional, Union, Any
 
 from typing_extensions import overload, override
@@ -714,7 +715,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         *,
         query: str | List[dict],
         response: str | List[dict],
-        tool_definitions: List[dict],
+        tool_definitions: Optional[List[dict]] = None,
     ) -> Dict[str, Union[str, float]]:
         """Evaluate groundedness for agent response with tool calls. Only file_search tool is supported.
 
@@ -722,8 +723,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :paramtype query: str
         :keyword response: The response from the agent to be evaluated.
         :paramtype response: List[dict]
-        :keyword tool_definitions: The tool definitions used by the agent.
-        :paramtype tool_definitions: List[dict]
+        :keyword tool_definitions: Optional tool definitions used by the agent.
+        :paramtype tool_definitions: Optional[List[dict]]
         :return: The groundedness score.
         :rtype: Dict[str, Union[str, float]]
         """
@@ -827,7 +828,16 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
         if eval_input.get("query", None) is None:
-            return await super()._do_eval(eval_input)
+            result = await super()._do_eval(eval_input)
+            # Check if base returned nan (invalid output case)
+            if math.isnan(result.get(self._result_key, 0)):
+                raise EvaluationException(
+                    message="Evaluator returned invalid output.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+                )
+            return result
 
         contains_context = self.has_context(eval_input)
 
@@ -842,7 +852,16 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
 
         # Replace and call the parent method
-        return await super()._do_eval(simplified_eval_input)
+        result = await super()._do_eval(simplified_eval_input)
+        # Check if base returned nan (invalid output case)
+        if math.isnan(result.get(self._result_key, 0)):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+            )
+        return result
 
     async def _real_call(self, **kwargs):
         """Asynchronous call where real end-to-end evaluation logic is performed.
@@ -863,13 +882,18 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         except EvaluationException as ex:
             if ex.category == ErrorCategory.NOT_APPLICABLE:
                 return {
-                    self._result_key: self._NOT_APPLICABLE_RESULT,
+                    self._result_key: self.threshold,
                     f"{self._result_key}_result": "pass",
                     f"{self._result_key}_threshold": self.threshold,
-                    f"{self._result_key}_reason": (
-                        "Supported tools were not called. "
-                        f"Supported tools for groundedness are {self._SUPPORTED_TOOLS}."
-                    ),
+                    f"{self._result_key}_reason": f"Not applicable: {ex.message}",
+                    f"{self._result_key}_details": {},
+                    f"{self._result_key}_prompt_tokens": 0,
+                    f"{self._result_key}_completion_tokens": 0,
+                    f"{self._result_key}_total_tokens": 0,
+                    f"{self._result_key}_finish_reason": "",
+                    f"{self._result_key}_model": "",
+                    f"{self._result_key}_sample_input": "",
+                    f"{self._result_key}_sample_output": "",
                 }
             else:
                 raise ex
@@ -911,7 +935,11 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         context = self._get_context_from_agent_response(response, tool_definitions)
 
         if not self._validate_context(context) and self._is_single_entry(response) and self._is_single_entry(query):
-            msg = f"{type(self).__name__}: No valid context provided or could be extracted from the query or response."
+            msg = (
+                f"{type(self).__name__}: No valid context provided or could be extracted from the query or response. "
+                "Please either provide valid context or pass the full items list for 'response' and 'query' "
+                "to extract context from tool calls."
+            )
             raise EvaluationException(
                 message=msg,
                 blame=ErrorBlame.USER_ERROR,

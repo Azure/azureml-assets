@@ -22,12 +22,8 @@ initParameterSchema:
 dataMappingSchema:
   type: "object"
   properties:
-    query:
-      type: "string"
     response:
       type: "string"
-    conversation:
-      type: "object"
   required: ["response"]
 outputSchema:
   fluency:
