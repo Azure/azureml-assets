@@ -1,6 +1,6 @@
 FROM nvidia/cuda:13.1.1-devel-ubuntu22.04
 
-RUN rm -rf /opt/nvidia/nsight-compute || true
+RUN rm -rf /opt/nvidia/nsight-compute
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
