@@ -279,7 +279,7 @@ class ConversationValidator(ValidatorInterface):
                                 return EvaluationException(
                                     message=(
                                         f"{name} tool call is currently not supported for "
-                                        f"{self.error_target} evaluator."
+                                        f"{self.error_target.value} evaluator."
                                     ),
                                     blame=ErrorBlame.USER_ERROR,
                                     category=ErrorCategory.NOT_APPLICABLE,
