@@ -773,7 +773,6 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     _PROMPTY_FILE = "tool_output_utilization.prompty"
     _RESULT_KEY = "tool_output_utilization"
-    _OPTIONAL_PARAMS = ["tool_definitions"]
 
     _validator: ValidatorInterface
 
@@ -795,7 +794,10 @@ class ToolOutputUtilizationEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
 
         # Initialize input validator
-        self._validator = ToolDefinitionsValidator(error_target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR)
+        self._validator = ToolDefinitionsValidator(
+            error_target=ErrorTarget.TOOL_OUTPUT_UTILIZATION_EVALUATOR,
+            optional_tool_definitions=False
+        )
 
         super().__init__(
             model_config=model_config,
