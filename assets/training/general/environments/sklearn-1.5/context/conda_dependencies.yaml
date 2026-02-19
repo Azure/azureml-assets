@@ -12,6 +12,7 @@ dependencies:
   - scikit-learn-intelex=={{latest-pypi-version}}
   - azureml-core=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
+  - azureml-inference-server-http=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - scikit-learn~=1.5.0
