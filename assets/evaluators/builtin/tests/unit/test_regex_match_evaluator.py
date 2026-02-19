@@ -413,3 +413,40 @@ class TestRegexMatchEvaluatorScoring:
         # Empty response -> fail
         result = evaluator(response="")
         assert result[REGEX_MATCH_RESULT] == FAIL
+
+
+class TestRegexMatchEvaluatorLogging:
+    """Tests for logging behavior."""
+
+    def test_logging_on_invalid_pattern(self, caplog):
+        """Test that info logging includes pattern metadata on compilation error."""
+        import logging
+
+        with caplog.at_level(logging.INFO):
+            with pytest.raises(ValueError, match="Invalid regular expression"):
+                RegexMatchEvaluator(patterns=r"[invalid(regex")
+
+        # Check that info log includes pattern metadata
+        assert any("Failed to compile pattern at index 0" in record.message for record in caplog.records)
+        assert any("length=" in record.message for record in caplog.records)
+
+    def test_logging_on_init(self, caplog):
+        """Test that debug logging includes pattern count on init."""
+        import logging
+
+        with caplog.at_level(logging.DEBUG):
+            RegexMatchEvaluator(patterns=[r"pattern1", r"pattern2"])
+
+        # Check that debug log includes pattern count
+        assert any("2 pattern(s)" in record.message for record in caplog.records)
+        assert any("dynamic=False" in record.message for record in caplog.records)
+
+    def test_logging_on_dynamic_pattern_init(self, caplog):
+        """Test that debug logging indicates dynamic patterns."""
+        import logging
+
+        with caplog.at_level(logging.DEBUG):
+            RegexMatchEvaluator(patterns=r"(?i)ANSWER:\s*{{ground_truth}}")
+
+        # Check that dynamic flag is logged
+        assert any("dynamic=True" in record.message for record in caplog.records)
