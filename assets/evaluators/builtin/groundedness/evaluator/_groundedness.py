@@ -3,6 +3,7 @@
 
 import os
 import logging
+import math
 from typing import Dict, List, Optional, Union, Any
 
 from typing_extensions import overload, override
@@ -911,7 +912,16 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         if eval_input.get("query", None) is None:
-            return await super()._do_eval(eval_input)
+            result = await super()._do_eval(eval_input)
+            # Check if base returned nan (invalid output case)
+            if math.isnan(result.get(self._result_key, 0)):
+                raise EvaluationException(
+                    message="Evaluator returned invalid output.",
+                    blame=ErrorBlame.SYSTEM_ERROR,
+                    category=ErrorCategory.FAILED_EXECUTION,
+                    target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+                )
+            return result
 
         contains_context = self.has_context(eval_input)
 
@@ -926,7 +936,16 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
 
         # Replace and call the parent method
-        return await super()._do_eval(simplified_eval_input)
+        result = await super()._do_eval(simplified_eval_input)
+        # Check if base returned nan (invalid output case)
+        if math.isnan(result.get(self._result_key, 0)):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+            )
+        return result
 
     async def _real_call(self, **kwargs):
         """Asynchronous call where real end-to-end evaluation logic is performed.

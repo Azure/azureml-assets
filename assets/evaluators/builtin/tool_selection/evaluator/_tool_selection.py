@@ -1253,7 +1253,7 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         else:
             raise EvaluationException(
-                message="Tool selection evaluator returned invalid output.",
+                message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ExtendedErrorTarget.TOOL_SELECTION_EVALUATOR,

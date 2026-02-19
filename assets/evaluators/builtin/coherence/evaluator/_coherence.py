@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import math
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -737,3 +738,23 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self._validator.validate_eval_input(kwargs)
 
         return await super()._real_call(**kwargs)
+
+    @override
+    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
+        """Do a coherence evaluation.
+
+        :param eval_input: The input to the evaluator.
+        :type eval_input: Dict
+        :return: The evaluation result.
+        :rtype: Dict
+        """
+        result = await super()._do_eval(eval_input)
+        # Check if base returned nan (invalid output case)
+        if math.isnan(result.get(self._result_key, 0)):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.COHERENCE_EVALUATOR,
+            )
+        return result
