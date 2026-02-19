@@ -707,19 +707,6 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_sample_output": "",
         }
 
-    @override
-    async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
-        """Do fluency evaluation with is-intermediate-response check."""
-        if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
-                "Intermediate response. Please provide the agent's final response for evaluation.",
-                self._threshold,
-            )
-        if isinstance(eval_input.get("response"), list):
-            eval_input["response"] = _preprocess_messages(eval_input["response"])
-        if isinstance(eval_input.get("query"), list):
-            eval_input["query"] = _preprocess_messages(eval_input["query"])
-        return await super()._do_eval(eval_input)
 
     @override
     async def _real_call(self, **kwargs):
@@ -744,7 +731,18 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Dict
         """
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
+
         result = await super()._do_eval(eval_input)
+
         # Check if base returned nan (invalid output case)
         if math.isnan(result.get(self._result_key, 0)):
             raise EvaluationException(
