@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import math
 import os
 import logging
 from typing import Dict, Union, List, Optional
@@ -673,16 +672,12 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
                 f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
             }
-        if logger:
-            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
-
-        score = math.nan
-        binary_result = self._get_binary_result(score)
-        return {
-            self._result_key: float(score),
-            f"{self._result_key}_result": binary_result,
-            f"{self._result_key}_threshold": self._threshold,
-        }
+        raise EvaluationException(
+            message="Evaluator returned invalid output.",
+            blame=ErrorBlame.SYSTEM_ERROR,
+            category=ErrorCategory.FAILED_EXECUTION,
+            target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
+        )
 
 
 def _filter_to_used_tools(tool_definitions, msgs_list, logger=None):
