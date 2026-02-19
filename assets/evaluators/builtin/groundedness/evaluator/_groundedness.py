@@ -871,13 +871,14 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
+        # Validate input before processing
+        if kwargs.get("query"):
+            self._validator_with_query.validate_eval_input(kwargs)
+        else:
+            self._validator.validate_eval_input(kwargs)
+
         # Convert inputs into list of evaluable inputs.
         try:
-            # Validate input before processing
-            if kwargs.get("query"):
-                self._validator_with_query.validate_eval_input(kwargs)
-            else:
-                self._validator.validate_eval_input(kwargs)
             return await super()._real_call(**kwargs)
         except EvaluationException as ex:
             if ex.category == ErrorCategory.NOT_APPLICABLE:
