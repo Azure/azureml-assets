@@ -191,7 +191,7 @@ class BaseEvaluatorRunner(ABC):
     # ==================== COMMON ASSERTION HELPERS ====================
 
     def _assert_pass_result(self, result_data: Dict[str, Any]):
-        """Common validation logic for pass results.
+        """Validate logic for pass results.
 
         Args:
             result_data: Dictionary containing evaluation result data.
