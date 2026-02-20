@@ -216,21 +216,12 @@ class PromptFactory(ABC):
                         )
 
         if self.metadata_keys is not None:
-            def collect_metadata(metadata_keys, data, index):
-                metadata = data.get("metadata", {})
-                for k in metadata_keys.split(","):
-                    if k in data:
-                        metadata[k] = data[k]
-                    else:
-                        logger.warning(f"Metadata key {k} not found in data at row {index}")
-                return metadata
-
-            metadata = collect_metadata(
-                metadata_keys=self.metadata_keys,
-                data=row,
-                index=index,
-            )
-            output_data["metadata"] = metadata
+            for k in self.metadata_keys.split(","):
+                k = k.strip()
+                if k in row:
+                    output_data[k] = row[k]
+                else:
+                    logger.warning(f"Metadata key {k} not found in data at row {index}")
 
         if self.additional_payload:
             try:
