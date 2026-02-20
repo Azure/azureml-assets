@@ -4,7 +4,7 @@ channels:
 - anaconda
 dependencies:
 - python=3.10
-- pip=25.3
+- pip=26.0.1
 - pip:
   - -c /pip_constraints.txt
     # RAG package
