@@ -571,6 +571,66 @@ def _create_extended_error_target():
 ExtendedErrorTarget = _create_extended_error_target()
 
 
+def _is_intermediate_response(response):
+    """Check if response is intermediate (last content item is function_call or mcp_approval_request)."""
+    if isinstance(response, list) and len(response) > 0:
+        last_msg = response[-1]
+        if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+            content = last_msg.get("content", [])
+            if isinstance(content, list) and len(content) > 0:
+                last_content = content[-1]
+                if (isinstance(last_content, dict) and
+                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                    return True
+    return False
+
+
+def _drop_mcp_approval_messages(messages):
+    """Remove MCP approval request/response messages."""
+    if not isinstance(messages, list):
+        return messages
+    return [
+        msg for msg in messages
+        if not (
+            isinstance(msg, dict)
+            and isinstance(msg.get("content"), list)
+            and (
+                (msg.get("role") == "assistant" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_request" for c in msg["content"]))
+                or (msg.get("role") == "tool" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_response" for c in msg["content"]))
+            )
+        )
+    ]
+
+
+def _normalize_function_call_types(messages):
+    """Normalize function_call/function_call_output types to tool_call/tool_result."""
+    if not isinstance(messages, list):
+        return messages
+    for msg in messages:
+        if not isinstance(msg, dict) or not isinstance(msg.get("content"), list):
+            continue
+        for item in msg["content"]:
+            if not isinstance(item, dict):
+                continue
+            t = item.get("type")
+            if t == "function_call":
+                item["type"] = "tool_call"
+            elif t == "function_call_output":
+                item["type"] = "tool_result"
+                if "function_call_output" in item:
+                    item["tool_result"] = item.pop("function_call_output")
+    return messages
+
+
+def _preprocess_messages(messages):
+    """Drop MCP approval messages and normalize function call types."""
+    messages = _drop_mcp_approval_messages(messages)
+    messages = _normalize_function_call_types(messages)
+    return messages
+
+
 @experimental
 class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """The Task Completion evaluator determines whether an AI agent successfully completed the requested task.
@@ -703,6 +763,25 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         return super().__call__(*args, **kwargs)
 
+    def _not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict]]:
+        """Return a result indicating that the evaluation is not applicable."""
+        return {
+            self._result_key: threshold,
+            f"{self._result_key}_result": "pass",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_details": {},
+            f"{self._result_key}_prompt_tokens": 0,
+            f"{self._result_key}_completion_tokens": 0,
+            f"{self._result_key}_total_tokens": 0,
+            f"{self._result_key}_finish_reason": "",
+            f"{self._result_key}_model": "",
+            f"{self._result_key}_sample_input": "",
+            f"{self._result_key}_sample_output": "",
+        }
+
     @override
     async def _real_call(self, **kwargs):
         """Perform asynchronous call where real end-to-end evaluation logic is executed.
@@ -736,6 +815,15 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 category=ErrorCategory.MISSING_FIELD,
                 target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             )
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
         eval_input["query"] = reformat_conversation_history(eval_input["query"], logger, include_system_messages=True)
         eval_input["response"] = reformat_agent_response(eval_input["response"], logger, include_tool_messages=True)
         if "tool_definitions" in eval_input and eval_input["tool_definitions"]:
