@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python=3.10
   - pip:
-    - pip==25.3
+    - pip==26.0.1
     - azure-ai-ml==1.31.0
     - azure-identity==1.25.2
     - cryptography==46.0.5
