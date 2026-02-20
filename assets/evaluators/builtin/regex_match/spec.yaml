@@ -1,8 +1,8 @@
 type: "evaluator"
 name: "builtin.regex_match"
-version: 1
+version: 2
 displayName: "Regex-Match-Evaluator"
-description: "Evaluates whether a model response matches one or more regex patterns. Patterns can include {{ground_truth}} which is resolved per-row from the ground_truth parameter. Returns a binary accuracy score: 1.0 if any pattern matches, 0.0 otherwise. Designed for benchmarking tasks where correctness is determined by pattern matching."
+description: "Evaluates whether a model response matches one or more regex patterns. Patterns can include {{ground_truth}} which is resolved per-row from the ground_truth parameter. Returns True if any pattern matches, False otherwise. Designed for benchmarking tasks where correctness is determined by pattern matching."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["quality"]
@@ -30,8 +30,6 @@ dataMappingSchema:
   required: ["response"]
 outputSchema:
   regex_match:
-    type: "ordinal"
+    type: "boolean"
     desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
 path: ./evaluator
