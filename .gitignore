@@ -131,6 +131,7 @@ dmypy.json
 
 # ignore mlflow local dumps
 mlruns/
+mlflow.db
 
 # VS Code settings
 .vscode
