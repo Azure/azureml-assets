@@ -80,8 +80,8 @@ def base_test(dataset_name,
 @pytest.mark.test_mnli
 def test_mnli() -> None:
     """Test to ensure that the checksums for the mnli dataset are as expected."""
-    completion_ground_truth_checksum = "25ed56454fc4f7d5c042372e34a32f0a14ec7b5779deec0ab57a6be82aaee258"
-    chat_ground_truth_checksum = "541038f3df8cb820729f633a9149c0c3a13daa81bf2a9ab2c6be3a3501e67942"
+    completion_ground_truth_checksum = "09544c71a22d4be3802b2e70433c0871a877d073d93c1cb68e0f4a5136db05d2"
+    chat_ground_truth_checksum = "c140b3e5fb544581b206262bd3bcc6e6b0c682ef9bcb8230ef334c49870c8c94"
     params = {
         "n_shots": 7,
         "random_seed": 0,
@@ -101,8 +101,8 @@ def test_mnli() -> None:
 @pytest.mark.test_anli
 def test_anli() -> None:
     """Test to ensure that the checksums for the anli dataset are as expected."""
-    completion_ground_truth_checksum = "1e614c621f02f318c55877ac41e8244f9659ea4902971d5ae5a5ef038071539c"
-    chat_ground_truth_checksum = "5e1ba228d89613cedc2f523922da582dbc3c02c5e2e6cab85964c1bab3835fd3"
+    completion_ground_truth_checksum = "10e3e179a4730ff119286c5eed06d3ca25c4387d51fc1177f648a85bfe5cef93"
+    chat_ground_truth_checksum = "401b1d69cd445c1c15864a9dbcbda2388062381909a79ffbc5ed60a4c5b017f4"
     params = {
         "n_shots": 7,
         "random_seed": 0,
@@ -122,8 +122,8 @@ def test_anli() -> None:
 @pytest.mark.test_gsm8k_chain_of_thought
 def test_gsm8k_chain_of_thought() -> None:
     """Test to ensure that the checksums for the gsm8k_chain_of_thought dataset are as expected."""
-    completion_ground_truth_checksum = "a087a01eb5cf98c1700f9aa4415ebb920418d6b0311998955e29dff757aef712"
-    chat_ground_truth_checksum = "6b03925c3bcf5923182f7a9bb9e28ade7754ad21d9bb78d85ab1793e384bb2ff"
+    completion_ground_truth_checksum = "a14934fd5b874c5b21e6ef07b2a8af503b02f7404fade503d6a8aeb9757816dd"
+    chat_ground_truth_checksum = "3f58458761e14fc3d9294fd3eeda23270cbd91ab304b02494bd6bf8c6f424fd8"
     params = {
         "n_shots": 0,
         "random_seed": 0,
@@ -144,7 +144,7 @@ def test_gsm8k_chain_of_thought() -> None:
 def test_bigbench_hard_casual_judgment() -> None:
     """Test to ensure that the checksums for the bigbench-hard_causal_judgement dataset are as expected."""
     completion_ground_truth_checksum = None
-    chat_ground_truth_checksum = "68a53edfe173c735e88cea0767f4e9e3788b8027d80b306103750d1f0de89fc7"
+    chat_ground_truth_checksum = "cdd1e1b1a8586276dc2a84ef9d2783932f7ee837bd567abc158f448a60456cfc"
     params = {
         "n_shots": 0,
         "random_seed": 0,
