@@ -169,20 +169,22 @@ transformations:
 
         return few_shot_pool
 
-    @staticmethod
-    def row_output_post_process(row_output_data):
+    def row_output_post_process(self, row_output_data):
         """Post process the output data for the row."""
-        # metadata is named differently for batch scoring component, so we need to pop it
-        # and add it back with the correct key
-        metadata = row_output_data.pop("metadata", {})
+        batch_request_metadata = {}
+        if self.metadata_keys:
+            for k in self.metadata_keys.split(","):
+                k = k.strip()
+                if k in row_output_data:
+                    batch_request_metadata[k] = row_output_data.pop(k)
         # completion is pass through in OAI API component but to be consumable
         # by batch scoring component, we need to add it to the metadata
         completion = row_output_data.pop("completion", None)
         if completion:
-            metadata["completion"] = completion
+            batch_request_metadata["completion"] = completion
         new_data = {
             **row_output_data,
-            "_batch_request_metadata": metadata,
+            "_batch_request_metadata": batch_request_metadata,
         }
         return new_data
 
