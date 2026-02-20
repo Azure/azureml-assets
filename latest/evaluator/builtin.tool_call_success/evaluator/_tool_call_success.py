@@ -569,6 +569,66 @@ def _create_extended_error_target():
 ExtendedErrorTarget = _create_extended_error_target()
 
 
+def _is_intermediate_response(response):
+    """Check if response is intermediate (last content item is function_call or mcp_approval_request)."""
+    if isinstance(response, list) and len(response) > 0:
+        last_msg = response[-1]
+        if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+            content = last_msg.get("content", [])
+            if isinstance(content, list) and len(content) > 0:
+                last_content = content[-1]
+                if (isinstance(last_content, dict) and
+                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                    return True
+    return False
+
+
+def _drop_mcp_approval_messages(messages):
+    """Remove MCP approval request/response messages."""
+    if not isinstance(messages, list):
+        return messages
+    return [
+        msg for msg in messages
+        if not (
+            isinstance(msg, dict)
+            and isinstance(msg.get("content"), list)
+            and (
+                (msg.get("role") == "assistant" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_request" for c in msg["content"]))
+                or (msg.get("role") == "tool" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_response" for c in msg["content"]))
+            )
+        )
+    ]
+
+
+def _normalize_function_call_types(messages):
+    """Normalize function_call/function_call_output types to tool_call/tool_result."""
+    if not isinstance(messages, list):
+        return messages
+    for msg in messages:
+        if not isinstance(msg, dict) or not isinstance(msg.get("content"), list):
+            continue
+        for item in msg["content"]:
+            if not isinstance(item, dict):
+                continue
+            t = item.get("type")
+            if t == "function_call":
+                item["type"] = "tool_call"
+            elif t == "function_call_output":
+                item["type"] = "tool_result"
+                if "function_call_output" in item:
+                    item["tool_result"] = item.pop("function_call_output")
+    return messages
+
+
+def _preprocess_messages(messages):
+    """Drop MCP approval messages and normalize function call types."""
+    messages = _drop_mcp_approval_messages(messages)
+    messages = _normalize_function_call_types(messages)
+    return messages
+
+
 @experimental
 class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """The Tool Call Success evaluator determines whether tool calls done by an AI agent includes failures or not.
@@ -693,6 +753,24 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
+    def _not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict]]:
+        """Return a result indicating that the evaluation is not applicable."""
+        return {
+            self._result_key: threshold,
+            f"{self._result_key}_result": "pass",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_prompt_tokens": 0,
+            f"{self._result_key}_completion_tokens": 0,
+            f"{self._result_key}_total_tokens": 0,
+            f"{self._result_key}_finish_reason": "",
+            f"{self._result_key}_model": "",
+            f"{self._result_key}_sample_input": "",
+            f"{self._result_key}_sample_output": "",
+        }
+
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[str, float]]:  # type: ignore[override]
         """Do Tool Call Success evaluation.
@@ -711,6 +789,11 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 category=ErrorCategory.MISSING_FIELD,
                 target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             )
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
         if eval_input["response"] is None or eval_input["response"] == []:
             raise EvaluationException(
                 message="response cannot be None or empty for the Tool Call Success evaluator.",
@@ -720,13 +803,18 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             )
 
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
         # If response is a string, pass directly without reformatting
-        if isinstance(eval_input["response"], str):
+        elif isinstance(eval_input["response"], str):
             # Unless tool calls are explicitly provided, then keep it as is
             if "tool_calls" not in eval_input or not eval_input["tool_calls"]:
                 eval_input["tool_calls"] = eval_input["response"]
         else:
             eval_input["tool_calls"] = _reformat_tool_calls_results(eval_input["response"], logger)
+
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
 
         # If tool definitions are string, pass directly without reformatting, else format it.
         if "tool_definitions" in eval_input and not isinstance(eval_input["tool_definitions"], str):
