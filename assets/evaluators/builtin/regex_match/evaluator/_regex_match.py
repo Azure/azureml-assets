@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import logging
 import re
 from typing import Dict, List, Optional, Union
 from typing_extensions import overload, override
@@ -8,6 +9,7 @@ from typing_extensions import overload, override
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 
+logger = logging.getLogger(__name__)
 
 # Regex to detect {{ground_truth}} reference in patterns
 GROUND_TRUTH_PATTERN = re.compile(r"\{\{ground_truth\}\}")
@@ -27,7 +29,7 @@ class RegexMatchEvaluator(EvaluatorBase):
     Key characteristics:
     - Regex is applied ONLY to the model response text
     - Matching is existence-based (does the pattern match?), not extraction-based
-    - Scoring is binary: 1.0 if any pattern matches, 0.0 otherwise
+    - Scoring is binary: True if any pattern matches, False otherwise
     - No capture groups required - simple pattern matching
     - Static patterns are compiled once; dynamic patterns (with {{ground_truth}}) are resolved per-row
 
@@ -48,7 +50,7 @@ class RegexMatchEvaluator(EvaluatorBase):
             result = evaluator(
                 response="Based on my analysis, ANSWER: B is correct."
             )
-            # result: {"regex_match": 1.0, "regex_match_result": "pass",
+            # result: {"regex_match": True, "regex_match_result": "pass",
             #          "match_found": True, "matched_pattern_index": 0}
 
     .. admonition:: Example with ground_truth pattern (GPQA-style):
@@ -65,7 +67,7 @@ class RegexMatchEvaluator(EvaluatorBase):
                 response="After analysis, ANSWER: A",
                 ground_truth="A"
             )
-            # result: {"regex_match": 1.0, ...}
+            # result: {"regex_match": True, ...}
 
     .. admonition:: Example with multiple patterns:
 
@@ -80,7 +82,7 @@ class RegexMatchEvaluator(EvaluatorBase):
             )
 
             result = evaluator(response="I believe the answer is C.", ground_truth="C")
-            # result: {"regex_match": 1.0, "matched_pattern_index": 1, ...}
+            # result: {"regex_match": True, "matched_pattern_index": 1, ...}
     """
 
     id = "azureai://built-in/evaluators/regex_match"
@@ -115,6 +117,12 @@ class RegexMatchEvaluator(EvaluatorBase):
             GROUND_TRUTH_PATTERN.search(p) for p in patterns
         )
 
+        logger.debug(
+            "RegexMatchEvaluator initialized with %d pattern(s), dynamic=%s",
+            len(patterns),
+            self._has_dynamic_patterns,
+        )
+
         # Pre-compile static patterns (no {{ground_truth}} reference)
         if not self._has_dynamic_patterns:
             self._compiled_patterns = self._compile_patterns(patterns)
@@ -138,7 +146,17 @@ class RegexMatchEvaluator(EvaluatorBase):
             try:
                 compiled.append(re.compile(pattern))
             except re.error as e:
+                # Log pattern metadata for debugging (truncate for readability)
+                pattern_preview = pattern[:30] + "..." if len(pattern) > 30 else pattern
+                logger.info(
+                    "Failed to compile pattern at index %d (length=%d, preview='%s'): %s",
+                    i,
+                    len(pattern),
+                    pattern_preview,
+                    e,
+                )
                 raise ValueError(f"Invalid regular expression pattern at index {i}: {e}")
+        logger.debug("Successfully compiled %d pattern(s)", len(compiled))
         return compiled
 
     @staticmethod
@@ -157,11 +175,21 @@ class RegexMatchEvaluator(EvaluatorBase):
         ground_truth = eval_input.get("ground_truth")
         if ground_truth is None:
             # If ground_truth is not provided, leave pattern unchanged
+            logger.debug("ground_truth is None, pattern unchanged")
             return pattern
 
-        # Escape the value for safe use in regex and replace {{ground_truth}}
-        escaped_value = re.escape(str(ground_truth))
-        return GROUND_TRUTH_PATTERN.sub(escaped_value, pattern)
+        # Escape the value for safe use in regex
+        # Use str.replace() instead of re.sub() because re.sub() interprets
+        # backslashes in replacement strings as escape sequences
+        ground_truth_str = str(ground_truth)
+        has_special_chars = bool(re.search(r'[\\()[\]{}.*+?^$|]', ground_truth_str))
+        escaped_value = re.escape(ground_truth_str)
+        logger.debug(
+            "Resolving {{ground_truth}}: value_length=%d, has_special_chars=%s",
+            len(ground_truth_str),
+            has_special_chars,
+        )
+        return pattern.replace('{{ground_truth}}', escaped_value)
 
     def _get_compiled_patterns(self, eval_input: Dict) -> List[re.Pattern]:
         """Get compiled patterns, resolving {{ground_truth}} if needed.
@@ -176,9 +204,11 @@ class RegexMatchEvaluator(EvaluatorBase):
         """
         if self._compiled_patterns is not None:
             # Static patterns - already compiled
+            logger.debug("Using pre-compiled static patterns")
             return self._compiled_patterns
 
         # Dynamic patterns - resolve and compile
+        logger.debug("Resolving dynamic patterns with ground_truth reference")
         resolved_patterns = [
             self._resolve_pattern(p, eval_input) for p in self._patterns
         ]
@@ -228,11 +258,13 @@ class RegexMatchEvaluator(EvaluatorBase):
         matched_index = self._find_match(response, compiled_patterns)
         match_found = matched_index is not None
 
-        # Score is 1.0 if any pattern matches, 0.0 otherwise
-        score = 1.0 if match_found else 0.0
+        if match_found:
+            logger.debug("Pattern matched at index %d", matched_index)
+        else:
+            logger.debug("No pattern matched")
 
         result = {
-            "regex_match": score,
+            "regex_match": match_found,
             "regex_match_result": EVALUATION_PASS_FAIL_MAPPING[match_found],
             "match_found": match_found,
         }
