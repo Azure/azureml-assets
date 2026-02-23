@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.retrieval"
-version: 7
+version: 8
 displayName: "Retrieval-Evaluator"
 description: "Measures how effectively the system retrieves relevant data or content. Higher scores mean better recall of useful information. It’s best used for the quality of search in information retrieval and retrieval augmented generation, when you don't have ground truth for chunk retrieval rankings. Use the retrieval score when you want to assess to what extent the context chunks retrieved are highly relevant and ranked at the top for answering your users' queries."
 evaluatorType: "builtin"
