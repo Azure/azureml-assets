@@ -6,7 +6,6 @@ from itertools import chain
 from typing import Dict, List, Union, TypeVar, cast
 from typing_extensions import override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._common.utils import reformat_agent_response
 from azure.ai.evaluation._exceptions import (
     ErrorMessage,
     ErrorBlame,
@@ -703,6 +702,83 @@ def _format_value(v):
     if isinstance(v, str):
         return f'"{v}"'
     return v
+
+
+def _get_agent_response(agent_response_msgs, include_tool_messages=False):
+    """Extract formatted agent response including text, and optionally tool calls/results."""
+    agent_response_text = []
+    tool_results = {}
+
+    # First pass: collect tool results
+    if include_tool_messages:
+        for msg in agent_response_msgs:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
+
+    # Second pass: parse assistant messages and tool calls
+    for msg in agent_response_msgs:
+        if "role" in msg and msg.get("role") == "assistant" and "content" in msg:
+            text = _extract_text_from_content(msg["content"])
+            if text:
+                agent_response_text.extend(text)
+            if include_tool_messages:
+                for content in msg.get("content", []):
+                    # Todo: Verify if this is the correct way to handle tool calls
+                    if content.get("type") == "tool_call":
+                        if "tool_call" in content and "function" in content.get("tool_call", {}):
+                            tc = content.get("tool_call", {})
+                            func_name = tc.get("function", {}).get("name", "")
+                            args = tc.get("function", {}).get("arguments", {})
+                            tool_call_id = tc.get("id")
+                        else:
+                            tool_call_id = content.get("tool_call_id")
+                            func_name = content.get("name", "")
+                            args = content.get("arguments", {})
+                        args_str = ", ".join(f"{k}={_format_value(v)}" for k, v in args.items())
+                        call_line = f"[TOOL_CALL] {func_name}({args_str})"
+                        agent_response_text.append(call_line)
+                        if tool_call_id in tool_results:
+                            agent_response_text.append(tool_results[tool_call_id])
+
+    return agent_response_text
+
+
+def reformat_agent_response(response, logger=None, include_tool_messages=False):
+    """Reformat agent response to a standardized string format.
+
+    :param response: The agent response to reformat, can be None, empty list, or list of messages
+    :type response: Union[None, List[dict], str]
+    :param logger: Optional logger for warning messages
+    :type logger: Optional[logging.Logger]
+    :param include_tool_messages: Whether to include tool call and result information
+    :type include_tool_messages: bool
+    :return: Formatted agent response as a string, or original response if parsing fails
+    :rtype: str
+    """
+    try:
+        if response is None or response == []:
+            return ""
+        agent_response = _get_agent_response(response, include_tool_messages=include_tool_messages)
+        if agent_response == []:
+            # If no message could be extracted, fallback to the original response in that case
+            if logger:
+                logger.debug(
+                    "Empty agent response extracted, likely due to input schema change. "
+                    f"Falling back to using the original response: {response}"
+                )
+            return response
+        return "\n".join(agent_response)
+    except Exception as e:
+        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed),
+        # the original response is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # See comments on reformat_conversation_history for more details.
+        if logger:
+            logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
+        return response
 
 
 def _get_conversation_history(query, include_system_messages=False, include_tool_calls=False):
