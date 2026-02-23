@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.retrieval"
-version: 7
+version: 8
 displayName: "Retrieval-Evaluator"
 description: "Measures how effectively the system retrieves relevant data or content.
   Higher scores mean better recall of useful information. It’s best used for the quality
