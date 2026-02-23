@@ -705,7 +705,7 @@ def _format_value(v):
 
 
 def _get_agent_response(agent_response_msgs, include_tool_messages=False):
-    """Extracts formatted agent response including text, and optionally tool calls/results."""
+    """Extract formatted agent response including text, and optionally tool calls/results."""
     agent_response_text = []
     tool_results = {}
 
@@ -747,23 +747,37 @@ def _get_agent_response(agent_response_msgs, include_tool_messages=False):
 
 
 def reformat_agent_response(response, logger=None, include_tool_messages=False):
+    """Reformat agent response to a standardized string format.
+
+    :param response: The agent response to reformat, can be None, empty list, or list of messages
+    :type response: Union[None, List[dict], str]
+    :param logger: Optional logger for warning messages
+    :type logger: Optional[logging.Logger]
+    :param include_tool_messages: Whether to include tool call and result information
+    :type include_tool_messages: bool
+    :return: Formatted agent response as a string, or original response if parsing fails
+    :rtype: str
+    """
     try:
         if response is None or response == []:
             return ""
         agent_response = _get_agent_response(response, include_tool_messages=include_tool_messages)
         if agent_response == []:
-            # If no message could be extracted, likely the format changed, fallback to the original response in that case
+            # If no message could be extracted, fallback to the original response in that case
             if logger:
                 logger.debug(
-                    "Empty agent response extracted, likely due to input schema change. Falling back to original response"
+                    "Empty agent response extracted, likely due to input schema change. "
+                    f"Falling back to using the original response: {response}"
                 )
             return response
         return "\n".join(agent_response)
-    except Exception:
-        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed), the original response is returned
-        # This is a fallback to ensure that the evaluation can still proceed. See comments on reformat_conversation_history for more details.
+    except Exception as e:
+        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed),
+        # the original response is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # See comments on reformat_conversation_history for more details.
         if logger:
-            logger.debug("Agent response could not be parsed, falling back to original response")
+            logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
         return response
 
 
