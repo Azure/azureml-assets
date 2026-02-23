@@ -558,9 +558,7 @@ class ToolDefinitionsValidator(ConversationValidator):
 
 # endregion Validators
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 T_EvalValue = TypeVar("T_EvalValue")
 
