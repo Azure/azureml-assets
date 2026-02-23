@@ -249,20 +249,15 @@ class RetrievalEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Dict
         """
-        response = eval_input.get("response")
-        if response is not None:
-            if _is_intermediate_response(response):
-                return self._not_applicable_result(
-                    "Intermediate response. Please provide the agent's final response for evaluation.",
-                    self._threshold,
-                )
-            if isinstance(response, list):
-                eval_input["response"] = _preprocess_messages(response)
-
-        query = eval_input.get("query")
-        if query is not None and isinstance(query, list):
-            if isinstance(query, list):
-                eval_input["query"] = _preprocess_messages(query)
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if eval_input.get("response") is not None and isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
 
         result = await super()._do_eval(eval_input)
         # Check if base returned nan (invalid output case)
