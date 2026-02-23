@@ -1,12 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import math
 import os
 from typing import Dict
 
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 
 
 class SimilarityEvaluator(PromptyEvaluatorBase):
@@ -143,3 +145,61 @@ class SimilarityEvaluator(PromptyEvaluatorBase):
         :rtype: Dict[str, float]
         """
         return super().__call__(*args, **kwargs)
+
+    @override
+    def _convert_kwargs_to_eval_input(self, **kwargs):
+        """Convert keyword arguments to evaluation input, with validation."""
+        conversation = kwargs.get("conversation")
+        if conversation is not None:
+            return super()._convert_kwargs_to_eval_input(**kwargs)
+
+        query = kwargs.get("query")
+        response = kwargs.get("response")
+        ground_truth = kwargs.get("ground_truth")
+
+        # Validate required fields are not None
+        if query is None:
+            raise EvaluationException(
+                message="Either 'conversation' or individual inputs must be provided. 'query' is missing.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.MISSING_FIELD,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
+
+        if response is None:
+            raise EvaluationException(
+                message="Either 'conversation' or individual inputs must be provided. 'response' is missing.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.MISSING_FIELD,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
+
+        if ground_truth is None:
+            raise EvaluationException(
+                message="Either 'conversation' or individual inputs must be provided. 'ground_truth' is missing.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.MISSING_FIELD,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
+
+        return super()._convert_kwargs_to_eval_input(**kwargs)
+
+    @override
+    async def _do_eval(self, eval_input: Dict):  # type: ignore[override]
+        """Do a similarity evaluation.
+
+        :param eval_input: The input to the evaluator.
+        :type eval_input: Dict
+        :return: The evaluation result.
+        :rtype: Dict
+        """
+        result = await super()._do_eval(eval_input)
+        # Check if base returned nan (invalid output case)
+        if math.isnan(result.get(self._result_key, 0)):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.SIMILARITY_EVALUATOR,
+            )
+        return result

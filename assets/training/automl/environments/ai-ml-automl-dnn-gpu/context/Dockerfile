@@ -45,8 +45,6 @@ RUN apt-get update && \
 
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=25.3 -y
 
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH
-
 ###############################
 # Pre-Build LightGBM
 ###############################
