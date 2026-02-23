@@ -1154,11 +1154,6 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         eval_input["query"] = reformat_conversation_history(
             eval_input["query"], logger, include_system_messages=True, include_tool_calls=True
         )
-        print('------------')
-        print(f"Formatted inputs evaluation:")
-        for k, v in eval_input.items():
-            print(f"{k}: {v}")
-        print('------------')
 
         # Call the LLM to evaluate
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
