@@ -291,18 +291,21 @@ class BusinessSuccessEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, **kwargs):
+    def __init__(self, model_config, *, credential=None, threshold=1, **kwargs):
         """Initialize the BusinessSuccessEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
         :keyword credential: Credential for authentication.
         :type credential: Optional[TokenCredential]
+        :keyword threshold: The threshold for the evaluator. Default is 1.
+        :type threshold: int
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        threshold_value = kwargs.pop("threshold", 1)
+        self._threshold = threshold
+        self._higher_is_better = True
 
         # Initialize input validator
         self._validator = BusinessSuccessValidator(error_target=ExtendedErrorTarget.BUSINESS_SUCCESS_EVALUATOR)
@@ -312,7 +315,8 @@ class BusinessSuccessEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             prompty_file=prompty_path,
             result_key=self._RESULT_KEY,
             credential=credential,
-            threshold=threshold_value,
+            threshold=threshold,
+            _higher_is_better=self._higher_is_better,
             **kwargs,
         )
 

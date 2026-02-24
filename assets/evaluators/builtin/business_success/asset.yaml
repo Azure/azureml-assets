@@ -6,4 +6,4 @@ test:
   pytest:
     enabled: true
     conda_environment: ../../tests/conda.yaml
-    tests_dir: ../../tests/test_evaluators_behavior/test_business_success_evaluator_behavior.py
+    tests_dir: ../../../tests/test_evaluators_behavior/test_business_success_evaluator_behavior.py

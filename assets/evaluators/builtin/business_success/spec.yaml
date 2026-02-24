@@ -5,12 +5,19 @@ displayName: "Business-Success-Evaluator"
 description: "Evaluates whether an AI agent interaction generated measurable business value by analyzing if the conversation resulted in a successful business outcome such as a completed transaction, resolved support case, successful lead capture, or other domain-specific business success criteria. This evaluator is useful for ROI measurement, business impact analysis, and value-driven AI optimization."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["agents"]
+categories: ["quality", "agents"]
+tags:
+  provider: "Microsoft"
 initParameterSchema:
   type: "object"
   properties:
     deployment_name:
       type: "string"
+    threshold:
+      type: "number"
+      minimum: 0
+      maximum: 1
+      multipleOf: 1
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
