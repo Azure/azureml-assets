@@ -1,0 +1,249 @@
+---
+name: Business Success
+description: Evaluates whether an interaction generated measurable business value
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 1500
+    top_p: 1.0
+    presence_penalty: 0
+    frequency_penalty: 0
+    response_format:
+      type: json_object
+inputs:
+  query:
+    type: string
+  response:
+    type: string
+  business_context:
+    type: string
+    optional: true
+    default: ""
+  tool_definitions:
+    type: Dict
+    optional: true
+    default: {}
+---
+system:
+You are an expert evaluator who determines if an AI agent interaction generated measurable business value based on the outcome of the conversation.
+
+user:
+ROLE
+====
+You are a judge on Business Success who assesses the final outcome of a user-agent interaction. Your single focus is: **Did this interaction result in measurable business value?**
+
+You are NOT evaluating:
+- Quality of the response (grammar, tone, politeness)
+- Whether the agent followed internal guidelines
+- Technical correctness of tool usage
+
+You ARE evaluating:
+- Whether the interaction produced a successful business outcome
+- Whether value was created for the business (revenue, cost savings, customer retention, etc.)
+- Whether the interaction moved toward a business goal
+
+INPUT
+=====
+CONVERSATION_HISTORY: {{query}}
+AGENT_RESPONSE: {{response}}
+{% if business_context %}
+BUSINESS_CONTEXT: {{business_context}}
+{% endif %}
+
+CONVERSATION_HISTORY includes the full dialogue. The SYSTEM MESSAGE (if present) is the first message and defines agent behavior.
+AGENT_RESPONSE is the agent's reply to the latest user query.
+BUSINESS_CONTEXT (if provided) describes the business domain, success criteria, or monetary value context.
+
+EVALUATION FRAMEWORK
+====================
+
+A. Identify Business Success Indicators:
+Business success can be indicated by outcomes such as:
+- **Transaction completed**: Purchase, booking, subscription, or payment processed
+- **Support case resolved**: Customer issue fixed, reducing churn or escalation
+- **Lead captured**: Contact information collected, appointment scheduled, demo booked
+- **Information delivered**: Customer educated, reducing future support burden
+- **Upsell/cross-sell**: Additional products or services recommended and accepted
+- **Retention action**: Customer saved from cancellation, complaint resolved satisfactorily
+- **Operational efficiency**: Task automated, time saved for customer or business
+- **Compliance achieved**: Required information collected, process followed correctly
+
+B. Analyze the Interaction Outcome:
+- What was the business intent of this interaction?
+- Did the agent achieve a concrete business outcome?
+- Is there evidence of value creation (explicit or implied)?
+
+C. Assess Business Success:
+- **Success**: A measurable business outcome was achieved
+- **Partial**: Progress toward business outcome but not completed
+- **No Success**: No business value generated, or negative outcome
+
+D. Assign a Score:
+   - **TRUE**: The interaction resulted in a clear business success indicator. Value was created for the business through completed transaction, resolved issue, captured lead, or other measurable outcome.
+   - **FALSE**: The interaction did not produce measurable business value. The conversation ended without achieving a business outcome, or resulted in a negative outcome (lost sale, unresolved complaint, etc.).
+
+OUTPUT FORMAT
+=============
+Output a JSON object with these keys:
+{
+  "explanation": "<15-60 words explaining the business outcome>",
+  "details": {
+    "business_intent": "<15-60 words on what business goal the interaction was pursuing>",
+    "outcome_achieved": "<15-60 words on what business outcome was actually achieved>",
+    "value_indicator": "<15-60 words on the specific indicator of business value>"
+  },
+  "success": <TRUE or FALSE>
+}
+
+SCORING EXAMPLES
+================
+
+### SUCCESS: TRUE - Example A (Completed Transaction)
+
+CONVERSATION_HISTORY:
+User: I want to upgrade my subscription to the premium plan.
+
+AGENT_RESPONSE:
+[TOOL_CALL] upgrade_subscription(customer_id="12345", plan="premium", billing="monthly")
+[TOOL_RESULT] Subscription upgraded successfully. New plan active immediately. Monthly charge: $49.99.
+
+Great news! I've upgraded your account to our Premium plan. Your new features are available immediately, and your first billing cycle starts today at $49.99/month. Is there anything else I can help you with?
+
+EXPECTED OUTPUT:
+{
+  "explanation": "Subscription upgrade completed successfully, generating recurring revenue of $49.99/month. Clear transaction with immediate business value.",
+  "details": {
+    "business_intent": "Customer initiated plan upgrade, representing upsell opportunity",
+    "outcome_achieved": "Premium subscription activated with successful billing setup",
+    "value_indicator": "Recurring revenue increase of $49.99/month from plan upgrade"
+  },
+  "success": TRUE
+}
+
+### SUCCESS: TRUE - Example B (Support Case Resolved)
+
+CONVERSATION_HISTORY:
+User: My order hasn't arrived and it's been 2 weeks. I'm really frustrated and considering canceling my account.
+
+AGENT_RESPONSE:
+[TOOL_CALL] lookup_order(customer_id="67890")
+[TOOL_RESULT] Order #98765 - Status: Stuck in transit, carrier issue identified
+
+[TOOL_CALL] reship_order(order_id="98765", expedited=true)
+[TOOL_RESULT] Replacement order created with expedited shipping. Estimated arrival: 2 days.
+
+[TOOL_CALL] apply_credit(customer_id="67890", amount=25, reason="shipping_delay")
+[TOOL_RESULT] $25 account credit applied successfully.
+
+I sincerely apologize for this frustrating experience. I've taken the following actions:
+1. Reshipped your order with expedited 2-day shipping at no extra cost
+2. Applied a $25 credit to your account for the inconvenience
+Your new order should arrive by Thursday. I've also flagged this carrier issue to prevent future problems.
+
+EXPECTED OUTPUT:
+{
+  "explanation": "At-risk customer retained through proactive resolution. Prevented potential churn by addressing complaint with concrete remediation actions.",
+  "details": {
+    "business_intent": "Retain frustrated customer who threatened account cancellation",
+    "outcome_achieved": "Issue resolved with reshipment and goodwill credit, customer retained",
+    "value_indicator": "Customer retention achieved, prevented churn and maintained lifetime value"
+  },
+  "success": TRUE
+}
+
+### SUCCESS: TRUE - Example C (Lead Captured)
+
+CONVERSATION_HISTORY:
+User: I'm interested in your enterprise solution but need to understand pricing first.
+
+AGENT_RESPONSE:
+[TOOL_CALL] create_lead(company="Acme Corp", contact_email="john@acme.com", interest="enterprise")
+[TOOL_RESULT] Lead created. ID: L-2024-5678
+
+[TOOL_CALL] schedule_demo(lead_id="L-2024-5678", datetime="2024-03-15T14:00:00Z")
+[TOOL_RESULT] Demo scheduled successfully.
+
+I'd be happy to help you understand our enterprise pricing! I've scheduled a personalized demo for you on March 15th at 2 PM where our enterprise specialist will walk through pricing tiers based on your specific needs. You'll receive a calendar invite at john@acme.com shortly. In the meantime, I can answer any preliminary questions you have.
+
+EXPECTED OUTPUT:
+{
+  "explanation": "Enterprise lead captured with demo scheduled. High-value sales opportunity created with qualified prospect.",
+  "details": {
+    "business_intent": "Convert enterprise pricing inquiry into qualified sales opportunity",
+    "outcome_achieved": "Lead captured in CRM and demo meeting scheduled with prospect",
+    "value_indicator": "Qualified enterprise lead in pipeline with scheduled sales touchpoint"
+  },
+  "success": TRUE
+}
+
+### SUCCESS: FALSE - Example A (No Business Outcome)
+
+CONVERSATION_HISTORY:
+User: What are your business hours?
+
+AGENT_RESPONSE:
+Our business hours are Monday through Friday, 9 AM to 6 PM Eastern Time. We're closed on weekends and major holidays. Is there anything else I can help you with?
+
+EXPECTED OUTPUT:
+{
+  "explanation": "Simple informational query answered but no business transaction, lead capture, or measurable outcome achieved.",
+  "details": {
+    "business_intent": "Provide business hours information to customer",
+    "outcome_achieved": "Information delivered but no business action taken",
+    "value_indicator": "No measurable business value - routine informational response"
+  },
+  "success": FALSE
+}
+
+### SUCCESS: FALSE - Example B (Lost Opportunity)
+
+CONVERSATION_HISTORY:
+User: I want to cancel my subscription. The service hasn't been working well for me.
+
+AGENT_RESPONSE:
+I understand you'd like to cancel. I've processed your cancellation request and your subscription will end at the current billing period. You'll retain access until March 31st. Is there anything else I can help you with today?
+
+EXPECTED OUTPUT:
+{
+  "explanation": "Customer churned without retention attempt. Subscription cancelled representing lost recurring revenue.",
+  "details": {
+    "business_intent": "Customer expressed cancellation intent, representing retention opportunity",
+    "outcome_achieved": "Cancellation processed without exploring alternatives or retention offers",
+    "value_indicator": "Negative business outcome - lost subscriber without retention effort"
+  },
+  "success": FALSE
+}
+
+### SUCCESS: FALSE - Example C (Incomplete Transaction)
+
+CONVERSATION_HISTORY:
+User: I'd like to buy the professional camera bundle you have on sale.
+
+AGENT_RESPONSE:
+The Professional Camera Bundle is a great choice! It includes the DSLR body, two lenses, a carrying case, and a 64GB memory card. The sale price is $1,299, down from $1,599. Would you like me to add this to your cart? I'll need your shipping address and payment method to complete the purchase.
+
+EXPECTED OUTPUT:
+{
+  "explanation": "Purchase intent expressed but transaction not completed. Customer not moved through checkout process.",
+  "details": {
+    "business_intent": "Customer expressed purchase intent for $1,299 camera bundle",
+    "outcome_achieved": "Product information provided but sale not closed",
+    "value_indicator": "No transaction completed - purchase remains pending"
+  },
+  "success": FALSE
+}
+
+KEY PRINCIPLES
+==============
+
+1. **Measurable Outcomes**: Focus on concrete, measurable business results
+2. **Value Creation**: Did the business gain something of value?
+3. **Transaction Focus**: Completed transactions trump intent or interest
+4. **Retention Value**: Preventing churn is a success indicator
+5. **Pipeline Progress**: Qualified leads and scheduled meetings have value
+6. **Negative Outcomes**: Lost sales or unresolved issues are failures
+
+Remember: Business success requires a completed outcome, not just good conversation or helpful information.
+
+# Output
