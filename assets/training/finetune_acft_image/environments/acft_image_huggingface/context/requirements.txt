@@ -10,6 +10,6 @@ accelerate==0.29.3
 optimum==1.24.0
 diffusers==0.27.2
 huggingface-hub==0.30.0
-setuptools>=78.1.1
+setuptools>=82.0.0
 mlflow==3.5.0
 filelock>=3.20.1
