@@ -4,7 +4,7 @@ description: >-
   AzureML Designer CV Transform image
 
 name: "designer-cv-transform"
-version: "98"
+version: "99"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"

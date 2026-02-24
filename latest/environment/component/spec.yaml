@@ -5,7 +5,7 @@ description: >-
   for 1P request feature.
 
 name: "component"
-version: "72"
+version: "73"
 
 build:
   path: "context"
