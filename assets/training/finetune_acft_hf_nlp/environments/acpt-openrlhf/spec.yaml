@@ -1,0 +1,18 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  Environment for OpenRLHF-based reinforcement learning training (PPO, GRPO, RLOO,
+  REINFORCE++, SFT, DPO, KTO). Includes openrlhf, ray, vllm, deepspeed, flash-attn,
+  and peft pre-installed on CUDA 12.6 + PyTorch 2.8.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  Preview: ""
