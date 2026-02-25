@@ -45,8 +45,8 @@ RUN conda install pip -n ptca -y || true
 # This ensures necessary torch dependencies are already installed
 RUN pip install --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 RUN pip install --no-cache-dir \ 
-    'azureml-automl-dnn-nlp==1.61.0.post1' \
-    'azureml-defaults==1.61.0'
+    'azureml-automl-dnn-nlp==1.62.0' \
+    'azureml-defaults==1.62.0'
 
 # onnx and onnxruntime-training installation
 RUN pip uninstall -y onnxruntime

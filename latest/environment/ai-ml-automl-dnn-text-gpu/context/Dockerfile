@@ -102,10 +102,10 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 RUN pip install --no-cache-dir \
                 # begin pypi dependencies
                 azureml-core==1.61.0.post1 \
-                azureml-mlflow==1.61.0.post1 \
-                azureml-automl-core==1.61.0.post1 \
-                azureml-automl-runtime==1.61.0 \
-                azureml-defaults==1.61.0 \
+                azureml-mlflow==1.62.0 \
+                azureml-automl-core==1.62.0 \
+                azureml-automl-runtime==1.62.0 \
+                azureml-defaults==1.62.0 \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
                 'mlflow-skinny==2.15.1' \
@@ -117,9 +117,9 @@ RUN pip install --no-cache-dir \
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
-                azureml-train-automl-client==1.61.0.post1 \
-                azureml-train-automl-runtime==1.61.0 \
-                azureml-automl-dnn-nlp==1.61.0.post1
+                azureml-train-automl-client==1.62.0 \
+                azureml-train-automl-runtime==1.62.0 \
+                azureml-automl-dnn-nlp==1.62.0
 
 # Separate updates for fixing vulnerabilities.
 # Doing it  separately from pip install above to avoid conflict with other packages

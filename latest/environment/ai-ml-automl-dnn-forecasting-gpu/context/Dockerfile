@@ -66,14 +66,14 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 RUN pip install --no-cache-dir \
                 # begin pypi dependencies
                 azureml-core==1.61.0.post1 \
-                azureml-mlflow==1.61.0.post1 \
-                azureml-defaults==1.61.0 \
-                azureml-telemetry==1.61.0 \
-                azureml-interpret==1.61.0 \
-                azureml-responsibleai==1.61.0 \
-                azureml-automl-core==1.61.0.post1 \
-                azureml-automl-runtime==1.61.0 \
-                azureml-dataset-runtime==1.61.0 \
+                azureml-mlflow==1.62.0 \
+                azureml-defaults==1.62.0 \
+                azureml-telemetry==1.62.0 \
+                azureml-interpret==1.62.0 \
+                azureml-responsibleai==1.62.0 \
+                azureml-automl-core==1.62.0 \
+                azureml-automl-runtime==1.62.0 \
+                azureml-dataset-runtime==1.62.0 \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
                 'mlflow-skinny==2.15.1' \
@@ -90,10 +90,10 @@ RUN pip install --no-cache-dir \
 
 # Install packages with torch packages separately to reduce layer size
 RUN pip install --no-cache-dir \
-                azureml-train-automl==1.61.0.post1 \
-                azureml-train-automl-client==1.61.0.post1 \
-                azureml-train-automl-runtime==1.61.0 \
-                azureml-contrib-automl-dnn-forecasting==1.61.0.post1
+                azureml-train-automl==1.62.0 \
+                azureml-train-automl-client==1.62.0 \
+                azureml-train-automl-runtime==1.62.0 \
+                azureml-contrib-automl-dnn-forecasting==1.62.0
 
 # end pip install
 

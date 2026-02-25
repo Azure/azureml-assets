@@ -7,14 +7,14 @@ dependencies:
 - pip=24.0
 - pip:
   - azureml-core==1.61.0.post1
-  - azureml-contrib-dataset==1.61.0
+  - azureml-contrib-dataset==1.62.0
   - azureml-dataset-runtime[fuse,pandas]
-  - azureml-defaults==1.61.0
+  - azureml-defaults==1.62.0
   - azure-ml-component
-  - azureml-mlflow==1.61.0.post1
-  - azureml-contrib-services==1.61.0
+  - azureml-mlflow==1.62.0
+  - azureml-contrib-services==1.62.0
   - torch-tb-profiler~=0.4.0
-  - azureml-automl-common-tools==1.61.0
+  - azureml-automl-common-tools==1.62.0
   - azureml-inference-server-http
   - inference-schema
   - regex

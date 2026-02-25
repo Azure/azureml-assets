@@ -10,9 +10,9 @@ dependencies:
 - numpy~=1.22.0
 - pip:
   - azureml-core==1.61.0.post1
-  - azureml-defaults==1.61.0
-  - azureml-mlflow==1.61.0.post1
-  - azureml-telemetry==1.61.0
+  - azureml-defaults==1.62.0
+  - azureml-mlflow==1.62.0
+  - azureml-telemetry==1.62.0
   - scikit-learn~=1.5.1
   - xgboost~=1.7.6
   - lightgbm>=4.6.0

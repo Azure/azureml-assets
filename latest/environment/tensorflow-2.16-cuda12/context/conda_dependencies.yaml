@@ -16,9 +16,9 @@ dependencies:
   - tqdm~=4.66.3
   - ipykernel~=6.20.2
   - azureml-core==1.61.0.post1
-  - azureml-defaults==1.61.0
-  - azureml-mlflow==1.61.0.post1
-  - azureml-telemetry==1.61.0
+  - azureml-defaults==1.62.0
+  - azureml-mlflow==1.62.0
+  - azureml-telemetry==1.62.0
   - tensorboard~=2.16.0
   - tensorflow[and-cuda]==2.16.2
   - tensorflow-datasets~=4.9.0

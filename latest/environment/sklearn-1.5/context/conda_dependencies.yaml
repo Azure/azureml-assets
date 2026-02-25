@@ -11,9 +11,9 @@ dependencies:
 - pip:
   - scikit-learn-intelex==2025.10.1
   - azureml-core==1.61.0.post1
-  - azureml-defaults==1.61.0
-  - azureml-mlflow==1.61.0.post1
-  - azureml-telemetry==1.61.0
+  - azureml-defaults==1.62.0
+  - azureml-mlflow==1.62.0
+  - azureml-telemetry==1.62.0
   - scikit-learn~=1.5.0
   - joblib~=1.2.0
   # azureml-automl-common-tools packages
