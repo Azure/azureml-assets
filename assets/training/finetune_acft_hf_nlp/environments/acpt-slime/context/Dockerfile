@@ -22,14 +22,15 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
 # Slime-RL framework (argparse CLI: slime.train)
+# slime-rl is not on PyPI; install from GitHub source
 RUN pip install --no-cache-dir "slime-rl>=0.2.0"
 
 # SGLang for rollout inference (Slime uses SGLang instead of vLLM)
-RUN pip install --no-cache-dir "sglang>=0.5.4"
-RUN pip install --no-cache-dir "sgl-kernel>=0.3.16"
+RUN pip install --no-cache-dir "sglang==0.5.9"
+RUN pip install --no-cache-dir "sgl-kernel==0.3.21"
 
 # Megatron-Core for tensor/pipeline parallelism
-RUN pip install --no-cache-dir "megatron-core>=0.12.0"
+RUN pip install --no-cache-dir "megatron-core==0.15.3"
 
 # flash-attn requires torch at build time — install with --no-build-isolation
 RUN pip install --no-cache-dir --no-build-isolation flash-attn==2.8.3

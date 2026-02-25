@@ -12,11 +12,11 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install transformers==4.56.0
 
 # OpenRLHF with vllm extra
-RUN pip install --no-cache-dir "openrlhf[vllm]>=0.5.0"
+RUN pip install --no-cache-dir "openrlhf[vllm]==0.9.3"
 
 # Ray is required for RL algorithms (train_ppo_ray entrypoint);
 # openrlhf[vllm] does not pull ray transitively.
-RUN pip install --no-cache-dir "ray[default]>=2.35.0"
+RUN pip install --no-cache-dir "ray[default]==2.54.0"
 
 # flash-attn requires torch at build time — install with --no-build-isolation
 RUN pip install --no-cache-dir --no-build-isolation flash-attn==2.7.4

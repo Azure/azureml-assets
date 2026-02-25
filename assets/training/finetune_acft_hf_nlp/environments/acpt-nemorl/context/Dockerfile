@@ -22,17 +22,18 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
 # NeMo-RL framework (Hydra-based CLI: nemo_rl.cli.train)
+# nemo-rl is a placeholder on PyPI; install from GitHub source
 RUN pip install --no-cache-dir "nemo-rl>=0.4.0"
 
 # NeMo toolkit + Megatron-Core for model parallel training
-RUN pip install --no-cache-dir "nemo-toolkit[all]>=2.3.0"
-RUN pip install --no-cache-dir "megatron-core>=0.12.0"
+RUN pip install --no-cache-dir "nemo-toolkit[all]==2.6.2"
+RUN pip install --no-cache-dir "megatron-core==0.15.3"
 
 # Ray is required for distributed RL rollouts
-RUN pip install --no-cache-dir "ray[default]>=2.35.0"
+RUN pip install --no-cache-dir "ray[default]==2.54.0"
 
 # vLLM for fast rollout inference
-RUN pip install --no-cache-dir "vllm>=0.12.0"
+RUN pip install --no-cache-dir "vllm==0.15.1"
 
 # flash-attn requires torch at build time — install with --no-build-isolation
 RUN pip install --no-cache-dir --no-build-isolation flash-attn==2.8.3

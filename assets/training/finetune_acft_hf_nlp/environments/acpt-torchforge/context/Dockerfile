@@ -22,10 +22,10 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
 # TorchTitan framework (torchrun CLI: torchtitan.train)
-RUN pip install --no-cache-dir "torchtitan>=0.1.0"
+RUN pip install --no-cache-dir "torchtitan==0.2.2"
 
 # torchao for quantization-aware training and int8 optimizers
-RUN pip install --no-cache-dir "torchao>=0.10.0"
+RUN pip install --no-cache-dir "torchao==0.16.0"
 
 # flash-attn requires torch at build time — install with --no-build-isolation
 RUN pip install --no-cache-dir --no-build-isolation flash-attn==2.8.3
