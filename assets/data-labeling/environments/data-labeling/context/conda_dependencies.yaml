@@ -4,7 +4,7 @@ channels:
 - pytorch
 dependencies:
 - python=3.9
-- pip=25.3
+- pip
 - pip:
   - azureml-core=={{latest-pypi-version}}
   - azureml-contrib-dataset=={{latest-pypi-version}}
