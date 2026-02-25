@@ -1,0 +1,18 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  Environment for Slime-RL-based reinforcement learning training (GRPO, SFT).
+  Includes slime-rl, Megatron-LM, SGLang, and deepspeed pre-installed on
+  CUDA 12.6 + PyTorch 2.8.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  Preview: ""

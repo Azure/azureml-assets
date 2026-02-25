@@ -1,0 +1,12 @@
+image:
+  name: azureml/curated/acft-nemorl-training
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
+  publish:
+    location: mcr
+    visibility: public
