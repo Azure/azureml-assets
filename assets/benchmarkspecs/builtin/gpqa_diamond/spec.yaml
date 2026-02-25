@@ -21,8 +21,7 @@ evaluator:
       evaluator_name: "builtin.regex_match"
       evaluator_version: "2"
       initialization_parameters:
-        patterns:
-          - "(?i)ANSWER\\s*:\\s*({{ground_truth}})"
+        patterns: ["(?i)ANSWER\\s*:\\s*({{ground_truth}})"]
       data_mapping:
         ground_truth: "{{item.Correct_Answer}}"
         response: "{{sample.output_text}}"
