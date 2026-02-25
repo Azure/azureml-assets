@@ -1,0 +1,1 @@
+LICENSE PLACEHOLDER - replace with actual MuSR dataset license content
