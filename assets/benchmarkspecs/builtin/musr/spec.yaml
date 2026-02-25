@@ -30,8 +30,8 @@ evaluator:
 dataset:
   datasetName: "musr"
   datasetType: "oss"
-  recordCount: "2000"
-  license: "MIT"
+  recordCount: "757"
+  license: "cc-by-4.0 (Creative Commons Attribution 4.0 International License)"
   properties:
     domain: "reasoning"
     source_paper: "https://arxiv.org/abs/2310.16049"
