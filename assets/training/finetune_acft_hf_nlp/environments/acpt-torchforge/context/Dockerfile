@@ -1,6 +1,7 @@
-# TorchForge (torchtitan) curated training environment
-# Supports: SFT, GRPO via native PyTorch distributed (torchrun + FSDP2)
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+# TorchForge (Meta) curated training environment
+# Supports: SFT, GRPO via Meta's TorchForge framework (Monarch + torchtitan + vLLM)
+# https://github.com/meta-pytorch/torchforge
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch290:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 
@@ -9,7 +10,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
         libssl3 \
-        openssl && \
+        openssl \
+        git && \
     apt-get autoremove -y && \
     apt-get autoclean && \
     apt-get clean && \
@@ -21,11 +23,14 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
-# TorchTitan framework (torchrun CLI: torchtitan.train)
-RUN pip install --no-cache-dir "torchtitan==0.2.2"
+# TorchForge framework (Meta's post-training at scale)
+# Installs: forge, torchtitan, torchmonarch, vllm, torchao, and dependencies
+RUN pip install --no-cache-dir "torchforge==0.0.1"
 
-# torchao for quantization-aware training and int8 optimizers
-RUN pip install --no-cache-dir "torchao==0.16.0"
+# Clone repo for apps/ entrypoints and default configs (not included in pip package).
+# torchforge's CLI is: python -m apps.<algo>.main --config apps/<algo>/<config>.yaml
+RUN git clone --depth 1 https://github.com/meta-pytorch/torchforge.git /opt/torchforge
+ENV PYTHONPATH="/opt/torchforge:${PYTHONPATH}"
 
 # flash-attn requires torch at build time — install with --no-build-isolation
 RUN pip install --no-cache-dir --no-build-isolation flash-attn==2.8.3

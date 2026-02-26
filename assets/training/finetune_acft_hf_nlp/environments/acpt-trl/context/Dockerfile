@@ -51,10 +51,10 @@ COPY finetune_run.py /azureml/finetune/run.py
 
 RUN pip install -r requirements.txt --no-cache-dir
 
+RUN pip install nltk==3.9.1
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
-RUN pip install nltk==3.9.1
 
 # vulnerabilities, cannot be added to requirements.txt as it causes pip dependency resolver to break
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
