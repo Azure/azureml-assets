@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "musr"
+version: "1"
+tags:
+  azureml.Designer: true
+  azureml.Designer.name: MuSR
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: MuSR (Multistep Soft Reasoning) benchmark dataset
+type: uri_folder
+path: sample_data/
