@@ -8,7 +8,7 @@ Provides common interfaces and assertion helpers shared by both prompty-based an
 """
 
 from abc import ABC
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 from unittest.mock import MagicMock
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._exceptions import EvaluationException
@@ -81,15 +81,18 @@ class BaseEvaluatorRunner(ABC):
 
         return self.evaluator_type(**kwargs)
 
-    def _run_evaluation(self, **kwargs) -> Dict[str, Any]:
-        """Run evaluation and return results.
+    def _run_evaluation_and_return_mocked_flow(self, **kwargs) -> Tuple[Dict[str, Any], Optional[MagicMock]]:
+        """Run evaluation and return both results and the mocked flow.
+
+        Core implementation that creates the evaluator, sets up mocking,
+        runs the evaluation, and returns the flow mock for assertion.
 
         Args:
             **kwargs: Keyword arguments. Args in constructor_arg_names are passed to
                       evaluator constructor, remaining kwargs are passed to the evaluator call.
 
         Returns:
-            Dictionary containing evaluation results.
+            Tuple of (results dict, flow mock or None if not mocking).
         """
         # Split kwargs into constructor args vs call args
         constructor_kwargs = {}
@@ -104,9 +107,11 @@ class BaseEvaluatorRunner(ABC):
         evaluator = self._init_evaluator(**constructor_kwargs)
 
         # Mock the flow only for behavioral tests
+        flow_mock = None
         if self.use_mocking:
             if hasattr(evaluator, "_flow"):
-                evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(self.result_key))
+                flow_mock = MagicMock(side_effect=get_flow_side_effect_for_evaluator(self.result_key))
+                evaluator._flow = flow_mock
 
             # Special handling for groundedness evaluator to disable flow reloading
             if hasattr(evaluator, "_ensure_query_prompty_loaded"):
@@ -114,18 +119,31 @@ class BaseEvaluatorRunner(ABC):
 
         try:
             results = evaluator(**call_kwargs)
-            return results
+            return results, flow_mock
         except EvaluationException as e:
             print(f"Error during evaluation: {e}")
             return {
                 f"{self.result_key}_error_message": e.message,
                 f"{self.result_key}_error_code": e.category.name,
-            }
+            }, flow_mock
         except Exception as e:
             print(f"Unexpected error during evaluation: {e}")
             return {
                 f"{self.result_key}_error_message": str(e),
-            }
+            }, flow_mock
+
+    def _run_evaluation(self, **kwargs) -> Dict[str, Any]:
+        """Run evaluation and return results.
+
+        Args:
+            **kwargs: Keyword arguments. Args in constructor_arg_names are passed to
+                      evaluator constructor, remaining kwargs are passed to the evaluator call.
+
+        Returns:
+            Dictionary containing evaluation results.
+        """
+        results, _ = self._run_evaluation_and_return_mocked_flow(**kwargs)
+        return results
 
     def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
         """Extract result fields and print them.
