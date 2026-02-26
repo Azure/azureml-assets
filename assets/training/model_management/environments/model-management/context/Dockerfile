@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+WORKDIR /
 
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install wget nscd python3-idna git libxml2 curl -y && \
