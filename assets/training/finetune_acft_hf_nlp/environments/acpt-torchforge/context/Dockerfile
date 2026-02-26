@@ -1,7 +1,7 @@
 # TorchForge (Meta) curated training environment
 # Supports: SFT, GRPO via Meta's TorchForge framework (Monarch + torchtitan + vLLM)
 # https://github.com/meta-pytorch/torchforge
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch290:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 
