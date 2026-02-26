@@ -6,7 +6,6 @@ from itertools import chain
 from typing import Dict, List, Union, TypeVar, cast
 from typing_extensions import override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
-from azure.ai.evaluation._common.utils import reformat_agent_response
 from azure.ai.evaluation._exceptions import (
     ErrorMessage,
     ErrorBlame,
@@ -50,18 +49,57 @@ class ContentType(str, Enum):
     OUTPUT_TEXT = "output_text"
     TOOL_CALL = "tool_call"
     TOOL_RESULT = "tool_result"
+    FUNCTION_CALL = "function_call"
+    FUNCTION_CALL_OUTPUT = "function_call_output"
+    MCP_APPROVAL_REQUEST = "mcp_approval_request"
+    MCP_APPROVAL_RESPONSE = "mcp_approval_response"
+    OPENAPI_CALL = "openapi_call"
+    OPENAPI_CALL_OUTPUT = "openapi_call_output"
 
 
 class ConversationValidator(ValidatorInterface):
     """Validate conversation inputs (queries and responses) comprised of message lists."""
 
     requires_query: bool = True
+    check_for_unsupported_tools: bool = False
     error_target: ErrorTarget
 
-    def __init__(self, error_target: ErrorTarget, requires_query: bool = True):
+    UNSUPPORTED_TOOLS: List[str] = [
+        "azure_ai_search",
+        "bing_custom_search",
+        "bing_grounding",
+        "browser_automation",
+        "code_interpreter_call",
+        "computer_call",
+        "azure_fabric",
+        "openapi_call",
+        "sharepoint_grounding",
+        "web_search"
+    ]
+
+    def __init__(
+        self,
+        error_target: ErrorTarget,
+        requires_query: bool = True,
+        check_for_unsupported_tools: bool = False
+    ):
         """Initialize ConversationValidator."""
         self.requires_query = requires_query
+        self.check_for_unsupported_tools = check_for_unsupported_tools
         self.error_target = error_target
+
+    def _validate_field_exists(
+        self, item: Dict[str, Any], field_name: str, context: str
+    ) -> Optional[EvaluationException]:
+        """Validate that a field exists in a dictionary."""
+        if field_name not in item:
+            return EvaluationException(
+                message=f"Each {context} must contain a '{field_name}' field.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
+        return None
 
     def _validate_string_field(
         self, item: Dict[str, Any], field_name: str, context: str
@@ -138,13 +176,27 @@ class ConversationValidator(ValidatorInterface):
         return None
 
     def _validate_tool_call_content_item(self, content_item: Dict[str, Any]) -> Optional[EvaluationException]:
-        if "type" not in content_item or content_item["type"] != ContentType.TOOL_CALL:
+        valid_tool_call_content_types = [
+            ContentType.TOOL_CALL,
+            ContentType.FUNCTION_CALL,
+            ContentType.OPENAPI_CALL,
+            ContentType.MCP_APPROVAL_REQUEST
+        ]
+        valid_tool_call_content_types_as_strings = [t.value for t in valid_tool_call_content_types]
+        if "type" not in content_item or content_item["type"] not in valid_tool_call_content_types:
             return EvaluationException(
-                message=f"The content item must be of type '{ContentType.TOOL_CALL.value}' in tool_call content item.",
+                message=(
+                    f"The content item must be of type {valid_tool_call_content_types_as_strings} "
+                    "in tool_call content item."
+                ),
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.INVALID_VALUE,
                 target=self.error_target,
             )
+
+        if content_item["type"] == ContentType.MCP_APPROVAL_REQUEST:
+            return None
+
         error = self._validate_string_field(content_item, "name", "tool_call content items")
         if error:
             return error
@@ -179,7 +231,14 @@ class ConversationValidator(ValidatorInterface):
     def _validate_assistant_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
         content = message["content"]
         if isinstance(content, list):
-            valid_assistant_content_types = [ContentType.TEXT, ContentType.OUTPUT_TEXT, ContentType.TOOL_CALL]
+            valid_assistant_content_types = [
+                ContentType.TEXT,
+                ContentType.OUTPUT_TEXT,
+                ContentType.TOOL_CALL,
+                ContentType.FUNCTION_CALL,
+                ContentType.MCP_APPROVAL_REQUEST,
+                ContentType.OPENAPI_CALL
+            ]
             valid_assistant_content_type_values = [t.value for t in valid_assistant_content_types]
             for content_item in content:
                 content_type = content_item["type"]
@@ -198,10 +257,28 @@ class ConversationValidator(ValidatorInterface):
                     error = self._validate_text_content_item(content_item, MessageRole.ASSISTANT)
                     if error:
                         return error
-                else:
+                elif content_type in [ContentType.TOOL_CALL, ContentType.FUNCTION_CALL, ContentType.OPENAPI_CALL]:
                     error = self._validate_tool_call_content_item(content_item)
                     if error:
                         return error
+
+                    # Raise error in case of unsupported tools for evaluators that enabled check_for_unsupported_tools
+                    if self.check_for_unsupported_tools:
+                        if content_type == ContentType.TOOL_CALL or content_type == ContentType.OPENAPI_CALL:
+                            name = (
+                                "openapi_call" if content_type == ContentType.OPENAPI_CALL
+                                else content_item["name"].lower()
+                            )
+                            if name in self.UNSUPPORTED_TOOLS:
+                                return EvaluationException(
+                                    message=(
+                                        f"{name} tool call is currently not supported for "
+                                        f"{self.error_target.value} evaluator."
+                                    ),
+                                    blame=ErrorBlame.USER_ERROR,
+                                    category=ErrorCategory.NOT_APPLICABLE,
+                                    target=self.error_target,
+                                )
         return None
 
     def _validate_tool_message(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
@@ -223,21 +300,32 @@ class ConversationValidator(ValidatorInterface):
             return error
         for content_item in content:
             content_type = content_item["type"]
-            if content_type != ContentType.TOOL_RESULT:
+            valid_tool_content_types = [
+                ContentType.TOOL_RESULT,
+                ContentType.FUNCTION_CALL_OUTPUT,
+                ContentType.MCP_APPROVAL_RESPONSE,
+                ContentType.OPENAPI_CALL_OUTPUT
+            ]
+            valid_tool_content_types_as_strings = [t.value for t in valid_tool_content_types]
+            if content_type not in valid_tool_content_types:
                 return EvaluationException(
                     message=(
-                        f"Invalid content type '{content_type}' for message with role '{MessageRole.TOOL.value}'. "
-                        f"Must be '{ContentType.TOOL_RESULT.value}'."
+                        f"Invalid content type '{content_type}' for message with role "
+                        f"'{MessageRole.TOOL.value}'. Must be one of {valid_tool_content_types_as_strings}."
                     ),
                     blame=ErrorBlame.USER_ERROR,
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            error = self._validate_dict_field(
-                content_item, "tool_result", f"content items for role '{MessageRole.TOOL.value}'"
-            )
-            if error:
-                return error
+
+            if content_type in [
+                ContentType.TOOL_RESULT, ContentType.OPENAPI_CALL_OUTPUT, ContentType.FUNCTION_CALL_OUTPUT
+            ]:
+                error = self._validate_field_exists(
+                    content_item, content_type, f"content items for role '{MessageRole.TOOL.value}'"
+                )
+                if error:
+                    return error
         return None
 
     def _validate_message_dict(self, message: Dict[str, Any]) -> Optional[EvaluationException]:
@@ -387,9 +475,15 @@ class ToolDefinitionsValidator(ConversationValidator):
 
     optional_tool_definitions: bool = True
 
-    def __init__(self, error_target: ErrorTarget, requires_query: bool = True, optional_tool_definitions: bool = True):
+    def __init__(
+        self,
+        error_target: ErrorTarget,
+        requires_query: bool = True,
+        optional_tool_definitions: bool = True,
+        check_for_unsupported_tools: bool = False
+    ):
         """Initialize ToolDefinitionsValidator."""
-        super().__init__(error_target, requires_query)
+        super().__init__(error_target, requires_query, check_for_unsupported_tools)
         self.optional_tool_definitions = optional_tool_definitions
 
     def _validate_tool_definition(self, tool_definition) -> Optional[EvaluationException]:
@@ -610,6 +704,83 @@ def _format_value(v):
     return v
 
 
+def _get_agent_response(agent_response_msgs, include_tool_messages=False):
+    """Extract formatted agent response including text, and optionally tool calls/results."""
+    agent_response_text = []
+    tool_results = {}
+
+    # First pass: collect tool results
+    if include_tool_messages:
+        for msg in agent_response_msgs:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[msg["tool_call_id"]] = f"[TOOL_RESULT] {result}"
+
+    # Second pass: parse assistant messages and tool calls
+    for msg in agent_response_msgs:
+        if "role" in msg and msg.get("role") == "assistant" and "content" in msg:
+            text = _extract_text_from_content(msg["content"])
+            if text:
+                agent_response_text.extend(text)
+            if include_tool_messages:
+                for content in msg.get("content", []):
+                    # Todo: Verify if this is the correct way to handle tool calls
+                    if content.get("type") == "tool_call":
+                        if "tool_call" in content and "function" in content.get("tool_call", {}):
+                            tc = content.get("tool_call", {})
+                            func_name = tc.get("function", {}).get("name", "")
+                            args = tc.get("function", {}).get("arguments", {})
+                            tool_call_id = tc.get("id")
+                        else:
+                            tool_call_id = content.get("tool_call_id")
+                            func_name = content.get("name", "")
+                            args = content.get("arguments", {})
+                        args_str = ", ".join(f"{k}={_format_value(v)}" for k, v in args.items())
+                        call_line = f"[TOOL_CALL] {func_name}({args_str})"
+                        agent_response_text.append(call_line)
+                        if tool_call_id in tool_results:
+                            agent_response_text.append(tool_results[tool_call_id])
+
+    return agent_response_text
+
+
+def reformat_agent_response(response, logger=None, include_tool_messages=False):
+    """Reformat agent response to a standardized string format.
+
+    :param response: The agent response to reformat, can be None, empty list, or list of messages
+    :type response: Union[None, List[dict], str]
+    :param logger: Optional logger for warning messages
+    :type logger: Optional[logging.Logger]
+    :param include_tool_messages: Whether to include tool call and result information
+    :type include_tool_messages: bool
+    :return: Formatted agent response as a string, or original response if parsing fails
+    :rtype: str
+    """
+    try:
+        if response is None or response == []:
+            return ""
+        agent_response = _get_agent_response(response, include_tool_messages=include_tool_messages)
+        if agent_response == []:
+            # If no message could be extracted, fallback to the original response in that case
+            if logger:
+                logger.debug(
+                    "Empty agent response extracted, likely due to input schema change. "
+                    f"Falling back to using the original response: {response}"
+                )
+            return response
+        return "\n".join(agent_response)
+    except Exception as e:
+        # If the agent response cannot be parsed for whatever reason (e.g. the converter format changed),
+        # the original response is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        # See comments on reformat_conversation_history for more details.
+        if logger:
+            logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
+        return response
+
+
 def _get_conversation_history(query, include_system_messages=False, include_tool_calls=False):
     all_user_queries = []
     cur_user_query = []
@@ -753,6 +924,66 @@ def reformat_conversation_history(query, logger=None, include_system_messages=Fa
         return query
 
 
+def _is_intermediate_response(response):
+    """Check if response is intermediate (last content item is function_call or mcp_approval_request)."""
+    if isinstance(response, list) and len(response) > 0:
+        last_msg = response[-1]
+        if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+            content = last_msg.get("content", [])
+            if isinstance(content, list) and len(content) > 0:
+                last_content = content[-1]
+                if (isinstance(last_content, dict) and
+                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                    return True
+    return False
+
+
+def _drop_mcp_approval_messages(messages):
+    """Remove MCP approval request/response messages."""
+    if not isinstance(messages, list):
+        return messages
+    return [
+        msg for msg in messages
+        if not (
+            isinstance(msg, dict)
+            and isinstance(msg.get("content"), list)
+            and (
+                (msg.get("role") == "assistant" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_request" for c in msg["content"]))
+                or (msg.get("role") == "tool" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_response" for c in msg["content"]))
+            )
+        )
+    ]
+
+
+def _normalize_function_call_types(messages):
+    """Normalize function_call/function_call_output types to tool_call/tool_result."""
+    if not isinstance(messages, list):
+        return messages
+    for msg in messages:
+        if not isinstance(msg, dict) or not isinstance(msg.get("content"), list):
+            continue
+        for item in msg["content"]:
+            if not isinstance(item, dict):
+                continue
+            t = item.get("type")
+            if t == "function_call":
+                item["type"] = "tool_call"
+            elif t == "function_call_output":
+                item["type"] = "tool_result"
+                if "function_call_output" in item:
+                    item["tool_result"] = item.pop("function_call_output")
+    return messages
+
+
+def _preprocess_messages(messages):
+    """Drop MCP approval messages and normalize function call types."""
+    messages = _drop_mcp_approval_messages(messages)
+    messages = _normalize_function_call_types(messages)
+    return messages
+
+
 @experimental
 class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """The Tool Input Accuracy evaluator performs an evaluations of parameters passed to tool calls.
@@ -832,7 +1063,8 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Initialize input validator
         self._validator = ToolDefinitionsValidator(
-            error_target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR, optional_tool_definitions=False
+            error_target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR, optional_tool_definitions=False,
+            check_for_unsupported_tools=True,
         )
 
         super().__init__(
@@ -978,7 +1210,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         else:
             raise EvaluationException(
-                message="Tool input accuracy evaluator returned invalid output.",
+                message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ExtendedErrorTarget.TOOL_INPUT_ACCURACY_EVALUATOR,
@@ -995,6 +1227,16 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Validate input before processing
         self._validator.validate_eval_input(kwargs)
 
+        response = kwargs.get("response")
+        if _is_intermediate_response(response):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                1,
+            )
+        if "response" in kwargs:
+            kwargs["response"] = _preprocess_messages(kwargs["response"])
+        if "query" in kwargs:
+            kwargs["query"] = _preprocess_messages(kwargs["query"])
         # Convert inputs into list of evaluable inputs.
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
