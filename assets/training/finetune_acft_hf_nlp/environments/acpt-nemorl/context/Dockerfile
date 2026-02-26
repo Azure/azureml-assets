@@ -23,7 +23,7 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
 # NeMo-RL framework (Hydra-based CLI: nemo_rl.cli.train)
 # nemo-rl is a placeholder on PyPI; install from GitHub source
-RUN pip install --no-cache-dir "nemo-rl>=0.4.0"
+RUN pip install --no-cache-dir --no-deps "git+https://github.com/NVIDIA-NeMo/RL.git@v0.2.1"
 
 # NeMo toolkit + Megatron-Core for model parallel training
 RUN pip install --no-cache-dir "nemo-toolkit[all]==2.7.0"

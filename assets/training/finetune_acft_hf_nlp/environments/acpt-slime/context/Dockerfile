@@ -23,7 +23,7 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 
 # Slime-RL framework (argparse CLI: slime.train)
 # slime-rl is not on PyPI; install from GitHub source
-RUN pip install --no-cache-dir "slime-rl>=0.2.0"
+RUN pip install --no-cache-dir "git+https://github.com/THUDM/slime.git@v0.2.2"
 
 # SGLang for rollout inference (Slime uses SGLang instead of vLLM)
 RUN pip install --no-cache-dir "sglang==0.5.9"

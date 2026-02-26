@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   Environment for TRL-based training (SFT, DPO, KTO, GRPO, RLOO, ORPO, CPO,
   SimPO, RewardModel). Includes trl, vllm, deepspeed, peft, flash-attn,
-  and accelerate pre-installed on CUDA 12.6 + PyTorch 2.10.
+  and accelerate pre-installed on CUDA 12.6 + PyTorch 2.8.
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"

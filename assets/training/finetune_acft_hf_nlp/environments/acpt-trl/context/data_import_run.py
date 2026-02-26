@@ -76,21 +76,26 @@ class FtaasPipelineInputsValidator:
         """Validate field parameters for their types."""
         for param in fields(self):
             logger.info(f"Validating input: {param.name}")
-            if isinstance(param.type, ComponentStr):
+            param_value = getattr(self, param.name)
+            if isinstance(param_value, ComponentStr):
                 self._str_param_validator(param.name)
-            elif isinstance(param.type, int):
+            elif isinstance(param_value, int):
                 self._int_param_validator(param.name)
-            elif isinstance(param.type, float):
+            elif isinstance(param_value, float):
                 self._float_param_validator(param.name)
-            elif isinstance(param.type, ComponentInput):
+            elif isinstance(param_value, ComponentInput):
                 self._component_input_validator(param.name)
 
     def _str_param_validator(self, param_name: str):
         """Validate a string field."""
         env_var_name = self._AZUREML_PARAMETER_PREFIX + param_name
         user_passed_value = os.environ.get(env_var_name, None)
-        param = getattr(fields(self), param_name)
-        if param.value not in param.choices:
+        if user_passed_value is None:
+            logger.warning(f"Couldn't validate the parameter: {param_name}")
+            return
+
+        param = getattr(self, param_name)
+        if param.choices and user_passed_value not in param.choices:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
@@ -99,7 +104,7 @@ class FtaasPipelineInputsValidator:
                     )
                 )
             )
-        if len(param.value) > param.allowed_max_length:
+        if len(user_passed_value) > param.allowed_max_length:
             raise ACFTValidationException._with_error(
                 AzureMLError.create(
                     ACFTUserError,
@@ -109,18 +114,15 @@ class FtaasPipelineInputsValidator:
                     )
                 )
             )
-        if user_passed_value is not None:
-            if not isinstance(user_passed_value, str):
-                raise ACFTValidationException._with_error(
-                    AzureMLError.create(
-                        ACFTUserError,
-                        pii_safe_message=(
-                            f"Invalid value set for {param_name}: {user_passed_value}"
-                        )
+        if not isinstance(user_passed_value, str):
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        f"Invalid value set for {param_name}: {user_passed_value}"
                     )
                 )
-        else:
-            logger.warning(f"Couldn't validate the parameter: {param_name}")
+            )
 
     def _int_param_validator(self, param_name: str):
         """Validate an int field."""
@@ -162,20 +164,12 @@ class FtaasPipelineInputsValidator:
 
     def _component_input_validator(self, param_name: str):
         """Validate a string field."""
-        user_passed_value = os.path.join(
-            os.environ[self._AZUREML_CR_DATA_CAPABILITY_PATH], f'INPUT_{param_name}')
+        data_capability_path = os.environ.get(self._AZUREML_CR_DATA_CAPABILITY_PATH, None)
+        if data_capability_path is None:
+            logger.warning(f"Couldn't validate the parameter: {param_name}")
+            return
 
-        param = getattr(fields(self), param_name)
-        if len(param.value) > param.allowed_max_length:
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(
-                    ACFTUserError,
-                    pii_safe_message=(
-                        f"Invalid value set for {param_name}: {user_passed_value}, \
-                            exceeds allowed max_length limit (128)"
-                    )
-                )
-            )
+        user_passed_value = os.path.join(data_capability_path, f'INPUT_{param_name}')
 
         if (
             user_passed_value is not None and
@@ -191,8 +185,6 @@ class FtaasPipelineInputsValidator:
                     )
                 )
             )
-        else:
-            logger.warning(f"Couldn't validate the parameter: {param_name}")
 
     def __post_init__(self):
         """Validate a string field."""
@@ -211,7 +203,7 @@ def _copy_components_scripts():
             f"Copying files from {component_scripts_path} to {dst_folder}")
         shutil.copytree(component_scripts_path, dst_folder, dirs_exist_ok=True)
     else:
-        ACFTValidationException._with_error(
+        raise ACFTValidationException._with_error(
             AzureMLError.create(
                 ACFTUserError,
                 pii_safe_message=(
@@ -274,7 +266,7 @@ def _run_subprocess_cmd(cmd: List[str], component_name: str):
     """Run the subprocess command."""
     logger.info(f"Starting the command: {cmd}")
     process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     for line in process.stdout:
         logger.info(line.strip())
 
