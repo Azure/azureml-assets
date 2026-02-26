@@ -15,11 +15,8 @@ COPY requirements.txt .
 
 # Clean conda cache and force reinstall pip to overwrite metadata
 RUN conda clean --all -y
-RUN conda install -n base -c conda-forge pip=26.0 "setuptools>=80.0.0" "wheel>=0.46.2" --force-reinstall -y
-RUN conda install -n ptca -c conda-forge pip=26.0 "setuptools>=80.0.0" "wheel>=0.46.2" --force-reinstall -y || true
 
-# Force upgrade setuptools and wheel in ptca environment via pip
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade --force-reinstall "setuptools>=80.0.0" "wheel>=0.46.2"
+RUN conda install -n ptca -c conda-forge "pip>=26.0" "wheel>=0.46.2" --force-reinstall -y
 
 RUN rm -rf /opt/conda/lib/python3.13 || true
 
