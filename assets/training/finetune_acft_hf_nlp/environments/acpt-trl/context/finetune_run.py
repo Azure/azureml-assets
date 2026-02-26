@@ -211,7 +211,8 @@ class FtaasPipelineInputsValidator:
                 AzureMLError.create(
                     ACFTUserError,
                     pii_safe_message=(
-                        f"Invalid value set for {param_name}: {user_passed_value}, exceeds allowed max_length limit (128)"
+                        f"Invalid value set for {param_name}: {user_passed_value}, "
+                        "exceeds allowed max_length limit (128)"
                     ),
                 )
             )
