@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Business success evaluator implementation init file."""
+"""Customer satisfaction evaluator init file."""
