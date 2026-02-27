@@ -1,5 +1,5 @@
 path:
   container_name: data
-  container_path: foundry_benchmark_dataset_assets/FrontierScience/v1
+  container_path: foundry_benchmark_dataset_assets/frontierscience/v1
   storage_name: foundrybenchmarkdatasets
   type: azureblob
