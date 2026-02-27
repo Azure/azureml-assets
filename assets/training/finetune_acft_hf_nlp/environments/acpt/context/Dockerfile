@@ -10,6 +10,7 @@ COPY requirements.txt .
 COPY data_import_run.py /azureml/data_import/run.py
 COPY finetune_run.py /azureml/finetune/run.py
 
+RUN pip install mpi4py==3.1.5 --no-build-isolation --no-cache-dir
 RUN pip install -r requirements.txt --no-cache-dir
 
 RUN pip install mlflow==3.5.0
@@ -21,8 +22,13 @@ RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerab
 # vulnerabilities, cannot be added to requirements.txt as it causes pip dependency resolver to break
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
 
+# protobuf is required by onnxruntime, mlflow
+# pyasn1 is required by azureml-acft-accelerator, mlflow and both dont pin the libs hence upgrade
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 pyasn1==0.6.2 \
+    python-multipart>=0.0.22
+
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

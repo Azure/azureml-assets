@@ -12,7 +12,7 @@ opencv-python-headless==4.11.0.86
 deepspeed==0.15.1
 transformers==4.53.0
 open-clip-torch==2.26.1
-sentencepiece==0.2.0
+sentencepiece==0.2.1
 peft==0.17.1
 ninja==1.11.1.1
 kornia==0.7.3
@@ -28,7 +28,7 @@ dotmap==1.3.30
 h5py==3.14.0
 appdirs==1.4.4
 ffmpeg==1.4
-wheel==0.41.2
+wheel==0.46.3
 lightning==2.5.5
 azureml-acft-image-components[mip]=={{latest-pypi-version}}
-filelock>=3.20.1
+filelock>=3.20.3

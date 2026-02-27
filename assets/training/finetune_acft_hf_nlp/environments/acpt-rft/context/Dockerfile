@@ -67,11 +67,19 @@ COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/rewar
 COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_grader.py
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
-RUN python3 -m pip install --upgrade pip setuptools wheel
-RUN pip install vllm==0.13.0
+RUN python3 -m pip install --upgrade pip==26.0 setuptools==82.0.0 wheel==0.46.2
+RUN pip install vllm==0.14.1
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl
+
+# aiohttp is a transitive dep of vllm/sglang; protobuf is a transitive dep of vllm
+# azure-core is a transitive dep of azureml-acft-common-components; pyasn1 is a transitive dep of mlflow
+RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 \
+    setuptools==82.0.0 pip==26.0 wheel==0.46.2 python-multipart>=0.0.22
+# Fix vulnerabilities in base conda env
+RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0
+
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
