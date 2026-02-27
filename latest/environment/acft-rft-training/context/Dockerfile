@@ -43,7 +43,7 @@ RUN conda install pip==25.3 -y
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
-RUN pip install azureml-acft-common-components==0.0.85
+RUN pip install azureml-acft-common-components==0.0.86
 RUN pip install azureml-evaluate-mlflow==0.0.85
 RUN pip install verl==0.6.1
 RUN pip install sacrebleu==2.5.1
