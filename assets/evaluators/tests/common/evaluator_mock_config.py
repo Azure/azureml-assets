@@ -58,6 +58,8 @@ EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
     "tool_output_utilization": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
     "tool_selection": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
     "tool_call_success": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
+    "customer_satisfaction": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
+    "deflection_rate": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
 }
 
 
