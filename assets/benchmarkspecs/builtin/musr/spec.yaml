@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.musr"
-version: 1
+version: 2
 display_name: "MuSR Benchmark"
 description: "MuSR (Multistep Soft Reasoning) is a benchmark designed to evaluate chain-of-thought reasoning in language models. It contains murder mystery narratives requiring models to identify the most likely murderer by carefully analyzing motives, opportunities, and clues from the story."
 benchmarkType: "builtin"
@@ -9,9 +9,9 @@ categories: ["reasoning", "quality"]
 inference:
   promptText: "You are given a reasoning problem, with the following fields:\n\n- Narrative: a detailed story describing events, characters, and circumstances.\n\n- Question: a question think about it and answer.\n\n- Choices: a list of possible question answers.\n\nYour task is to answer the Question using ONLY the information in the Narrative.\n\nCarefully analyze narrative, the question and any clues mentioned.\n\nInstructions:\n\n- Select exactly ONE option from the Choices list.\n\n- Do NOT add new suspects.\n\n- If your final answer is not exactly one of the provided choices, the response is incorrect.\n\n- The last line of your response MUST be in the following format:\n\nANSWER: $OUTPUT\n\nWhere OUTPUT is EXACTLY one of the provided choices, exactly as it appears in Choices, copied verbatim with the same spelling and formatting, with its exact same format and string. Do not add any extra text after the answer line.\n\nThink step by step before answering.\n\nNarrative:\n\n{{item.narrative}}\n\nQuestion:\n\n{{item.question}}\n\nChoices:\n\n{{item.choices}}"
   inferenceParameters:
-    temperature: 0
+    temperature: 1
     top_p: 1
-    max_completion_tokens: 4096
+    max_completion_tokens: 32000
 
 evaluator:
   id: "azureml://registries/azureml/evaluators/builtin.regex_match/versions/2"
@@ -30,7 +30,7 @@ evaluator:
 dataset:
   datasetName: "musr"
   datasetType: "oss"
-  recordCount: "757"
+  recordCount: "756"
   license: "cc-by-4.0 (Creative Commons Attribution 4.0 International License)"
   properties:
     domain: "reasoning"
