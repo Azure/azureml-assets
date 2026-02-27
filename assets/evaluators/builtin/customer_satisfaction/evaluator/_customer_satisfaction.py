@@ -310,14 +310,14 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 score = float(score_value) if score_value.replace(".", "").isdigit() else 3.0
             else:
                 score = float(score_value) if score_value else 3.0
-            
+
             # Clamp score to 1-5 range
             score = max(1.0, min(5.0, score))
-            
+
             success_result = "pass" if score >= self._threshold else "fail"
             reason = llm_output.get("explanation", "")
             dimensions = llm_output.get("dimensions", {})
-            
+
             return {
                 self._result_key: score,
                 f"{self._result_key}_result": success_result,
@@ -332,7 +332,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
                 f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
             }
-        
+
         # Check if base returned nan (invalid output case)
         if isinstance(llm_output, float) and math.isnan(llm_output):
             raise EvaluationException(
@@ -341,7 +341,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 category=ErrorCategory.FAILED_EXECUTION,
                 target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
             )
-        
+
         raise EvaluationException(
             message="Evaluator returned invalid output.",
             blame=ErrorBlame.SYSTEM_ERROR,

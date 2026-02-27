@@ -238,7 +238,9 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
         # Reformat response if it's a list of messages
         if isinstance(eval_input.get("response"), list):
-            eval_input["response"] = reformat_agent_response(eval_input["response"], logger, include_tool_messages=True)
+            eval_input["response"] = reformat_agent_response(
+                eval_input["response"], logger, include_tool_messages=True
+            )
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
@@ -249,12 +251,12 @@ class DeflectionRateEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 score = int(score_value) if score_value.isdigit() else 0
             else:
                 score = int(score_value) if score_value else 0
-            
+
             # For deflection, lower is better, so pass when score <= threshold
             success_result = "pass" if score <= self._threshold else "fail"
             reason = llm_output.get("explanation", "")
             deflection_type = llm_output.get("deflection_type", "")
-            
+
             return {
                 self._result_key: score,
                 f"{self._result_key}_result": success_result,
