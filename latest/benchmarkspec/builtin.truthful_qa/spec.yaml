@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.truthful_qa"
-version: 1
+version: 2
 display_name: "TruthfulQA Benchmark"
 description: "TruthfulQA is a benchmark to measure whether a language model is truthful
   in generating answers to questions. The benchmark comprises 817 questions that span
@@ -17,9 +17,9 @@ inference:
     options, don't output anything except only the answer. Think step by step before
     answering.\n\n{{item.Question}}\n\nChoices:\n\n{{item.Correct_Answers}};{{item.Incorrect_Answers}}"
   inferenceParameters:
-    temperature: 0
+    temperature: 1
     top_p: 1
-    max_completion_tokens: 4096
+    max_completion_tokens: 32000
 
 evaluator:
   id: "azureml://registries/azureml/evaluators/builtin.string_check/versions/2"
