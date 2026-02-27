@@ -1,6 +1,8 @@
-# TRL curated training environment
+# AzureML low-code curated training environment (TRL) — MCR internal visibility (not publicly browsable).
+# Consumed by AzureML curated fine-tuning jobs (finetune_acft) via the TrainingRecipeCompiler.
 # Supports: SFT, DPO, KTO, GRPO, RLOO, ORPO, CPO, SimPO, RewardModel
 # Unified environment replacing acft-hf-nlp-gpu and acft-group-relative-policy-optimization
+# Base: ACPT (Azure Container for PyTorch)
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root

@@ -9,4 +9,4 @@ image:
     - requirements.txt
   publish:
     location: mcr
-    visibility: public
+    visibility: internal

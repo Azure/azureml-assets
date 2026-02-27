@@ -1,5 +1,7 @@
-# VERL curated training environment
+# AzureML low-code curated training environment (VERL) — MCR internal visibility (not publicly browsable).
+# Consumed by AzureML curated fine-tuning jobs (finetune_acft) via the TrainingRecipeCompiler.
 # Supports: PPO, GRPO, RLOO, REINFORCE++, SFT (FSDP/FSDP2 + vLLM/SGLang rollout)
+# Base: ACPT (Azure Container for PyTorch)
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
 RUN apt-get update && \
