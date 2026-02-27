@@ -44,3 +44,10 @@ RUN pip list
 
 ## Delete
 RUN rm requirements.txt
+
+# Ensure only v2 SDK exists
+RUN python -m pip uninstall -y azureml-core azureml-sdk azureml-defaults || true
+
+RUN python -m pip install --upgrade azure-ai-ml==1.28.1
+
+RUN python -m pip freeze | grep azure
