@@ -1,6 +1,7 @@
-azure-core==1.38.0
+#azure-core==1.38.0
 azure-ai-ml==1.28.1
 azure-identity==1.23.1
+azure-monitor-opentelemetry==1.8.6
 azureml-evaluate-mlflow==0.0.77
 ffmpeg-python==0.2.0
 langcodes==3.5.0
