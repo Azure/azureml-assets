@@ -1,0 +1,5 @@
+path:
+  container_name: data
+  container_path: foundry_benchmark_dataset_assets/MuSR/v1
+  storage_name: foundrybenchmarkdatasets
+  type: azureblob

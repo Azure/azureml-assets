@@ -1,18 +1,18 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: qwen3-0.6b-generic-cpu
-version: 2
+name: qwen3-4b-generic-cpu
+version: 1
 path: ./
 tags:
   foundryLocal: "test"
   license: "apache-2.0"
-  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE>."
+  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/Qwen/Qwen3-4B/blob/main/LICENSE>."
   author: Microsoft
   inputModalities: "text"
   outputModalities: "text"
   task: chat-completion
   maxOutputTokens: 2048
-  alias: qwen3-0.6b
-  directoryPath: v2
+  alias: qwen3-4b
+  directoryPath: v1
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
@@ -25,11 +25,11 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/qwen3-0.6b/versions/1
+  - assetId: azureml://registries/azureml/models/qwen3-4b/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 1254524044
-    vRamFootprintBytes: 1254524044
+    fileSizeBytes: 3814309589
+    vRamFootprintBytes: 3814309589

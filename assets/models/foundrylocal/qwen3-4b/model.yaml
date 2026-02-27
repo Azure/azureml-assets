@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/qwen3-0.6b/onnx/cpu_and_mobile/v2
+  container_path: foundrylocal/models/qwen3-0.6b
   storage_name: foundrylocalmodels
   type: azureblob
 publish:
