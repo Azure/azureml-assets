@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.gpqa_diamond"
-version: 3
+version: 4
 display_name: "GPQA Diamond Benchmark"
 description: "GPQA Diamond is a curated to be a higher-difficulty subset of the GPQA benchmark. (Graduate-Level Google-Proof Q&A) benchmark for evaluating model reasoning accuracy on multiple-choice science questions."
 benchmarkType: "builtin"
@@ -9,9 +9,9 @@ categories: ["reasoning", "quality"]
 inference:
   promptText: "Answer the following multiple choice question. The last line of your response should be of the following format: 'ANSWER: $OUTPUT' (without quotes) where OUTPUT is one of question choices, and it has to be strictly one of the provided options as is with its exact same format and string. Think step by step before answering.\n\n{{item.Question}}\n\nChoices:\n\n{{item.Correct_Answer}}\n\n{{item.Incorrect_Answer_1}}\n\n{{item.Incorrect_Answer_2}}\n\n{{item.Incorrect_Answer_3}}"
   inferenceParameters:
-    temperature: 0
+    temperature: 1
     top_p: 1
-    max_completion_tokens: 4096
+    max_completion_tokens: 32000
 
 evaluator:
   id: "azureml://registries/azureml/evaluators/builtin.regex_match/versions/2"
