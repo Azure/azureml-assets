@@ -1,0 +1,59 @@
+type: "benchmarkspec"
+name: "builtin.frontierscience"
+version: 1
+display_name: "FrontierScience Benchmark"
+description: "FrontierScience is a benchmark for evaluating model reasoning accuracy on challenging science olympiad problems spanning multiple scientific disciplines including biology, chemistry, physics, and mathematics."
+benchmarkType: "builtin"
+categories: ["reasoning", "quality"]
+
+inference:
+  promptText: "{{item.problem}} Think step by step and solve the problem below. At the end of your response, write your final answer on a new line starting with 'FINAL ANSWER'. It should be an answer to the question such as providing a number, mathematical expression, formula, or entity name, without any extra commentary or providing multiple answer attempts."
+  inferenceParameters:
+    temperature: 1
+    top_p: 1
+    max_completion_tokens: 32000
+
+evaluator:
+  id: "azureml://registries/azureml/evaluators/builtin.label_model/versions/1"
+  testingCriteria:
+    type: "label_model"
+    name: "FrontierScience"
+    model: "{{aoai_deployment_and_model}}"
+    input:
+      - role: "user"
+        content: "You are grading an attempted answer to a science olympiad problem. You will be given\n\n   the problem, attempted answer, and reference answer. Evaluate the solution against\n\n   the provided reference solution, ensuring it is complete and matches the reference\n\n   solution. Pay close attention to detail and grade it strictly, but fairly.\n\n \n\n   The reference answer is either a single number or expression in latex formatting, a\n\n   chemical formula, a compound name, or a phrase referring to a specific name, entity,\n\n   or method.\n\n \n\n   Mark the attempted answer as correct if it fully matches the reference answer or is\n\n   otherwise equivalent (e.g., an equivalent algebraic expression, a numerical number\n\n   within 1 decimal place rounding of the reference answer (e.g., 6.69 ≈ 6.7), an\n\n   equivalent name for a compound/formula, equivalent when accounting for units, etc.).\n\n   Mark it as incorrect if it is not equivalent to the reference answer.\n\n   ***\n\n   The problem: {{item.problem}}\n\n   ***\n\n   The reference answer: {{item.answer}}\n\n   ***\n\n   The attempted answer: {{sample.output_text}}\n\n   ***\n\n   First, think step-by-step about whether the attempted answer matches the reference\n\n   answer.\n\n   At the end, respond with matched if the answer is correct, or not_matched if incorrect."
+    passing_labels:
+      - "matched"
+    labels:
+      - "matched"
+      - "not_matched"
+
+dataset:
+  datasetName: "frontierscience"
+  datasetType: "oss"
+  recordCount: "160"
+  license: "apache-2.0"
+  properties:
+    domain: "science"
+    dataset_source: "https://huggingface.co/datasets/openai/frontierscience"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/frontierscience/versions/1"
+    sourceFormat: "csv"
+    properties:
+      file_name: "frontierscience.csv"
+      type: "uri_folder"
+  datasetSchema:
+    item:
+      type: "object"
+      properties:
+        problem:
+          type: "string"
+        answer:
+          type: "string"
+        subject:
+          type: "string"
+        task_group_id:
+          type: "string"
+        category:
+          type: "string"
