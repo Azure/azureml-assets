@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.musr"
-version: 3
+version: 2
 display_name: "MuSR Benchmark"
 description: "MuSR (Multistep Soft Reasoning) is a benchmark designed to evaluate chain-of-thought reasoning in language models. It contains murder mystery narratives requiring models to identify the most likely murderer by carefully analyzing motives, opportunities, and clues from the story."
 benchmarkType: "builtin"
