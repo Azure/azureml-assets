@@ -1,0 +1,3 @@
+# Ignore test output directories generated during test runs
+*/output_dir/
+*/output_mltable/

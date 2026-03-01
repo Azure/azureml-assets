@@ -172,12 +172,10 @@ transformations:
     @staticmethod
     def row_output_post_process(row_output_data):
         """Post process the output data for the row."""
-        # metadata is named differently for batch scoring component, so we need to pop it
-        # and add it back with the correct key
-        metadata = row_output_data.pop("metadata", {})
         # completion is pass through in OAI API component but to be consumable
         # by batch scoring component, we need to add it to the metadata
         completion = row_output_data.pop("completion", None)
+        metadata = {}
         if completion:
             metadata["completion"] = completion
         new_data = {
