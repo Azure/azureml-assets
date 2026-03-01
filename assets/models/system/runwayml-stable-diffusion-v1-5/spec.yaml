@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: runwayml-stable-diffusion-v1-5
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 1d0c4ebf6ff58a5caecab40fa1406526bca4b5b9
   finetuning-tasks: text-to-image
   finetune-min-sku-spec: 6|1|112|736
@@ -20,7 +20,7 @@ tags:
   author: Runway
   training_dataset: LAION-2B (en)
   inference_supported_envs:
-  - ds-mii
+  - ds_mii
   inference_compute_allow_list:
     [
       Standard_NC6s_v3,

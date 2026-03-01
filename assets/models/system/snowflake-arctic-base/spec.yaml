@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: snowflake-arctic-base
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 76fa59362cd95eb633a4e419c24364c90674966c
   inference-min-sku-spec: 96|8|1900|1024
   inference-recommended-sku:  Standard_ND96isr_H100_v5
@@ -10,7 +10,7 @@ properties:
 tags:
   Featured: ''
   huggingface_model_id: Snowflake/snowflake-arctic-base
-  license: apache2.0
+  license: apache-2.0
   disable-batch: 'true'
   task: text-generation
   SharedComputeCapacityEnabled: ''

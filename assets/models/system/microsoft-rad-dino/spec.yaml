@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: microsoft-rad-dino
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   datasets: ''
   inference-min-sku-spec: 6|1|112|64
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC24ads_A100_v4,
@@ -27,5 +27,5 @@ tags:
   author: Microsoft
   task: embeddings
   industry: health-and-life-sciences
-  hiddenlayerscanned: "true"
+  hiddenlayerscanned: ""
 version: 3

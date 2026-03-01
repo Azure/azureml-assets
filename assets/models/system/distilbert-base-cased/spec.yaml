@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: distilbert-base-cased
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 0dacbb01d604f8adeeb5b87c9339e485ac40d5c0
   evaluation-min-sku-spec: 4|0|28|56
   inference-min-sku-spec: 2|0|8|28

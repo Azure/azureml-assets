@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: stabilityai-stable-diffusion-2-1
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 5cae40e6a2745ae2b01ad92ae5043f95f23644d6
   finetuning-tasks: text-to-image
   finetune-min-sku-spec: 6|1|112|736
@@ -20,7 +20,7 @@ tags:
   author: "Stability AI"
   training_dataset: LAION-5B
   inference_supported_envs:
-  - ds-mii
+  - ds_mii
   inference_compute_allow_list:
     [
       Standard_NC6s_v3,
