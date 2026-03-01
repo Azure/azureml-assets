@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 # Remove vulnerable NVIDIA Nsight Compute components
-RUN rm -rf /opt/nvidia/nsight-compute || true
+RUN rm -rf /opt/nvidia/nsight-compute
 
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
@@ -36,7 +36,7 @@ ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
-RUN python3.12 -m pip install --upgrade pip==25.3
+RUN python3.12 -m pip install --upgrade pip==26.0
 
 WORKDIR /
 
