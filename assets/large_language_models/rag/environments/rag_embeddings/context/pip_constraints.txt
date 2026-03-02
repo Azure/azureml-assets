@@ -19,3 +19,9 @@ wheel>=0.46.2
 
 # Vendored dependency inside setuptools (jaraco.context)
 setuptools>=80.10.2
+
+# New vulns from ICM 754325440 scan (tag 94)
+# NOTE: cryptography>=46.0.5 CANNOT be constrained here because
+# azureml-mlflow 1.62.0 depends on cryptography<46.0.0 (upper bound conflict).
+# Filed exception + need azureml-mlflow owner to release with relaxed bound.
+pillow>=12.1.1
