@@ -10,7 +10,7 @@ Uses the base class _run_evaluation_and_return_mocked_flow with use_mocking=True
 and asserts correct behavior using assert_expected_behavior and assert_called_once_with.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from ..test_evaluators_tools import tool_type_test_data as data
 from .base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
@@ -57,10 +57,9 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         tool_definitions: Any,
         assert_type: BasePromptyEvaluatorRunner.AssertType,
         tool_calls: Any = None,
-        context: str = None,
+        context: Optional[str] = None,
         expected_flow_called: bool,
-        expected_flow_tool_calls: Any = None,
-        expected_flow_tool_definitions: Any = None,
+        expected_flow_inputs: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Run a tool-type test, assert expected behavior, and verify flow mock.
@@ -74,9 +73,7 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
             tool_calls: Tool calls data (optional).
             context: Additional context (optional).
             expected_flow_called: Whether the flow mock should have been called.
-            expected_flow_tool_calls: Expected tool_calls arg passed to flow (required when expected_flow_called=True).
-            expected_flow_tool_definitions: Expected tool_definitions arg passed to flow (defaults to tool_definitions).
-            **kwargs: Additional keyword arguments passed to _run_evaluation.
+            expected_flow_inputs: Optional dictionary of expected inputs to the flow (query, tool_calls, tool_definitions).
 
         Returns:
             Dictionary containing the extracted result data.
@@ -97,9 +94,7 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         if expected_flow_called:
             flow_mock.assert_called_once_with(
                 timeout=600,
-                query=query,
-                tool_calls=expected_flow_tool_calls,
-                tool_definitions=expected_flow_tool_definitions if expected_flow_tool_definitions is not None else tool_definitions,
+                **expected_flow_inputs,
             )
         else:
             flow_mock.assert_not_called()
@@ -119,7 +114,11 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
             tool_definitions=data.LOCAL_CALLS_TOOL_DEFINITIONS,
             assert_type=self.AssertType.PASS,
             expected_flow_called=True,
-            expected_flow_tool_calls=data.LOCAL_CALLS_EXPECTED_FLOW_TOOL_CALLS,
+            expected_flow_inputs={
+                "query": data.LOCAL_CALLS_QUERY,
+                "tool_calls": data.LOCAL_CALLS_EXPECTED_FLOW_TOOL_CALLS,
+                "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS,
+            },
         )
 
     # --- Code Interpreter ---
@@ -172,7 +171,11 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
             tool_definitions=data.FILE_SEARCH_TOOL_DEFINITIONS,
             assert_type=self.AssertType.PASS,
             expected_flow_called=True,
-            expected_flow_tool_calls=data.FILE_SEARCH_EXPECTED_FLOW_TOOL_CALLS,
+            expected_flow_inputs={
+                "query": data.FILE_SEARCH_QUERY,
+                "tool_calls": data.FILE_SEARCH_EXPECTED_FLOW_TOOL_CALLS,
+                "tool_definitions": data.FILE_SEARCH_TOOL_DEFINITIONS,
+            },
         )
 
     # --- Azure AI Search ---
@@ -277,7 +280,11 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
             tool_definitions=data.IMAGE_GEN_TOOL_DEFINITIONS,
             assert_type=self.AssertType.PASS,
             expected_flow_called=True,
-            expected_flow_tool_calls=data.IMAGE_GEN_EXPECTED_FLOW_TOOL_CALLS,
+            expected_flow_inputs={
+                "query": data.IMAGE_GEN_QUERY,
+                "tool_calls": data.IMAGE_GEN_EXPECTED_FLOW_TOOL_CALLS,
+                "tool_definitions": data.IMAGE_GEN_TOOL_DEFINITIONS,
+            },
         )
 
     # --- Memory Search ---
@@ -291,7 +298,11 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
             tool_definitions=data.MEMORY_SEARCH_TOOL_DEFINITIONS,
             assert_type=self.AssertType.PASS,
             expected_flow_called=True,
-            expected_flow_tool_calls=data.MEMORY_SEARCH_EXPECTED_FLOW_TOOL_CALLS,
+            expected_flow_inputs={
+                "query": data.MEMORY_SEARCH_QUERY,
+                "tool_calls": data.MEMORY_SEARCH_EXPECTED_FLOW_TOOL_CALLS,
+                "tool_definitions": data.MEMORY_SEARCH_TOOL_DEFINITIONS,
+            },
         )
 
     # --- Knowledge Base MCP ---
@@ -305,7 +316,11 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
             tool_definitions=data.KB_MCP_TOOL_DEFINITIONS,
             assert_type=self.AssertType.PASS,
             expected_flow_called=True,
-            expected_flow_tool_calls=data.KB_MCP_EXPECTED_FLOW_TOOL_CALLS,
+            expected_flow_inputs={
+                "query": data.KB_MCP_QUERY,
+                "tool_calls": data.KB_MCP_EXPECTED_FLOW_TOOL_CALLS,
+                "tool_definitions": data.KB_MCP_TOOL_DEFINITIONS,
+            },
         )
 
     # --- MCP (Multi-tool) ---
@@ -319,5 +334,9 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
             tool_definitions=data.MCP_TOOL_DEFINITIONS,
             assert_type=self.AssertType.PASS,
             expected_flow_called=True,
-            expected_flow_tool_calls=data.MCP_EXPECTED_FLOW_TOOL_CALLS,
+            expected_flow_inputs={
+                "query": data.MCP_QUERY,
+                "tool_calls": data.MCP_EXPECTED_FLOW_TOOL_CALLS,
+                "tool_definitions": data.MCP_TOOL_DEFINITIONS,
+            },
         )
