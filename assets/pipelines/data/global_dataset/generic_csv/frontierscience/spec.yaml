@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+tags:
+  azureml.Designer: true
+  azureml.Designer.name: FrontierScience
+  azureml.Designer.dataTypeId: DataFrameDirectory
+description: FrontierScience benchmark dataset
+type: uri_folder
+path: sample_data/

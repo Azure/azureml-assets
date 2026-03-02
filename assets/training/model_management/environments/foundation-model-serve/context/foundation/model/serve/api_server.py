@@ -212,8 +212,9 @@ class ProxyMiddleware(BaseHTTPMiddleware):
 
         client_host = request.client.host if request.client else "unknown"
 
+        proxy_timeout = float(os.getenv("PROXY_TIMEOUT", "180"))  # Default 3 minutes
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=proxy_timeout) as client:
                 proxied = await client.request(
                     request.method,
                     url,

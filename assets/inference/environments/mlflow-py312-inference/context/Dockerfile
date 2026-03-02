@@ -14,11 +14,7 @@ ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 USER root
 
-# We'll copy the HF scripts as well to enable better handling for v2 packaging. This will not require changes to the
-# packages installed in the image, as the expectation is that these will all be brought along with the model.
 COPY mlflow_score_script.py /var/mlflow_resources/mlflow_score_script.py
-COPY mlflow_hf_score_cpu.py /var/mlflow_resources/mlflow_hf_score_cpu.py
-COPY mlflow_hf_score_gpu.py /var/mlflow_resources/mlflow_hf_score_gpu.py
 
 # Create conda environment
 COPY conda_dependencies.yaml .

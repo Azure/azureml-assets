@@ -14,4 +14,4 @@ os_type: linux
 
 tags:
   OS: Ubuntu22.04
-  Python: 3.9
+  Python: 3.10

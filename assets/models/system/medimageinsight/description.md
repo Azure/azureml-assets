@@ -171,4 +171,4 @@ data =  {
 
 | Version | Date | Description |
 |---------|------|-------------|
-| 11 | 2025-12-10 | - Initial version tracking <br>- Remove V100 support|
+| 12 | 2026-02-17 | - Initial version tracking <br>- Fixing deployment issues for fine-tuned classification models |

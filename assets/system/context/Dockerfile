@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl git \
  && rm -rf /var/lib/apt/lists/*
-ARG GO_VERSION=1.25.5
+ARG GO_VERSION=1.26.0
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz \
  && tar -C /usr/local -xzf /tmp/go.tar.gz \
  && rm /tmp/go.tar.gz
@@ -44,7 +44,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Trivy install (same small-footprint pattern)
-ARG TRIVY_VERSION=0.67.2
+ARG TRIVY_VERSION=0.69.1
 RUN curl -fsSL -o /tmp/trivy.deb "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb" \
  && apt-get update \
  && apt-get install -y --no-install-recommends /tmp/trivy.deb \
@@ -61,7 +61,7 @@ RUN chmod 0755 /usr/local/bin/oras \
 
 # AzureML conda env (minimal) + cleanup
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/image-build
-RUN conda create -y -p "$AZUREML_CONDA_ENVIRONMENT_PATH" python=3.11 pip=25.* -c conda-forge \
+RUN conda create -y -p "$AZUREML_CONDA_ENVIRONMENT_PATH" python=3.11 pip=26.* -c conda-forge \
  && conda clean -afy
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 

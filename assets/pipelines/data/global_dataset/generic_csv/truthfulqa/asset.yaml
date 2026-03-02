@@ -1,0 +1,7 @@
+name: truthful_qa
+version: 1
+type: data
+spec: spec.yaml
+extra_config: storage.yaml
+categories:
+  - pipeline

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.groundedness"
-version: 6
+version: 8
 displayName: "Groundedness-Evaluator"
 description: "Assesses whether the response stays true to the given context in a retrieval-augmented generation scenario. It’s best used for retrieval-augmented generation (RAG) scenarios, including question and answering and summarization. Use the groundedness metric when you need to verify that ai-generated responses align with and are validated by the provided context."
 evaluatorType: "builtin"
@@ -45,7 +45,7 @@ dataMappingSchema:
             type: "object"
   anyOf: 
       - required: ["response", "context"]
-      - required: ["response", "tool_definitions"]
+      - required: ["query", "response"]
 outputSchema:
   groundedness:
     type: "ordinal"

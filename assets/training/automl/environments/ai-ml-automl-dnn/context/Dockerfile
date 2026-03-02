@@ -55,7 +55,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     'psutil>5.0.0,<6.0.0' \
     # end conda dependencies
     -c conda-forge -c pytorch -c nvidia -c anaconda && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
 # end conda create
 

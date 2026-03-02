@@ -17,6 +17,66 @@ from azure.ai.evaluation._common._experimental import experimental
 logger = logging.getLogger(__name__)
 
 
+def _is_intermediate_response(response):
+    """Check if response is intermediate (last content item is function_call or mcp_approval_request)."""
+    if isinstance(response, list) and len(response) > 0:
+        last_msg = response[-1]
+        if isinstance(last_msg, dict) and last_msg.get("role") == "assistant":
+            content = last_msg.get("content", [])
+            if isinstance(content, list) and len(content) > 0:
+                last_content = content[-1]
+                if (isinstance(last_content, dict) and
+                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                    return True
+    return False
+
+
+def _drop_mcp_approval_messages(messages):
+    """Remove MCP approval request/response messages."""
+    if not isinstance(messages, list):
+        return messages
+    return [
+        msg for msg in messages
+        if not (
+            isinstance(msg, dict)
+            and isinstance(msg.get("content"), list)
+            and (
+                (msg.get("role") == "assistant" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_request" for c in msg["content"]))
+                or (msg.get("role") == "tool" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_response" for c in msg["content"]))
+            )
+        )
+    ]
+
+
+def _normalize_function_call_types(messages):
+    """Normalize function_call/function_call_output types to tool_call/tool_result."""
+    if not isinstance(messages, list):
+        return messages
+    for msg in messages:
+        if not isinstance(msg, dict) or not isinstance(msg.get("content"), list):
+            continue
+        for item in msg["content"]:
+            if not isinstance(item, dict):
+                continue
+            t = item.get("type")
+            if t == "function_call":
+                item["type"] = "tool_call"
+            elif t == "function_call_output":
+                item["type"] = "tool_result"
+                if "function_call_output" in item:
+                    item["tool_result"] = item.pop("function_call_output")
+    return messages
+
+
+def _preprocess_messages(messages):
+    """Drop MCP approval messages and normalize function call types."""
+    messages = _drop_mcp_approval_messages(messages)
+    messages = _normalize_function_call_types(messages)
+    return messages
+
+
 @experimental
 class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """Evaluate the extent to which a response contains necessary and relevant information with respect to truth.
@@ -91,8 +151,8 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
-        threshold_value = kwargs.pop('threshold', threshold)
-        higher_is_better_value = kwargs.pop('_higher_is_better', True)
+        threshold_value = kwargs.pop("threshold", threshold)
+        higher_is_better_value = kwargs.pop("_higher_is_better", True)
         self.threshold = threshold_value  # to be removed in favor of _threshold
         super().__init__(
             model_config=model_config,
@@ -160,6 +220,24 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
+    def _not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict]]:
+        """Return a result indicating that the evaluation is not applicable."""
+        return {
+            self._result_key: threshold,
+            f"{self._result_key}_result": "pass",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_prompt_tokens": 0,
+            f"{self._result_key}_completion_tokens": 0,
+            f"{self._result_key}_total_tokens": 0,
+            f"{self._result_key}_finish_reason": "",
+            f"{self._result_key}_model": "",
+            f"{self._result_key}_sample_input": "",
+            f"{self._result_key}_sample_output": "",
+        }
+
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do completeness evaluation.
@@ -176,14 +254,24 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             raise EvaluationException(
                 message="Both ground_truth and response must be provided as input to the completeness evaluator.",
                 internal_message="Both ground_truth and response must be provided as input to the completeness "
-                                 "evaluator.",
+                "evaluator.",
                 blame=ErrorBlame.USER_ERROR,
                 category=ErrorCategory.MISSING_FIELD,
                 target=ErrorTarget.COMPLETENESS_EVALUATOR,
             )
 
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
+
         result = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
-        llm_output = result.get("llm_output") if isinstance(result, dict) else result
+        llm_output = result.get("llm_output", result) if isinstance(result, dict) else result
 
         score = math.nan
         llm_output_is_dict = isinstance(llm_output, dict)
@@ -197,27 +285,32 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
             binary_result = self._get_binary_result(score)
 
+            input_token_count = result.get("input_token_count", 0) if isinstance(result, dict) else 0
+            output_token_count = result.get("output_token_count", 0) if isinstance(result, dict) else 0
+            total_token_count = result.get("total_token_count", 0) if isinstance(result, dict) else 0
+            finish_reason = result.get("finish_reason", "") if isinstance(result, dict) else ""
+            model_id = result.get("model_id", "") if isinstance(result, dict) else ""
+            sample_input = result.get("sample_input", "") if isinstance(result, dict) else ""
+            sample_output = result.get("sample_output", "") if isinstance(result, dict) else ""
+
             # updating the result key and threshold to int based on the schema
             return {
                 f"{self._result_key}": int(score),
                 f"{self._result_key}_result": binary_result,
                 f"{self._result_key}_threshold": int(self._threshold),
                 f"{self._result_key}_reason": reason,
-                f"{self._result_key}_prompt_tokens": result.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": result.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": result.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": result.get("finish_reason", ""),
-                f"{self._result_key}_model": result.get("model_id", ""),
-                f"{self._result_key}_sample_input": result.get("sample_input", ""),
-                f"{self._result_key}_sample_output": result.get("sample_output", ""),
+                f"{self._result_key}_prompt_tokens": input_token_count,
+                f"{self._result_key}_completion_tokens": output_token_count,
+                f"{self._result_key}_total_tokens": total_token_count,
+                f"{self._result_key}_finish_reason": finish_reason,
+                f"{self._result_key}_model": model_id,
+                f"{self._result_key}_sample_input": sample_input,
+                f"{self._result_key}_sample_output": sample_output,
             }
 
-        if logger:
-            logger.warning("LLM output is not a dictionary, returning NaN for the score.")
-
-        binary_result = self._get_binary_result(score)
-        return {
-            self._result_key: float(score),
-            f"{self._result_key}_result": binary_result,
-            f"{self._result_key}_threshold": self._threshold,
-        }
+        raise EvaluationException(
+            message="Evaluator returned invalid output.",
+            blame=ErrorBlame.SYSTEM_ERROR,
+            category=ErrorCategory.FAILED_EXECUTION,
+            target=ErrorTarget.COMPLETENESS_EVALUATOR,
+        )

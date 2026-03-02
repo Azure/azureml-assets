@@ -5,6 +5,9 @@ ENV PYTHONUNBUFFERED=1 \
     TZ=Etc/UTC \
     DEBIAN_FRONTEND=noninteractive
 
+# Remove vulnerable NVIDIA Nsight Compute components
+RUN rm -rf /opt/nvidia/nsight-compute || true
+
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
 

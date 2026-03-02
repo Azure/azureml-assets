@@ -14,7 +14,7 @@ tags:
   alias: qwen2.5-14b
   directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\": \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
-  supportsToolCalling: "true"
+  supportsToolCalling: ""
   toolCallStart: "<tool_call>"
   toolCallEnd: "</tool_call>"
   toolRegisterStart: "<tools>"
