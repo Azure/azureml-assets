@@ -1,0 +1,52 @@
+{
+  "columnAttributes": [
+    {
+      "name": "narrative",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "question",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "choices",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "answer_index",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "answer_choice",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    }
+  ],
+  "featureChannels": [],
+  "labelColumns": {},
+  "scoreColumns": {}
+}
