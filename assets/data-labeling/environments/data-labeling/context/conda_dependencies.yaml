@@ -11,9 +11,10 @@ dependencies:
   - azureml-dataset-runtime[fuse,pandas]
   - azureml-defaults=={{latest-pypi-version}}
   - azure-storage-blob==12.14.1
-  - Pillow
+  - Pillow=={{latest-pypi-version}}
   - pycairo==1.20.1
   - pydicom
   - python-rle==0.0.3
   - setuptools=={{latest-pypi-version}}
+  - wheel=={{latest-pypi-version}}
   
