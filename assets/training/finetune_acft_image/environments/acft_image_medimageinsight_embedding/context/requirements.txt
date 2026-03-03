@@ -13,7 +13,7 @@ numpy==1.22.2
 einops==0.8.1
 fvcore==0.1.5.post20221221
 transformers==4.53.0
-sentencepiece==0.2.0
+sentencepiece==0.2.1
 ftfy==6.3.1
 regex==2024.11.6
 vision-datasets==0.2.7
@@ -26,6 +26,6 @@ mup==1.0.0
 torch==2.8.0
 torchvision==0.23.0
 safetensors==0.5.2
-setuptools==78.1.1
+setuptools>=82.0.0
 mlflow==3.5.0
 filelock>=3.20.1

@@ -22,3 +22,4 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest)
     evaluator_type = ToolOutputUtilizationEvaluator
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.VALID_RESPONSE
+    requires_tool_definitions = True
