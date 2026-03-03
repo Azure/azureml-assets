@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/qwen3-4b
+  container_path: foundrylocal/models/qwen3-vl-2b-instruct
   storage_name: foundrylocalmodels
   type: azureblob
 publish:
