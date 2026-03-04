@@ -7,7 +7,7 @@ description: >-
   embedding components.
 
 name: "llm-rag-embeddings"
-version: "94"
+version: "95"
 
 build:
   path: "context"

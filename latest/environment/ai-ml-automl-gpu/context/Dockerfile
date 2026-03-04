@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:20260223.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04:20260303.v5
 
 USER root
 
