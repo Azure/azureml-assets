@@ -39,7 +39,7 @@ update: # Assets to update
         stage: "Archived" # Use Active or Archived to control visibility to list operations
         update_on_create: # Update-on-create settings
           enabled: true
-          clouds: ["public"] # Clouds where update-on-create applies; must be a non-empty list if update-on-create is enabled
+          clouds: ["public"] # Clouds where update-on-create applies
 
 delete: # Assets to delete
   component: # List of components
