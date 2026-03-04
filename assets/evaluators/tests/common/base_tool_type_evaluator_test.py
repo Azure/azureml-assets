@@ -10,7 +10,7 @@ Uses the base class _run_evaluation_and_return_mocked_flow with use_mocking=True
 and asserts correct behavior using assert_expected_behavior and assert_called_once_with.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ..test_evaluators_tools import tool_type_test_data as data
 from .base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
@@ -25,71 +25,79 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
 
     Subclasses may override:
     - expected_result_fields: list of expected fields in evaluation results
+    - check_for_unsupported_tools: whether to check for unsupported tool types in the conversation (default False since many tool types not supported by Tool Call Accuracy Evaluator)
     """
 
     use_mocking = True
 
-    _additional_expected_field_suffixes = ["details"]
+    check_for_unsupported_tools = False
 
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for tool type evaluator tests."""
-        return [
-            f"{self._result_prefix}",
-            f"{self._result_prefix}_reason",
-            f"{self._result_prefix}_threshold",
-            f"{self._result_prefix}_result",
-            f"{self._result_prefix}_prompt_tokens",
-            f"{self._result_prefix}_completion_tokens",
-            f"{self._result_prefix}_total_tokens",
-            f"{self._result_prefix}_finish_reason",
-            f"{self._result_prefix}_model",
-            f"{self._result_prefix}_sample_input",
-            f"{self._result_prefix}_sample_output",
-        ] + [f"{self._result_prefix}_{suffix}" for suffix in self._additional_expected_field_suffixes]
+    is_tool_definition_required = False
+
+    _additional_expected_field_suffixes = []
+
+    #region Expected flow inputs for each test
+    test_function_tool_local_calls_expected_flow_inputs = {}
+
+    test_code_interpreter_expected_flow_inputs = {}
+
+    test_bing_grounding_expected_flow_inputs = {}
+
+    test_bing_custom_search_expected_flow_inputs = {}
+
+    test_file_search_expected_flow_inputs = {}
+
+    test_azure_ai_search_expected_flow_inputs = {}
+
+    test_sharepoint_grounding_expected_flow_inputs = {}
+
+    test_fabric_data_agent_expected_flow_inputs = {}
+
+    test_openapi_expected_flow_inputs = {}
+
+    test_web_search_expected_flow_inputs = {}
+
+    test_browser_automation_expected_flow_inputs = {}
+
+    test_computer_use_expected_flow_inputs = {}
+
+    test_image_generation_expected_flow_inputs = {}
+
+    test_memory_search_expected_flow_inputs = {}
+
+    test_kb_mcp_expected_flow_inputs = {}
+
+    test_mcp_expected_flow_inputs = {}
+    #endregion
 
     def _run_tool_type_test(
         self,
         *,
         test_label: str,
-        query: Any,
-        response: Any,
-        tool_definitions: Any,
+        evaluation_inputs: Dict[str, Any],
         assert_type: BasePromptyEvaluatorRunner.AssertType,
-        tool_calls: Any = None,
-        context: Optional[str] = None,
-        expected_flow_called: bool,
         expected_flow_inputs: Optional[Dict[str, Any]] = None,
-        **kwargs,
     ) -> Dict[str, Any]:
         """Run a tool-type test, assert expected behavior, and verify flow mock.
 
         Args:
             test_label: Descriptive label for the test.
-            query: Query input (query_history_list from converter output).
-            response: Response input (response from converter output).
-            tool_definitions: Tool definitions from converter output.
+            evaluation_inputs: Dictionary containing query, response, tool_definitions, and optionally tool_calls, context.
             assert_type: Expected behavior (PASS, INVALID_VALUE, MISSING_FIELD, NOT_APPLICABLE).
-            tool_calls: Tool calls data (optional).
-            context: Additional context (optional).
-            expected_flow_called: Whether the flow mock should have been called.
             expected_flow_inputs: Optional dictionary of expected inputs to the flow (query, tool_calls, tool_definitions).
 
         Returns:
             Dictionary containing the extracted result data.
         """
         results, flow_mock = self._run_evaluation_and_return_mocked_flow(
-            query=query,
-            response=response,
-            tool_definitions=tool_definitions,
-            tool_calls=tool_calls,
-            context=context,
-            **kwargs,
+            **evaluation_inputs,
         )
         result_data = self._extract_and_print_result(results, test_label)
         self.assert_expected_behavior(assert_type, result_data)
 
         # Assert flow mock behavior
+        # Flow is called if and only if assert_type is PASS
+        expected_flow_called = assert_type == self.AssertType.PASS
         assert flow_mock is not None, "Flow mock should be set when use_mocking=True"
         if expected_flow_called:
             flow_mock.assert_called_once_with(
@@ -109,16 +117,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Function tool (get_horoscope) with function_call content type."""
         self._run_tool_type_test(
             test_label="Function Tool - local_calls",
-            query=data.LOCAL_CALLS_QUERY,
-            response=data.LOCAL_CALLS_RESPONSE,
-            tool_definitions=data.LOCAL_CALLS_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.PASS,
-            expected_flow_called=True,
-            expected_flow_inputs={
+            evaluation_inputs={
                 "query": data.LOCAL_CALLS_QUERY,
-                "tool_calls": data.LOCAL_CALLS_EXPECTED_FLOW_TOOL_CALLS,
+                "response": data.LOCAL_CALLS_RESPONSE,
                 "tool_definitions": data.LOCAL_CALLS_TOOL_DEFINITIONS,
             },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_function_tool_local_calls_expected_flow_inputs,
         )
 
     # --- Code Interpreter ---
@@ -127,11 +132,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Code interpreter tool with code_interpreter type - not supported."""
         self._run_tool_type_test(
             test_label="Code Interpreter",
-            query=data.CODE_INTERPRETER_QUERY,
-            response=data.CODE_INTERPRETER_RESPONSE,
-            tool_definitions=data.CODE_INTERPRETER_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.CODE_INTERPRETER_QUERY,
+                "response": data.CODE_INTERPRETER_RESPONSE,
+                "tool_definitions": data.CODE_INTERPRETER_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_code_interpreter_expected_flow_inputs,
         )
 
     # --- Bing Grounding ---
@@ -140,11 +147,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Bing grounding tool with remote_tool type - not supported."""
         self._run_tool_type_test(
             test_label="Bing Grounding",
-            query=data.BING_GROUNDING_QUERY,
-            response=data.BING_GROUNDING_RESPONSE,
-            tool_definitions=data.BING_GROUNDING_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.BING_GROUNDING_QUERY,
+                "response": data.BING_GROUNDING_RESPONSE,
+                "tool_definitions": data.BING_GROUNDING_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_bing_grounding_expected_flow_inputs,
         )
 
     # --- Bing Custom Search ---
@@ -153,11 +162,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Bing custom search tool with remote_tool type - not supported."""
         self._run_tool_type_test(
             test_label="Bing Custom Search",
-            query=data.BING_CUSTOM_SEARCH_QUERY,
-            response=data.BING_CUSTOM_SEARCH_RESPONSE,
-            tool_definitions=data.BING_CUSTOM_SEARCH_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.BING_CUSTOM_SEARCH_QUERY,
+                "response": data.BING_CUSTOM_SEARCH_RESPONSE,
+                "tool_definitions": data.BING_CUSTOM_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_bing_custom_search_expected_flow_inputs,
         )
 
     # --- File Search ---
@@ -166,16 +177,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """File search tool with file_search type."""
         self._run_tool_type_test(
             test_label="File Search",
-            query=data.FILE_SEARCH_QUERY,
-            response=data.FILE_SEARCH_RESPONSE,
-            tool_definitions=data.FILE_SEARCH_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.PASS,
-            expected_flow_called=True,
-            expected_flow_inputs={
+            evaluation_inputs={
                 "query": data.FILE_SEARCH_QUERY,
-                "tool_calls": data.FILE_SEARCH_EXPECTED_FLOW_TOOL_CALLS,
+                "response": data.FILE_SEARCH_RESPONSE,
                 "tool_definitions": data.FILE_SEARCH_TOOL_DEFINITIONS,
             },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_file_search_expected_flow_inputs,
         )
 
     # --- Azure AI Search ---
@@ -184,11 +192,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Azure AI Search tool with remote_tool type - not supported."""
         self._run_tool_type_test(
             test_label="Azure AI Search",
-            query=data.AZURE_AI_SEARCH_QUERY,
-            response=data.AZURE_AI_SEARCH_RESPONSE,
-            tool_definitions=data.AZURE_AI_SEARCH_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.AZURE_AI_SEARCH_QUERY,
+                "response": data.AZURE_AI_SEARCH_RESPONSE,
+                "tool_definitions": data.AZURE_AI_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_azure_ai_search_expected_flow_inputs,
         )
 
     # --- SharePoint Grounding ---
@@ -197,11 +207,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """SharePoint grounding tool with remote_tool type - not supported."""
         self._run_tool_type_test(
             test_label="SharePoint Grounding",
-            query=data.SHAREPOINT_QUERY,
-            response=data.SHAREPOINT_RESPONSE,
-            tool_definitions=data.SHAREPOINT_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.SHAREPOINT_QUERY,
+                "response": data.SHAREPOINT_RESPONSE,
+                "tool_definitions": data.SHAREPOINT_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_sharepoint_grounding_expected_flow_inputs,
         )
 
     # --- Fabric Data Agent ---
@@ -210,11 +222,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Fabric data agent tool with remote_tool type - not supported."""
         self._run_tool_type_test(
             test_label="Fabric Data Agent",
-            query=data.FABRIC_QUERY,
-            response=data.FABRIC_RESPONSE,
-            tool_definitions=data.FABRIC_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.FABRIC_QUERY,
+                "response": data.FABRIC_RESPONSE,
+                "tool_definitions": data.FABRIC_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_fabric_data_agent_expected_flow_inputs,
         )
 
     # --- OpenAPI ---
@@ -223,11 +237,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """OpenAPI tool with openapi_call content type - invalid without 'functions' field."""
         self._run_tool_type_test(
             test_label="OpenAPI",
-            query=data.OPENAPI_QUERY,
-            response=data.OPENAPI_RESPONSE,
-            tool_definitions=data.OPENAPI_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.INVALID_VALUE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.OPENAPI_QUERY,
+                "response": data.OPENAPI_RESPONSE,
+                "tool_definitions": data.OPENAPI_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_openapi_expected_flow_inputs,
         )
 
     # --- Web Search ---
@@ -236,11 +252,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Web search tool with web_search_preview type - not supported."""
         self._run_tool_type_test(
             test_label="Web Search",
-            query=data.WEB_SEARCH_QUERY,
-            response=data.WEB_SEARCH_RESPONSE,
-            tool_definitions=data.WEB_SEARCH_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.WEB_SEARCH_QUERY,
+                "response": data.WEB_SEARCH_RESPONSE,
+                "tool_definitions": data.WEB_SEARCH_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_web_search_expected_flow_inputs,
         )
 
     # --- Browser Automation ---
@@ -249,11 +267,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Browser automation tool with remote_tool type - not supported."""
         self._run_tool_type_test(
             test_label="Browser Automation",
-            query=data.BROWSER_AUTOMATION_QUERY,
-            response=data.BROWSER_AUTOMATION_RESPONSE,
-            tool_definitions=data.BROWSER_AUTOMATION_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.NOT_APPLICABLE,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.BROWSER_AUTOMATION_QUERY,
+                "response": data.BROWSER_AUTOMATION_RESPONSE,
+                "tool_definitions": data.BROWSER_AUTOMATION_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.NOT_APPLICABLE if self.check_for_unsupported_tools else self.AssertType.PASS,
+            expected_flow_inputs=self.test_browser_automation_expected_flow_inputs,
         )
 
     # --- Computer Use ---
@@ -262,11 +282,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Computer use tool with empty tool_definitions - missing field error."""
         self._run_tool_type_test(
             test_label="Computer Use",
-            query=data.COMPUTER_USE_QUERY,
-            response=data.COMPUTER_USE_RESPONSE,
-            tool_definitions=data.COMPUTER_USE_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.MISSING_FIELD,
-            expected_flow_called=False,
+            evaluation_inputs={
+                "query": data.COMPUTER_USE_QUERY,
+                "response": data.COMPUTER_USE_RESPONSE,
+                "tool_definitions": data.COMPUTER_USE_TOOL_DEFINITIONS,
+            },
+            assert_type=self.AssertType.MISSING_FIELD if self.is_tool_definition_required else self.AssertType.INVALID_VALUE,
+            expected_flow_inputs=self.test_computer_use_expected_flow_inputs,
         )
 
     # --- Image Generation ---
@@ -275,16 +297,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Image generation tool with image_generation type."""
         self._run_tool_type_test(
             test_label="Image Generation",
-            query=data.IMAGE_GEN_QUERY,
-            response=data.IMAGE_GEN_RESPONSE,
-            tool_definitions=data.IMAGE_GEN_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.PASS,
-            expected_flow_called=True,
-            expected_flow_inputs={
+            evaluation_inputs={
                 "query": data.IMAGE_GEN_QUERY,
-                "tool_calls": data.IMAGE_GEN_EXPECTED_FLOW_TOOL_CALLS,
+                "response": data.IMAGE_GEN_RESPONSE,
                 "tool_definitions": data.IMAGE_GEN_TOOL_DEFINITIONS,
             },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_image_generation_expected_flow_inputs,
         )
 
     # --- Memory Search ---
@@ -293,16 +312,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Memory search tool with memory_search type."""
         self._run_tool_type_test(
             test_label="Memory Search",
-            query=data.MEMORY_SEARCH_QUERY,
-            response=data.MEMORY_SEARCH_RESPONSE,
-            tool_definitions=data.MEMORY_SEARCH_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.PASS,
-            expected_flow_called=True,
-            expected_flow_inputs={
+            evaluation_inputs={
                 "query": data.MEMORY_SEARCH_QUERY,
-                "tool_calls": data.MEMORY_SEARCH_EXPECTED_FLOW_TOOL_CALLS,
+                "response": data.MEMORY_SEARCH_RESPONSE,
                 "tool_definitions": data.MEMORY_SEARCH_TOOL_DEFINITIONS,
             },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_memory_search_expected_flow_inputs,
         )
 
     # --- Knowledge Base MCP ---
@@ -311,16 +327,13 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """Knowledge base with MCP approval request/response."""
         self._run_tool_type_test(
             test_label="KB MCP",
-            query=data.KB_MCP_QUERY,
-            response=data.KB_MCP_RESPONSE,
-            tool_definitions=data.KB_MCP_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.PASS,
-            expected_flow_called=True,
-            expected_flow_inputs={
+            evaluation_inputs={
                 "query": data.KB_MCP_QUERY,
-                "tool_calls": data.KB_MCP_EXPECTED_FLOW_TOOL_CALLS,
+                "response": data.KB_MCP_RESPONSE,
                 "tool_definitions": data.KB_MCP_TOOL_DEFINITIONS,
             },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_kb_mcp_expected_flow_inputs,
         )
 
     # --- MCP (Multi-tool) ---
@@ -329,14 +342,11 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
         """MCP with multiple tool types (code_interpreter, web_search, function)."""
         self._run_tool_type_test(
             test_label="MCP Multi-tool",
-            query=data.MCP_QUERY,
-            response=data.MCP_RESPONSE,
-            tool_definitions=data.MCP_TOOL_DEFINITIONS,
-            assert_type=self.AssertType.PASS,
-            expected_flow_called=True,
-            expected_flow_inputs={
+            evaluation_inputs={
                 "query": data.MCP_QUERY,
-                "tool_calls": data.MCP_EXPECTED_FLOW_TOOL_CALLS,
+                "response": data.MCP_RESPONSE,
                 "tool_definitions": data.MCP_TOOL_DEFINITIONS,
             },
+            assert_type=self.AssertType.PASS,
+            expected_flow_inputs=self.test_mcp_expected_flow_inputs,
         )
