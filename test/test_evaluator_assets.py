@@ -12,6 +12,7 @@ from jsonschema import Draft202012Validator
 EVALUATORS_DIR = (
     Path(__file__).parent.parent / "assets" / "evaluators" / "builtin"
 )
+EVALUATORS_SKIP_DIRS = ["tests"]
 
 
 def get_all_evaluator_spec_files():
@@ -25,7 +26,7 @@ def get_all_evaluator_spec_files():
         return spec_files
 
     for evaluator_dir in EVALUATORS_DIR.iterdir():
-        if evaluator_dir.is_dir():
+        if evaluator_dir.is_dir() and evaluator_dir.name not in EVALUATORS_SKIP_DIRS:
             spec_file = evaluator_dir / "spec.yaml"
             if spec_file.exists():
                 spec_files.append((evaluator_dir.name, spec_file))
@@ -99,7 +100,10 @@ def test_validate_evaluators_schema(
 
 def test_all_evaluators_have_spec_files():
     """Test that all evaluator directories contain spec.yaml files."""
-    evaluator_dirs = [d for d in EVALUATORS_DIR.iterdir() if d.is_dir()]
+    evaluator_dirs = [
+        d for d in EVALUATORS_DIR.iterdir()
+        if d.is_dir() and d.name not in EVALUATORS_SKIP_DIRS
+    ]
     assert len(evaluator_dirs) > 0, "No evaluator directories found"
 
     missing_spec_files = []
