@@ -10,7 +10,7 @@ from marshmallow import Schema, fields, post_load, validates, validates_schema
 from ruamel.yaml import YAML
 
 """
-Sample deplyment config YAML file:
+Sample deployment config YAML file:
 
 create: # Assets to create
   component: # List of components
