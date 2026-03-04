@@ -13,7 +13,7 @@ update:
         description: "Test description for environment1."
         update_on_create:
           enabled: true
-          clouds: ["public", "fairfax"]
+          clouds: ["public"]
         tags:
           add:
             AddMe: "Value"
