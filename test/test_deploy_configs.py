@@ -35,7 +35,7 @@ def test_load():
             assert update.all_versions is True
             assert update.versions is None
             assert update.update_on_create.enabled is True
-            assert update.update_on_create.clouds == ["public", "fairfax"]
+            assert update.update_on_create.clouds == ["public"]
             assert update.tags.add == {"AddMe": "Value"}
             assert update.tags.delete == ["DeleteMe"]
             assert update.stage == "Active"

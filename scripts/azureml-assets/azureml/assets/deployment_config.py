@@ -39,7 +39,7 @@ update: # Assets to update
         stage: "Archived" # Use Active or Archived to control visibility to list operations
         update_on_create: # Update-on-create settings
           enabled: true
-          clouds: ["fairfax", "ussec", "usnat"] # Clouds where update-on-create applies; must be a non-empty list if update-on-create is enabled
+          clouds: ["public"] # Clouds where update-on-create applies; must be a non-empty list if update-on-create is enabled
 
 delete: # Assets to delete
   component: # List of components
@@ -325,10 +325,6 @@ class UpdateOnCreateSchema(Schema):
         clouds = data.get('clouds')
         if not clouds:
             raise ValueError("clouds must be a non-empty list when update_on_create is set")
-        allowed = {"public", "fairfax", "mooncake", "ussec", "usnat"}
-        invalid = [c for c in clouds if c not in allowed]
-        if invalid:
-            raise ValueError(f"clouds contains invalid values: {invalid}")
 
 
 class VersionsSchema(Schema):
