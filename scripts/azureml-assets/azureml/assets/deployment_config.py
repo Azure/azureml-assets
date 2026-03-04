@@ -102,6 +102,19 @@ class Versions:
 
 
 @dataclass
+class AssetUpdateOnCreate:
+    """Update-on-create settings.
+
+    Args:
+        enabled (bool): Enable update-on-create.
+        clouds (List[str]): Clouds where update-on-create applies.
+    """
+
+    enabled: bool = None
+    clouds: List[str] = None
+
+
+@dataclass
 class AssetVersionUpdate(Versions):
     """Asset version update class.
 
@@ -111,6 +124,7 @@ class AssetVersionUpdate(Versions):
         properties (AssetProperties): Property updates.
         stage (str): New stage.
         system_metadata (AssetSystemMetadata): System metadata updates.
+        update_on_create (AssetUpdateOnCreate): Update-on-create settings.
     """
 
     description: str = None
@@ -118,6 +132,7 @@ class AssetVersionUpdate(Versions):
     properties: AssetProperties = None
     stage: str = None
     system_metadata: AssetSystemMetadata = None
+    update_on_create: AssetUpdateOnCreate = None
 
     def __post_init__(self):
         """Convert field values to objects."""
@@ -129,6 +144,9 @@ class AssetVersionUpdate(Versions):
 
         if self.system_metadata:
             self.system_metadata = AssetSystemMetadata(**self.system_metadata)
+
+        if self.update_on_create:
+            self.update_on_create = AssetUpdateOnCreate(**self.update_on_create)
 
 
 @dataclass
@@ -291,6 +309,25 @@ class PropertiesSchema(Schema):
             raise ValueError("add must be non-empty")
 
 
+class UpdateOnCreateSchema(Schema):
+    """Update-on-create schema."""
+
+    enabled = fields.Boolean()
+    clouds = fields.List(fields.Str())
+
+    @validates_schema
+    def _validate_schema(self, data: Dict[str, object], **kwargs):
+        if data.get('enabled') is None:
+            raise ValueError("enabled is required when update_on_create is set")
+        clouds = data.get('clouds')
+        if not clouds:
+            raise ValueError("clouds must be a non-empty list when update_on_create is set")
+        allowed = {"public", "fairfax", "mooncake", "ussec", "usnat"}
+        invalid = [c for c in clouds if c not in allowed]
+        if invalid:
+            raise ValueError(f"clouds contains invalid values: {invalid}")
+
+
 class VersionsSchema(Schema):
     """Versions schema."""
 
@@ -316,6 +353,7 @@ class AssetVersionUpdateSchema(VersionsSchema):
     properties = fields.Nested(PropertiesSchema)
     stage = fields.Str()
     system_metadata = fields.Nested(SystemMetadataSchema)
+    update_on_create = fields.Nested(UpdateOnCreateSchema)
 
 
 class AssetVersionDeleteSchema(VersionsSchema):
