@@ -12,11 +12,11 @@ and asserts correct behavior using assert_expected_behavior and assert_called_on
 
 from typing import Any, Dict, Optional
 
-from ..test_evaluators_tools import tool_type_test_data as data
-from .base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
+from . import common_tool_test_data as data
+from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
 
 
-class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
+class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
     """
     Base class for tool-type-specific evaluator tests.
 
@@ -30,11 +30,9 @@ class BaseToolTypeEvaluatorTest(BasePromptyEvaluatorRunner):
 
     use_mocking = True
 
-    check_for_unsupported_tools = False
+    check_for_unsupported_tools: bool = False
 
-    is_tool_definition_required = False
-
-    _additional_expected_field_suffixes = []
+    is_tool_definition_required: bool = False
 
     #region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {}
