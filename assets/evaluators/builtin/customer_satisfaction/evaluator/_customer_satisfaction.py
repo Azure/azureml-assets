@@ -70,7 +70,6 @@ class ConversationValidator(ValidatorInterface):
         "code_interpreter_call",
         "computer_call",
         "azure_fabric",
-        "openapi_call",
         "sharepoint_grounding",
         "web_search"
     ]
@@ -270,10 +269,7 @@ class ConversationValidator(ValidatorInterface):
                     # Raise error in case of unsupported tools for evaluators that enabled check_for_unsupported_tools
                     if self.check_for_unsupported_tools:
                         if content_type == ContentType.TOOL_CALL or content_type == ContentType.OPENAPI_CALL:
-                            name = (
-                                "openapi_call" if content_type == ContentType.OPENAPI_CALL
-                                else content_item["name"].lower()
-                            )
+                            name = content_item["name"].lower()
                             if name in self.UNSUPPORTED_TOOLS:
                                 return EvaluationException(
                                     message=(
@@ -496,7 +492,7 @@ def _is_intermediate_response(response):
             if isinstance(content, list) and len(content) > 0:
                 last_content = content[-1]
                 if (isinstance(last_content, dict) and
-                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                        last_content.get("type") in ("function_call", "mcp_approval_request", "openapi_call")):
                     return True
     return False
 

@@ -81,7 +81,6 @@ class ConversationValidator(ValidatorInterface):
         "code_interpreter_call",
         "computer_call",
         "azure_fabric",
-        "openapi_call",
         "sharepoint_grounding",
         "web_search"
     ]
@@ -281,10 +280,7 @@ class ConversationValidator(ValidatorInterface):
                     # Raise error in case of unsupported tools for evaluators that enabled check_for_unsupported_tools
                     if self.check_for_unsupported_tools:
                         if content_type == ContentType.TOOL_CALL or content_type == ContentType.OPENAPI_CALL:
-                            name = (
-                                "openapi_call" if content_type == ContentType.OPENAPI_CALL
-                                else content_item["name"].lower()
-                            )
+                            name = content_item["name"].lower()
                             if name in self.UNSUPPORTED_TOOLS:
                                 return EvaluationException(
                                     message=(
@@ -592,7 +588,7 @@ def _is_intermediate_response(response):
             if isinstance(content, list) and len(content) > 0:
                 last_content = content[-1]
                 if (isinstance(last_content, dict) and
-                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                        last_content.get("type") in ("function_call", "mcp_approval_request", "openapi_call")):
                     return True
     return False
 
@@ -617,7 +613,7 @@ def _drop_mcp_approval_messages(messages):
 
 
 def _normalize_function_call_types(messages):
-    """Normalize function_call/function_call_output types to tool_call/tool_result."""
+    """Normalize function_call/function_call_output/openapi_call/openapi_call_output types to tool_call/tool_result."""
     if not isinstance(messages, list):
         return messages
     for msg in messages:
@@ -633,6 +629,12 @@ def _normalize_function_call_types(messages):
                 item["type"] = "tool_result"
                 if "function_call_output" in item:
                     item["tool_result"] = item.pop("function_call_output")
+            elif t == "openapi_call":
+                item["type"] = "tool_call"
+            elif t == "openapi_call_output":
+                item["type"] = "tool_result"
+                if "openapi_call_output" in item:
+                    item["tool_result"] = item.pop("openapi_call_output")
     return messages
 
 

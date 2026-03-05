@@ -26,7 +26,7 @@ def _is_intermediate_response(response):
             if isinstance(content, list) and len(content) > 0:
                 last_content = content[-1]
                 if (isinstance(last_content, dict) and
-                        last_content.get("type") in ("function_call", "mcp_approval_request")):
+                        last_content.get("type") in ("function_call", "mcp_approval_request", "openapi_call")):
                     return True
     return False
 
@@ -51,7 +51,7 @@ def _drop_mcp_approval_messages(messages):
 
 
 def _normalize_function_call_types(messages):
-    """Normalize function_call/function_call_output types to tool_call/tool_result."""
+    """Normalize function_call/function_call_output/openapi_call/openapi_call_output types to tool_call/tool_result."""
     if not isinstance(messages, list):
         return messages
     for msg in messages:
@@ -67,6 +67,12 @@ def _normalize_function_call_types(messages):
                 item["type"] = "tool_result"
                 if "function_call_output" in item:
                     item["tool_result"] = item.pop("function_call_output")
+            elif t == "openapi_call":
+                item["type"] = "tool_call"
+            elif t == "openapi_call_output":
+                item["type"] = "tool_result"
+                if "openapi_call_output" in item:
+                    item["tool_result"] = item.pop("openapi_call_output")
     return messages
 
 
