@@ -37,6 +37,15 @@
       }
     },
     {
+      "name": "Best_Incorrect_Answer",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
       "name": "Correct_Answers",
       "type": "String",
       "isFeature": true,
