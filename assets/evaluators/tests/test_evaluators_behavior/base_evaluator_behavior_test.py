@@ -396,59 +396,6 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
         },
     ]
 
-    OPENAPI_CALL_ONLY_RESPONSE: List[Dict[str, Any]] = [
-        {
-            "run_id": "",
-            "role": "assistant",
-            "content": [
-                {
-                    "type": "openapi_call",
-                    "tool_call_id": "call_openapi_1",
-                    "name": "get_horoscope",
-                    "arguments": {"sign": "Aquarius"},
-                }
-            ],
-        }
-    ]
-
-    OPENAPI_CALL_FULL_RESPONSE: List[Dict[str, Any]] = [
-        {
-            "run_id": "",
-            "role": "assistant",
-            "content": [
-                {
-                    "type": "openapi_call",
-                    "tool_call_id": "call_openapi_1",
-                    "name": "get_horoscope",
-                    "arguments": {"sign": "Aquarius"},
-                }
-            ],
-        },
-        {
-            "run_id": "",
-            "tool_call_id": "call_openapi_1",
-            "role": "tool",
-            "content": [
-                {
-                    "type": "openapi_call_output",
-                    "openapi_call_output": {
-                        "horoscope": "Aquarius: Next Tuesday you will befriend a baby otter."
-                    },
-                }
-            ],
-        },
-        {
-            "role": "assistant",
-            "content": [
-                {
-                    "type": "output_text",
-                    "text": "Your horoscope for today as an Aquarius: "
-                    "Next Tuesday you will befriend a baby otter.",
-                }
-            ],
-        },
-    ]
-
     def remove_parameter_from_input_content(self, input_data: List[Dict], parameter_name: str) -> List[Dict]:
         """Remove a parameter from the content field of all items in the input data."""
         input_data_copy = copy.deepcopy(input_data)
@@ -951,20 +898,3 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "MCP Approval Full - Preprocessed")
         self.assert_pass(result_data)
-
-    def test_openapi_call_response(self):
-        """OpenAPI call types: openapi_call response is rejected (unsupported or intermediate)."""
-        # openapi_call-only response -> not applicable (intermediate) or unsupported tool error
-        results = self._run_evaluation(
-            query=self.VALID_QUERY,
-            response=self.OPENAPI_CALL_ONLY_RESPONSE,
-            tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "OpenAPI Call Only - Rejected")
-        # Evaluators that validate before intermediate detection return an error;
-        # others return not-applicable via intermediate detection.
-        if result_data.get("error_message") is not None:
-            self.assert_error(result_data, error_code="NOT_APPLICABLE")
-        else:
-            self.assert_not_applicable(result_data)

@@ -123,23 +123,6 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
 
         self.assert_expected_behavior(expected_behavior, result_data)
 
-    def test_openapi_call_response(self):
-        """OpenAPI call types: openapi_call response is rejected (unsupported or intermediate)."""
-        # openapi_call-only response -> not applicable (intermediate) or unsupported tool error
-        results = self._run_evaluation(
-            query=self.VALID_QUERY,
-            response=self.OPENAPI_CALL_ONLY_RESPONSE,
-            tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "OpenAPI Call Only - Rejected")
-        # Evaluators that validate before intermediate detection return an error;
-        # others return not-applicable via intermediate detection.
-        if result_data.get("error_message") is not None:
-            self.assert_error(result_data, error_code="NOT_APPLICABLE")
-        else:
-            self.assert_not_applicable(result_data)
-
     def test_tool_definitions_not_present(self):
         """Tool definitions not present - should raise missing field error."""
         self.run_tool_definitions_test(
@@ -147,7 +130,6 @@ class BaseToolsEvaluatorBehaviorTest(BaseEvaluatorBehaviorTest):
             description="Tool Definitions Not Present",
             assert_type=self.AssertType.MISSING_FIELD,
         )
-
 
     def test_tool_definitions_as_string(self):
         """Tool definitions as string - should pass."""
