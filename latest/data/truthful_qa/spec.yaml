@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "truthful_qa"
-version: "1"
+version: "2"
 tags:
   azureml.Designer: true
   azureml.Designer.name: TruthfulQA

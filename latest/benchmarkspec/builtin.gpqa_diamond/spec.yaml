@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.gpqa_diamond"
-version: 4
+version: 5
 display_name: "GPQA Diamond Benchmark"
 description: "GPQA Diamond is a curated to be a higher-difficulty subset of the GPQA
   benchmark. (Graduate-Level Google-Proof Q&A) benchmark for evaluating model reasoning
@@ -22,7 +22,7 @@ inference:
 
 evaluator:
   id: "azureml://registries/azureml/evaluators/builtin.regex_match/versions/2"
-  testing_criteria:
+  testingCriteria:
     type: "azure_ai_evaluator"
     name: "GPQA_Diamond"
     evaluator_name: "builtin.regex_match"

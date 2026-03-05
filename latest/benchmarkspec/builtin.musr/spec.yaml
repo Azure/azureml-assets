@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.musr"
-version: 2
+version: 3
 display_name: "MuSR Benchmark"
 description: "MuSR (Multistep Soft Reasoning) is a benchmark designed to evaluate
   chain-of-thought reasoning in language models. It contains murder mystery narratives
@@ -31,7 +31,7 @@ inference:
 
 evaluator:
   id: "azureml://registries/azureml/evaluators/builtin.regex_match/versions/2"
-  testing_criteria:
+  testingCriteria:
     type: "azure_ai_evaluator"
     name: "MuSR"
     evaluator_name: "builtin.regex_match"
