@@ -959,13 +959,14 @@ def _reformat_tool_calls_results(response, logger=None):
                 )
             return response
         return "\n".join(agent_response)
-    except Exception:
+    except Exception as e:
         # If the agent response cannot be parsed for whatever
         # reason (e.g. the converter format changed), the original response is returned
         # This is a fallback to ensure that the evaluation can still proceed.
         # See comments on reformat_conversation_history for more details.
         if logger:
-            logger.warning(f"Agent response could not be parsed, falling back to original response: {response}")
+            logger.warning(f"Agent response could not be parsed, falling back to original response. Error: {e}")
+            logger.debug(f"Original response: {response}")
         return response
 
 
@@ -979,12 +980,13 @@ def _reformat_tool_definitions(tool_definitions, logger=None):
             param_names = ", ".join(params.keys()) if params else "no parameters"
             output_lines.append(f"- {name}: {desc} (inputs: {param_names})")
         return "\n".join(output_lines)
-    except Exception:
+    except Exception as e:
         # If the tool definitions cannot be parsed for whatever reason, the original tool definitions are returned
         # This is a fallback to ensure that the evaluation can still proceed.
         # See comments on reformat_conversation_history for more details.
         if logger:
             logger.warning(
-                f"Tool definitions could not be parsed, falling back to original definitions: {tool_definitions}"
+                f"Tool definitions could not be parsed, falling back to original definitions. Error: {e}"
             )
+            logger.debug(f"Original tool definitions: {tool_definitions}")
         return tool_definitions
