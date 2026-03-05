@@ -1,5 +1,5 @@
 path:
   container_name: data
-  container_path: foundry_benchmark_dataset_assets/TruthfulQA/v2
+  container_path: foundry_benchmark_dataset_assets/TruthfulQA/v1
   storage_name: foundrybenchmarkdatasets
   type: azureblob
