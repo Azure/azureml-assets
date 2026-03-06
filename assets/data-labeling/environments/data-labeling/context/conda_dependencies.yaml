@@ -16,4 +16,5 @@ dependencies:
   - pydicom
   - python-rle==0.0.3
   - setuptools=={{latest-pypi-version}}
+  - wheel=={{latest-pypi-version}}
   
