@@ -44,7 +44,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Trivy install (same small-footprint pattern)
-ARG TRIVY_VERSION=0.69.1
+ARG TRIVY_VERSION=0.69.2
 RUN curl -fsSL -o /tmp/trivy.deb "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb" \
  && apt-get update \
  && apt-get install -y --no-install-recommends /tmp/trivy.deb \
