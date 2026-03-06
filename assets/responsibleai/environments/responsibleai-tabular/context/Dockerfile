@@ -56,7 +56,8 @@ RUN pip install 'tqdm>=4.66.3'
 RUN pip install 'requests>=2.32.4'
 RUN pip install 'mcp>=1.23.0'
 # vulnerability fixes for skops (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm)
-RUN pip install 'skops>=0.13.0'
+# --no-deps to prevent skops from upgrading numpy (skops>=0.13.0 requires numpy>=1.25 but we pin numpy<1.24)
+RUN pip install --no-deps 'skops>=0.13.0'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
