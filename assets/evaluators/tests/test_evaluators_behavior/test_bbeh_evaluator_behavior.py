@@ -4,6 +4,7 @@
 """Behavioral tests for BBEH Evaluator."""
 
 import pytest
+from typing import Any, Dict
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.bbeh.evaluator._bbeh import BBEHEvaluator
 
@@ -26,6 +27,22 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
     result_key = "bbeh"
     result_prefix = "bbeh"
 
+    # BBEH returns boolean score, not float like other evaluators
+    @property
+    def expected_result_fields(self):
+        return ["bbeh", "bbeh_result"]
+
+    # Override assert methods for boolean score
+    def assert_pass(self, result_data: Dict[str, Any]):
+        """Assert a passing result (boolean True)."""
+        assert result_data["label"] == "pass", f"Expected 'pass' but got '{result_data['label']}'"
+        assert result_data["score"] is True, f"Expected True but got {result_data['score']}"
+
+    def assert_fail(self, result_data: Dict[str, Any]):
+        """Assert a failing result (boolean False)."""
+        assert result_data["label"] == "fail", f"Expected 'fail' but got '{result_data['label']}'"
+        assert result_data["score"] is False, f"Expected False but got {result_data['score']}"
+
     # region Test Data
     # Exact match scenarios
     SIMPLE_ANSWER = "yes"
@@ -47,9 +64,9 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
     CASE_ANSWER_LOWER = "yes"
     CASE_RESPONSE_UPPER = "The answer is: YES"
 
-    # Quote normalization
+    # Quote normalization - Note: BBEH strips quotes from predictions
     QUOTE_ANSWER = "hello world"
-    QUOTE_RESPONSE = "The answer is: \"hello world\""
+    QUOTE_RESPONSE = "The answer is: 'hello world'"  # Single quotes are stripped
 
     # Bracket variations
     BRACKET_ANSWER = "x, y, z"

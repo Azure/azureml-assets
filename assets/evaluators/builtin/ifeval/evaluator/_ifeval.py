@@ -116,7 +116,7 @@ class IFEvalEvaluator(EvaluatorBase):
             eval_input.get("instruction_id_list"), "instruction_id_list"
         )
         kwargs_list = self._parse_json_field(
-            eval_input.get("kwargs"), "kwargs"
+            eval_input.get("instruction_kwargs"), "instruction_kwargs"
         )
 
         # Validate inputs
@@ -204,7 +204,7 @@ class IFEvalEvaluator(EvaluatorBase):
         *,
         response: str,
         instruction_id_list: str,
-        kwargs: str
+        instruction_kwargs: str
     ) -> Dict[str, any]:
         """
         Evaluate whether the response follows all specified instructions.
@@ -213,8 +213,8 @@ class IFEvalEvaluator(EvaluatorBase):
         :paramtype response: str
         :keyword instruction_id_list: JSON array of instruction IDs.
         :paramtype instruction_id_list: str
-        :keyword kwargs: JSON array of parameter dicts for each instruction.
-        :paramtype kwargs: str
+        :keyword instruction_kwargs: JSON array of parameter dicts for each instruction.
+        :paramtype instruction_kwargs: str
         :return: The evaluation result containing strict and loose accuracy.
         :rtype: Dict[str, any]
         """
@@ -223,7 +223,7 @@ class IFEvalEvaluator(EvaluatorBase):
     def __call__(  # pylint: disable=docstring-missing-param
         self,
         *args,
-        **kwargs,
+        **kw,
     ):
         """
         Evaluate whether the response follows all specified instructions.
@@ -232,9 +232,9 @@ class IFEvalEvaluator(EvaluatorBase):
         :paramtype response: str
         :keyword instruction_id_list: JSON array of instruction IDs.
         :paramtype instruction_id_list: str
-        :keyword kwargs: JSON array of parameter dicts for each instruction.
-        :paramtype kwargs: str
+        :keyword instruction_kwargs: JSON array of parameter dicts for each instruction.
+        :paramtype instruction_kwargs: str
         :return: The evaluation result containing strict and loose accuracy.
         :rtype: Dict[str, any]
         """
-        return super().__call__(*args, **kwargs)
+        return super().__call__(*args, **kw)

@@ -4,6 +4,7 @@
 """Behavioral tests for IFEval Evaluator."""
 
 import pytest
+from typing import Any, Dict
 from ..common.base_code_evaluator_runner import BaseCodeEvaluatorRunner
 from ...builtin.ifeval.evaluator._ifeval import IFEvalEvaluator
 
@@ -32,6 +33,17 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             "ifeval_loose",
             "ifeval_result",
         ]
+
+    # IFEval returns boolean scores
+    def assert_pass(self, result_data: Dict[str, Any]):
+        """Assert a passing result (boolean True)."""
+        assert result_data["label"] == "pass", f"Expected 'pass' but got '{result_data['label']}'"
+        assert result_data["score"] is True, f"Expected True but got {result_data['score']}"
+
+    def assert_fail(self, result_data: Dict[str, Any]):
+        """Assert a failing result (boolean False)."""
+        assert result_data["label"] == "fail", f"Expected 'fail' but got '{result_data['label']}'"
+        assert result_data["score"] is False, f"Expected False but got {result_data['score']}"
 
     # region Test Data
     # No comma instruction
@@ -82,7 +94,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.NO_COMMA_RESPONSE,
             instruction_id_list='["punctuation:no_comma"]',
-            kwargs='[{}]',
+            instruction_kwargs='[{}]',
         )
         result_data = self._extract_and_print_result(results, "no_comma_pass")
         self.assert_pass(result_data)
@@ -92,7 +104,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.WITH_COMMA_RESPONSE,
             instruction_id_list='["punctuation:no_comma"]',
-            kwargs='[{}]',
+            instruction_kwargs='[{}]',
         )
         result_data = self._extract_and_print_result(results, "no_comma_fail")
         self.assert_fail(result_data)
@@ -104,7 +116,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.TEN_WORD_RESPONSE,
             instruction_id_list='["length_constraints:number_words"]',
-            kwargs='[{"num_words": 10, "relation": "at least"}]',
+            instruction_kwargs='[{"num_words": 10, "relation": "at least"}]',
         )
         result_data = self._extract_and_print_result(results, "word_count_at_least_pass")
         self.assert_pass(result_data)
@@ -114,7 +126,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.THREE_WORD_RESPONSE,
             instruction_id_list='["length_constraints:number_words"]',
-            kwargs='[{"num_words": 10, "relation": "at least"}]',
+            instruction_kwargs='[{"num_words": 10, "relation": "at least"}]',
         )
         result_data = self._extract_and_print_result(results, "word_count_at_least_fail")
         self.assert_fail(result_data)
@@ -124,7 +136,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.THREE_WORD_RESPONSE,
             instruction_id_list='["length_constraints:number_words"]',
-            kwargs='[{"num_words": 10, "relation": "less than"}]',
+            instruction_kwargs='[{"num_words": 10, "relation": "less than"}]',
         )
         result_data = self._extract_and_print_result(results, "word_count_less_than_pass")
         self.assert_pass(result_data)
@@ -136,7 +148,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.VALID_JSON,
             instruction_id_list='["detectable_format:json_format"]',
-            kwargs='[{}]',
+            instruction_kwargs='[{}]',
         )
         result_data = self._extract_and_print_result(results, "json_format_pass")
         self.assert_pass(result_data)
@@ -146,7 +158,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.INVALID_JSON,
             instruction_id_list='["detectable_format:json_format"]',
-            kwargs='[{}]',
+            instruction_kwargs='[{}]',
         )
         result_data = self._extract_and_print_result(results, "json_format_fail")
         self.assert_fail(result_data)
@@ -156,7 +168,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.JSON_WITH_MARKDOWN,
             instruction_id_list='["detectable_format:json_format"]',
-            kwargs='[{}]',
+            instruction_kwargs='[{}]',
         )
         result_data = self._extract_and_print_result(results, "json_format_markdown")
         self.assert_pass(result_data)
@@ -168,7 +180,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.ASTERISK_BULLETS,
             instruction_id_list='["detectable_format:number_bullet_lists"]',
-            kwargs='[{"num_bullets": 3}]',
+            instruction_kwargs='[{"num_bullets": 3}]',
         )
         result_data = self._extract_and_print_result(results, "bullet_list_asterisk")
         self.assert_pass(result_data)
@@ -178,7 +190,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.DASH_BULLETS,
             instruction_id_list='["detectable_format:number_bullet_lists"]',
-            kwargs='[{"num_bullets": 3}]',
+            instruction_kwargs='[{"num_bullets": 3}]',
         )
         result_data = self._extract_and_print_result(results, "bullet_list_dash")
         self.assert_pass(result_data)
@@ -190,7 +202,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.KEYWORDS_PRESENT,
             instruction_id_list='["keywords:existence"]',
-            kwargs='[{"keywords": ["quick", "fox", "dog"]}]',
+            instruction_kwargs='[{"keywords": ["quick", "fox", "dog"]}]',
         )
         result_data = self._extract_and_print_result(results, "keywords_present")
         self.assert_pass(result_data)
@@ -200,7 +212,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.KEYWORDS_MISSING,
             instruction_id_list='["keywords:existence"]',
-            kwargs='[{"keywords": ["quick", "fox", "dog"]}]',
+            instruction_kwargs='[{"keywords": ["quick", "fox", "dog"]}]',
         )
         result_data = self._extract_and_print_result(results, "keywords_missing")
         self.assert_fail(result_data)
@@ -212,7 +224,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.TEN_WORD_RESPONSE,
             instruction_id_list='["punctuation:no_comma", "length_constraints:number_words"]',
-            kwargs='[{}, {"num_words": 10, "relation": "at least"}]',
+            instruction_kwargs='[{}, {"num_words": 10, "relation": "at least"}]',
         )
         result_data = self._extract_and_print_result(results, "multiple_all_pass")
         self.assert_pass(result_data)
@@ -223,7 +235,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response="one, two, three",
             instruction_id_list='["punctuation:no_comma", "length_constraints:number_words"]',
-            kwargs='[{}, {"num_words": 3, "relation": "at least"}]',
+            instruction_kwargs='[{}, {"num_words": 3, "relation": "at least"}]',
         )
         result_data = self._extract_and_print_result(results, "multiple_one_fails")
         self.assert_fail(result_data)
@@ -237,7 +249,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.EIGHT_WORD_RESPONSE,
             instruction_id_list='["length_constraints:number_words"]',
-            kwargs='[{"num_words": 10, "relation": "at least"}]',
+            instruction_kwargs='[{"num_words": 10, "relation": "at least"}]',
         )
         # Check raw results for both strict and loose
         assert results.get("ifeval_strict") is False, "Strict should fail"
@@ -250,7 +262,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response=self.EMPTY_STRING,
             instruction_id_list='["punctuation:no_comma"]',
-            kwargs='[{}]',
+            instruction_kwargs='[{}]',
         )
         result_data = self._extract_and_print_result(results, "empty_response")
         self.assert_fail(result_data)
@@ -260,7 +272,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         results = self._run_evaluation(
             response="Some response",
             instruction_id_list='[]',
-            kwargs='[]',
+            instruction_kwargs='[]',
         )
         result_data = self._extract_and_print_result(results, "empty_instruction_list")
         self.assert_fail(result_data)
