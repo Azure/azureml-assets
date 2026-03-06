@@ -8,7 +8,6 @@ Ported from Google Research's instruction_following_eval:
 https://github.com/google-research/google-research/tree/master/instruction_following_eval
 """
 
-import functools
 import random
 import re
 from typing import List
@@ -73,7 +72,10 @@ LANGUAGE_CODES = {
 _ALPHABETS = "([A-Za-z])"
 _PREFIXES = "(Mr|St|Mrs|Ms|Dr)[.]"
 _SUFFIXES = "(Inc|Ltd|Jr|Sr|Co)"
-_STARTERS = r"(Mr|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
+_STARTERS = (
+    r"(Mr|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|He\s|She\s|It\s|They\s|Their\s|"
+    r"Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
+)
 _ACRONYMS = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
 _WEBSITES = "[.](com|net|org|io|gov|edu|me)"
 _DIGITS = "([0-9])"

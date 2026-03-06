@@ -13,7 +13,7 @@ Reference: https://github.com/google-research/google-research/tree/master/instru
 
 import json
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
@@ -51,8 +51,9 @@ class IFEvalEvaluator(EvaluatorBase):
 
             evaluator = IFEvalEvaluator()
 
+            bullets = "* Point 1\\n* Point 2\\n* Point 3\\n* Point 4\\n* Point 5"
             result = evaluator(
-                response="Here is my response with exactly five bullet points:\\n* Point 1\\n* Point 2\\n* Point 3\\n* Point 4\\n* Point 5",
+                response=f"Here is my response with exactly five bullet points:\\n{bullets}",
                 instruction_id_list='["detectable_format:number_bullet_lists"]',
                 kwargs='[{"num_bullets": 5}]'
             )

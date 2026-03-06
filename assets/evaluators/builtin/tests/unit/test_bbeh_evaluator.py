@@ -13,7 +13,6 @@ These tests validate the BBEH (BIG-Bench Extra Hard) evaluator behavior:
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
-import pytest
 
 # Mock the azure.ai.evaluation imports before loading the evaluator
 sys.modules['azure'] = MagicMock()
@@ -40,8 +39,6 @@ from _bbeh import (  # noqa: E402
     strip_latex,
     extract_answer,
     fuzzy_match,
-    preprocess_sample,
-    preprocess_reference,
     evaluate_correctness,
 )
 

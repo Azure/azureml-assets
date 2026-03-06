@@ -9,11 +9,9 @@ These tests validate the IFEval (Instruction-Following Evaluation) behavior:
 - Strict vs loose accuracy modes
 """
 
-import json
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
-import pytest
 
 # Mock the azure.ai.evaluation imports before loading the evaluator
 sys.modules['azure'] = MagicMock()
@@ -268,8 +266,10 @@ class TestIFEvalEvaluatorMultiple:
         """Test all instructions passing."""
         response = "one two three four five six seven eight nine ten eleven twelve"
         comma_checker = get_checker("punctuation:no_comma", {})
-        word_checker = get_checker("length_constraints:number_words", 
-                                   {"num_words": 10, "relation": "at least"})
+        word_checker = get_checker(
+            "length_constraints:number_words",
+            {"num_words": 10, "relation": "at least"}
+        )
         assert comma_checker.check_following(response) is True
         assert word_checker.check_following(response) is True
 
