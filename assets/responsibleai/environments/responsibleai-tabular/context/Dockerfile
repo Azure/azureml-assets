@@ -41,8 +41,8 @@ RUN pip install 'azureml-telemetry==1.60.0' --no-deps \
 # so we install pyarrow in extra step to avoid conflict
 RUN pip install 'pyarrow>=14.0.1'
 
-# To resolve vulnerability issue regarding crytography
-RUN pip install 'cryptography>=43.0.1'
+# To resolve vulnerability issue regarding cryptography
+RUN pip install 'cryptography>=46.0.5'
 
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
@@ -55,6 +55,8 @@ RUN pip install 'tqdm>=4.66.3'
 # vulnerability of requests GHSA-9hjg-9r4m-mvj7
 RUN pip install 'requests>=2.32.4'
 RUN pip install 'mcp>=1.23.0'
+# vulnerability fixes for skops (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm)
+RUN pip install 'skops>=0.13.0'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
