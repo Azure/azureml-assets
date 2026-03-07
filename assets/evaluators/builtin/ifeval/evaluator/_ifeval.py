@@ -25,8 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class IFEvalEvaluator(EvaluatorBase):
-    """
-    Evaluator for Instruction-Following Eval (IFEval) benchmark.
+    r"""Evaluator for Instruction-Following Eval (IFEval) benchmark.
 
     This evaluator checks whether model outputs comply with verifiable
     instructions such as word count constraints, format requirements, keyword
@@ -51,11 +50,11 @@ class IFEvalEvaluator(EvaluatorBase):
 
             evaluator = IFEvalEvaluator()
 
-            bullets = "* Point 1\\n* Point 2\\n* Point 3\\n* Point 4\\n* Point 5"
+            bullets = "* Point 1\n* Point 2\n* Point 3\n* Point 4\n* Point 5"
             result = evaluator(
-                response=f"Here is my response with exactly five bullet points:\\n{bullets}",
+                response=f"Here is my response with exactly five bullet points:\n{bullets}",
                 instruction_id_list='["detectable_format:number_bullet_lists"]',
-                kwargs='[{"num_bullets": 5}]'
+                instruction_kwargs='[{"num_bullets": 5}]'
             )
             # result: {"ifeval_strict": True, "ifeval_loose": True, "ifeval_result": "pass"}
 
@@ -66,7 +65,7 @@ class IFEvalEvaluator(EvaluatorBase):
             result = evaluator(
                 response="This is a response with at least 10 words and no commas used anywhere.",
                 instruction_id_list='["length_constraints:number_words", "punctuation:no_comma"]',
-                kwargs='[{"num_words": 10, "relation": "at least"}, {}]'
+                instruction_kwargs='[{"num_words": 10, "relation": "at least"}, {}]'
             )
             # result: {"ifeval_strict": True, "ifeval_loose": True, "ifeval_result": "pass"}
     """

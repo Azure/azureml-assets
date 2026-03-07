@@ -11,8 +11,7 @@ from ...builtin.bbeh.evaluator._bbeh import BBEHEvaluator
 
 @pytest.mark.unittest
 class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
-    """
-    Behavioral tests for BBEH (BIG-Bench Extra Hard) Evaluator.
+    r"""Behavioral tests for BBEH (BIG-Bench Extra Hard) Evaluator.
 
     Tests the fuzzy matching logic ported from google-deepmind/bbeh:
     - LaTeX formatting (\boxed{}, \text{}, \texttt{})
@@ -30,6 +29,7 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # BBEH returns boolean score, not float like other evaluators
     @property
     def expected_result_fields(self):
+        """Return the expected result fields for BBEH evaluator."""
         return ["bbeh", "bbeh_result"]
 
     # Override assert methods for boolean score
@@ -111,7 +111,7 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # ==================== LATEX FORMATTING TESTS ====================
 
     def test_latex_boxed_answer(self):
-        """Test LaTeX \\boxed{} answer extraction."""
+        r"""Test LaTeX \boxed{} answer extraction."""
         results = self._run_evaluation(
             response=self.BOXED_RESPONSE,
             ground_truth=self.BOXED_ANSWER,
@@ -120,7 +120,7 @@ class TestBBEHEvaluatorBehavior(BaseCodeEvaluatorRunner):
         self.assert_pass(result_data)
 
     def test_latex_text_answer(self):
-        """Test LaTeX \\text{} answer extraction."""
+        r"""Test LaTeX \text{} answer extraction."""
         results = self._run_evaluation(
             response=self.LATEX_TEXT_RESPONSE,
             ground_truth=self.LATEX_TEXT_ANSWER,

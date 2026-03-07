@@ -22,13 +22,13 @@ logger = logging.getLogger(__name__)
 
 
 def strip_latex(response: str) -> str:
-    """Strip LaTeX formatting from a response.
+    r"""Strip LaTeX formatting from a response.
 
     Handles common LaTeX patterns used in math answers:
     - Dollar signs: $...$
-    - Boxed: \\boxed{...}
-    - Text: \\text{...}
-    - Texttt: \\texttt{...}
+    - Boxed: \boxed{...}
+    - Text: \text{...}
+    - Texttt: \texttt{...}
 
     :param response: The response text potentially containing LaTeX.
     :type response: str
@@ -182,8 +182,7 @@ def evaluate_correctness(sample: str, reference: str) -> bool:
 
 
 class BBEHEvaluator(EvaluatorBase):
-    """
-    Evaluator for BIG-Bench Extra Hard (BBEH) benchmark.
+    r"""Evaluator for BIG-Bench Extra Hard (BBEH) benchmark.
 
     This evaluator implements the official BBEH fuzzy matching logic from
     Google DeepMind for evaluating model responses on challenging reasoning
@@ -192,7 +191,7 @@ class BBEHEvaluator(EvaluatorBase):
 
     The evaluator:
     1. Extracts the answer from model output (handles "The answer is:" prefixes)
-    2. Strips LaTeX formatting (\\boxed{}, \\text{}, etc.)
+    2. Strips LaTeX formatting (\boxed{}, \text{}, etc.)
     3. Normalizes both prediction and reference (lowercase, spacing)
     4. Applies fuzzy matching (handles (a) vs a, numeric equality, quotes, etc.)
 

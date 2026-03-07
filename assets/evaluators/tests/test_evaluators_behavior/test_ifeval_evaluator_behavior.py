@@ -28,6 +28,7 @@ class TestIFEvalEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # Override expected result fields for IFEval (has both strict and loose)
     @property
     def expected_result_fields(self):
+        """Return the expected result fields for IFEval evaluator."""
         return [
             "ifeval_strict",
             "ifeval_loose",

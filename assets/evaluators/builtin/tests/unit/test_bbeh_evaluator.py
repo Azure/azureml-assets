@@ -1,11 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests for the BBEHEvaluator.
+r"""Tests for the BBEHEvaluator.
 
 These tests validate the BBEH (BIG-Bench Extra Hard) evaluator behavior:
 - Answer extraction from model responses
-- LaTeX formatting removal (\\boxed{}, \\text{}, etc.)
+- LaTeX formatting removal (\boxed{}, \text{}, etc.)
 - Fuzzy matching logic (numeric, parentheses, quotes, etc.)
 - Case-insensitive and whitespace-normalized comparison
 """
@@ -61,16 +61,16 @@ class TestStripLatex:
         assert strip_latex("$answer$") == "answer"
 
     def test_strip_boxed(self):
-        """Test stripping \\boxed{} wrapper."""
+        r"""Test stripping \boxed{} wrapper."""
         assert strip_latex("\\boxed{4}") == "4"
         assert strip_latex("\\boxed{answer}") == "answer"
 
     def test_strip_text(self):
-        """Test stripping \\text{} wrapper."""
+        r"""Test stripping \text{} wrapper."""
         assert strip_latex("\\text{answer}") == "answer"
 
     def test_strip_texttt(self):
-        """Test stripping \\texttt{} wrapper."""
+        r"""Test stripping \texttt{} wrapper."""
         assert strip_latex("\\texttt{code}") == "code"
 
     def test_no_latex(self):
