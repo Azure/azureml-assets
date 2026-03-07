@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: projecte-aina-FLOR-1-3B-Instructed
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 5d8b61d6bb55ac1f9e5e3376658356c1aadad196
   datasets: ''
   inference-min-sku-spec: 24|1|220|64

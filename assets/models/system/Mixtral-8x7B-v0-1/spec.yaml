@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistralai-Mixtral-8x7B-v01
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 985aa055896a8f943d4a9f2572e6ea1341823841
   inference-min-sku-spec: 40|8|672|2900
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4

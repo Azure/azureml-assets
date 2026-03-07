@@ -13,7 +13,7 @@ tags:
   maxOutputTokens: 2048
   alias: gpt-oss-20b
   directoryPath: v1
-  disable-maap: true
+  disable-maap: "true"
 type: custom_model
 variantInfo:
   parents:
