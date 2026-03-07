@@ -1,0 +1,29 @@
+type: "evaluator"
+name: "builtin.bbeh"
+version: 1
+displayName: "BBEH-Evaluator"
+description: "Evaluates model responses for the BIG-Bench Extra Hard (BBEH) benchmark using fuzzy matching logic. Extracts answers from model output (handling 'The answer is:' prefixes and LaTeX formatting) and compares against ground truth with tolerance for common variations like (a) vs a, numeric equality, quote differences, and bracket formatting."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+  enable_evaluation_ui: false
+initParameterSchema:
+  type: "object"
+  properties: {}
+dataMappingSchema:
+  type: "object"
+  properties:
+    response:
+      type: "string"
+      description: "The raw model output text to evaluate."
+    ground_truth:
+      type: "string"
+      description: "The expected answer to match against."
+  required: ["response", "ground_truth"]
+outputSchema:
+  bbeh:
+    type: "boolean"
+    desirable_direction: "increase"
+path: ./evaluator

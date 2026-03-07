@@ -5,5 +5,5 @@ categories:
 test:
   pytest:
     enabled: true
-    tests_dir: ../../tests/test_evaluators_behavior/test_regex_match_evaluator_behavior.py
+    tests_dir: ../../tests/test_evaluators_behavior/test_bbeh_evaluator_behavior.py
     pip_requirements: ../tests/requirements.txt
