@@ -65,7 +65,6 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
             tool_definitions=[],
         )
 
-        
     def test_pass_factual_question(self) -> None:
         """Test case: PASS - Factual question answered."""
         self.run_quality_test(
@@ -383,4 +382,3 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                 }
             ],
         )
-
