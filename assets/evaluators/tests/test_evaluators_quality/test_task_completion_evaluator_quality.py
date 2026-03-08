@@ -65,6 +65,71 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
             tool_definitions=[],
         )
 
+        
+    def test_pass_factual_question(self) -> None:
+        """Test case: PASS - Factual question answered."""
+        self.run_quality_test(
+            test_label="PASS-factual-question",
+            expected=ExpectedResult.PASS,
+            query=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What is the capital of France?",
+                        }
+                    ]
+                }
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Paris.",
+                        }
+                    ],
+                }
+            ],
+        )
+
+    def test_subjective_question(self) -> None:
+        """Test case: PASS - Subjective question answered with reasonable response."""
+        self.run_quality_test(
+            test_label="PASS-subjective-question",
+            expected=ExpectedResult.PASS,
+            query=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What is the best programming language?",
+                        }
+                    ]
+                }
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "The best programming language depends on your specific needs and "
+                                "preferences. For web development, JavaScript is popular. For data "
+                                "science, Python is widely used. For system programming, C++ is a "
+                                "strong choice. Consider what you want to build and choose the "
+                                "language that best fits your project."
+                            ),
+                        }
+                    ],
+                }
+            ],
+        )
+
     # ==================== FAIL CASES ====================
 
     def test_fail_minor_incompletion(self) -> None:
@@ -318,3 +383,4 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                 }
             ],
         )
+
