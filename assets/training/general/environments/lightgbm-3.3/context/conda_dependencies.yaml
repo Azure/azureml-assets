@@ -4,7 +4,7 @@ channels:
 - anaconda
 dependencies:
 - python=3.10
-- pip=25.3
+- pip=26.0
 - pandas~=1.5.3
 - scipy~=1.10.0
 - numpy~=1.22.0
@@ -16,7 +16,7 @@ dependencies:
   - scikit-learn~=1.5.1
   - xgboost~=1.7.6
   - lightgbm>=4.6.0
-  - distributed~=2021.10.0
+  - distributed>=2026.1.0
   - adlfs~=0.7.0
   # azureml-automl-common-tools packages
   - py-spy==0.3.12

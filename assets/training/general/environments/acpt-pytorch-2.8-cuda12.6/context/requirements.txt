@@ -9,11 +9,12 @@ inference-schema
 MarkupSafe
 regex
 pybind11
-urllib3>=2.6.0
+urllib3>=2.6.3
 requests
-pillow
+pillow>=12.1.1
 transformers
-aiohttp>=3.12.14
+cryptography>=46.0.5
+aiohttp>=3.13.3
 py-spy
 debugpy
 ipykernel

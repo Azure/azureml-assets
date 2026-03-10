@@ -43,7 +43,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=25.3 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y
 
 ###############################
 # Pre-Build LightGBM
@@ -64,7 +64,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     holidays=0.29 \
     setuptools-git \
     setuptools=78.1.1 \
-    wheel=0.44.0 \
+    wheel=0.46.2 \
     scipy=1.10.1 \
     joblib=1.2.0 \
     ncurses=6.5 \
@@ -109,22 +109,22 @@ RUN pip install \
                 'psutil>5.0.0,<6.0.0' \
                 'requests>=2.32.5' \
                 'certifi>=2025.11.12' \
-                'cryptography>=45.0.7' \
+                'cryptography>=46.0.5' \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
 # Fix vulnerabilities
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 
 # If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 
 # --- End Vulnerability Fixes ---
 
 # --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
-RUN pip install --upgrade 'numpy==1.23.5' 'h2>=4.3.0'
+RUN pip install --upgrade 'numpy==1.23.5' 'h2>=4.3.0' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
