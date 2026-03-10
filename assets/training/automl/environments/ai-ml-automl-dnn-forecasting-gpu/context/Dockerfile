@@ -78,7 +78,6 @@ RUN pip install --no-cache-dir \
                 'inference-schema' \
                 'mlflow-skinny==2.15.1' \
                 'xgboost==1.5.2' \
-                'cryptography>=46.0.5' \
                 'requests>=2.32.5' \
                 'certifi>=2025.11.12' \
                 'spacy==3.7.4' \
@@ -98,7 +97,7 @@ RUN pip install --no-cache-dir \
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3, bokeh, PyNaCl
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6'
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5'
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

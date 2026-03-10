@@ -246,7 +246,7 @@ RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --
 RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
 
 # Security vulnerability fixes
-RUN conda run -p $CONDA_PREFIX pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 'jaraco.context>=6.1.0' 'pyasn1>=0.6.2' 'pip>=26.0'
+RUN conda run -p $CONDA_PREFIX pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 'jaraco.context>=6.1.0' 'pyasn1>=0.6.2' 'pip>=26.0' 'cryptography>=46.0.5'
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH

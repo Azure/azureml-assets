@@ -109,7 +109,6 @@ RUN pip install --no-cache-dir \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
                 'mlflow-skinny==2.15.1' \
-                'cryptography>=46.0.5'\
                 'requests>=2.32.5' \
                 'certifi>=2025.11.12' \
                 'filelock>=3.20.3'
@@ -137,7 +136,7 @@ RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0
 
 # Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3>=2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=6.33.5'
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3>=2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.5'
 RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3>=2.6.3'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3>=2.6.3' 'filelock>=3.20.3'
 
