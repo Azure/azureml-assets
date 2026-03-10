@@ -20,7 +20,7 @@ class TestToolCallSuccessEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseT
     Tests different input formats and scenarios.
     """
 
-    #region Expected flow inputs for each test
+    # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "response": data.LOCAL_CALLS_TCS_EXPECTED_FLOW_RESPONSE,
         "tool_calls": data.LOCAL_CALLS_TCS_EXPECTED_FLOW_TOOL_CALLS,
@@ -56,7 +56,7 @@ class TestToolCallSuccessEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseT
         "tool_calls": data.MCP_TCS_EXPECTED_FLOW_TOOL_CALLS,
         "tool_definitions": data.MCP_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS,
     }
-    #endregion
+    # endregion
 
     evaluator_type = ToolCallSuccessEvaluator
 

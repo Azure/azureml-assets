@@ -18,7 +18,7 @@ class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluation
     Tests different input formats and scenarios.
     """
 
-    #region Expected flow inputs for each test
+    # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "response": data.LOCAL_CALLS_COHERENCE_EXPECTED_FLOW_RESPONSE,
     }
@@ -78,7 +78,7 @@ class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluation
     test_mcp_expected_flow_inputs = {
         "response": data.MCP_TCS_EXPECTED_FLOW_RESPONSE,
     }
-    #endregion
+    # endregion
 
     evaluator_type = FluencyEvaluator
 

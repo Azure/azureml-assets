@@ -18,7 +18,7 @@ class TestCoherenceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluati
     Tests different input formats and scenarios.
     """
 
-    #region Expected flow inputs for each test
+    # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "query": data.LOCAL_CALLS_QUERY,
         "response": data.LOCAL_CALLS_COHERENCE_EXPECTED_FLOW_RESPONSE,
@@ -93,6 +93,6 @@ class TestCoherenceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluati
         "query": data.MCP_QUERY,
         "response": data.MCP_TCS_EXPECTED_FLOW_RESPONSE,
     }
-    #endregion
+    # endregion
 
     evaluator_type = CoherenceEvaluator

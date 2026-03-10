@@ -21,7 +21,7 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
     Tests different input formats and scenarios.
     """
 
-    #region Expected flow inputs for each test
+    # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
         "response": data.LOCAL_CALLS_EXPECTED_FLOW_RESPONSE,
@@ -57,7 +57,7 @@ class TestToolOutputUtilizationEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest,
         "response": data.MCP_EXPECTED_FLOW_RESPONSE,
         "tool_definitions": data.MCP_TOU_EXPECTED_FLOW_TOOL_DEFINITIONS_STR,
     }
-    #endregion
+    # endregion
 
     evaluator_type = ToolOutputUtilizationEvaluator
 

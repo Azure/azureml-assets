@@ -20,7 +20,7 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
     Tests different input formats and scenarios.
     """
 
-    #region Expected flow inputs for each test
+    # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
         "tool_calls": data.LOCAL_CALLS_TIA_EXPECTED_FLOW_TOOL_CALLS,
@@ -56,7 +56,7 @@ class TestToolInputAccuracyEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, Bas
         "tool_calls": data.MCP_TIA_EXPECTED_FLOW_TOOL_CALLS,
         "tool_definitions": data.MCP_TOOL_DEFINITIONS,
     }
-    #endregion
+    # endregion
 
     evaluator_type = ToolInputAccuracyEvaluator
 

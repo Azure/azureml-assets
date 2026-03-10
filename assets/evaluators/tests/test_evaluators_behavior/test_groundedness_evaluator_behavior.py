@@ -20,7 +20,7 @@ class TestGroundednessEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvalu
     Tests different input formats and scenarios.
     """
 
-    #region Expected flow inputs for each test
+    # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "query": data.LOCAL_CALLS_GROUNDEDNESS_EXPECTED_FLOW_QUERY,
         "response": data.LOCAL_CALLS_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE,
@@ -56,7 +56,7 @@ class TestGroundednessEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvalu
         "response": data.MCP_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE,
         "context": data.GROUNDEDNESS_NO_CONTEXT,
     }
-    #endregion
+    # endregion
 
     evaluator_type = GroundednessEvaluator
 

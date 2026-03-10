@@ -25,7 +25,8 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
 
     Subclasses may override:
     - expected_result_fields: list of expected fields in evaluation results
-    - check_for_unsupported_tools: whether to check for unsupported tool types in the conversation (default False since many tool types not supported by Tool Call Accuracy Evaluator)
+    - check_for_unsupported_tools: whether to check for unsupported tool types in the
+      conversation (default False since many tool types not supported by Tool Call Accuracy Evaluator)
     """
 
     use_mocking = True
@@ -34,7 +35,7 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
 
     is_tool_definition_required: bool = False
 
-    #region Expected flow inputs for each test
+    #  region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {}
 
     test_code_interpreter_expected_flow_inputs = {}
@@ -66,7 +67,7 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
     test_kb_mcp_expected_flow_inputs = {}
 
     test_mcp_expected_flow_inputs = {}
-    #endregion
+    #  endregion
 
     def _run_tool_type_test(
         self,
@@ -80,9 +81,12 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
 
         Args:
             test_label: Descriptive label for the test.
-            evaluation_inputs: Dictionary containing query, response, tool_definitions, and optionally tool_calls, context.
-            assert_type: Expected behavior (PASS, INVALID_VALUE, MISSING_FIELD, NOT_APPLICABLE).
-            expected_flow_inputs: Optional dictionary of expected inputs to the flow (query, tool_calls, tool_definitions).
+            evaluation_inputs: Dictionary containing query, response, tool_definitions,
+                and optionally tool_calls, context.
+            assert_type: Expected behavior (PASS, INVALID_VALUE, MISSING_FIELD,
+                NOT_APPLICABLE).
+            expected_flow_inputs: Optional dictionary of expected inputs to the flow
+                (query, tool_calls, tool_definitions).
 
         Returns:
             Dictionary containing the extracted result data.
@@ -285,7 +289,9 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
                 "response": data.COMPUTER_USE_RESPONSE,
                 "tool_definitions": data.COMPUTER_USE_TOOL_DEFINITIONS,
             },
-            assert_type=self.AssertType.MISSING_FIELD if self.is_tool_definition_required else self.AssertType.INVALID_VALUE,
+            assert_type=(
+                self.AssertType.MISSING_FIELD if self.is_tool_definition_required else self.AssertType.INVALID_VALUE
+            ),
             expected_flow_inputs=self.test_computer_use_expected_flow_inputs,
         )
 

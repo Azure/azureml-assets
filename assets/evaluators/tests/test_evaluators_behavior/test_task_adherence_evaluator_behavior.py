@@ -20,7 +20,7 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
     Tests different input formats and scenarios.
     """
 
-    #region Expected flow inputs for each test
+    # region Expected flow inputs for each test
     test_function_tool_local_calls_expected_flow_inputs = {
         "system_message": "",
         "query": data.LOCAL_CALLS_EXPECTED_FLOW_QUERY,
@@ -125,7 +125,7 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
         "response": data.MCP_EXPECTED_FLOW_RESPONSE,
         "tool_calls": "",
     }
-    #endregion
+    # endregion
 
     evaluator_type = TaskAdherenceEvaluator
 
