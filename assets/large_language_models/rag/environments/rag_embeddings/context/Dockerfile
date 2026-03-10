@@ -22,7 +22,8 @@ RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
 # Sentence Transformers CPU only install
 RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cpu && \
     pip install --no-cache-dir transformers && \
-    pip install --no-cache-dir tqdm numpy scikit-learn scipy nltk sentencepiece pillow && \
+    pip install --no-cache-dir tqdm numpy scikit-learn scipy nltk sentencepiece && \
+    pip install --no-cache-dir --upgrade pillow && \
     pip install --no-cache-dir sentence-transformers --no-deps
 
 RUN set -eux; \
