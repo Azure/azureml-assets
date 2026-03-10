@@ -10,7 +10,7 @@ dependencies:
 - py-xgboost=1.7.6
 - 'psutil>=5.2.2,<6.0.0'
 - tqdm
-- setuptools=78.1.1
+- setuptools=82.0.1
 - wheel=0.44.0
 - pip:
   - inference-schema

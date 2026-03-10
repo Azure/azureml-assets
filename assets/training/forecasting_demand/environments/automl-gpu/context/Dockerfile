@@ -29,7 +29,22 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
-        libarchive13 && \
+        libarchive13 \
+        libglib2.0-0 \
+        libglib2.0-data \
+        gnupg \
+        gnupg-utils \
+        gnupg2 \
+        gnupg-l10n \
+        gpg \
+        gpg-agent \
+        gpg-wks-client \
+        gpg-wks-server \
+        gpgconf \
+        gpgsm \
+        gpgv \
+        dirmngr \
+        libtasn1-6 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
@@ -41,7 +56,8 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # dummy number to change when needing to force rebuild without changing the definition: 2
 
 # Address vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'requests==2.32.5' 'urllib3>=2.6.3' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==11.3.0' || true
+RUN pip install --upgrade --no-cache-dir 'requests==2.32.5' 'urllib3>=2.6.3' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==11.3.0' 'bokeh==3.8.2' 'Werkzeug>=3.1.5' 'azure-core>=1.38.0' || true
+RUN /opt/miniconda/bin/pip install --upgrade 'setuptools>=82.0.1' 'urllib3>=2.6.3' 'Werkzeug>=3.1.5' 'azure-core>=1.38.0' || true
 
 # Avoid ImportError: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.29' not found
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$AZUREML_CONDA_ENVIRONMENT_PATH/lib

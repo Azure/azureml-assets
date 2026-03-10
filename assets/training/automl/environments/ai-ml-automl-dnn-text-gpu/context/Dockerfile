@@ -85,7 +85,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
-    setuptools=78.1.1 \
+    setuptools=82.0.1 \
     wheel=0.44.0 \
     scipy=1.10.1 \
     pybind11=2.10.1 \

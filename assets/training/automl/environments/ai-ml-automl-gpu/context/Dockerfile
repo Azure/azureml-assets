@@ -34,7 +34,22 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
-        libarchive13
+        libarchive13 \
+        libglib2.0-0 \
+        libglib2.0-data \
+        gnupg \
+        gnupg-utils \
+        gnupg2 \
+        gnupg-l10n \
+        gpg \
+        gpg-agent \
+        gpg-wks-client \
+        gpg-wks-server \
+        gpgconf \
+        gpgsm \
+        gpgv \
+        dirmngr \
+        libtasn1-6
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -68,7 +83,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=78.1.1 \
+    setuptools=82.0.1 \
     wheel=0.44.0 \
     scipy=1.10.1 \
     'psutil>5.0.0,<6.0.0' \
@@ -106,8 +121,8 @@ RUN pip install \
                 # end pypi dependencies
 
 # Upgrade requests, urllib3, pip, starlette, bokeh, PyNaCl in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'Werkzeug>=3.1.5' 'azure-core>=1.38.0'
+RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'Werkzeug>=3.1.5' 'azure-core>=1.38.0'
 
 RUN rm -rf /opt/miniconda/pkgs/
 

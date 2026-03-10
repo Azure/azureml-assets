@@ -47,7 +47,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     pandas~=1.5.3 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=78.1.1 \
+    setuptools=82.0.1 \
     wheel=0.44.0 \
     pytorch=2.8.0 \
     scipy=1.10.1 \

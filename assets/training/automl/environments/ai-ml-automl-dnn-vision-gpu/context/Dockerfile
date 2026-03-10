@@ -42,7 +42,20 @@ RUN apt-get update && \
         libpam0g \
         libpam-modules-bin \
         libpam-modules \
-        libpam-runtime && \
+        libpam-runtime \
+        gnupg \
+        gnupg-utils \
+        gnupg2 \
+        gnupg-l10n \
+        gpg \
+        gpg-agent \
+        gpg-wks-client \
+        gpg-wks-server \
+        gpgconf \
+        gpgsm \
+        gpgv \
+        dirmngr \
+        libtasn1-6 && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -89,7 +102,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     shap=0.39.0 \
     llvmlite=0.39.1 \
     scipy=1.10.1 \
-    setuptools=78.1.1 \
+    setuptools=82.0.1 \
     wheel=0.44.0 \
     tbb=2021.1.1 \
     # end conda dependencies
@@ -128,9 +141,9 @@ RUN pip install cryptography>=45.0.7 \
                 aiohttp>=3.13.3
 
 # Patch for pillow, requests, urllib3, bokeh, PyNaCl vulnerability and update pip/starlette
-RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'filelock>=3.20.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'azure-core>=1.38.0'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'aiohttp>=3.13.3' 'azure-core>=1.38.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'filelock>=3.20.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'aiohttp>=3.13.3' 'azure-core>=1.38.0'
 
 # Upgrade torch and torchvision to fix vulnerabilities
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
