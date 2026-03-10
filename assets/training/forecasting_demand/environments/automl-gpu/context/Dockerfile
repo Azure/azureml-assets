@@ -41,7 +41,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # dummy number to change when needing to force rebuild without changing the definition: 2
 
 # Address vulnerabilities
-RUN pip install --upgrade --no-cache-dir 'requests==2.32.5' 'urllib3>=2.6.3' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==11.3.0' || true
+RUN pip install --upgrade --no-cache-dir 'requests==2.32.5' 'urllib3>=2.6.3' 'torch==2.8.0' 'torchvision==0.23.0' 'pillow==12.1.1' 'Werkzeug>=3.1.5' 'azure-core>=1.38.0' 'bokeh>=3.8.2' 'cryptography>=46.0.5' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'pyasn1>=0.6.2' 'pip>=26.0' 'wheel>=0.46.2' || true
 
 # Avoid ImportError: /lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.29' not found
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$AZUREML_CONDA_ENVIRONMENT_PATH/lib

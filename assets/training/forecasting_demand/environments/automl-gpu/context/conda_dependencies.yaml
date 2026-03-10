@@ -4,14 +4,14 @@ channels:
 - anaconda
 dependencies:
 - python=3.10
-- pip=25.3
+- pip=26.0
 - numpy~=1.23.5
 - pandas~=1.5.3
 - py-xgboost=1.7.6
 - 'psutil>=5.2.2,<6.0.0'
 - tqdm
 - setuptools=78.1.1
-- wheel=0.44.0
+- wheel=0.46.2
 - pip:
   - inference-schema
   - azureml-core=={{latest-pypi-version}}

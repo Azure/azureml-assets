@@ -78,13 +78,13 @@ RUN pip install \
     'requests==2.32.5' \
     'urllib3>=2.6.3' \
     'mlflow-skinny==2.15.1' \
-    'filelock>=3.20.1'
+    'filelock>=3.20.3'
 
 # Patch for Pillow vulnerability
-RUN pip install --upgrade 'pillow==12.0.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
+RUN pip install --upgrade 'pillow==12.1.1'
+RUN /opt/conda/bin/pip install --upgrade 'pillow==12.1.1' || true
 
 # Fix security vulnerabilities
-RUN pip install --upgrade 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'distributed>=2026.1.0'
 
 RUN pip list

@@ -32,3 +32,7 @@ RUN apt-get install -y openssh-server openssh-client
 
 # vulnerability in base conda env
 RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+
+# Fix security vulnerabilities
+RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
+RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
