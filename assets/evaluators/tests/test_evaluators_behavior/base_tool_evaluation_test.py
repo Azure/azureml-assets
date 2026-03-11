@@ -206,7 +206,7 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
     # --- SharePoint Grounding ---
 
     def test_sharepoint_grounding(self):
-        """SharePoint grounding tool with remote_tool type - not supported."""
+        """Test SharePoint grounding tool with remote_tool type - not supported."""
         self._run_tool_type_test(
             test_label="SharePoint Grounding",
             evaluation_inputs={
@@ -236,7 +236,7 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
     # --- OpenAPI ---
 
     def test_openapi(self):
-        """OpenAPI tool with openapi_call content type - invalid without 'functions' field."""
+        """Test OpenAPI tool with openapi_call content type - invalid without 'functions' field."""
         self._run_tool_type_test(
             test_label="OpenAPI",
             evaluation_inputs={
