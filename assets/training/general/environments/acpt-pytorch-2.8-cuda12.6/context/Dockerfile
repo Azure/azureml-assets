@@ -32,3 +32,7 @@ RUN apt-get install -y openssh-server openssh-client
 
 # vulnerability in base conda env
 RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+
+# Fix jaraco.context vulnerability (GHSA-58pv-8j8x-9vj2) by upgrading setuptools
+RUN pip install --upgrade 'setuptools>=82.0.1'
+RUN conda run -n base python -m pip install --upgrade 'setuptools>=82.0.1'

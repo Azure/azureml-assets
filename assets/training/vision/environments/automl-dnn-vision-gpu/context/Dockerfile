@@ -52,6 +52,28 @@ RUN apt-get update && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 
+# Upgrade system packages for security vulnerabilities (USN-7946-1, USN-7954-1, USN-7951-1)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        libpython3.10-stdlib \
+        python3.10 \
+        libpython3.10-minimal \
+        python3.10-minimal \
+        gnupg \
+        gnupg-utils \
+        gnupg2 \
+        gnupg-l10n \
+        gpg \
+        gpg-agent \
+        gpg-wks-client \
+        gpg-wks-server \
+        gpgconf \
+        gpgsm \
+        gpgv \
+        dirmngr \
+        libtasn1-6 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Upgrade sudo to patch known vulnerability
 RUN apt-get update && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
@@ -95,6 +117,11 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20
 RUN pip install --upgrade pillow==12.0.0
 RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 || true
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 || true
+
+# Patch aiohttp, bokeh, azure-core, PyNaCl vulnerabilities
+RUN pip install --upgrade 'aiohttp>=3.13.3' 'bokeh==3.8.2' 'azure-core>=1.38.0' 'PyNaCl==1.6.2'
+RUN /opt/conda/bin/pip install --upgrade 'aiohttp>=3.13.3' 'bokeh==3.8.2' 'azure-core>=1.38.0' 'PyNaCl==1.6.2' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'aiohttp>=3.13.3' 'bokeh==3.8.2' 'azure-core>=1.38.0' 'PyNaCl==1.6.2' || true
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
