@@ -14,12 +14,12 @@ azureml-telemetry==1.60.0
 pyarrow==14.0.2
 GitPython==3.1.45
 paramiko==3.5.1
-cryptography==44.0.2
+cryptography==46.0.5
 ####
 #torch==2.8.0
 #torchaudio==2.8.0
 setuptools==80.0.0
-Pillow==10.3.0
+Pillow==12.1.1
 gunicorn==23.0.0
 onnx==1.17.0 
 idna==3.10

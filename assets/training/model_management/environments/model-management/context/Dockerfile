@@ -6,9 +6,9 @@ RUN apt-get update && apt-get upgrade -y && \
     curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
     apt-get install git-lfs -y
 
-RUN wget https://go.dev/dl/go1.24.12.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.24.12.linux-amd64.tar.gz && \
-    rm go1.24.12.linux-amd64.tar.gz
+RUN wget https://go.dev/dl/go1.24.13.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.24.13.linux-amd64.tar.gz && \
+    rm go1.24.13.linux-amd64.tar.gz
 
 ENV PATH="/usr/local/go/bin:$PATH"
 
@@ -16,11 +16,8 @@ COPY requirements.txt .
 
 # Clean conda cache and force reinstall pip to overwrite metadata
 RUN conda clean --all -y
-RUN conda install -n base -c conda-forge pip=25.3 "setuptools>=80.0.0" "wheel>=0.46.2" --force-reinstall -y
-RUN conda install -n ptca -c conda-forge pip=25.3 "setuptools>=80.0.0" "wheel>=0.46.2" --force-reinstall -y || true
 
-# Force upgrade setuptools and wheel in ptca environment via pip
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade --force-reinstall "setuptools>=80.0.0" "wheel>=0.46.2"
+RUN conda install -n ptca -c conda-forge "pip>=26.0" "wheel>=0.46.2" --force-reinstall -y
 
 RUN rm -rf /opt/conda/lib/python3.13 || true
 
