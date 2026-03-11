@@ -34,12 +34,15 @@ def test_load():
         if env_update.name == "environment1":
             assert update.all_versions is True
             assert update.versions is None
+            assert update.update_on_create.enabled is True
+            assert update.update_on_create.clouds == ["public"]
             assert update.tags.add == {"AddMe": "Value"}
             assert update.tags.delete == ["DeleteMe"]
             assert update.stage == "Active"
         elif env_update.name == "environment2":
             assert update.all_versions is False
             assert update.versions == ["1", "2"]
+            assert update.update_on_create is None
             assert update.tags.replace == {"ReplaceMe": "Value"}
             assert update.stage == "Archived"
 
