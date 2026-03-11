@@ -23,4 +23,4 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda clean -a -y
 
 # Security vulnerability fixes
-RUN conda run -p $CONDA_PREFIX pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'wheel>=0.46.2' 'pip>=26.0'
+RUN conda run -p $CONDA_PREFIX pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'wheel>=0.46.2' 'pip>=26.0' 'distributed>=2026.1.0'

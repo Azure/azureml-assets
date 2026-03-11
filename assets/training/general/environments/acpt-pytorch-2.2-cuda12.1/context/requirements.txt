@@ -15,7 +15,6 @@ urllib3==2.6.3
 requests==2.32.5
 pillow==12.1.1
 transformers==4.54.1
-cryptography>=46.0.5
 aiohttp>=3.12.14
 py-spy==0.3.12
 debugpy~=1.6.3

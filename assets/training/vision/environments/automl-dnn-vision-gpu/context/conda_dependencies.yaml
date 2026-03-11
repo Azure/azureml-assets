@@ -14,7 +14,6 @@ dependencies:
 - wheel=0.46.2
 - tbb=2021.1.1
 - pip:
-  - cryptography>=46.0.5
   - pyarrow-hotfix>=0.5
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-dataset-runtime=={{latest-pypi-version}}
