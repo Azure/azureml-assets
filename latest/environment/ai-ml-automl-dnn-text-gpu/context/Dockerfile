@@ -101,7 +101,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # and earlier versions of tokenizers cause log spam with transformers==4.16.0.
 RUN pip install --no-cache-dir \
                 # begin pypi dependencies
-                azureml-core==1.61.0.post1 \
+                azureml-core==1.61.0.post2 \
                 azureml-mlflow==1.62.0 \
                 azureml-automl-core==1.62.0 \
                 azureml-automl-runtime==1.62.0 \
