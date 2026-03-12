@@ -79,3 +79,7 @@ EXPOSE 5001 8883 8888
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
+
+# Fix Vulnerability 
+# TODO: latest version of azureml-mlflow ~ 1.62.0 depends on cryptography<46.0.0
+RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
