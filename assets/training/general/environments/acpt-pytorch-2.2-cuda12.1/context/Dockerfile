@@ -2,8 +2,9 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest
 
 # Upgrade base conda packages
 RUN conda install -n base -c conda-forge pip=26.0 -y
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
-RUN conda list -n base
+# These are from base image adding till we get new base image tag
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 
+
 
 # Upgrade ptca environment conda packages
 RUN conda install -c conda-forge pip=26.0 -y && \
@@ -12,7 +13,7 @@ RUN conda install -c conda-forge pip=26.0 -y && \
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-RUN conda list
+
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
@@ -78,7 +79,3 @@ EXPOSE 5001 8883 8888
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
-
-# Fix security vulnerabilities
-RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'pyasn1>=0.6.2'
-RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'pyasn1>=0.6.2'

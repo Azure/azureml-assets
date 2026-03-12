@@ -27,3 +27,7 @@ py-cpuinfo==5.0.0
 torch-tb-profiler~=0.4.0
 starlette>=0.49.1
 filelock>=3.20.1
+wheel>=0.46.2
+cryptography>=46.0.5
+jaraco.context>=6.1.0
+protobuf>=6.33.5
