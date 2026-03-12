@@ -1,0 +1,9 @@
+type: evaluator
+spec: spec.yaml
+categories:
+- Evaluator
+test:
+  pytest:
+    enabled: true
+    tests_dir: ../../tests/test_evaluators_behavior/test_bbeh_evaluator_behavior.py
+    pip_requirements: ../tests/requirements.txt
