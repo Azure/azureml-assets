@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: qwen3-4b
-version: 2
+name: qwen3-vl-8b-instruct
+version: 1
 path: ./
 tags:
   foundryLocal: ""
