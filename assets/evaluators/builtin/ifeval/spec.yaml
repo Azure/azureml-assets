@@ -9,6 +9,7 @@ categories: ["quality"]
 tags:
   provider: "Microsoft"
   enable_evaluation_ui: false
+  scenario: "benchmark"
 initParameterSchema:
   type: "object"
   properties: {}
