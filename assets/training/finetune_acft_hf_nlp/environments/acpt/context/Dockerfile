@@ -17,7 +17,7 @@ RUN pip install mlflow==3.5.0
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
-RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
+RUN pip install nltk==3.9.3 # Pinning to fix the unsafe deserialization vulnerability
 
 # vulnerabilities, cannot be added to requirements.txt as it causes pip dependency resolver to break
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
