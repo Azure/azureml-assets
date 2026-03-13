@@ -13,7 +13,13 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
+# Security fixes: USN-8005-1 (glibc), USN-8018-1 (python), USN-8017-1 (glib),
+# USN-8022-1 (expat), USN-8025-1 (.NET), USN-8039-1 (libpng), USN-8038-1 (nginx),
+# USN-8043-1 (gnutls), USN-8044-1 (alsa-lib), USN-8062-1 (curl), USN-7946-1 (gnupg),
+# USN-7951-1 (python), USN-7954-1 (libtasn1), USN-7963-1 (libpng), USN-7974-1 (libxml2),
+# USN-7980-1 (openssl)
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -52,9 +58,9 @@ RUN apt-get update && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 
-# Upgrade sudo to patch known vulnerability
+# Upgrade sudo
 RUN apt-get update && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
+    apt-get install -y sudo && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
@@ -82,19 +88,51 @@ RUN pip install --no-cache-dir \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
 
 # vulnearbility fix
-RUN pip install pyarrow==14.0.2
-RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
-RUN pip install --upgrade urllib3>=2.6.3
+RUN pip install --no-cache-dir pyarrow==14.0.2
+RUN pip install --upgrade --no-cache-dir torch==2.8.0 torchvision==0.23.0
 
-# Update conda base and ptca envs
-RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20.1|| true
+# Security vulnerability fixes for main conda env:
+# GHSA-58pv-8j8x-9vj2 jaraco.context (vendored in setuptools)
+# GHSA-8rrh-rw8j-w5fx wheel (vendored in setuptools + direct)
+# GHSA-r6ph-v2qm-q3c2 cryptography
+# GHSA-cfh3-3jmp-rvhc pillow
+# GHSA-c336-7962-wfj2 distributed (transitive via dask)
+# GHSA-793v-589g-574v bokeh
+# GHSA-6vgw-5pg2-w6jp pip
+# GHSA-38jv-5279-wg99 urllib3
+RUN pip install --upgrade --no-cache-dir \
+    'setuptools>=82.0.1' \
+    'wheel>=0.46.2' \
+    'cryptography>=46.0.5' \
+    'pillow>=12.1.1' \
+    'distributed>=2026.1.0' \
+    'dask>=2026.1.0' \
+    'bokeh>=3.8.2' \
+    'pip>=26.0' \
+    'urllib3>=2.6.3'
 
-# Patch pillow vulnerability
-RUN pip install --upgrade pillow==12.0.0
-RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 || true
+# Security fixes for base conda env:
+# GHSA-r6ph-v2qm-q3c2 cryptography, GHSA-8rrh-rw8j-w5fx wheel,
+# GHSA-cfh3-3jmp-rvhc pillow, GHSA-69f9/6mq8/mqqc/fh55/6jhg/jj3x/g84x/54jq aiohttp
+# GHSA-58pv-8j8x-9vj2 jaraco.context (vendored in setuptools)
+RUN /opt/conda/bin/pip install --upgrade --no-cache-dir \
+    'cryptography>=46.0.5' \
+    'wheel>=0.46.2' \
+    'pillow>=12.1.1' \
+    'aiohttp>=3.13.3' \
+    'urllib3>=2.6.3' || true
+RUN /opt/conda/bin/python -m pip install --upgrade --no-cache-dir 'setuptools>=82.0.1' || true
+
+# Security fixes for ptca conda env:
+# GHSA-58pv-8j8x-9vj2 jaraco.context (vendored in setuptools),
+# GHSA-8rrh-rw8j-w5fx wheel, GHSA-cfh3-3jmp-rvhc pillow
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir \
+    'wheel>=0.46.2' \
+    'pillow>=12.1.1' \
+    'urllib3>=2.6.3' \
+    'filelock>=3.20.3' || true
+RUN /opt/conda/envs/ptca/bin/python -m pip install --upgrade --no-cache-dir 'setuptools>=82.0.1' || true
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir torch==2.8.0 torchvision==0.23.0 || true
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
