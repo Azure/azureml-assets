@@ -99,8 +99,6 @@ jobs:
       - setup
       - check-execution-context
     environment: Testing
-    env:
-      timeout_minutes: "120"
     strategy:
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
       fail-fast: false
