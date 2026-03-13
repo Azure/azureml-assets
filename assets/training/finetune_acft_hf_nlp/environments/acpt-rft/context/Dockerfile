@@ -33,7 +33,7 @@ RUN apt-get update && \
         util-linux \
         libpcre2-8-0 \
         grep \
-        gzip || true && \
+        gzip && \
     apt-get autoremove -y && \
     apt-get autoclean && \
     apt-get clean && \

@@ -5,7 +5,7 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade linux-headers-5.15.0-163-generic=5.15.0-163.173 linux-headers-5.15.0-163=5.15.0-163.173 linux-libc-dev=5.15.0-163.173 || \
     apt-get install -y --only-upgrade linux-headers-generic linux-libc-dev && \
     apt-get install -y --only-upgrade git tar binutils binutils-common binutils-x86-64-linux-gnu libbinutils wget && \
-    apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null || true && \
+    apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN conda run -n base python -m pip install --upgrade pip==26.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
 COPY requirements.txt .
