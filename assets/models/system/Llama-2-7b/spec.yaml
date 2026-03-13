@@ -13,7 +13,7 @@ properties:
   finetune-recommended-sku: Standard_ND40rs_v2, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification, text-generation
   azureml.copyRegistryFilesToWorkspace: true
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   baseModelWeightsVersion: 1.0
   baseWeightsId: Llama-2-7b
 
@@ -29,8 +29,8 @@ tags:
   FinetuneRetirementDate: '2025-06-30'
   hiddenlayerscanned: ""
   training_datasets: Publicly available sources
-  maas-inference: true
-  maas-finetuning: false
+  maas-inference: "true"
+  maas-finetuning: "True"
   SharedComputeCapacityEnabled: ""
   finetune_compute_allow_list:
     - Standard_ND40rs_v2

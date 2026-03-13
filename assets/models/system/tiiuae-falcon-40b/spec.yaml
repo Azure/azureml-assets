@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: tiiuae-falcon-40b
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 3d7c5902f1dc9da830979a826cd96114b3ba4ec1
   datasets: tiiuae/falcon-refinedweb
   languages: en, de, es, fr
