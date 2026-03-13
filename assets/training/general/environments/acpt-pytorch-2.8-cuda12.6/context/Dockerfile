@@ -1,5 +1,12 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# Upgrade pip, setuptools, wheel in base conda env to fix:
+# GHSA-6vgw-5pg2-w6jp (pip), GHSA-58pv-8j8x-9vj2 (jaraco.context via setuptools), GHSA-8rrh-rw8j-w5fx (wheel)
+RUN conda run -n base python -m pip install --upgrade "pip>=26.0" "setuptools>=82.0.1" "wheel>=0.46.2"
+
+# Upgrade pip, setuptools, wheel in active conda env
+RUN pip install --upgrade "pip>=26.0" "setuptools>=82.0.1" "wheel>=0.46.2"
+
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
@@ -7,6 +14,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -31,4 +39,4 @@ RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 "cryptography>=46.0.5" "protobuf>=6.33.5"

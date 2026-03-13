@@ -11,7 +11,7 @@ regex
 pybind11
 urllib3>=2.6.0
 requests
-pillow
+pillow>=12.1.1
 transformers
 aiohttp>=3.12.14
 py-spy
@@ -24,3 +24,5 @@ tqdm
 py-cpuinfo
 torch-tb-profiler
 filelock>=3.20.1
+cryptography>=46.0.5
+protobuf>=6.33.5
