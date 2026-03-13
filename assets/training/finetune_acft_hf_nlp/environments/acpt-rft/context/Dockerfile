@@ -76,7 +76,13 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # protobuf is a transitive dep of vllm; parents use loose floors (>=6.30.0), cannot force 6.33.5
 # azure-core is a transitive dep of azureml-acft-common-components; parent requires >=1.31.0, cannot force 1.38.0
 # pyasn1 is a transitive dep of mlflow; parent requires >=0.1.3, cannot force 0.6.2
-RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5 jaraco.context==6.1.0
+# pillow is a transitive dep of sglang (no version constraint) and vllm (no version constraint) and torchvision (>=5.3.0);
+#   latest sglang (0.5.9) and vllm (0.17.0) still use no version constraint so upgrading parents does not fix the vulnerability
+# python-multipart is a transitive dep of sglang (no version constraint) and vllm via fastapi[standard] (requires >=0.0.18);
+#   latest sglang (0.5.9) still uses no version constraint so upgrading parents does not fix the vulnerability
+# jaraco.context is vendored inside setuptools; setuptools>=82.0.0 already vendors the fixed 6.1.0;
+#   pinning standalone jaraco.context==6.1.1 ensures the vulnerability is fixed in all scanner detection paths
+RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5 "jaraco.context==6.1.1"
 # Fix vulnerabilities in base conda env
 RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0 cryptography==46.0.5
 # Clean up pip caches and old package files to prevent vulnerability detection
