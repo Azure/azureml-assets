@@ -53,7 +53,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scipy=1.10.1 \
     'psutil>=5.2.2,<6.0.0' \
     tqdm \
-    setuptools=78.1.1 \
+    setuptools=82.0.1 \
     wheel=0.46.2 \
     -c conda-forge -c pytorch -c anaconda && \
     # end conda dependencies
@@ -76,15 +76,10 @@ RUN pip install --no-cache-dir \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
-                'mlflow-skinny==2.15.1' \
                 'xgboost==1.5.2' \
-                'requests>=2.32.5' \
-                'certifi>=2025.11.12' \
-                'spacy==3.7.4' \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
-                'py-cpuinfo==5.0.0' \
-                "pillow>=12.1.1"
+                'py-cpuinfo==5.0.0' 
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -96,8 +91,8 @@ RUN pip install --no-cache-dir \
 
 # end pip install
 
-# Fix vulnerabilities - upgrade pip, starlette, urllib3, bokeh, PyNaCl
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5'
+# Fix vulnerabilities
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5'
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
