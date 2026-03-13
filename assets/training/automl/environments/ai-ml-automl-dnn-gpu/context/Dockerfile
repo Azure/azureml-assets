@@ -63,7 +63,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=78.1.1 \
+    setuptools=82.0.1 \
     wheel=0.46.2 \
     scipy=1.10.1 \
     joblib=1.2.0 \
@@ -115,16 +115,10 @@ RUN pip install \
 
 # Fix vulnerabilities
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-
-# If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0'
 
 # --- End Vulnerability Fixes ---
 
-# --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
-RUN pip install --upgrade 'numpy==1.23.5' 'h2>=4.3.0' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
