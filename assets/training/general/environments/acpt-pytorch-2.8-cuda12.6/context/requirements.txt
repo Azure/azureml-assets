@@ -11,7 +11,7 @@ regex
 pybind11
 urllib3>=2.6.0
 requests
-pillow
+pillow>=12.1.1
 transformers
 aiohttp>=3.12.14
 py-spy
