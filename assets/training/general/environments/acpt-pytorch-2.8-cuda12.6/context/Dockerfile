@@ -33,6 +33,13 @@ RUN apt-get install -y openssh-server openssh-client
 # vulnerability in base conda env
 RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
 
-# Fix security vulnerabilities
-RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
-RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
+# Fix OS-level security vulnerabilities:
+# curl (USN-8062-1), libxml2 (USN-7974-1), OpenSSL (USN-7980-1),
+# glibc (USN-8005-1), Python (USN-8018-1), GLib (USN-8017-1),
+# Expat (USN-8022-1), .NET (USN-8025-1), libpng (USN-8039-1),
+# nginx (USN-8038-1), GnuTLS (USN-8043-1), alsa-lib (USN-8044-1)
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Fix pip security vulnerabilities
+RUN pip install --upgrade --no-cache-dir 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
