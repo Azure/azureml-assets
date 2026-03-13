@@ -1,6 +1,6 @@
-## 1.17.0 (Unreleased)
+## 1.17.0 (2026-03-04)
 ### 🚀 New Features
-### 🐛 Bugs Fixed
+- [#4830](https://github.com/Azure/azureml-assets/pull/4830) Add update_on_create settings for asset version updates
 
 ## 1.16.102 (2026-01-23)
 ### 🚀 New Features

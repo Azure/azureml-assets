@@ -14,6 +14,7 @@ from typing import Callable, Awaitable, Dict, Any
 # Constants for success scores
 GRADERS_SUCCESS_SCORE = 5
 BINARY_SUCCESS_SCORE = 1
+BINARY_INVERSE_SUCCESS_SCORE = 0  # For evaluators where lower is better (e.g., deflection_rate)
 DEFAULT_EXPLANATION = "Success explanation"
 
 
@@ -29,7 +30,8 @@ class EvaluatorCategory(Enum):
     """Categories of evaluators based on their scoring system."""
 
     GRADERS = "graders"  # Uses 1-5 scale
-    BINARY = "binary"  # Uses 0-1 scale
+    BINARY = "binary"  # Uses 0-1 scale (higher is better)
+    BINARY_INVERSE = "binary_inverse"  # Uses 0-1 scale (lower is better)
 
 
 class EvaluatorOutputConfig:
@@ -39,7 +41,12 @@ class EvaluatorOutputConfig:
         """Initialize configuration with category and output type."""
         self.category = category
         self.output_type = output_type
-        self.score = GRADERS_SUCCESS_SCORE if category == EvaluatorCategory.GRADERS else BINARY_SUCCESS_SCORE
+        if category == EvaluatorCategory.GRADERS:
+            self.score = GRADERS_SUCCESS_SCORE
+        elif category == EvaluatorCategory.BINARY_INVERSE:
+            self.score = BINARY_INVERSE_SUCCESS_SCORE
+        else:
+            self.score = BINARY_SUCCESS_SCORE
 
 
 # Mapping of evaluator names to their output configurations
@@ -58,6 +65,8 @@ EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
     "tool_output_utilization": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
     "tool_selection": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
     "tool_call_success": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
+    "customer_satisfaction": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
+    "deflection_rate": EvaluatorOutputConfig(EvaluatorCategory.BINARY_INVERSE, OutputType.DICT),
 }
 
 

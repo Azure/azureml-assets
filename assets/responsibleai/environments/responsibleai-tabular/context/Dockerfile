@@ -17,7 +17,7 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 RUN conda list
 
-RUN pip install --pre 'azure-ai-ml>=1.26.3' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
+RUN pip install --pre 'azure-ai-ml>=1.26.3' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0' 'pandas<2.0.0'
 
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
 # score card rendering is using domonic only for the html elements composer which does not involve requests or urllib3
@@ -31,7 +31,8 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
 # Install azureml packages
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-rai-utils==0.0.6'
+                'azureml-rai-utils==0.0.7' \
+                'numpy<1.24.0' 'pandas<2.0.0'
 
 RUN pip install 'azureml-telemetry==1.60.0' --no-deps \
                 'applicationinsights'
@@ -40,8 +41,8 @@ RUN pip install 'azureml-telemetry==1.60.0' --no-deps \
 # so we install pyarrow in extra step to avoid conflict
 RUN pip install 'pyarrow>=14.0.1'
 
-# To resolve vulnerability issue regarding crytography
-RUN pip install 'cryptography>=43.0.1'
+# To resolve vulnerability issue regarding cryptography
+RUN pip install 'cryptography>=46.0.5'
 
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
@@ -54,6 +55,9 @@ RUN pip install 'tqdm>=4.66.3'
 # vulnerability of requests GHSA-9hjg-9r4m-mvj7
 RUN pip install 'requests>=2.32.4'
 RUN pip install 'mcp>=1.23.0'
+# vulnerability fixes for skops (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm)
+# --no-deps to prevent skops from upgrading numpy (skops>=0.13.0 requires numpy>=1.25 but we pin numpy<1.24)
+RUN pip install --no-deps 'skops>=0.13.0'
 
 # clean conda and pip caches
 RUN conda run -p $CONDA_PREFIX pip cache purge && \
