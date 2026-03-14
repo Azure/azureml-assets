@@ -32,18 +32,24 @@ RUN apt-get update && \
     openssl \
     libssl-dev \
     libssh-4 \
-    libpam-runtime && \
+    libpam-runtime \
+    libexpat1 \
+    libpng16-16 \
+    libgnutls30 \
+    libasound2 \
+    libasound2-data \
+    curl \
+    libcurl3-gnutls \
+    libcurl4 && \
     apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y || true
-RUN conda install pip -n ptca -y || true
+RUN conda install pip -n base -y
+RUN conda install pip -n ptca -y
 
-# This ensures necessary torch dependencies are already installed
-RUN pip install --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
@@ -53,10 +59,6 @@ RUN pip uninstall -y onnxruntime
 RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
-
-# Install numpy
-RUN pip install --upgrade "numpy==1.23.5"
-RUN /opt/conda/bin/pip install --upgrade "numpy==1.23.5" || true
 
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
@@ -70,21 +72,12 @@ RUN pip install \
     deepspeed~=0.15.1
 
 # Address vulnerabilities
-RUN /opt/conda/bin/pip install --upgrade 'urllib3>=2.6.3' || true
-RUN pip install \
-    'pyarrow==14.0.1' \
-    'aiohttp>=3.13.3' \
-    'idna==3.7' \
-    'requests==2.32.5' \
-    'urllib3>=2.6.3' \
-    'mlflow-skinny==2.15.1' \
-    'filelock>=3.20.1'
+# Patch for Pillow vulnerability : Direct dep (used by bokeh, torchvision) from base image
+RUN pip install --upgrade 'pillow>=12.1.1'
 
-# Patch for Pillow vulnerability
-RUN pip install --upgrade 'pillow==12.0.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
+# Fix security vulnerabilities (ptca env)
+RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3'
 
-# Fix security vulnerabilities
-RUN pip install --upgrade 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+# Fix security vulnerabilities (conda base env)
+RUN /opt/conda/bin/pip install --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1'
 
-RUN pip list
