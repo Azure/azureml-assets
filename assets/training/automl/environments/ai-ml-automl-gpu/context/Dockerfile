@@ -100,7 +100,6 @@ RUN pip install \
                 'prophet==1.1.4'
                 # end pypi dependencies
 
-# Upgrade requests, urllib3, pip, starlette, bokeh, PyNaCl in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
