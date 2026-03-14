@@ -63,7 +63,7 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=82.0.1 \
+    setuptools=78.1.1 \
     wheel=0.46.2 \
     scipy=1.10.1 \
     joblib=1.2.0 \

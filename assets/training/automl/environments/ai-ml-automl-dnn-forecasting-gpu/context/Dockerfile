@@ -53,7 +53,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scipy=1.10.1 \
     'psutil>=5.2.2,<6.0.0' \
     tqdm \
-    setuptools=82.0.1 \
+    setuptools=78.1.1 \
     wheel=0.46.2 \
     -c conda-forge -c pytorch -c anaconda && \
     # end conda dependencies
@@ -92,7 +92,7 @@ RUN pip install --no-cache-dir \
 # end pip install
 
 # Fix vulnerabilities
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1'
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
