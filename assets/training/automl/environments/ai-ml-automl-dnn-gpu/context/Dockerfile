@@ -63,7 +63,6 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=78.1.1 \
     wheel=0.46.2 \
     scipy=1.10.1 \
     joblib=1.2.0 \
@@ -106,16 +105,12 @@ RUN pip install \
                 'spacy==3.7.4' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
-                'psutil>5.0.0,<6.0.0' \
-                'requests>=2.32.5' \
-                'certifi>=2025.11.12' \
-                'cryptography>=46.0.5' \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
 # Fix vulnerabilities
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
 
 # --- End Vulnerability Fixes ---
 
@@ -130,8 +125,5 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 RUN rm -rf /opt/miniconda/pkgs/
-
-# Verify installation
-RUN conda list
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
