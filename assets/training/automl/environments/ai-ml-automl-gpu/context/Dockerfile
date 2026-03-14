@@ -68,7 +68,6 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=78.1.1 \
     wheel=0.46.2 \
     scipy=1.10.1 \
     'psutil>5.0.0,<6.0.0' \
@@ -95,19 +94,13 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.25.1' \
-                'mlflow-skinny==2.15.1' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
                 'cmdstanpy==1.0.4' \
-                'prophet==1.1.4' \
-                'requests==2.32.5' \
-                'certifi>=2025.11.12'
+                'prophet==1.1.4'
                 # end pypi dependencies
 
 # Upgrade requests, urllib3, pip, starlette, bokeh, PyNaCl in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5'
-RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.1.1' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-
-RUN rm -rf /opt/miniconda/pkgs/
+RUN pip install --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
