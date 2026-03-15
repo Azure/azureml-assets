@@ -31,5 +31,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 3798370686
-    vRamFootprintBytes: 3798370686
+    fileSizeBytes: 2897432380
+    vRamFootprintBytes: 2897432380

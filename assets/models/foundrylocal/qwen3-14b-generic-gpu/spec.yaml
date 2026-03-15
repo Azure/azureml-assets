@@ -31,5 +31,5 @@ variantInfo:
     quantization: ['GPTQ']
     device: 'gpu'
     executionProvider: 'WebGPUExecutionProvider'
-    fileSizeBytes: 10265371193
-    vRamFootprintBytes: 10265371193
+    fileSizeBytes: 10666451673
+    vRamFootprintBytes: 10666451673

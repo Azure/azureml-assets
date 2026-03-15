@@ -31,5 +31,5 @@ variantInfo:
     quantization: ['GPTQ']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 9601948769
-    vRamFootprintBytes: 9601948769
+    fileSizeBytes: 9993919743
+    vRamFootprintBytes: 9993919743

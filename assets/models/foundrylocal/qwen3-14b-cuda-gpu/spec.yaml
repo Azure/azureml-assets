@@ -31,5 +31,5 @@ variantInfo:
     quantization: ['GPTQ']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 9361890415
-    vRamFootprintBytes: 9361890415
+    fileSizeBytes: 9753861389
+    vRamFootprintBytes: 9753861389
