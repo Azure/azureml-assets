@@ -243,7 +243,7 @@ RUN conda run -p $CONDA_PREFIX
 RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --no-cache-dir --no-build-isolation horovod["tensorflow"]==0.28.1
 
 # Reinstall OpenSSL inside Conda
-RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
+RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 
 # Security vulnerability fixes
 RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'protobuf>=5.29.6'
