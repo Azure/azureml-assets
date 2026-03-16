@@ -40,9 +40,9 @@ dataset:
   source:
     provider: "mlregistry"
     sourceDatasetId: "azureml://registries/azureml/data/bigbenchhard/versions/1"
-    sourceFormat: "csv"
+    sourceFormat: "jsonl"
     properties:
-      file_name: "bigbenchhard.csv"
+      file_name: "bbh_samples_flat.jsonl"
       type: "uri_folder"
   datasetSchema:
     item:
