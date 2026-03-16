@@ -1,5 +1,5 @@
 azureml-acft-contrib-hf-nlp==0.0.86
-pillow==11.3.0
+pillow==12.1.1
 accelerate==1.6.0
 datasets==3.6.0
 deepspeed==0.17.1
@@ -9,4 +9,4 @@ vllm==0.14.1
 peft==0.15.2
 mlflow==3.5.0
 numpy==2.2.5
-filelock>=3.20.1
+filelock>=3.20.3

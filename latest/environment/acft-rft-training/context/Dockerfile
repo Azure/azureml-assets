@@ -33,7 +33,7 @@ RUN apt-get update && \
         util-linux \
         libpcre2-8-0 \
         grep \
-        gzip || true && \
+        gzip && \
     apt-get autoremove -y && \
     apt-get autoclean && \
     apt-get clean && \
@@ -56,7 +56,7 @@ RUN pip install --no-cache-dir sgl-kernel==0.3.16.post3
 RUN pip uninstall -y mlflow 
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 RUN pip install --no-cache-dir starlette==0.49.1
-RUN pip install --no-cache-dir "cryptography>=43.0.0"
+RUN pip install --no-cache-dir cryptography==46.0.5
 # Upgrade wandb to fix golang.org/x/crypto vulnerabilities (CVE-2025-47914, CVE-2025-58181)
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install --no-cache-dir triton==3.4.0
@@ -76,9 +76,9 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # protobuf is a transitive dep of vllm; parents use loose floors (>=6.30.0), cannot force 6.33.5
 # azure-core is a transitive dep of azureml-acft-common-components; parent requires >=1.31.0, cannot force 1.38.0
 # pyasn1 is a transitive dep of mlflow; parent requires >=0.1.3, cannot force 0.6.2
-RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2
+RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5 jaraco.context==6.1.0
 # Fix vulnerabilities in base conda env
-RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0
+RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0 cryptography==46.0.5
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults

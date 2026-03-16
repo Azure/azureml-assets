@@ -73,20 +73,20 @@ EXPOSE 5001 8883 8888
 ENV ENABLE_METADATA=true
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y || true
-RUN conda install pip -n ptca -y || true
+RUN conda install pip -n base -y 
+RUN conda install pip -n ptca -y
 
 # begin conda create
 # Create conda environment
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip=25.3 \
+    pip \
     numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
-    setuptools=78.1.1 \
-    wheel=0.44.0 \
+    setuptools \
+    wheel=0.46.2 \
     scipy=1.10.1 \
     pybind11=2.10.1 \
     # end conda dependencies
@@ -108,11 +108,7 @@ RUN pip install --no-cache-dir \
                 azureml-defaults==1.62.0 \
                 'azure-identity>=1.25.1' \
                 'sentencepiece==0.2.1' \
-                'mlflow-skinny==2.15.1' \
-                'cryptography>=45.0.7'\
-                'requests>=2.32.5' \
-                'certifi>=2025.11.12' \
-                'filelock>=3.20.1'
+                'filelock>=3.20.3'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -126,27 +122,14 @@ RUN pip install --no-cache-dir \
 # We should aim for this list to be empty with new and patched releases
 # by fixing dependencies in the base packages
 RUN pip list && \
-    pip install --upgrade 'starlette>=0.49.1' && \
     pip install pyarrow==14.0.2 \
                 accelerate==1.12.0 \
-                'transformers[sentencepiece,torch]==4.53.0' \
-                aiohttp==3.13.3
+                'transformers[sentencepiece,torch]==4.53.0'
 
-# Upgrade torch and torchvision
-RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0
 
 # Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3>=2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/conda/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3>=2.6.3'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'starlette>=0.49.1' 'urllib3>=2.6.3' 'filelock>=3.20.1'
-
-# Patch for pillow vulnerability
-RUN pip install --upgrade 'pillow==12.0.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0'
-
-RUN pip install --upgrade 'h2>=4.3.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3'
 
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

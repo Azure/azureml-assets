@@ -44,7 +44,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=25.3 conda-forge::tzdata -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 conda-forge::tzdata -y
 
 ###############################
 # Pre-Build LightGBM
@@ -57,19 +57,18 @@ RUN pip install --upgrade lightgbm==4.6.0
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # try updating pip for base env using conda
-RUN conda install pip -n base -y || true
+RUN conda install pip -n base -y
 
 # begin conda create
 # Create conda environment
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
-    pip=25.3 \
+    pip=26.0 \
     numpy~=1.23.5 \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=78.1.1 \
-    wheel=0.44.0 \
+    wheel=0.46.2 \
     scipy=1.10.1 \
     'psutil>5.0.0,<6.0.0' \
     cudatoolkit=10.0.130 \
@@ -95,20 +94,12 @@ RUN pip install \
                 azureml-dataset-runtime==1.62.0 \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'azure-identity>=1.25.1' \
-                'mlflow-skinny==2.15.1' \
                 'inference-schema' \
                 'py-cpuinfo==5.0.0' \
                 'cmdstanpy==1.0.4' \
-                'prophet==1.1.4' \
-                'cryptography>=45.0.7' \
-                'requests==2.32.5' \
-                'certifi>=2025.11.12'
+                'prophet==1.1.4'
                 # end pypi dependencies
 
-# Upgrade requests, urllib3, pip, starlette, bokeh, PyNaCl in all relevant Python environments to meet vulnerability requirements
-RUN pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/miniconda/bin/pip install --upgrade 'starlette>=0.49.1' 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-
-RUN rm -rf /opt/miniconda/pkgs/
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
