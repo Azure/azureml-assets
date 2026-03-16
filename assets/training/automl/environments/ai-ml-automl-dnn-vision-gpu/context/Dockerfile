@@ -36,7 +36,7 @@ RUN apt-get update && \
         libexpat1 \
         libglib2.0-0 \
         libgnutls30 \
-        libpng16-16 \
+        libpng16-16\
         libssh-4 \
         libxml2 \
         linux-libc-dev \
@@ -47,7 +47,7 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
+    apt-get install -y sudo && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
