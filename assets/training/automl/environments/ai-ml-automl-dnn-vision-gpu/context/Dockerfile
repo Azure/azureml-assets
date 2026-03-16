@@ -7,8 +7,6 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
@@ -32,7 +30,12 @@ RUN apt-get update && \
         libc6-dev \
         libc6 \
         libc-dev-bin \
+        libasound2 \
         libdpkg-perl \
+        libexpat1 \
+        libglib2.0-0 \
+        libgnutls30 \
+        libpng16-16 \
         libssh-4 \
         libxml2 \
         linux-libc-dev \
@@ -73,24 +76,24 @@ EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
 
-# try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y || true
-RUN conda install pip -n ptca -y || true
+# Update pip in base and ptca environments
+RUN conda install pip -n base -y
+RUN conda install pip -n ptca -y
 
 # Create conda environment
 # begin conda create
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip=25.3 \
+    pip \
     numpy~=1.23.5\
     libffi=3.4.4 \
     pycocotools=2.0.4 \
     shap=0.39.0 \
     llvmlite=0.39.1 \
     scipy=1.10.1 \
-    setuptools=78.1.1 \
-    wheel=0.44.0 \
+    setuptools=82.0.1 \
+    wheel=0.46.2 \
     tbb=2021.1.1 \
     # end conda dependencies
     -c conda-forge -c cerebis && \
@@ -111,9 +114,8 @@ RUN pip install --no-cache-dir \
                 azureml-defaults=={{latest-pypi-version}} \
                 azureml-interpret=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
-                'requests>=2.32.5' \
                 'azure-identity>=1.25.1' \
-                'filelock>=3.20.1'
+                'pillow==12.1.1'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -122,22 +124,17 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
                 
-# Update cryptography and pyarow for fixing vulnerability. Doing it  separately from pip install to avoid conflict with other packages
-RUN pip install cryptography>=45.0.7 \
-                pyarrow==14.0.2 \
-                aiohttp>=3.13.3
+# Vulnerability patches for conda environment
+RUN pip install --no-cache-dir --upgrade \
+                'cryptography>=46.0.5' \
+                'distributed>=2026.1.0' \
+                'mlflow-skinny>=2.16.0'
 
-# Patch for pillow, requests, urllib3, bokeh, PyNaCl vulnerability and update pip/starlette
-RUN pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow==12.0.0' 'starlette>=0.49.1' 'urllib3==2.6.3' 'filelock>=3.20.1' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
 
-# Upgrade torch and torchvision to fix vulnerabilities
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN pip install --upgrade --no-cache-dir 'torch==2.8.0' torchvision==0.23.0
-RUN pip install --upgrade 'mlflow-skinny==2.15.1' 'numpy~=1.23.5'
+# Vulnerability patches for ptca environment
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
+                'pillow==12.1.1' 'filelock>=3.20.3'
 
-RUN pip install --upgrade 'h2>=4.3.0'
 RUN rm -rf /opt/conda/pkgs/
 
 # end pip install

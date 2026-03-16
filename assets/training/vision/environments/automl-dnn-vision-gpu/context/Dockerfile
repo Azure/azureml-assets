@@ -66,8 +66,8 @@ EXPOSE 5001 8883 8888
 ENV ENABLE_METADATA=true
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y || true
-RUN conda install pip -n ptca -y || true
+RUN conda install pip -n base -y 
+RUN conda install pip -n ptca -y 
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -87,14 +87,17 @@ RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
 RUN pip install --upgrade urllib3>=2.6.3
 
 # Update conda base and ptca envs
-RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20.1|| true
+RUN /opt/conda/bin/pip install --upgrade requests urllib3 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20.3
 
 # Patch pillow vulnerability
-RUN pip install --upgrade pillow==12.0.0
-RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 || true
+RUN pip install --upgrade pillow==12.1.1
+RUN /opt/conda/bin/pip install --upgrade pillow==12.1.1 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.1.1 
+
+# Fix security vulnerabilities
+RUN pip install --upgrade 'aiohttp>=3.13.3' 'azure-core>=1.38.0' 'bokeh>=3.8.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=6.33.5' 'pyasn1>=0.6.2' 'pip>=26.0' 'cryptography>=46.0.5'
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
