@@ -1,5 +1,5 @@
 name: bigbenchhard
-version: 2
+version: 1
 type: data
 spec: spec.yaml
 extra_config: storage.yaml
