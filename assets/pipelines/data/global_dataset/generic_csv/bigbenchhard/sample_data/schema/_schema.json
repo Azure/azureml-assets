@@ -1,0 +1,40 @@
+{
+  "columnAttributes": [
+    {
+      "name": "input",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "target",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "task_name",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "regex",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    }
+  ]
+}
