@@ -17,17 +17,17 @@ RUN pip install mlflow==3.5.0
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
-RUN pip install nltk==3.9.1 # Pinning to fix the unsafe deserialization vulnerability
+RUN pip install nltk==3.9.3 # Pinning to fix the unsafe deserialization vulnerability
 
 # vulnerabilities, cannot be added to requirements.txt as it causes pip dependency resolver to break
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
 
 # protobuf is required by onnxruntime, mlflow
 # pyans1 is required by azureml-acft-accelerator, mlflow and both dont pin the libs hence upgrade
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 pyasn1==0.6.2
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 pyasn1==0.6.2 cryptography==46.0.5 pillow==12.1.1 python-multipart==0.0.22
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
