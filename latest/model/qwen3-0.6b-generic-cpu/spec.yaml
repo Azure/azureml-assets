@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-0.6b-generic-cpu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen3-0.6b
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\"\
     : \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\\
     n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\\
@@ -35,8 +35,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 1254524044
-    vRamFootprintBytes: 1254524044
+    fileSizeBytes: 622320383
+    vRamFootprintBytes: 622320383
 description: |-
   This model is an optimized version of Qwen3-0.6B to enable local inference on CPUs. This model uses KLD Gradient quantization.
 
