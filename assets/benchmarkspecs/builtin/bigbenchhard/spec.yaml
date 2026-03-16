@@ -22,9 +22,8 @@ evaluator:
     evaluator_version: "2"
     initialization_parameters:
       patterns:
-        - "(?i)ANSWER\\\\s*:\\\\s*({{ground_truth}})"
-        - "(?i)ANSWER\\\\s*:\\\\s*\\\\({{ground_truth}}\\\\)"
-        - "(?i)ANSWER\\s*:\\s*({{ground_truth}})(?:\\s|$|\\.|,)"
+        - "(?i)ANSWER\\s*:\\s*\\$?({{ground_truth}})(?:\\s|$|\\.|,)"
+        - "(?i)ANSWER\\s*:\\s*\\$?\\(?({{ground_truth}})\\)?(?:\\s|$|\\.|,)"
     data_mapping:
       ground_truth: "{{item.target}}"
       response: "{{sample.output_text}}"
