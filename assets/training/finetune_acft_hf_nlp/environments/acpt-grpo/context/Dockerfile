@@ -19,3 +19,4 @@ RUN rm -rf ~/.cache/pip
 
 # vulnerability in base conda env
 RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

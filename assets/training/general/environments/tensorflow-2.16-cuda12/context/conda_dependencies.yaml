@@ -22,7 +22,7 @@ dependencies:
   - tensorboard~=2.16.0
   - tensorflow[and-cuda]==2.16.2
   - tensorflow-datasets~=4.9.0
-  - keras==3.12.1
+  - keras==3.13.1
   - tf-keras==2.16.0
   - debugpy~=1.6.3
   - idna>=3.7
@@ -32,3 +32,4 @@ dependencies:
   - pillow==12.1.1
   - h2>=4.3.0
   - starlette>=0.49.1
+  - protobuf>=5.29.6

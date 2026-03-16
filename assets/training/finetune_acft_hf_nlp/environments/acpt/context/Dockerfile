@@ -31,3 +31,5 @@ RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
+

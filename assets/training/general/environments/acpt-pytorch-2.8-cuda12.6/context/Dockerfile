@@ -7,6 +7,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -34,5 +35,7 @@ RUN apt-get install -y openssh-server openssh-client
 RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
 
 # Fix security vulnerabilities
-RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
-RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5'
+RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1'
+RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1'
+
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

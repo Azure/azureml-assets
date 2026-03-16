@@ -91,7 +91,7 @@ RUN pip install --no-cache-dir \
 # end pip install
 
 # Fix vulnerabilities
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' 'bokeh>=3.8.2'
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

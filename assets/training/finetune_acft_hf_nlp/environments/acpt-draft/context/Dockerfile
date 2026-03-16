@@ -28,3 +28,4 @@ RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
 COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
 COPY parse /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/data/parse.py
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

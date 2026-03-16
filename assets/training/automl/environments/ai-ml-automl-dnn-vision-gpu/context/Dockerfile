@@ -11,6 +11,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --only-upgrade \
         libpython3.10-stdlib \
         python3.10 \
@@ -128,12 +129,20 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'distributed>=2026.1.0' \
-                'mlflow-skinny>=2.16.0'
+                'mlflow-skinny>=2.16.0' \ 
+                'bokeh>=3.8.2' \
+                'pillow==12.1.1'
+
+
 
 
 # Vulnerability patches for ptca environment
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-                'pillow==12.1.1' 'filelock>=3.20.3'
+                'pillow==12.1.1' 'filelock>=3.20.3' 'setuptools>=82.0.1' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'protobuf>=6.33.5'
+
+RUN conda run -n base pip install --no-cache-dir --upgrade \
+                'cryptography>=46.0.5' \
+                'wheel>=0.46.2'
 
 RUN rm -rf /opt/conda/pkgs/
 

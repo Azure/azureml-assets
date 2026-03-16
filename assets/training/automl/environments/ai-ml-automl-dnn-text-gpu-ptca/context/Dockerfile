@@ -76,7 +76,7 @@ RUN pip install \
 RUN pip install --upgrade 'pillow>=12.1.1'
 
 # Fix security vulnerabilities (ptca env)
-RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3'
+RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'bokeh>=3.8.2' 'protobuf>=6.33.5'
 
 # Fix security vulnerabilities (conda base env)
 RUN /opt/conda/bin/pip install --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1'
