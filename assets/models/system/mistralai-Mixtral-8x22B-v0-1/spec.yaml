@@ -20,4 +20,4 @@ tags:
   task: text-generation
   author: "Mistral AI"
   benchmark: "quality"
-version: 5
+version: 6

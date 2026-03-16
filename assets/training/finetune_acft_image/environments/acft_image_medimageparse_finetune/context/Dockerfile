@@ -12,7 +12,7 @@ RUN pip install -r requirements.txt
 RUN pip install --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
 
 # protobuf is a transitive dep of mlflow-skinny/onnx; parents require >=3.12.0, cannot force 6.33.5
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 pillow==12.1.1
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
