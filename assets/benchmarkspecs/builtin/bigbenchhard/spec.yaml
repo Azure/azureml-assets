@@ -22,8 +22,9 @@ evaluator:
     evaluator_version: "2"
     initialization_parameters:
       patterns:
-        - "(?i)ANSWER\\s*:\\s*\\$?({{ground_truth}})(?:\\s|$|\\.|,)"
-        - "(?i)ANSWER\\s*:\\s*\\$?\\(?({{ground_truth}})\\)?(?:\\s|$|\\.|,)"
+        - "(?i)ANSWER\\\\s*:\\\\s*({{ground_truth}})"
+        - "(?i)ANSWER\\\\s*:\\\\s*\\\\({{ground_truth}}\\\\)"
+        - "(?i)ANSWER\\s*:\\s*({{ground_truth}})(?:\\s|$|\\.|,)"
     data_mapping:
       ground_truth: "{{item.target}}"
       response: "{{sample.output_text}}"
@@ -31,7 +32,7 @@ evaluator:
 dataset:
   datasetName: "bigbenchhard"
   datasetType: "oss"
-  recordCount: "934"
+  recordCount: "6511"
   license: "MIT"
   properties:
     domain: "reasoning"
@@ -39,10 +40,10 @@ dataset:
     dataset_source: "https://github.com/suzgunmirac/BIG-Bench-Hard"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/bigbenchhard/versions/2"
-    sourceFormat: "jsonl"
+    sourceDatasetId: "azureml://registries/azureml/data/bigbenchhard/versions/1"
+    sourceFormat: "csv"
     properties:
-      file_name: "bbh_samples_flat.jsonl"
+      file_name: "bigbenchhard.csv"
       type: "uri_folder"
   datasetSchema:
     item:
@@ -53,6 +54,4 @@ dataset:
         target:
           type: "string"
         task_name:
-          type: "string"
-        regex:
           type: "string"
