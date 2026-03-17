@@ -100,6 +100,7 @@ RUN pip install \
                 'prophet==1.1.4'
                 # end pypi dependencies
 
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+# bokeh 2.4.3 has CSWSH vulnerability (GHSA-793v-589g-574v / CVE-2026-21883), upgrade to >=3.8.2
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' 'bokeh>=3.8.2'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
