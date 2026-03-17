@@ -138,11 +138,15 @@ RUN pip install --no-cache-dir --upgrade \
 
 # Vulnerability patches for ptca environment
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-                'pillow==12.1.1' 'filelock>=3.20.3' 'setuptools>=82.0.1' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'protobuf>=6.33.5'
+                'pillow==12.1.1' 'filelock>=3.20.3' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2'
+# setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'wheel>=0.46.2'
+# Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
+RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN rm -rf /opt/conda/pkgs/
 

@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest
 # Upgrade base conda packages
 RUN conda install -n base -c conda-forge pip=26.0 -y
 # These are from base image adding till we get new base image tag
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 
+RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 
 
 
 # Upgrade ptca environment conda packages
@@ -84,3 +84,4 @@ RUN apt-get install -y openssh-server openssh-client
 # Fix Vulnerability 
 # TODO: latest version of azureml-mlflow ~ 1.62.0 depends on cryptography<46.0.0
 RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
+RUN conda install -y -n base setuptools>=82.0.1

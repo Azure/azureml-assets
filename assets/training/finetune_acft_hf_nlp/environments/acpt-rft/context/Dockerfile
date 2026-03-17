@@ -84,6 +84,6 @@ RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
-
+RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
 

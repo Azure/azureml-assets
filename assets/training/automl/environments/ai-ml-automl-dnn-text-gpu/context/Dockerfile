@@ -13,6 +13,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --only-upgrade \
         libpython3.10-stdlib \
         python3.10 \
@@ -44,7 +45,7 @@ RUN apt-get update && \
         dpkg-dev \
         libssl-dev \
         libpam-runtime && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
+    apt-get install -y sudo && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -128,9 +129,14 @@ RUN pip list && \
 
 
 # Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3'
-
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 'bokeh>=3.8.2'
+# Vulnerability patches for ptca environment
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3' 'pillow>=12.1.1' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2'
+# Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in ptca/base setuptools
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
+# Base env: fix cryptography, wheel, and setuptools vendored vulns
+RUN conda run -n base pip install --no-cache-dir --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2'
+RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \

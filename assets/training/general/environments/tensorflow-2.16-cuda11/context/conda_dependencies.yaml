@@ -3,8 +3,8 @@ channels:
 - conda-forge
 - anaconda
 dependencies:
-- python=3.10
-- pip=22.3.1
+- python=3.11
+- pip
 - pandas=2.2.2
 - numpy=1.23.5
 - scipy~=1.14.0
