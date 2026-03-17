@@ -34,6 +34,6 @@ RUN pip install yapf==0.40.1
 
 # protobuf is a transitive dep of onnx/mlflow-skinny; parents use loose floors (>=3.12.0), cannot force 6.33.5
 RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pillow==12.1.1
-
+RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
 # Upgrade requests, urllib3, aiohttp in the system Python (3.13) for fixing vulnerability
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade requests==2.32.4 urllib3==2.6.3 aiohttp==3.13.3 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5

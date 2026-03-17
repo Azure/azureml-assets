@@ -20,6 +20,6 @@ RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mm
 # upgrade pip, wheel, setuptools vulnerabilities in ptca env
 # protobuf is required by azureml-acft-accelerator but it is not pinned hence upgrade
 RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 setuptools==82.0.0 cryptography==46.0.5 pillow==12.1.1
-
+RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5

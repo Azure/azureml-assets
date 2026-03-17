@@ -11,7 +11,9 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # protobuf is a transitive dep of mlflow-skinny/onnx; parents use loose floors (>=3.12.0), cannot force 6.33.5
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 cryptography==46.0.5 pillow==12.1.1 'setuptools>=82.0.1'
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 cryptography==46.0.5 pillow==12.1.1 'setuptools>=82.0.1' 'fastmcp>=2.14.0'
+
+RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
 
 # Upgrade requests, urllib3, aiohttp in the system Python (3.13) for fixing vulnerability
 RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.5
