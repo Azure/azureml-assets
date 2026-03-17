@@ -84,4 +84,6 @@ RUN apt-get install -y openssh-server openssh-client
 # Fix Vulnerability 
 # TODO: latest version of azureml-mlflow ~ 1.62.0 depends on cryptography<46.0.0
 RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
-RUN conda install -y -n base setuptools>=82.0.1
+# CVE-2026-23949 (jaraco.context) & CVE-2026-24049 (wheel) - upgrade setuptools in ptca and base envs
+RUN pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
+RUN conda run -n base pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
