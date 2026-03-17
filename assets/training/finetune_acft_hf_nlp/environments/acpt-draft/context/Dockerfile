@@ -23,8 +23,11 @@ RUN pip install xgrammar==0.1.27
 RUN pip install transformers==4.57.1
 # upgrade pip, wheel, setuptools to fix vulnerabilities
 RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 protobuf==6.33.5 pillow==12.1.1
+# Use pip instead of conda to install pip/wheel (avoid PackagesNotFoundError in default channels)
+RUN conda run -n ptca pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2'
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
 COPY eagle3 /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/eagle3.py
 COPY parse /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/data/parse.py
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

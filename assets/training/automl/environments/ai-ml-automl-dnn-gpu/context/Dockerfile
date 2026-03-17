@@ -63,12 +63,14 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    wheel=0.46.2 \
     scipy=1.10.1 \
     joblib=1.2.0 \
     ncurses=6.5 \
     # end conda dependencies
     -c conda-forge -c anaconda
+
+# Upgrade pip/setuptools/wheel via pip (avoid conda solver OOM)
+RUN pip install --upgrade 'pip>=26.0' 'setuptools>=82.0.1' 'wheel>=0.46.2'
 
 # Ensure future conda and pip calls are tied to this conda environment,
 # and we don't just get lucky from the implicit PATH ordering.
@@ -92,7 +94,6 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
-                'mlflow-skinny==2.15.1' \
                 'azure-identity>=1.25.1' --no-cache-dir
 
 RUN pip install \
@@ -110,7 +111,7 @@ RUN pip install \
 
 # Fix vulnerabilities
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' 'bokeh>=3.8.2'
 
 # --- End Vulnerability Fixes ---
 

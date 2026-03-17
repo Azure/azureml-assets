@@ -47,16 +47,17 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip=26.0 \
     numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
     scipy=1.10.1 \
     'psutil>=5.2.2,<6.0.0' \
-    wheel=0.46.2 \
     -c conda-forge -c pytorch -c anaconda && \
     # end conda dependencies
     conda clean -a -y
+
+# Upgrade pip/setuptools/wheel via pip (avoid conda solver OOM)
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade 'pip>=26.0' 'setuptools>=82.0.1' 'wheel>=0.46.2'
 # end conda create
 
 # begin pip install
@@ -91,7 +92,7 @@ RUN pip install --no-cache-dir \
 # end pip install
 
 # Fix vulnerabilities
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' 'bokeh>=3.8.2'
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

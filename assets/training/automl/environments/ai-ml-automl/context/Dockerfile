@@ -27,16 +27,17 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip=26.0 \
     py-cpuinfo=5.0.0\
     joblib=1.2.0 \
     setuptools-git \
-    setuptools=78.1.1 \
     'psutil>5.0.0,<6.0.0' \
     pytorch=2.8.0 \
     # end conda dependencies
     -c conda-forge -c pytorch -c anaconda -c nvidia && \
     conda clean -a -y
+
+# Upgrade pip/setuptools/wheel via pip (avoid conda solver OOM)
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade 'pip>=26.0' 'setuptools>=82.0.1' 'wheel>=0.46.2'
 # end conda create
 
 # begin pip install
@@ -57,7 +58,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 # TODO: replace the hard coded above by a referenceto azureml-train-automl[tabular]
-                'mlflow-skinny==2.15.1' \
+                'mlflow-skinny>=2.16.0' \
                 'xgboost==1.5.2' \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
@@ -69,5 +70,5 @@ RUN pip install \
 
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
-RUN pip install --upgrade 'pip>=26.0' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.6.3' 'bokeh==3.8.2' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'distributed>=2026.1.0'
+RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'distributed>=2026.1.0' 'bokeh>=3.8.2'
 # end pip ad-hoc

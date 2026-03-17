@@ -38,7 +38,6 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
     python=3.10 \
-    pip=26.0 \
     numpy~=1.23.5\
     py-cpuinfo=5.0.0 \
     joblib=1.2.0 \
@@ -47,8 +46,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     pandas~=1.5.3 \
     holidays=0.29 \
     setuptools-git \
-    setuptools=78.1.1 \
-    wheel=0.46.2 \
     pytorch=2.8.0 \
     scipy=1.10.1 \
     cudatoolkit=10.0.130 \
@@ -56,6 +53,9 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # end conda dependencies
     -c conda-forge -c pytorch -c nvidia -c anaconda && \
     conda clean -a -y
+
+# Upgrade pip/setuptools/wheel via pip (avoid conda solver OOM)
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade 'pip>=26.0' 'setuptools>=82.0.1' 'wheel>=0.46.2'
 # end conda create
 
 # begin pip install
@@ -76,7 +76,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 'inference-schema' \
-                'mlflow-skinny==2.15.1' \
+                'mlflow-skinny>=2.16.0' \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'xgboost==1.5.2' \
@@ -90,7 +90,7 @@ RUN pip install \
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3, bokeh
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' bokeh>=3.8.2
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

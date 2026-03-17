@@ -44,7 +44,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 conda-forge::tzdata -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 conda-forge::tzdata -y
 
 ###############################
 # Pre-Build LightGBM
@@ -63,17 +63,18 @@ RUN conda install pip -n base -y
 # Create conda environment
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
-    pip=26.0 \
     numpy~=1.23.5 \
     scikit-learn=1.5.1 \
     holidays=0.29 \
     setuptools-git \
-    wheel=0.46.2 \
     scipy=1.10.1 \
     'psutil>5.0.0,<6.0.0' \
     cudatoolkit=10.0.130 \
     # end conda dependencies
     -c conda-forge -c pytorch -c anaconda
+
+# Upgrade pip/setuptools/wheel via pip (avoid conda solver OOM)
+RUN pip install --upgrade 'pip>=26.0' 'setuptools>=82.0.1' 'wheel>=0.46.2'
 # end conda create
 
 # begin pip install
@@ -100,6 +101,7 @@ RUN pip install \
                 'prophet==1.1.4'
                 # end pypi dependencies
 
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+# bokeh 2.4.3 has CSWSH vulnerability (GHSA-793v-589g-574v / CVE-2026-21883), upgrade to >=3.8.2
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' 'bokeh>=3.8.2'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
