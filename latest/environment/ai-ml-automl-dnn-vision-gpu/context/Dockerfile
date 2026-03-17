@@ -105,7 +105,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # Install pip dependencies
 RUN pip install --no-cache-dir \
                  # begin pypi dependencies
-                azureml-mlflow==1.62.0 \
+                azureml-mlflow==1.62.0.post1 \
                 azureml-dataset-runtime==1.62.0 \
                 azureml-telemetry==1.62.0 \
                 azureml-responsibleai==1.62.0 \

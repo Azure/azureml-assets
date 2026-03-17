@@ -7,8 +7,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get clean && rm -rf /var/lib/apt
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install azureml-evaluate-mlflow==0.0.86
-RUN pip install azureml-acft-common-components==0.0.86
+RUN pip install azureml-evaluate-mlflow==0.0.87
+RUN pip install azureml-acft-common-components==0.0.87
 RUN pip install transformers==4.56.0
 
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities

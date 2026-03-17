@@ -11,8 +11,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Removing it from requirements.txt to avoid conflict with scikit-learn version
 RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 
-RUN pip install azureml-acft-common-components==0.0.86
-RUN pip install azureml-acft-accelerator==0.0.86
+RUN pip install azureml-acft-common-components==0.0.87
+RUN pip install azureml-acft-accelerator==0.0.87
 
 # protobuf is a transitive dep of onnxruntime-training; base image has older version pre-installed
 RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pillow==12.1.1
