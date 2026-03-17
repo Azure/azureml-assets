@@ -1,0 +1,4 @@
+name: ifeval
+version: 1
+type: benchmarkspec
+spec: spec.yaml

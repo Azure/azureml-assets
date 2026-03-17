@@ -1,0 +1,4 @@
+name: bbeh
+version: 1
+type: benchmarkspec
+spec: spec.yaml
