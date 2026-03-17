@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-mini-reasoning-openvino-npu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini-reasoning
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed
     by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\"\
     : \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
@@ -25,6 +25,7 @@ tags:
   toolRegisterEnd: "<|/tool|>"
   toolResponseStart: "<|tool_response|>"
   toolResponseEnd: "<|tool_response|>"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:
@@ -34,8 +35,8 @@ variantInfo:
     quantization: ['QuaRot', 'GPTQ']
     device: 'npu'
     executionProvider: 'OpenVINOExecutionProvider'
-    fileSizeBytes: 2982936576
-    vRamFootprintBytes: 1749486141
+    fileSizeBytes: 2313243100
+    vRamFootprintBytes: 2313243100
 description: |-
   This model is an optimized version of Phi-4-mini-reasoning to enable local inference on Intel NPUs.
   # Model Description
