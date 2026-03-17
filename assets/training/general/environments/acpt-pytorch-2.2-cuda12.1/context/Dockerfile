@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest
 # Upgrade base conda packages
 RUN conda install -n base -c conda-forge pip=26.0 -y
 # These are from base image adding till we get new base image tag
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 
+RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 
 
 
 # Upgrade ptca environment conda packages
@@ -18,6 +18,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -83,3 +84,7 @@ RUN apt-get install -y openssh-server openssh-client
 # Fix Vulnerability 
 # TODO: latest version of azureml-mlflow ~ 1.62.0 depends on cryptography<46.0.0
 RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
+# CVE-2026-23949 (jaraco.context) & CVE-2026-24049 (wheel) - upgrade setuptools in ptca and base envs
+# setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
+RUN pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
+RUN conda run -n base pip install --force-reinstall --no-deps 'setuptools>=82.0.1'

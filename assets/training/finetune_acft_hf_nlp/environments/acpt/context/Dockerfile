@@ -23,11 +23,15 @@ RUN pip install nltk==3.9.3 # Pinning to fix the unsafe deserialization vulnerab
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
 
 # protobuf is required by onnxruntime, mlflow
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # pyans1 is required by azureml-acft-accelerator, mlflow and both dont pin the libs hence upgrade
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 pyasn1==0.6.2 cryptography==46.0.5 pillow==12.1.1 python-multipart==0.0.22
-
+RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.2 cryptography==46.0.5 pillow==12.1.1 python-multipart==0.0.22
+# pip install updates the binary but conda-meta still references old versions; conda install syncs both
+RUN conda install -n ptca -y wheel>=0.46.2 pip>=26.0.1
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --upgrade pip>=26.0 wheel>=0.46.2 setuptools>=82.0.0 cryptography==46.0.5
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
+

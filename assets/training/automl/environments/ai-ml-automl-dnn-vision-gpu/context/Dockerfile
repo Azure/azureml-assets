@@ -11,6 +11,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --only-upgrade \
         libpython3.10-stdlib \
         python3.10 \
@@ -35,7 +36,7 @@ RUN apt-get update && \
         libexpat1 \
         libglib2.0-0 \
         libgnutls30 \
-        libpng16-16 \
+        libpng16-16\
         libssh-4 \
         libxml2 \
         linux-libc-dev \
@@ -46,7 +47,7 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
+    apt-get install -y sudo && \
     apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -125,15 +126,30 @@ RUN pip install --no-cache-dir \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
                 
 # Vulnerability patches for conda environment
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'distributed>=2026.1.0' \
-                'mlflow-skinny>=2.16.0'
+                'mlflow-skinny>=2.16.0' \ 
+                'bokeh>=3.8.2' \
+                'pillow==12.1.1'
+
+
 
 
 # Vulnerability patches for ptca environment
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-                'pillow==12.1.1' 'filelock>=3.20.3'
+                'pillow==12.1.1' 'filelock>=3.20.3' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2'
+# setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
+# setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
+
+RUN conda run -n base pip install --no-cache-dir --upgrade \
+                'cryptography>=46.0.5' \
+                'wheel>=0.46.2'
+# Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
+# setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
+RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN rm -rf /opt/conda/pkgs/
 

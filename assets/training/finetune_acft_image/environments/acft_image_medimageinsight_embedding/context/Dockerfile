@@ -11,8 +11,12 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # upgrade pip, wheel and transitive deps to fix vulnerabilities
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # protobuf is a transitive dep of mlflow-skinny/onnx; parents use loose floors (>=3.12.0), cannot force 6.33.5
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.2 pillow==12.1.1
+RUN pip install --no-cache-dir --upgrade protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.2 pillow==12.1.1 wheel>=0.46.2 fastmcp>=2.14.0
 
-# Upgrade packages in the system Python (3.13) for fixing vulnerability
+# pip install updates the binary but conda-meta still references old versions; conda install syncs both
+RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
+
+# Upgrade packages in the system Python(3.13) for fixing vulnerability
 RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
