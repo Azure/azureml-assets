@@ -17,7 +17,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml-openai-oss/models/gpt-oss-20b/versions/11
+  - assetId: azureml://registries/azureml-openai-oss/models/gpt-oss-20b/versions/9
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
