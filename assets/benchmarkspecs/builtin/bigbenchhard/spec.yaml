@@ -31,7 +31,7 @@ evaluator:
 dataset:
   datasetName: "bigbenchhard"
   datasetType: "oss"
-  recordCount: "6511"
+  recordCount: "934"
   license: "MIT"
   properties:
     domain: "reasoning"
@@ -53,4 +53,6 @@ dataset:
         target:
           type: "string"
         task_name:
+          type: "string"
+        regex:
           type: "string"
