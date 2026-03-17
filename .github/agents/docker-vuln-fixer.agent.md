@@ -1,5 +1,5 @@
 ---
-description: "Build Docker images locally and fix Dockerfile vulnerabilities. Use when: docker build, fix vulnerability, trivy scan, vcm scan, update packages, patch CVE, security fix Dockerfile, pip upgrade vulnerability, apt-get upgrade, conda vulnerability, local SBOM scan, vulnerability evaluate, kusto vulnerability query, SLA status"
+description: "Build Docker images locally and fix Dockerfile vulnerabilities. Use when: docker build, fix vulnerability, trivy scan, vcm scan, update packages, patch CVE, security fix Dockerfile, pip upgrade vulnerability, apt-get upgrade, conda vulnerability, local SBOM scan, vulnerability evaluate, kusto vulnerability query, SLA status, image scanning, scan image, generate SBOM, spdx-json, vcm show, vcm evaluate"
 tools: [execute, read, edit, search]
 ---
 
@@ -13,12 +13,22 @@ These rules override any default judgment. Follow them unconditionally:
 - **NEVER stop after a single build/scan cycle** — after applying fixes, always rebuild and re-scan. Repeat until `vcm image vulnerabilities evaluate` reports no actionable HIGH/CRITICAL findings that match the Kusto list.
 - **NEVER offer or suggest steps that are mandatory** — do not say "I can rebuild if you'd like" or "want me to re-scan?". Just do it.
 - **NEVER remove images without explicit user confirmation** — always list image names and sizes and wait for an explicit yes.
+- **ALWAYS use `python -m azureml.assets.update_assets -i <environment-folder> -o <output-folder> -r .` to generate the build context** — NEVER build directly from the source `assets/` tree, NEVER manually copy files into a context directory, NEVER use any other script or shortcut to prepare the build context. The `-r .` flag is required for auto-versioned environments (`version: auto` in `asset.yaml`) and is safe to always include.
 
 ❌ WRONG: "I'll skip the Kusto query since we can proceed with a local scan."
 ✅ RIGHT: Query Kusto first (or load from cache), then build, then scan — always in that order.
 
 ❌ WRONG: "I've applied the fix. Would you like me to rebuild and verify?"
 ✅ RIGHT: Rebuild and re-scan immediately after applying any fix. Loop until clean.
+
+❌ WRONG: Running `docker build` directly from the `assets/` folder or manually constructing a build context.
+✅ RIGHT: ALWAYS run `python -m azureml.assets.update_assets -i <environment-folder> -o <output-folder> -r .` first to generate the build context, then `docker build` from the generated output directory.
+
+❌ WRONG: Pinning a vulnerable package version before `pip install -r requirements.txt` and assuming it will stick.
+✅ RIGHT: Always install version-pinned security overrides **after** `requirements.txt` to prevent transitive dep downgrades.
+
+❌ WRONG: Fixing a Python pip vulnerability only in the active conda env and assuming the base env is also covered.
+✅ RIGHT: Check all conda envs with `conda env list`; apply pip fixes to each env that has the vulnerable package.
 
 ## Virtual Environment Setup
 
@@ -103,50 +113,13 @@ if (Test-Path ".cache/kusto-vuln-results.tsv") {
 
 ## Local Scanning Tools
 
-### Trivy (local image scan)
+For full Trivy and VCM command references, flag explanations, scan timeout fallback, multi-conda-environment checks, compliance overrides, and troubleshooting, see the #tool:image-scanning skill.
 
-Trivy scans locally-built Docker images directly:
-```bash
-trivy image --scanners vuln --severity HIGH,CRITICAL <image-name>
-```
-
-To generate a structured SBOM for use with VCM:
-```bash
-trivy image --scanners vuln --no-progress --format spdx-json --skip-db-update --skip-java-db-update --offline-scan --output sbom.json <image-name> --timeout 10m0s
-```
-
-**Always use `--scanners vuln`** to disable secret scanning. Secret scanning is slow and not needed for vulnerability remediation.
-
-### Vienna Container Management (VCM) — local SBOM scanning
-
-VCM can scan a local SBOM file against the CoMET API for vulnerability details and compliance evaluation. No registry access is needed — only the SBOM file.
-
-#### Installation
-```bash
-pip install -i https://msdata.pkgs.visualstudio.com/_packaging/Vienna/pypi/simple/
-```
-
-#### Show vulnerabilities from a local SBOM
-```bash
-vcm image vulnerabilities show --sbom sbom.json
-```
-
-#### Evaluate compliance from a local SBOM
-```bash
-vcm image vulnerabilities evaluate --sbom sbom.json
-```
-
-#### Override compliance settings
-```bash
-# Adjust compliance SLA (days before due date)
-vcm image vulnerabilities evaluate --sbom sbom.json --override evaluation.sla=-30
-
-# Ignore certain severity levels
-vcm image vulnerabilities evaluate --sbom sbom.json --override evaluation.ignore_risk=LOW,MEDIUM
-
-# Ignore specific QIDs
-vcm image vulnerabilities evaluate --sbom sbom.json --override evaluation.ignore_qid=123456,789012
-```
+Quick reference:
+- **SBOM generation**: `trivy image --scanners vuln --no-progress --format spdx-json --skip-db-update --skip-java-db-update --offline-scan --output <image-name>-sbom.json --timeout 10m0s <image-name>`
+- **Show vulnerabilities**: `vcm image vulnerabilities show --sbom <image-name>-sbom.json`
+- **Evaluate compliance**: `vcm image vulnerabilities evaluate --sbom <image-name>-sbom.json`
+- **Always use `--scanners vuln`** to disable slow secret scanning
 
 ## Constraints
 
@@ -176,8 +149,21 @@ Many operations in this workflow are slow (GPU image builds can take 30–90 min
 | `docker rmi` | 1–5 seconds | 30s |
 | `docker image prune` | 5–30 seconds | 60s |
 
+### Build log monitoring
+Always tee build output to a log file — this is more reliable than reading truncated background terminal buffers:
+```powershell
+docker build -t <image-name> <context-dir> 2>&1 | Tee-Object -FilePath build_logs/<image-name>-build.log
+```
+To check build progress or confirm completion:
+```powershell
+# Last N lines of the log (look for "Successfully built" or "DONE" on the last layer)
+Get-Content build_logs/<image-name>-build.log | Select-Object -Last 30
+# Confirm image was created and when
+docker images <image-name> --format "{{.Tag}}\t{{.CreatedAt}}\t{{.Size}}"
+```
+
 ### Rules for long-running commands
-- **Docker builds**: Always run in a background terminal. After starting the build, periodically check the terminal output to monitor progress. Do not block on the build — proceed with other preparatory work (e.g., reading Dockerfiles, planning fixes) while the build runs.
+- **Docker builds**: Always run in a background terminal with `Tee-Object` to a log file. Monitor progress by reading the log file, not the terminal buffer (which gets truncated). Do not block on the build — proceed with other preparatory work (e.g., reading Dockerfiles, planning fixes) while the build runs.
 - **Trivy scans**: The `--timeout 10m0s` flag is already set in the scan commands. If Trivy times out, retry once. If it still has not completed after a total of 10 minutes, **stop waiting and use the direct package version fallback** (see **Scan Timeout Fallback** in Step 3) to verify the fix immediately from inside the running image. Do not block on a hung scan.
 - **Sequential builds**: When building multiple images, wait for each build to complete before starting the next. Check terminal output to confirm completion (look for `Successfully built` or error messages).
 - **Check before starting**: Before kicking off a Docker build, verify no other build is in progress:
@@ -201,12 +187,9 @@ This is the authoritative list of images, CVEs, SLA status, and required fixes. 
 
 #### Step 2: Build images locally
 
-Ensure the virtual environment is active (see **Virtual Environment Setup** above), then for each affected image, generate the build context and build locally:
-```bash
-python -m azureml.assets.update_assets -i <environment-folder> -o <output-folder>
-cd <output-folder>/environment/<image-name>/context
-docker build -t <image-name> .
-```
+Ensure the virtual environment is active (see **Virtual Environment Setup** above), then use the #tool:docker-local-build skill to generate the build context and build each affected image locally.
+
+> **MANDATORY**: Build context MUST be generated using `update_assets`. Do NOT build directly from `assets/`, do not manually copy files, do not use any other approach. This is the only supported method. Follow the full procedure in the #tool:docker-local-build skill.
 
 **Batching strategy** — Docker builds are slow, so batch them efficiently:
 - Kick off `update_assets` for all affected images first (these are fast)
@@ -216,46 +199,17 @@ docker build -t <image-name> .
 
 #### Step 3: Scan locally to confirm vulnerabilities
 
-For each successfully built image, scan to confirm the Kusto findings:
-```bash
-trivy image --scanners vuln --no-progress --format spdx-json --skip-db-update --skip-java-db-update --offline-scan --output <image-name>-sbom.json <image-name> --timeout 10m0s
-vcm image vulnerabilities show --sbom <image-name>-sbom.json
-```
-If VCM is not installed, fall back to: `trivy image --scanners vuln --severity HIGH,CRITICAL <image-name>`
+Use the #tool:image-scanning skill to scan each successfully built image. The skill handles:
+- Trivy SBOM generation (`spdx-json` format)
+- VCM `show` and `evaluate` commands
+- Scan timeout fallback (per-package `pip show` / `dpkg -l` verification)
+- Multi-conda-environment checks (`ptca` + `base`)
+- Cross-referencing results against the Kusto list from Step 1
 
-Cross-reference the local scan results with the Kusto results from Step 1. Flag any discrepancies (new vulns not in Kusto, or Kusto vulns already fixed locally).
-
-#### Scan Timeout Fallback
-
-**If the Trivy scan has not completed after 10 minutes**, stop waiting and verify the fix directly from inside the built image by checking installed package versions:
-
-```bash
-# Check the installed version of a specific package
-docker run --rm <image-name> pip show <package-name>
-
-# Check multiple packages at once
-docker run --rm <image-name> pip show <pkg1> <pkg2> <pkg3>
-
-# Check all installed packages and grep for the ones from the Kusto list
-docker run --rm <image-name> pip list | grep -iE "<pkg1>|<pkg2>"
-
-# For OS packages (apt/dpkg)
-docker run --rm <image-name> dpkg -l <package-name>
-```
-
-**Verification logic:**
-- For each CVE in the Kusto list, look up the minimum fixed version (from the `ScanResult` / `Solution` column).
-- Run `pip show <package>` inside the image and extract the `Version:` field.
-- If installed version ≥ fixed version → **treat as resolved** for this cycle.
-- If installed version < fixed version → **fix is not effective**, return to Step 4.
-
-**Rules for this fallback:**
-- ALWAYS record which packages were verified this way and their installed versions in your session summary.
-- This fallback does NOT replace a full scan — once the image is clean by version check, run a full Trivy scan asynchronously in the background and update the report when it finishes.
-- If any package cannot be found via `pip show`, check with `pip list` or `conda list` depending on the package manager used in the Dockerfile.
-
-❌ WRONG: Waiting indefinitely for a hung Trivy scan before reporting progress.
-✅ RIGHT: After 10 minutes, switch to `docker run pip show` per-package verification and continue the workflow.
+After the skill completes, confirm for each image:
+- Which Kusto CVEs are still present locally → proceed to Step 4
+- Which Kusto CVEs are already resolved → mark as fixed in the session report
+- Any new HIGH/CRITICAL findings not in Kusto → treat as new vulnerabilities and fix them
 
 #### Step 4: Suggest and apply fixes
 
@@ -286,9 +240,70 @@ For each confirmed vulnerability:
    RUN pip install --upgrade --no-cache-dir '<package-name>>=<fixed-version>'
    ```
 
-   **D. OS packages**: Add or update an `apt-get install --only-upgrade` or `apt-get install --reinstall` block
-   **E. Conda packages**: Update the conda dependency spec or add a `conda install` line
-   **F. Bundled JARs/vendored deps**: Remove or replace the vulnerable artifact
+   **D. OS packages**: Add or update a targeted `apt-get install --only-upgrade` block inside the existing apt-get `RUN` layer (see *OS package fix pattern* below).
+   **E. Conda packages**: Update the conda dependency spec or add a `conda install` line.
+   **F. Bundled JARs/vendored deps**: Remove or replace the vulnerable artifact.
+
+   #### OS package fix pattern
+   Always consolidate all apt-get operations into a **single `RUN` layer** in this order:
+   ```dockerfile
+   # Security fixes: USN-XXXX (libfoo), USN-YYYY (libbar)
+   RUN apt-get update && \
+       apt-get upgrade -y && \
+       apt-get install -y --no-install-recommends \
+           <new-packages-needed> && \
+       apt-get install -y --only-upgrade \
+           libfoo \
+           libbar && \
+       apt-get clean && rm -rf /var/lib/apt/lists/*
+   ```
+   Key rules:
+   - `apt-get upgrade -y` runs first to pick up all available patches
+   - `apt-get install --only-upgrade` follows for any specific packages not covered by the general upgrade
+   - `apt-get clean && rm -rf /var/lib/apt/lists/*` cleans up in the **same** `RUN` layer
+   - **Never** add a separate `RUN apt-get update` — always chain it in the same layer
+   - **Verify exact package names** with `docker run --rm <image> dpkg -l | grep <pattern>` before adding to the Dockerfile — names vary (e.g., `libasound2` not `libalsa2`)
+
+   #### OS patches not yet in Ubuntu repos
+   After running `apt-get upgrade -y`, if packages report **"already the newest version"** despite being listed in Kusto as vulnerable, it means **the patched package version has not yet been published to the Ubuntu security repositories**. This is NOT a Dockerfile bug.
+
+   What to do:
+   - Keep the `apt-get upgrade -y` and `--only-upgrade` lines in place — they are correct and will automatically apply the fix on the next rebuild once Ubuntu publishes the patch
+   - Document in the fix comment which USN advisory the line addresses
+   - Do **not** try to pin a specific deb version or download packages manually
+   - In your report, mark these as **"fix ready, awaiting Ubuntu repo publication"** — not as failures
+
+   ❌ WRONG: Removing the `--only-upgrade` line because it reported "already the newest version".
+   ✅ RIGHT: Keep it — the patch infrastructure is in place. The next rebuild after Ubuntu publishes the fix will upgrade automatically.
+
+   #### Multiple conda environments
+   ACPT/training images often have **two conda environments**: an active one (e.g., `ptca`) and the `base` env. 
+   A plain `pip install` only affects the **currently active** env. To fix vulnerabilities in both:
+   ```dockerfile
+   # Fix in active env (ptca)
+   RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
+   # Fix in base conda env
+   RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
+   ```
+   Always check which envs exist and what's installed in each:
+   ```bash
+   docker run --rm <image> conda env list
+   docker run --rm <image> conda run -n base pip show <package>
+   docker run --rm <image> pip show <package>   # active env
+   ```
+
+   #### pip install ordering trap
+   Installing a version-pinned package **before** `pip install -r requirements.txt` is ineffective — transitive deps in requirements.txt can silently downgrade it.
+   ```dockerfile
+   # ❌ WRONG: cryptography pinned here gets downgraded by requirements.txt
+   RUN pip install 'cryptography>=46.0.5'
+   RUN pip install -r requirements.txt
+
+   # ✅ RIGHT: pin AFTER requirements.txt so it wins
+   RUN pip install -r requirements.txt
+   RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
+   ```
+   This applies to any package where a transitive dependency chain could pull in an older version.
 
 5. **Audit and clean up existing override pip installs** — do this **before** adding any new fix lines:
 
@@ -328,8 +343,8 @@ For each confirmed vulnerability:
 **ENTRY**: immediately after applying any fix in Step 4 — do not wait for user confirmation.
 
 **LOOP** (repeat until EXIT condition is met):
-1. **Rebuild** — re-run `update_assets` and `docker build` for each changed image.
-2. **Re-scan** — re-run the Trivy SBOM generation and `vcm image vulnerabilities show` / `evaluate` for each rebuilt image.
+1. **Rebuild** — re-run `python -m azureml.assets.update_assets -i <environment-folder> -o <output-folder>` to regenerate the build context, then `docker build` from the output context directory. NEVER skip `update_assets` or build directly from source.
+2. **Re-scan** — use the #tool:image-scanning skill to re-run Trivy SBOM generation and `vcm image vulnerabilities show` / `evaluate` for each rebuilt image.
 3. **Compare** scan output against the Kusto list from Step 1:
    - Finding resolved → mark as fixed.
    - Finding still present → return to Step 4 and apply a stronger or different fix.
@@ -372,17 +387,17 @@ Docker images are large (often 10–30 GB for GPU training images) and will fill
 
 #### Build only:
 1. Ensure the virtual environment is active (run the check/create steps from **Virtual Environment Setup**)
-2. Locate the environment folder and its `asset.yaml`
-3. Run `python -m azureml.assets.update_assets -i <environment-folder> -o <output-folder>`
-4. Run `docker build -t <image-name> .` from the output context directory
-5. Report build success/failure
+2. Locate the environment folder and its `asset.yaml`; check if `version: auto` is set
+3. **Run `python -m azureml.assets.update_assets -i <environment-folder> -o <output-folder> -r .` to generate the build context** — always pass `-r .` for auto-versioned environments (the majority); omitting it causes an immediate error
+4. Run `docker build -t <image-name> <output-folder>/environment/<image-name>/context/ 2>&1 | Tee-Object -FilePath build_logs/<image-name>-build.log` in a background terminal
+5. Monitor with `Get-Content build_logs/<image-name>-build.log | Select-Object -Last 30`; confirm with `docker images <image-name>`
 6. After work is complete, remind the user they can clean up with `docker rmi <image-name>` to free disk space
 
+❌ WRONG: `docker build -t <image-name> assets/training/general/...` (building directly from source)
+✅ RIGHT: `python -m azureml.assets.update_assets -i <environment-folder> -o <output-folder> -r .` → then `docker build` from the generated context
+
 #### Scan only:
-1. Generate SBOM: `trivy image --scanners vuln --no-progress --format spdx-json --skip-db-update --skip-java-db-update --offline-scan --output sbom.json <image-name> --timeout 10m0s`
-2. Show vulnerabilities: `vcm image vulnerabilities show --sbom sbom.json`
-3. Evaluate compliance: `vcm image vulnerabilities evaluate --sbom sbom.json`
-4. Suggest fixes for any findings
+Use the #tool:image-scanning skill. It covers SBOM generation, VCM `show`/`evaluate`, compliance overrides, scan timeout fallback, and multi-conda-environment checks. Suggest fixes for any HIGH/CRITICAL findings returned.
 
 ## Output Format
 
