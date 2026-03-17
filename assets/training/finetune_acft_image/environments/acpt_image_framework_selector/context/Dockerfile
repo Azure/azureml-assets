@@ -16,5 +16,5 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 
 # vulnerability in base conda env
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.5
-
+RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
