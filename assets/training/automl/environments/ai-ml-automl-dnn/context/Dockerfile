@@ -38,7 +38,6 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
     python=3.10 \
-    pip=26.0 \
     numpy~=1.23.5\
     py-cpuinfo=5.0.0 \
     joblib=1.2.0 \
@@ -47,8 +46,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     pandas~=1.5.3 \
     holidays=0.29 \
     setuptools-git \
-    'setuptools>=82.0.1' \
-    wheel=0.46.2 \
     pytorch=2.8.0 \
     scipy=1.10.1 \
     cudatoolkit=10.0.130 \
@@ -56,6 +53,9 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # end conda dependencies
     -c conda-forge -c pytorch -c nvidia -c anaconda && \
     conda clean -a -y
+
+# Upgrade pip/setuptools/wheel via pip (avoid conda solver OOM)
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade 'pip>=26.0' 'setuptools>=82.0.1' 'wheel>=0.46.2'
 # end conda create
 
 # begin pip install
