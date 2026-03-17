@@ -13,7 +13,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # upgrade pip, wheel, protobuf vulnerabilities in ptca env
 # protobuf parent is mlflow==3.5.0 (already latest) which accepts protobuf>=3.12.0, cannot force 6.33.5 via parent
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.2 pillow==12.1.1
-
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.2 pillow==12.1.1 fastmcp>=2.14.0
+RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
