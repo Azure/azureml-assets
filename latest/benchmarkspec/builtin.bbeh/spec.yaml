@@ -1,0 +1,61 @@
+type: "benchmarkspec"
+name: "builtin.bbeh"
+version: 1
+display_name: "BBEH Benchmark"
+description: "BIG-Bench Extra Hard (BBEH) is a benchmark designed to push the boundaries
+  of LLM reasoning evaluation. BBEH replaces each task in BIG-Bench Hard (BBH) with
+  a novel task that probes a similar reasoning capability but exhibits significantly
+  increased difficulty. The benchmark includes 23 tasks covering diverse reasoning
+  skills including logical reasoning, arithmetic, spatial reasoning, and more."
+benchmarkType: "builtin"
+categories: ["reasoning", "quality"]
+
+inference:
+  promptText: "{{item.input}}\n\nProvide the answer directly without any explanation.
+    The answer should be a single word or phrase."
+  inferenceParameters:
+    temperature: 0
+    top_p: 1
+    max_completion_tokens: 512
+
+evaluator:
+  id: "azureml://registries/azureml/evaluators/builtin.bbeh/versions/1"
+  testingCriteria:
+    type: "azure_ai_evaluator"
+    name: "BBEH"
+    evaluator_name: "builtin.bbeh"
+    evaluator_version: "1"
+    initialization_parameters: {}
+    data_mapping:
+      ground_truth: "{{item.target}}"
+      response: "{{sample.output_text}}"
+
+dataset:
+  datasetName: "bbeh"
+  datasetType: "oss"
+  recordCount: "4520"
+  license: "CC-BY-4.0 (Creative Commons Attribution 4.0 International License)"
+  properties:
+    domain: "reasoning"
+    source_paper: "https://arxiv.org/abs/2502.19187"
+    dataset_source: "https://github.com/google-deepmind/bbeh"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/bbeh/versions/1"
+    sourceFormat: "jsonl"
+    properties:
+      file_name: "bbeh.jsonl"
+      type: "uri_folder"
+  datasetSchema:
+    item:
+      type: "object"
+      properties:
+        task:
+          type: "string"
+          description: "The BBEH task name (e.g., bbeh_boardgame_qa, bbeh_boolean_expressions)"
+        input:
+          type: "string"
+          description: "The input prompt for the model"
+        target:
+          type: "string"
+          description: "The expected answer"
