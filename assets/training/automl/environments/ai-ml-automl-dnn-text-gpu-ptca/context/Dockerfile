@@ -76,8 +76,10 @@ RUN pip install \
 RUN pip install --upgrade 'pillow>=12.1.1'
 
 # Fix security vulnerabilities (ptca env)
-RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3'
+# GHSA-6vgw-5pg2-w6jp (pip), GHSA-58pv-8j8x-9vj2 (jaraco.context), GHSA-7gcm-g887-7qv7 (protobuf)
+# GHSA-78cv-mqj4-43f7 (tornado) - cookie attribute validation header injection
+RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'tornado>=6.5.5'
 
 # Fix security vulnerabilities (conda base env)
-RUN /opt/conda/bin/pip install --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1'
+RUN /opt/conda/bin/pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'tornado>=6.5.5'
 
