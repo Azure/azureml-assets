@@ -27,7 +27,7 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     # begin conda dependencies
-    pip=25.3 \
+    pip=26.0 \
     py-cpuinfo=5.0.0\
     joblib=1.2.0 \
     setuptools-git \
@@ -63,11 +63,11 @@ RUN pip install \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
-                'pillow==12.0.0'
+                'pillow==12.1.1'
                 # end pypi dependencies
 # end pip install
 
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
-RUN pip install --upgrade 'pip>=25.3' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.6.3' 'bokeh==3.8.2'
+RUN pip install --upgrade 'pip>=26.0' 'starlette>=0.49.1' 'pyarrow==14.0.2' 'urllib3==2.6.3' 'bokeh==3.8.2' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'distributed>=2026.1.0'
 # end pip ad-hoc

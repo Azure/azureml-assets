@@ -38,7 +38,7 @@ RUN apt-get update && \
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     # begin conda dependencies
     python=3.10 \
-    pip=25.3 \
+    pip=26.0 \
     numpy~=1.23.5\
     py-cpuinfo=5.0.0 \
     joblib=1.2.0 \
@@ -48,7 +48,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     holidays=0.29 \
     setuptools-git \
     setuptools=78.1.1 \
-    wheel=0.44.0 \
+    wheel=0.46.2 \
     pytorch=2.8.0 \
     scipy=1.10.1 \
     cudatoolkit=10.0.130 \
@@ -80,18 +80,17 @@ RUN pip install \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'xgboost==1.5.2' \
-                'cryptography>=45.0.7' \
                 'mltable>=1.0.0' \
                 'pytorch-transformers==1.0.0' \
                 'GitPython>=3.1.41' \
                 'spacy==3.7.4' \
-                'pillow>=12.0.0' \
+                'pillow>=12.1.1' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz'
                 # end pypi dependencies
 # end pip install
 
 # Fix vulnerabilities - upgrade pip, starlette, urllib3, bokeh
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5'
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

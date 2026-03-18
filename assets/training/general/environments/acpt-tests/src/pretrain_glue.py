@@ -134,7 +134,7 @@ if __name__ == "__main__":
         train_dataset=encoded_dataset_train,
         eval_dataset=encoded_dataset_eval,
         # data_collator=data_collator,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         compute_metrics=compute_metrics,
         # callbacks=[ProfilerCallback]
     )
