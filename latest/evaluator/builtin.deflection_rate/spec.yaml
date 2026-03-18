@@ -9,7 +9,7 @@ description: "Evaluates whether an AI agent successfully resolved a user's query
   support automation rates, and self-service success in support scenarios."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["quality", "agents"]
+categories: ["business"]
 tags:
   provider: "Microsoft"
 initParameterSchema:
