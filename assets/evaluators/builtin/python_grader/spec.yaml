@@ -8,7 +8,6 @@ evaluatorSubType: "openai_graders"
 categories: ["quality"]
 tags:
   provider: "Microsoft"
-  is_continuous_scenario: "true"
   enable_evaluation_ui: false
 initParameterSchema:
   type: "object"
