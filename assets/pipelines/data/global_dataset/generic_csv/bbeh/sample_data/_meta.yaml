@@ -1,5 +1,0 @@
-type: DataFrameDirectory
-extension: {}
-format: CSV
-data: bbeh.csv
-schema: schema/_schema.json
