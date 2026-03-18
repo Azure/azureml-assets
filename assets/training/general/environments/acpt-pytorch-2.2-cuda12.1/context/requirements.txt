@@ -30,3 +30,5 @@ filelock>=3.20.1
 wheel>=0.46.2
 jaraco.context>=6.1.0
 protobuf>=6.33.5
+pyasn1>=0.6.2
+tornado>=6.5.5

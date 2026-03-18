@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest
 # Upgrade base conda packages
 RUN conda install -n base -c conda-forge pip=26.0 -y
 # These are from base image adding till we get new base image tag
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 'wheel>=0.46.2' 'cryptography>=46.0.5' 'jaraco.context>=6.1.0' 'pyasn1>=0.6.2' 'tornado>=6.5.5'
 
 
 # Upgrade ptca environment conda packages
@@ -68,9 +68,26 @@ RUN apt-get update && \
         libssl-dev \
         libssl3 \
         openssl \
-        sudo && \
+        sudo \
+        # USN-7954-1 Libtasn1 vulnerability fix
+        libtasn1-6 \
+        # USN-7963-1 / USN-8039-1 libpng vulnerability fix
+        libpng16-16 \
+        # USN-8017-1 GLib vulnerability fix
+        libglib2.0-0 \
+        # USN-8022-1 Expat vulnerability fix
+        libexpat1 \
+        # USN-8038-1 nginx vulnerability fix
+        nginx-light \
+        # USN-8043-1 GnuTLS vulnerability fix
+        libgnutls30 \
+        # USN-8044-1 alsa-lib vulnerability fix
+        libasound2 \
+        # USN-8062-1 / USN-8084-1 curl vulnerability fix
+        curl \
+        libcurl4 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    apt-get autoremove -y 
+    apt-get autoremove -y
 
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
