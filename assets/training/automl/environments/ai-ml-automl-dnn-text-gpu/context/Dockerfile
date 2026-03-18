@@ -27,6 +27,12 @@ RUN apt-get update && \
         libc6-dev \
         libxml2 \
         libssh-4 \
+        libglib2.0-0 \
+        libexpat1 \
+        libpng16-16 \
+        libgnutls30 \
+        libasound2 \
+        libcurl4 \
         linux-libc-dev \
         linux-headers-generic \
         locales \
@@ -73,8 +79,8 @@ EXPOSE 5001 8883 8888
 ENV ENABLE_METADATA=true
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y 
-RUN conda install pip -n ptca -y
+RUN conda install pip -n base -y && /opt/conda/bin/pip install --upgrade 'pip>=26.0'
+RUN conda install pip -n ptca -y && /opt/conda/envs/ptca/bin/pip install --upgrade 'pip>=26.0'
 
 # begin conda create
 # Create conda environment
@@ -127,8 +133,9 @@ RUN pip list && \
                 'transformers[sentencepiece,torch]==4.53.0'
 
 
-# Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 
+# Upgrade distributed, cryptography, setuptools, wheel, jaraco.context, protobuf, pillow, tornado & pip
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' \
+                          'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'pillow>=12.1.1' 'tornado>=6.5.5' 'pip>=26.0'
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3'
 
 
