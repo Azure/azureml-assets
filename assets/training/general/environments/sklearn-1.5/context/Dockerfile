@@ -9,9 +9,13 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Update package lists and reinstall system OpenSSL & OpenSSH
+# Update package lists and reinstall system packages for security fixes
+# USN-8018-2: Python regression fix (CVE-2025-15366, CVE-2025-15367, CVE-2026-0865)
+# USN-8084-1: curl vulnerabilities (CVE-2026-1965, CVE-2026-3783, CVE-2026-3784)
 RUN apt-get update && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server libpam-runtime libc-bin dpkg-dev && \
+    apt-get install --reinstall -y openssl libssl-dev openssh-server libpam-runtime libc-bin dpkg-dev \
+        python3.12 python3.12-minimal libpython3.12-stdlib libpython3.12-minimal \
+        curl libcurl4t64 libcurl3t64-gnutls && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
