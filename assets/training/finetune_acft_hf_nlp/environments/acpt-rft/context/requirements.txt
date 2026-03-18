@@ -20,7 +20,7 @@ pyarrow==21.0.0
 pybind11==3.0.0
 pylatexenc==2.10
 qwen-vl-utils==0.0.10
-#Replace the below install with version >2.53.0 once available from pypi. Now it solved aiohttp and log4j realted vulnerabilities
+#Replace the below install with version >2.53.0 once available from pypi. Now it solved aiohttp and log4j related vulnerabilities. Custom 3.0.0.dev0 covers CVE-2026-27482 (ray DoS, patched >=2.54.0).
 ray[default] @ https://github.com/yeshsurya/ray/releases/download/2.53.dev/ray-3.0.0.dev0-cp310-cp310-linux_x86_64.whl 
 tensorboard==2.20.0
 tensordict==0.9.1

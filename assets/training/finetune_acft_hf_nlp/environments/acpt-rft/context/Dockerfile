@@ -60,7 +60,8 @@ RUN pip install --no-cache-dir cryptography==46.0.5
 # Upgrade wandb to fix golang.org/x/crypto vulnerabilities (CVE-2025-47914, CVE-2025-58181)
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install --no-cache-dir triton==3.4.0
-RUN pip install xgrammar==0.1.27
+# CVE-2026-25048 (GHSA-7rgv-gqhr-fxg3): stack exhaustion DoS via nested grammar rules
+RUN pip install xgrammar==0.1.32
 RUN pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url https://download.pytorch.org/whl/cu126
 COPY vllm_async_server /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/__init__.py
@@ -76,9 +77,19 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # protobuf is a transitive dep of vllm; parents use loose floors (>=6.30.0), cannot force 6.33.5
 # azure-core is a transitive dep of azureml-acft-common-components; parent requires >=1.31.0, cannot force 1.38.0
 # pyasn1 is a transitive dep of mlflow; parent requires >=0.1.3, cannot force 0.6.2
-RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5 jaraco.context==6.1.0
+RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5 jaraco.context==6.1.0 xgrammar==0.1.32
 # Fix vulnerabilities in base conda env
 RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0 cryptography==46.0.5
+# Fix Java (Maven) vulnerabilities bundled in Ray JARs
+# log4j-core CVE-2025-68161 (GHSA-vc5p-v9hr-52mj) - patched in >=2.25.3
+# jackson-core GHSA-72hv-8253-57qq - patched in >=2.18.6
+RUN RAY_DIR=$(python -c "import ray;print(ray.__path__[0])") && \
+    rm -f "$RAY_DIR/jars/ray_dist.jar" 2>/dev/null || true && \
+    find "$RAY_DIR" -name "log4j-core-*.jar" -not -name "log4j-core-2.25.3.jar" -delete 2>/dev/null || true && \
+    find "$RAY_DIR" -name "jackson-core-*.jar" -not -name "jackson-core-2.18.6.jar" -delete 2>/dev/null || true && \
+    mkdir -p "$RAY_DIR/jars" && \
+    wget -q -O "$RAY_DIR/jars/log4j-core-2.25.3.jar" https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/2.25.3/log4j-core-2.25.3.jar && \
+    wget -q -O "$RAY_DIR/jars/jackson-core-2.18.6.jar" https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.18.6/jackson-core-2.18.6.jar
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
