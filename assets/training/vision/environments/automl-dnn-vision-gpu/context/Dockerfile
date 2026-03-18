@@ -97,8 +97,47 @@ RUN /opt/conda/bin/pip install --upgrade pillow==12.1.1
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.1.1 
 
 # Fix security vulnerabilities
-RUN pip install --upgrade 'aiohttp>=3.13.3' 'azure-core>=1.38.0' 'bokeh>=3.8.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=6.33.5' 'pyasn1>=0.6.2' 'pip>=26.0' 'cryptography>=46.0.5'
+RUN pip install --upgrade 'aiohttp>=3.13.3' 'azure-core>=1.38.0' 'bokeh>=3.8.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=6.33.5' 'pyasn1>=0.6.2' 'pip>=26.0' 'cryptography>=46.0.5' 'tornado>=6.5.5'
 
+# Patch Ubuntu security vulnerabilities
+# USN-7946-1 (GnuPG), USN-7951-1/USN-8018-1/USN-8018-2 (Python),
+# USN-7954-1 (Libtasn1), USN-7963-1/USN-8039-1 (libpng),
+# USN-7974-1 (libxml2), USN-7980-1 (OpenSSL), USN-8005-1 (glibc),
+# USN-8017-1 (GLib), USN-8022-1 (Expat), USN-8025-1 (.NET),
+# USN-8038-1 (nginx), USN-8043-1 (GnuTLS), USN-8044-1 (alsa-lib),
+# USN-8062-1/USN-8084-1 (curl)
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        gnupg \
+        gpg \
+        gpg-agent \
+        gpgconf \
+        gpgsm \
+        dirmngr \
+        python3.10 \
+        python3.10-minimal \
+        libpython3.10-stdlib \
+        libpython3.10-minimal \
+        libtasn1-6 \
+        libpng16-16 \
+        libxml2 \
+        openssl \
+        libssl3 \
+        libc6 \
+        libc-bin \
+        libc6-dev \
+        libc-dev-bin \
+        libglib2.0-0 \
+        libexpat1 \
+        dotnet-hostfxr-8.0 \
+        dotnet-host-8.0 \
+        dotnet-runtime-8.0 \
+        nginx-light \
+        libgnutls30 \
+        libasound2 \
+        libcurl4 \
+        curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 # dummy number to change when needing to force rebuild without changing the definition: 1
