@@ -2,12 +2,14 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
-RUN apt-get -y update && apt-get -y upgrade && apt-get install -y libglib2.0-0 libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y libglib2.0-0 libxml2 libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
 
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get install -y expat
+# Patch Ubuntu security: libpng (USN-8039-1), GnuTLS (USN-8043-1), curl (USN-8062-1, USN-8084-1), alsa-lib (USN-8044-1), .NET (USN-8025-1)
+RUN apt-get install -y --only-upgrade libpng16-16 libgnutls30 curl libcurl4 libasound2 libasound2-data dotnet-host dotnet-hostfxr-8.0 dotnet-runtime-8.0 || true
 
 # # # Install mmdet
 # # Note that MMDet installs pycocotools
@@ -19,7 +21,8 @@ RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mm
 
 # upgrade pip, wheel, setuptools vulnerabilities in ptca env
 # protobuf is required by azureml-acft-accelerator but it is not pinned hence upgrade
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 setuptools==82.0.0 cryptography==46.0.5 pillow==12.1.1
+# jaraco.context is a transitive dep of setuptools; explicit upgrade for GHSA-58pv-8j8x-9vj2 (CVE-2026-23949)
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 setuptools==82.0.0 cryptography==46.0.5 pillow==12.1.1 jaraco.context==6.1.0
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 jaraco.context==6.1.0
