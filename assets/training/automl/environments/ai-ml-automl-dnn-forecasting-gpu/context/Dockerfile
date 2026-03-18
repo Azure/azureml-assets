@@ -30,7 +30,19 @@ apt-get install -y --only-upgrade \
     libpam0g \
     libpam-modules \
     libpam-modules-bin \
-    libpam-runtime
+    libpam-runtime \
+    libxml2 \
+    openssl \
+    libssl3 \
+    libc6 \
+    libc-bin \
+    libc-dev-bin \
+    libglib2.0-0 \
+    libexpat1 \
+    libgnutls30 \
+    curl \
+    libcurl4 \
+    libcurl3-gnutls
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -75,7 +87,7 @@ RUN pip install --no-cache-dir \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
-                'xgboost==1.5.2' \
+                'xgboost==3.2.0' \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' 
@@ -90,8 +102,9 @@ RUN pip install --no-cache-dir \
 
 # end pip install
 
-# Fix vulnerabilities
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+# Fix vulnerabilities - once azureml-automl-rumtime, azureml-mlflow, azureml-train-automl-runtime is released (commented on mar-2026)
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
+                          'protobuf>=5.29.6' 'pillow>=12.1.1' 'tornado>=6.5.5' 'bokeh>=3.8.2'
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
