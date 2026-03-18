@@ -1,0 +1,64 @@
+type: "benchmarkspec"
+name: "builtin.bigbenchhard"
+version: 1
+display_name: "BIG-Bench Hard Benchmark"
+description: "BIG-Bench Hard (BBH) is a suite of 23 challenging tasks from the BIG-Bench
+  benchmark where prior language models did not outperform average human performance.
+  It evaluates diverse reasoning capabilities including algorithmic, causal, logical,
+  spatial, and temporal reasoning, as well as language understanding and common-sense
+  inference. This is a 1k sample, generated using IRT method."
+benchmarkType: "builtin"
+categories: ["reasoning", "quality"]
+
+inference:
+  promptText: "Answer the following question. The last line of your response should
+    be of the following format: 'ANSWER: $OUTPUT' (without quotes) where OUTPUT is
+    your answer. Think step by step before answering.\n\n{{item.input}}"
+  inferenceParameters:
+    temperature: 1
+    top_p: 1
+    max_completion_tokens: 32000
+
+evaluator:
+  id: "azureml://registries/azureml/evaluators/builtin.regex_match/versions/2"
+  testingCriteria:
+    type: "azure_ai_evaluator"
+    name: "BIG_Bench_Hard"
+    evaluator_name: "builtin.regex_match"
+    evaluator_version: "2"
+    initialization_parameters:
+      patterns:
+      - "(?i)ANSWER\\s*:\\s*\\$?({{ground_truth}})(?:\\s|$|\\.|,)"
+      - "(?i)ANSWER\\s*:\\s*\\$?\\(?({{ground_truth}})\\)?(?:\\s|$|\\.|,)"
+    data_mapping:
+      ground_truth: "{{item.target}}"
+      response: "{{sample.output_text}}"
+
+dataset:
+  datasetName: "bigbenchhard"
+  datasetType: "oss"
+  recordCount: "934"
+  license: "MIT"
+  properties:
+    domain: "reasoning"
+    source_paper: "https://arxiv.org/abs/2210.09261"
+    dataset_source: "https://github.com/suzgunmirac/BIG-Bench-Hard"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/bigbenchhard/versions/1"
+    sourceFormat: "jsonl"
+    properties:
+      file_name: "bbh_samples_flat.jsonl"
+      type: "uri_folder"
+  datasetSchema:
+    item:
+      type: "object"
+      properties:
+        input:
+          type: "string"
+        target:
+          type: "string"
+        task_name:
+          type: "string"
+        regex:
+          type: "string"
