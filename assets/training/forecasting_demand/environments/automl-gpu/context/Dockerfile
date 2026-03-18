@@ -29,8 +29,28 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
-        libarchive13 && \
+        libarchive13 \
+        # USN-7942-1, USN-8017-1 (GLib)
+        libglib2.0-0 \
+        # USN-7946-1 (GnuPG)
+        gnupg2 \
+        # USN-7954-1 (Libtasn1)
+        libtasn1-6 \
+        # USN-7974-1 (libxml2)
+        libxml2 \
+        # USN-7980-1 (OpenSSL)
+        openssl libssl3 \
+        # USN-8005-1 (GNU C Library)
+        libc6 libc-bin \
+        # USN-8022-1 (Expat)
+        libexpat1 \
+        # USN-8043-1 (GnuTLS)
+        libgnutls30 \
+        # USN-8062-1, USN-8084-1 (curl)
+        curl libcurl4 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# TODO: Patch needed for Ubuntu Security Notification for nginx Vulnerability (USN-8038-1) - nginx likely not installed in this image
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -40,11 +60,26 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda clean -a -y
 # dummy number to change when needing to force rebuild without changing the definition: 2
 
-RUN pip install cryptography>=46.0.5
-# fix until the base packages are updated with the new cryptography version. 
-# distributed is transitively pinned at 2023.2.0 by azureml-train-automl-runtime, which depends on dask==2023.2.0 
-# that in turn pulls in the matching distributed version, so it cannot be upgraded independently without updating azureml-train-automl-runtime itself.
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir bokeh>=3.8.2 cryptography>=46.0.5 setuptools>=79.0.0 distributed>=2026.1.0
+RUN pip install 'cryptography>=46.0.5'
+# Security vulnerability overrides for the conda environment
+# GHSA-793v-589g-574v (bokeh), GHSA-r6ph-v2qm-q3c2 (cryptography), GHSA-c336-7962-wfj2 (distributed)
+# GHSA-38jv-5279-wg99 (urllib3), GHSA-87hc-h4r5-73f7 (Werkzeug), GHSA-qmgc-5h2g-mvrw (filelock)
+# GHSA-jm66-cg57-jjv5 (azure-core), GHSA-58pv-8j8x-9vj2 (jaraco.context), GHSA-63vm-454h-vhhq (pyasn1)
+# GHSA-7gcm-g887-7qv7 (protobuf), GHSA-cfh3-3jmp-rvhc (pillow), GHSA-78cv-mqj4-43f7 (tornado)
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir \
+    'bokeh>=3.8.2' \
+    'cryptography>=46.0.5' \
+    'setuptools>=79.0.0' \
+    'distributed>=2026.1.0' \
+    'urllib3>=2.6.3' \
+    'Werkzeug>=3.1.5' \
+    'filelock>=3.20.3' \
+    'azure-core>=1.38.0' \
+    'jaraco.context>=6.1.0' \
+    'pyasn1>=0.6.2' \
+    'protobuf>=5.29.6' \
+    'pillow>=12.1.1' \
+    'tornado>=6.5.5'
 
 # Clean conda pkgs cache to remove stale vendored copies
 RUN rm -rf /opt/miniconda/pkgs/
