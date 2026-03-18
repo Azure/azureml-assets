@@ -23,11 +23,12 @@ RUN pip install nltk==3.9.3 # Pinning to fix the unsafe deserialization vulnerab
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
 
 # protobuf is required by onnxruntime, mlflow
-# pyans1 is required by azureml-acft-accelerator, mlflow and both dont pin the libs hence upgrade
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 pyasn1==0.6.2 cryptography==46.0.5 pillow==12.1.1 python-multipart==0.0.22
+# pyasn1 is required by azureml-acft-accelerator, mlflow and both dont pin the libs hence upgrade
+# jaraco.context is a transitive dep of setuptools; upgrade for CVE-2026-23949 (Zip Slip path traversal)
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 pyasn1==0.6.2 cryptography==46.0.5 pillow==12.1.1 python-multipart==0.0.22 jaraco.context==6.1.0
 
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 jaraco.context==6.1.0
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
