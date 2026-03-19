@@ -34,12 +34,7 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
-        libarchive13 \
-        # USN: libexpat1 — CVE-2023-52425, CVE-2024-28757 (billion laughs / resource exhaustion)
-        libexpat1 \
-        # USN: openssl/libssl3 — CVE-2024-13176, CVE-2025-9230 (ECDSA timing side-channel, CMS decryption)
-        libssl3 \
-        openssl
+        libarchive13
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
