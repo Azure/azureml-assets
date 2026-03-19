@@ -34,28 +34,34 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # begin conda create
-# Create conda environment
+# Create conda environment (minimal — packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    # begin conda dependencies
     python=3.10 \
-    pip=26.0 \
-    numpy~=1.23.5\
-    py-cpuinfo=5.0.0 \
-    joblib=1.2.0 \
-    cloudpickle=1.6.0 \
-    scikit-learn=1.5.1 \
-    pandas~=1.5.3 \
-    holidays=0.29 \
-    setuptools-git \
-    setuptools=78.1.1 \
-    wheel=0.46.2 \
-    pytorch=2.8.0 \
-    scipy=1.10.1 \
-    cudatoolkit=10.0.130 \
-    'psutil>5.0.0,<6.0.0' \
-    # end conda dependencies
-    -c conda-forge -c pytorch -c nvidia -c anaconda && \
+    -c conda-forge && \
     conda clean -a -y
+
+# Install cudatoolkit via conda (not available on pip; single-package solve is trivial)
+RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    cudatoolkit=10.0.130 \
+    -c nvidia -c conda-forge && \
+    conda clean -a -y
+
+# Install scientific packages via pip (avoids conda solver OOM)
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
+    'numpy>=1.23.5,<1.24' \
+    'py-cpuinfo==5.0.0' \
+    'joblib==1.2.0' \
+    'cloudpickle==1.6.0' \
+    'scikit-learn==1.5.1' \
+    'pandas>=1.5.3,<1.6' \
+    'holidays==0.29' \
+    'setuptools-git' \
+    'setuptools==78.1.1' \
+    'wheel>=0.46.2' \
+    'torch==2.8.0' \
+    'scipy==1.10.1' \
+    'psutil>5.0.0,<6.0.0' \
+    'pip>=26.0'
 # end conda create
 
 # begin pip install

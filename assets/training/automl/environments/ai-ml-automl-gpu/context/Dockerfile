@@ -60,20 +60,21 @@ RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 RUN conda install pip -n base -y
 
 # begin conda create
-# Create conda environment
+# Install cudatoolkit via conda (not available on pip; single-package solve is trivial)
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    # begin conda dependencies
-    pip=26.0 \
-    numpy~=1.23.5 \
-    scikit-learn=1.5.1 \
-    holidays=0.29 \
-    setuptools-git \
-    wheel=0.46.2 \
-    scipy=1.10.1 \
-    'psutil>5.0.0,<6.0.0' \
     cudatoolkit=10.0.130 \
-    # end conda dependencies
-    -c conda-forge -c pytorch -c anaconda
+    -c nvidia -c conda-forge -y
+
+# Install scientific packages via pip (avoids conda solver OOM)
+RUN pip install --no-cache-dir \
+    'numpy>=1.23.5,<1.24' \
+    'scikit-learn==1.5.1' \
+    'holidays==0.29' \
+    'setuptools-git' \
+    'wheel>=0.46.2' \
+    'scipy==1.10.1' \
+    'psutil>5.0.0,<6.0.0' \
+    'pip>=26.0'
 # end conda create
 
 # begin pip install
