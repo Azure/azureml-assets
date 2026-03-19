@@ -56,19 +56,20 @@ RUN pip install --upgrade lightgbm==4.6.0
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # begin conda create
-# Install conda packages
+# Install ncurses via conda (C library, not available on pip; single-package solve is trivial)
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    # begin conda dependencies
-    numpy~=1.23.5 \
-    scikit-learn=1.5.1 \
-    holidays=0.29 \
-    setuptools-git \
-    wheel=0.46.2 \
-    scipy=1.10.1 \
-    joblib=1.2.0 \
     ncurses=6.5 \
-    # end conda dependencies
-    -c conda-forge -c anaconda
+    -c conda-forge -y
+
+# Install packages via pip (avoids conda solver OOM)
+RUN pip install --no-cache-dir \
+    'numpy>=1.23.5,<1.24' \
+    'scikit-learn==1.5.1' \
+    'holidays==0.29' \
+    'setuptools-git' \
+    'wheel>=0.46.2' \
+    'scipy==1.10.1' \
+    'joblib==1.2.0'
 
 # Ensure future conda and pip calls are tied to this conda environment,
 # and we don't just get lucky from the implicit PATH ordering.
