@@ -7,7 +7,6 @@ evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
 tags:
-  provider: "Microsoft"
   is_continuous_scenario: "true"
 initParameterSchema:
   type: "object"
