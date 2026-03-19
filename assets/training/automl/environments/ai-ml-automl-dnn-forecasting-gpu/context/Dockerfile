@@ -13,26 +13,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
 RUN apt-get update && \
-apt-get upgrade -y && \
-apt-get install -y --only-upgrade \
-    systemd \
-    libsystemd0 \
-    libnss-systemd \
-    libpam-systemd \
-    libudev1 \
-    systemd-sysv \
-    systemd-timesyncd \
-    python3.10 \
-    python3.10-minimal \
-    libarchive13 \
-    libpython3.10-minimal \
-    libpython3.10-stdlib \
-    libpam0g \
-    libpam-modules \
-    libpam-modules-bin \
-    libpam-runtime
-
-RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
