@@ -12,27 +12,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
-# Upgrade system-level packages to fix known vulnerabilities (systemd, python3.12, pam)
-RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        systemd-dev \
-        libudev1 \
-        systemd-timesyncd \
-        systemd \
-        systemd-resolved \
-        libsystemd0 \
-        libsystemd-shared \
-        libpython3.12-minimal \
-        python3.12-minimal \
-        libpython3.12-stdlib \
-        python3.12 \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 # begin conda create
 # Create conda environment (minimal — packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
