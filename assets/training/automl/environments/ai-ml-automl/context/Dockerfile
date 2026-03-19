@@ -34,7 +34,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'py-cpuinfo==5.0.0' \
     'joblib==1.2.0' \
     'setuptools-git' \
-    'setuptools==78.1.1' \
+    'setuptools==82.0.1' \
     'psutil>5.0.0,<6.0.0' \
     'torch==2.8.0' \
     'pip>=26.0'
