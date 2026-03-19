@@ -15,26 +15,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# --- Start Vulnerability Fixes ---
-RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        systemd \
-        systemd-sysv \
-        libudev1 \
-        libpam-systemd \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libarchive13
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         cmake \
