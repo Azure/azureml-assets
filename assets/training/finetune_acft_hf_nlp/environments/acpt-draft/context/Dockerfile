@@ -19,10 +19,13 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 # release of following packages consider moving then to requirements.txt
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
-RUN pip install xgrammar==0.1.27
+# GHSA-7rgv-gqhr-fxg3: xgrammar stack exhaustion DoS; patched in 0.1.32
+RUN pip install xgrammar==0.1.32
 RUN pip install transformers==4.57.1
 # upgrade pip, wheel, setuptools to fix vulnerabilities
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 protobuf==6.33.5 pillow==12.1.1
+# jaraco.context>=6.1.0: CVE-2026-23949 Zip Slip path traversal fix. Direct install required because
+# setuptools 82.0.1 (latest) vendors jaraco.context with vulnerable code despite dist-info labeling 6.1.0
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 protobuf==6.33.5 pillow==12.1.1 jaraco.context==6.1.0
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
