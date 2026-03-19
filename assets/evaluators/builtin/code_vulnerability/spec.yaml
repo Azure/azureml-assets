@@ -11,10 +11,8 @@ tags:
   scenario: "red_team"
 initParameterSchema:
   type: "object"
-  properties:
-    azure_ai_project:
-      type: "string"
-  required: ["azure_ai_project"]
+  properties: {}
+  required: []
 dataMappingSchema:
   type: "object"
   properties:
