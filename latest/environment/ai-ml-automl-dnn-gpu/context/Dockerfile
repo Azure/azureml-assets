@@ -79,7 +79,7 @@ SHELL ["conda", "run", "-p", "$AZUREML_CONDA_ENVIRONMENT_PATH", "/bin/bash", "-c
 # Install pip dependencies
 RUN pip install \
                 # begin pypi dependencies
-                azureml-core==1.61.0.post2 \
+                azureml-core==1.61.0.post3 \
                 azureml-pipeline-core==1.62.0 \
                 azureml-telemetry==1.62.0 \
                 azureml-defaults==1.62.0 \
