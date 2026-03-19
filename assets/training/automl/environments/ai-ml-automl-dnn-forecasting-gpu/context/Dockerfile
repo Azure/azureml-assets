@@ -29,7 +29,8 @@ apt-get install -y --only-upgrade \
     libpython3.10-stdlib \
     libpam0g \
     libpam-modules \
-    libpam-modules-bin 
+    libpam-modules-bin \
+    libpam-runtime
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
