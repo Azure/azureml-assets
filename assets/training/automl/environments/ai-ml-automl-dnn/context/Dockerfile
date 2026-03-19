@@ -56,7 +56,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'pandas>=1.5.3,<1.6' \
     'holidays==0.29' \
     'setuptools-git' \
-    'setuptools==78.1.1' \
+    'setuptools==82.0.1' \
     'wheel>=0.46.2' \
     'torch==2.8.0' \
     'scipy==1.10.1' \
