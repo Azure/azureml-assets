@@ -29,20 +29,7 @@ apt-get install -y --only-upgrade \
     libpython3.10-stdlib \
     libpam0g \
     libpam-modules \
-    libpam-modules-bin \
-    libpam-runtime \
-    libxml2 \
-    openssl \
-    libssl3 \
-    libc6 \
-    libc-bin \
-    libc-dev-bin \
-    libglib2.0-0 \
-    libexpat1 \
-    libgnutls30 \
-    curl \
-    libcurl4 \
-    libcurl3-gnutls
+    libpam-modules-bin 
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
