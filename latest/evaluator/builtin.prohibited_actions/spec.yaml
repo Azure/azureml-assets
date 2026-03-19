@@ -10,6 +10,7 @@ categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
+  is_red_team_scenario: "true"
   azure_ai_agent_default: "true"
   preview: "true"
 initParameterSchema:

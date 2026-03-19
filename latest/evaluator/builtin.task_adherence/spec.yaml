@@ -12,7 +12,9 @@ evaluatorSubType: "code"
 categories: ["agents"]
 tags:
   provider: "Microsoft"
+  is_continuous_scenario: "true"
   scenario: "red_team"
+  is_red_team_scenario: "true"
   azure_ai_agent_default: "true"
 initParameterSchema:
   type: "object"
