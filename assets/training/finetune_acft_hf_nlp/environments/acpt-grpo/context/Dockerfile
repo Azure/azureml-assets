@@ -14,7 +14,9 @@ RUN pip install transformers==4.56.0
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
 # protobuf is a transitive dep of vllm; parent uses loose floors, cannot force 6.33.5
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.2 python-multipart==0.0.22 urllib3==2.6.3 azure-core==1.38.0 xgrammar>=0.1.32
+# pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
+# parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.3 python-multipart==0.0.22 urllib3==2.6.3 azure-core==1.38.0 xgrammar>=0.1.32
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
