@@ -92,17 +92,14 @@ RUN pip install \
 # Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
 # torchvision==0.23.0, torch==2.8.0: CVE-2025-32434 RCE via torch.load (via pytorch-transformers -> torch, horovod)
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete] -> distributed)
-# cryptography>=46.0.5: CVE-2026-26007 (via azureml-mlflow, azure-identity -> cryptography)
-# setuptools>=82.0.1: CVE-2025-47273 path traversal in PackageIndex (universal build tool; spacy, torch)
-# jaraco.context>=6.1.0: CVE-2026-23949 Zip Slip path traversal fix. Direct install required because
-# setuptools 82.0.1 (latest) vendors jaraco.context with vulnerable code despite dist-info labeling 6.1.0
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
 # protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.1.1: CVE-2026-25990 heap buffer overflow (via torchvision -> pillow, prophet -> matplotlib -> pillow)
 # tornado>=6.5.5: GHSA-78cv-mqj4-43f7 DoS (via distributed -> tornado, bokeh -> tornado)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
+# Note: cryptography, setuptools, jaraco.context overrides removed — verified not needed (base image resolves safe versions)
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'jaraco.context>=6.1.0' 'mlflow-skinny>=2.16.0' \
+RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.1.1' 'tornado>=6.5.5' 'bokeh>=3.8.2'
 
 # --- End Vulnerability Fixes ---
