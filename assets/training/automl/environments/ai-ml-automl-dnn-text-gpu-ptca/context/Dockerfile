@@ -4,45 +4,7 @@ USER root:root
 
 # Update system package index and upgrade Python 3.10 packages to required versions
 RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-    libpython3.10-stdlib \
-    python3.10 \
-    libpython3.10-minimal \
-    python3.10-minimal \
-    libpam0g \
-    libpam-modules-bin \
-    libpam-modules \
-    libc-bin \
-    libc-dev-bin \
-    binutils \
-    binutils-common \
-    binutils-x86-64-linux-gnu \
-    libbinutils \
-    libctf0 \
-    libctf-nobfd0 \
-    libxml2 \
-    dpkg \
-    dpkg-dev \
-    dotnet-hostfxr-8.0 \
-    dotnet-host-8.0 \
-    dotnet-runtime-8.0 \
-    linux-libc-dev \
-    linux-headers-generic \
-    locales \
-    openssl \
-    libssl-dev \
-    libssh-4 \
-    libpam-runtime \
-    libexpat1 \
-    libpng16-16 \
-    libgnutls30 \
-    libasound2 \
-    libasound2-data \
-    curl \
-    libcurl3-gnutls \
-    libcurl4 && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
-    apt-mark hold sudo && \
+    apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 

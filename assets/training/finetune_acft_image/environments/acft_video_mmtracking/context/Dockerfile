@@ -8,10 +8,6 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get install -y expat
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# # # Install mmcv-full and mmdet
-# Request for scipy installation to avoid error in mmcv-full installation
-RUN apt-get install -y gfortran libopenblas-dev liblapack-dev libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
-
 
 # [Temp Fix] To address PyTorch Distributed RPC Framework Remote Code Execution (RCE) Vulnerability - Working internally to get a compatbile image, will re-enable
 # RUN mim install mmtrack==0.14.0

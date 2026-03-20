@@ -2,38 +2,6 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 USER root
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        libssl3 \
-        openssl && \
-    apt-get install -y --only-upgrade \
-        linux-headers-generic \
-        linux-libc-dev \
-        libsystemd0 \
-        libudev1 \
-        udev \
-        systemd \
-        base-files \
-        bash \
-        coreutils \
-        tar \
-        wget \
-        curl \
-        patch \
-        ncurses-base \
-        ncurses-bin \
-        login \
-        passwd \
-        libgssapi-krb5-2 \
-        libk5crypto3 \
-        libkrb5-3 \
-        libkrb5support0 \
-        libc6 \
-        libc-bin \
-        util-linux \
-        libpcre2-8-0 \
-        grep \
-        gzip && \
     apt-get autoremove -y && \
     apt-get autoclean && \
     apt-get clean && \

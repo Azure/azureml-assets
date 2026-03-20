@@ -14,39 +14,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --only-upgrade \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libc-bin \
-        libc-dev-bin \
-        libc6 \
-        libc6-dev \
-        libxml2 \
-        libssh-4 \
-        linux-libc-dev \
-        linux-headers-generic \
-        locales \
-        openssl \
-        dotnet-hostfxr-8.0 \
-        dotnet-host-8.0 \
-        dotnet-runtime-8.0 \
-        binutils \
-        binutils-common \
-        binutils-x86-64-linux-gnu \
-        libbinutils \
-        libctf0 \
-        libctf-nobfd0 \
-        dpkg \
-        dpkg-dev \
-        libssl-dev \
-        libpam-runtime && \
-    apt-get install -y sudo && \
-    apt-mark hold sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \

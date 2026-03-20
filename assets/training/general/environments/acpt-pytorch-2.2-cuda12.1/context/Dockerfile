@@ -37,44 +37,6 @@ RUN apt-get update && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 
-RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        dotnet-hostfxr-8.0 \
-        dotnet-host-8.0 \
-        dotnet-runtime-8.0 \
-        dpkg \
-        dpkg-dev \
-        libbinutils \
-        binutils \
-        binutils-common \
-        binutils-x86-64-linux-gnu \
-        libctf0 \
-        libctf-nobfd0 \
-        libc6 \
-        libc6-dev \
-        libc-bin \
-        libc-dev-bin \
-        libdpkg-perl \
-        libssh-4 \
-        libxml2 \
-        linux-libc-dev \
-        linux-headers-generic \
-        locales \
-        libssl-dev \
-        libssl3 \
-        openssl \
-        sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    apt-get autoremove -y 
-
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888

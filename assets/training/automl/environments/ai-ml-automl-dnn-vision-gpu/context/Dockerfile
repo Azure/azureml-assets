@@ -12,46 +12,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --only-upgrade \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        dotnet-hostfxr-8.0 \
-        dotnet-host-8.0 \
-        dotnet-runtime-8.0 \
-        dpkg \
-        dpkg-dev \
-        libbinutils \
-        binutils \
-        binutils-common \
-        binutils-x86-64-linux-gnu \
-        libctf0 \
-        libctf-nobfd0 \
-        libc6-dev \
-        libc6 \
-        libc-dev-bin \
-        libasound2 \
-        libdpkg-perl \
-        libexpat1 \
-        libglib2.0-0 \
-        libgnutls30 \
-        libpng16-16\
-        libssh-4 \
-        libxml2 \
-        linux-libc-dev \
-        linux-headers-generic \
-        locales \
-        openssl \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime && \
-    apt-get install -y sudo && \
-    apt-mark hold sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -61,8 +21,6 @@ RUN apt-get update && \
         psmisc \
         rsyslog \
         runit \
-        libc-bin \
-        libssl-dev \
         unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
