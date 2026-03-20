@@ -22,17 +22,14 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
     rm /tmp/miniconda.sh && \
     find / -type d -name __pycache__ | xargs rm -rf
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/opt/conda/envs/azureml-env
 
-# Create conda environment with py310
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
-    -c conda-forge --solver=classic
+# Create conda environment
+RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10
 
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
+# Activate environment via PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
-
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
