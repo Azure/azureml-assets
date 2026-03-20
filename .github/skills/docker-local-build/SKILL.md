@@ -30,7 +30,7 @@ Builds Azure ML environment Docker images locally by first generating a resolved
   .venv\Scripts\Activate.ps1
   uv pip install -e scripts/azureml-assets
   ```
-- Working directory: repo root (`c:\Users\hnamburi\azureml-assets` or equivalent)
+- Working directory: repo root (the `azureml-assets` clone)
 
 ## Step-by-Step Procedure
 
