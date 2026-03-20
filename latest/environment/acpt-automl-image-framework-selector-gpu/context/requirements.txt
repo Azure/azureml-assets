@@ -7,3 +7,6 @@ requests==2.32.4
 setuptools>=82.0.0
 Werkzeug>=3.1.5
 filelock>=3.20.1
+pillow>=12.1.1
+# protobuf 6.33.4 has CVE-2026-0994 (HIGH 8.6); transitive dep from mlflow -> mlflow-skinny (requires >=3.12.0,<7)
+protobuf>=6.33.5

@@ -13,39 +13,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libc-bin \
-        libc-dev-bin \
-        libc6 \
-        libc6-dev \
-        libxml2 \
-        libssh-4 \
-        linux-libc-dev \
-        linux-headers-generic \
-        locales \
-        openssl \
-        dotnet-hostfxr-8.0 \
-        dotnet-host-8.0 \
-        dotnet-runtime-8.0 \
-        binutils \
-        binutils-common \
-        binutils-x86-64-linux-gnu \
-        libbinutils \
-        libctf0 \
-        libctf-nobfd0 \
-        dpkg \
-        dpkg-dev \
-        libssl-dev \
-        libpam-runtime && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
-    apt-mark hold sudo && \
+    apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
@@ -128,9 +96,17 @@ RUN pip list && \
 
 
 # Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3'
-
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 'bokeh>=3.8.2'
+# Vulnerability patches for ptca environment
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3' 'pillow>=12.1.1' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2'
+# Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in ptca/base setuptools
+# setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
+# Base env: fix cryptography, wheel, and setuptools vendored vulns
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN conda run -n base pip install --no-cache-dir --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'PyJWT>=2.12.0'
+RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
