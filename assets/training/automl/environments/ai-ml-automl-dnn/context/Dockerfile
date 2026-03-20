@@ -61,7 +61,7 @@ RUN pip install \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}} \
                 'inference-schema' \
-                'mlflow-skinny==2.15.1' \
+                'mlflow-skinny>=2.16.0' \
                 'cmdstanpy==1.0.4' \
                 'prophet==1.1.4' \
                 'xgboost==1.5.2' \
