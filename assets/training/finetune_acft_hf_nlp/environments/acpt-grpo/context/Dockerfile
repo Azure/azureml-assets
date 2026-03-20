@@ -11,6 +11,11 @@ RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install transformers==4.56.0
 
+# mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635); upgrade after azureml packages
+# azureml-evaluate-mlflow → azureml-mlflow pins mlflow-skinny<=3.5.0, conflicting with mlflow 3.10.1
+# so mlflow must be upgraded separately to avoid pip resolution conflict
+RUN pip install --no-cache-dir mlflow==3.10.1
+
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
 # protobuf is a transitive dep of vllm; parent uses loose floors, cannot force 6.33.5
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
