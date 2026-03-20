@@ -17,6 +17,10 @@ tags:
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\\
     n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\"\
     : \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
+  capabilities: "reasoning"
+  contextLength: 131072
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:

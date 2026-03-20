@@ -18,6 +18,9 @@ tags:
     : \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\\
     n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\\
     n<|im_start|>assistant\"}"
+  contextLength: 40960
+  capabilities: ""
+  minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model
 variantInfo:

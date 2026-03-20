@@ -16,6 +16,10 @@ tags:
   directoryPath: cpu-fp32
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
+  contextLength: 448
+  capabilities: ""
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:

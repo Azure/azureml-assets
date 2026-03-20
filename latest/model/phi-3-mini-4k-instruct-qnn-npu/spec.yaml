@@ -18,6 +18,10 @@ tags:
     by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\"\
     : \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
     }"
+  contextLength: 4096
+  capabilities: ""
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:

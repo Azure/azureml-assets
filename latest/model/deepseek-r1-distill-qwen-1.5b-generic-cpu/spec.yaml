@@ -19,6 +19,10 @@ tags:
   parameterSchema: "{\"enabled\": [{\"name\": \"temperature\", \"default\": 0.6},
     {\"name\": \"top_p\", \"default\": 0.95}, {\"name\": \"top_k\", \"default\": 40},
     {\"name\": \"presence_penalty\", \"default\": 1.1}]}"
+  capabilities: "reasoning"
+  contextLength: 131072
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:

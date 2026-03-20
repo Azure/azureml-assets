@@ -25,6 +25,9 @@ tags:
   toolRegisterEnd: "</tools>"
   toolResponseStart: "<tool_response>"
   toolResponseEnd: "</tool_response>"
+  capabilities: "reasoning,tool-calling"
+  contextLength: 40960
+  minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model
 variantInfo:

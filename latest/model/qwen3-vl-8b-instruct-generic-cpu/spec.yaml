@@ -10,7 +10,7 @@ tags:
   author: Microsoft
   inputModalities: "text,image"
   outputModalities: "text"
-  task: chat-completion
+  task: vision-language-chat
   maxOutputTokens: 2048
   alias: qwen3-vl-8b-instruct
   directoryPath: v1
@@ -25,6 +25,9 @@ tags:
   toolRegisterEnd: "</tools>"
   toolResponseStart: "<tool_response>"
   toolResponseEnd: "</tool_response>"
+  capabilities: "reasoning,tool-calling"
+  contextLength: 262144
+  minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model
 variantInfo:

@@ -17,6 +17,9 @@ tags:
   promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\"\
     , \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"\
     }"
+  contextLength: 4224
+  capabilities: ""
+  minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model
 variantInfo:
