@@ -15,26 +15,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# --- Start Vulnerability Fixes ---
-RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        systemd \
-        systemd-sysv \
-        libudev1 \
-        libpam-systemd \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libarchive13
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         cmake \
@@ -56,19 +36,20 @@ RUN pip install --upgrade lightgbm==4.6.0
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # begin conda create
-# Install conda packages
+# Install ncurses via conda (C library, not available on pip; single-package solve is trivial)
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    # begin conda dependencies
-    numpy~=1.23.5 \
-    scikit-learn=1.5.1 \
-    holidays=0.29 \
-    setuptools-git \
-    wheel=0.46.2 \
-    scipy=1.10.1 \
-    joblib=1.2.0 \
     ncurses=6.5 \
-    # end conda dependencies
-    -c conda-forge -c anaconda
+    -c conda-forge -y
+
+# Install packages via pip (avoids conda solver OOM)
+RUN pip install --no-cache-dir \
+    'numpy>=1.23.5,<1.24' \
+    'scikit-learn==1.5.1' \
+    'holidays==0.29' \
+    'setuptools-git' \
+    'wheel>=0.46.2' \
+    'scipy==1.10.1' \
+    'joblib==1.2.0'
 
 # Ensure future conda and pip calls are tied to this conda environment,
 # and we don't just get lucky from the implicit PATH ordering.
@@ -108,9 +89,18 @@ RUN pip install \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
-# Fix vulnerabilities
+# Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
+# torchvision==0.23.0, torch==2.8.0: CVE-2025-32434 RCE via torch.load (via pytorch-transformers -> torch, horovod)
+# distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete] -> distributed)
+# mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
+# protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
+# pillow>=12.1.1: CVE-2026-25990 heap buffer overflow (via torchvision -> pillow, prophet -> matplotlib -> pillow)
+# tornado>=6.5.5: GHSA-78cv-mqj4-43f7 DoS (via distributed -> tornado, bokeh -> tornado)
+# bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
+# Note: cryptography, setuptools, jaraco.context overrides removed — verified not needed (base image resolves safe versions)
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
+                          'protobuf>=5.29.6' 'pillow>=12.1.1' 'tornado>=6.5.5' 'bokeh>=3.8.2'
 
 # --- End Vulnerability Fixes ---
 
