@@ -14,11 +14,12 @@ RUN pip install transformers==4.56.0
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
 # protobuf is a transitive dep of vllm; parent uses loose floors, cannot force 6.33.5
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.2 python-multipart==0.0.22 urllib3==2.6.3 azure-core==1.38.0
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.2 python-multipart==0.0.22 urllib3==2.6.3 azure-core==1.38.0 xgrammar>=0.1.32
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0'
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

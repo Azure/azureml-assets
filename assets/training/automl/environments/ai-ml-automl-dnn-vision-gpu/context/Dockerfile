@@ -146,7 +146,9 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
-                'wheel>=0.46.2'
+                'wheel>=0.46.2' \
+                'PyJWT>=2.12.0'
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'

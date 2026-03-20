@@ -19,4 +19,5 @@ RUN pip install --no-cache-dir --upgrade protobuf==6.33.5 cryptography==46.0.5 p
 RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
 
 # Upgrade packages in the system Python(3.13) for fixing vulnerability
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0'

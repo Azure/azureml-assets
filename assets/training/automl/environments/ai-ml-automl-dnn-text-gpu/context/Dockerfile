@@ -137,7 +137,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3' 'pillow>=1
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 # Base env: fix cryptography, wheel, and setuptools vendored vulns
-RUN conda run -n base pip install --no-cache-dir --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2'
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN conda run -n base pip install --no-cache-dir --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'PyJWT>=2.12.0'
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

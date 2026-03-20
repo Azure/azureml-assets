@@ -60,7 +60,6 @@ RUN pip install --no-cache-dir cryptography==46.0.5
 # Upgrade wandb to fix golang.org/x/crypto vulnerabilities (CVE-2025-47914, CVE-2025-58181)
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install --no-cache-dir triton==3.4.0
-RUN pip install xgrammar==0.1.27
 RUN pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url https://download.pytorch.org/whl/cu126
 COPY vllm_async_server /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py
 COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/__init__.py
@@ -69,6 +68,10 @@ COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
 RUN python3 -m pip install --upgrade pip==26.0 setuptools==82.0.0 wheel==0.46.2
 RUN pip install vllm==0.14.1
+# xgrammar 0.1.29 → ≥0.1.32 (CVE-2026-25048 — segfault via nested syntax)
+#   vllm pins xgrammar==0.1.29; all vllm versions (up to 0.17.1) use this exact pin,
+#   so no vllm upgrade can fix this — explicit override after vllm install is required.
+RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl
@@ -76,9 +79,9 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # protobuf is a transitive dep of vllm; parents use loose floors (>=6.30.0), cannot force 6.33.5
 # azure-core is a transitive dep of azureml-acft-common-components; parent requires >=1.31.0, cannot force 1.38.0
 # pyasn1 is a transitive dep of mlflow; parent requires >=0.1.3, cannot force 0.6.2
-RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5 jaraco.context==6.1.0
-# Fix vulnerabilities in base conda env
-RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0 cryptography==46.0.5
+RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.2 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0'
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults

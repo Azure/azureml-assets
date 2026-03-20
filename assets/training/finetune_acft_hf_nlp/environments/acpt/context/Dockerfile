@@ -29,7 +29,8 @@ RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.2
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y wheel>=0.46.2 pip>=26.0.1
 # vulnerability in base conda env
-RUN conda run -n base python -m pip install --upgrade pip>=26.0 wheel>=0.46.2 setuptools>=82.0.0 cryptography==46.0.5
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN conda run -n base python -m pip install --upgrade pip>=26.0 wheel>=0.46.2 setuptools>=82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
