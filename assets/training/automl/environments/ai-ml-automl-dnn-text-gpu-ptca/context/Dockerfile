@@ -4,45 +4,7 @@ USER root:root
 
 # Update system package index and upgrade Python 3.10 packages to required versions
 RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-    libpython3.10-stdlib \
-    python3.10 \
-    libpython3.10-minimal \
-    python3.10-minimal \
-    libpam0g \
-    libpam-modules-bin \
-    libpam-modules \
-    libc-bin \
-    libc-dev-bin \
-    binutils \
-    binutils-common \
-    binutils-x86-64-linux-gnu \
-    libbinutils \
-    libctf0 \
-    libctf-nobfd0 \
-    libxml2 \
-    dpkg \
-    dpkg-dev \
-    dotnet-hostfxr-8.0 \
-    dotnet-host-8.0 \
-    dotnet-runtime-8.0 \
-    linux-libc-dev \
-    linux-headers-generic \
-    locales \
-    openssl \
-    libssl-dev \
-    libssh-4 \
-    libpam-runtime \
-    libexpat1 \
-    libpng16-16 \
-    libgnutls30 \
-    libasound2 \
-    libasound2-data \
-    curl \
-    libcurl3-gnutls \
-    libcurl4 && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
-    apt-mark hold sudo && \
+    apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
@@ -76,8 +38,12 @@ RUN pip install \
 RUN pip install --upgrade 'pillow>=12.1.1'
 
 # Fix security vulnerabilities (ptca env)
-RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3'
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
+RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'bokeh>=3.8.2' 'protobuf>=6.33.5'
 
 # Fix security vulnerabilities (conda base env)
-RUN /opt/conda/bin/pip install --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1'
+# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN /opt/conda/bin/pip install --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0'
 
