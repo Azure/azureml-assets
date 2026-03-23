@@ -7,7 +7,7 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade git tar binutils binutils-common binutils-x86-64-linux-gnu libbinutils wget && \
     apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN conda run -n base python -m pip install --upgrade pip==26.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --upgrade pip==26.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 PyJWT==2.12.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -29,7 +29,8 @@ RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptograph
     'aiohttp>=3.13.3' 'azure-core>=1.38.0' 'pyasn1>=0.6.3' 'urllib3>=2.6.3' 'python-multipart>=0.0.22' 'tornado>=6.5.5' 'filelock>=3.20.3' 'orjson>=3.11.6'
 # Fix vulnerabilities in the ptca conda environment (pre-built in base image, not targeted by above installs)
 # CVE-2026-1703 (pip), CVE-2026-24049 (wheel), CVE-2026-32597 (PyJWT via azureml-core)
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade "pip>=26.0" "wheel>=0.46.2" "PyJWT>=2.12.0"
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade "pip>=26.0" "wheel>=0.46.2" "PyJWT>=2.12.0" && \
+    rm -f /opt/conda/envs/ptca/conda-meta/wheel-0.45.1*.json /opt/conda/envs/ptca/conda-meta/pip-25.3*.json
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
