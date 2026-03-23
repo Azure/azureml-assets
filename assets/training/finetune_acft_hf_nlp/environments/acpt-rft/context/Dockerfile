@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
+# Security: upgrade all OS packages and remove stale kernel headers to patch USN vulnerabilities
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get autoremove -y && \

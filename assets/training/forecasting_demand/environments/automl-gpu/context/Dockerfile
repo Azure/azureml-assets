@@ -41,6 +41,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda clean -a -y
 # dummy number to change when needing to force rebuild without changing the definition: 2
 
+# Security: fix cryptography (CVE-2026-41727) — azureml-mlflow caps cryptography<46, direct override needed
 RUN pip install cryptography>=46.0.5
 # fix until the base packages are updated with the new cryptography version. 
 # distributed is transitively pinned at 2023.2.0 by azureml-train-automl-runtime, which depends on dask==2023.2.0 

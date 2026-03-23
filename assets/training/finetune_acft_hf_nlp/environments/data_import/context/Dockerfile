@@ -4,15 +4,17 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 USER root
 
 # sudo is expected by Singularity inside the image
+# Security: upgrade all OS packages and install security-patched system libraries
 RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && apt-get install -y sudo libxml2 sqlite3 libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl 
 
+# Security: upgrade pip to fix CVE-2026-1703
 RUN pip install --upgrade pip==26.0
 
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-# temp fix for vulnerabilties, remove after pypi release
+# Security: fix transitive pip vulnerabilities — pyasn1 (CVE-2026-30922), aiohttp, urllib3, cryptography
 RUN pip install --no-cache-dir scikit-learn==1.5.1 h2==4.3.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 cryptography==46.0.5 'pyasn1>=0.6.3' && rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment 

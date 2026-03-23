@@ -2,6 +2,7 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
+# Security: upgrade all OS packages to patch USN vulnerabilities (libssh, curl, openssl, etc.)
 RUN apt-get update && apt-get -y upgrade && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

@@ -81,24 +81,31 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
 
-# vulnearbility fix
+# Security: fix pyarrow vulnerability (CVE-2025-44187)
 RUN pip install pyarrow==14.0.2
+# Security: fix torch remote code execution (CVE-2025-32434)
 RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
+# Security: fix urllib3 (CVE-2026-37152) — transitive dep of azureml SDK
 RUN pip install --upgrade urllib3>=2.6.3
 
-# Update conda base and ptca envs
+# Security: fix base conda env (python 3.13) — aiohttp (CVE-2026-37899), wheel (CVE-2026-24049),
+# setuptools vendored jaraco.context (CVE-2026-23949), cryptography (CVE-2026-41727), PyJWT (CVE-2026-32597)
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade requests urllib3 'aiohttp>=3.13.3' 'wheel>=0.46.2' \
     'setuptools>=82.0.1' 'cryptography>=46.0.5' 'PyJWT>=2.12.0' 'jaraco.context>=6.1.0' 'pip>=26.0'
+# Security: fix ptca conda env — torch (CVE-2025-32434), protobuf (CVE-2026-40186),
+# wheel/setuptools vendored packages, jaraco.context Zip Slip path traversal
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0 
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade urllib3>=2.6.3 filelock>=3.20.3 \
     'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' 'jaraco.context>=6.1.0'
 
-# Patch pillow vulnerability
+# Patch pillow vulnerability (CVE-2026-45483) across all three conda environments
 RUN pip install --upgrade pillow==12.1.1
 RUN /opt/conda/bin/pip install --upgrade pillow==12.1.1 
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.1.1 
 
-# Fix security vulnerabilities
+# Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu)
+# aiohttp (CVE-2026-37899), azure-core, bokeh, distributed, jaraco.context (CVE-2026-23949 Zip Slip),
+# protobuf (CVE-2026-40186), pyasn1 (CVE-2026-30922), cryptography, filelock, wheel, setuptools, PyJWT, tornado
 RUN pip install --upgrade 'aiohttp>=3.13.3' 'azure-core>=1.38.0' 'bokeh>=3.8.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=6.33.5' 'pyasn1>=0.6.3' 'pip>=26.0' 'cryptography>=46.0.5' \
     'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'tornado>=6.5.5'
 # Remove stale vendored metadata that scanners pick up

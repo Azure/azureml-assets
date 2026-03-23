@@ -1,12 +1,15 @@
 #PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
+# Security: upgrade all OS packages, pin linux headers to patched versions, and upgrade binutils/git/wget
 RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade linux-headers-5.15.0-163-generic=5.15.0-163.173 linux-headers-5.15.0-163=5.15.0-163.173 linux-libc-dev=5.15.0-163.173 || \
     apt-get install -y --only-upgrade linux-headers-generic linux-libc-dev && \
     apt-get install -y --only-upgrade git tar binutils binutils-common binutils-x86-64-linux-gnu libbinutils wget && \
     apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+# Security: upgrade base conda env packages — PyJWT (CVE-2026-32597), aiohttp (CVE-2026-37899),
+# cryptography (CVE-2026-41727), pip/wheel/setuptools for toolchain vulns
 RUN conda run -n base python -m pip install --upgrade pip==26.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 PyJWT==2.12.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
