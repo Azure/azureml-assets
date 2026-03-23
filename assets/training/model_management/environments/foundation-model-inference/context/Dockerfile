@@ -42,6 +42,8 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu12
 # When copied to assets repo, change to install from public pypi
 RUN pip install llm-optimized-inference==0.2.52 --no-cache-dir
 
+RUN pip install --no-cache-dir --force-reinstall xgrammar==0.1.29
+
 # Patch Ray bundled vulnerabilities:
 RUN rm -f $(python -c "import ray;print(ray.__path__[0])")/jars/ray_dist.jar && \
     rm -rf $(python -c "import ray;print(ray.__path__[0])")/_private/runtime_env/agent/thirdparty_files/*aiohttp* && \
