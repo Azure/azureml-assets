@@ -22,17 +22,14 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
     rm /tmp/miniconda.sh && \
     find / -type d -name __pycache__ | xargs rm -rf
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/opt/conda/envs/azureml-env
 
-# Create conda environment with py310
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
-    -c conda-forge --solver=classic
+# Create conda environment
+RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10
 
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
+# Activate environment via PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
-
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
@@ -43,7 +40,9 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu12
     torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
     
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.51 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.52 --no-cache-dir
+
+RUN pip install --no-cache-dir --force-reinstall xgrammar==0.1.29
 
 # Patch Ray bundled vulnerabilities:
 RUN rm -f $(python -c "import ray;print(ray.__path__[0])")/jars/ray_dist.jar && \
