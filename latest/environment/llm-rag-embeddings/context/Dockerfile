@@ -113,8 +113,8 @@ RUN python3 -m nltk.downloader punkt && \
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
 # Install tika server
-RUN downloadUrl='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.2.3/tika-server-standard-3.2.3.jar'; \
-    downloadMd5='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.2.3/tika-server-standard-3.2.3.jar.md5'; \
+RUN downloadUrl='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.3.0/tika-server-standard-3.3.0.jar'; \
+    downloadMd5='https://repo1.maven.org/maven2/org/apache/tika/tika-server-standard/3.3.0/tika-server-standard-3.3.0.jar.md5'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
     # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
     wget -O tika-server.jar.md5 "$downloadMd5"; \
