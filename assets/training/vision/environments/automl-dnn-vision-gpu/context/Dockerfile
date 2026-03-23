@@ -53,10 +53,9 @@ RUN apt-get update && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 
-# Upgrade sudo to patch known vulnerability
+# Upgrade sudo to patch known vulnerability (version resolved by apt-get upgrade above)
 RUN apt-get update && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
-    apt-mark hold sudo && \
+    apt-get install -y sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
