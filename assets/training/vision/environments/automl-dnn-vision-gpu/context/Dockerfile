@@ -87,9 +87,11 @@ RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
 RUN pip install --upgrade urllib3>=2.6.3
 
 # Update conda base and ptca envs
-RUN /opt/conda/bin/pip install --upgrade requests urllib3 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20.3
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade requests urllib3 'aiohttp>=3.13.3' 'wheel>=0.46.2' \
+    'setuptools>=82.0.1' 'cryptography>=46.0.5' 'PyJWT>=2.12.0' 'jaraco.context>=6.1.0' 'pip>=26.0'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0 
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade urllib3>=2.6.3 filelock>=3.20.3 \
+    'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' 'jaraco.context>=6.1.0'
 
 # Patch pillow vulnerability
 RUN pip install --upgrade pillow==12.1.1
@@ -99,6 +101,12 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.1.1
 # Fix security vulnerabilities
 RUN pip install --upgrade 'aiohttp>=3.13.3' 'azure-core>=1.38.0' 'bokeh>=3.8.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=6.33.5' 'pyasn1>=0.6.3' 'pip>=26.0' 'cryptography>=46.0.5' \
     'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'tornado>=6.5.5'
+# Remove stale vendored metadata that scanners pick up
+RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
+    /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
+    /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
+    /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
+    /opt/conda/envs/ptca/lib/python3.10/site-packages/wheel-0.41.2.dist-info
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
