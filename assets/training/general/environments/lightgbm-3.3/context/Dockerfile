@@ -16,12 +16,18 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Step 1: Create conda environment with only conda packages (split to reduce OOM during solve)
+# Environment setup is split into two stages (conda create + pip install) because the
+# original single-step `conda env create -f conda_dependencies.yaml` combines conda's
+# SAT solver with pip dependency resolution in one process. On ACR Standard build agents
+# (limited memory), the conda solver consistently OOMs (exit 137) when resolving both
+# conda and pip dependencies together. Splitting them avoids the memory spike.
+
+# Step 1: Create conda env with only conda-channel packages (small, fast solve)
 COPY conda_dependencies.yaml .
 RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.0 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
     conda clean -a -y
 
-# Step 2: Install pip packages separately to avoid conda solver OOM
+# Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     azureml-core=={{latest-pypi-version}} \
     azureml-defaults=={{latest-pypi-version}} \
