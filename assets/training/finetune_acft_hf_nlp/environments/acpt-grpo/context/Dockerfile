@@ -28,7 +28,8 @@ RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6
 RUN rm -rf ~/.cache/pip
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2
-# vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0' 'jaraco.context>=6.1.0' 'filelock>=3.20.3'
+# Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
+# aiohttp==3.13.3 and urllib3==2.6.3 already fixed in base image — not overridden here
+# Still vulnerable in base: cryptography(44.0.1), pip(25.3), PyJWT(2.10.1), setuptools(80.9.0), wheel(0.45.1)
+RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0' 'jaraco.context>=6.1.0' 'filelock>=3.20.3'
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

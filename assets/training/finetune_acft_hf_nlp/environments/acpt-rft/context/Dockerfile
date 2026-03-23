@@ -50,8 +50,10 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # pyasn1 is a transitive dep of mlflow; parent requires >=0.1.3, cannot force 0.6.2
 RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.3 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5 \
     'jaraco.context>=6.1.0' 'filelock>=3.20.3' 'tornado>=6.5.5' 'orjson>=3.11.6'
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0' 'jaraco.context>=6.1.0' 'filelock>=3.20.3'
+# Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
+# aiohttp==3.13.3 and urllib3==2.6.3 already fixed in base image — not overridden here
+# Still vulnerable in base: cryptography(44.0.1), pip(25.3), PyJWT(2.10.1), setuptools(80.9.0), wheel(0.45.1)
+RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0' 'jaraco.context>=6.1.0' 'filelock>=3.20.3'
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults

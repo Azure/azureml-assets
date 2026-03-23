@@ -8,9 +8,10 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get install -y --only-upgrade git tar binutils binutils-common binutils-x86-64-linux-gnu libbinutils wget && \
     apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-# Security: upgrade base conda env packages — PyJWT (CVE-2026-32597), aiohttp (CVE-2026-37899),
-# cryptography (CVE-2026-41727), pip/wheel/setuptools for toolchain vulns
-RUN conda run -n base python -m pip install --upgrade pip==26.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 PyJWT==2.12.0
+# Security: upgrade base conda env (python3.13) from ACPT base image (biweekly.202603.1)
+# aiohttp==3.13.3 and urllib3==2.6.3 already fixed in base image — not overridden here
+# Still vulnerable: cryptography(44.0.1), pip(25.3), PyJWT(2.10.1), setuptools(80.9.0), wheel(0.45.1)
+RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 PyJWT==2.12.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
