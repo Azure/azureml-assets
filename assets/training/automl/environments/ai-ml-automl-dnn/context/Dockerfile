@@ -12,6 +12,11 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # begin conda create
 # Create conda environment (minimal — packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \

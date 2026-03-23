@@ -13,6 +13,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 # Upgrade critical system and python packages
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
         systemd \
         systemd-sysv \
@@ -44,7 +45,7 @@ RUN pip install cryptography>=46.0.5
 # fix until the base packages are updated with the new cryptography version. 
 # distributed is transitively pinned at 2023.2.0 by azureml-train-automl-runtime, which depends on dask==2023.2.0 
 # that in turn pulls in the matching distributed version, so it cannot be upgraded independently without updating azureml-train-automl-runtime itself.
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir bokeh>=3.8.2 cryptography>=46.0.5 setuptools>=79.0.0 distributed>=2026.1.0
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir bokeh>=3.8.2 cryptography>=46.0.5 setuptools>=79.0.0 distributed>=2026.1.0 'pyasn1>=0.6.3'
 
 # Clean conda pkgs cache to remove stale vendored copies
 RUN rm -rf /opt/miniconda/pkgs/

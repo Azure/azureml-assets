@@ -13,7 +13,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # temp fix for vulnerabilties, remove after pypi release
-RUN pip install --no-cache-dir scikit-learn==1.5.1 h2==4.3.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 cryptography==46.0.5 && rm -rf /root/.cache/pip
+RUN pip install --no-cache-dir scikit-learn==1.5.1 h2==4.3.0 urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2 wheel==0.46.2 cryptography==46.0.5 'pyasn1>=0.6.3' && rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment 
 COPY data_import_run.py /azureml/data_import/run.py

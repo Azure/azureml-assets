@@ -14,6 +14,7 @@ ENV ENABLE_METADATA=true
 
 # System package security upgrades
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --only-upgrade \
         libpam0g \
         libpam-modules \
