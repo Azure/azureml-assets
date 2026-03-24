@@ -75,23 +75,6 @@ RUN pip install \
 # pip>=26.0 (CVE-2025-8869): symlink path traversal during tar extraction
 #   Chain: direct conda dep (pip=26.0), upgraded for security
 #
-# starlette>=0.49.1 (CVE-2025-62727): DoS via quadratic HTTP Range header parsing
-#   Chain: mlflow-skinny -> fastapi -> starlette
-#
-# pyarrow==14.0.2 (CVE-2023-47248): arbitrary code execution via IPC/Parquet deserialization
-#   Chain: mltable -> azureml-dataprep[parquet] -> pyarrow
-#   Also:  azureml-train-automl-runtime -> pyarrow (direct)
-#
-# urllib3==2.6.3 (CVE-2025-66418, CVE-2025-66471, CVE-2026-21441): DoS via decompression chain/bomb, redirect decompression bomb
-#   Chain: mlflow-skinny -> requests -> urllib3
-#   Also:  azureml-core -> requests -> urllib3
-#   Also:  azureml-automl-runtime -> urllib3 (direct)
-#   Also:  azureml-train-automl-runtime -> urllib3 (direct)
-#
-# bokeh==3.8.2 (CVE-2026-21883): WebSocket origin validation bypass (CSWSH)
-#   Chain: azureml-train-automl-runtime -> bokeh (direct dep)
-#   Also:  azureml-train-automl-runtime -> dask[complete] -> bokeh
-#
 # wheel>=0.46.2 (CVE-2026-24049): path traversal & privilege escalation via malicious wheel unpack
 #   Chain: setuptools[core] -> wheel (build dependency)
 #
@@ -99,24 +82,20 @@ RUN pip install \
 #   Chain: mltable -> cryptography (direct dep)
 #   Also:  mltable -> azureml-dataprep -> azure-identity -> cryptography
 #
-# jaraco.context>=6.1.0: CVE-2026-23949 Zip Slip path traversal fix. Direct install required because
-# setuptools 82.0.1 (latest) vendors jaraco.context with vulnerable code despite dist-info labeling 6.1.0
-#
 # protobuf>=5.29.6 (CVE-2025-4565): DoS via uncontrolled recursion in pure-Python decoder
 #   Chain: mlflow-skinny -> protobuf (direct dep)
 #   Also:  mlflow-skinny -> databricks-sdk -> protobuf
 #
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
+#
+# bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
+#   Chain: azureml-train-automl-runtime -> bokeh
 RUN pip install --upgrade \
     'pip>=26.0' \
-    'starlette>=0.49.1' \
-    'pyarrow==14.0.2' \
-    'urllib3==2.6.3' \
-    'bokeh==3.8.2' \
     'wheel>=0.46.2' \
     'cryptography>=46.0.5' \
-    'jaraco.context>=6.1.0' \
     'protobuf>=5.29.6' \
-    'distributed>=2026.1.0'
+    'distributed>=2026.1.0' \
+    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 # end pip ad-hoc

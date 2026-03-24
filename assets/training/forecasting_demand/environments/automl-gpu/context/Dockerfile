@@ -47,7 +47,9 @@ RUN pip install cryptography>=46.0.5
 # fix until the base packages are updated with the new cryptography version. 
 # distributed is transitively pinned at 2023.2.0 by azureml-train-automl-runtime, which depends on dask==2023.2.0 
 # that in turn pulls in the matching distributed version, so it cannot be upgraded independently without updating azureml-train-automl-runtime itself.
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir bokeh>=3.8.2 cryptography>=46.0.5 setuptools>=79.0.0 distributed>=2026.1.0 'pyasn1>=0.6.3'
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir \
+    'cryptography>=46.0.5' 'setuptools>=79.0.0' 'distributed>=2026.1.0' \
+    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
 # Clean conda pkgs cache to remove stale vendored copies
 RUN rm -rf /opt/miniconda/pkgs/

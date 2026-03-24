@@ -18,20 +18,14 @@ RUN pip install transformers==4.56.0
 RUN pip install --no-cache-dir mlflow==3.10.1
 
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
-# protobuf is a transitive dep of vllm; parent uses loose floors, cannot force 6.33.5
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
-# parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
-# jaraco.context and filelock are transitive deps resolved to fixed versions by
-# setuptools==82.0.0 (vendors jaraco.context 6.1.0) and torch (pulls filelock>=3.25)
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.3 python-multipart==0.0.22 urllib3==2.6.3 azure-core==1.38.0 xgrammar>=0.1.32 \
-    'pillow>=12.1.1' 'tornado>=6.5.5'
+# protobuf: vllm uses loose floors, pip can't force 6.33.5 transitively
+# cryptography: azureml-mlflow~=1.62.0 pins <46.0.0; override needed for CVE fix
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 xgrammar>=0.1.32
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2
 # Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
-# aiohttp==3.13.3 and urllib3==2.6.3 already fixed in base image — not overridden here
-# Still vulnerable in base: cryptography(44.0.1), pip(25.3), PyJWT(2.10.1), setuptools(80.9.0), wheel(0.45.1)
-RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0'
+# Still vulnerable in base: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
+RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

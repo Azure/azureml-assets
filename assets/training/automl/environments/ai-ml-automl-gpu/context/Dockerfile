@@ -118,17 +118,16 @@ RUN pip install \
 # setuptools>=82.0.1 — CVE-2025-47273 (PackageIndex path traversal RCE)
 #   Chain: azureml-automl-runtime -> pmdarima -> setuptools
 #
-# jaraco.context>=6.1.0: CVE-2026-23949 Zip Slip path traversal fix. Direct install required because
-# setuptools 82.0.1 (latest) vendors jaraco.context with vulnerable code despite dist-info labeling 6.1.0
-#
 # mlflow-skinny>=2.16.0 — CVE-2024-37059 (unsafe deserialization, CVSS 8.8),
 #                          CVE-2025-11201 (directory traversal RCE, CVSS 9.8)
 #   Chain L1: azureml-mlflow -> mlflow-skinny<=3.5.0
 #   Chain L2: azureml-train-automl-runtime -> azureml-mlflow -> mlflow-skinny
 #
-# bokeh>=3.8.2 — CVE-2026-21883 (WebSocket origin validation bypass, CVSS 5.4)
+# bokeh>=3.8.2 — GHSA-793v-589g-574v (WebSocket origin validation bypass, CVSS 5.4)
+#   conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain L1: azureml-train-automl-runtime -> bokeh<3.0.0
 #   Chain L2: azureml-train-automl-runtime -> dask[complete] -> bokeh (via [diagnostics] extra)
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'jaraco.context>=6.1.0' 'mlflow-skinny>=2.16.0' 'bokeh>=3.8.2'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
+    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
