@@ -1,0 +1,60 @@
+type: "benchmarkspec"
+name: "builtin.ifeval"
+version: 1
+display_name: "IFEval Benchmark"
+description: "Instruction-Following Eval (IFEval) is a benchmark for evaluating the instruction-following capabilities of large language models. It focuses on verifiable instructions such as word count constraints, format requirements (JSON, markdown, bullet points), keyword usage, language specifications, and case constraints. The benchmark returns both strict (exact compliance) and loose (minor tolerance) accuracy scores."
+benchmarkType: "builtin"
+categories: ["instruction_following", "quality"]
+
+inference:
+  promptText: "{{item.prompt}}"
+  inferenceParameters:
+    temperature: 0
+    top_p: 1
+    max_completion_tokens: 4096
+
+evaluator:
+  id: "azureml://registries/azureml/evaluators/builtin.ifeval/versions/1"
+  testingCriteria:
+    type: "azure_ai_evaluator"
+    name: "IFEval"
+    evaluator_name: "builtin.ifeval"
+    evaluator_version: "1"
+    initialization_parameters: {}
+    data_mapping:
+      instruction_id_list: "{{item.instruction_id_list}}"
+      instruction_kwargs: "{{item.kwargs}}"
+      response: "{{sample.output_text}}"
+
+dataset:
+  datasetName: "ifeval"
+  datasetType: "oss"
+  recordCount: "541"
+  license: "Apache-2.0"
+  properties:
+    domain: "instruction_following"
+    source_paper: "https://arxiv.org/abs/2311.07911"
+    dataset_source: "https://huggingface.co/datasets/google/IFEval"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/ifeval/versions/1"
+    sourceFormat: "jsonl"
+    properties:
+      file_name: "ifeval.jsonl"
+      type: "uri_folder"
+  datasetSchema:
+    item:
+      type: "object"
+      properties:
+        key:
+          type: "integer"
+          description: "Unique identifier for the prompt"
+        prompt:
+          type: "string"
+          description: "The instruction prompt for the model"
+        instruction_id_list:
+          type: "string"
+          description: "JSON array of instruction IDs to verify (e.g., punctuation:no_comma, length_constraints:number_words)"
+        kwargs:
+          type: "string"
+          description: "JSON array of parameter dictionaries for each instruction"

@@ -15,27 +15,9 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# --- Start Vulnerability Fixes ---
+# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
 RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-        systemd \
-        systemd-sysv \
-        libudev1 \
-        libpam-systemd \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libarchive13
-
-RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -43,7 +25,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=25.3 -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y
 
 ###############################
 # Pre-Build LightGBM
@@ -56,20 +38,20 @@ RUN pip install --upgrade lightgbm==4.6.0
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
 # begin conda create
-# Install conda packages
+# Install ncurses via conda (C library, not available on pip; single-package solve is trivial)
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    # begin conda dependencies
-    numpy~=1.23.5 \
-    scikit-learn=1.5.1 \
-    holidays=0.29 \
-    setuptools-git \
-    setuptools=78.1.1 \
-    wheel=0.44.0 \
-    scipy=1.10.1 \
-    joblib=1.2.0 \
     ncurses=6.5 \
-    # end conda dependencies
-    -c conda-forge -c anaconda
+    -c conda-forge -y
+
+# Install packages via pip (avoids conda solver OOM)
+RUN pip install --no-cache-dir \
+    'numpy>=1.23.5,<1.24' \
+    'scikit-learn==1.5.1' \
+    'holidays==0.29' \
+    'setuptools-git' \
+    'wheel>=0.46.2' \
+    'scipy==1.10.1' \
+    'joblib==1.2.0'
 
 # Ensure future conda and pip calls are tied to this conda environment,
 # and we don't just get lucky from the implicit PATH ordering.
@@ -106,25 +88,23 @@ RUN pip install \
                 'spacy==3.7.4' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
                 'py-cpuinfo==5.0.0' \
-                'psutil>5.0.0,<6.0.0' \
-                'requests>=2.32.5' \
-                'certifi>=2025.11.12' \
-                'cryptography>=45.0.7' \
                 'jinja2>=3.1.6' --no-cache-dir
                 # end pypi dependencies
 
-# Fix vulnerabilities
+# Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
+# torchvision==0.23.0, torch==2.8.0: CVE-2025-32434 RCE via torch.load (via pytorch-transformers -> torch, horovod)
+# distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete] -> distributed)
+# mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
+# protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
+# pillow>=12.1.1: CVE-2026-25990 heap buffer overflow (via torchvision -> pillow, prophet -> matplotlib -> pillow)
+# bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-
-# If you have other python/pip environments, update them too:
-RUN /opt/miniconda/bin/pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
-RUN pip install --upgrade 'requests==2.32.5' 'urllib3==2.6.3' 'pillow==12.0.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
+                          'protobuf>=5.29.6' 'pillow>=12.1.1' \
+                          'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
 # --- End Vulnerability Fixes ---
 
-# --- Pin NumPy <2 everywhere to avoid NumPy 2.x incompatibility ---
-RUN pip install --upgrade 'numpy==1.23.5' 'h2>=4.3.0'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
@@ -136,8 +116,5 @@ RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  git+https://github.com/horovod/horovod@3a31d933a13c7c885b8a673f4172b17914ad334d"
 
 RUN rm -rf /opt/miniconda/pkgs/
-
-# Verify installation
-RUN conda list
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
