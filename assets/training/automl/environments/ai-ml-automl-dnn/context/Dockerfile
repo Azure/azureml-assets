@@ -12,6 +12,12 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Security: upgrade all OS packages to fix USN vulnerabilities
+# Using --fix-missing to avoid failures when Ubuntu mirrors are mid-sync (systemd 404s)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # begin conda create
 # Create conda environment (minimal — packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -76,32 +82,10 @@ RUN pip install \
 
 # Fix vulnerabilities - security overrides for transitive dependencies
 #
-# starlette>=0.49.1        CVE-2025-62727  DoS via HTTP Range header parsing
-#                          Chain: mlflow-skinny -> fastapi -> starlette
-#
-# urllib3==2.6.3           CVE-2025-66418  DoS via unbounded content-encoding decompression
-#                          Chain (L1): azureml-core -> urllib3
-#                          Chain (L1): azureml-automl-runtime -> urllib3
-#                          Chain (L2): azureml-core -> requests -> urllib3
-#
-# h2>=4.3.0               CVE-2025-57804  HTTP/2 request splitting via CRLF injection
-#                          Chain: azureml-core -> urllib3 -> h2
-#
-# bokeh==3.8.2             CVE-2026-21883  Cross-Site WebSocket Hijacking on server
-#                          Chain (L1): azureml-train-automl-runtime -> bokeh
-#                          Chain (L2): prophet -> dask -> bokeh
-#
-# PyNaCl==1.6.2            CVE-2025-69277  libsodium incomplete input validation
-#                          Chain: azureml-core -> paramiko -> PyNaCl
-#
 # distributed>=2026.1.0    CVE-2026-23528  XSS-to-RCE via Dask dashboard proxy
 #                          Chain (L1): prophet -> distributed
 #                          Chain (L1): xgboost -> distributed
 #                          Chain (L2): prophet -> dask -> distributed
-#
-# jaraco.context>=6.1.0    CVE-2026-23949  Zip Slip path traversal fix. Direct install required
-#                          because setuptools 82.0.1 (latest) vendors jaraco.context with
-#                          vulnerable code despite dist-info labeling 6.1.0
 #
 # protobuf>=5.29.6         CVE-2025-4565   DoS via recursive protobuf messages (pure-Python)
 #                          Chain (L1): mlflow-skinny -> protobuf
@@ -112,10 +96,11 @@ RUN pip install \
 #                          Chain (L1): mltable -> cryptography
 #                          Chain (L2): azureml-core -> paramiko -> cryptography
 #
-# tornado>=6.5.0           CVE-2025-47287  DoS via multipart/form-data log flood
-#                          Chain: bokeh -> tornado
-#                          Chain: distributed -> tornado
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2' 'distributed>=2026.1.0' 'jaraco.context>=6.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' 'tornado>=6.5.0'
+# bokeh>=3.8.2             GHSA-793v-589g-574v  conda env installs 2.4.3, pip can't auto-upgrade
+#                          Chain (L1): azureml-train-automl-runtime -> bokeh
+#                          Chain (L2): prophet -> dask -> bokeh
+RUN pip install --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' \
+    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
