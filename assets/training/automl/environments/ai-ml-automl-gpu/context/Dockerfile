@@ -15,30 +15,10 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
-# Security: upgrade all OS packages to fix USN vulnerabilities (systemd, sudo, libpam, etc.)
-RUN apt-get update && echo 'success updated apt-get!'
+# Security: upgrade all OS packages to fix USN vulnerabilities
+# Using --fix-missing to avoid failures when Ubuntu mirrors are mid-sync (systemd 404s)
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
-        sudo \
-        systemd \
-        systemd-sysv \
-        libudev1 \
-        libpam-systemd \
-        systemd-timesyncd \
-        libsystemd0 \
-        libnss-systemd \
-        libpython3.10-stdlib \
-        python3.10 \
-        libpython3.10-minimal \
-        python3.10-minimal \
-        libpam0g \
-        libpam-modules-bin \
-        libpam-modules \
-        libpam-runtime \
-        libarchive13
-
-RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \

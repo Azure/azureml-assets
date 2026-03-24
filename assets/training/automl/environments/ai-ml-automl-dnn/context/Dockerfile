@@ -12,9 +12,10 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
-# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
+# Security: upgrade all OS packages to fix USN vulnerabilities
+# Using --fix-missing to avoid failures when Ubuntu mirrors are mid-sync (systemd 404s)
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # begin conda create
