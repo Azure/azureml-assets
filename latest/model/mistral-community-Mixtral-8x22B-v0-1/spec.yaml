@@ -6,7 +6,7 @@ properties:
   SHA: 499f4b3093afb3defc03f599356b9dae13462379
   inference-min-sku-spec: 96|8|1800|2900
   inference-recommended-sku: Standard_ND96amsr_A100_v4
-  languages: moe, fr, it, de, es, en
+  languages: fr, it, de, es, en
 tags:
   Featured: ''
   SharedComputeCapacityEnabled: ''
@@ -21,7 +21,7 @@ tags:
   task: text-generation
   author: "Mistral AI"
   benchmark: "quality"
-version: 6
+version: 7
 description: |
   The Mixtral-8x22B Large Language Model (LLM) is a pretrained generative Sparse Mixture of Experts.
 
