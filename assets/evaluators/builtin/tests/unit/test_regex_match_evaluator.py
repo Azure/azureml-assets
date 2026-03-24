@@ -14,13 +14,15 @@ import sys
 from pathlib import Path
 import pytest
 
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory
+
 # Add the evaluator path to sys.path for testing
 EVALUATOR_PATH = (
     Path(__file__).parent.parent.parent / "regex_match" / "evaluator"
 )
 sys.path.insert(0, str(EVALUATOR_PATH))
 
-from _regex_match import RegexMatchEvaluator  # noqa: E402
+from _regex_match import RegexMatchEvaluator, ExtendedErrorTarget  # noqa: E402
 
 
 # Output field names
@@ -399,18 +401,18 @@ class TestRegexMatchEvaluatorValidation:
             RegexMatchEvaluator()
 
     def test_invalid_pattern_syntax(self):
-        """Test that invalid regex syntax raises ValueError."""
-        with pytest.raises(ValueError, match="Invalid regular expression"):
+        """Test that invalid regex syntax raises EvaluationException."""
+        with pytest.raises(EvaluationException, match="Invalid regular expression"):
             RegexMatchEvaluator(patterns=r"[invalid(regex")
 
     def test_empty_pattern_in_list(self):
-        """Test that empty pattern in list raises ValueError."""
-        with pytest.raises(ValueError, match="must not be empty"):
+        """Test that empty pattern in list raises EvaluationException."""
+        with pytest.raises(EvaluationException, match="must not be empty"):
             RegexMatchEvaluator(patterns=["(?i)ANSWER:\\s*A", ""])
 
     def test_empty_patterns_list(self):
-        """Test that empty patterns list raises ValueError."""
-        with pytest.raises(ValueError, match="At least one pattern"):
+        """Test that empty patterns list raises EvaluationException."""
+        with pytest.raises(EvaluationException, match="At least one pattern"):
             RegexMatchEvaluator(patterns=[])
 
     def test_pattern_without_capture_group_is_valid(self):
@@ -461,9 +463,10 @@ class TestRegexMatchEvaluatorLogging:
     def test_logging_on_invalid_pattern(self, caplog):
         """Test that info logging includes pattern metadata on compilation error."""
         import logging
+        from azure.ai.evaluation._exceptions import EvaluationException
 
         with caplog.at_level(logging.INFO):
-            with pytest.raises(ValueError, match="Invalid regular expression"):
+            with pytest.raises(EvaluationException, match="Invalid regular expression"):
                 RegexMatchEvaluator(patterns=r"[invalid(regex")
 
         # Check that info log includes pattern metadata
@@ -490,3 +493,55 @@ class TestRegexMatchEvaluatorLogging:
 
         # Check that dynamic flag is logged
         assert any("dynamic=True" in record.message for record in caplog.records)
+
+
+class TestRegexMatchEvaluatorUserErrors:
+    """Tests for user error handling with EvaluationException."""
+
+    def test_empty_patterns_error_attributes(self):
+        """Test that empty patterns raises EvaluationException with correct attributes."""
+        with pytest.raises(EvaluationException) as exc_info:
+            RegexMatchEvaluator(patterns=[])
+
+        exc = exc_info.value
+        assert exc.blame == ErrorBlame.USER_ERROR
+        assert exc.category == ErrorCategory.MISSING_FIELD
+        assert exc.target == ExtendedErrorTarget.REGEX_MATCH_EVALUATOR
+        assert "At least one pattern must be provided" in str(exc)
+
+    def test_empty_pattern_in_list_error_attributes(self):
+        """Test that empty pattern in list raises EvaluationException with correct attributes."""
+        with pytest.raises(EvaluationException) as exc_info:
+            RegexMatchEvaluator(patterns=["valid", ""])
+
+        exc = exc_info.value
+        assert exc.blame == ErrorBlame.USER_ERROR
+        assert exc.category == ErrorCategory.INVALID_VALUE
+        assert exc.target == ExtendedErrorTarget.REGEX_MATCH_EVALUATOR
+        assert "must not be empty" in str(exc)
+
+    def test_invalid_regex_error_attributes(self):
+        """Test that invalid regex raises EvaluationException with correct attributes."""
+        with pytest.raises(EvaluationException) as exc_info:
+            RegexMatchEvaluator(patterns=r"[invalid(regex")
+
+        exc = exc_info.value
+        assert exc.blame == ErrorBlame.USER_ERROR
+        assert exc.category == ErrorCategory.INVALID_VALUE
+        assert exc.target == ExtendedErrorTarget.REGEX_MATCH_EVALUATOR
+        assert "Invalid regular expression pattern at index 0" in str(exc)
+
+    def test_invalid_regex_in_dynamic_pattern_error_attributes(self):
+        """Test that invalid regex at runtime raises EvaluationException with correct attributes."""
+        # Create evaluator with dynamic pattern containing invalid regex when resolved
+        evaluator = RegexMatchEvaluator(patterns=r"[{{ground_truth}}")
+
+        # When ground_truth is resolved, the pattern becomes invalid
+        with pytest.raises(EvaluationException) as exc_info:
+            evaluator(response="test", ground_truth="a")
+
+        exc = exc_info.value
+        assert exc.blame == ErrorBlame.USER_ERROR
+        assert exc.category == ErrorCategory.INVALID_VALUE
+        assert exc.target == ExtendedErrorTarget.REGEX_MATCH_EVALUATOR
+        assert "Invalid regular expression pattern" in str(exc)
