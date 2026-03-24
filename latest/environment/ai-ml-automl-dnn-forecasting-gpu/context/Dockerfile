@@ -12,6 +12,11 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         cmake \
@@ -79,10 +84,10 @@ RUN pip install --no-cache-dir \
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow, azureml-contrib-automl-dnn-forecasting)
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.1.1: CVE-2026-25990 (via matplotlib, bokeh, tensorboard)
-# tornado>=6.5.5: GHSA-78cv-mqj4-43f7 (via distributed, bokeh, ipykernel)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'mlflow-skinny>=2.16.0' \
-                          'protobuf>=5.29.6' 'pillow>=12.1.1' 'tornado>=6.5.5' 'bokeh>=3.8.2' 'jaraco.context>=6.1.0'
+                          'protobuf>=5.29.6' 'pillow>=12.1.1' \
+                          'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
