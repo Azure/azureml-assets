@@ -16,6 +16,7 @@ urllib3>=2.6.3
 Werkzeug>=3.1.5
 pyasn1>=0.6.2
 wheel>=0.46.2
+cryptography>=46.0.5
 
 # Vendored dependency inside setuptools (jaraco.context)
 setuptools>=80.10.2
