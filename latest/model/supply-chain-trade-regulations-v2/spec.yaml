@@ -158,6 +158,9 @@ tags:
 
     [https://ai.azure.com/explore/models/Phi\-4/version/7/registry/azureml?tid\=72f988bf\-86f1\-41af\-91ab\-2d7cd011db47](https://ai.azure.com/explore/models/Phi-4/version/7/registry/azureml?tid=72f988bf-86f1-41af-91ab-2d7cd011db47)
   hiddenlayerscanned: ""
+  InferenceLegacyDate: '2026-03-16'
+  InferenceDeprecationDate: '2026-04-16'
+  InferenceRetirementDate: '2026-07-31'
   inference_compute_allow_list: [Standard_NC24ads_A100_v4, 
       Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, 
       Standard_ND96amsr_A100_v4]
