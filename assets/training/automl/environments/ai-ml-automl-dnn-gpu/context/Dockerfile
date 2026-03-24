@@ -15,7 +15,9 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
+# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -95,12 +97,11 @@ RUN pip install \
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow -> mlflow-skinny, also installed directly)
 # protobuf>=5.29.6: CVE-2026-0994 DoS recursion (via mlflow-skinny -> protobuf, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.1.1: CVE-2026-25990 heap buffer overflow (via torchvision -> pillow, prophet -> matplotlib -> pillow)
-# tornado>=6.5.5: GHSA-78cv-mqj4-43f7 DoS (via distributed -> tornado, bokeh -> tornado)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
-# Note: cryptography, setuptools, jaraco.context overrides removed — verified not needed (base image resolves safe versions)
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
 RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
-                          'protobuf>=5.29.6' 'pillow>=12.1.1' 'tornado>=6.5.5' 'bokeh>=3.8.2'
+                          'protobuf>=5.29.6' 'pillow>=12.1.1' \
+                          'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
 # --- End Vulnerability Fixes ---
 

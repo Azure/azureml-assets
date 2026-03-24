@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
+# Security: upgrade all OS packages and remove stale kernel headers to patch USN vulnerabilities
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get autoremove -y && \
@@ -43,13 +44,12 @@ RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl
-# aiohttp is a transitive dep of vllm/sglang; parents use loose floors, cannot force 3.13.3
-# protobuf is a transitive dep of vllm; parents use loose floors (>=6.30.0), cannot force 6.33.5
-# azure-core is a transitive dep of azureml-acft-common-components; parent requires >=1.31.0, cannot force 1.38.0
-# pyasn1 is a transitive dep of mlflow; parent requires >=0.1.3, cannot force 0.6.2
-RUN pip install --upgrade aiohttp==3.13.3 azure-core==1.38.0 pyasn1==0.6.3 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 pillow==12.1.1 python-multipart==0.0.22 cryptography==46.0.5
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 aiohttp==3.13.3 setuptools==82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0'
+# aiohttp: vllm/sglang use loose floors, pip can't force 3.13.3 transitively
+# protobuf: vllm uses loose floors (>=6.30.0), pip can't force 6.33.5 transitively
+RUN pip install --upgrade aiohttp==3.13.3 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.5
+# Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
+# Still vulnerable in base: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
+RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
