@@ -11,10 +11,8 @@ tags:
   provider: "Microsoft"
 initParameterSchema:
   type: "object"
-  properties:
-    azure_ai_project:
-      type: "string"
-  required: ["azure_ai_project"]
+  properties: {}
+  required: []
 dataMappingSchema:
   type: "object"
   properties:
