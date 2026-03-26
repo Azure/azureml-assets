@@ -45,7 +45,7 @@ dataset:
     dataset_source: "https://github.com/suzgunmirac/BIG-Bench-Hard"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/bigbenchhard/versions/1"
+    sourceDatasetId: "azureml://registries/azureml/data/bigbenchhard/versions/2"
     sourceFormat: "jsonl"
     properties:
       file_name: "bbh_samples_flat.jsonl"

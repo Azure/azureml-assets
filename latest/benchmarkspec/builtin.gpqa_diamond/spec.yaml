@@ -45,7 +45,7 @@ dataset:
     dataset_source: "https://github.com/idavidrein/gpqa"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/gpqa_diamond/versions/1"
+    sourceDatasetId: "azureml://registries/azureml/data/gpqa_diamond/versions/2"
     sourceFormat: "csv"
     properties:
       file_name: "gpqa_diamond.csv"

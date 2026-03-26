@@ -41,7 +41,7 @@ dataset:
     dataset_source: "https://github.com/sylinrl/TruthfulQA/"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/truthful_qa/versions/2"
+    sourceDatasetId: "azureml://registries/azureml/data/truthful_qa/versions/3"
     sourceFormat: "csv"
     properties:
       file_name: "TruthfulQA.csv"

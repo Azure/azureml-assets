@@ -1,10 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "frontierscience"
-version: "1"
+version: "2"
 tags:
-  azureml.Designer: true
-  azureml.Designer.name: FrontierScience
-  azureml.Designer.dataTypeId: DataFrameDirectory
+  azureml.Designer: false
 description: FrontierScience benchmark dataset
 type: uri_folder
 path: sample_data/

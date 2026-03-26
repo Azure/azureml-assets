@@ -1,10 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "bigbenchhard"
-version: "1"
+version: "2"
 tags:
-  azureml.Designer: true
-  azureml.Designer.name: BIG-Bench Hard
-  azureml.Designer.dataTypeId: DataFrameDirectory
+  azureml.Designer: false
 description: BIG-Bench Hard (BBH) benchmark dataset
 type: uri_folder
 path: sample_data/
