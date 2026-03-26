@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.violence"
-version: 2
+version: 3
 displayName: "Violence-Content-Evaluator"
 description: "Detects violent or threatening language in the response. Lower scores indicate safer, non‑violent communication."
 evaluatorType: "builtin"
