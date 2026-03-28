@@ -46,7 +46,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
 RUN pip install \
                 # begin pypi dependencies
                 azureml-core==1.61.0.post3 \
-                azureml-mlflow==1.62.0.post1 \
+                azureml-mlflow==1.62.0.post2 \
                 azureml-pipeline-core==1.62.0 \
                 azureml-telemetry==1.62.0 \
                 azureml-interpret==1.62.0 \

@@ -31,7 +31,7 @@ RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.0 'pandas~=1.5.3' 'sc
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     azureml-core==1.61.0.post3 \
     azureml-defaults==1.62.0 \
-    azureml-mlflow==1.62.0.post1 \
+    azureml-mlflow==1.62.0.post2 \
     azureml-telemetry==1.62.0 \
     'scikit-learn~=1.5.1' \
     'xgboost~=1.7.6' \
