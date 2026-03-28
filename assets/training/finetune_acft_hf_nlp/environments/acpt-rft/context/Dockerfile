@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get autoclean && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
-RUN conda install pip==25.3 -y
+
 # Remove all old pip metadata after upgrade
 COPY requirements.txt .
 
