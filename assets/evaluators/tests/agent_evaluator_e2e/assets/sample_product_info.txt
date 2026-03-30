@@ -1,0 +1,26 @@
+Product Catalog - Contoso Electronics
+
+Product: Contoso SmartWatch X100
+Price: $299.99
+Category: Wearable Technology
+Description: The Contoso SmartWatch X100 features a 1.5-inch AMOLED display, heart rate monitoring,
+GPS tracking, sleep analysis, and 7-day battery life. Compatible with iOS and Android.
+Available colors: Midnight Black, Silver Frost, Ocean Blue.
+
+Product: Contoso Wireless Earbuds Pro
+Price: $149.99
+Category: Audio
+Description: Premium noise-canceling wireless earbuds with 30-hour battery life (with case),
+Bluetooth 5.3, IPX5 water resistance, and adaptive EQ. Includes three ear tip sizes.
+
+Product: Contoso Portable Speaker Z50
+Price: $79.99
+Category: Audio
+Description: Compact Bluetooth speaker with 360-degree sound, 12-hour battery life,
+IPX7 waterproof rating. Supports multi-speaker pairing for stereo sound.
+
+Product: Contoso USB-C Hub Ultra
+Price: $59.99
+Category: Accessories
+Description: 7-in-1 USB-C hub featuring HDMI 4K output, 2x USB-A 3.0, 1x USB-C charging,
+SD card reader, microSD slot, and Ethernet port. Aluminum body with travel pouch.
