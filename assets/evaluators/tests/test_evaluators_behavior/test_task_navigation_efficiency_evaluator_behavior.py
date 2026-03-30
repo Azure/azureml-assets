@@ -600,7 +600,7 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
 
     @staticmethod
     def _make_action(name: str, arguments: Any) -> Dict[str, Any]:
-        """Helper to create an assistant action with a tool call."""
+        """Create an assistant action with a tool call."""
         return {
             "role": "assistant",
             "content": [
