@@ -38,7 +38,7 @@ dataset:
     dataset_source: "https://huggingface.co/datasets/openai/frontierscience"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/frontierscience/versions/1"
+    sourceDatasetId: "azureml://registries/azureml/data/frontierscience/versions/2"
     sourceFormat: "csv"
     properties:
       file_name: "frontierscience.csv"

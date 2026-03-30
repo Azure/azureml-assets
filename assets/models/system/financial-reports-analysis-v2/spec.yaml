@@ -33,6 +33,9 @@ tags:
   evaluation: "evaluation.md"
   notes: "notes.md"
   hiddenlayerscanned: ""
+  InferenceLegacyDate: '2026-03-16'
+  InferenceDeprecationDate: '2026-04-16'
+  InferenceRetirementDate: '2026-07-31'
   inference_compute_allow_list:
     [
       Standard_NC24ads_A100_v4,

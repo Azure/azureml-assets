@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/intel-npu-models/WMLGA_Sep23_NPU/Mistral-7B-Instruct-v0.2-npu-context-ov-dyn-sym-gs128-bkp-int8-sym/Mistral-7B-Instruct-v0.2-npu-context-ov-dyn-sym-gs128-bkp-int8-sym/model
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/models/Mistral-7B-Instruct-v0-2/onnx/openvino_npu/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md

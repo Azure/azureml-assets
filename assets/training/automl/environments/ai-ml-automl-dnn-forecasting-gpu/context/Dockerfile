@@ -12,24 +12,10 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
+# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
 RUN apt-get update && \
-apt-get install -y --only-upgrade \
-    systemd \
-    libsystemd0 \
-    libnss-systemd \
-    libpam-systemd \
-    libudev1 \
-    systemd-sysv \
-    systemd-timesyncd \
-    python3.10 \
-    python3.10-minimal \
-    libarchive13 \
-    libpython3.10-minimal \
-    libpython3.10-stdlib \
-    libpam0g \
-    libpam-modules \
-    libpam-modules-bin \
-    libpam-runtime
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -42,22 +28,22 @@ RUN apt-get update && \
 
 
 # begin conda create
-# Create conda environment
+# Create conda environment (minimal — packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
-    # begin conda dependencies
-    pip=25.3 \
-    numpy~=1.23.5\
-    scikit-learn=1.5.1 \
-    pandas~=1.5.3 \
-    scipy=1.10.1 \
-    'psutil>=5.2.2,<6.0.0' \
-    tqdm \
-    setuptools=78.1.1 \
-    wheel=0.44.0 \
-    -c conda-forge -c pytorch -c anaconda && \
-    # end conda dependencies
+    -c conda-forge && \
     conda clean -a -y
+
+# Install scientific packages + pip/setuptools/wheel via pip (avoids conda solver OOM)
+RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
+    'numpy>=1.23.5,<1.24' \
+    'scikit-learn==1.5.1' \
+    'pandas>=1.5.3,<1.6' \
+    'scipy==1.10.1' \
+    'psutil>=5.2.2,<6.0.0' \
+    'pip>=26.0' \
+    'setuptools>=82.0.1' \
+    'wheel>=0.46.2'
 # end conda create
 
 # begin pip install
@@ -76,16 +62,10 @@ RUN pip install --no-cache-dir \
                 azureml-dataset-runtime=={{latest-pypi-version}} \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
-                'mlflow-skinny==2.15.1' \
-                'xgboost==1.5.2' \
-                'cryptography>=45.0.7' \
-                'requests>=2.32.5' \
-                'certifi>=2025.11.12' \
-                'spacy==3.7.4' \
+                'xgboost==3.2.0' \
                 'GitPython>=3.1.41' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-3.7.1.tar.gz' \
-                'py-cpuinfo==5.0.0' \
-                "pillow>=12.0.0"
+                'py-cpuinfo==5.0.0' 
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -97,8 +77,17 @@ RUN pip install --no-cache-dir \
 
 # end pip install
 
-# Fix vulnerabilities - upgrade pip, starlette, urllib3, bokeh, PyNaCl
-RUN pip install --upgrade 'starlette>=0.49.1' 'urllib3==2.6.3' 'h2>=4.3.0' 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+# Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
+# distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete])
+# cryptography>=46.0.5: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
+# setuptools>=82.0.1: CVE-2026-23949 (vendors patched jaraco.context 6.1.0; universal build tool)
+# mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow, azureml-contrib-automl-dnn-forecasting)
+# protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
+# pillow>=12.1.1: CVE-2026-25990 (via matplotlib, bokeh, tensorboard)
+# bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'mlflow-skinny>=2.16.0' \
+                          'protobuf>=5.29.6' 'pillow>=12.1.1' \
+                          'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
