@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-1.5b-instruct-openvino-npu
-version: 3
+version: 4
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-1.5b
-  directoryPath: v3
+  directoryPath: v4
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
@@ -21,6 +21,10 @@ tags:
   toolRegisterEnd: "</tools>"
   toolResponseStart: "<tool_response>"
   toolResponseEnd: "</tool_response>"
+  capabilities: "tool-calling"
+  contextLength: 4224
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:
@@ -30,5 +34,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'npu'
     executionProvider: 'OpenVINOExecutionProvider'
-    fileSizeBytes: 1621350154
-    vRamFootprintBytes: 1621666242
+    fileSizeBytes: 928062117
+    vRamFootprintBytes: 928062117

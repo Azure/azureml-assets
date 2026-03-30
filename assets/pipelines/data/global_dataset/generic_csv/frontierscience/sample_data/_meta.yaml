@@ -1,0 +1,5 @@
+type: DataFrameDirectory
+extension: {}
+format: CSV
+data: frontierscience.csv
+schema: schema/_schema.json

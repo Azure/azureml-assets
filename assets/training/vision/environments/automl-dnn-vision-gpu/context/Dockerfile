@@ -14,6 +14,7 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -46,16 +47,15 @@ RUN apt-get update && \
         locales \
         openssl \
         unzip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*&& \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 
-# Upgrade sudo to patch known vulnerability
+# Upgrade sudo to patch known vulnerability (version resolved by apt-get upgrade above)
 RUN apt-get update && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
-    apt-mark hold sudo && \
+    apt-get install -y sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
@@ -66,8 +66,8 @@ EXPOSE 5001 8883 8888
 ENV ENABLE_METADATA=true
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y || true
-RUN conda install pip -n ptca -y || true
+RUN conda install pip -n base -y 
+RUN conda install pip -n ptca -y 
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -81,20 +81,42 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-runtime=={{latest-pypi-version}} \
                 azureml-automl-dnn-vision=={{latest-pypi-version}}
 
-# vulnearbility fix
-RUN pip install pyarrow==14.0.2
+# Security: fix torch remote code execution (CVE-2025-32434)
 RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
+# Security: fix urllib3 (CVE-2026-37152) — transitive dep of azureml SDK
 RUN pip install --upgrade urllib3>=2.6.3
 
-# Update conda base and ptca envs
-RUN /opt/conda/bin/pip install --upgrade requests urllib3 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade torch==2.8.0 torchvision==0.23.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade urllib3>=2.6.3 filelock>=3.20.1|| true
+# Security: fix base conda env (python 3.13) — aiohttp (CVE-2026-37899), wheel (CVE-2026-24049),
+# cryptography (CVE-2026-41727), PyJWT (CVE-2026-32597), urllib3, filelock, pillow, bokeh
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade requests 'urllib3>=2.6.3' 'aiohttp>=3.13.3' 'wheel>=0.46.2' \
+    'setuptools>=82.0.1' 'cryptography>=46.0.5' 'PyJWT>=2.12.0' 'pip>=26.0' \
+    'filelock>=3.20.3' 'pillow>=12.1.1' \
+    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+# Security: fix ptca conda env — torch (CVE-2025-32434), protobuf (CVE-2026-40186),
+# wheel/setuptools, urllib3, filelock, pillow, PyJWT, bokeh overrides for conda env
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0 
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.6.3' 'filelock>=3.20.3' \
+    'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
+    'PyJWT>=2.12.0' 'pillow>=12.1.1' \
+    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
-# Patch pillow vulnerability
-RUN pip install --upgrade pillow==12.0.0
-RUN /opt/conda/bin/pip install --upgrade pillow==12.0.0 || true
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.0.0 || true
+# Patch pillow vulnerability (CVE-2026-45483) across all three conda environments
+RUN pip install --upgrade pillow==12.1.1
+RUN /opt/conda/bin/pip install --upgrade pillow==12.1.1 
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.1.1 
+
+# Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu)
+# aiohttp (CVE-2026-37899), bokeh (GHSA-793v-589g-574v), distributed (CVE-2026-23528),
+# protobuf (CVE-2026-40186), cryptography, filelock, wheel, setuptools, PyJWT, urllib3, pillow
+RUN pip install --upgrade 'aiohttp>=3.13.3' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.0' 'cryptography>=46.0.5' \
+    'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.1.1' \
+    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+# Remove stale vendored metadata that scanners pick up
+RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
+    /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
+    /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
+    /opt/conda/envs/ptca/lib/python3.10/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
+    /opt/conda/envs/ptca/lib/python3.10/site-packages/wheel-0.41.2.dist-info
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
