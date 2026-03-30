@@ -496,7 +496,10 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         if isinstance(value, str):
             return value
         if isinstance(value, (dict, list)):
-            return json.dumps(value, sort_keys=True)
+            try:
+                return json.dumps(value, sort_keys=True)
+            except (TypeError, ValueError):
+                return str(value)
         return str(value)
 
     def _prepare_steps_for_comparison(
