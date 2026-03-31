@@ -744,8 +744,6 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
         if isinstance(eval_input.get("response"), list):
             eval_input["response"] = _preprocess_messages(eval_input["response"])
-        if isinstance(eval_input.get("query"), list):
-            eval_input["query"] = _preprocess_messages(eval_input["query"])
 
         eval_input["response"] = reformat_agent_response(eval_input.get("response"), logger)
 
