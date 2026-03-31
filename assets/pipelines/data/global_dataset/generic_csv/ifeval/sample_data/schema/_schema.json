@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "integer",
+      "description": "Unique identifier for the prompt"
+    },
+    "prompt": {
+      "type": "string",
+      "description": "The instruction prompt for the model"
+    },
+    "instruction_id_list": {
+      "type": "string",
+      "description": "JSON array of instruction IDs to verify (e.g., punctuation:no_comma, length_constraints:number_words)"
+    },
+    "kwargs": {
+      "type": "string",
+      "description": "JSON array of parameter dictionaries for each instruction"
+    }
+  },
+  "required": ["key", "prompt", "instruction_id_list", "kwargs"]
+}

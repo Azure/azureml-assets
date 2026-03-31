@@ -8,10 +8,6 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get install -y expat
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# # # Install mmcv-full and mmdet
-# Request for scipy installation to avoid error in mmcv-full installation
-RUN apt-get install -y gfortran libopenblas-dev liblapack-dev libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
-
 
 # [Temp Fix] To address PyTorch Distributed RPC Framework Remote Code Execution (RCE) Vulnerability - Working internally to get a compatbile image, will re-enable
 # RUN mim install mmtrack==0.14.0
@@ -33,7 +29,10 @@ RUN pip install numpy==1.23.5
 RUN pip install yapf==0.40.1
 
 # protobuf is a transitive dep of onnx/mlflow-skinny; parents use loose floors (>=3.12.0), cannot force 6.33.5
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5
-
-# Upgrade requests, urllib3, aiohttp in the system Python (3.13) for fixing vulnerability
-RUN /opt/conda/bin/python3.13 -m pip install --upgrade requests==2.32.4 urllib3==2.6.3 aiohttp==3.13.3 pip==26.0 wheel==0.46.2 setuptools==82.0.0
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pillow==12.1.1
+# pip install updates the binary but conda-meta still references old versions; conda install syncs both
+RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
+# Upgrade requests, urllib3, aiohttpin the system Python (3.13) for fixing vulnerability
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5 'PyJWT>=2.12.0'

@@ -243,10 +243,12 @@ RUN conda run -p $CONDA_PREFIX
 RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --no-cache-dir --no-build-isolation horovod["tensorflow"]==0.28.1
 
 # Reinstall OpenSSL inside Conda
-RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl=3.0.2
+RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 
 # Security vulnerability fixes
-RUN conda run -p $CONDA_PREFIX pip install --upgrade urllib3==2.6.3 aiohttp==3.13.3 PyNaCl==1.6.2
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'protobuf>=5.29.6'
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH

@@ -5,9 +5,10 @@ displayName: "Deflection-Rate-Evaluator"
 description: "Evaluates whether an AI agent successfully resolved a user's query without requiring human intervention (deflection). A deflection occurs when the AI indicates the topic is out of scope, suggests seeking help elsewhere, or fails to provide a direct answer. This evaluator is useful for measuring chatbot effectiveness, customer support automation rates, and self-service success in support scenarios."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
-categories: ["quality", "agents"]
+categories: ["business"]
 tags:
   provider: "Microsoft"
+  is_continuous_scenario: "true"
 initParameterSchema:
   type: "object"
   properties:

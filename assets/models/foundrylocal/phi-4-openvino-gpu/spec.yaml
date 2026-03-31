@@ -14,6 +14,10 @@ tags:
   alias: phi-4
   directoryPath: model
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|im_end|>\", \"user\": \"<|user|>\\n{Content}<|im_end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|im_end|>\", \"prompt\": \"<|user|>\\n{Content}<|im_end|>\\n<|assistant|>\"}"
+  contextLength: 16384
+  capabilities: ""
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:

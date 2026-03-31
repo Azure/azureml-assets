@@ -259,7 +259,38 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
 
 RUN conda run -p $CONDA_PREFIX
 
+# Fix OS package vulnerabilities (CRITICAL/HIGH from base CUDA image)
+# NOTE: libcmark-gfm fix is ESM-only (~esm1 suffix) -- apt-get may not find it without Ubuntu Pro
+# NOTE: gcc-11/12 upgrade may cause ABI issues with compiled libs (Open-MPI, UCX, Horovod)
+# NOTE: protobuf is force-upgraded at the end of the Dockerfile (after horovod) due to tensorflow conflict
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+        bash \
+        libtasn1-6 \
+        libcap2 \
+        libkrb5-3 \
+        libgssapi-krb5-2 \
+        libk5crypto3 \
+        libkrb5support0 \
+        cpp-11 gcc-11 g++-11 gcc-11-base libasan6 libgcc-11-dev libstdc++-11-dev libtsan0 \
+        gcc-12-base libatomic1 libcc1-0 libgcc-s1 libgomp1 libitm1 liblsan0 libquadmath0 libstdc++6 libubsan1 \
+        libcmark-gfm0.29.0.gfm.3 libcmark-gfm-extensions0.29.0.gfm.3 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN pip install --no-cache-dir horovod[tensorflow]==0.28.1
+
+# CVE-2026-0994 (HIGH 8.6): protobuf>=5.29.6 required.
+# tensorflow 2.16.2 pins protobuf<5.0.0 and horovod[tensorflow] re-resolves it back down.
+# Must be the LAST pip install to ensure the override sticks.
+RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --no-deps 'protobuf>=5.29.6'
+
+# CVE-2022-39209, CVE-2023-22483/22484/22486, CVE-2023-26485 (HIGH 7.5): libcmark-gfm
+# Fix is ESM-only (~esm1 suffix, requires Ubuntu Pro). pandoc is the sole consumer and
+# is only listed as an rdma-core build dep -- rdma-core is installed from pre-built
+# Ubuntu packages so pandoc is not needed at runtime. Safe to remove.
+RUN apt-get remove -y --allow-remove-essential pandoc libcmark-gfm0.29.0.gfm.3 libcmark-gfm-extensions0.29.0.gfm.3 2>/dev/null; \
+    apt-get autoremove -y 2>/dev/null; \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
