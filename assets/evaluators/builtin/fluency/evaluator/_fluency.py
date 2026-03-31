@@ -3,6 +3,7 @@
 
 import math
 import os
+import logging
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Dict, Optional, List, Union
@@ -12,7 +13,7 @@ from typing_extensions import overload, override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
-
+from azure.ai.evaluation._common.utils import reformat_agent_response
 
 # region Validators
 
@@ -545,6 +546,7 @@ def _preprocess_messages(messages):
     messages = _normalize_function_call_types(messages)
     return messages
 
+logger = logging.getLogger(__name__)
 
 class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
@@ -742,6 +744,8 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["response"] = _preprocess_messages(eval_input["response"])
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
+
+        eval_input["response"] = reformat_agent_response(eval_input.get("response"), logger)
 
         result = await super()._do_eval(eval_input)
 
