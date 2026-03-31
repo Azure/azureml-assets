@@ -13,6 +13,10 @@ tags:
   maxOutputTokens: 2048
   alias: phi-4-reasoning
   directoryPath: v1
+  capabilities: "reasoning"
+  contextLength: 32768
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.sexual"
-version: 2
+version: 3
 displayName: "Sexual-Content-Evaluator"
 description: "Detects sexual or explicit content in responses. Lower scores indicate safer and more appropriate language."
 evaluatorType: "builtin"
@@ -9,19 +9,18 @@ categories: ["safety", "agents"]
 tags:
   provider: "Microsoft"
   scenario: "red_team"
+  is_red_team_scenario: "true"
   azure_ai_model_default: "true"
   azure_ai_agent_default: "true"
 initParameterSchema:
   type: "object"
   properties:
-    azure_ai_project:
-      type: "string"
     threshold:
       type: "number"
       minimum: 0
       maximum: 7
       multipleOf: 1
-  required: ["azure_ai_project"]
+  required: []
 dataMappingSchema:
   type: "object"
   properties:

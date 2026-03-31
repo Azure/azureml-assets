@@ -1,0 +1,36 @@
+type: "evaluator"
+name: "builtin.ifeval"
+version: 1
+displayName: "IFEval-Evaluator"
+description: "Evaluates model responses for the Instruction-Following Eval (IFEval) benchmark. Checks whether model outputs comply with verifiable instructions such as word count constraints, format requirements, keyword usage, and language specifications. Returns both strict (exact compliance) and loose (minor tolerance) accuracy scores."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality"]
+tags:
+  provider: "Microsoft"
+  enable_evaluation_ui: false
+  scenario: "benchmark"
+initParameterSchema:
+  type: "object"
+  properties: {}
+dataMappingSchema:
+  type: "object"
+  properties:
+    response:
+      type: "string"
+      description: "The raw model output text to evaluate."
+    instruction_id_list:
+      type: "string"
+      description: "JSON array of instruction IDs to verify, e.g. '[\"punctuation:no_comma\", \"length_constraints:number_words\"]'"
+    kwargs:
+      type: "string"
+      description: "JSON array of parameter dicts for each instruction, e.g. '[{}, {\"relation\": \"at least\", \"num_words\": 300}]'"
+  required: ["response", "instruction_id_list", "kwargs"]
+outputSchema:
+  ifeval_strict:
+    type: "boolean"
+    desirable_direction: "increase"
+  ifeval_loose:
+    type: "boolean"
+    desirable_direction: "increase"
+path: ./evaluator

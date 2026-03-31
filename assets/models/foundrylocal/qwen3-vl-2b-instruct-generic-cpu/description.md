@@ -1,4 +1,4 @@
-This model is an optimized version of Qwen3-VL-2B-Instruct to enable local inference on CPUs. This model uses KLD Gradient quantization.
+This model is an optimized version of Qwen3-VL-2B-Instruct to enable local inference on CPUs. This model uses RTN quantization.
 
 # Model Description
 - **Developed by:** Microsoft

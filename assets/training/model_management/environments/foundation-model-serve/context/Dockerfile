@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 # Remove vulnerable NVIDIA Nsight Compute components
-RUN rm -rf /opt/nvidia/nsight-compute || true
+RUN rm -rf /opt/nvidia/nsight-compute
 
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
@@ -28,7 +28,7 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/default
 # Create conda environment with py310
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.12 \
-    -c conda-forge --solver=classic
+    -c conda-forge
 
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -36,13 +36,12 @@ ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
-RUN python3.12 -m pip install --upgrade pip==25.3
+RUN python3.12 -m pip install --upgrade pip==26.0
 
 WORKDIR /
 
 COPY . .
 RUN pip install -e ./ --no-cache-dir
-
 
 RUN pip install --no-cache-dir torch==2.8.0
 
