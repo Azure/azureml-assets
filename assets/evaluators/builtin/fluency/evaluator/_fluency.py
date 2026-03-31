@@ -546,7 +546,9 @@ def _preprocess_messages(messages):
     messages = _normalize_function_call_types(messages)
     return messages
 
+
 logger = logging.getLogger(__name__)
+
 
 class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
