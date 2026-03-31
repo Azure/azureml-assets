@@ -1,7 +1,7 @@
 type: "evaluator"
 name: "builtin.task_completion"
 version: 7
-displayName: "Task-Completion-Evaluator"
+displayName: "Task-Completion-Evaluator-(Preview)"
 description: "Evaluates whether an AI agent successfully completed the requested task
   end to end by analyzing the conversation history and agent response to determine
   if all task requirements were met, ignoring rule adherence or intent understanding.
@@ -12,6 +12,7 @@ evaluatorSubType: "code"
 categories: ["agents"]
 tags:
   is_continuous_scenario: "true"
+  provider: "Microsoft"
 initParameterSchema:
   type: "object"
   properties:
