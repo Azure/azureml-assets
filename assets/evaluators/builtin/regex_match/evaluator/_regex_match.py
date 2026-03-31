@@ -8,11 +8,24 @@ from typing_extensions import overload, override
 
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
 # Regex to detect {{ground_truth}} reference in patterns
 GROUND_TRUTH_PATTERN = re.compile(r"\{\{ground_truth\}\}")
+
+
+# Create extended ErrorTarget enum with REGEX_MATCH_EVALUATOR
+def _create_extended_error_target():
+    """Create an extended ErrorTarget enum that includes REGEX_MATCH_EVALUATOR."""
+    existing_members = {member.name: member.value for member in ErrorTarget}
+    existing_members["REGEX_MATCH_EVALUATOR"] = "RegexMatchEvaluator"
+    return Enum("ExtendedErrorTarget", existing_members)
+
+
+ExtendedErrorTarget = _create_extended_error_target()
 
 
 class RegexMatchEvaluator(EvaluatorBase):
@@ -96,19 +109,29 @@ class RegexMatchEvaluator(EvaluatorBase):
             Patterns may include {{ground_truth}} which is resolved per-row from
             the ground_truth parameter.
         :type patterns: Union[str, List[str]]
-        :raises ValueError: If patterns is empty or contains empty patterns.
+        :raises EvaluationException: If patterns is empty or contains empty patterns.
         """
         # Normalize patterns to a list
         if isinstance(patterns, str):
             patterns = [patterns]
 
         if not patterns:
-            raise ValueError("At least one pattern must be provided.")
+            raise EvaluationException(
+                message="At least one pattern must be provided.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.MISSING_FIELD,
+                target=ExtendedErrorTarget.REGEX_MATCH_EVALUATOR,
+            )
 
         # Validate patterns are not empty
         for i, pattern in enumerate(patterns):
             if not pattern:
-                raise ValueError(f"Pattern at index {i} must not be empty.")
+                raise EvaluationException(
+                    message=f"Pattern at index {i} must not be empty.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.REGEX_MATCH_EVALUATOR,
+                )
 
         self._patterns = patterns
 
@@ -139,7 +162,7 @@ class RegexMatchEvaluator(EvaluatorBase):
         :type patterns: List[str]
         :return: List of compiled regex patterns.
         :rtype: List[re.Pattern]
-        :raises ValueError: If any pattern has invalid regex syntax.
+        :raises EvaluationException: If any pattern has invalid regex syntax.
         """
         compiled = []
         for i, pattern in enumerate(patterns):
@@ -155,7 +178,12 @@ class RegexMatchEvaluator(EvaluatorBase):
                     pattern_preview,
                     e,
                 )
-                raise ValueError(f"Invalid regular expression pattern at index {i}: {e}")
+                raise EvaluationException(
+                    message=f"Invalid regular expression pattern at index {i}: {e}",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.REGEX_MATCH_EVALUATOR,
+                ) from e
         logger.debug("Successfully compiled %d pattern(s)", len(compiled))
         return compiled
 

@@ -38,7 +38,7 @@ dataset:
     dataset_source: "https://huggingface.co/datasets/TAUR-Lab/MuSR"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/musr/versions/1"
+    sourceDatasetId: "azureml://registries/azureml/data/musr/versions/2"
     sourceFormat: "csv"
     properties:
       file_name: "MuSR_all.csv"

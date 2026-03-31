@@ -4,46 +4,14 @@ USER root:root
 
 # Update system package index and upgrade Python 3.10 packages to required versions
 RUN apt-get update && \
-    apt-get install -y --only-upgrade \
-    libpython3.10-stdlib \
-    python3.10 \
-    libpython3.10-minimal \
-    python3.10-minimal \
-    libpam0g \
-    libpam-modules-bin \
-    libpam-modules \
-    libc-bin \
-    libc-dev-bin \
-    binutils \
-    binutils-common \
-    binutils-x86-64-linux-gnu \
-    libbinutils \
-    libctf0 \
-    libctf-nobfd0 \
-    libxml2 \
-    dpkg \
-    dpkg-dev \
-    dotnet-hostfxr-8.0 \
-    dotnet-host-8.0 \
-    dotnet-runtime-8.0 \
-    linux-libc-dev \
-    linux-headers-generic \
-    locales \
-    openssl \
-    libssl-dev \
-    libssh-4 \
-    libpam-runtime && \
-    apt-get install -y sudo=1.9.9-1ubuntu2.5 && \
-    apt-mark hold sudo && \
+    apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
 # try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y || true
-RUN conda install pip -n ptca -y || true
+RUN conda install pip -n base -y
+RUN conda install pip -n ptca -y
 
-# This ensures necessary torch dependencies are already installed
-RUN pip install --no-cache-dir torch==2.8.0  torchaudio==2.8.0 torchvision==0.23.0
 RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
@@ -53,10 +21,6 @@ RUN pip uninstall -y onnxruntime
 RUN pip install onnx==1.17.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
-
-# Install numpy
-RUN pip install --upgrade "numpy==1.23.5"
-RUN /opt/conda/bin/pip install --upgrade "numpy==1.23.5" || true
 
 # torch-ort installation
 RUN TORCH_CUDA_ARCH_LIST="5.2;6.0;7.0;8.0;8.6;9.0" python -m onnxruntime.training.ortmodule.torch_cpp_extensions.install
@@ -70,21 +34,16 @@ RUN pip install \
     deepspeed~=0.15.1
 
 # Address vulnerabilities
-RUN /opt/conda/bin/pip install --upgrade 'urllib3>=2.6.3' || true
-RUN pip install \
-    'pyarrow==14.0.1' \
-    'aiohttp>=3.13.3' \
-    'idna==3.7' \
-    'requests==2.32.5' \
-    'urllib3>=2.6.3' \
-    'mlflow-skinny==2.15.1' \
-    'filelock>=3.20.1'
+# Patch for Pillow vulnerability : Direct dep (used by bokeh, torchvision) from base image
+RUN pip install --upgrade 'pillow>=12.1.1'
 
-# Patch for Pillow vulnerability
-RUN pip install --upgrade 'pillow==12.0.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow==12.0.0' || true
+# Fix security vulnerabilities (ptca env)
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
+RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'bokeh>=3.8.2' 'protobuf>=6.33.5'
 
-# Fix security vulnerabilities
-RUN pip install --upgrade 'bokeh==3.8.2' 'PyNaCl==1.6.2'
+# Fix security vulnerabilities (conda base env)
+# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
+# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+RUN /opt/conda/bin/pip install --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0'
 
-RUN pip list

@@ -6,6 +6,8 @@ description: "Evaluates whether an AI agent successfully completed the requested
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["agents"]
+tags:
+  is_continuous_scenario: "true"
 initParameterSchema:
   type: "object"
   properties:

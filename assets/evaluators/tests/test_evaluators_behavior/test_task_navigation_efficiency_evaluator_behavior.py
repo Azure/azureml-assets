@@ -595,3 +595,206 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         assert 0.66 <= result_data["details"]["precision_score"] <= 0.67
         assert 0.66 <= result_data["details"]["recall_score"] <= 0.67
         assert 0.66 <= result_data["details"]["f1_score"] <= 0.67
+
+    # ==================== PARAMETER TYPE NORMALIZATION TESTS ====================
+
+    @staticmethod
+    def _make_action(name: str, arguments: Any) -> Dict[str, Any]:
+        """Create an assistant action with a tool call."""
+        return {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_call",
+                    "tool_call_id": f"call_{name}",
+                    "name": name,
+                    "arguments": arguments,
+                }
+            ],
+        }
+
+    def test_param_int_agent_vs_int_ground_truth(self):
+        """Test that int param values match when both sides are int."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"count": 1, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"count": 1, "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - int vs int")
+        self.assert_pass(result_data)
+
+    def test_param_int_agent_vs_str_ground_truth(self):
+        """Test that int agent param matches str ground truth ('1' == '1')."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"count": 1, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"count": "1", "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - int vs str")
+        self.assert_pass(result_data)
+
+    def test_param_str_agent_vs_int_ground_truth(self):
+        """Test that str agent param matches int ground truth ('1' == '1')."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"count": "1", "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"count": 1, "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - str vs int")
+        self.assert_pass(result_data)
+
+    def test_param_bool_agent_vs_bool_ground_truth(self):
+        """Test that bool param values match when both sides are bool."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"verbose": True, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"verbose": True, "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - bool vs bool")
+        self.assert_pass(result_data)
+
+    def test_param_bool_agent_vs_str_ground_truth(self):
+        """Test that bool agent param matches str 'True' ground truth."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"verbose": True, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"verbose": "True", "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - bool vs str 'True'")
+        self.assert_pass(result_data)
+
+    def test_param_dict_agent_vs_dict_ground_truth(self):
+        """Test that dict param values match when both sides are dict."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"filters": {"category": "news", "lang": "en"}, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"filters": {"category": "news", "lang": "en"}, "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - dict vs dict")
+        self.assert_pass(result_data)
+
+    def test_param_dict_agent_vs_json_str_ground_truth(self):
+        """Test that dict agent param matches JSON-stringified ground truth."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"filters": {"category": "news", "lang": "en"}, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"filters": '{"category": "news", "lang": "en"}', "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - dict vs JSON string")
+        self.assert_pass(result_data)
+
+    def test_param_json_str_agent_vs_dict_ground_truth(self):
+        """Test that JSON-stringified agent param matches dict ground truth."""
+        results = self._run_evaluation(
+            actions=[
+                self._make_action(
+                    "search", {"filters": '{"category": "news", "lang": "en"}', "query": "weather"}
+                )
+            ],
+            expected_actions=(
+                ["search"],
+                {"search": {"filters": {"category": "news", "lang": "en"}, "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - JSON string vs dict")
+        self.assert_pass(result_data)
+
+    def test_param_list_agent_vs_list_ground_truth(self):
+        """Test that list param values match when both sides are list."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"tags": ["a", "b", "c"], "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"tags": ["a", "b", "c"], "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - list vs list")
+        self.assert_pass(result_data)
+
+    def test_param_list_agent_vs_json_str_ground_truth(self):
+        """Test that list agent param matches JSON-stringified list ground truth."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"tags": ["a", "b", "c"], "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"tags": '["a", "b", "c"]', "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - list vs JSON string")
+        self.assert_pass(result_data)
+
+    def test_param_stringified_args_vs_dict_ground_truth(self):
+        """Test that stringified JSON arguments match dict ground truth values."""
+        actions = [
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "call_1",
+                        "name": "search",
+                        "arguments": '{"count": 1, "query": "weather"}',
+                    }
+                ],
+            }
+        ]
+        results = self._run_evaluation(
+            actions=actions,
+            expected_actions=(
+                ["search"],
+                {"search": {"count": 1, "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - stringified args vs dict GT")
+        self.assert_pass(result_data)
+
+    def test_param_float_agent_vs_float_ground_truth(self):
+        """Test that float param values match when both sides are float."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"threshold": 0.5, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"threshold": 0.5, "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - float vs float")
+        self.assert_pass(result_data)
+
+    def test_param_float_agent_vs_str_ground_truth(self):
+        """Test that float agent param matches str ground truth ('0.5' == '0.5')."""
+        results = self._run_evaluation(
+            actions=[self._make_action("search", {"threshold": 0.5, "query": "weather"})],
+            expected_actions=(
+                ["search"],
+                {"search": {"threshold": "0.5", "query": "weather"}},
+            ),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "Param Type - float vs str")
+        self.assert_pass(result_data)

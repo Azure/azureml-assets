@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Mistral-7B-Instruct-v0-2-openvino-npu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,8 +12,12 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: mistral-7b-v0.2
-  directoryPath: model
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\", \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"}"
+  contextLength: 4224
+  capabilities: ""
+  minFLVersion: "0.0.0"
+  disable-maap: true
 type: custom_model
 variantInfo:
   parents:
@@ -23,5 +27,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'npu'
     executionProvider: 'OpenVINOExecutionProvider'
-    fileSizeBytes: 4370129223
-    vRamFootprintBytes: 4382250762
+    fileSizeBytes: 3871049231
+    vRamFootprintBytes: 3871049231
