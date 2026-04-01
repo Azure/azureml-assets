@@ -1,0 +1,5 @@
+type: DataFrameDirectory
+extension: {}
+format: JSONL
+data: chembench.jsonl
+schema: schema/_schema.json
