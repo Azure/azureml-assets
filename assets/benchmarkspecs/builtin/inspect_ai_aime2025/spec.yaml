@@ -1,0 +1,29 @@
+type: "benchmarkspec"
+name: "builtin.inspect_ai.aime2025"
+version: 1
+display_name: "AIME 2025 Benchmark (inspect_ai)"
+description: "American Invitational Mathematics Examination 2025. Tests advanced mathematical reasoning with competition-level problems. Evaluated using the inspect_ai framework."
+benchmarkType: "builtin"
+categories: ["reasoning", "quality", "math"]
+
+evaluator:
+  testingCriteria:
+    type: "inspect_ai"
+    name: "AIME 2025"
+    task_name: "inspect_evals/aime2025"
+
+dataset:
+  datasetName: "aime2025"
+  datasetType: "oss"
+  recordCount: "30"
+  license: "MIT"
+  properties:
+    domain: "math"
+    source_paper: "https://artofproblemsolving.com/wiki/index.php/2025_AIME"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/aime2025/versions/1"
+    sourceFormat: "jsonl"
+    properties:
+      file_name: "aime2025.jsonl"
+      type: "uri_folder"
