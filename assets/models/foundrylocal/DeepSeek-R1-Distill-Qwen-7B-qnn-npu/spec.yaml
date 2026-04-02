@@ -15,6 +15,9 @@ tags:
   directoryPath: qnn-deepseek-r1-distill-qwen-7b
   promptTemplate: "{\"assistant\": \"{Content}\", \"prompt\": \"\\\\u003C\\\\uFF5CUser\\\\uFF5C\\\\u003E{Content}\\\\u003C\\\\uFF5CAssistant\\\\uFF5C\\\\u003E\"}"
   capabilities: "reasoning"
+  supportsReasoning: "true"
+  reasoningStart: "<think>"
+  reasoningEnd: "</think>"
   contextLength: 4096
   minFLVersion: "0.0.0"
   disable-maap: true

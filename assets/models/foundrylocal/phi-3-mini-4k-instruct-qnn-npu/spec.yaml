@@ -16,6 +16,9 @@ tags:
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
   contextLength: 4096
   capabilities: ""
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
   minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model
