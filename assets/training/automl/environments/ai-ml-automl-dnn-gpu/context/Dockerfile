@@ -100,7 +100,7 @@ RUN pip install \
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
 RUN pip install --upgrade torchvision==0.23.0 torch==2.8.0 --no-cache-dir
 RUN pip install --upgrade 'distributed>=2026.1.0' 'mlflow-skinny>=2.16.0' \
-                          'protobuf>=5.29.6' 'pillow>=12.1.1' \
+                          'protobuf>=5.29.6' 'pillow>=12.1.1' 'requests>=2.33.0' \
                           'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
 # --- End Vulnerability Fixes ---

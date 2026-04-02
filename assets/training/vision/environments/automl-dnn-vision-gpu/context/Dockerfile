@@ -88,7 +88,7 @@ RUN pip install --upgrade urllib3>=2.6.3
 
 # Security: fix base conda env (python 3.13) — aiohttp (CVE-2026-37899), wheel (CVE-2026-24049),
 # cryptography (CVE-2026-41727), PyJWT (CVE-2026-32597), urllib3, filelock, pillow, bokeh
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade requests 'urllib3>=2.6.3' 'aiohttp>=3.13.3' 'wheel>=0.46.2' \
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.6.3' 'aiohttp>=3.13.3' 'wheel>=0.46.2' \
     'setuptools>=82.0.1' 'cryptography>=46.0.5' 'PyJWT>=2.12.0' 'pip>=26.0' \
     'filelock>=3.20.3' 'pillow>=12.1.1' \
     'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
@@ -109,7 +109,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.1.1
 # aiohttp (CVE-2026-37899), bokeh (GHSA-793v-589g-574v), distributed (CVE-2026-23528),
 # protobuf (CVE-2026-40186), cryptography, filelock, wheel, setuptools, PyJWT, urllib3, pillow
 RUN pip install --upgrade 'aiohttp>=3.13.3' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.0' 'cryptography>=46.0.5' \
-    'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.1.1' \
+    'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.1.1' 'requests>=2.33.0' \
     'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 # Remove stale vendored metadata that scanners pick up
 RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \

@@ -248,7 +248,10 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # Security vulnerability fixes
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'protobuf>=5.29.6'
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0'
+
+# Fix requests in miniconda base env (GHSA-gc5v-m9x4-r6x2)
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0'
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH

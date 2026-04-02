@@ -38,7 +38,7 @@ RUN apt-get install -y openssh-server openssh-client
 RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1'
 # vulnerability in base conda env
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0'
+RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'requests>=2.33.0'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -y -n ptca pip>=26.0.1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

@@ -10,7 +10,7 @@ RUN apt-get update && apt-get -y upgrade && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 # Security: upgrade base conda env (python3.13) from ACPT base image (biweekly.202603.1)
 # Still vulnerable: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
-RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'requests>=2.33.0'
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
@@ -29,7 +29,7 @@ RUN pip install transformers==4.57.1
 # protobuf: wandb/google-cloud-storage cap <7, override needed
 # cryptography: azureml-mlflow pins <46.0.0; override needed for CVE fix
 RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 protobuf==6.33.5 \
-    'aiohttp>=3.13.3'
+    'aiohttp>=3.13.3' 'requests>=2.33.0'
 # Fix vulnerabilities in the ptca conda environment (pre-built in base image, not targeted by above installs)
 # CVE-2026-1703 (pip), CVE-2026-24049 (wheel)
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade "pip>=26.0" "wheel>=0.46.2" && \

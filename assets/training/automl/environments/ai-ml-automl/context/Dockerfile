@@ -97,5 +97,6 @@ RUN pip install --upgrade \
     'cryptography>=46.0.5' \
     'protobuf>=5.29.6' \
     'distributed>=2026.1.0' \
+    'requests>=2.33.0' \
     'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 # end pip ad-hoc

@@ -20,12 +20,12 @@ RUN pip install --no-cache-dir mlflow==3.10.1
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
 # protobuf: vllm uses loose floors, pip can't force 6.33.5 transitively
 # cryptography: azureml-mlflow~=1.62.0 pins <46.0.0; override needed for CVE fix
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 xgrammar>=0.1.32
+RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 xgrammar>=0.1.32 requests>=2.33.0
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2
 # Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
 # Still vulnerable in base: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
-RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5 'requests>=2.33.0'
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
