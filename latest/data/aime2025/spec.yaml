@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "aime2025"
+version: "1"
+tags:
+  azureml.Designer: false
+description: "AIME 2025 - American Invitational Mathematics Examination 2025 competition
+  problems"
+type: uri_folder
+path: sample_data/
