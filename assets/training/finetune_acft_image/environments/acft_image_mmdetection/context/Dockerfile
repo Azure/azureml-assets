@@ -5,6 +5,8 @@ USER root
 RUN apt-get -y update && apt-get -y upgrade 
 
 # Install required packages from pypi
+# Temporarily pin setuptools<72 so openmim (uses pkg_resources) and mim install work
+RUN pip install --no-cache-dir 'setuptools<72'
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get install -y expat

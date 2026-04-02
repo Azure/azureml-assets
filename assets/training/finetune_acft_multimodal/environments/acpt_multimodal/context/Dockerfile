@@ -4,6 +4,10 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 USER root
 RUN apt-get -y update && apt-get -y upgrade
 # Install required packages from pypi
+# Temporarily pin setuptools<72 to build mpi4py 3.1.4 (incompatible with setuptools>=72 new_compiler API).
+# Must use --no-build-isolation because pip's isolated build env downloads latest setuptools from PyPI.
+RUN pip install --no-cache-dir 'setuptools<72'
+RUN pip install mpi4py==3.1.4 --no-build-isolation --no-cache-dir
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
