@@ -50,6 +50,7 @@ RUN pip install --upgrade aiohttp==3.13.3 protobuf==6.33.5 setuptools==82.0.0 pi
 # Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
 # Still vulnerable in base: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
 RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 # Set secure defaults
