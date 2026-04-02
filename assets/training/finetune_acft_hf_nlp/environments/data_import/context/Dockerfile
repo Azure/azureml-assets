@@ -14,7 +14,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # pip==26.0.1, setuptools==82.0.1, wheel==0.46.3, cryptography==46.0.5, urllib3==2.6.3, h2==4.3.0
 # are already at fixed versions in the openmpi base image (20260315.v1).
 # The override below only targets packages NOT fixed in base or pulled in vulnerable by requirements.txt.
-RUN pip install --no-cache-dir scikit-learn==1.5.1 aiohttp==3.13.3 && rm -rf /root/.cache/pip
+RUN pip install --no-cache-dir scikit-learn==1.5.1 aiohttp==3.13.3 'requests>=2.33.0' && rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment 
 COPY data_import_run.py /azureml/data_import/run.py
