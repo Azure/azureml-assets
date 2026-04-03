@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: deepseek/deepseek-r1-distill-qwen/deepseek-r1-distill-qwen-7b/onnx/npu/qnn-deepseek-r1-distill-qwen-7b
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/models/deepseek-r1-distill-qwen-7b/onnx/qnn_npu/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md

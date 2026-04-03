@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/DeepSeek-R1-Distill-Qwen-7B/onnx/openvino_npu/v2
+  container_path: foundrylocal/models/DeepSeek-R1-Distill-Qwen-7B/onnx/openvino_npu/v3
   storage_name: foundrylocalmodels
   type: azureblob
 publish:

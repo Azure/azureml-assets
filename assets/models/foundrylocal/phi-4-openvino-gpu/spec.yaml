@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-4-openvino-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4
-  directoryPath: model
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|im_end|>\", \"user\": \"<|user|>\\n{Content}<|im_end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|im_end|>\", \"prompt\": \"<|user|>\\n{Content}<|im_end|>\\n<|assistant|>\"}"
   contextLength: 16384
   capabilities: ""
