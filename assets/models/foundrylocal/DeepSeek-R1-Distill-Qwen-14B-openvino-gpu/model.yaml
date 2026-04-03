@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/intel-gpu-models/DeepSeek-R1-Distill-Qwen-14B-gpu-context-ov-dy-gs128-r1/model
+  container_path: foundrylocal/models/DeepSeek-R1-Distill-Qwen-14B/onnx/openvino_gpu/v2
   storage_name: foundrylocalmodels
   type: azureblob
 publish:

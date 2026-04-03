@@ -1,0 +1,5 @@
+type: DataFrameDirectory
+extension: {}
+format: JSONL
+data: aime2025.jsonl
+schema: schema/_schema.json

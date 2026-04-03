@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: DeepSeek-R1-Distill-Qwen-14B-openvino-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,9 +12,12 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: deepseek-r1-14b
-  directoryPath: model
+  directoryPath: v2
   promptTemplate: "{\"assistant\": \"{Content}\", \"prompt\": \"\\\\u003C\\\\uFF5CUser\\\\uFF5C\\\\u003E{Content}\\\\u003C\\\\uFF5CAssistant\\\\uFF5C\\\\u003E\"}"
   capabilities: "reasoning"
+  supportsReasoning: "true"
+  reasoningStart: "<think>"
+  reasoningEnd: "</think>"
   contextLength: 131072
   minFLVersion: "0.0.0"
   disable-maap: true

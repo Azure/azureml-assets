@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/olive-trt-models/microsoft-Phi-3-mini-128k-instruct
+  container_path: foundrylocal/models/phi-3-mini-128k-instruct/onnx/trtrtx_gpu/v2
   storage_name: foundrylocalmodels
   type: azureblob
 publish:
