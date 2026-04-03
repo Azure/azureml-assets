@@ -1,0 +1,6 @@
+ChemBench - Chemistry reasoning benchmark
+
+Source: https://huggingface.co/datasets/jablonkagroup/ChemBench
+Paper: https://arxiv.org/abs/2404.01475
+
+Licensed under Creative Commons Attribution 4.0 International License (CC-BY-4.0).
