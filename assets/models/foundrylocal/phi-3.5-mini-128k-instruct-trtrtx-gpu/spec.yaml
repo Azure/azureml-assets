@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-3.5-mini-instruct-trtrtx-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -12,10 +12,13 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-3.5-mini
-  directoryPath: microsoft-Phi-3.5-mini-instruct
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|system|>\\n{Content}<|end|>\", \"user\": \"<|user|>\\n{Content}<|end|>\", \"assistant\": \"<|assistant|>\\n{Content}<|end|>\", \"prompt\": \"<|user|>\\n{Content}<|end|>\\n<|assistant|>\"}"
   contextLength: 131072
   capabilities: ""
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
   minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model

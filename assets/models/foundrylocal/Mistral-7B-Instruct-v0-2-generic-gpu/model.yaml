@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/onnx-models/mistral-7b-instruct-v0.2/onnx/directml/mistralai_Mistral-7B-Instruct-v0.2
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/models/mistralai-Mistral-7B-Instruct-v0-2/onnx/webgpu/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md
