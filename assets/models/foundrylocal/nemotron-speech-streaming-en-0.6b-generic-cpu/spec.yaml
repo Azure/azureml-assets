@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: nemotron-speech-streaming-en-0.8b-generic-cpu
+name: nemotron-speech-streaming-en-0.6b-generic-cpu
 version: 1
 path: ./
 tags:
@@ -11,7 +11,7 @@ tags:
   outputModalities: "text"
   task: automatic-speech-recognition
   maxOutputTokens: 2048
-  alias: nemotron-speech-streaming-en-0.8b
+  alias: nemotron-speech-streaming-en-0.6b
   directoryPath: v1
   promptTemplate: ""
   capabilities: ""
@@ -24,7 +24,7 @@ tags:
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/nemotron-speech-streaming-en-0.8b/versions/1
+  - assetId: azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']

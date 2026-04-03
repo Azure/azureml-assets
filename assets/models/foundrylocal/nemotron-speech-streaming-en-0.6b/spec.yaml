@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: nemotron-speech-streaming-en-0.8b
+name: nemotron-speech-streaming-en-0.6b
 version: 1
 path: ./
 tags:

@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/nemotron-speech-streaming-en-0.8b
+  container_path: foundrylocal/models/nemotron-speech-streaming-en-0.6b
   storage_name: foundrylocalmodels
   type: azureblob
 publish:
