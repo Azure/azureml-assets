@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistralai-Mistral-7B-Instruct-v0-2-generic-gpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -13,12 +13,15 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: mistral-7b-v0.2
-  directoryPath: mistralai_Mistral-7B-Instruct-v0.2
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\"\
     , \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"\
     }"
   contextLength: 32768
   capabilities: ""
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
   minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model

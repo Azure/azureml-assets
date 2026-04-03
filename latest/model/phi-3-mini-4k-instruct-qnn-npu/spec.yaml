@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-3-mini-4k-instruct-qnn-npu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: ""
@@ -13,13 +13,16 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-3-mini-4k
-  directoryPath: v1
+  directoryPath: v3
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed
     by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\"\
     : \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
     }"
   contextLength: 4096
   capabilities: ""
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
   minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model

@@ -1,7 +1,7 @@
 path:
   container_name: models
-  container_path: foundrylocal/foundry-local/phi-4-medium-instruct/onnx/cuda/cuda-int4-rtn-block-32
-  storage_name: automlcesdkdataresources
+  container_path: foundrylocal/models/Phi-4/onnx/cuda/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md

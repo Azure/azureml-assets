@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-small-generic-cpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: ""
@@ -13,11 +13,14 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-small
-  directoryPath: cpu-fp32
+  directoryPath: v2
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
   contextLength: 448
   capabilities: ""
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
   minFLVersion: "0.0.0"
   disable-maap: true
 type: custom_model

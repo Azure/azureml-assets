@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/intel-gpu-models/Phi-4-gpu-context-dy/model
+  container_path: foundrylocal/models/phi-4/onnx/openvino_gpu/v2
   storage_name: foundrylocalmodels
   type: azureblob
 publish:

@@ -25,6 +25,9 @@ tags:
   toolResponseStart: "<|tool_response|>"
   toolResponseEnd: "<|tool_response|>"
   capabilities: "tool-calling"
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
   contextLength: 4096
   minFLVersion: "0.0.0"
   disable-maap: true
