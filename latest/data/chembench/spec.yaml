@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "chembench"
+version: "1"
+tags:
+  azureml.Designer: false
+description: "ChemBench - Graduate-level chemistry reasoning benchmark"
+type: uri_folder
+path: sample_data/
