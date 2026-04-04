@@ -8,12 +8,13 @@ from typing import Dict, List, Union, TypeVar
 from typing_extensions import overload, override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import (
+    ErrorMessage,
     ErrorBlame,
     ErrorCategory,
     ErrorTarget,
     EvaluationException,
 )
-from azure.ai.evaluation._common.utils import check_score_is_valid
+from azure.ai.evaluation._common.utils import check_score_is_valid, reformat_agent_response
 from azure.ai.evaluation._common._experimental import experimental
 from azure.ai.evaluation._converters._models import (
     _BUILT_IN_DESCRIPTIONS,
@@ -742,6 +743,165 @@ def _preprocess_messages(messages):
     return messages
 
 
+def _extract_text_from_content(content):
+    text = []
+    for msg in content:
+        if "text" in msg:
+            text.append(msg["text"])
+    return text
+
+
+def _format_value(v):
+    if v is None:
+        return "None"
+    if isinstance(v, str):
+        return f'"{v}"'
+    return v
+
+
+def _get_conversation_history(query, include_system_messages=False, include_tool_messages=False):
+    all_user_queries = []
+    cur_user_query = []
+    all_agent_responses = []
+    cur_agent_response = []
+    system_message = None
+
+    # Track tool calls and results for grouping with assistant messages
+    tool_results = {}
+
+    # First pass: collect all tool results if include_tool_messages is True
+    if include_tool_messages:
+        for msg in query:
+            if msg.get("role") == "tool" and "tool_call_id" in msg:
+                tool_call_id = msg["tool_call_id"]
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_result":
+                        result = content.get("tool_result")
+                        tool_results[tool_call_id] = f"[TOOL_RESULT] {result}"
+
+    # Second pass: process messages and build conversation history
+    for msg in query:
+        if "role" not in msg:
+            continue
+
+        if include_system_messages and msg["role"] == "system" and "content" in msg:
+            system_message = msg.get("content", "")
+
+        if msg["role"] == "user" and "content" in msg:
+            # Start new user turn, close previous agent response if exists
+            if cur_agent_response != []:
+                all_agent_responses.append(cur_agent_response)
+                cur_agent_response = []
+            text_in_msg = _extract_text_from_content(msg["content"])
+            if text_in_msg:
+                cur_user_query.append(text_in_msg)
+
+        if msg["role"] == "assistant" and "content" in msg:
+            # Start new agent response, close previous user query if exists
+            if cur_user_query != []:
+                all_user_queries.append(cur_user_query)
+                cur_user_query = []
+
+            # Add text content
+            text_in_msg = _extract_text_from_content(msg["content"])
+            if text_in_msg:
+                cur_agent_response.append(text_in_msg)
+
+            # Handle tool calls in assistant messages
+            if include_tool_messages:
+                for content in msg.get("content", []):
+                    if content.get("type") == "tool_call":
+                        # Handle the format from your sample data
+                        tool_call_id = content.get("tool_call_id")
+                        func_name = content.get("name", "")
+                        args = content.get("arguments", {})
+
+                        # Also handle the nested tool_call format
+                        if "tool_call" in content and "function" in content.get("tool_call", {}):
+                            tc = content.get("tool_call", {})
+                            func_name = tc.get("function", {}).get("name", "")
+                            args = tc.get("function", {}).get("arguments", {})
+                            tool_call_id = tc.get("id")
+
+                        args_str = ", ".join(f"{k}={_format_value(v)}" for k, v in args.items())
+                        tool_call_text = f"[TOOL_CALL] {func_name}({args_str})"
+                        cur_agent_response.append(tool_call_text)
+
+                        # Immediately add tool result if available
+                        if tool_call_id and tool_call_id in tool_results:
+                            cur_agent_response.append(tool_results[tool_call_id])
+
+    # Close any remaining open queries/responses
+    if cur_user_query != []:
+        all_user_queries.append(cur_user_query)
+    if cur_agent_response != []:
+        all_agent_responses.append(cur_agent_response)
+
+    if len(all_user_queries) != len(all_agent_responses) + 1:
+        raise EvaluationException(
+            message=ErrorMessage.MALFORMED_CONVERSATION_HISTORY,
+            internal_message=ErrorMessage.MALFORMED_CONVERSATION_HISTORY,
+            target=ErrorTarget.CONVERSATION_HISTORY_PARSING,
+            category=ErrorCategory.INVALID_VALUE,
+            blame=ErrorBlame.USER_ERROR,
+        )
+    result = {"user_queries": all_user_queries, "agent_responses": all_agent_responses}
+    if include_system_messages:
+        result["system_message"] = system_message
+    return result
+
+
+def _pretty_format_conversation_history(conversation_history):
+    """Format the conversation history for better readability."""
+    formatted_history = ""
+    if "system_message" in conversation_history and conversation_history["system_message"] is not None:
+        formatted_history += "SYSTEM_PROMPT:\n"
+        formatted_history += "  " + conversation_history["system_message"] + "\n\n"
+    for i, (user_query, agent_response) in enumerate(
+        zip(conversation_history["user_queries"], conversation_history["agent_responses"] + [None])
+    ):
+        formatted_history += f"User turn {i+1}:\n"
+        for msg in user_query:
+            if isinstance(msg, list):
+                for submsg in msg:
+                    formatted_history += "  " + "\n  ".join(submsg.split("\n")) + "\n"
+            else:
+                formatted_history += "  " + "\n  ".join(msg.split("\n")) + "\n"
+        formatted_history += "\n"
+        if agent_response:
+            formatted_history += f"Agent turn {i+1}:\n"
+            for msg in agent_response:
+                if isinstance(msg, list):
+                    for submsg in msg:
+                        formatted_history += "  " + "\n  ".join(submsg.split("\n")) + "\n"
+                else:
+                    formatted_history += "  " + "\n  ".join(msg.split("\n")) + "\n"
+            formatted_history += "\n"
+    return formatted_history
+
+
+def reformat_conversation_history(query, logger=None, include_system_messages=False, include_tool_messages=False):
+    """Reformats the conversation history to a more compact representation."""
+    try:
+        conversation_history = _get_conversation_history(
+            query, include_system_messages=include_system_messages, include_tool_messages=include_tool_messages
+        )
+        return _pretty_format_conversation_history(conversation_history)
+    except Exception:
+        # If the conversation history cannot be parsed for whatever reason (e.g. the converter format changed),
+        #  the original query is returned
+        # This is a fallback to ensure that the evaluation can still proceed.
+        #  However the accuracy of the evaluation will be affected.
+        # From our tests the negative impact on IntentResolution is:
+        #   Higher intra model variance (0.142 vs 0.046)
+        #   Higher inter model variance (0.345 vs 0.607)
+        #   Lower percentage of mode in Likert scale (73.4% vs 75.4%)
+        #   Lower pairwise agreement between LLMs (85% vs 90% at the pass/fail level with threshold of 3)
+        if logger:
+            logger.warning(f"Conversation history could not be parsed, falling back to original query: {query}")
+        return query
+
+
 @experimental
 class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """The Tool Call Accuracy evaluator assesses how accurately an AI uses tools by examining the following criteria.
@@ -968,6 +1128,29 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 category=ErrorCategory.INVALID_VALUE,
                 target=ErrorTarget.TOOL_CALL_ACCURACY_EVALUATOR,
             )
+
+        # Reformat conversation history for cleaner evaluation
+        eval_input["query"] = reformat_conversation_history(
+            eval_input["query"], logger, include_system_messages=True, include_tool_messages=True
+        )
+
+        # Reformat tool_calls for cleaner evaluation.
+        # Reconstruct a proper message structure from the already-extracted tool call dicts:
+        # - one assistant message per tool_call content item
+        # - one role="tool" message per tool call that has an attached tool_result
+        #   (only present when response was parsed via _parse_tools_from_response)
+        if isinstance(eval_input.get("tool_calls"), list):
+            tool_call_items = eval_input["tool_calls"]
+            messages = []
+            for tc in tool_call_items:
+                messages.append({"role": "assistant", "content": [tc]})
+                if "tool_result" in tc:
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc.get("tool_call_id"),
+                        "content": [{"type": "tool_result", "tool_result": tc["tool_result"]}],
+                    })
+            eval_input["tool_calls"] = reformat_agent_response(messages, include_tool_messages=True)
 
         # Single LLM call for all tool calls
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
