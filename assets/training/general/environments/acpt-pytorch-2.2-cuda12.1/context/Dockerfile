@@ -5,7 +5,7 @@ RUN conda install -n base -c conda-forge pip=26.0 -y
 # These are from base image adding till we get new base image tag
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
 # aiohttp 3.12.14 (8 CVEs) and urllib3 2.5.0 (3 CVEs) are also in base env from base image
-RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.3' 'urllib3>=2.6.3'
+RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.3' 'urllib3>=2.6.3' 'requests>=2.33.0'
 
 
 # Upgrade ptca environment conda packages

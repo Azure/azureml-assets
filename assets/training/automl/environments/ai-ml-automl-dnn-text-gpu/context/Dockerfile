@@ -97,7 +97,7 @@ RUN pip list && \
 
 # Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 'bokeh>=3.8.2'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 'bokeh>=3.8.2' 'requests>=2.33.0'
 # Vulnerability patches for ptca environment
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3' 'pillow>=12.1.1' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2'
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in ptca/base setuptools
@@ -105,7 +105,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'filelock>=3.20.3' 'pillow>=1
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 # Base env: fix cryptography, wheel, and setuptools vendored vulns
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base pip install --no-cache-dir --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'PyJWT>=2.12.0'
+RUN conda run -n base pip install --no-cache-dir --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'PyJWT>=2.12.0' 'requests>=2.33.0'
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

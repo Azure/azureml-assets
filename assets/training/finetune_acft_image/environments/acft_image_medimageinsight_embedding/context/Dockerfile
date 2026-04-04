@@ -18,7 +18,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install --no-cache-dir mlflow==3.10.1
 # pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
 # parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
-RUN pip install --no-cache-dir --upgrade protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.3 pillow==12.1.1 wheel>=0.46.2 fastmcp>=2.14.0
+RUN pip install --no-cache-dir --upgrade protobuf==6.33.5 cryptography==46.0.5 pyasn1==0.6.3 pillow==12.1.1 wheel>=0.46.2 fastmcp>=2.14.0 requests>=2.33.0
 
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 

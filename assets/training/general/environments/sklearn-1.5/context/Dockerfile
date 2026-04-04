@@ -54,4 +54,4 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 # cryptography: azureml-mlflow==1.62.0 (latest) caps cryptography<46.0.0, so conda env installs 44.x;
 #   override after conda env create to restore 46.0.5
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    aiohttp==3.13.3 cryptography==46.0.5 'distributed>=2026.1.0'
+    aiohttp==3.13.3 cryptography==46.0.5 'distributed>=2026.1.0' 'requests>=2.33.0'

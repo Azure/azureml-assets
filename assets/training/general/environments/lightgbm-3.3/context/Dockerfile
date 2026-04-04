@@ -54,4 +54,4 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 # cryptography, pip, setuptools, urllib3, wheel already fixed in openmpi base (20260315.v1)
 # Only override packages still vulnerable after conda env create
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    aiohttp==3.13.3 'protobuf>=6.33.5' 'distributed>=2026.1.0'
+    aiohttp==3.13.3 'protobuf>=6.33.5' 'distributed>=2026.1.0' 'requests>=2.33.0'

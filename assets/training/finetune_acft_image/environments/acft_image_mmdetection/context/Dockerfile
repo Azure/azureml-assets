@@ -5,6 +5,8 @@ USER root
 RUN apt-get -y update && apt-get -y upgrade 
 
 # Install required packages from pypi
+# Temporarily pin setuptools<72 so openmim (uses pkg_resources) and mim install work
+RUN pip install --no-cache-dir 'setuptools<72'
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get install -y expat
@@ -20,9 +22,9 @@ RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mm
 # upgrade pip, wheel, setuptools vulnerabilities in ptca env
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # protobuf is required by azureml-acft-accelerator but it is not pinned hence upgrade
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 setuptools==82.0.0 cryptography==46.0.5 pillow==12.1.1
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 setuptools==82.0.0 cryptography==46.0.5 pillow==12.1.1 requests>=2.33.0
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2 
 # vulnerability in base conda env
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5 'PyJWT>=2.12.0'
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5 'PyJWT>=2.12.0' 'requests>=2.33.0'

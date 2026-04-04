@@ -108,6 +108,7 @@ RUN pip install \
 #   Chain L1: azureml-train-automl-runtime -> bokeh<3.0.0
 #   Chain L2: azureml-train-automl-runtime -> dask[complete] -> bokeh (via [diagnostics] extra)
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
+    'requests>=2.33.0' \
     'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

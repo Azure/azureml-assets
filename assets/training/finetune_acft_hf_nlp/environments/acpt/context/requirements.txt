@@ -25,5 +25,5 @@ scipy==1.14.0
 catalogue==2.0.10
 cryptography==46.0.5
 setuptools==82.0.0
-requests==2.32.4
+requests>=2.33.0
 filelock>=3.20.1
