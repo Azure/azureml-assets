@@ -46,7 +46,7 @@ RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https:
 RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3-linux-1/flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl
 # aiohttp: vllm/sglang use loose floors, pip can't force 3.13.3 transitively
 # protobuf: vllm uses loose floors (>=6.30.0), pip can't force 6.33.5 transitively
-RUN pip install --upgrade aiohttp==3.13.3 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.5
+RUN pip install --upgrade aiohttp==3.13.3 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.5 'requests>=2.33.0'
 # Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
 # Still vulnerable in base: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
 RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5

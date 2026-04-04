@@ -21,6 +21,13 @@ RUN pip install --no-cache-dir mlflow==3.10.1
 # protobuf: vllm uses loose floors, pip can't force 6.33.5 transitively
 # cryptography: azureml-mlflow~=1.62.0 pins <46.0.0; override needed for CVE fix
 RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.5 xgrammar>=0.1.32
+# Fix additional transitive Python vulnerabilities not controlled by requirements.txt
+# aiohttp: vllm uses loose floors, pip can't force >=3.13.3 transitively (GHSA-69f9 etc.)
+# requests: GHSA-gc5v-m9x4-r6x2; PyJWT: CVE-2026-32597; azure-core: GHSA-jm66-cg57-jjv5
+# cbor2: GHSA-3c37-wwvx-h642; pyasn1: CVE-2026-30922; python-multipart: GHSA-wp53-j4wj-2cfg
+# urllib3: GHSA-38jv-5279-wg99
+RUN pip install --no-cache-dir --upgrade 'aiohttp>=3.13.3' 'requests>=2.33.0' 'PyJWT>=2.12.0' \
+    'azure-core>=1.38.0' 'cbor2>=5.9.0' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'urllib3>=2.6.3'
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
