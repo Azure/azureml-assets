@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202603.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202604.1
 USER root
 # Security: upgrade all OS packages, pin linux headers to patched versions, and upgrade binutils/git/wget
 RUN apt-get update && apt-get -y upgrade && \
