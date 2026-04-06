@@ -16,7 +16,7 @@ dataset:
   datasetName: "chembench"
   datasetType: "oss"
   recordCount: "2785"
-  license: "CC-BY-4.0"
+  license: "MIT"
   properties:
     domain: "chemistry"
     source_paper: "https://arxiv.org/abs/2404.01475"
