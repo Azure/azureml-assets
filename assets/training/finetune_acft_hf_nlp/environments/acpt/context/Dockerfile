@@ -10,7 +10,8 @@ COPY requirements.txt .
 COPY data_import_run.py /azureml/data_import/run.py
 COPY finetune_run.py /azureml/finetune/run.py
 
-RUN pip install mpi4py==3.1.5 --no-build-isolation --no-cache-dir
+# mpi4py 3.x uses distutils APIs removed in setuptools>=81; upgrade to 4.x which is compatible
+RUN pip install mpi4py==4.1.1 --no-cache-dir
 RUN pip install -r requirements.txt --no-cache-dir
 
 RUN pip install mlflow==3.10.1
