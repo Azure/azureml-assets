@@ -5,11 +5,6 @@ USER root
 RUN apt-get -y update && apt-get -y upgrade
 # Install required packages from pypi
 COPY requirements.txt .
-# mpi4py <4.0 uses distutils APIs removed in setuptools>=81; build separately without isolation
-# (pip's build isolation would pull latest setuptools, breaking the build)
-# setuptools is upgraded back to >=82.0.1 in the vulnerability fix step below
-RUN pip install --no-cache-dir 'setuptools<81' && \
-    pip install mpi4py==3.1.4 --no-build-isolation --no-cache-dir
 RUN pip install -r requirements.txt --no-cache-dir
 # Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
 # Removing it from requirements.txt to avoid conflict with scikit-learn version

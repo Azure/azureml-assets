@@ -6,10 +6,7 @@ RUN apt-get -y update && apt-get -y upgrade
 
 # Install required packages from pypi
 COPY requirements.txt .
-# openmim uses pkg_resources, removed in setuptools>=81; temporarily downgrade for build
-# setuptools is upgraded back to >=82.0 in the vulnerability fix step below
-RUN pip install --no-cache-dir 'setuptools<81' && \
-    pip install -r requirements.txt --no-cache-dir
+RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get install -y expat
 
 # # # Install mmdet
