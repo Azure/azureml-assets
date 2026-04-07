@@ -1,3 +1,7 @@
+## 1.17.3 (2026-04-23)
+### 🚀 New Features
+- Add EvaluationSuite to asset types and GENERIC_ASSET_TYPES
+
 ## 1.17.2 (2026-04-17)
 ### 🚀 New Features
 - [#4939](https://github.com/Azure/azureml-assets/pull/4939) Add HumanEvaluationTemplate AssetType
