@@ -25,7 +25,7 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/opt/conda/envs/azureml-env
 
 # Create conda environment
-RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10
+RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 -c conda-forge
 
 # Activate environment via PATH
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
