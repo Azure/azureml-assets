@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/olive-trt-models/deepseek-ai-DeepSeek-R1-Distill-Qwen-14B
+  container_path: foundrylocal/models/deepseek-r1-distill-qwen-14b/onnx/trtrtx_gpu/v2
   storage_name: foundrylocalmodels
   type: azureblob
 publish:

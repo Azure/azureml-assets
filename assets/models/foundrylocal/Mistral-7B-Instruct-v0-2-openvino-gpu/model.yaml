@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/intel-gpu-models/Mistral-7B-Instruct-v0.2-gpu-context-ov-dy/model
+  container_path: foundrylocal/models/Mistral-7B-Instruct-v0-2/onnx/openvino_gpu/v2
   storage_name: foundrylocalmodels
   type: azureblob
 publish:
