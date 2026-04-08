@@ -874,7 +874,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, int]]:
-        """Evaluate task completion for the last agent response given a query, response, and optionally tool definitions.
+        """Evaluate task completion for last agent response given a query, response, and optionally tool definitions.
 
         The query and response can be either a string or a list of messages.
 
