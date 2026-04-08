@@ -10,11 +10,23 @@ from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, Err
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response
 from azure.ai.evaluation._common.utils import reformat_tool_definitions
+from azure.ai.evaluation._common.utils import (
+    construct_prompty_model_config,
+    validate_model_config,
+    _extract_text_from_content,
+    _get_agent_response,
+    _pretty_format_conversation_history,
+)
 from azure.ai.evaluation._common._experimental import experimental
 from enum import Enum
 
 from abc import ABC, abstractmethod
 from typing import Any
+
+if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
+    from promptflow.core._flow import AsyncPrompty
+else:
+    from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 
 # region Validators
@@ -553,7 +565,131 @@ class ToolDefinitionsValidator(ConversationValidator):
         return True
 
 
+class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
+    """Validator that supports both single-turn (query/response) and multi-turn (messages) inputs.
+
+    When ``messages`` is provided, it validates the messages list and optional tool_definitions.
+    Otherwise, it delegates to the parent ``ToolDefinitionsValidator`` for the query/response path.
+    """
+
+    @override
+    def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
+        """Validate evaluation input, supporting messages as an alternative to query/response."""
+        messages = eval_input.get("messages")
+        if messages is not None:
+            if not isinstance(messages, list):
+                raise EvaluationException(
+                    message="messages must be provided as a list of message dictionaries.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if len(messages) == 0:
+                raise EvaluationException(
+                    message="messages list must not be empty.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            tool_definitions = eval_input.get("tool_definitions")
+            tool_definitions_error = self._validate_tool_definitions(tool_definitions)
+            if tool_definitions_error:
+                raise tool_definitions_error
+            return True
+        return super().validate_eval_input(eval_input)
+
+
 # endregion Validators
+
+
+def serialize_messages(messages: List[dict]) -> str:
+    """Serialize a list of messages into labeled text for the multi-turn prompt.
+
+    Uses ``_pretty_format_conversation_history`` from
+    ``azure.ai.evaluation._common.utils`` for formatting. The parsing
+    mirrors ``_get_conversation_history`` from the same module but drops
+    the strict alternation validation so that conversations may end on
+    any role.
+
+    :param messages: The list of message dicts with role and content.
+    :type messages: List[dict]
+    :return: Formatted text transcript.
+    :rtype: str
+    """
+    if not messages:
+        return ""
+
+    all_user_queries: List = []
+    all_agent_responses: List = []
+    cur_user_query: List = []
+    cur_agent_response: List = []
+    system_message = None
+
+    for msg in messages:
+        if not isinstance(msg, dict):
+            continue
+        role = msg.get("role")
+        if not role:
+            continue
+
+        # Normalize string content to list format for _get_agent_response
+        normalized = msg
+        if role == "assistant" and isinstance(msg.get("content"), str):
+            normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
+
+        if role == "system":
+            system_message = msg.get("content", "")
+
+        elif role == "user" and "content" in msg:
+            if cur_agent_response:
+                formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+                all_agent_responses.append([formatted])
+                cur_agent_response = []
+            content = msg["content"]
+            if isinstance(content, str):
+                text_in_msg = [content]
+            else:
+                text_in_msg = _extract_text_from_content(content)
+            if text_in_msg:
+                cur_user_query.append(text_in_msg)
+
+        elif role in ("assistant", "tool"):
+            if cur_user_query:
+                all_user_queries.append(cur_user_query)
+                cur_user_query = []
+            cur_agent_response.append(normalized)
+
+    if cur_user_query:
+        all_user_queries.append(cur_user_query)
+    if cur_agent_response:
+        formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+        all_agent_responses.append([formatted])
+
+    conversation_history: Dict = {
+        "user_queries": all_user_queries,
+        "agent_responses": all_agent_responses[:len(all_user_queries) - 1]
+        if len(all_user_queries) > 0
+        else [],
+    }
+    if system_message:
+        conversation_history["system_message"] = system_message
+
+    result = _pretty_format_conversation_history(conversation_history)
+
+    # Append any trailing agent turns that the main formatter didn't cover
+    start = max(len(all_user_queries) - 1, 0)
+    for i, agent_response in enumerate(all_agent_responses[start:], start=start):
+        result += f"Agent turn {i + 1}:\n"
+        for msg_text in agent_response:
+            if isinstance(msg_text, list):
+                for submsg in msg_text:
+                    result += "  " + "\n  ".join(submsg.split("\n")) + "\n"
+            else:
+                result += "  " + "\n  ".join(msg_text.split("\n")) + "\n"
+        result += "\n"
+
+    return result.rstrip("\n")
+
 
 logger = logging.getLogger(__name__)
 
@@ -679,6 +815,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """
 
     _PROMPTY_FILE = "task_completion.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "task_completion_multi_turn.prompty"
     _RESULT_KEY = "task_completion"
     _OPTIONAL_PARAMS = ["tool_definitions"]
 
@@ -701,8 +838,10 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = kwargs.pop("threshold", 1)
 
-        # Initialize input validator
-        self._validator = ToolDefinitionsValidator(error_target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR)
+        # Initialize input validator (supports both query/response and messages)
+        self._validator = MessagesOrQueryResponseInputValidator(
+            error_target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR
+        )
 
         super().__init__(
             model_config=model_config,
@@ -713,6 +852,20 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             **kwargs,
         )
 
+        # Load the multi-turn prompty flow for multi-turn evaluation
+        multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
+        prompty_model_config = construct_prompty_model_config(
+            validate_model_config(model_config),
+            self._DEFAULT_OPEN_API_VERSION,
+            f"azure-ai-evaluation (type=evaluator subtype={self.__class__.__name__})",
+        )
+        self._multi_turn_flow = AsyncPrompty.load(
+            source=multi_turn_prompty_path,
+            model=prompty_model_config,
+            token_credential=credential,
+            is_reasoning_model=self._is_reasoning_model,
+        )
+
     @overload
     def __call__(
         self,
@@ -721,7 +874,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         response: Union[str, List[dict]],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, int]]:
-        """Evaluate task completion for a given query, response, and optionally tool definitions.
+        """Evaluate task completion for the last agent response given a query, response, and optionally tool definitions.
 
         The query and response can be either a string or a list of messages.
 
@@ -751,6 +904,33 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :keyword response: The response being evaluated, either a string or a list of messages
         :paramtype response: Union[str, List[dict]]
         :keyword tool_definitions: An optional list of messages containing the tool definitions the agent is aware of.
+        :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
+        :return: A dictionary with the task completion evaluation results.
+        :rtype: Dict[str, Union[str, int]]
+        """
+
+    @overload
+    def __call__(
+        self,
+        *,
+        messages: List[dict],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
+    ) -> Dict[str, Union[str, int]]:
+        """Evaluate task completion for a full multi-turn conversation session.
+
+        Example with messages:
+            evaluator = TaskCompletionEvaluator(model_config)
+            messages = [
+                {'role': 'user', 'content': [{'type': 'text', 'text': 'Book a flight to London'}]},
+                {'role': 'assistant', 'content': [{'type': 'text', 'text': 'I found a flight...'}]},
+                {'role': 'user', 'content': [{'type': 'text', 'text': 'Also book a hotel'}]},
+                {'role': 'assistant', 'content': [{'type': 'text', 'text': 'Done! Both booked.'}]},
+            ]
+            result = evaluator(messages=messages)
+
+        :keyword messages: The full multi-turn conversation as a list of message dicts.
+        :paramtype messages: List[dict]
+        :keyword tool_definitions: An optional list of tool definitions the agent is aware of.
         :paramtype tool_definitions: Optional[Union[dict, List[dict]]]
         :return: A dictionary with the task completion evaluation results.
         :rtype: Dict[str, Union[str, int]]
@@ -806,14 +986,20 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[int, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
 
+        Routes to the multi-turn path when ``messages`` is provided,
+        otherwise falls through to the single-turn query/response path.
+
         :param eval_input: The input to the evaluator.
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
         """
-        # we override the _do_eval method as we want the output to be a dictionary,
-        # which is a different schema than _base_prompty_eval.py
-        if "query" not in eval_input and "response" not in eval_input:
+        # Multi-turn path (messages)
+        if eval_input.get("messages") is not None:
+            return await self._do_eval_multi_turn(eval_input)
+
+        # Single-turn path (query/response)
+        if eval_input.get("query") is None or eval_input.get("response") is None:
             raise EvaluationException(
                 message="Both query and response must be provided as input to the Task Completion evaluator.",
                 internal_message="Both query and response must be provided as input to the Task Completion evaluator.",
@@ -836,6 +1022,45 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             eval_input["tool_definitions"] = reformat_tool_definitions(eval_input["tool_definitions"], logger)
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    async def _do_eval_multi_turn(self, eval_input: Dict) -> Dict[str, Union[int, str]]:
+        """Evaluate task completion for a full multi-turn conversation session.
+
+        :param eval_input: The input containing ``messages`` and optionally ``tool_definitions``.
+        :type eval_input: Dict
+        :return: The evaluation result.
+        :rtype: Dict
+        """
+        messages = eval_input["messages"]
+
+        if _is_intermediate_response(messages):
+            return self._not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+
+        messages = _preprocess_messages(messages)
+        conversation_text = serialize_messages(messages)
+
+        prompty_kwargs: Dict[str, Any] = {"conversation": conversation_text}
+        tool_definitions = eval_input.get("tool_definitions")
+        if tool_definitions:
+            prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
+
+        prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Union[int, str]]:
+        """Parse the prompty output into a standardized result dictionary.
+
+        Shared between single-turn and multi-turn evaluation paths.
+
+        :param prompty_output_dict: Raw output from the prompty flow.
+        :type prompty_output_dict: Dict
+        :return: The parsed evaluation result.
+        :rtype: Dict
+        """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
