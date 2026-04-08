@@ -1,7 +1,10 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
-# Install wkhtmltopdf for pdf rendering from html
-RUN apt-get -y update && apt-get -y install wkhtmltopdf
+# Install wkhtmltopdf with statically linked Qt to avoid system Qt5 vulnerabilities (USN-8076-1)
+RUN apt-get -y update && apt-get -y install --no-install-recommends xfonts-75dpi xfonts-base fontconfig libxrender1 libxext6 && \
+    wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.jammy_amd64.deb && \
+    dpkg -i wkhtmltox_0.12.6.1-3.jammy_amd64.deb || apt-get -y -f install && \
+    rm wkhtmltox_0.12.6.1-3.jammy_amd64.deb
 
 WORKDIR /
 ENV CONDA_PREFIX=/azureml-envs/responsibleai-tabular
@@ -47,8 +50,8 @@ RUN pip install 'cryptography>=46.0.5'
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
 
-# To resolve vulnerability issue
-RUN pip install 'mlflow>=3.2.0,<=3.5.0'
+# To resolve vulnerability issue (GHSA-xch3-2f9x-wh9f, GHSA-q2r8-vmq7-fpx2, GHSA-gq3w-7jj3-x7gr)
+RUN pip install 'mlflow>=3.8.0,<=3.10.0'
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'

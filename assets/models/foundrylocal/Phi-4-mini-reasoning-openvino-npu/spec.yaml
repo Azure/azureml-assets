@@ -23,8 +23,8 @@ tags:
   toolResponseEnd: "<|tool_response|>"
   capabilities: "reasoning"
   supportsReasoning: "true"
-  reasoningStart: "<think>"
-  reasoningEnd: "</think>"
+  reasoningStart: ""
+  reasoningEnd: ""
   contextLength: 4224
   minFLVersion: "0.0.0"
   disable-maap: true
