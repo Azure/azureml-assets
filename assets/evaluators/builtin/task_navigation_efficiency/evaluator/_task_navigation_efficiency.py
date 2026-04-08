@@ -485,6 +485,23 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         self._validator.validate_eval_input(kwargs)
         return await super()._real_call(**kwargs)
 
+    @staticmethod
+    def _normalize_param_value(value: Any) -> str:
+        """Normalize a parameter value to a string for consistent comparison.
+
+        Uses json.dumps for dicts and lists to produce canonical JSON strings,
+        and str() for other types. This ensures both agent and expected_actions
+        parameter values are compared in the same string format.
+        """
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (dict, list)):
+            try:
+                return json.dumps(value, sort_keys=True)
+            except (TypeError, ValueError):
+                return str(value)
+        return str(value)
+
     def _prepare_steps_for_comparison(
         self,
         agent_tool_pairs: List[Tuple[str, Dict[str, Any]]],
@@ -499,10 +516,20 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         agent_steps: List[Union[str, Tuple[str, Tuple]]] = []
         expected_actions_steps: List[Union[str, Tuple[str, Tuple]]] = []
         if use_parameter_matching:
-            # When parameter matching is enabled, we need to match both tool name and parameters
-            agent_steps = [(pair[0], tuple(sorted(pair[1].items()))) for pair in agent_tool_pairs]
+            # When parameter matching is enabled, we need to match both tool name and parameters.
+            # Normalize all parameter values to strings on both sides for consistent comparison.
+            agent_steps = [
+                (pair[0], tuple(sorted(
+                    (k, self._normalize_param_value(v)) for k, v in pair[1].items()
+                )))
+                for pair in agent_tool_pairs
+            ]
             expected_actions_steps = [
-                (name, tuple(sorted(expected_actions_params.get(name, {}).items()))) for name in expected_actions
+                (name, tuple(sorted(
+                    (k, self._normalize_param_value(v))
+                    for k, v in expected_actions_params.get(name, {}).items()
+                )))
+                for name in expected_actions
             ]
         else:
             # When parameter matching is disabled, only compare tool names
@@ -673,14 +700,13 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             if "arguments" in tool_call:
                 args = tool_call["arguments"]
                 if isinstance(args, dict):
-                    # Convert all values to strings for consistent comparison
-                    parameters = {str(k): str(v) for k, v in args.items()}
+                    parameters = {str(k): v for k, v in args.items()}
                 elif isinstance(args, str):
                     # If arguments is a string, try to parse it as JSON
                     try:
                         parsed_args = json.loads(args)
                         if isinstance(parsed_args, dict):
-                            parameters = {str(k): str(v) for k, v in parsed_args.items()}
+                            parameters = {str(k): v for k, v in parsed_args.items()}
                     except json.JSONDecodeError:
                         raise EvaluationException(
                             "Failed to parse tool call arguments as JSON.",
