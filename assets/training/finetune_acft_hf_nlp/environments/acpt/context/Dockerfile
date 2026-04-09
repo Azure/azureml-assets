@@ -18,22 +18,22 @@ RUN pip install mlflow==3.10.1
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
-RUN pip install nltk==3.9.3 # Pinning to fix the unsafe deserialization vulnerability
+RUN pip install nltk==3.9.4 # Pinning to fix the unsafe deserialization vulnerability
 
 # vulnerabilities, cannot be added to requirements.txt as it causes pip dependency resolver to break
-RUN pip install --upgrade --no-cache-dir 'fastmcp>=2.14.0'
+RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 
 # protobuf is required by onnxruntime, mlflow
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # pyans1 is required by azureml-acft-accelerator, mlflow and both dont pin the libs hence upgrade
 # pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
 # parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
-RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.5 pillow==12.1.1 python-multipart==0.0.22
+RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.6 pillow==12.1.1 python-multipart==0.0.22 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y wheel>=0.46.2 pip>=26.0.1
 # vulnerability in base conda env
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --upgrade pip>=26.0 wheel>=0.46.2 setuptools>=82.0.0 cryptography==46.0.5 'PyJWT>=2.12.0'
+RUN conda run -n base python -m pip install --upgrade pip>=26.0 wheel>=0.46.2 setuptools>=82.0.0 cryptography==46.0.6 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'requests>=2.33.0'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
