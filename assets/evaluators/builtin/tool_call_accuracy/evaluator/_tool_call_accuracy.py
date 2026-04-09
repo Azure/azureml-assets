@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from itertools import chain
 import os
 import logging
 from typing import Dict, List, Union, TypeVar

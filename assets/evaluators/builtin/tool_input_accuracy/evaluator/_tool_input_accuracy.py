@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import os
 import logging
-from itertools import chain
 from typing import Dict, List, Union, TypeVar, cast
 from typing_extensions import override
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase

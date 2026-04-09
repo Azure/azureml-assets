@@ -4,7 +4,6 @@ import os
 import logging
 from typing import Dict, List, Union, TypeVar
 from typing_extensions import override
-from itertools import chain
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._exceptions import (
     ErrorBlame,
