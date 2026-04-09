@@ -18,7 +18,7 @@ ftfy==6.3.1
 regex==2024.11.6
 vision-datasets==0.2.7
 tenacity==9.0.0
-requests==2.32.4
+requests>=2.33.0
 azure-storage-blob==12.13.0
 deepspeed==0.17.1
 GPUtil==1.4.0
