@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260329.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260408.v1
 WORKDIR /
 
 ENV CONDA_PREFIX=/azureml-envs/designer
