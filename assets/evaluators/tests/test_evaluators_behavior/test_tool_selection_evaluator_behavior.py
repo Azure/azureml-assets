@@ -73,8 +73,11 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
         "tool_definitions": data.FABRIC_TOOL_DEFINITIONS,
     }
 
-    # OpenAPI: ToolSelection flow is not called (no extractable tool calls)
-    # Expected flow inputs not used since the test will not reach flow assertion
+    test_openapi_expected_flow_inputs = {
+        "query": data.OPENAPI_EXPECTED_FLOW_QUERY,
+        "tool_calls": ["weather_GetCurrentWeather"],
+        "tool_definitions": data.OPENAPI_TOOL_DEFINITIONS,
+    }
 
     test_web_search_expected_flow_inputs = {
         "query": data.WEB_SEARCH_EXPECTED_FLOW_QUERY,
@@ -116,15 +119,3 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
     is_tool_definition_required = True
 
     evaluator_type = ToolSelectionEvaluator
-
-    def test_openapi(self):
-        """OpenAPI: ToolSelection flow is not called (no extractable tool calls)."""
-        results, flow_mock = self._run_evaluation_and_return_mocked_flow(
-            query=data.OPENAPI_QUERY,
-            response=data.OPENAPI_RESPONSE,
-            tool_definitions=data.OPENAPI_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "OpenAPI")
-        self.assert_not_applicable(result_data)
-        assert flow_mock is not None, "Flow mock should be set when use_mocking=True"
-        flow_mock.assert_not_called()
