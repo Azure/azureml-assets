@@ -139,10 +139,10 @@ TOOL DEFINITIONS: {{tool_definitions}}
 
 # Tasks
 ## Please provide your evaluation for the assistant RESPONSE in relation to the user QUERY and tool definitions based on the Definitions and examples above.
-Your output should consist only of a JSON object, as provided in the examples, that has the following keys:
-  - chain_of_thought: a string that explains your thought process to decide on the tool call accuracy level, based on the Chain of Thought structure. Start this string with 'Let's think step by step:'.
-  - tool_calls_success_level: a integer value between 1 and 5 that represents the level of tool call success, based on the level definitions mentioned before. You need to be very precise when deciding on this level. Ensure you are correctly following the rating system based on the description of each level.
-  - details: a dictionary that contains the following keys:
+Your output should consist only of a JSON object that has the following keys:
+  - score: an integer value between 1 and 5 that represents the level of tool call success, based on the level definitions mentioned before. You need to be very precise when deciding on this level. Ensure you are correctly following the rating system based on the description of each level.
+  - reasoning: a string that explains your thought process to decide on the tool call accuracy level, based on the Chain of Thought structure. Start this string with 'Let's think step by step:'.
+  - properties: a dictionary that contains the following keys:
         - tool_calls_made_by_agent: total number of tool calls made by the agent
         - correct_tool_calls_made_by_agent: total number of correct tool calls made by the agent
         - per_tool_call_details: a list of dictionaries, each containing:

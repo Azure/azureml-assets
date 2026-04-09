@@ -169,6 +169,9 @@ class BaseEvaluatorRunner(ABC):
 
         # Optional fields
         reason = results.get(f"{self.result_key}_reason")
+        if reason is None:
+            reason = results.get(f"{self._result_prefix}_reasoning")
+        status = results.get(f"{self.result_key}_status")
         threshold = results.get(f"{self._result_prefix}_threshold")
         precision = results.get(f"{self._result_prefix}_precision")
         recall = results.get(f"{self._result_prefix}_recall")
@@ -189,6 +192,9 @@ class BaseEvaluatorRunner(ABC):
         if threshold is not None:
             print(f"  Threshold: {threshold}")
             result["threshold"] = threshold
+        if status is not None:
+            print(f"  Status: {status}")
+            result["status"] = status
         if precision is not None:
             print(f"  Precision: {precision}")
             result["precision"] = precision
