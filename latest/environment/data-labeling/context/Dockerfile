@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260408.v1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:20260409.v4
 
 WORKDIR /
 

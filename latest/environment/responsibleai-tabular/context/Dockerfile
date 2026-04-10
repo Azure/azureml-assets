@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260408.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260409.v4
 
 # Install wkhtmltopdf with statically linked Qt to avoid system Qt5 vulnerabilities (USN-8076-1)
 RUN apt-get -y update && apt-get -y install --no-install-recommends xfonts-75dpi xfonts-base fontconfig libxrender1 libxext6 && \
