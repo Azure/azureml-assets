@@ -4,6 +4,10 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 USER root
 RUN apt-get -y update && apt-get -y upgrade
 # Install required packages from pypi
+# Temporarily pin setuptools<72 to build mpi4py 3.1.4 (incompatible with setuptools>=72 new_compiler API).
+# Must use --no-build-isolation because pip's isolated build env downloads latest setuptools from PyPI.
+RUN pip install --no-cache-dir 'setuptools<72'
+RUN pip install mpi4py==3.1.4 --no-build-isolation --no-cache-dir
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # Downgraded azureml-metrics, to prevent bug related to logger in azureml-metrics. Should be upgraded in next pypi release of acft-multimodal
@@ -16,9 +20,9 @@ RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 # protobuf is a transitive dep of onnxruntime-training; base image has older version pre-installed
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pillow==12.1.1 setuptools>=82.0.1
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.5 pillow==12.1.1 setuptools>=82.0.1 requests>=2.33.0
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
 # vulnerability in base conda env
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5 'PyJWT>=2.12.0'
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.5 'PyJWT>=2.12.0' 'requests>=2.33.0'

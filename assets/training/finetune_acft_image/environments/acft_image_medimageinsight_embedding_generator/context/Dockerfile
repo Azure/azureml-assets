@@ -22,7 +22,7 @@ RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
 #   Required-by: mlflow; all mlflow versions (up to 3.11.0rc0) specify skops<1 with no minimum,
 #   so no mlflow upgrade can fix this — explicit override is required.
 # wheel ≥0.46.2 via pip as fallback in case conda version lags (CVE-2026-24049)
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'skops>=0.13.0' 'wheel>=0.46.2'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'skops>=0.13.0' 'wheel>=0.46.2' 'requests>=2.33.0'
 
 # Upgrade requests, urllib3, aiohttpin the system Python (3.13) for fixing vulnerability
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
