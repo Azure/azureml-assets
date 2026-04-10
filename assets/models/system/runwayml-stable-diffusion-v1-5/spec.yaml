@@ -5,9 +5,9 @@ properties:
   SharedComputeCapacityEnabled: true
   SHA: 1d0c4ebf6ff58a5caecab40fa1406526bca4b5b9
   finetuning-tasks: text-to-image
-  finetune-min-sku-spec: 40|8|672|256
+  finetune-min-sku-spec: 40|8|672|2900
   finetune-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
-  inference-min-sku-spec: 40|8|672|256
+  inference-min-sku-spec: 40|8|672|2900
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
 tags:
   SharedComputeCapacityEnabled: ""
