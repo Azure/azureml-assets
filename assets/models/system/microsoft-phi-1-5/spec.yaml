@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: microsoft-phi-1-5
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 92557d03bb12543040c8bb5f0475cbdd9968f05f
   datasets: StackOverflow, Stackv1.2, CodeContests, gpt-3.5-turbo-0301
   inference-min-sku-spec: 4|0|14|28
