@@ -47,6 +47,7 @@ class AssetType(Enum):
     BENCHMARKSPEC = 'benchmarkspec'
     AGENTMANIFEST = 'agentmanifest'
     APPTEMPLATE = 'apptemplate'
+    EVALUATIONSUITE = 'evaluationsuite'
 
 
 class ComponentType(Enum):
@@ -141,7 +142,7 @@ EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
 GENERIC_ASSET_TYPES = [AssetType.EVALUATIONRESULT, AssetType.PROMPT, AssetType.AGENTBLUEPRINT, AssetType.EVALUATOR,
-                       AssetType.APPTEMPLATE, AssetType.BENCHMARKSPEC]
+                       AssetType.APPTEMPLATE, AssetType.BENCHMARKSPEC, AssetType.EVALUATIONSUITE]
 OTHER_ASSET_TYPES = [AssetType.AGENTMANIFEST]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}

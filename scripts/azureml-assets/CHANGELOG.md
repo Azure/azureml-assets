@@ -1,3 +1,7 @@
+## 1.18.0 (2026-04-07)
+### 🚀 New Features
+- Add EvaluationSuite to asset types and GENERIC_ASSET_TYPES
+
 ## 1.17.0 (2026-03-04)
 ### 🚀 New Features
 - [#4830](https://github.com/Azure/azureml-assets/pull/4830) Add update_on_create settings for asset version updates
