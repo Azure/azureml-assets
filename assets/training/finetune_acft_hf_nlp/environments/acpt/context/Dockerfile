@@ -32,12 +32,12 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # aiohttp: transitive dep of ray/vllm/azure-core; parents use loose floors (>=3.10); override needed (GHSA-mwh4-6h8g-pg8w etc.)
 # onnx: onnxruntime/azureml-acft-accelerator require onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
 # requests: transitive dep of azure-core/mlflow/transformers; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.6 pillow==12.1.1 python-multipart==0.0.22 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
+RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.7 pillow==12.1.1 python-multipart==0.0.22 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y wheel>=0.46.2 pip>=26.0.1
 # vulnerability in base conda env
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --upgrade pip>=26.0 wheel>=0.46.2 setuptools>=82.0.0 cryptography==46.0.6 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'requests>=2.33.0'
+RUN conda run -n base python -m pip install --upgrade pip>=26.0 wheel>=0.46.2 setuptools>=82.0.0 cryptography==46.0.7 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'requests>=2.33.0'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

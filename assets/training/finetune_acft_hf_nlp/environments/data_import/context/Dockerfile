@@ -15,9 +15,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 # are already at fixed versions in the openmpi base image (20260315.v1).
 # The override below only targets packages NOT fixed in base or pulled in vulnerable by requirements.txt.
 # aiohttp (GHSA-mwh4-6h8g-pg8w etc.): transitive dep of azure-core/datasets; parents use loose floors
-# cryptography (GHSA-m959-cc7f-wv43): base image has 46.0.5; override to 46.0.6
+# cryptography (GHSA-m959-cc7f-wv43, GHSA-p423-j2cm-9vmq): base image has 46.0.5; override to 46.0.6
 # requests (GHSA-gc5v-m9x4-r6x2): transitive dep of many packages; parents use loose floors
-RUN pip install --no-cache-dir scikit-learn==1.5.1 aiohttp==3.13.4 'requests>=2.33.0' 'cryptography>=46.0.6' && rm -rf /root/.cache/pip
+RUN pip install --no-cache-dir scikit-learn==1.5.1 aiohttp==3.13.4 'requests>=2.33.0' 'cryptography>=46.0.7' && rm -rf /root/.cache/pip
 
 # The below file is required for baking the code into the environment 
 COPY data_import_run.py /azureml/data_import/run.py
