@@ -20,6 +20,15 @@ RUN pip install --no-cache-dir mlflow==3.10.1
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
 # protobuf: vllm uses loose floors, pip can't force 6.33.5 transitively
 # cryptography: azureml-mlflow~=1.62.0 pins <46.0.0; override needed for CVE fix
+# onnx: onnxruntime-training accepts onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
+# nltk: GHSA-gfwx-w7gr-fvh7; >=3.9.4 required
+# filelock: transitive dep of torch/huggingface-hub; parents use loose floor (GHSA-qmgc-5h2g-mvrw)
+# urllib3: transitive dep of requests; parent uses urllib3>=1.21.1,<3 (GHSA-38jv-5279-wg99)
+# ray: GHSA-q5fh-2hc8-f6rq; >=2.54.0 required
+# azure-core: transitive dep of Azure SDKs; parents use loose floor (GHSA-jm66-cg57-jjv5)
+# cbor2: transitive dep via azure-identity → msal-extensions; parent uses loose floor (GHSA-3c37-wwvx-h642)
+# mlflow: GHSA-r23q-823p-vmf7 etc.; azureml-mlflow pins mlflow-skinny<=3.5.0, override needed
+# vllm: GHSA-pq5c-rjhq-qp7p, GHSA-3mwp-wvh9-7528 etc.; >=0.19.0 required
 RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.6 xgrammar>=0.1.32 \
     'aiohttp>=3.13.4' 'onnx>=1.21.0' 'nltk>=3.9.4' 'pyasn1>=0.6.3' \
     'python-multipart>=0.0.22' 'pillow>=12.1.1' 'filelock>=3.20.3' 'urllib3>=2.6.3' 'ray>=2.54.0' \

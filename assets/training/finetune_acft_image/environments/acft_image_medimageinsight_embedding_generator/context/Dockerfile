@@ -22,6 +22,10 @@ RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
 #   Required-by: mlflow; all mlflow versions (up to 3.11.0rc0) specify skops<1 with no minimum,
 #   so no mlflow upgrade can fix this — explicit override is required.
 # wheel ≥0.46.2 via pip as fallback in case conda version lags (CVE-2026-24049)
+# cryptography (GHSA-m959-cc7f-wv43): azureml-mlflow pins <46.0.0; override to 46.0.6
+# aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
+# onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
+# requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'skops>=0.13.0' 'wheel>=0.46.2' \
     cryptography==46.0.6 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
 

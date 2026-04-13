@@ -10,6 +10,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
 # protobuf parent is mlflow (already latest) which accepts protobuf>=3.12.0, cannot force 6.33.5 via parent
+# aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
+# onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
+# requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
 RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 cryptography==46.0.6 'setuptools>=82.0.1' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
 
 # Flag needed to enable control flow which is in PrP.
