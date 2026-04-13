@@ -19,7 +19,7 @@ kornia==0.7.3
 python-dotenv==1.0.1
 einops==0.8.0 
 mup==1.0.0 
-pydicom==2.4.4 
+pydicom>=2.4.5
 SimpleITK==2.4.0
 scikit-image==0.24.0 
 arrow==1.3.0 

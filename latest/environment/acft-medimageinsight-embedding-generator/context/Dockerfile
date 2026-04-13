@@ -22,8 +22,13 @@ RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
 #   Required-by: mlflow; all mlflow versions (up to 3.11.0rc0) specify skops<1 with no minimum,
 #   so no mlflow upgrade can fix this — explicit override is required.
 # wheel ≥0.46.2 via pip as fallback in case conda version lags (CVE-2026-24049)
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'skops>=0.13.0' 'wheel>=0.46.2'
+# cryptography (GHSA-m959-cc7f-wv43, GHSA-p423-j2cm-9vmq): azureml-mlflow pins <46.0.0; override to 46.0.6
+# aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
+# onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
+# requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'skops>=0.13.0' 'wheel>=0.46.2' \
+    cryptography==46.0.7 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
 
 # Upgrade requests, urllib3, aiohttpin the system Python (3.13) for fixing vulnerability
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.5 'PyJWT>=2.12.0'
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.7 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'

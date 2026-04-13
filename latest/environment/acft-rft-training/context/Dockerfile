@@ -25,7 +25,6 @@ RUN pip install --no-cache-dir sgl-kernel==0.3.16.post3
 RUN pip uninstall -y mlflow 
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 RUN pip install --no-cache-dir starlette==0.49.1
-RUN pip install --no-cache-dir cryptography==46.0.5
 # Upgrade wandb to fix golang.org/x/crypto vulnerabilities (CVE-2025-47914, CVE-2025-58181)
 RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
 RUN pip install --no-cache-dir triton==3.4.0
@@ -44,12 +43,15 @@ RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3-linux-1/flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl
-# aiohttp: vllm/sglang use loose floors, pip can't force 3.13.3 transitively
+# aiohttp: vllm/sglang use loose floors, pip can't force 3.13.4 transitively
 # protobuf: vllm uses loose floors (>=6.30.0), pip can't force 6.33.5 transitively
-RUN pip install --upgrade aiohttp==3.13.3 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.5
+# onnx: onnxruntime/azureml-acft-accelerator require onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
+# fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
+# requests: transitive dep of azure-core/mlflow/transformers; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
+RUN pip install --upgrade aiohttp==3.13.4 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.7 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0'
 # Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
 # Still vulnerable in base: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
-RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.5
+RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
