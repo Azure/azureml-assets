@@ -170,7 +170,9 @@ def _run_with_throttle_retry(cmd, cwd, name, is_acr):
     for attempt in range(1, ACR_THROTTLE_MAX_RETRIES + 1):
         if p.returncode == 0 or not _is_throttled(p.stdout.decode()):
             return p
-        logger.log_warning(f"ACR throttled for {name}, retrying in {wait}s (attempt {attempt}/{ACR_THROTTLE_MAX_RETRIES})")
+        logger.log_warning(
+            f"ACR throttled for {name}, retrying in {wait}s "
+            f"(attempt {attempt}/{ACR_THROTTLE_MAX_RETRIES})")
         time.sleep(wait)
         wait = min(wait * 2, 300)
         p = run(cmd, cwd=cwd, stdout=PIPE, stderr=STDOUT)
