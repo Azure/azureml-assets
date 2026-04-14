@@ -48,6 +48,7 @@ class MessageRole(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+    DEVELOPER = "developer"
 
 
 class ContentType(str, Enum):
@@ -379,7 +380,7 @@ class ConversationValidator(ValidatorInterface):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-        if role in [MessageRole.USER, MessageRole.SYSTEM]:
+        if role in [MessageRole.USER, MessageRole.SYSTEM, MessageRole.DEVELOPER]:
             error = self._validate_user_or_system_message(message, role)
             if error:
                 return error
@@ -591,6 +592,67 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
+
+            # Per-message structural checks
+            valid_roles = {r.value for r in MessageRole}
+            roles_present: set = set()
+            for i, msg in enumerate(messages):
+                if not isinstance(msg, dict):
+                    raise EvaluationException(
+                        message=(
+                            f"Each item in 'messages' must be a dictionary, "
+                            f"but item at index {i} is {type(msg).__name__}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                role = msg.get("role")
+                if role is None:
+                    raise EvaluationException(
+                        message=f"Each message must contain a 'role' key, but message at index {i} is missing it.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if role not in valid_roles:
+                    raise EvaluationException(
+                        message=(
+                            f"Invalid role '{role}' at message index {i}. "
+                            f"Must be one of: {sorted(valid_roles)}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                roles_present.add(role)
+
+            # Conversation-level checks
+            if MessageRole.USER not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'user'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if MessageRole.ASSISTANT not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'assistant'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if messages[-1]["role"] != MessageRole.ASSISTANT:
+                raise EvaluationException(
+                    message=(
+                        f"The last message must have role 'assistant', "
+                        f"but found role '{messages[-1]['role']}'."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+
             tool_definitions = eval_input.get("tool_definitions")
             tool_definitions_error = self._validate_tool_definitions(tool_definitions)
             if tool_definitions_error:
@@ -603,15 +665,32 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
 
 
 def serialize_messages(messages: List[dict]) -> str:
-    """Serialize a list of messages into labeled text for the multi-turn prompt.
+    """Serialize a list of chat messages into a labeled text transcript for the multi-turn prompty.
 
-    Uses ``_pretty_format_conversation_history`` from
-    ``azure.ai.evaluation._common.utils`` for formatting. The parsing
-    mirrors ``_get_conversation_history`` from the same module but drops
-    the strict alternation validation so that conversations may end on
-    any role.
+    **Input format:** List of message dicts, each with ``"role"`` (``user``, ``assistant``, ``tool``,
+    ``system``, ``developer``) and ``"content"`` (string or list of content-block dicts like
+    ``{"type": "text", "text": "..."}``). Tool messages may include ``tool_call_id`` and content
+    blocks of type ``tool_result``/``tool_call``.
 
-    :param messages: The list of message dicts with role and content.
+    **Output format:** Plain-text transcript with labeled turns::
+
+        User turn 1:
+          <user text>
+
+        Agent turn 1:
+          <assistant text>
+          [TOOL_CALL] func_name({"arg": "val"})
+          [TOOL_RESULT] <result>
+
+        User turn 2:
+          <user text>
+        ...
+
+    System/developer messages are included as a system preamble. Consecutive messages of the same
+    role are grouped into a single turn. Assistant string content is auto-normalized to content-block
+    format for consistent formatting.
+
+    :param messages: Chat messages with role and content.
     :type messages: List[dict]
     :return: Formatted text transcript.
     :rtype: str
@@ -619,6 +698,8 @@ def serialize_messages(messages: List[dict]) -> str:
     if not messages:
         return ""
 
+    # Accumulate turns: each "user turn" is a group of consecutive user messages,
+    # each "agent turn" is a group of consecutive assistant + tool messages.
     all_user_queries: List = []
     all_agent_responses: List = []
     cur_user_query: List = []
@@ -632,15 +713,16 @@ def serialize_messages(messages: List[dict]) -> str:
         if not role:
             continue
 
-        # Normalize string content to list format for _get_agent_response
+        # _get_agent_response expects content as list of dicts, not a plain string
         normalized = msg
         if role == "assistant" and isinstance(msg.get("content"), str):
             normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
 
-        if role == "system":
+        if role in ("system", "developer"):
             system_message = msg.get("content", "")
 
         elif role == "user" and "content" in msg:
+            # A new user message after agent messages ends the current agent turn
             if cur_agent_response:
                 formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
                 all_agent_responses.append([formatted])
@@ -649,22 +731,28 @@ def serialize_messages(messages: List[dict]) -> str:
             if isinstance(content, str):
                 text_in_msg = [content]
             else:
+                # Extracts only items with a "text" key; other content types are skipped
                 text_in_msg = _extract_text_from_content(content)
             if text_in_msg:
                 cur_user_query.append(text_in_msg)
 
         elif role in ("assistant", "tool"):
+            # A new agent/tool message after user messages ends the current user turn
             if cur_user_query:
                 all_user_queries.append(cur_user_query)
                 cur_user_query = []
             cur_agent_response.append(normalized)
 
+    # Flush any remaining buffered turn
     if cur_user_query:
         all_user_queries.append(cur_user_query)
     if cur_agent_response:
         formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
         all_agent_responses.append([formatted])
 
+    # Build the dict expected by _pretty_format_conversation_history.
+    # It pairs user_queries[i] with agent_responses[i], so we pass N-1 agent responses
+    # to let it format all paired turns (the last/trailing agent turn is appended below).
     conversation_history: Dict = {
         "user_queries": all_user_queries,
         "agent_responses": all_agent_responses[:len(all_user_queries) - 1]
@@ -676,7 +764,8 @@ def serialize_messages(messages: List[dict]) -> str:
 
     result = _pretty_format_conversation_history(conversation_history)
 
-    # Append any trailing agent turns that the main formatter didn't cover
+    # The formatter above only covers agent turns paired with a preceding user turn.
+    # Append any trailing agent turn (the final response after the last user query).
     start = max(len(all_user_queries) - 1, 0)
     for i, agent_response in enumerate(all_agent_responses[start:], start=start):
         result += f"Agent turn {i + 1}:\n"
@@ -916,17 +1005,67 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         messages: List[dict],
         tool_definitions: Optional[Union[dict, List[dict]]] = None,
     ) -> Dict[str, Union[str, int]]:
-        """Evaluate task completion for a full multi-turn conversation session.
+        """Evaluate task completion for a full multi-turn conversation.
 
-        Example with messages:
+        Example with messages and tool definitions:
             evaluator = TaskCompletionEvaluator(model_config)
             messages = [
-                {'role': 'user', 'content': [{'type': 'text', 'text': 'Book a flight to London'}]},
-                {'role': 'assistant', 'content': [{'type': 'text', 'text': 'I found a flight...'}]},
-                {'role': 'user', 'content': [{'type': 'text', 'text': 'Also book a hotel'}]},
-                {'role': 'assistant', 'content': [{'type': 'text', 'text': 'Done! Both booked.'}]},
+                {"role": "system", "content": "You are a helpful travel assistant."},
+                {"role": "user", "content": [{"type": "text", "text": "Find flights to London next Friday"}]},
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": "Let me search for flights to London."},
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "search_flights",
+                            "arguments": {"origin": "NYC", "destination": "London", "date": "2025-01-10"},
+                        },
+                    ],
+                },
+                {
+                    "role": "tool",
+                    "tool_call_id": "call_1",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": {"flights": [{"airline": "BA", "price": "$450", "departure": "8:00 AM"}]},
+                        }
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "I found a British Airways flight at $450 departing 8:00 AM. Shall I book it?",
+                        }
+                    ],
+                },
+                {"role": "user", "content": [{"type": "text", "text": "Yes, book it."}]},
+                {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": "Done! Your flight is booked. Confirmation #BA12345."},
+                    ],
+                },
             ]
-            result = evaluator(messages=messages)
+            tool_definitions = [
+                {
+                    "name": "search_flights",
+                    "description": "Search for flights between two cities on a given date.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "origin": {"type": "string", "description": "Departure city"},
+                            "destination": {"type": "string", "description": "Arrival city"},
+                            "date": {"type": "string", "description": "Travel date (YYYY-MM-DD)"},
+                        },
+                    },
+                }
+            ]
+            result = evaluator(messages=messages, tool_definitions=tool_definitions)
 
         :keyword messages: The full multi-turn conversation as a list of message dicts.
         :paramtype messages: List[dict]
@@ -1025,7 +1164,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         return self._parse_prompty_output(prompty_output_dict)
 
     async def _do_eval_multi_turn(self, eval_input: Dict) -> Dict[str, Union[int, str]]:
-        """Evaluate task completion for a full multi-turn conversation session.
+        """Evaluate task completion for a full multi-turn conversation.
 
         :param eval_input: The input containing ``messages`` and optionally ``tool_definitions``.
         :type eval_input: Dict
