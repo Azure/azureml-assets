@@ -1,3 +1,7 @@
+## 1.17.1 (2026-04-14)
+### 🐛 Bugs Fixed
+- [#4929](https://github.com/Azure/azureml-assets/pull/4929) Add ACR throttle retry and submission delay for environment builds
+
 ## 1.17.0 (2026-03-04)
 ### 🚀 New Features
 - [#4830](https://github.com/Azure/azureml-assets/pull/4830) Add update_on_create settings for asset version updates
