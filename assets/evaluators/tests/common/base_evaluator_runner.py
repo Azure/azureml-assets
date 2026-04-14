@@ -156,6 +156,8 @@ class BaseEvaluatorRunner(ABC):
             Dictionary with standardized result fields.
         """
         score = results.get(self.result_key)
+        if score is None:
+            score = results.get(f"{self.result_key}_score")
 
         if f"{self.result_key}_error_message" not in results and score != "not applicable":
             for field in self.expected_result_fields:
@@ -246,7 +248,7 @@ class BaseEvaluatorRunner(ABC):
         self._assert_pass_result(result_data)
 
     def assert_not_applicable(self, result_data: Dict[str, Any]):
-        """Assert a not-applicable result (intermediate response).
+        """Assert a not-applicable result (intermediate response or skipped evaluation).
 
         Args:
             result_data: Dictionary containing evaluation result data.
@@ -254,7 +256,15 @@ class BaseEvaluatorRunner(ABC):
         Raises:
             AssertionError: If the result is not a valid not-applicable result.
         """
-        self._assert_pass_result(result_data)
+        label_key = "label"
+        score_key = "score"
+        if result_data[label_key] == "not_applicable":
+            assert result_data[label_key] == "not_applicable", \
+                f"Expected 'not_applicable' but got '{result_data[label_key]}'"
+            assert result_data[score_key] is None, \
+                f"Expected score to be None for not-applicable result but got '{result_data[score_key]}'"
+        else:
+            self._assert_pass_result(result_data)
         assert "Not applicable" in result_data.get("reason", ""), \
             f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
 

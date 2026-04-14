@@ -974,6 +974,12 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
+            # Handle skipped status from LLM
+            llm_status = llm_output.get("status", "completed")
+            if llm_status == "skipped":
+                reason = llm_output.get("reasoning", "")
+                return self._not_applicable_result(reason, self.threshold)
+
             score = llm_output.get(self._LLM_SCORE_KEY, None)
             if not score or not check_score_is_valid(
                 score,
@@ -1004,12 +1010,13 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 "sample_output": prompty_output_dict.get("sample_output", ""),
             })
             response_dict = {
-                f"{self.result_key}_score": score,
-                f"{self.result_key}_result": score_result,
-                f"{self.result_key}_reasoning": reason,
-                f"{self.result_key}_status": "completed",
-                f"{self.result_key}_threshold": self._threshold,
-                f"{self.result_key}_properties": llm_properties,
+                f"{self._result_key}_score": score,
+                f"{self._result_key}_result": score_result,
+                f"{self._result_key}_passed": score_result == "pass",
+                f"{self._result_key}_reasoning": reason,
+                f"{self._result_key}_status": "completed",
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_properties": llm_properties,
             }
             return response_dict
 
@@ -1054,7 +1061,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
+    ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the tool call is not applicable for evaluation.
 
         :param error_message: The error message indicating why the evaluation is not applicable.
@@ -1062,15 +1069,16 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :param threshold: The threshold value for the evaluation.
         :type threshold: Union[int, float]
         :return: A dictionary containing the result of the evaluation.
-        :rtype: Dict[str, Union[str, float]]
+        :rtype: Dict[str, Union[str, float, None]]
         """
         return {
-            f"{self.result_key}_score": None,
-            f"{self.result_key}_result": "not_applicable",
-            f"{self.result_key}_reasoning": f"Not applicable: {error_message}",
-            f"{self.result_key}_status": "skipped",
-            f"{self.result_key}_threshold": threshold,
-            f"{self.result_key}_properties": {},
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_reasoning": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": {},
         }
 
     def _extract_needed_tool_definitions(self, tool_calls, tool_definitions):
