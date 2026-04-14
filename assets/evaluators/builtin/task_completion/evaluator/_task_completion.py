@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 import os
 import logging
-from typing import Dict, Union, List, Optional
+from enum import Enum
+from typing import Dict, Union, List, Optional, Any
 
 from typing_extensions import overload, override
 
@@ -49,6 +50,17 @@ class MessageRole(str, Enum):
     SYSTEM = "system"
     TOOL = "tool"
     DEVELOPER = "developer"
+
+
+class EvaluationMode(str, Enum):
+    """Evaluation mode for TaskCompletionEvaluator.
+
+    - ``SINGLE_TURN``: Force single-turn evaluation (query/response).
+    - ``MULTI_TURN``: Force multi-turn evaluation (messages).
+    """
+
+    SINGLE_TURN = "single_turn"
+    MULTI_TURN = "multi_turn"
 
 
 class ContentType(str, Enum):
@@ -914,18 +926,26 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, **kwargs):
+    def __init__(self, model_config, *, credential=None, evaluation_mode=None, **kwargs):
         """Initialize the TaskCompletionEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
         :keyword credential: Credential for authentication.
         :type credential: Optional[TokenCredential]
+        :keyword evaluation_mode: Force a specific evaluation mode. When ``None`` (default),
+            the mode is auto-detected from input shape (``messages`` → multi-turn,
+            ``query``/``response`` → single-turn). Set to ``EvaluationMode.SINGLE_TURN``
+            or ``EvaluationMode.MULTI_TURN`` to override auto-detection.
+        :type evaluation_mode: Optional[Union[EvaluationMode, str]]
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = kwargs.pop("threshold", 1)
+
+        # Validate and store evaluation mode
+        self._evaluation_mode = self._resolve_evaluation_mode(evaluation_mode)
 
         # Initialize input validator (supports both query/response and messages)
         self._validator = MessagesOrQueryResponseInputValidator(
@@ -1088,6 +1108,77 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         return super().__call__(*args, **kwargs)
 
+    @staticmethod
+    def _resolve_evaluation_mode(
+        evaluation_mode: Optional[Union["EvaluationMode", str]],
+    ) -> Optional[EvaluationMode]:
+        """Validate and normalize the evaluation_mode parameter.
+
+        :param evaluation_mode: The evaluation mode to resolve.
+        :type evaluation_mode: Optional[Union[EvaluationMode, str]]
+        :return: The resolved EvaluationMode or None for auto-detect.
+        :rtype: Optional[EvaluationMode]
+        """
+        if evaluation_mode is None:
+            return None
+        if isinstance(evaluation_mode, EvaluationMode):
+            return evaluation_mode
+        if isinstance(evaluation_mode, str):
+            try:
+                return EvaluationMode(evaluation_mode)
+            except ValueError:
+                valid = [m.value for m in EvaluationMode]
+                raise EvaluationException(
+                    message=f"Invalid evaluation_mode '{evaluation_mode}'. Must be one of: {valid}.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+                )
+        raise EvaluationException(
+            message=f"evaluation_mode must be a string or EvaluationMode, got {type(evaluation_mode).__name__}.",
+            blame=ErrorBlame.USER_ERROR,
+            category=ErrorCategory.INVALID_VALUE,
+            target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+        )
+
+    def _should_use_multi_turn(self, eval_input: Dict) -> bool:
+        """Determine whether to use multi-turn evaluation.
+
+        When ``evaluation_mode`` is set, it takes precedence. Otherwise, auto-detect
+        based on whether ``messages`` is present in the input.
+
+        :param eval_input: The evaluation input.
+        :type eval_input: Dict
+        :return: True if multi-turn evaluation should be used.
+        :rtype: bool
+        """
+        if self._evaluation_mode == EvaluationMode.MULTI_TURN:
+            if eval_input.get("messages") is None:
+                raise EvaluationException(
+                    message=(
+                        "evaluation_mode is 'multi_turn' but 'messages' was not provided. "
+                        "Multi-turn evaluation requires 'messages'."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.MISSING_FIELD,
+                    target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+                )
+            return True
+        if self._evaluation_mode == EvaluationMode.SINGLE_TURN:
+            if eval_input.get("messages") is not None:
+                raise EvaluationException(
+                    message=(
+                        "evaluation_mode is 'single_turn' but 'messages' was provided. "
+                        "Single-turn evaluation requires 'query' and 'response'."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+                )
+            return False
+        # Auto-detect (evaluation_mode is None)
+        return eval_input.get("messages") is not None
+
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
@@ -1125,16 +1216,17 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[int, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
 
-        Routes to the multi-turn path when ``messages`` is provided,
-        otherwise falls through to the single-turn query/response path.
+        Routes to multi-turn or single-turn based on ``evaluation_mode`` (if set)
+        or auto-detects from input shape (default).
 
         :param eval_input: The input to the evaluator.
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
         """
-        # Multi-turn path (messages)
-        if eval_input.get("messages") is not None:
+        use_multi_turn = self._should_use_multi_turn(eval_input)
+
+        if use_multi_turn:
             return await self._do_eval_multi_turn(eval_input)
 
         # Single-turn path (query/response)
@@ -1172,12 +1264,6 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :rtype: Dict
         """
         messages = eval_input["messages"]
-
-        if _is_intermediate_response(messages):
-            return self._not_applicable_result(
-                "Intermediate response. Please provide the agent's final response for evaluation.",
-                self._threshold,
-            )
 
         messages = _preprocess_messages(messages)
         conversation_text = serialize_messages(messages)
