@@ -9,7 +9,7 @@ Supports both mocked flow (for behavioral tests) and real flow execution (for qu
 
 import os
 from enum import Enum
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 try:
     from typing import override
@@ -112,7 +112,39 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
         Returns:
             Dictionary containing evaluation results
         """
-        return super()._run_evaluation(
+        results, _ = self._run_evaluation_and_return_mocked_flow(
+                query=query,
+                response=response,
+                tool_calls=tool_calls,
+                tool_definitions=tool_definitions,
+                context=context,
+                **kwargs,
+            )
+        return results
+
+    @override
+    def _run_evaluation_and_return_mocked_flow(
+        self,
+        query: List[Dict[str, Any]] = None,
+        response: List[Dict[str, Any]] = None,
+        tool_calls: List[Dict[str, Any]] = None,
+        tool_definitions: List[Dict[str, Any]] = None,
+        context: str = None,
+        **kwargs,
+    ) -> Tuple[Dict[str, Any], Optional[Any]]:
+        """Run evaluation and return both results and the mocked flow.
+
+        Args:
+            query: Query conversation messages (optional)
+            response: Response conversation messages (optional)
+            tool_calls: Tool calls data (optional)
+            tool_definitions: Tool definitions (optional)
+            context: Additional context (optional)
+
+        Returns:
+            Tuple of (results dict, flow mock or None if not mocking).
+        """
+        return super()._run_evaluation_and_return_mocked_flow(
                 query=query,
                 response=response,
                 tool_calls=tool_calls,
@@ -128,18 +160,20 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
         Attributes:
             MISSING_FIELD: Indicates test should assert a missing field error.
             INVALID_VALUE: Indicates test should assert an invalid value error.
+            NOT_APPLICABLE: Indicates test should assert a not applicable error.
             PASS: Indicates test should assert a passing result.
         """
 
         MISSING_FIELD = "MISSING_FIELD"
         INVALID_VALUE = "INVALID_VALUE"
+        NOT_APPLICABLE = "NOT_APPLICABLE"
         PASS = "PASS"
 
     def assert_expected_behavior(self, assert_type: AssertType, result_data: Dict[str, Any]):
         """Assert the expected behavior based on the assert type.
 
         Args:
-            assert_type: Type of assertion to perform (MISSING_FIELD, INVALID_VALUE, or PASS).
+            assert_type: Type of assertion to perform (MISSING_FIELD, INVALID_VALUE, NOT_APPLICABLE, or PASS).
             result_data: Dictionary containing evaluation result data to validate.
 
         Raises:
@@ -149,6 +183,8 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
             self.assert_missing_field_error(result_data)
         elif assert_type == self.AssertType.INVALID_VALUE:
             self.assert_invalid_value_error(result_data)
+        elif assert_type == self.AssertType.NOT_APPLICABLE:
+            self.assert_not_applicable_error(result_data)
         elif assert_type == self.AssertType.PASS:
             self.assert_pass(result_data)
         else:
@@ -196,3 +232,16 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
             AssertionError: If the result does not contain the expected invalid value error.
         """
         self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def assert_not_applicable_error(self, result_data: Dict[str, Any]):
+        """Assert a not applicable error result.
+
+        Validates that the result contains a NOT_APPLICABLE error.
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+
+        Raises:
+            AssertionError: If the result does not contain the expected not applicable error.
+        """
+        self.assert_error(result_data, ErrorCategory.NOT_APPLICABLE.name)

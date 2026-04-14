@@ -25,7 +25,7 @@ RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/opt/conda/envs/azureml-env
 
 # Create conda environment
-RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10
+RUN conda create -y -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 -c conda-forge
 
 # Activate environment via PATH
 ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
@@ -40,17 +40,17 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu12
     torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
     
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.52 --no-cache-dir
-
-RUN pip install --no-cache-dir --force-reinstall xgrammar==0.1.29
+RUN pip install llm-optimized-inference==0.2.54 --no-cache-dir
 
 # Patch Ray bundled vulnerabilities:
 RUN rm -f $(python -c "import ray;print(ray.__path__[0])")/jars/ray_dist.jar && \
     rm -rf $(python -c "import ray;print(ray.__path__[0])")/_private/runtime_env/agent/thirdparty_files/*aiohttp* && \
-    pip install --no-cache-dir --force-reinstall aiohttp==3.13.3
+    pip install --no-cache-dir --force-reinstall aiohttp==3.13.4
 
 # clean conda and pip caches
-RUN rm -rf ~/.cache/pip
+RUN rm -rf ~/.cache/pip && \
+    rm -rf /opt/miniconda/lib/python3.10/site-packages 
+
 
 ADD runit_folder/api_server /var/runit/api_server
 RUN sed -i 's/\r$//g' /var/runit/api_server/run

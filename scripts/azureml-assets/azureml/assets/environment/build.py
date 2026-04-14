@@ -5,9 +5,11 @@
 
 import argparse
 import os
+import re
 import shutil
 import sys
 import tempfile
+import time
 from collections import Counter
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta, datetime
@@ -32,6 +34,9 @@ SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 BUILT_IMAGES = "built_images"
+ACR_THROTTLE_MAX_RETRIES = 5
+ACR_THROTTLE_INITIAL_WAIT = 30
+ACR_SUBMISSION_DELAY = 10
 
 
 def create_acr_task(image_name: str,
@@ -150,6 +155,30 @@ def create_acr_task(image_name: str,
     return sum([step.get('timeout', DEFAULT_STEP_TIMEOUT_SECONDS) for step in task['steps']])
 
 
+def _is_throttled(output: str) -> bool:
+    """Check if ACR output indicates throttling (HTTP 429)."""
+    return bool(re.search(r'(429|too many requests|throttl)', output, re.IGNORECASE))
+
+
+def _run_with_throttle_retry(cmd, cwd, name, is_acr):
+    """Run a subprocess command, retrying on ACR throttling with exponential backoff."""
+    p = run(cmd, cwd=cwd, stdout=PIPE, stderr=STDOUT)
+    if not is_acr:
+        return p
+
+    wait = ACR_THROTTLE_INITIAL_WAIT
+    for attempt in range(1, ACR_THROTTLE_MAX_RETRIES + 1):
+        if p.returncode == 0 or not _is_throttled(p.stdout.decode()):
+            return p
+        logger.log_warning(
+            f"ACR throttled for {name}, retrying in {wait}s "
+            f"(attempt {attempt}/{ACR_THROTTLE_MAX_RETRIES})")
+        time.sleep(wait)
+        wait = min(wait * 2, 300)
+        p = run(cmd, cwd=cwd, stdout=PIPE, stderr=STDOUT)
+    return p
+
+
 def build_image(asset_config: assets.AssetConfig,
                 env_config: assets.EnvironmentConfig,
                 image_name: str,
@@ -192,10 +221,7 @@ def build_image(asset_config: assets.AssetConfig,
             # Build locally
             build_context_dir = env_config.context_dir_with_path
             cmd = ["docker", "build", "--file", env_config.dockerfile, "--progress", "plain", "--tag", image_name, "."]
-        p = run(cmd,
-                cwd=build_context_dir,
-                stdout=PIPE,
-                stderr=STDOUT)
+        p = _run_with_throttle_retry(cmd, build_context_dir, asset_config.name, is_acr=(registry is not None))
     end = timer()
     logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
     os.makedirs(build_log.parent, exist_ok=True)
@@ -306,6 +332,8 @@ def build_images(input_dirs: List[Path],
 
             # Start building image
             build_log = build_logs_dir / f"{asset_config.name}.log"
+            if registry is not None and futures:
+                time.sleep(ACR_SUBMISSION_DELAY)
             futures.append(pool.submit(build_image, asset_config=asset_config, env_config=env_config,
                                        image_name=image_name, build_log=build_log, resource_group=resource_group,
                                        registry=registry, test_command=test_command, push=push_this_image,
