@@ -1,7 +1,7 @@
 path:
-  container_name: amd-npu-models
-  container_path: AMD_NPU_LLM_Models/Mistral-7B-Instruct-v0.2-vai
-  storage_name: sunghchostorageaccount
+  container_name: models
+  container_path: foundrylocal/models/Mistral-7B-Instruct-v0-2/onnx/vitia_npu/v2
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md

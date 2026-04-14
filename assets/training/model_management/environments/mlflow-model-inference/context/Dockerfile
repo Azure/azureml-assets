@@ -36,6 +36,7 @@ RUN apt-get update && \
         libcurl4 \
         libunwind8 \
         systemd \
+        libudev1 \
         libssl3 && \
     apt-get autoremove -y && \
     apt-get clean -y && \

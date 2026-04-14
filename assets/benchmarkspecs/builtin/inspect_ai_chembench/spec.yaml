@@ -1,0 +1,30 @@
+type: "benchmarkspec"
+name: "builtin.inspect_ai.chembench"
+version: 1
+display_name: "ChemBench Benchmark (inspect_ai)"
+description: "Chemistry reasoning benchmark. Tests a model's ability to answer graduate-level chemistry questions across organic, inorganic, physical, and analytical chemistry. Evaluated using the inspect_ai framework."
+benchmarkType: "builtin"
+categories: ["reasoning", "quality", "science"]
+
+evaluator:
+  testingCriteria:
+    type: "inspect_ai"
+    name: "ChemBench"
+    task_name: "inspect_evals/chembench"
+
+dataset:
+  datasetName: "chembench"
+  datasetType: "oss"
+  recordCount: "2785"
+  license: "MIT"
+  properties:
+    domain: "chemistry"
+    source_paper: "https://arxiv.org/abs/2404.01475"
+    dataset_source: "https://huggingface.co/datasets/jablonkagroup/ChemBench"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/chembench/versions/1"
+    sourceFormat: "jsonl"
+    properties:
+      file_name: "chembench.jsonl"
+      type: "uri_folder"
