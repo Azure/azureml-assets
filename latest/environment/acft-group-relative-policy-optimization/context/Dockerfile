@@ -8,8 +8,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get clean && rm -rf /var/lib/apt
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install azureml-evaluate-mlflow==0.0.88
-RUN pip install azureml-acft-common-components==0.0.88
+RUN pip install azureml-evaluate-mlflow==0.0.89
+RUN pip install azureml-acft-common-components==0.0.89
 RUN pip install transformers==4.56.0
 
 # mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635); upgrade after azureml packages
