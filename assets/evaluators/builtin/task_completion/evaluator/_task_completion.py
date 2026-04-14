@@ -998,7 +998,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     _PROMPTY_FILE = "task_completion.prompty"
     _MULTI_TURN_PROMPTY_FILE = "task_completion_multi_turn.prompty"
     _RESULT_KEY = "task_completion"
-    _OPTIONAL_PARAMS = ["tool_definitions"]
+    _OPTIONAL_PARAMS = ["messages", "tool_definitions"]
 
     _validator: ValidatorInterface
 
