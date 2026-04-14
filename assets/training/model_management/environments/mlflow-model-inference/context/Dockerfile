@@ -100,7 +100,6 @@ ENV PATH=/opt/miniconda/bin:$PATH
 RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py312_24.5.0-0-Linux-x86_64.sh && \
     bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
     conda update --all -c conda-forge -y && \
-    pip install "cryptography>=46.0.6" && \
     conda clean -ay && \
     rm -rf /opt/miniconda/pkgs && \
     rm -f /tmp/miniconda.sh && \
