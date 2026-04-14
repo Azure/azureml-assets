@@ -19,10 +19,8 @@ from azure.ai.evaluation._common.utils import (
     _pretty_format_conversation_history,
 )
 from azure.ai.evaluation._common._experimental import experimental
-from enum import Enum
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
     from promptflow.core._flow import AsyncPrompty
