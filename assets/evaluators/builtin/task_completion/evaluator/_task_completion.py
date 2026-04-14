@@ -664,6 +664,23 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
+            # The final assistant message must contain text
+            last_content = messages[-1].get("content", "")
+            if isinstance(last_content, list):
+                has_text = any(
+                    isinstance(c, dict) and c.get("type") in ("text",)
+                    or isinstance(c, str)
+                    for c in last_content
+                )
+                if not has_text:
+                    raise EvaluationException(
+                        message=(
+                            "The agent's final text response is missing."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.MISSING_FIELD,
+                        target=self.error_target,
+                    )
 
             tool_definitions = eval_input.get("tool_definitions")
             tool_definitions_error = self._validate_tool_definitions(tool_definitions)

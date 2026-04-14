@@ -14,6 +14,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .base_tools_evaluator_behavior_test import BaseToolsEvaluatorBehaviorTest
 from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
+    EvaluationMode,
 )
 from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
 
@@ -163,7 +164,7 @@ class TestTaskCompletionMultiturnBehavior:
         assert result["task_completion"] in (0, 1)
 
     def test_messages_intermediate_response(self):
-        """Messages ending with a function_call return not-applicable result."""
+        """Messages ending with only tool calls (no text) are rejected."""
         evaluator = _create_mocked_evaluator()
         intermediate_messages = [
             {"role": "user", "content": [{"type": "text", "text": "Book a flight."}]},
@@ -179,9 +180,8 @@ class TestTaskCompletionMultiturnBehavior:
                 ],
             },
         ]
-        result = evaluator(messages=intermediate_messages)
-
-        assert result["task_completion_reason"].startswith("Not applicable")
+        with pytest.raises(EvaluationException, match="must contain text content"):
+            evaluator(messages=intermediate_messages)
 
     def test_messages_string_content(self):
         """Messages with string content (not list) are handled and user text is preserved."""
@@ -393,6 +393,93 @@ class TestTaskCompletionMultiturnBehavior:
         result = evaluator(messages=messages)
         assert "task_completion" in result
         assert result["task_completion"] in (0, 1)
+
+
+# endregion
+
+
+# region evaluation_mode tests
+
+def _create_mocked_evaluator_with_mode(evaluation_mode=None):
+    """Create a TaskCompletionEvaluator with evaluation_mode and mocked flows."""
+    model_config = AzureOpenAIModelConfiguration(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    )
+    evaluator = TaskCompletionEvaluator(model_config=model_config, evaluation_mode=evaluation_mode)
+    mock_side_effect = get_flow_side_effect_for_evaluator("task_completion")
+    evaluator._flow = MagicMock(side_effect=mock_side_effect)
+    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
+    return evaluator
+
+
+@pytest.mark.unittest
+class TestTaskCompletionEvaluationMode:
+    """Tests for the evaluation_mode parameter."""
+
+    def test_auto_detect_uses_multi_turn_for_messages(self):
+        """Default (None) mode auto-detects multi-turn when messages provided."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode=None)
+        evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+
+    def test_auto_detect_uses_single_turn_for_query_response(self):
+        """Default (None) mode auto-detects single-turn when query/response provided."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode=None)
+        evaluator(query="Plan a trip.", response="Here's your itinerary.")
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
+
+    def test_forced_multi_turn_with_messages(self):
+        """Forced multi_turn mode works with messages."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode=EvaluationMode.MULTI_TURN)
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        assert "task_completion" in result
+
+    def test_forced_single_turn_with_query_response(self):
+        """Forced single_turn mode works with query/response."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode=EvaluationMode.SINGLE_TURN)
+        result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
+        evaluator._flow.assert_called_once()
+        assert "task_completion" in result
+
+    def test_forced_multi_turn_without_messages_raises(self):
+        """Forced multi_turn mode without messages raises error."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode=EvaluationMode.MULTI_TURN)
+        with pytest.raises(EvaluationException, match="multi_turn.*messages"):
+            evaluator(query="Plan a trip.", response="Here's your itinerary.")
+
+    def test_forced_single_turn_with_messages_raises(self):
+        """Forced single_turn mode with messages raises error."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode=EvaluationMode.SINGLE_TURN)
+        with pytest.raises(EvaluationException, match="single_turn.*messages"):
+            evaluator(messages=VALID_MESSAGES)
+
+    def test_string_mode_multi_turn(self):
+        """String 'multi_turn' is accepted as evaluation_mode."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode="multi_turn")
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        assert "task_completion" in result
+
+    def test_string_mode_single_turn(self):
+        """String 'single_turn' is accepted as evaluation_mode."""
+        evaluator = _create_mocked_evaluator_with_mode(evaluation_mode="single_turn")
+        result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
+        evaluator._flow.assert_called_once()
+        assert "task_completion" in result
+
+    def test_invalid_string_mode_raises(self):
+        """Invalid string evaluation_mode raises at init time."""
+        with pytest.raises(EvaluationException, match="Invalid evaluation_mode"):
+            _create_mocked_evaluator_with_mode(evaluation_mode="batch")
+
+    def test_invalid_type_mode_raises(self):
+        """Non-string/non-enum evaluation_mode raises at init time."""
+        with pytest.raises(EvaluationException, match="evaluation_mode must be"):
+            _create_mocked_evaluator_with_mode(evaluation_mode=42)
 
 
 # endregion
