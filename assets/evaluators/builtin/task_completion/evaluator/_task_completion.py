@@ -1303,6 +1303,9 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         if "tool_definitions" in eval_input and eval_input["tool_definitions"]:
             eval_input["tool_definitions"] = reformat_tool_definitions(eval_input["tool_definitions"], logger)
 
+        # Remove keys not consumed by the single-turn prompty to avoid leaking extra kwargs
+        eval_input.pop("messages", None)
+
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 
