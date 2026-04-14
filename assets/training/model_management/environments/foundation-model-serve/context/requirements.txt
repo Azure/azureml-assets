@@ -2,7 +2,6 @@ azure-ai-contentsafety==1.0.0b1
 azure-ai-ml==1.13.0
 azureml-mlflow==1.60.0
 azure-identity==1.23.0
-requests==2.33.0
 fastapi==0.120.4
 pandas==2.1.4
 transformers==5.0.0
