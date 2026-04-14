@@ -673,10 +673,12 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                 if not has_text:
                     raise EvaluationException(
                         message=(
-                            "The agent's final text response is missing."
+                            "The last assistant message must contain text content, "
+                            "not only tool calls. The conversation appears to be "
+                            "mid-execution — provide the agent's final text response."
                         ),
                         blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.MISSING_FIELD,
+                        category=ErrorCategory.INVALID_VALUE,
                         target=self.error_target,
                     )
 
@@ -1283,7 +1285,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         messages = _preprocess_messages(messages)
         conversation_text = serialize_messages(messages)
 
-        prompty_kwargs: Dict[str, Any] = {"conversation": conversation_text}
+        prompty_kwargs: Dict[str, Any] = {"messages": conversation_text}
         tool_definitions = eval_input.get("tool_definitions")
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
