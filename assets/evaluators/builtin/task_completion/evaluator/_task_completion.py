@@ -3,7 +3,7 @@
 import os
 import logging
 from enum import Enum
-from typing import Dict, Union, List, Optional, Any
+from typing import Dict, Union, List, Optional, Any, Tuple
 
 from typing_extensions import overload, override
 
@@ -50,15 +50,78 @@ class MessageRole(str, Enum):
     DEVELOPER = "developer"
 
 
-class EvaluationMode(str, Enum):
-    """Evaluation mode for TaskCompletionEvaluator.
+class SupportedEvaluationLevel(str, Enum):
+    """Supported evaluation levels for TaskCompletionEvaluator.
 
-    - ``SINGLE_TURN``: Force single-turn evaluation (query/response).
-    - ``MULTI_TURN``: Force multi-turn evaluation (messages).
+    - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
+    - ``TRACE``: Force trace-level evaluation using the single-turn query/response path.
+    - ``SPAN``: Reserved for future use and not currently supported by this evaluator.
     """
 
-    SINGLE_TURN = "single_turn"
-    MULTI_TURN = "multi_turn"
+    CONVERSATION = "conversation"
+    TRACE = "trace"
+    SPAN = "span"
+
+
+def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
+    """Merge query and response message lists into a single conversation."""
+    return [*query, *response]
+
+
+def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+    """Split messages into query/response slices at the latest user turn."""
+    latest_user_index = max(i for i, message in enumerate(messages) if message["role"] == MessageRole.USER)
+    return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
+
+
+def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:
+    """Wrap string query/response into separate message lists."""
+    return (
+        [{"role": "user", "content": [{"type": "text", "text": query}]}],
+        [{"role": "assistant", "content": [{"type": "text", "text": response}]}],
+    )
+
+
+def _resolve_supported_evaluation_level(
+    supported_evaluation_level: Optional[Union[SupportedEvaluationLevel, str]],
+    error_target: ErrorTarget,
+) -> Optional[SupportedEvaluationLevel]:
+    """Validate and normalize the supported_evaluation_level parameter.
+
+    :param supported_evaluation_level: The evaluation level to resolve.
+    :type supported_evaluation_level: Optional[Union[SupportedEvaluationLevel, str]]
+    :param error_target: The error target for exceptions.
+    :type error_target: ErrorTarget
+    :return: The resolved SupportedEvaluationLevel or None for auto-detect.
+    :rtype: Optional[SupportedEvaluationLevel]
+    """
+    if supported_evaluation_level is None:
+        return None
+    if isinstance(supported_evaluation_level, SupportedEvaluationLevel):
+        return supported_evaluation_level
+    if isinstance(supported_evaluation_level, str):
+        try:
+            return SupportedEvaluationLevel(supported_evaluation_level)
+        except ValueError:
+            valid = [level.value for level in SupportedEvaluationLevel]
+            raise EvaluationException(
+                message=(
+                    f"Invalid supported_evaluation_level '{supported_evaluation_level}'. "
+                    f"Must be one of: {valid}."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=error_target,
+            )
+    raise EvaluationException(
+        message=(
+            "supported_evaluation_level must be a string or SupportedEvaluationLevel, "
+            f"got {type(supported_evaluation_level).__name__}."
+        ),
+        blame=ErrorBlame.USER_ERROR,
+        category=ErrorCategory.INVALID_VALUE,
+        target=error_target,
+    )
 
 
 class ContentType(str, Enum):
@@ -943,26 +1006,28 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, evaluation_mode=None, **kwargs):
+    def __init__(self, model_config, *, credential=None, supported_evaluation_level=None, **kwargs):
         """Initialize the TaskCompletionEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
         :keyword credential: Credential for authentication.
         :type credential: Optional[TokenCredential]
-        :keyword evaluation_mode: Force a specific evaluation mode. When ``None`` (default),
-            the mode is auto-detected from input shape (``messages`` → multi-turn,
-            ``query``/``response`` → single-turn). Set to ``EvaluationMode.SINGLE_TURN``
-            or ``EvaluationMode.MULTI_TURN`` to override auto-detection.
-        :type evaluation_mode: Optional[Union[EvaluationMode, str]]
+        :keyword supported_evaluation_level: Force a specific evaluation level. When ``None`` (default),
+            the level is auto-detected from input shape (``messages`` -> conversation,
+            ``query``/``response`` -> trace). Set to ``SupportedEvaluationLevel.CONVERSATION``,
+            ``SupportedEvaluationLevel.TRACE``, or ``SupportedEvaluationLevel.SPAN``.
+        :type supported_evaluation_level: Optional[Union[SupportedEvaluationLevel, str]]
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = kwargs.pop("threshold", 1)
 
-        # Validate and store evaluation mode
-        self._evaluation_mode = self._resolve_evaluation_mode(evaluation_mode)
+        # Validate and store supported evaluation level
+        self._supported_evaluation_level = _resolve_supported_evaluation_level(
+            supported_evaluation_level, ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR
+        )
 
         # Initialize input validator (supports both query/response and messages)
         self._validator = MessagesOrQueryResponseInputValidator(
@@ -1125,75 +1190,32 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         return super().__call__(*args, **kwargs)
 
-    @staticmethod
-    def _resolve_evaluation_mode(
-        evaluation_mode: Optional[Union["EvaluationMode", str]],
-    ) -> Optional[EvaluationMode]:
-        """Validate and normalize the evaluation_mode parameter.
+    def _should_use_conversation_level(self, eval_input: Dict) -> bool:
+        """Determine whether to use conversation-level evaluation.
 
-        :param evaluation_mode: The evaluation mode to resolve.
-        :type evaluation_mode: Optional[Union[EvaluationMode, str]]
-        :return: The resolved EvaluationMode or None for auto-detect.
-        :rtype: Optional[EvaluationMode]
-        """
-        if evaluation_mode is None:
-            return None
-        if isinstance(evaluation_mode, EvaluationMode):
-            return evaluation_mode
-        if isinstance(evaluation_mode, str):
-            try:
-                return EvaluationMode(evaluation_mode)
-            except ValueError:
-                valid = [m.value for m in EvaluationMode]
-                raise EvaluationException(
-                    message=f"Invalid evaluation_mode '{evaluation_mode}'. Must be one of: {valid}.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
-                )
-        raise EvaluationException(
-            message=f"evaluation_mode must be a string or EvaluationMode, got {type(evaluation_mode).__name__}.",
-            blame=ErrorBlame.USER_ERROR,
-            category=ErrorCategory.INVALID_VALUE,
-            target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
-        )
-
-    def _should_use_multi_turn(self, eval_input: Dict) -> bool:
-        """Determine whether to use multi-turn evaluation.
-
-        When ``evaluation_mode`` is set, it takes precedence. Otherwise, auto-detect
+        When ``supported_evaluation_level`` is set, it takes precedence. Otherwise, auto-detect
         based on whether ``messages`` is present in the input.
 
         :param eval_input: The evaluation input.
         :type eval_input: Dict
-        :return: True if multi-turn evaluation should be used.
+        :return: True if conversation-level evaluation should be used.
         :rtype: bool
         """
-        if self._evaluation_mode == EvaluationMode.MULTI_TURN:
-            if eval_input.get("messages") is None:
-                raise EvaluationException(
-                    message=(
-                        "evaluation_mode is 'multi_turn' but 'messages' was not provided. "
-                        "Multi-turn evaluation requires 'messages'."
-                    ),
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.MISSING_FIELD,
-                    target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
-                )
+        if self._supported_evaluation_level == SupportedEvaluationLevel.SPAN:
+            raise EvaluationException(
+                message=(
+                    "supported_evaluation_level 'span' is reserved and not currently supported "
+                    "by TaskCompletionEvaluator."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+            )
+        if self._supported_evaluation_level == SupportedEvaluationLevel.CONVERSATION:
             return True
-        if self._evaluation_mode == EvaluationMode.SINGLE_TURN:
-            if eval_input.get("messages") is not None:
-                raise EvaluationException(
-                    message=(
-                        "evaluation_mode is 'single_turn' but 'messages' was provided. "
-                        "Single-turn evaluation requires 'query' and 'response'."
-                    ),
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
-                )
+        if self._supported_evaluation_level == SupportedEvaluationLevel.TRACE:
             return False
-        # Auto-detect (evaluation_mode is None)
+        # Auto-detect (supported_evaluation_level is None)
         return eval_input.get("messages") is not None
 
     def _not_applicable_result(
@@ -1224,7 +1246,20 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
-        # Validate input before processing
+        # Reshape inputs based on evaluation level before validation
+        if self._supported_evaluation_level == SupportedEvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+            query = kwargs.get("query")
+            response = kwargs.get("response")
+            if isinstance(query, str) and isinstance(response, str) and query and response:
+                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, list) and isinstance(response, list):
+                kwargs["messages"] = _merge_query_response_messages(query, response)
+        elif self._supported_evaluation_level == SupportedEvaluationLevel.TRACE and kwargs.get("messages"):
+            if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
+                query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
+                kwargs["query"] = query_messages
+                kwargs["response"] = response_messages
+
         self._validator.validate_eval_input(kwargs)
 
         return await super()._real_call(**kwargs)
@@ -1233,7 +1268,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[int, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
 
-        Routes to multi-turn or single-turn based on ``evaluation_mode`` (if set)
+        Routes to conversation-level or trace-level evaluation based on
+        ``supported_evaluation_level`` (if set)
         or auto-detects from input shape (default).
 
         :param eval_input: The input to the evaluator.
@@ -1241,10 +1277,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :return: The evaluation result.
         :rtype: Dict
         """
-        use_multi_turn = self._should_use_multi_turn(eval_input)
-
-        if use_multi_turn:
-            return await self._do_eval_multi_turn(eval_input)
+        if self._should_use_conversation_level(eval_input):
+            return await self._do_eval_conversation_level(eval_input)
 
         # Single-turn path (query/response)
         if eval_input.get("query") is None or eval_input.get("response") is None:
@@ -1272,8 +1306,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
         return self._parse_prompty_output(prompty_output_dict)
 
-    async def _do_eval_multi_turn(self, eval_input: Dict) -> Dict[str, Union[int, str]]:
-        """Evaluate task completion for a full multi-turn conversation.
+    async def _do_eval_conversation_level(self, eval_input: Dict) -> Dict[str, Union[int, str]]:
+        """Evaluate task completion for a full conversation-level evaluation.
 
         :param eval_input: The input containing ``messages`` and optionally ``tool_definitions``.
         :type eval_input: Dict
