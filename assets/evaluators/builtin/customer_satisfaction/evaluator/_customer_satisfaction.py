@@ -49,6 +49,7 @@ class MessageRole(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+    DEVELOPER = "developer"
 
 
 class ContentType(str, Enum):
@@ -499,6 +500,86 @@ class ConversationValidator(ValidatorInterface):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
+
+            # Per-message structural checks
+            valid_roles = {r.value for r in MessageRole}
+            roles_present: set = set()
+            for i, msg in enumerate(messages):
+                if not isinstance(msg, dict):
+                    raise EvaluationException(
+                        message=(
+                            f"Each item in 'messages' must be a dictionary, "
+                            f"but item at index {i} is {type(msg).__name__}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                role = msg.get("role")
+                if role is None:
+                    raise EvaluationException(
+                        message=f"Each message must contain a 'role' key, but message at index {i} is missing it.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if role not in valid_roles:
+                    raise EvaluationException(
+                        message=(
+                            f"Invalid role '{role}' at message index {i}. "
+                            f"Must be one of: {sorted(valid_roles)}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                roles_present.add(role)
+
+            # Conversation-level checks
+            if MessageRole.USER not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'user'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if MessageRole.ASSISTANT not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'assistant'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if messages[-1]["role"] != MessageRole.ASSISTANT:
+                raise EvaluationException(
+                    message=(
+                        f"The last message must have role 'assistant', "
+                        f"but found role '{messages[-1]['role']}'."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            # The final assistant message must contain text
+            last_content = messages[-1].get("content", "")
+            if isinstance(last_content, list):
+                has_text = any(
+                    isinstance(c, dict) and c.get("type") in ("text",)
+                    or isinstance(c, str)
+                    for c in last_content
+                )
+                if not has_text:
+                    raise EvaluationException(
+                        message=(
+                            "The last assistant message must contain text content, "
+                            "not only tool calls. The conversation appears to be "
+                            "mid-execution — provide the agent's final text response."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+
             return True
 
         # Legacy conversation path
@@ -594,15 +675,32 @@ def _preprocess_messages(messages):
 
 
 def serialize_messages(messages: List[dict]) -> str:
-    """Serialize a list of messages into labeled text for the multi-turn prompt.
+    """Serialize a list of chat messages into a labeled text transcript for the multi-turn prompty.
 
-    Uses ``_pretty_format_conversation_history`` from
-    ``azure.ai.evaluation._common.utils`` for formatting. The parsing
-    mirrors ``_get_conversation_history`` from the same module but drops
-    the strict alternation validation so that conversations may end on
-    any role.
+    **Input format:** List of message dicts, each with ``"role"`` (``user``, ``assistant``, ``tool``,
+    ``system``, ``developer``) and ``"content"`` (string or list of content-block dicts like
+    ``{"type": "text", "text": "..."}``). Tool messages may include ``tool_call_id`` and content
+    blocks of type ``tool_result``/``tool_call``.
 
-    :param messages: The list of message dicts with role and content.
+    **Output format:** Plain-text transcript with labeled turns::
+
+        User turn 1:
+          <user text>
+
+        Agent turn 1:
+          <assistant text>
+          [TOOL_CALL] func_name({"arg": "val"})
+          [TOOL_RESULT] <result>
+
+        User turn 2:
+          <user text>
+        ...
+
+    System/developer messages are included as a system preamble. Consecutive messages of the same
+    role are grouped into a single turn. Assistant string content is auto-normalized to content-block
+    format for consistent formatting.
+
+    :param messages: Chat messages with role and content.
     :type messages: List[dict]
     :return: Formatted text transcript.
     :rtype: str
@@ -628,7 +726,7 @@ def serialize_messages(messages: List[dict]) -> str:
         if role == "assistant" and isinstance(msg.get("content"), str):
             normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
 
-        if role == "system":
+        if role in ("system", "developer"):
             system_message = msg.get("content", "")
 
         elif role == "user" and "content" in msg:
@@ -739,7 +837,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     _PROMPTY_FILE = "customer_satisfaction.prompty"
     _MULTI_TURN_PROMPTY_FILE = "customer_satisfaction_multi_turn.prompty"
     _RESULT_KEY = "customer_satisfaction"
-    _OPTIONAL_PARAMS = []
+    _OPTIONAL_PARAMS = ["messages"]
 
     _validator: ValidatorInterface
 
@@ -957,12 +1055,6 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Dict
         """
         messages = eval_input["messages"]
-
-        if _is_intermediate_response(messages):
-            return self._not_applicable_result(
-                "Intermediate response. Please provide the agent's final response for evaluation.",
-                self._threshold,
-            )
 
         messages = _preprocess_messages(messages)
         conversation_text = serialize_messages(messages)

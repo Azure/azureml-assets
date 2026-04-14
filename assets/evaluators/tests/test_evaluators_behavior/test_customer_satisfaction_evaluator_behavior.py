@@ -159,7 +159,7 @@ class TestCustomerSatisfactionSessionBehavior:
         assert 1.0 <= result["customer_satisfaction"] <= 5.0
 
     def test_messages_intermediate_response(self):
-        """Messages ending with a function_call return not-applicable result."""
+        """Messages ending with a function_call are rejected by validation (must contain text)."""
         evaluator = _create_mocked_evaluator()
         intermediate_messages = [
             {"role": "user", "content": [{"type": "text", "text": "Cancel my order."}]},
@@ -175,9 +175,8 @@ class TestCustomerSatisfactionSessionBehavior:
                 ],
             },
         ]
-        result = evaluator(messages=intermediate_messages)
-
-        assert result["customer_satisfaction_reason"].startswith("Not applicable")
+        with pytest.raises(EvaluationException, match="must contain text content"):
+            evaluator(messages=intermediate_messages)
 
     def test_messages_string_content(self):
         """Messages with string content (not list) are handled and user text is preserved."""
@@ -231,13 +230,121 @@ class TestCustomerSatisfactionSessionBehavior:
         assert "customer_satisfaction" in result
         assert 1.0 <= result["customer_satisfaction"] <= 5.0
 
-    def test_messages_with_non_dict_items(self):
-        """Messages list containing non-dict items are skipped gracefully."""
+    def test_messages_with_non_dict_items_raises_error(self):
+        """Messages list containing non-dict items raises validation error."""
         evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
             "not a dict",
             {"role": "assistant", "content": [{"type": "text", "text": "Hi there!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_invalid_role(self):
+        """Messages with an invalid role raise validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"role": "narrator", "content": [{"type": "text", "text": "The agent paused."}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_missing_role_key(self):
+        """Messages missing the role key raise validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"content": [{"type": "text", "text": "No role here"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_no_user_message(self):
+        """Messages without any user message raise validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "assistant", "content": [{"type": "text", "text": "Hello!"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_no_assistant_message(self):
+        """Messages without any assistant message raise validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_conversation_ending_with_user(self):
+        """Messages ending with a user message raise validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
+            {"role": "user", "content": [{"type": "text", "text": "One more thing..."}]},
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_rejects_conversation_ending_with_tool(self):
+        """Messages ending with a tool message raise validation error."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Check status"}]},
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": "tool_call", "tool_call_id": "call_1", "name": "check", "arguments": {}}
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "call_1",
+                "content": [{"type": "tool_result", "tool_result": {"status": "ok"}}],
+            },
+        ]
+        with pytest.raises(EvaluationException):
+            evaluator(messages=messages)
+
+    def test_messages_allows_consecutive_user_messages(self):
+        """Consecutive user messages are accepted."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"role": "user", "content": [{"type": "text", "text": "Also, one more thing"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Sure, here you go!"}]},
+        ]
+        result = evaluator(messages=messages)
+
+        assert "customer_satisfaction" in result
+        assert 1.0 <= result["customer_satisfaction"] <= 5.0
+
+    def test_messages_allows_consecutive_assistant_messages(self):
+        """Consecutive assistant messages are accepted."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Let me check..."}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Here's the answer!"}]},
+        ]
+        result = evaluator(messages=messages)
+
+        assert "customer_satisfaction" in result
+        assert 1.0 <= result["customer_satisfaction"] <= 5.0
+
+    def test_messages_allows_developer_role(self):
+        """Messages with developer role are accepted."""
+        evaluator = _create_mocked_evaluator()
+        messages = [
+            {"role": "developer", "content": "You are a helpful customer support agent."},
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
+            {"role": "assistant", "content": [{"type": "text", "text": "Hi! How can I help?"}]},
         ]
         result = evaluator(messages=messages)
 
