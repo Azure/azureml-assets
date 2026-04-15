@@ -9,11 +9,13 @@ categories: ["agents"]
 tags:
   is_continuous_scenario: "true"
   provider: "Microsoft"
-  preview: "true"
+supportedEvaluationLevels: ["conversation", "trace"]
 initParameterSchema:
   type: "object"
   properties:
     deployment_name:
+      type: "string"
+    evaluation_level:
       type: "string"
   required: ["deployment_name"]
 dataMappingSchema:

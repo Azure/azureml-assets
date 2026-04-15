@@ -81,30 +81,30 @@ def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[d
 
 
 def _resolve_evaluation_level(
-    supported_evaluation_level: Optional[Union[EvaluationLevel, str]],
+    evaluation_level: Optional[Union[EvaluationLevel, str]],
     error_target: ErrorTarget,
 ) -> Optional[EvaluationLevel]:
-    """Validate and normalize the supported_evaluation_level parameter.
+    """Validate and normalize the evaluation_level parameter.
 
-    :param supported_evaluation_level: The evaluation level to resolve.
-    :type supported_evaluation_level: Optional[Union[EvaluationLevel, str]]
+    :param evaluation_level: The evaluation level to resolve.
+    :type evaluation_level: Optional[Union[EvaluationLevel, str]]
     :param error_target: The error target for exceptions.
     :type error_target: ErrorTarget
     :return: The resolved EvaluationLevel or None for auto-detect.
     :rtype: Optional[EvaluationLevel]
     """
     valid = [level.value for level in EvaluationLevel]
-    if supported_evaluation_level is None:
+    if evaluation_level is None:
         return None
-    if isinstance(supported_evaluation_level, EvaluationLevel):
-        return supported_evaluation_level
-    if isinstance(supported_evaluation_level, str):
+    if isinstance(evaluation_level, EvaluationLevel):
+        return evaluation_level
+    if isinstance(evaluation_level, str):
         try:
-            return EvaluationLevel(supported_evaluation_level)
+            return EvaluationLevel(evaluation_level)
         except ValueError:
             raise EvaluationException(
                 message=(
-                    f"Invalid supported_evaluation_level '{supported_evaluation_level}'. "
+                    f"Invalid evaluation_level '{evaluation_level}'. "
                     f"Must be one of: {valid}."
                 ),
                 blame=ErrorBlame.USER_ERROR,
@@ -113,7 +113,7 @@ def _resolve_evaluation_level(
             )
     raise EvaluationException(
         message=(
-            f"Invalid supported_evaluation_level '{supported_evaluation_level}'. "
+            f"Invalid evaluation_level '{evaluation_level}'. "
             f"Must be one of: {valid}."
         ),
         blame=ErrorBlame.USER_ERROR,
@@ -1004,27 +1004,27 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, supported_evaluation_level=None, **kwargs):
+    def __init__(self, model_config, *, credential=None, evaluation_level=None, **kwargs):
         """Initialize the TaskCompletionEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
         :type model_config: Union[AzureOpenAIModelConfiguration, OpenAIModelConfiguration]
         :keyword credential: Credential for authentication.
         :type credential: Optional[TokenCredential]
-        :keyword supported_evaluation_level: Force a specific evaluation level. When ``None`` (default),
-            the level is auto-detected from input shape (``messages`` -> conversation,
-            ``query``/``response`` -> trace). Set to ``EvaluationLevel.CONVERSATION``,
-            ``EvaluationLevel.TRACE``.
-        :type supported_evaluation_level: Optional[Union[EvaluationLevel, str]]
+        :keyword evaluation_level: Force a specific evaluation level for this invocation. When ``None``
+            (default), the level is auto-detected from input shape (``messages`` -> conversation,
+            ``query``/``response`` -> trace). Set to ``EvaluationLevel.CONVERSATION`` or
+            ``EvaluationLevel.TRACE`` to override auto-detection.
+        :type evaluation_level: Optional[Union[EvaluationLevel, str]]
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         threshold_value = kwargs.pop("threshold", 1)
 
-        # Validate and store supported evaluation level
+        # Validate and store evaluation level
         self._supported_evaluation_level = _resolve_evaluation_level(
-            supported_evaluation_level, ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR
+            evaluation_level, ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR
         )
 
         # Initialize input validator (supports both query/response and messages)
