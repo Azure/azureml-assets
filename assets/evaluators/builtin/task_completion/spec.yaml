@@ -9,6 +9,7 @@ categories: ["agents"]
 tags:
   is_continuous_scenario: "true"
   provider: "Microsoft"
+  preview: "true"
 initParameterSchema:
   type: "object"
   properties:

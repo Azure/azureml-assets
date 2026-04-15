@@ -41,7 +41,7 @@ You ARE evaluating:
 
 INPUT
 =====
-CONVERSATION: {{conversation}}
+CONVERSATION: {{messages}}
 
 {% if tool_definitions %}
 TOOL_DEFINITIONS: {{tool_definitions}}
