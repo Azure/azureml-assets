@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
 name: "frontierscience"
-version: "2"
+version: "3"
 tags:
   azureml.Designer: false
 description: FrontierScience benchmark dataset

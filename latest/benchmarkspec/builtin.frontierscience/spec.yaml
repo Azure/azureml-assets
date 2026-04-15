@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.frontierscience"
-version: 1
+version: 2
 display_name: "FrontierScience Benchmark"
 description: "FrontierScience is a benchmark for evaluating model reasoning accuracy
   on challenging science olympiad problems spanning multiple scientific disciplines
@@ -61,7 +61,7 @@ dataset:
     dataset_source: "https://huggingface.co/datasets/openai/frontierscience"
   source:
     provider: "mlregistry"
-    sourceDatasetId: "azureml://registries/azureml/data/frontierscience/versions/2"
+    sourceDatasetId: "azureml://registries/azureml/data/frontierscience/versions/3"
     sourceFormat: "csv"
     properties:
       file_name: "frontierscience.csv"
