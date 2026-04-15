@@ -805,13 +805,13 @@ def serialize_messages(messages: List[dict]) -> str:
 
         # _get_agent_response expects content as list of dicts, not a plain string
         normalized = msg
-        if role == "assistant" and isinstance(msg.get("content"), str):
+        if role == MessageRole.ASSISTANT and isinstance(msg.get("content"), str):
             normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
 
-        if role in ("system", "developer"):
+        if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
             system_message = msg.get("content", "")
 
-        elif role == "user" and "content" in msg:
+        elif role == MessageRole.USER and "content" in msg:
             # A new user message after agent messages ends the current agent turn
             if cur_agent_response:
                 formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
@@ -826,7 +826,7 @@ def serialize_messages(messages: List[dict]) -> str:
             if text_in_msg:
                 cur_user_query.append(text_in_msg)
 
-        elif role in ("assistant", "tool"):
+        elif role in (MessageRole.ASSISTANT, MessageRole.TOOL):
             # A new agent/tool message after user messages ends the current user turn
             if cur_user_query:
                 all_user_queries.append(cur_user_query)
@@ -1023,7 +1023,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         threshold_value = kwargs.pop("threshold", 1)
 
         # Validate and store evaluation level
-        self._supported_evaluation_level = _resolve_evaluation_level(
+        self._evaluation_level = _resolve_evaluation_level(
             evaluation_level, ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR
         )
 
@@ -1191,7 +1191,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
         """Determine whether to use conversation-level evaluation.
 
-        When ``supported_evaluation_level`` is set, it takes precedence. Otherwise, auto-detect
+        When ``_evaluation_level`` is set, it takes precedence. Otherwise, auto-detect
         based on whether ``messages`` is present in the input.
 
         :param eval_input: The evaluation input.
@@ -1199,11 +1199,11 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :return: True if conversation-level evaluation should be used.
         :rtype: bool
         """
-        if self._supported_evaluation_level == EvaluationLevel.CONVERSATION:
+        if self._evaluation_level == EvaluationLevel.CONVERSATION:
             return True
-        if self._supported_evaluation_level == EvaluationLevel.TRACE:
+        if self._evaluation_level == EvaluationLevel.TRACE:
             return False
-        # Auto-detect (supported_evaluation_level is None)
+        # Auto-detect (_evaluation_level is None)
         return eval_input.get("messages") is not None
 
     def _not_applicable_result(
@@ -1235,14 +1235,14 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
         # Reshape inputs based on evaluation level before validation
-        if self._supported_evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+        if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
             query = kwargs.get("query")
             response = kwargs.get("response")
             if isinstance(query, str) and isinstance(response, str) and query and response:
                 query, response = _wrap_string_messages(query, response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
-        elif self._supported_evaluation_level == EvaluationLevel.TRACE and kwargs.get("messages"):
+        elif self._evaluation_level == EvaluationLevel.TRACE and kwargs.get("messages"):
             if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages
@@ -1257,7 +1257,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """Do Task Completion evaluation.
 
         Routes to conversation-level or trace-level evaluation based on
-        ``supported_evaluation_level`` (if set)
+        ``_evaluation_level`` (if set)
         or auto-detects from input shape (default).
 
         :param eval_input: The input to the evaluator.
