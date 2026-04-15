@@ -494,17 +494,17 @@ class TestTaskCompletionMultiturnBehavior:
 # endregion
 
 
-# region supported_evaluation_level tests
+# region evaluation_level tests
 
-def _create_mocked_evaluator_with_level(supported_evaluation_level=None):
-    """Create a TaskCompletionEvaluator with supported_evaluation_level and mocked flows."""
+def _create_mocked_evaluator_with_level(evaluation_level=None):
+    """Create a TaskCompletionEvaluator with evaluation_level and mocked flows."""
     model_config = AzureOpenAIModelConfiguration(
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
     )
     evaluator = TaskCompletionEvaluator(
         model_config=model_config,
-        supported_evaluation_level=supported_evaluation_level,
+        evaluation_level=evaluation_level,
     )
     mock_side_effect = get_flow_side_effect_for_evaluator("task_completion")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
@@ -514,18 +514,18 @@ def _create_mocked_evaluator_with_level(supported_evaluation_level=None):
 
 @pytest.mark.unittest
 class TestTaskCompletionEvaluationLevel:
-    """Tests for the supported_evaluation_level parameter."""
+    """Tests for the evaluation_level parameter."""
 
     def test_auto_detect_uses_multi_turn_for_messages(self):
         """Default (None) mode auto-detects multi-turn when messages provided."""
-        evaluator = _create_mocked_evaluator_with_level(supported_evaluation_level=None)
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level=None)
         evaluator(messages=VALID_MESSAGES)
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
     def test_auto_detect_uses_single_turn_for_query_response(self):
         """Default (None) mode auto-detects single-turn when query/response provided."""
-        evaluator = _create_mocked_evaluator_with_level(supported_evaluation_level=None)
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level=None)
         evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
@@ -533,7 +533,7 @@ class TestTaskCompletionEvaluationLevel:
     def test_forced_conversation_with_messages(self):
         """Forced conversation level works with messages."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=EvaluationLevel.CONVERSATION
+            evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._multi_turn_flow.assert_called_once()
@@ -543,7 +543,7 @@ class TestTaskCompletionEvaluationLevel:
     def test_forced_trace_with_query_response(self):
         """Forced trace level works with query/response."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TRACE
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
@@ -553,7 +553,7 @@ class TestTaskCompletionEvaluationLevel:
     def test_forced_conversation_with_query_response_message_lists_converts(self):
         """Forced conversation level converts query/response message lists into messages."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=EvaluationLevel.CONVERSATION
+            evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(query=VALID_MESSAGES[:3], response=VALID_MESSAGES[3:])
         evaluator._multi_turn_flow.assert_called_once()
@@ -568,7 +568,7 @@ class TestTaskCompletionEvaluationLevel:
     def test_forced_trace_with_messages_converts(self):
         """Forced trace level converts messages into query/response around the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TRACE
         )
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._flow.assert_called_once()
@@ -585,7 +585,7 @@ class TestTaskCompletionEvaluationLevel:
     def test_forced_conversation_with_string_query_response_wraps_to_messages(self):
         """Forced conversation level wraps string query/response into messages and uses multi-turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=EvaluationLevel.CONVERSATION
+            evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._multi_turn_flow.assert_called_once()
@@ -599,7 +599,7 @@ class TestTaskCompletionEvaluationLevel:
     def test_forced_conversation_with_empty_string_query_raises(self):
         """Forced conversation level rejects empty string query."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=EvaluationLevel.CONVERSATION
+            evaluation_level=EvaluationLevel.CONVERSATION
         )
         with pytest.raises(EvaluationException):
             evaluator(query="", response="Here's your itinerary.")
@@ -607,7 +607,7 @@ class TestTaskCompletionEvaluationLevel:
     def test_forced_trace_with_messages_without_response_raises_invalid_value(self):
         """Forced trace level requires response messages after the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TRACE
         )
         with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
             evaluator(
@@ -619,30 +619,30 @@ class TestTaskCompletionEvaluationLevel:
             )
 
     def test_string_level_conversation(self):
-        """String 'conversation' is accepted as supported_evaluation_level."""
-        evaluator = _create_mocked_evaluator_with_level(supported_evaluation_level="conversation")
+        """String 'conversation' is accepted as evaluation_level."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="conversation")
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._multi_turn_flow.assert_called_once()
         evaluator._flow.assert_not_called()
         assert "task_completion" in result
 
     def test_string_level_trace(self):
-        """String 'trace' is accepted as supported_evaluation_level."""
-        evaluator = _create_mocked_evaluator_with_level(supported_evaluation_level="trace")
+        """String 'trace' is accepted as evaluation_level."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="trace")
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
         assert "task_completion" in result
 
     def test_invalid_string_level_raises(self):
-        """Invalid string supported_evaluation_level raises at init time."""
-        with pytest.raises(EvaluationException, match="Invalid supported_evaluation_level"):
-            _create_mocked_evaluator_with_level(supported_evaluation_level="batch")
+        """Invalid string evaluation_level raises at init time."""
+        with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
+            _create_mocked_evaluator_with_level(evaluation_level="batch")
 
     def test_invalid_type_level_raises(self):
-        """Non-string/non-enum supported_evaluation_level raises at init time."""
-        with pytest.raises(EvaluationException, match="Invalid supported_evaluation_level"):
-            _create_mocked_evaluator_with_level(supported_evaluation_level=42)
+        """Non-string/non-enum evaluation_level raises at init time."""
+        with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
+            _create_mocked_evaluator_with_level(evaluation_level=42)
 
 
 # endregion
