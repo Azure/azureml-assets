@@ -8,6 +8,7 @@ evaluatorSubType: "code"
 categories: ["business"]
 tags:
   provider: "Microsoft"
+  preview: "true"
   is_continuous_scenario: "true"
 initParameterSchema:
   type: "object"
