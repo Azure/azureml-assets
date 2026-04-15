@@ -30,6 +30,7 @@ tags:
   playgroundRateLimitTier:  "low"
   Featured: ""
   maas-inference: "true"
+  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   license: MIT
   disable-batch: "true"
   task: chat-completion

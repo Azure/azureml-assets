@@ -32,6 +32,7 @@ tags:
   Featured: ""
   SharedComputeCapacityEnabled: ''
   maas-inference: "true"
+  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   hiddenlayerscanned : ""
   license: MIT
   disable-batch: "true"
