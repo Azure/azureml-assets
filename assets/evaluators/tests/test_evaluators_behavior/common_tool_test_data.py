@@ -2043,6 +2043,30 @@ MCP_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
     "(inputs: query, question)"
 )
 
+# ----- TCA (ToolCallAccuracy) expected flow tool_calls -----
+# TCA reformats tool_calls via reformat_agent_response; for scenarios where complex
+# arguments (lists/dicts) are stringified differently than TCS, we define separate constants.
+# For LOCAL_CALLS, IMAGE_GEN, MEMORY_SEARCH, MCP the TCS strings are identical to TCA.
+LOCAL_CALLS_TCA_EXPECTED_FLOW_TOOL_CALLS = LOCAL_CALLS_TCS_EXPECTED_FLOW_TOOL_CALLS
+FILE_SEARCH_TCA_EXPECTED_FLOW_TOOL_CALLS = (
+    "[TOOL_CALL] file_search_call(queries=\"['good restaurant recommendation', "
+    "'best restaurant', 'top rated restaurant', 'recommended restaurants', "
+    "\"what's a good restaurant\"]\")\n"
+    "[TOOL_RESULT] [{'attributes': {}, 'file_id': 'assistant-StE61XCSBRyLv11Ytyckea', "
+    "'filename': 'french_cafe_menu.md', 'score': 0.0333, 'text': '# Le Jardin de Paris', "
+    "'vector_store_id': ''}, {'attributes': {}, 'file_id': 'assistant-Xpu5yP1AQZiB86Hz5iG4uv', "
+    "'filename': 'italian_diner_menu.md', 'score': 0.0328, "
+    "'text': '# Trattoria Bella Notte', 'vector_store_id': ''}]"
+)
+IMAGE_GEN_TCA_EXPECTED_FLOW_TOOL_CALLS = IMAGE_GEN_TCS_EXPECTED_FLOW_TOOL_CALLS
+MEMORY_SEARCH_TCA_EXPECTED_FLOW_TOOL_CALLS = MEMORY_SEARCH_TCS_EXPECTED_FLOW_TOOL_CALLS
+KB_MCP_TCA_EXPECTED_FLOW_TOOL_CALLS = (
+    "[TOOL_CALL] knowledge_base_retrieve(request=\"{'knowledgeAgentIntents': "
+    "['Provide general information about the Earth.']}\")\n"
+    "[TOOL_RESULT] Retrieved 11 documents."
+)
+MCP_TCA_EXPECTED_FLOW_TOOL_CALLS = MCP_TCS_EXPECTED_FLOW_TOOL_CALLS
+
 # ----- TCS expected flow response -----
 # For LOCAL_CALLS, FILE_SEARCH, IMAGE_GEN, MEMORY_SEARCH: _preprocess_messages is a no-op.
 LOCAL_CALLS_TCS_EXPECTED_FLOW_RESPONSE = LOCAL_CALLS_RESPONSE
