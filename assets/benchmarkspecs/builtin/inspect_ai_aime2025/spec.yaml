@@ -1,6 +1,6 @@
 type: "benchmarkspec"
 name: "builtin.inspect_ai.aime2025"
-version: 1
+version: 2
 display_name: "AIME 2025 Benchmark (inspect_ai)"
 description: "American Invitational Mathematics Examination 2025. Tests advanced mathematical reasoning with competition-level problems. Evaluated using the inspect_ai framework."
 benchmarkType: "builtin"
@@ -20,6 +20,7 @@ dataset:
   properties:
     domain: "math"
     source_paper: "https://artofproblemsolving.com/wiki/index.php/2025_AIME"
+    dataset_source: "https://huggingface.co/datasets/math-ai/aime25"
   source:
     provider: "mlregistry"
     sourceDatasetId: "azureml://registries/azureml/data/aime2025/versions/1"
