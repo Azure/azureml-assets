@@ -50,17 +50,15 @@ class MessageRole(str, Enum):
     DEVELOPER = "developer"
 
 
-class SupportedEvaluationLevel(str, Enum):
+class EvaluationLevel(str, Enum):
     """Supported evaluation levels for TaskCompletionEvaluator.
 
     - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
     - ``TRACE``: Force trace-level evaluation using the single-turn query/response path.
-    - ``SPAN``: Reserved for future use and not currently supported by this evaluator.
     """
 
     CONVERSATION = "conversation"
     TRACE = "trace"
-    SPAN = "span"
 
 
 def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
@@ -82,28 +80,28 @@ def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[d
     )
 
 
-def _resolve_supported_evaluation_level(
-    supported_evaluation_level: Optional[Union[SupportedEvaluationLevel, str]],
+def _resolve_evaluation_level(
+    supported_evaluation_level: Optional[Union[EvaluationLevel, str]],
     error_target: ErrorTarget,
-) -> Optional[SupportedEvaluationLevel]:
+) -> Optional[EvaluationLevel]:
     """Validate and normalize the supported_evaluation_level parameter.
 
     :param supported_evaluation_level: The evaluation level to resolve.
-    :type supported_evaluation_level: Optional[Union[SupportedEvaluationLevel, str]]
+    :type supported_evaluation_level: Optional[Union[EvaluationLevel, str]]
     :param error_target: The error target for exceptions.
     :type error_target: ErrorTarget
-    :return: The resolved SupportedEvaluationLevel or None for auto-detect.
-    :rtype: Optional[SupportedEvaluationLevel]
+    :return: The resolved EvaluationLevel or None for auto-detect.
+    :rtype: Optional[EvaluationLevel]
     """
+    valid = [level.value for level in EvaluationLevel]
     if supported_evaluation_level is None:
         return None
-    if isinstance(supported_evaluation_level, SupportedEvaluationLevel):
+    if isinstance(supported_evaluation_level, EvaluationLevel):
         return supported_evaluation_level
     if isinstance(supported_evaluation_level, str):
         try:
-            return SupportedEvaluationLevel(supported_evaluation_level)
+            return EvaluationLevel(supported_evaluation_level)
         except ValueError:
-            valid = [level.value for level in SupportedEvaluationLevel]
             raise EvaluationException(
                 message=(
                     f"Invalid supported_evaluation_level '{supported_evaluation_level}'. "
@@ -115,8 +113,8 @@ def _resolve_supported_evaluation_level(
             )
     raise EvaluationException(
         message=(
-            "supported_evaluation_level must be a string or SupportedEvaluationLevel, "
-            f"got {type(supported_evaluation_level).__name__}."
+            f"Invalid supported_evaluation_level '{supported_evaluation_level}'. "
+            f"Must be one of: {valid}."
         ),
         blame=ErrorBlame.USER_ERROR,
         category=ErrorCategory.INVALID_VALUE,
@@ -1015,9 +1013,9 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :type credential: Optional[TokenCredential]
         :keyword supported_evaluation_level: Force a specific evaluation level. When ``None`` (default),
             the level is auto-detected from input shape (``messages`` -> conversation,
-            ``query``/``response`` -> trace). Set to ``SupportedEvaluationLevel.CONVERSATION``,
-            ``SupportedEvaluationLevel.TRACE``, or ``SupportedEvaluationLevel.SPAN``.
-        :type supported_evaluation_level: Optional[Union[SupportedEvaluationLevel, str]]
+            ``query``/``response`` -> trace). Set to ``EvaluationLevel.CONVERSATION``,
+            ``EvaluationLevel.TRACE``.
+        :type supported_evaluation_level: Optional[Union[EvaluationLevel, str]]
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
@@ -1025,7 +1023,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         threshold_value = kwargs.pop("threshold", 1)
 
         # Validate and store supported evaluation level
-        self._supported_evaluation_level = _resolve_supported_evaluation_level(
+        self._supported_evaluation_level = _resolve_evaluation_level(
             supported_evaluation_level, ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR
         )
 
@@ -1201,19 +1199,9 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :return: True if conversation-level evaluation should be used.
         :rtype: bool
         """
-        if self._supported_evaluation_level == SupportedEvaluationLevel.SPAN:
-            raise EvaluationException(
-                message=(
-                    "supported_evaluation_level 'span' is reserved and not currently supported "
-                    "by TaskCompletionEvaluator."
-                ),
-                blame=ErrorBlame.USER_ERROR,
-                category=ErrorCategory.INVALID_VALUE,
-                target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
-            )
-        if self._supported_evaluation_level == SupportedEvaluationLevel.CONVERSATION:
+        if self._supported_evaluation_level == EvaluationLevel.CONVERSATION:
             return True
-        if self._supported_evaluation_level == SupportedEvaluationLevel.TRACE:
+        if self._supported_evaluation_level == EvaluationLevel.TRACE:
             return False
         # Auto-detect (supported_evaluation_level is None)
         return eval_input.get("messages") is not None
@@ -1247,14 +1235,14 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
         # Reshape inputs based on evaluation level before validation
-        if self._supported_evaluation_level == SupportedEvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+        if self._supported_evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
             query = kwargs.get("query")
             response = kwargs.get("response")
             if isinstance(query, str) and isinstance(response, str) and query and response:
                 query, response = _wrap_string_messages(query, response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
-        elif self._supported_evaluation_level == SupportedEvaluationLevel.TRACE and kwargs.get("messages"):
+        elif self._supported_evaluation_level == EvaluationLevel.TRACE and kwargs.get("messages"):
             if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages

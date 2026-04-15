@@ -16,7 +16,7 @@ from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
 from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
-    SupportedEvaluationLevel,
+    EvaluationLevel,
 )
 from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
 
@@ -512,7 +512,7 @@ def _create_mocked_evaluator_with_level(supported_evaluation_level=None):
 
 
 @pytest.mark.unittest
-class TestTaskCompletionSupportedEvaluationLevel:
+class TestTaskCompletionEvaluationLevel:
     """Tests for the supported_evaluation_level parameter."""
 
     def test_auto_detect_uses_multi_turn_for_messages(self):
@@ -532,7 +532,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
     def test_forced_conversation_with_messages(self):
         """Forced conversation level works with messages."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.CONVERSATION
+            supported_evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._multi_turn_flow.assert_called_once()
@@ -542,7 +542,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
     def test_forced_trace_with_query_response(self):
         """Forced trace level works with query/response."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.TRACE
+            supported_evaluation_level=EvaluationLevel.TRACE
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
@@ -552,7 +552,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
     def test_forced_conversation_with_query_response_message_lists_converts(self):
         """Forced conversation level converts query/response message lists into messages."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.CONVERSATION
+            supported_evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(query=VALID_MESSAGES[:3], response=VALID_MESSAGES[3:])
         evaluator._multi_turn_flow.assert_called_once()
@@ -567,7 +567,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
     def test_forced_trace_with_messages_converts(self):
         """Forced trace level converts messages into query/response around the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.TRACE
+            supported_evaluation_level=EvaluationLevel.TRACE
         )
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._flow.assert_called_once()
@@ -584,7 +584,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
     def test_forced_conversation_with_string_query_response_wraps_to_messages(self):
         """Forced conversation level wraps string query/response into messages and uses multi-turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.CONVERSATION
+            supported_evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._multi_turn_flow.assert_called_once()
@@ -598,7 +598,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
     def test_forced_conversation_with_empty_string_query_raises(self):
         """Forced conversation level rejects empty string query."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.CONVERSATION
+            supported_evaluation_level=EvaluationLevel.CONVERSATION
         )
         with pytest.raises(EvaluationException):
             evaluator(query="", response="Here's your itinerary.")
@@ -606,7 +606,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
     def test_forced_trace_with_messages_without_response_raises_invalid_value(self):
         """Forced trace level requires response messages after the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.TRACE
+            supported_evaluation_level=EvaluationLevel.TRACE
         )
         with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
             evaluator(
@@ -633,14 +633,6 @@ class TestTaskCompletionSupportedEvaluationLevel:
         evaluator._multi_turn_flow.assert_not_called()
         assert "task_completion" in result
 
-    def test_span_level_is_reserved(self):
-        """supported_evaluation_level 'span' is accepted by the enum but rejected by the evaluator."""
-        evaluator = _create_mocked_evaluator_with_level(
-            supported_evaluation_level=SupportedEvaluationLevel.SPAN
-        )
-        with pytest.raises(EvaluationException, match="supported_evaluation_level 'span'.*not currently supported"):
-            evaluator(messages=VALID_MESSAGES)
-
     def test_invalid_string_level_raises(self):
         """Invalid string supported_evaluation_level raises at init time."""
         with pytest.raises(EvaluationException, match="Invalid supported_evaluation_level"):
@@ -648,7 +640,7 @@ class TestTaskCompletionSupportedEvaluationLevel:
 
     def test_invalid_type_level_raises(self):
         """Non-string/non-enum supported_evaluation_level raises at init time."""
-        with pytest.raises(EvaluationException, match="supported_evaluation_level must be"):
+        with pytest.raises(EvaluationException, match="Invalid supported_evaluation_level"):
             _create_mocked_evaluator_with_level(supported_evaluation_level=42)
 
 
