@@ -17,6 +17,7 @@ from . import common_tool_test_data as data
 from ...builtin.task_completion.evaluator._task_completion import (
     TaskCompletionEvaluator,
     EvaluationLevel,
+    serialize_messages,
 )
 from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
 
@@ -642,6 +643,141 @@ class TestTaskCompletionEvaluationLevel:
         """Non-string/non-enum supported_evaluation_level raises at init time."""
         with pytest.raises(EvaluationException, match="Invalid supported_evaluation_level"):
             _create_mocked_evaluator_with_level(supported_evaluation_level=42)
+
+
+# endregion
+
+
+# region serialize_messages tests
+
+
+class TestSerializeMessages:
+    """Unit tests for the serialize_messages helper."""
+
+    def test_consecutive_user_messages_grouped_into_one_turn(self):
+        """Multiple consecutive user messages should be collected into a single user turn."""
+        messages = [
+            {"role": "user", "content": "Hello, I need help."},
+            {"role": "user", "content": "I am trying to book a flight."},
+            {"role": "user", "content": "From London to Paris, next Monday."},
+            {"role": "assistant", "content": "Sure! Let me look that up for you."},
+        ]
+        expected = (
+            "User turn 1:\n"
+            "  Hello, I need help.  I am trying to book a flight.  From London to Paris, next Monday.\n"
+            "\n"
+            "Agent turn 1:\n"
+            "  Sure! Let me look that up for you."
+        )
+        assert serialize_messages(messages) == expected
+
+    def test_consecutive_assistant_text_messages_grouped_into_one_agent_turn(self):
+        """Multiple consecutive assistant text messages should be collected into a single agent turn."""
+        messages = [
+            {"role": "user", "content": "Summarize the report."},
+            {"role": "assistant", "content": "The report covers three topics."},
+            {"role": "assistant", "content": "First, it discusses market trends."},
+            {"role": "assistant", "content": "Second, it covers financial performance."},
+        ]
+        expected = (
+            "User turn 1:\n"
+            "  Summarize the report.\n"
+            "\n"
+            "Agent turn 1:\n"
+            "  The report covers three topics.\n"
+            "  First, it discusses market trends.\n"
+            "  Second, it covers financial performance."
+        )
+        assert serialize_messages(messages) == expected
+
+    def test_alternating_consecutive_user_and_assistant_messages(self):
+        """Consecutive user messages then consecutive assistant messages across two exchanges."""
+        messages = [
+            {"role": "user", "content": "Step 1: set up the environment."},
+            {"role": "user", "content": "Step 2: install the dependencies."},
+            {"role": "assistant", "content": "Environment set up successfully."},
+            {"role": "assistant", "content": "Dependencies installed."},
+            {"role": "user", "content": "Now run the tests."},
+            {"role": "assistant", "content": "All tests passed."},
+        ]
+        expected = (
+            "User turn 1:\n"
+            "  Step 1: set up the environment.  Step 2: install the dependencies.\n"
+            "\n"
+            "Agent turn 1:\n"
+            "  Environment set up successfully.\n"
+            "  Dependencies installed.\n"
+            "\n"
+            "User turn 2:\n"
+            "  Now run the tests.\n"
+            "\n"
+            "Agent turn 2:\n"
+            "  All tests passed."
+        )
+        assert serialize_messages(messages) == expected
+
+    def test_complex_pairing_order_not_mixed_up(self):
+        """Three full exchanges with consecutive bursts + a tool call.
+
+        Verifies that the entire serialized transcript matches the expected output exactly,
+        ensuring turn pairing is never crossed and ordering is preserved end-to-end.
+        """
+        messages = [
+            # User burst 1 (two messages)
+            {"role": "user", "content": "What is the weather in Paris?"},
+            {"role": "user", "content": "And also in London?"},
+            # Agent burst 1 (two text messages)
+            {"role": "assistant", "content": "Paris is sunny and 22 C."},
+            {"role": "assistant", "content": "London is cloudy and 15 C."},
+            # User burst 2 (two messages)
+            {"role": "user", "content": "Which city is warmer?"},
+            {"role": "user", "content": "By how many degrees?"},
+            # Agent burst 2 — tool call + tool result + final text
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_call",
+                        "tool_call_id": "c1",
+                        "name": "compare_temps",
+                        "arguments": {"city1": "Paris", "city2": "London"},
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "c1",
+                "content": [{"type": "tool_result", "tool_result": "Paris is warmer by 7 degrees."}],
+            },
+            {"role": "assistant", "content": "Paris is warmer by 7 degrees."},
+            # User burst 3 (single message)
+            {"role": "user", "content": "Thanks for the info!"},
+            # Agent burst 3 (single text message)
+            {"role": "assistant", "content": "You are welcome!"},
+        ]
+        expected = (
+            "User turn 1:\n"
+            "  What is the weather in Paris?  And also in London?\n"
+            "\n"
+            "Agent turn 1:\n"
+            "  Paris is sunny and 22 C.\n"
+            "  London is cloudy and 15 C.\n"
+            "\n"
+            "User turn 2:\n"
+            "  Which city is warmer?  By how many degrees?\n"
+            "\n"
+            "Agent turn 2:\n"
+            '  [TOOL_CALL] compare_temps(city1="Paris", city2="London")\n'
+            "  [TOOL_RESULT] Paris is warmer by 7 degrees.\n"
+            "  Paris is warmer by 7 degrees.\n"
+            "\n"
+            "User turn 3:\n"
+            "  Thanks for the info!\n"
+            "\n"
+            "Agent turn 3:\n"
+            "  You are welcome!"
+        )
+        assert serialize_messages(messages) == expected
 
 
 # endregion
