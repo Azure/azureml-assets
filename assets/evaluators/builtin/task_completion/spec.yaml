@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_completion"
-version: 8
+version: 9
 displayName: "Task-Completion-Evaluator-(Preview)"
 description: "Evaluates whether an AI agent successfully completed the requested task end to end by analyzing the conversation history and agent response to determine if all task requirements were met, ignoring rule adherence or intent understanding. This evaluator is useful for assessing agent effectiveness in task-oriented scenarios, workflow automation, and goal-oriented AI interactions."
 evaluatorType: "builtin"
@@ -9,10 +9,13 @@ categories: ["agents"]
 tags:
   is_continuous_scenario: "true"
   provider: "Microsoft"
+supportedEvaluationLevels: ["conversation", "trace"]
 initParameterSchema:
   type: "object"
   properties:
     deployment_name:
+      type: "string"
+    evaluation_level:
       type: "string"
   required: ["deployment_name"]
 dataMappingSchema:
@@ -30,13 +33,19 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
+    messages:
+      type: "array"
+      items:
+        type: "object"
     tool_definitions:
       anyOf:
         - type: "object"
         - type: "array"
           items:
             type: "object"
-  required: ["query", "response"]
+  anyOf:
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
   task_completion:
     type: "boolean"
