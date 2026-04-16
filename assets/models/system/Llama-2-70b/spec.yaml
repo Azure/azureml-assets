@@ -30,7 +30,6 @@ tags:
   hiddenlayerscanned: ""
   training_datasets: Publicly available sources
   maas-inference: "true"
-  maas-finetuning: "False"
   SharedComputeCapacityEnabled: ""
   inference_supported_envs:
     - vllm
