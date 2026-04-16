@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.customer_satisfaction"
-version: 2
+version: 3
 displayName: "Customer-Satisfaction-Evaluator"
 description: "Evaluates the predicted customer satisfaction level of an AI agent interaction
   on a 1-5 Likert scale. This evaluator assesses whether the agent's response would
@@ -12,8 +12,8 @@ evaluatorSubType: "code"
 categories: ["business"]
 tags:
   provider: "Microsoft"
-  preview: "true"
   is_continuous_scenario: "true"
+  supportedEvaluationLevels: ["conversation", "trace"]
 initParameterSchema:
   type: "object"
   properties:
@@ -24,6 +24,8 @@ initParameterSchema:
       minimum: 1
       maximum: 5
       multipleOf: 1
+    evaluation_level:
+      type: "string"
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
