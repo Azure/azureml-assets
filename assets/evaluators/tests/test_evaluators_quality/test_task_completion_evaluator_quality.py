@@ -10,6 +10,9 @@ from .common_test_data import (
     ToolDefinitionSets,
     create_user_message,
     create_assistant_text_message,
+    create_tool_call,
+    create_assistant_tool_call_message,
+    create_tool_result_message,
 )
 
 
@@ -380,5 +383,190 @@ class TestTaskCompletionEvaluatorQuality(BaseQualityEvaluatorRunner):
                         "required": ["appointment_id"],
                     },
                 }
+            ],
+        )
+
+
+@pytest.mark.quality
+class TestTaskCompletionMultiTurnQuality(BaseQualityEvaluatorRunner):
+    """
+    Quality tests for Task Completion Evaluator with multi-turn (messages) input.
+
+    Tests actual LLM evaluation with real flow execution (no mocking).
+    Uses the multi-turn prompty to evaluate full conversation sessions.
+    """
+
+    evaluator_type = TaskCompletionEvaluator
+
+    # ==================== PASS CASES ====================
+
+    def test_pass_multi_turn_task_fully_completed(self) -> None:
+        """Test case: PASS - Multi-turn conversation where task is fully completed."""
+        self.run_quality_test(
+            test_label="PASS-multi-turn-task-fully-completed",
+            expected=ExpectedResult.PASS,
+            messages=[
+                create_user_message("Book a flight from NYC to London for next Friday."),
+                create_assistant_text_message(
+                    "I found a direct British Airways flight departing NYC at 9 PM, arriving London "
+                    "at 9 AM. The price is $450. Shall I book it?"
+                ),
+                create_user_message("Yes, book it."),
+                create_assistant_text_message(
+                    "Done! Your flight is booked. Confirmation #BA8392 has been sent to your email. "
+                    "Departing NYC JFK on Friday March 20 at 9:00 PM, arriving London Heathrow "
+                    "Saturday March 21 at 9:00 AM."
+                ),
+            ],
+        )
+
+    def test_pass_multi_turn_with_tool_calls(self) -> None:
+        """Test case: PASS - Multi-turn with tool usage that completes the task."""
+        self.run_quality_test(
+            test_label="PASS-multi-turn-with-tool-calls",
+            expected=ExpectedResult.PASS,
+            messages=[
+                create_user_message("What's the weather in Seattle and should I bring an umbrella?"),
+                create_assistant_tool_call_message([
+                    create_tool_call("call_1", "get_weather", {"city": "Seattle"}),
+                ]),
+                create_tool_result_message("call_1", "Rainy, 14°C, 90% chance of rain"),
+                create_assistant_text_message(
+                    "The weather in Seattle is currently rainy at 14°C with a 90% chance of rain. "
+                    "Yes, you should definitely bring an umbrella!"
+                ),
+            ],
+            tool_definitions=[
+                {
+                    "name": "get_weather",
+                    "description": "Get current weather for a city",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"city": {"type": "string"}},
+                        "required": ["city"],
+                    },
+                }
+            ],
+        )
+
+    def test_pass_multi_turn_iterative_refinement(self) -> None:
+        """Test case: PASS - User refines request across turns, final result meets requirements."""
+        self.run_quality_test(
+            test_label="PASS-multi-turn-iterative-refinement",
+            expected=ExpectedResult.PASS,
+            messages=[
+                create_user_message("Write me a Python function that sorts a list."),
+                create_assistant_text_message(
+                    "Here's a simple sort function:\n\n"
+                    "def sort_list(lst):\n    return sorted(lst)"
+                ),
+                create_user_message("Can you make it sort in descending order and handle None values?"),
+                create_assistant_text_message(
+                    "Here's the updated function:\n\n"
+                    "def sort_list(lst):\n"
+                    "    filtered = [x for x in lst if x is not None]\n"
+                    "    return sorted(filtered, reverse=True)"
+                ),
+            ],
+        )
+
+    # ==================== FAIL CASES ====================
+
+    def test_fail_multi_turn_task_abandoned(self) -> None:
+        """Test case: FAIL - Agent starts task but conversation ends without completion."""
+        self.run_quality_test(
+            test_label="FAIL-multi-turn-task-abandoned",
+            expected=ExpectedResult.FAIL,
+            messages=[
+                create_user_message(
+                    "I need you to create a budget spreadsheet with categories for rent, "
+                    "groceries, utilities, and entertainment, with monthly totals."
+                ),
+                create_assistant_text_message(
+                    "Sure! I can help with that. What's your monthly rent amount?"
+                ),
+                create_user_message("$1,500 for rent."),
+                create_assistant_text_message(
+                    "Got it, $1,500 for rent. What about groceries?"
+                ),
+            ],
+        )
+
+    def test_fail_multi_turn_tool_error_unresolved(self) -> None:
+        """Test case: FAIL - Tool call fails and agent doesn't complete the task."""
+        self.run_quality_test(
+            test_label="FAIL-multi-turn-tool-error-unresolved",
+            expected=ExpectedResult.FAIL,
+            messages=[
+                create_user_message("Transfer $500 from my checking to savings account."),
+                create_assistant_tool_call_message([
+                    create_tool_call("call_1", "transfer_funds", {
+                        "from_account": "checking",
+                        "to_account": "savings",
+                        "amount": 500,
+                    }),
+                ]),
+                create_tool_result_message("call_1", "Error: Transfer failed - insufficient funds"),
+                create_assistant_text_message(
+                    "The transfer failed due to insufficient funds in your checking account. "
+                    "Please check your balance and try again later."
+                ),
+            ],
+            tool_definitions=[
+                {
+                    "name": "transfer_funds",
+                    "description": "Transfer funds between accounts",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "from_account": {"type": "string"},
+                            "to_account": {"type": "string"},
+                            "amount": {"type": "number"},
+                        },
+                        "required": ["from_account", "to_account", "amount"],
+                    },
+                }
+            ],
+        )
+
+    def test_fail_multi_turn_partial_completion(self) -> None:
+        """Test case: FAIL - Only some sub-tasks completed across the conversation."""
+        self.run_quality_test(
+            test_label="FAIL-multi-turn-partial-completion",
+            expected=ExpectedResult.FAIL,
+            messages=[
+                create_user_message(
+                    "I need three things: 1) summarize yesterday's meeting notes, "
+                    "2) send the summary to the team, and 3) schedule a follow-up meeting for next Tuesday."
+                ),
+                create_assistant_text_message(
+                    "Here's the summary of yesterday's meeting:\n\n"
+                    "- Discussed Q4 roadmap priorities\n"
+                    "- Agreed on budget allocation for marketing\n"
+                    "- Action items: finalize designs by Friday"
+                ),
+                create_user_message("Great, now send it to the team and schedule the follow-up."),
+                create_assistant_text_message(
+                    "I've sent the summary to the team via email. Is there anything else you need?"
+                ),
+            ],
+        )
+
+    def test_fail_multi_turn_irrelevant_responses(self) -> None:
+        """Test case: FAIL - Agent provides irrelevant responses throughout the conversation."""
+        self.run_quality_test(
+            test_label="FAIL-multi-turn-irrelevant-responses",
+            expected=ExpectedResult.FAIL,
+            messages=[
+                create_user_message("Cancel my 3 PM dentist appointment tomorrow."),
+                create_assistant_text_message(
+                    "Regular dental checkups are important for maintaining oral health. "
+                    "The ADA recommends visiting your dentist every 6 months."
+                ),
+                create_user_message("I didn't ask about that. Please cancel my appointment."),
+                create_assistant_text_message(
+                    "Dental anxiety is common. Many people feel nervous about dental visits. "
+                    "You might want to try deep breathing exercises before your next appointment."
+                ),
             ],
         )

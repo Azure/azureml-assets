@@ -2314,6 +2314,8 @@ FABRIC_EXPECTED_FLOW_RESPONSE = (
 )
 
 OPENAPI_EXPECTED_FLOW_RESPONSE = (
+                                 '[TOOL_CALL] weather_GetCurrentWeather(location="Cairo", format="j1")\n'
+                                 '[TOOL_RESULT] \n'
                                  "**Current weather in Cairo:**\n\n- **Temperature:** 26°C (feels like 25°C)\n- "
                                  "**Condition:** Sand (likely some dusty or sandy winds)\n- **Humidity:** 28%\n- "
                                  "**Cloud Cover:** 0% (clear skies)\n- **Wind:** SW at 23 km/h\n- **Visibility:** "
