@@ -1,0 +1,4 @@
+type: humanevaluationtemplates
+spec: spec.yaml
+categories:
+- HumanEvaluationTemplate
