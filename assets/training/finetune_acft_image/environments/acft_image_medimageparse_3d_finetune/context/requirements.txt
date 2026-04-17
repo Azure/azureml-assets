@@ -5,7 +5,7 @@ marshmallow==3.23.2
 azure-ai-ml==1.16.1
 azure-identity==1.16.1
 mlflow-skinny==2.13.2
-azureml-mlflow==1.56.0
+azureml-mlflow==1.62.0
 azureml-dataprep==5.4.1
 timm==0.9.16
 opencv-python-headless==4.11.0.86
