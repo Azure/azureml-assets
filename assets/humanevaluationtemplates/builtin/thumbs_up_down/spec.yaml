@@ -1,4 +1,4 @@
-type: "humanevaluationtemplates"
+type: "humanevaluationtemplate"
 name: "builtin.thumbs_up_down"
 version: 1
 displayName: "thumbs_up_down"
