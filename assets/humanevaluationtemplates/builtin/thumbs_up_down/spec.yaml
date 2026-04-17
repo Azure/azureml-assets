@@ -3,4 +3,4 @@ name: "builtin.thumbs_up_down"
 version: 1
 displayName: "thumbs_up_down"
 description: "Human evaluation template using a simple thumbs up/down approach."
-feedbackQuestions: [{ type: "YesNo", questionText: "Likert" }]
+feedbackQuestions: [{ type: "YesNo", questionText: "Rate this response" }]
