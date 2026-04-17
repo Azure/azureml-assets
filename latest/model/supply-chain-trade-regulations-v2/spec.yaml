@@ -9,16 +9,15 @@ properties:
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
 
 tags:
   author: Microsoft
   SharedComputeCapacityEnabled: ""
-  disable-batch: true
+  disable-batch: "true"
   Preview: ""
   Featured: ""
   languages: "en"
-  keywords: ""
   freePlayground: "false"
   licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
     \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\

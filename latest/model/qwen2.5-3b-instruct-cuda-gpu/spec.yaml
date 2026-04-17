@@ -30,7 +30,7 @@ tags:
   reasoningEnd: ""
   contextLength: 32768
   minFLVersion: "0.0.0"
-  disable-maap: true
+  disable-maap: "true"
 type: custom_model
 variantInfo:
   parents:

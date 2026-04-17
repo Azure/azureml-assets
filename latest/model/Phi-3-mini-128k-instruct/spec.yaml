@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-mini-128k-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   languages: en
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
@@ -134,7 +134,7 @@ tags:
   languages: "en"
   inputModalities: "text"
   outputModalities: "text"
-  trainingDataDate: "Oct 2023"
+  trainingDataDate: "October 2023"
   keywords: "Reasoning,Understanding,Low latency"
   licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
     \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
@@ -152,10 +152,9 @@ tags:
     IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
   playgroundRateLimitTier: "low"
   Featured: ""
-  huggingface_model_id: ""
-  maas-inference: true
+  maas-inference: "true"
   deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
-  license: mit
+  license: MIT
   disable-batch: "true"
   task: chat-completion
   author: Microsoft

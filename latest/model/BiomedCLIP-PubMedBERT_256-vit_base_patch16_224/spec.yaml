@@ -10,15 +10,14 @@ properties:
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, 
     Standard_ND40rs_v2
   languages: en
-  SharedComputeCapacityEnabled: true
-
+  SharedComputeCapacityEnabled: "True"
 tags:
   task: zero-shot-image-classification
   industry: health-and-life-sciences
   Preview: ""
   inference_supported_envs:
   - hf
-  license: mit
+  license: MIT
   author: Microsoft
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""

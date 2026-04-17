@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: microsoft-deberta-large-mnli
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 7296194b9009373def4f7c5dad292651e4b5cf4e
   evaluation-min-sku-spec: 4|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, 
@@ -42,7 +42,7 @@ properties:
     Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en
 tags:
-  license: mit
+  license: MIT
   model_specific_defaults: {'apply_deepspeed': 'true', 'apply_lora': 'true', 'apply_ort': 'true'}
   SharedComputeCapacityEnabled: ""
   task: text-classification

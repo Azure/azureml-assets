@@ -7,8 +7,7 @@ properties:
   languages: EN
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4
-  SharedComputeCapacityEnabled: true
-
+  SharedComputeCapacityEnabled: "True"
 tags:
   task: environmental-forecasting
   Preview: ""
@@ -29,7 +28,7 @@ tags:
     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY,
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR
     IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
-  hiddenlayerscanned: "true"
+  hiddenlayerscanned: ""
   notes: |
     ## Resources
 
@@ -122,7 +121,7 @@ tags:
     These evaluations are the main topic of [the paper](https://arxiv.org/pdf/2405.13063).
 
     *Note: The documentation included here is for informational purposes only and is not intended to supersede the applicable license terms.*
-  disable-batch: true
+  disable-batch: "true"
   SharedComputeCapacityEnabled: ""
   inference_compute_allow_list:
   - Standard_NC24ads_A100_v4

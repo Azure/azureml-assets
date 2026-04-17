@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-medium-4k-instruct
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   languages: en
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_ND40rs_v2, Standard_NC24ads_A100_v4, 
@@ -123,7 +123,7 @@ tags:
   languages: "en"
   textContextWindow: 4096
   maxOutputTokens: 4096
-  trainingDataDate: "Oct 2023"
+  trainingDataDate: "October 2023"
   licenseDescription: "Microsoft.\nCopyright (c) Microsoft Corporation.\n\nMIT License\n\
     \nPermission is hereby granted, free of charge, to any person obtaining a copy\n\
     of this software and associated documentation files (the \"Software\"), to deal\n\
@@ -140,12 +140,11 @@ tags:
     IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
   playgroundRateLimitTier: "low"
   Featured: ""
-  huggingface_model_id: ""
   SharedComputeCapacityEnabled: ''
-  maas-inference: true
+  maas-inference: "true"
   deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   hiddenlayerscanned: ""
-  license: mit
+  license: MIT
   disable-batch: "true"
   task: chat-completion
   author: Microsoft

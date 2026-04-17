@@ -12,7 +12,7 @@ properties:
     Standard_ND96amsr_A100_v4, Standard_ND40rs_v2, Standard_NC40ads_H100_v5, 
     Standard_NC80adis_H100_v5, Standard_ND96isr_H100_v5
   languages: en
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
 
 tags:
   task: embeddings
@@ -22,7 +22,7 @@ tags:
     <https://github.com/StanfordMIMI/MedVAE/blob/main/LICENSE>."
   inference_supported_envs:
   - hf
-  license: mit
+  license: MIT
   author: "StanfordMIMI"
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""
