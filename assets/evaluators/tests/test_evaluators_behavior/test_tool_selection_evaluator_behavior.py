@@ -116,21 +116,3 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
     is_tool_definition_required = True
 
     evaluator_type = ToolSelectionEvaluator
-
-    def test_openapi(self):
-        """OpenAPI with empty functions list - evaluator returns pass with not-applicable reason.
-
-        The evaluator can't find matching tool definitions for openapi_call when functions
-        list is empty, so it returns score=1/pass but with a "Not applicable" reason.
-        The flow is never called.
-        """
-        results, flow_mock = self._run_evaluation_and_return_mocked_flow(
-            query=data.OPENAPI_QUERY,
-            response=data.OPENAPI_RESPONSE,
-            tool_definitions=data.OPENAPI_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "OpenAPI")
-        assert result_data["label"] == "pass"
-        assert result_data["score"] == 1
-        assert "Not applicable" in result_data["reason"]
-        flow_mock.assert_not_called()

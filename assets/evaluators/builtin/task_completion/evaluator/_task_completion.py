@@ -1205,7 +1205,6 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             return False
         # Auto-detect (_evaluation_level is None)
         return eval_input.get("messages") is not None
- 
 
     def _build_result(
         self,
@@ -1242,7 +1241,6 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._result_key}_sample_input": p.get("sample_input", ""),
             f"{self._result_key}_sample_output": p.get("sample_output", ""),
         }
-
 
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
