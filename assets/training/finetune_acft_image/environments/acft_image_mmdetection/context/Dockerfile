@@ -10,8 +10,9 @@ RUN apt-get -y update && apt-get -y upgrade && \
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get update && apt-get install -y expat && apt-get clean && rm -rf /var/lib/apt/lists/*
-# openmim imports pkg_resources from setuptools at runtime.
-RUN pip install --no-cache-dir 'setuptools>=82.0.0'
+# openmim still imports pkg_resources, which is removed from setuptools>=82.
+# Keep a temporary compatibility pin for mim installation, then restore setuptools.
+RUN pip install --no-cache-dir 'setuptools<82'
 
 # # # Install mmdet
 # # Note that MMDet installs pycocotools
@@ -19,6 +20,7 @@ RUN pip install --no-cache-dir 'setuptools>=82.0.0'
 RUN mim install mmdet==3.3.0
 # Temporary workaround for https://github.com/open-mmlab/mmdetection/issues/11668 (when mmdet updated, remove lines below)
 RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html --no-cache-dir
+RUN pip install --no-cache-dir --upgrade setuptools==82.0.0
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
 # upgrade pip, wheel, setuptools and transitive dependencies in ptca env
