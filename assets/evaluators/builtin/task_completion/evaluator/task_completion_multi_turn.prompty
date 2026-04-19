@@ -69,10 +69,10 @@ C. Assess Task Completion:
 - **Incomplete**: No usable deliverable or major requirements unmet
 
 D. Assign a Score:
-   - **TRUE**: The agent delivered a complete and correct solution that accomplishes the user's entire goal by the end of the conversation. The user does not need to take further action or ask follow-up questions to get what they originally asked for.
-   - **FALSE**: The agent failed to complete one or more parts of the task, provided an incorrect/incomplete result, or left the user's goal unresolved by the end of the conversation.
+   - **1**: The agent delivered a complete and correct solution that accomplishes the user's entire goal by the end of the conversation. The user does not need to take further action or ask follow-up questions to get what they originally asked for.
+   - **0**: The agent failed to complete one or more parts of the task, provided an incorrect/incomplete result, or left the user's goal unresolved by the end of the conversation.
 
-   **Note on subjective/open-ended queries:** When the user asks a subjective, opinion-based, or comparison question, there is no single correct answer. The task is considered **complete** (TRUE) if the agent provides a thoughtful, relevant response that addresses the question with reasonable perspectives or trade-offs.
+   **Note on subjective/open-ended queries:** When the user asks a subjective, opinion-based, or comparison question, there is no single correct answer. The task is considered **complete** (1) if the agent provides a thoughtful, relevant response that addresses the question with reasonable perspectives or trade-offs.
 
    **Note on direct/factual queries:** When the user asks a straightforward factual, yes/no, or verification question, a correct and direct answer fully completes the task. No additional elaboration is required.
 
@@ -82,19 +82,25 @@ OUTPUT FORMAT
 =============
 Output a JSON object with these keys:
 {
-  "details": {
+  "reasoning": "<15-60 words explaining the completion status>",
+  "properties": {
     "user_requests": ["<request 1>", "<request 2>", ...],
     "delivered_outcome": "<15-60 words summarizing what the agent accomplished>",
     "completion_gaps": "<For each unmet request, quote the assistant's actual response (or note its absence) as evidence. 'None' if all requests met.>"
   },
-  "explanation": "<15-60 words explaining the completion status>",
-  "success": <TRUE or FALSE>
+  "score": <1 or 0>,
+  "status": "<completed or skipped>"
 }
+
+- **reasoning**: A brief explanation of the completion status.
+- **properties**: An object containing evaluation details. null when status is "skipped".
+- **score**: 1 if the task was fully completed, 0 otherwise. null when status is "skipped".
+- **status**: "completed" when you were able to evaluate the input. "skipped" when the input is not applicable or cannot be evaluated (e.g., no response provided, empty conversation).
 
 SCORING EXAMPLES
 ================
 
-### SUCCESS: TRUE - Multi-turn task with refinement
+### SCORE: 1 - Multi-turn task with refinement
 
 CONVERSATION:
 User turn 1: Book me a flight from NYC to London for next Friday.
@@ -107,16 +113,17 @@ I found a Holiday Inn 0.3 miles from ExCeL London at $120/night for 3 nights. I'
 
 EXPECTED OUTPUT:
 {
-  "details": {
+  "reasoning": "Both tasks completed: flight booked as requested and hotel near conference venue secured after the user added that requirement in turn 2.",
+  "properties": {
     "user_requests": ["Book a flight from NYC to London for next Friday", "Find a hotel near ExCeL London for 3 nights"],
     "delivered_outcome": "Flight and hotel both booked with confirmations sent, total cost provided",
     "completion_gaps": "None"
   },
-  "explanation": "Both tasks completed: flight booked as requested and hotel near conference venue secured after the user added that requirement in turn 2.",
-  "success": TRUE
+  "score": 1,
+  "status": "completed"
 }
 
-### SUCCESS: FALSE - Incomplete multi-turn conversation
+### SCORE: 0 - Incomplete multi-turn conversation
 
 CONVERSATION:
 User turn 1: I need you to analyze our Q3 sales data and create a report with charts.
@@ -129,13 +136,14 @@ Agent turn 2: Revenue by region shows North America at 45%, Europe at 30%, and A
 
 EXPECTED OUTPUT:
 {
-  "details": {
+  "reasoning": "Data was analyzed with summary stats, but the user explicitly requested charts and a report. Only text descriptions were provided.",
+  "properties": {
     "user_requests": ["Analyze Q3 sales data", "Create a report with charts", "Revenue by region chart", "Monthly trend line chart"],
     "delivered_outcome": "Text-based summary of data analysis without actual charts or formatted report",
     "completion_gaps": "User requested charts but agent only provided text: 'Revenue by region shows North America at 45%...' — no visual charts or formatted report were generated."
   },
-  "explanation": "Data was analyzed with summary stats, but the user explicitly requested charts and a report. Only text descriptions were provided.",
-  "success": FALSE
+  "score": 0,
+  "status": "completed"
 }
 
 KEY PRINCIPLES

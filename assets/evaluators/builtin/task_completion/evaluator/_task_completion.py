@@ -1205,25 +1205,60 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             return False
         # Auto-detect (_evaluation_level is None)
         return eval_input.get("messages") is not None
+ 
+
+    def _build_result(
+        self,
+        score: Optional[int],
+        result: str,
+        reason: str,
+        status: str,
+        details: Dict,
+        prompty_output_dict: Optional[Dict] = None,
+    ) -> Dict[str, Union[str, int, float, Dict, None]]:
+        """Build a standardized result dictionary.
+
+        :param score: The evaluation score (1, 0, or None).
+        :param result: The result label ("pass", "fail", "skipped", or "error").
+        :param reason: The reasoning or explanation string.
+        :param status: The evaluation status ("completed", "skipped", or "error").
+        :param details: The properties/details dictionary.
+        :param prompty_output_dict: Optional raw prompty output for extracting token metadata.
+        :return: The standardized result dictionary.
+        """
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        return {
+            self._result_key: score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": status,
+            f"{self._result_key}_details": details,
+            f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
+            f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
+            f"{self._result_key}_total_tokens": p.get("total_token_count", 0),
+            f"{self._result_key}_finish_reason": p.get("finish_reason", ""),
+            f"{self._result_key}_model": p.get("model_id", ""),
+            f"{self._result_key}_sample_input": p.get("sample_input", ""),
+            f"{self._result_key}_sample_output": p.get("sample_output", ""),
+        }
+
 
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
-        return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_details": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
-        }
+        """Return a result indicating that the evaluation is not applicable (skipped).
+
+        Not-applicable results have no score since the evaluator cannot make a judgment
+        (e.g., intermediate responses that are not final agent responses).
+        """
+        return self._build_result(
+            score=None,
+            result="skipped",
+            reason=f"Not applicable: {error_message}",
+            status="skipped",
+            details={},
+        )
 
     @override
     async def _real_call(self, **kwargs):
@@ -1322,6 +1357,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """Parse the prompty output into a standardized result dictionary.
 
         Shared between single-turn and multi-turn evaluation paths.
+        Expects the canonical schema: score (int), reasoning (str), status (str), properties (dict|null).
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -1330,31 +1366,35 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
-        if isinstance(llm_output, dict):
-            success_value = llm_output.get("success", False)
-            if isinstance(success_value, str):
-                success = 1 if success_value.lower() == "true" else 0
+        if not isinstance(llm_output, dict):
+            score = None
+            result = "error"
+            reasoning = "Evaluator returned invalid output."
+            status = "error"
+            properties = {}
+        else:
+            status = llm_output.get("status", "completed")
+            reasoning = llm_output.get("reasoning", "")
+            properties = llm_output.get("properties") or {}
+
+            if status == "skipped":
+                score = None
+                result = "skipped"
             else:
-                success = 1 if success_value else 0
-            success_result = "pass" if success == 1 else "fail"
-            reason = llm_output.get("explanation", "")
-            return {
-                self._result_key: success,
-                f"{self._result_key}_result": success_result,
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_details": llm_output.get("details", {}),
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
-            }
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
-            blame=ErrorBlame.SYSTEM_ERROR,
-            category=ErrorCategory.FAILED_EXECUTION,
-            target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+                score_value = llm_output.get("score", 0)
+                if isinstance(score_value, str):
+                    score = 1 if score_value.strip() in ("1", "true") else 0
+                elif isinstance(score_value, (int, float)):
+                    score = 1 if score_value == 1 else 0
+                else:
+                    score = 1 if score_value else 0
+                result = "pass" if score == 1 else "fail"
+
+        return self._build_result(
+            score=score,
+            result=result,
+            reason=reasoning,
+            status=status,
+            details=properties,
+            prompty_output_dict=prompty_output_dict,
         )
