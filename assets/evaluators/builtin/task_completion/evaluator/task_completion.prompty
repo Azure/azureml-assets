@@ -66,8 +66,8 @@ C. Assess Task Completion:
 - **Incomplete**: No usable deliverable or major requirements unmet
 
 D. Assign a Score:
-   - **1**: The agent delivered a complete and correct solution that accomplishes the user's entire goal. The user does not need to take further action or ask follow-up questions to get what they originally asked for.
-   - **0**: The agent failed to complete one or more parts of the task, provided an incorrect/incomplete result, or left the user's goal unresolved.
+   - **1 (TRUE)**: The agent delivered a complete and correct solution that accomplishes the user's entire goal. The user does not need to take further action or ask follow-up questions to get what they originally asked for.
+   - **0 (FALSE)**: The agent failed to complete one or more parts of the task, provided an incorrect/incomplete result, or left the user's goal unresolved.
 
    **Note on subjective/open-ended queries:** When the user asks a subjective, opinion-based, or comparison question (e.g., "Which is better, X or Y?", "What do you think about…?"), there is no single correct answer. The task is considered **complete** (1) if the agent provides a thoughtful, relevant response that addresses the question with reasonable perspectives or trade-offs — even if it does not give a single definitive recommendation.
 
@@ -77,20 +77,21 @@ OUTPUT FORMAT
 =============
 Output a JSON object with these keys:
 {
-  "reasoning": "<15-60 words explaining the completion status>",
+  "reason": "<15-60 words explaining the completion status>",
   "properties": {
     "task_requirements": "<15-60 words on what the user specifically requested>",
     "delivered_outcome": "<15-60 words on what the agent actually provided>",
     "completion_gaps": "<15-60 words on missing elements if task is incomplete>"
   },
-  "score": <1 or 0>,
+  "score": <1 if task completed successfully, 0 if task failed or incomplete, null if status is skipped>,
   "status": "<completed or skipped>"
 }
 
-- **reasoning**: A brief explanation of the completion status.
-- **properties**: An object containing evaluation details. null when status is "skipped".
-- **score**: 1 if the task was fully completed, 0 otherwise. null when status is "skipped".
-- **status**: "completed" when you were able to evaluate the input. "skipped" when the input is not applicable or cannot be evaluated (e.g., no response provided, empty input).
+**Status: Skipped**
+If the CONVERSATION_HISTORY or AGENT_RESPONSE is empty or not provided, return status "skipped" immediately without scoring:
+```json
+{"reason": "<explain why evaluation was skipped>", "properties": null, "score": null, "status": "skipped"}
+```
 
 SCORING EXAMPLES
 ================
@@ -123,7 +124,7 @@ Transportation: Metro Day Pass recommended. Book Louvre tickets online in advanc
 
 EXPECTED OUTPUT:
 {
-  "reasoning": "Complete 3-day Paris itinerary delivered with cultural landmarks and local cuisine for each day, including practical transportation advice.",
+  "reason": "Complete 3-day Paris itinerary delivered with cultural landmarks and local cuisine for each day, including practical transportation advice.",
   "properties": {
     "task_requirements": "3-day Paris itinerary with cultural landmarks and local cuisine",
     "delivered_outcome": "Detailed 3-day schedule with specific landmarks, restaurants, and practical tips",
@@ -149,7 +150,7 @@ Your internet issues are resolved - update firmware and change DNS as instructed
 
 EXPECTED OUTPUT:
 {
-  "reasoning": "Both issues resolved: specific troubleshooting steps provided for internet drops, and unlimited data plan successfully activated.",
+  "reason": "Both issues resolved: specific troubleshooting steps provided for internet drops, and unlimited data plan successfully activated.",
   "properties": {
     "task_requirements": "Fix internet connection issues and upgrade to unlimited data plan",
     "delivered_outcome": "Diagnostic completed with specific fix instructions, data plan upgrade confirmed active",
@@ -181,7 +182,7 @@ If you're interested in data or automation, start with Python. If you want to bu
 
 EXPECTED OUTPUT:
 {
-  "reasoning": "The question is subjective with no single correct answer. The agent provided a balanced comparison covering syntax, use cases, and ecosystems for both languages with actionable guidance.",
+  "reason": "The question is subjective with no single correct answer. The agent provided a balanced comparison covering syntax, use cases, and ecosystems for both languages with actionable guidance.",
   "properties": {
     "task_requirements": "Subjective comparison of Python vs JavaScript for beginners",
     "delivered_outcome": "Balanced pros/cons for each language with context-dependent recommendation",
@@ -201,7 +202,7 @@ No, the boiling point of water is 100°C at standard atmospheric pressure, not 5
 
 EXPECTED OUTPUT:
 {
-  "reasoning": "The user asked a factual verification question. The agent correctly identified the error and provided the accurate value. No further elaboration is required.",
+  "reason": "The user asked a factual verification question. The agent correctly identified the error and provided the accurate value. No further elaboration is required.",
   "properties": {
     "task_requirements": "Verify whether the boiling point of water is 50°C",
     "delivered_outcome": "Correct answer provided: boiling point is 100°C, not 50°C",
@@ -221,7 +222,7 @@ I'd recommend visiting the Louvre and Eiffel Tower. Paris has great food - try F
 
 EXPECTED OUTPUT:
 {
-  "reasoning": "Vague suggestions provided but no actual detailed day-by-day itinerary created as user requested. Missing specific landmarks, restaurants, and detailed schedule.",
+  "reason": "Vague suggestions provided but no actual detailed day-by-day itinerary created as user requested. Missing specific landmarks, restaurants, and detailed schedule.",
   "properties": {
     "task_requirements": "A detailed 3-day Paris itinerary with cultural landmarks and local cuisine",
     "delivered_outcome": "General recommendations without structured itinerary as asked",
@@ -243,7 +244,7 @@ I found that your router firmware needs updating. You can usually do this throug
 
 EXPECTED OUTPUT:
 {
-  "reasoning": "Internet troubleshooting started but not completed with specific steps. Data plan upgrade not attempted. User cannot proceed without more help.",
+  "reason": "Internet troubleshooting started but not completed with specific steps. Data plan upgrade not attempted. User cannot proceed without more help.",
   "properties": {
     "task_requirements": "Fix internet connection issues and upgrade to unlimited data plan",
     "delivered_outcome": "Identified router firmware issue but no specific fix instructions, data upgrade not completed",
@@ -263,7 +264,7 @@ I can help you analyze sales data! Sales analysis is important for business grow
 
 EXPECTED OUTPUT:
 {
-  "reasoning": "No actual analysis performed and no report generated. Agent provided general information about sales analysis instead of completing the requested task.",
+  "reason": "No actual analysis performed and no report generated. Agent provided general information about sales analysis instead of completing the requested task.",
   "properties": {
     "task_requirements": "Analyze Q3 sales data and generate summary report",
     "delivered_outcome": "General information about sales analysis concepts",

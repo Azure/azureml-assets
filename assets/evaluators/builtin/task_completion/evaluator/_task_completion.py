@@ -1355,7 +1355,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """Parse the prompty output into a standardized result dictionary.
 
         Shared between single-turn and multi-turn evaluation paths.
-        Expects the canonical schema: score (int), reasoning (str), status (str), properties (dict|null).
+        Expects the canonical schema: score (int), reason (str), status (str), properties (dict|null).
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -1367,12 +1367,12 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         if not isinstance(llm_output, dict):
             score = None
             result = "error"
-            reasoning = "Evaluator returned invalid output."
+            reason = "Evaluator returned invalid output."
             status = "error"
             properties = {}
         else:
             status = llm_output.get("status", "completed")
-            reasoning = llm_output.get("reasoning", "")
+            reason = llm_output.get("reason", "")
             properties = llm_output.get("properties") or {}
 
             if status == "skipped":
@@ -1391,7 +1391,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         return self._build_result(
             score=score,
             result=result,
-            reason=reasoning,
+            reason=reason,
             status=status,
             details=properties,
             prompty_output_dict=prompty_output_dict,
