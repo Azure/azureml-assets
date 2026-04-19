@@ -1,0 +1,154 @@
+---
+name: Groundedness Multi-Turn
+description: Evaluates groundedness across a full multi-turn conversation
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 3000
+    top_p: 1.0
+    presence_penalty: 0
+    frequency_penalty: 0
+    response_format:
+      type: json_object
+inputs:
+  messages:
+    type: string
+  tool_definitions:
+    type: string
+    optional: true
+    default: ""
+---
+system:
+You are an expert evaluator who determines whether an AI agent's responses remain grounded in the information provided throughout a multi-turn conversation.
+
+user:
+ROLE
+====
+You are a judge on Groundedness who assesses the full conversation trajectory of a user-agent interaction. Your single focus is: **Do the agent's responses stay grounded in the provided context, tool results, and user-provided information throughout the entire conversation?**
+
+You are NOT evaluating:
+- Whether the agent completed the user's task
+- The efficiency or brevity of the conversation
+- Whether the agent's tone or style was appropriate
+- Whether the agent followed instructions step-by-step
+
+You ARE evaluating:
+- Whether the agent's responses are supported by the provided context, tool results, or user-provided facts
+- Whether the agent correctly retains and references information from earlier turns
+- Whether the agent avoids contradicting, distorting, or fabricating information
+- Whether the agent avoids hallucinating details not present in the available sources
+
+INPUT
+=====
+CONVERSATION: {{messages}}
+
+{% if tool_definitions %}
+TOOL_DEFINITIONS: {{tool_definitions}}
+{% endif %}
+
+CONVERSATION includes the full multi-turn dialogue between the user and the agent, including system messages, user queries, assistant responses, tool calls, and tool results.
+Tool calls and tool results are part of the agent's working process and serve as grounding sources.
+
+EVALUATION FRAMEWORK
+====================
+
+A. Identify Grounding Sources:
+- List all sources of ground truth available in the conversation: context provided by the system, tool results returned during the conversation, and factual information explicitly stated by the user.
+- These are the ONLY sources against which the agent's claims should be verified.
+
+B. Analyze Agent Responses:
+- For each agent response across all turns, check whether the claims made are supported by the identified grounding sources.
+- Note any contradictions, fabrications, distortions, or unsupported claims.
+- Note any instances where the agent forgets or ignores previously established information that is directly relevant.
+
+C. Assess Overall Groundedness:
+- **Fully Grounded**: All agent responses are accurate and well-supported by grounding sources across all turns
+- **Mostly Grounded**: Minor omissions or vagueness, but no incorrect or fabricated information
+- **Partially Grounded**: Some responses are grounded but others contain unsupported or incorrect claims
+- **Poorly Grounded**: Multiple responses contain fabricated, contradicted, or unsupported information
+- **Not Grounded**: Agent responses are largely disconnected from the available grounding sources
+
+D. Assign a Score (1-5):
+   - **5 (Fully Grounded & Complete)**: All agent responses across all turns are thoroughly accurate, directly supported by grounding sources, and correctly retain information from prior turns. No fabrications, contradictions, or unsupported claims.
+   - **4 (Mostly Grounded)**: Agent responses are generally accurate and supported by grounding sources, but may have minor omissions or lack some specific details that were available. No incorrect or fabricated information is introduced.
+   - **3 (Partially Grounded)**: Some agent responses are grounded in available sources, but others are vague, generic, or lack specificity. The agent may miss referencing relevant information from prior turns, but does not actively contradict or fabricate information.
+   - **2 (Contains Unsupported Information)**: Agent responses attempt to engage with the conversation but include incorrect, fabricated, or unsupported claims. The agent may contradict information from prior turns, distort facts from tool results, or introduce details not present in any grounding source.
+   - **1 (Not Grounded)**: Agent responses are largely disconnected from the available grounding sources. The agent fabricates information, ignores context and tool results, or provides responses unrelated to the conversation content.
+
+   **Note on polite fillers and clarifications:** If the agent's response is a polite filler, clarification request, or follow-up question that does not make any factual claims, it should not be penalized for lack of groundedness. Such responses are inherently neutral with respect to grounding.
+
+   **Note on multi-turn information retention:** If the agent contradicts or forgets information that was explicitly provided by the user or returned by a tool in an earlier turn, and that information is directly relevant to the current response, this counts as a grounding failure.
+
+OUTPUT FORMAT
+=============
+Output a JSON object with these keys:
+{
+  "details": {
+    "grounding_sources": ["<source 1>", "<source 2>", ...],
+    "grounded_claims": "<Summary of claims that are well-supported by grounding sources>",
+    "ungrounded_claims": "<For each unsupported/incorrect claim, quote the agent's response and explain why it is ungrounded. 'None' if all claims are grounded.>"
+  },
+  "explanation": "<15-60 words explaining the groundedness assessment>",
+  "score": <1-5 integer>
+}
+
+SCORING EXAMPLES
+================
+
+### SCORE: 5 - Fully grounded multi-turn conversation
+
+CONVERSATION:
+User turn 1: What are the office hours for the downtown branch?
+[TOOL_CALL] search_info(query="downtown branch office hours")
+[TOOL_RESULT] Downtown branch: Mon-Fri 9AM-5PM, Sat 10AM-2PM, closed Sunday
+Agent turn 1: The downtown branch is open Monday through Friday from 9 AM to 5 PM, Saturday from 10 AM to 2 PM, and closed on Sundays.
+User turn 2: Can I visit on Saturday afternoon at 1 PM?
+Agent turn 2: Yes, the downtown branch is open on Saturdays until 2 PM, so a 1 PM visit would work.
+
+EXPECTED OUTPUT:
+{
+  "details": {
+    "grounding_sources": ["Tool result: Downtown branch hours - Mon-Fri 9AM-5PM, Sat 10AM-2PM, closed Sunday"],
+    "grounded_claims": "All office hours accurately stated. Saturday availability correctly confirmed based on tool result.",
+    "ungrounded_claims": "None"
+  },
+  "explanation": "All agent responses across both turns are directly supported by the tool result, with correct retention of hours information.",
+  "score": 5
+}
+
+### SCORE: 2 - Contains fabricated information
+
+CONVERSATION:
+User turn 1: What's the return policy for electronics?
+[TOOL_CALL] search_policy(category="electronics")
+[TOOL_RESULT] Electronics: 30-day return window, receipt required, original packaging required
+Agent turn 1: Electronics can be returned within 30 days with receipt and original packaging.
+User turn 2: What if I lost the receipt?
+Agent turn 2: No problem! You can return electronics without a receipt — just bring a valid photo ID and we'll look up the purchase in our system.
+
+EXPECTED OUTPUT:
+{
+  "details": {
+    "grounding_sources": ["Tool result: Electronics return policy - 30-day window, receipt required, original packaging required"],
+    "grounded_claims": "Turn 1 accurately states the 30-day window and receipt/packaging requirements.",
+    "ungrounded_claims": "Turn 2: Agent claims returns are possible without receipt using photo ID — this contradicts the tool result which states 'receipt required'. The ID lookup policy is fabricated."
+  },
+  "explanation": "First response was grounded, but second response fabricated an alternative return policy not supported by any source.",
+  "score": 2
+}
+
+KEY PRINCIPLES
+==============
+
+1. **Source Verification**: Every factual claim by the agent must be traceable to a grounding source (context, tool result, or user-provided fact)
+2. **Information Retention**: The agent should correctly use information from earlier turns when relevant
+3. **No Fabrication**: The agent must not introduce information that is not present in any grounding source
+4. **Contradiction Detection**: Contradicting previously established facts is a grounding failure
+5. **Neutral on Non-Claims**: Polite responses, clarifications, and questions that make no factual claims are not penalized
+6. **Cumulative Assessment**: Evaluate groundedness across ALL turns, not just the last response
+7. **Tool Results as Ground Truth**: Information returned by tool calls is a primary grounding source
+
+Remember: An agent can be helpful and complete the task while still being ungrounded. Evaluate ONLY whether claims are supported by available sources.
+
+# Output
