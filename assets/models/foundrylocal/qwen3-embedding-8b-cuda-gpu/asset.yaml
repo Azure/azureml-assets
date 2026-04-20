@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.schema.json
+name: qwen3-embedding-8b-cuda-gpu
+version: 1
+directory: ./qwen3-embedding-8b-cuda-gpu

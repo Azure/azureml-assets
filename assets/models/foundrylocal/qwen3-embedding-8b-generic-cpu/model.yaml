@@ -1,0 +1,8 @@
+storage:
+  container_name: models
+  container_path: foundrylocal/models/qwen3-embedding-8b/onnx/cpu_and_mobile/v1
+  storage_name: foundrylocalmodels
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model
