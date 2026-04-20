@@ -7,8 +7,6 @@ RUN apt-get update && \
     apt-get autoclean && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
-RUN conda install pip==25.3 -y
-# Remove all old pip metadata after upgrade
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
@@ -35,10 +33,8 @@ COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/r
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
 RUN python3 -m pip install --upgrade pip==26.0 setuptools==82.0.0 wheel==0.46.2
-RUN pip install vllm==0.17.0
-# xgrammar 0.1.29 → ≥0.1.32 (CVE-2026-25048 — segfault via nested syntax)
-#   vllm pins xgrammar==0.1.29; all vllm versions (up to 0.17.1) use this exact pin,
-#   so no vllm upgrade can fix this — explicit override after vllm install is required.
+RUN pip install vllm==0.18.0
+# Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
@@ -51,7 +47,10 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 RUN pip install --upgrade aiohttp==3.13.4 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.7 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0'
 # Fix vulnerabilities in base conda env (python3.13) from ACPT base image (biweekly.202603.1)
 # Still vulnerable in base: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
-RUN conda run -n base pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 aiohttp==3.13.4
+# ray vendors aiohttp for runtime_env agent under thirdparty_files; patch that copy too.
+RUN rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/__private/runtime_env/agent/thirdparty_files/aiohttp* && \
+    pip install --no-cache-dir --target /opt/conda/envs/ptca/lib/python3.10/site-packages/ray/__private/runtime_env/agent/thirdparty_files 'aiohttp==3.13.4'
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
 # Clean up pip caches and old package files to prevent vulnerability detection
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
@@ -59,6 +58,6 @@ RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
+RUN conda install -y -n ptca 'pip>=26.0.1' 'wheel>=0.46.2'
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
 
