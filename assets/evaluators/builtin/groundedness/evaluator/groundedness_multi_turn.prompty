@@ -35,6 +35,11 @@ user:
 > Tool calls and tool results are part of the agent's working process and serve as grounding sources.
 > If the agent contradicts or forgets information that was explicitly provided by the user or returned by a tool in an earlier turn, and that information is directly relevant to the current response, this counts as a grounding failure.
 
+## Important Evaluation Checks
+Before scoring, verify these two things:
+1. **Inferences and extrapolations:** Does the agent make causal claims, generalizations, or extrapolations across turns that go beyond what the grounding sources explicitly state? Plausible-sounding inferences are still ungrounded if the grounding sources do not state them. Score 2 if the conversation's core claims rely on inference rather than explicit grounding.
+2. **Unsupported additions:** Does the agent add significant claims not found in any grounding source? A conversation that is mostly grounded but includes one or more major unsupported claims should be scored lower (2 if significant, 4 if only minor additions).
+
 # Ratings
 ## [Groundedness: 1] (Not Grounded)
 **Definition:** Agent responses are largely disconnected from the available grounding sources. The agent fabricates information, ignores context and tool results, or provides responses unrelated to the conversation content.
@@ -48,8 +53,8 @@ user:
   User turn 2: Any side effects I should watch for?
   Agent turn 2: Common side effects include dizziness and muscle pain. You should also avoid grapefruit juice while on these medications.
 
-## [Groundedness: 2] (Contains Unsupported Information)
-**Definition:** Agent responses attempt to engage with the conversation but include incorrect, fabricated, or unsupported claims. The agent may contradict information from prior turns, distort facts from tool results, or introduce details not present in any grounding source.
+## [Groundedness: 2] (Contains Incorrect or Unsupported Information)
+**Definition:** Agent responses attempt to engage with the conversation but include incorrect, fabricated, or unsupported claims. This includes contradicting information from prior turns, distorting facts from tool results, introducing details not present in any grounding source, or making inferences and extrapolations beyond what the grounding sources explicitly state. Even if some parts are correct, the presence of significant unsupported claims makes the conversation unreliable.
 
 **Examples:**
   **CONVERSATION:**
@@ -59,6 +64,14 @@ user:
   Agent turn 1: Electronics can be returned within 30 days with receipt and original packaging.
   User turn 2: What if I lost the receipt?
   Agent turn 2: No problem! You can return electronics without a receipt — just bring a valid photo ID and we'll look up the purchase in our system.
+
+  **CONVERSATION:**
+  User turn 1: What services does this gardening company offer?
+  [TOOL_CALL] get_business_profile(name="Fifth Season Gardening")
+  [TOOL_RESULT] Fifth Season Gardening has a 4.2 rating from 62 reviews. Services include lawn mowing, hedge trimming, edging, and weed control.
+  Agent turn 1: They offer lawn mowing, hedge trimming, edging, and weed control.
+  User turn 2: How can I prepare my garden for the winter season?
+  Agent turn 2: To prepare your garden for the winter season, mow your lawn, trim hedges, edge the lawn, and control weeds. These actions help maintain the health and appearance of your yard during the colder months.
 
 ## [Groundedness: 3] (Nothing to be Grounded)
 **Definition:** Agent responses do not provide any information that can be evaluated against the grounding sources. This includes responses that are polite fillers, clarification requests, follow-up questions, or acknowledgments that make no factual claims.
@@ -71,7 +84,7 @@ user:
   Agent turn 2: Sure, I can help with that. Could you provide your new address?
 
 ## [Groundedness: 4] (Partially Correct Response)
-**Definition:** Agent responses provide correct information from the grounding sources but are incomplete or lack specific details that were available. The agent captures some of the necessary information but omits key elements needed for a full understanding. No incorrect or fabricated information is introduced.
+**Definition:** Agent responses provide correct information from the grounding sources but are incomplete or lack specific details that were available. The agent captures some of the necessary information but omits key elements needed for a full understanding. All major stated claims are supported by the grounding sources; only minor details may be missing or slightly imprecise.
 
 **Examples:**
   **CONVERSATION:**
@@ -82,8 +95,14 @@ user:
   User turn 2: Does it support team collaboration?
   Agent turn 2: Yes, the premium plan supports team collaboration features.
 
+  **CONVERSATION:**
+  User turn 1: How do I set up parental controls on Netflix?
+  [TOOL_CALL] search_help(query="Netflix parental controls")
+  [TOOL_RESULT] Disney+: To set up parental controls, go to Profile > Settings > Content Rating.
+  Agent turn 1: The available information does not cover Netflix parental controls. However, for Disney+ you can set up parental controls by going to Profile > Settings > Content Rating.
+
 ## [Groundedness: 5] (Fully Grounded & Complete)
-**Definition:** All agent responses across all turns are thoroughly accurate, directly supported by grounding sources, and correctly retain information from prior turns. No fabrications, contradictions, or unsupported claims.
+**Definition:** All agent responses across all turns are thoroughly accurate, directly supported by grounding sources, and correctly retain information from prior turns. No fabrications, contradictions, or unsupported claims. Every factual claim is supported by the grounding sources.
 
 **Examples:**
   **CONVERSATION:**
@@ -111,7 +130,7 @@ TOOL_DEFINITIONS: {{tool_definitions}}
   - **grounded_claims**: A summary of claims that are well-supported by grounding sources.
   - **ungrounded_claims**: For each unsupported/incorrect claim, quote the agent's response and explain why it is ungrounded. "None" if all claims are grounded.
 
-## Example output:
+## OUTPUT FORMAT:
 {
   "properties": {
     "grounding_sources": ["<source 1>", "<source 2>"],
@@ -124,11 +143,12 @@ TOOL_DEFINITIONS: {{tool_definitions}}
   
 }
 
-## Example output for skipped evaluation:
+## OUTPUT FORMAT FOR SKIPPED EVALUATION:
 {
   "properties": null,
   "reason": "No agent responses to evaluate for groundedness.",
   "score": null,
   "status": "skipped"
 }
+
 # Output
