@@ -1367,13 +1367,13 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 )
             score = int(score)
             score_result = "pass" if score >= self.threshold else "fail"
-            reason = llm_output.get("explanation", "")
+            reason = llm_output.get("reason", "")
             return {
                 self._result_key: score,
                 f"{self._result_key}_result": score_result,
                 f"{self._result_key}_threshold": self.threshold,
                 f"{self._result_key}_reason": reason,
-                f"{self._result_key}_details": llm_output.get("details", {}),
+                f"{self._result_key}_details": llm_output.get("properties", {}),
                 f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
                 f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
                 f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
