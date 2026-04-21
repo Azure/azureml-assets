@@ -1,0 +1,42 @@
+type: "evaluator"
+name: "builtin.quality_grader"
+version: 1
+displayName: "Quality-Grader-Evaluator"
+description: "Evaluates overall response quality using a two-stage grading pipeline. Stage 1 assesses response quality (relevance, abstention, answer completeness). Stage 2 (if context provided) assesses groundedness and context coverage. Returns pass/fail with detailed failure reasons."
+evaluatorType: "builtin"
+evaluatorSubType: "code"
+categories: ["quality", "agents"]
+tags:
+  provider: "Microsoft"
+  is_continuous_scenario: "true"
+initParameterSchema:
+  type: "object"
+  properties:
+    deployment_name:
+      type: "string"
+  required: ["deployment_name"]
+dataMappingSchema:
+  type: "object"
+  properties:
+    query:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    response:
+      anyOf:
+        - type: "string"
+        - type: "array"
+          items:
+            type: "object"
+    context:
+      type: "string"
+  required: ["query", "response"]
+outputSchema:
+  quality_grader:
+    type: "ordinal"
+    desirable_direction: "increase"
+    min_value: 0
+    max_value: 1
+path: ./evaluator
