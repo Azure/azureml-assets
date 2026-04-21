@@ -7,6 +7,7 @@ This is the GPU (NVIDIA CUDA)-optimized variant of qwen3-embedding-0.6b, a text 
 - **Parameters**: 0.6 billion
 - **Context Length**: 32K tokens
 - **Embedding Dimension**: Up to 1024
+- **Quantization**: KLD Gradient quantization
 - **Target Device**: GPU (NVIDIA CUDA)
 - **Execution Provider**: CUDAExecutionProvider
 - **Supported Languages**: 100+

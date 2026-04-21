@@ -7,6 +7,7 @@ This is the GPU (WebGPU)-optimized variant of qwen3-embedding-0.6b, a text embed
 - **Parameters**: 0.6 billion
 - **Context Length**: 32K tokens
 - **Embedding Dimension**: Up to 1024
+- **Quantization**: KLD Gradient quantization
 - **Target Device**: GPU (WebGPU)
 - **Execution Provider**: WebGPUExecutionProvider
 - **Supported Languages**: 100+

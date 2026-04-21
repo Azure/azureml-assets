@@ -7,6 +7,7 @@ This is the CPU-optimized variant of qwen3-embedding-0.6b, a text embedding mode
 - **Parameters**: 0.6 billion
 - **Context Length**: 32K tokens
 - **Embedding Dimension**: Up to 1024
+- **Quantization**: KLD Gradient quantization
 - **Target Device**: CPU
 - **Execution Provider**: CPUExecutionProvider
 - **Supported Languages**: 100+

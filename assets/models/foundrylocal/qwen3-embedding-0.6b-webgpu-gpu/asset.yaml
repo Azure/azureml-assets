@@ -1,4 +1,4 @@
-$schema: https://azuremlschemas.azureedge.net/latest/asset.schema.json
-name: qwen3-embedding-0.6b-webgpu-gpu
-version: 1
-directory: ./qwen3-embedding-0.6b-webgpu-gpu
+extra_config: model.yaml
+spec: spec.yaml
+type: model
+categories: ["Local"]

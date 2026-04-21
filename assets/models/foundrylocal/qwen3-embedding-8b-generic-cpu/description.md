@@ -7,6 +7,7 @@ This is the CPU-optimized variant of qwen3-embedding-8b, a text embedding model 
 - **Parameters**: 8 billion
 - **Context Length**: 32K tokens
 - **Embedding Dimension**: Up to 4096
+- **Quantization**: KLD Gradient quantization
 - **Target Device**: CPU
 - **Execution Provider**: CPUExecutionProvider
 - **Supported Languages**: 100+
