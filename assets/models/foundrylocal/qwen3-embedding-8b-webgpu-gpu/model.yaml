@@ -1,4 +1,4 @@
-storage:
+path:
   container_name: models
   container_path: foundrylocal/models/qwen3-embedding-8b/onnx/webgpu/v1
   storage_name: foundrylocalmodels
