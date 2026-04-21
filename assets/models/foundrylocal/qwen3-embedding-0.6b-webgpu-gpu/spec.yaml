@@ -20,7 +20,7 @@ tags:
   reasoningStart: ""
   reasoningEnd: ""
   contextLength: 32768
-  minFLVersion: "1.1.0"
+  minFLVersion: "0.0.0"
   disable-maap: "true"
 type: custom_model
 variantInfo:
