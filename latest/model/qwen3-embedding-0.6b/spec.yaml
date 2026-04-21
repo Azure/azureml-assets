@@ -1,0 +1,29 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qwen3-embedding-0.6b
+version: 1
+path: ./
+tags:
+  foundryLocal: "test"
+type: custom_model
+description: |
+  # Qwen3 Embedding 0.6B
+
+  This is the parent model entry for qwen3-embedding-0.6b in the Foundry Local catalog.
+
+  ## Model Details
+  - **Model Type**: Text Embedding
+  - **Architecture**: Transformer (Qwen3)
+  - **Parameters**: 0.6 billion
+  - **Context Length**: 32K tokens
+  - **Embedding Dimension**: Up to 1024
+  - **Supported Languages**: 100+
+
+  ## Overview
+
+  The Qwen3 Embedding model series is designed for text embedding and ranking tasks. Building upon the Qwen3 foundation models, it provides state-of-the-art performance across text retrieval, code retrieval, text classification, text clustering, and bitext mining tasks.
+
+  ## License
+  This model is licensed under Apache 2.0. See [license details](https://huggingface.co/Qwen/Qwen3-Embedding-0.6B).
+
+  ## Source
+  - HuggingFace: [Qwen3-Embedding-0.6B](https://huggingface.co/Qwen/Qwen3-Embedding-0.6B)
