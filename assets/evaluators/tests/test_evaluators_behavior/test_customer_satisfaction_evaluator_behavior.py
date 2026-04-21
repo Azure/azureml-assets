@@ -30,17 +30,19 @@ class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.MINIMAL_RESPONSE
 
-    _additional_expected_field_suffixes = ["dimensions"]
+    _additional_expected_field_suffixes = ["status", "properties"]
 
     @property
     def expected_result_fields(self):
         """Get the expected result fields for customer satisfaction evaluator."""
         return [
             f"{self._result_prefix}",
+            f"{self._result_prefix}_score",
             f"{self._result_prefix}_reason",
             f"{self._result_prefix}_threshold",
             f"{self._result_prefix}_result",
-            f"{self._result_prefix}_dimensions",
+            f"{self._result_prefix}_status",
+            f"{self._result_prefix}_properties",
             f"{self._result_prefix}_prompt_tokens",
             f"{self._result_prefix}_completion_tokens",
             f"{self._result_prefix}_total_tokens",
@@ -49,6 +51,12 @@ class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
             f"{self._result_prefix}_sample_input",
             f"{self._result_prefix}_sample_output",
         ]
+
+    def assert_not_applicable(self, result_data: Dict[str, Any]):
+        """Customer satisfaction treats intermediate responses as skipped results."""
+        assert result_data["score"] is None
+        assert result_data["label"] == "skipped"
+        assert "Not applicable" in result_data.get("reason", "")
 
 
 def _create_mocked_evaluator():
@@ -98,11 +106,16 @@ class TestCustomerSatisfactionSessionBehavior:
         result = evaluator(messages=VALID_MESSAGES)
 
         assert "customer_satisfaction" in result
+        assert "customer_satisfaction_score" in result
         assert "customer_satisfaction_result" in result
         assert "customer_satisfaction_reason" in result
-        assert "customer_satisfaction_dimensions" in result
+        assert "customer_satisfaction_status" in result
+        assert "customer_satisfaction_properties" in result
         assert "customer_satisfaction_threshold" in result
         assert 1.0 <= result["customer_satisfaction"] <= 5.0
+        assert result["customer_satisfaction_score"] == result["customer_satisfaction"]
+        assert result["customer_satisfaction_status"] == "completed"
+        assert isinstance(result["customer_satisfaction_properties"], dict)
 
     def test_messages_empty_list_raises_error(self):
         """Empty messages list raises validation error."""
@@ -193,6 +206,33 @@ class TestCustomerSatisfactionSessionBehavior:
         call_kwargs = evaluator._multi_turn_flow.call_args
         conversation_text = call_kwargs.kwargs.get("conversation", "")
         assert "I need help with my order." in conversation_text
+
+    def test_query_response_intermediate_returns_skipped_schema(self):
+        """Intermediate single-turn responses return the standardized skipped schema."""
+        evaluator = _create_mocked_evaluator()
+        result = evaluator(
+            query="Cancel my order.",
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "function_call",
+                            "name": "cancel_order",
+                            "tool_call_id": "call_1",
+                            "arguments": {"order_id": "12345"},
+                        }
+                    ],
+                }
+            ],
+        )
+
+        assert result["customer_satisfaction"] is None
+        assert result["customer_satisfaction_score"] is None
+        assert result["customer_satisfaction_result"] == "skipped"
+        assert result["customer_satisfaction_status"] == "skipped"
+        assert result["customer_satisfaction_reason"].startswith("Not applicable:")
+        assert result["customer_satisfaction_properties"] == {}
 
     def test_messages_uses_multi_turn_flow(self):
         """Verify that the session path calls _multi_turn_flow, not _flow."""

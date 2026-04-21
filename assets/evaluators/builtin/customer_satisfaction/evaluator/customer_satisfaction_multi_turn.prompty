@@ -101,14 +101,22 @@ OUTPUT FORMAT
 =============
 Output a JSON object with these keys:
 {
-  "score": <1, 2, 3, 4, or 5>,
-  "explanation": "<30-60 words explaining the predicted satisfaction level for the full session>",
-  "dimensions": {
+  
+  "reason": "<30-60 words explaining the predicted satisfaction level for the full session>",
+  "properties": {
     "helpfulness": "<1-2 sentences assessing helpfulness across all turns>",
     "completeness": "<1-2 sentences assessing completeness of all requests>",
     "tone": "<1-2 sentences assessing tone throughout the session>"
-  }
+  },
+  "score": <1, 2, 3, 4, or 5, or null when skipped>,
+  "status": "completed"
 }
+
+**Status: Skipped**
+If the CONVERSATION is empty or not provided, or doesn't end with the agent response, return status "skipped" immediately without scoring:
+```json
+{"reason": "<explain why evaluation was skipped>", "properties": null, "score": null, "status": "skipped"}
+```
 
 SCORING EXAMPLES
 ================
@@ -123,13 +131,14 @@ Agent turn 2: Order #12346 shipped yesterday via FedEx. Tracking number: FX12345
 
 EXPECTED OUTPUT:
 {
-  "score": 5,
-  "explanation": "Both requests handled efficiently across two turns. Cancellation processed immediately with refund details, and shipping status provided with tracking info. Customer would be very satisfied with the responsive, complete service.",
-  "dimensions": {
+  "reason": "Both requests handled efficiently across two turns. Cancellation processed immediately with refund details, and shipping status provided with tracking info. Customer would be very satisfied with the responsive, complete service.",
+  "properties": {
     "helpfulness": "Both the cancellation and shipping inquiry were addressed immediately and completely.",
     "completeness": "All details provided: refund timeline, confirmation email, tracking number, and delivery estimate.",
     "tone": "Professional and proactive throughout, offering further assistance after the first request."
-  }
+  },
+  "score": 5,
+  "status": "completed"
 }
 
 ### Score 3 - Neutral (Partial resolution across turns)
@@ -142,13 +151,14 @@ Agent turn 2: I see. Account locks usually expire after 30 minutes. Please try a
 
 EXPECTED OUTPUT:
 {
-  "score": 3,
-  "explanation": "The agent provided basic troubleshooting but didn't proactively unlock the account or offer alternative solutions. The customer got a partial answer but would need to wait and try again without certainty of resolution.",
-  "dimensions": {
+  "reason": "The agent provided basic troubleshooting but didn't proactively unlock the account or offer alternative solutions. The customer got a partial answer but would need to wait and try again without certainty of resolution.",
+  "properties": {
     "helpfulness": "Initial suggestion was generic and unhelpful. Second response addressed the specific error but offered only passive waiting.",
     "completeness": "Missing proactive options like unlocking the account, password reset, or escalation to support.",
     "tone": "Polite but somewhat dismissive of the customer's frustration with a 'try again later' response."
-  }
+  },
+  "score": 3,
+  "status": "completed"
 }
 
 ### Score 1 - Very Dissatisfied (Failed session)
@@ -161,13 +171,14 @@ Agent turn 2: Unfortunately, since the package shows as delivered, we cannot pro
 
 EXPECTED OUTPUT:
 {
-  "score": 1,
-  "explanation": "The agent dismissed the customer's concern across both turns, offered no real resolution, and suggested filing a police report instead of helping. The customer's problem was completely unresolved.",
-  "dimensions": {
+  "reason": "The agent dismissed the customer's concern across both turns, offered no real resolution, and suggested filing a police report instead of helping. The customer's problem was completely unresolved.",
+  "properties": {
     "helpfulness": "Failed to offer any meaningful assistance. Deflected responsibility to the customer.",
     "completeness": "Did not offer investigation, replacement, refund, or escalation options.",
     "tone": "Dismissive in both turns, implying the customer is wrong and offering no empathy for the situation."
-  }
+  },
+  "score": 1,
+  "status": "completed"
 }
 
 KEY PRINCIPLES
