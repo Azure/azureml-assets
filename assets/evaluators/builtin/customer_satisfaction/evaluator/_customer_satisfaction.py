@@ -1051,7 +1051,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Union[str, float, Dict]]:
         """Return a result indicating that the evaluation is not applicable."""
         return {
             self._result_key: None,
