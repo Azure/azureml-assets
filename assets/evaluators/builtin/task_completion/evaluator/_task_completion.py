@@ -1212,7 +1212,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         result: str,
         reason: str,
         status: str,
-        details: Dict,
+        properties: Dict,
         prompty_output_dict: Optional[Dict] = None,
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
         """Build a standardized result dictionary.
@@ -1221,18 +1221,19 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :param result: The result label ("pass", "fail", "skipped", or "error").
         :param reason: The reasoning or explanation string.
         :param status: The evaluation status ("completed", "skipped", or "error").
-        :param details: The properties/details dictionary.
+        :param properties: The properties dictionary.
         :param prompty_output_dict: Optional raw prompty output for extracting token metadata.
         :return: The standardized result dictionary.
         """
         p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
         return {
             self._result_key: score,
+            f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_reason": reason,
             f"{self._result_key}_status": status,
-            f"{self._result_key}_details": details,
+            f"{self._result_key}_properties": properties,
             f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
             f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
             f"{self._result_key}_total_tokens": p.get("total_token_count", 0),
@@ -1255,7 +1256,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             result="skipped",
             reason=f"Not applicable: {error_message}",
             status="skipped",
-            details={},
+            properties={},
         )
 
     @override
@@ -1393,6 +1394,6 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             result=result,
             reason=reason,
             status=status,
-            details=properties,
+            properties=properties,
             prompty_output_dict=prompty_output_dict,
         )
