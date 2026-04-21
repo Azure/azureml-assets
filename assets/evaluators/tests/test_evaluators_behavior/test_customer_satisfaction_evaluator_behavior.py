@@ -53,7 +53,7 @@ class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
         ]
 
     def assert_not_applicable(self, result_data: Dict[str, Any]):
-        """Customer satisfaction treats intermediate responses as skipped results."""
+        """Assert that the result is not applicable."""
         assert result_data["score"] is None
         assert result_data["label"] == "skipped"
         assert "Not applicable" in result_data.get("reason", "")
