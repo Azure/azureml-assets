@@ -1,6 +1,5 @@
 name: build-test-good
 channels:
-- anaconda
 - conda-forge
 dependencies:
 - python=3.10
