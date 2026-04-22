@@ -1056,7 +1056,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return {
             self._result_key: None,
             f"{self._result_key}_score": None,
-            f"{self._result_key}_result": "skipped",
+            f"{self._result_key}_result": "not_applicable",
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_status": "skipped",
@@ -1196,7 +1196,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Build a standardized result dictionary.
 
         :param score: The evaluation score (1, 0, or None).
-        :param result: The result label ("pass", "fail", "skipped", or "error").
+        :param result: The result label ("pass", "fail", "not_applicable", or "error").
         :param reason: The reasoning or explanation string.
         :param status: The evaluation status ("completed", "skipped", or "error").
         :param properties: The properties dictionary.

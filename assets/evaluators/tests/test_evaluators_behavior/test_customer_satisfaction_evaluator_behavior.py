@@ -55,7 +55,7 @@ class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
     def assert_not_applicable(self, result_data: Dict[str, Any]):
         """Assert that the result is not applicable."""
         assert result_data["score"] is None
-        assert result_data["label"] == "skipped"
+        assert result_data["label"] == "not_applicable"
         assert "Not applicable" in result_data.get("reason", "")
 
 
@@ -207,8 +207,8 @@ class TestCustomerSatisfactionSessionBehavior:
         conversation_text = call_kwargs.kwargs.get("conversation", "")
         assert "I need help with my order." in conversation_text
 
-    def test_query_response_intermediate_returns_skipped_schema(self):
-        """Intermediate single-turn responses return the standardized skipped schema."""
+    def test_query_response_intermediate_returns_not_applicable_schema(self):
+        """Intermediate single-turn responses return the standardized not-applicable schema."""
         evaluator = _create_mocked_evaluator()
         result = evaluator(
             query="Cancel my order.",
@@ -229,7 +229,7 @@ class TestCustomerSatisfactionSessionBehavior:
 
         assert result["customer_satisfaction"] is None
         assert result["customer_satisfaction_score"] is None
-        assert result["customer_satisfaction_result"] == "skipped"
+        assert result["customer_satisfaction_result"] == "not_applicable"
         assert result["customer_satisfaction_status"] == "skipped"
         assert result["customer_satisfaction_reason"].startswith("Not applicable:")
         assert result["customer_satisfaction_properties"] == {}
