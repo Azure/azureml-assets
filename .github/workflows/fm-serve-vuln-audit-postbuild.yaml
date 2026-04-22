@@ -1,8 +1,15 @@
 name: fm-serve-vuln-audit-postbuild
 
 # Fires when `environments-ci` reaches a terminal state on a PR whose
-# head branch was created by `fm-serve-vuln-audit.yaml`. Posts a comment
-# tagging the configured reviewer with the build conclusion.
+# head branch was created by `fm-serve-vuln-audit.yaml`.
+#
+# Jobs:
+#   notify   - comments the build conclusion on the PR, tagging the reviewer.
+#   ems-scan - runs a post-build EMS-style security scan (Trivy filesystem
+#              scan over the foundation-model-serve context, covering both
+#              requirements.txt and Dockerfile-installed packages) and posts
+#              a summary comment on the PR. Uploads full JSON report as an
+#              artifact for audit.
 
 on:
   workflow_run:
@@ -12,6 +19,12 @@ on:
 permissions:
   pull-requests: write
   issues: write
+  contents: read
+
+env:
+  SCOPE_DIR: assets/training/model_management/environments/foundation-model-serve/context
+  AUTO_BRANCH_PREFIX: auto/fm-serve-vuln-audit
+  REVIEWER: pabhatia-ms
 
 jobs:
   notify:
@@ -20,9 +33,6 @@ jobs:
     steps:
       - name: Comment on auto-generated PRs
         uses: actions/github-script@v7
-        env:
-          REVIEWER: pabhatia-ms
-          AUTO_BRANCH_PREFIX: auto/fm-serve-vuln-audit
         with:
           script: |
             const run = context.payload.workflow_run;
@@ -50,6 +60,143 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
+                body,
+              });
+            }
+
+  ems-scan:
+    # Post-build EMS-style security scan. Runs Trivy filesystem scan against
+    # the foundation-model-serve context (requirements.txt + Dockerfile) and
+    # posts a concise vulnerability summary on any associated auto-PR.
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'pull_request_target' }}
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Resolve associated PRs
+        id: prs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prefix = process.env.AUTO_BRANCH_PREFIX;
+            const matches = [];
+            for (const pr of (run.pull_requests || [])) {
+              const { data } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+              if (data.head && data.head.ref.startsWith(prefix)) {
+                matches.push(pr.number);
+              }
+            }
+            core.setOutput('numbers', JSON.stringify(matches));
+            core.setOutput('count', matches.length);
+
+      - name: Install Trivy
+        if: steps.prs.outputs.count != '0'
+        run: |
+          curl -fsSL -o trivy.deb https://github.com/aquasecurity/trivy/releases/download/v0.42.1/trivy_0.42.1_Linux-64bit.deb
+          sudo dpkg -i trivy.deb
+
+      - name: Extract Dockerfile pip-install pins as requirements
+        if: steps.prs.outputs.count != '0'
+        run: |
+          python - <<'PY'
+          import os, re, pathlib
+          ctx = pathlib.Path(os.environ["SCOPE_DIR"])
+          df = (ctx / "Dockerfile").read_text()
+          pins = set()
+          for m in re.finditer(r"(?m)^\s*RUN[^\n]*pip\s+install[^\n]*", df):
+              for p in re.finditer(r"([A-Za-z0-9][A-Za-z0-9_.\-]*)==([A-Za-z0-9][A-Za-z0-9_.\-]*)", m.group(0)):
+                  pins.add(f"{p.group(1)}=={p.group(2)}")
+          pathlib.Path("ems-dockerfile-pins.txt").write_text(
+              "\n".join(sorted(pins)) + ("\n" if pins else "")
+          )
+          PY
+
+      - name: Run Trivy filesystem scan (EMS post-build)
+        if: steps.prs.outputs.count != '0'
+        run: |
+          mkdir -p ems-scan
+          cp "${SCOPE_DIR}/requirements.txt" ems-scan/requirements.txt || true
+          cp ems-dockerfile-pins.txt ems-scan/dockerfile-pins.txt || true
+          trivy fs --quiet --scanners vuln --format json \
+            --output ems-scan/trivy-report.json ems-scan/ || true
+          trivy fs --quiet --scanners vuln --format table \
+            --severity CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN \
+            --output ems-scan/trivy-report.txt ems-scan/ || true
+
+      - name: Summarise scan
+        if: steps.prs.outputs.count != '0'
+        id: summary
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, collections
+          rpt = pathlib.Path("ems-scan/trivy-report.json")
+          counts = collections.Counter()
+          rows = []
+          if rpt.exists() and rpt.stat().st_size:
+              data = json.loads(rpt.read_text())
+              for r in data.get("Results", []) or []:
+                  target = r.get("Target", "")
+                  for v in r.get("Vulnerabilities", []) or []:
+                      sev = (v.get("Severity") or "UNKNOWN").upper()
+                      counts[sev] += 1
+                      rows.append((target, v.get("PkgName"), v.get("InstalledVersion"),
+                                   v.get("FixedVersion") or "—", sev,
+                                   v.get("VulnerabilityID")))
+          order = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"]
+          md = ["### EMS post-build scan (Trivy)", ""]
+          md.append("**Scope:** `" + os.environ["SCOPE_DIR"] + "/` — `requirements.txt` + Dockerfile `RUN pip install` pins")
+          md.append("")
+          if not rows:
+              md.append("🟢 No vulnerabilities detected.")
+          else:
+              md.append("**Totals:** " + ", ".join(f"{s}: {counts.get(s,0)}" for s in order))
+              md.append("")
+              md.append("| Source | Package | Installed | Fixed | Severity | Advisory |")
+              md.append("|---|---|---|---|---|---|")
+              rows.sort(key=lambda r: (order.index(r[4]) if r[4] in order else 99, r[1] or ""))
+              for target, pkg, inst, fix, sev, vid in rows[:100]:
+                  md.append(f"| `{target}` | `{pkg}` | `{inst}` | `{fix}` | {sev} | {vid} |")
+              if len(rows) > 100:
+                  md.append(f"\n_Showing 100 of {len(rows)} findings. See `ems-scan` artifact for full report._")
+          md.append("")
+          md.append(f"_Post-build scan by `.github/workflows/fm-serve-vuln-audit-postbuild.yaml` — run {os.environ.get('GITHUB_RUN_ID','?')}._")
+          pathlib.Path("ems-scan/summary.md").write_text("\n".join(md))
+          severe = counts.get("CRITICAL", 0) + counts.get("HIGH", 0)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"severe={severe}\n")
+              fh.write(f"total={sum(counts.values())}\n")
+          PY
+
+      - name: Upload EMS scan artifact
+        if: steps.prs.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ems-scan-${{ github.event.workflow_run.id }}
+          path: ems-scan/
+
+      - name: Comment scan summary on PR(s)
+        if: steps.prs.outputs.count != '0'
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBERS: ${{ steps.prs.outputs.numbers }}
+        with:
+          script: |
+            const fs = require('fs');
+            const reviewer = process.env.REVIEWER;
+            const body = `@${reviewer}\n\n` + fs.readFileSync('ems-scan/summary.md', 'utf8');
+            for (const n of JSON.parse(process.env.PR_NUMBERS)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: n,
                 body,
               });
             }
