@@ -15,7 +15,7 @@ setup(
    install_requires=[
       "GitPython>=3.1",
       "ruamel.yaml~=0.18.10",
-      "pip>=21",
+      "pip>=22",
       "marshmallow>=3.19",
       "tenacity>=8.2.2",
       "azure-ai-ml>=1.9.0",
