@@ -1,0 +1,4 @@
+type: benchmarkspec
+spec: spec.yaml
+categories:
+- BenchmarkSpec
