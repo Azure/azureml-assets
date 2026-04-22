@@ -154,25 +154,37 @@ def classify(findings: list[dict[str, Any]],
     for f in findings:
         name_lc = (f["name"] or "").lower()
         is_direct = name_lc in direct_names
-        if not f["fix_versions"]:
+        fix_versions = f["fix_versions"] or []
+        if not fix_versions:
             residual.append({**f, "reason": "no-fix-available"})
             continue
+        # Semver-aware minimum — lexicographic min("10.0.0", "2.0.0") would
+        # pick "10.0.0", which is wrong. Fall back to the raw string only
+        # if the version isn't PEP-440 parseable.
+        try:
+            from packaging.version import Version, InvalidVersion
+            try:
+                min_fix = str(min(Version(v) for v in fix_versions))
+            except InvalidVersion:
+                min_fix = min(fix_versions)
+        except ImportError:
+            min_fix = min(fix_versions)
         if is_direct:
             # Caller already patches direct pins in Stage 1; leave a marker
             # so the workflow can confirm it was picked up.
             parent_bump.append({
                 **f,
-                "suggested_version": min(f["fix_versions"]),
+                "suggested_version": min_fix,
                 "kind": "direct",
             })
         else:
             transitive_pin.append({
                 **f,
-                "suggested_pin": f"{f['name']}=={min(f['fix_versions'])}",
+                "suggested_pin": f"{f['name']}=={min_fix}",
                 "drop_when": (
                     "drop when the parent direct dependency's resolved "
                     "tree includes "
-                    f"{f['name']}>={min(f['fix_versions'])}"
+                    f"{f['name']}>={min_fix}"
                 ),
             })
     return {
