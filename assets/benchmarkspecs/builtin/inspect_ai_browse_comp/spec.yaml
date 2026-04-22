@@ -1,0 +1,30 @@
+type: "benchmarkspec"
+name: "builtin.inspect_ai.browse_comp"
+version: 1
+display_name: "BrowseComp Benchmark (inspect_ai)"
+description: "BrowseComp is a benchmark for evaluating browsing agents on realistic web research tasks. Problems are encrypted at rest and decrypted at runtime. Evaluated using the inspect_ai framework."
+benchmarkType: "builtin"
+categories: ["reasoning", "quality"]
+
+evaluator:
+  testingCriteria:
+    type: "inspect_ai"
+    name: "BrowseComp"
+    task_name: "inspect_evals/browse_comp"
+
+dataset:
+  datasetName: "browse_comp"
+  datasetType: "oss"
+  recordCount: "1266"
+  license: "MIT"
+  properties:
+    domain: "browsing"
+    source_paper: "https://arxiv.org/pdf/2504.12516"
+    dataset_source: "https://github.com/openai/simple-evals"
+  source:
+    provider: "mlregistry"
+    sourceDatasetId: "azureml://registries/azureml/data/browse_comp/versions/1"
+    sourceFormat: "csv"
+    properties:
+      file_name: "browse_comp.csv"
+      type: "uri_folder"
