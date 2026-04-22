@@ -1,13 +1,34 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04:{{latest-image-tag}}
 
 # OS updates + openssh (DeepSpeed multi-node launcher requires passwordless ssh)
+# + inference-server scaffolding. This curated env is dual-use: its
+# requirements.txt installs azureml-inference-server-http and inference-schema,
+# so the nginx / runit / rsyslog / port layer below is part of the image's
+# contract for online-endpoint deployments.
+COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
+        libcurl4 \
+        liblttng-ust1 \
+        libunwind8 \
+        libxml++2.6-2v5 \
+        nginx-light \
+        psmisc \
+        rsyslog \
+        runit \
+        unzip \
         openssh-server \
         openssh-client && \
     apt-get autoremove -y && apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb && \
+    cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
+    cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
+    ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
+    rm -f /etc/nginx/sites-enabled/default
+ENV SVDIR=/var/runit
+ENV WORKER_TIMEOUT=400
+EXPOSE 5001 8883 8888
 
 # Upgrade pip toolchain before any package install so resolver sees patched versions
 RUN pip install --no-cache-dir --upgrade \
