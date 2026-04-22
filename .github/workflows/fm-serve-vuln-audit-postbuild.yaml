@@ -1,0 +1,55 @@
+name: fm-serve-vuln-audit-postbuild
+
+# Fires when `environments-ci` reaches a terminal state on a PR whose
+# head branch was created by `fm-serve-vuln-audit.yaml`. Posts a comment
+# tagging the configured reviewer with the build conclusion.
+
+on:
+  workflow_run:
+    workflows: ["environments-ci"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'pull_request_target' }}
+    steps:
+      - name: Comment on auto-generated PRs
+        uses: actions/github-script@v7
+        env:
+          REVIEWER: pabhatia-ms
+          AUTO_BRANCH_PREFIX: auto/fm-serve-vuln-audit
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prs = run.pull_requests || [];
+            const reviewer = process.env.REVIEWER;
+            const prefix = process.env.AUTO_BRANCH_PREFIX;
+            for (const pr of prs) {
+              const { data: prData } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+              if (!prData.head || !prData.head.ref.startsWith(prefix)) {
+                continue;
+              }
+              const body = [
+                `@${reviewer} \`environments-ci\` reached a terminal state.`,
+                ``,
+                `- Conclusion: **${run.conclusion}**`,
+                `- Run: ${run.html_url}`,
+                ``,
+                `Please review this automated vulnerability-patch PR.`,
+              ].join("\n");
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }

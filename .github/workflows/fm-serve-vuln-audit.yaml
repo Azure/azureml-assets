@@ -1,0 +1,132 @@
+name: fm-serve-vuln-audit
+
+# Scheduled vulnerability audit for the foundation-model-serve environment.
+# Scope: assets/training/model_management/environments/foundation-model-serve/*
+#   - context/requirements.txt
+#   - pinned packages (name==version) in context/Dockerfile `pip install` lines
+#
+# Runs every alternate day at 08:00 IST (02:30 UTC). When pip-audit reports
+# advisories with available fix versions, this workflow bumps the pinned
+# versions and opens a pull request tagging the configured reviewer.
+
+on:
+  schedule:
+    # 02:30 UTC every other day == 08:00 IST every alternate day
+    - cron: "30 2 */2 * *"
+  workflow_dispatch:
+    inputs:
+      reviewer:
+        description: GitHub username to request review from
+        default: pabhatia-ms
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  SCOPE_DIR: assets/training/model_management/environments/foundation-model-serve/context
+  AUTO_BRANCH: auto/fm-serve-vuln-audit
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pip-audit==2.7.3"
+
+      - name: Extract Dockerfile pip-install pins
+        run: |
+          python - <<'PY'
+          import os, re, pathlib
+          ctx = pathlib.Path(os.environ["SCOPE_DIR"])
+          df = (ctx / "Dockerfile").read_text()
+          pins = set()
+          # Only scan RUN pip install ... lines; ignore e.g. --upgrade pip==X which we bump elsewhere.
+          for m in re.finditer(r"(?m)^\s*RUN[^\n]*pip\s+install[^\n]*", df):
+              for p in re.finditer(r"([A-Za-z0-9][A-Za-z0-9_.\-]*)==([A-Za-z0-9][A-Za-z0-9_.\-]*)", m.group(0)):
+                  pins.add(f"{p.group(1)}=={p.group(2)}")
+          out = pathlib.Path("dockerfile-pins.txt")
+          out.write_text("\n".join(sorted(pins)) + ("\n" if pins else ""))
+          print("Dockerfile pins detected:\n" + out.read_text())
+          PY
+
+      - name: Audit and auto-fix requirements.txt
+        continue-on-error: true
+        run: |
+          pip-audit -r "${SCOPE_DIR}/requirements.txt" --fix --disable-pip || true
+
+      - name: Audit Dockerfile pins and apply fixes
+        run: |
+          if [[ ! -s dockerfile-pins.txt ]]; then
+            echo "No Dockerfile pins to audit."
+            exit 0
+          fi
+          pip-audit -r dockerfile-pins.txt --format=json --disable-pip --output=df-audit.json || true
+          python - <<'PY'
+          import json, os, pathlib, re
+          audit = pathlib.Path("df-audit.json")
+          if not audit.exists() or audit.stat().st_size == 0:
+              print("No advisories for Dockerfile pins.")
+              raise SystemExit(0)
+          data = json.loads(audit.read_text())
+          df_path = pathlib.Path(os.environ["SCOPE_DIR"]) / "Dockerfile"
+          text = df_path.read_text()
+          changed = []
+          for dep in data.get("dependencies", []):
+              name = dep.get("name")
+              fix = dep.get("fix_versions") or []
+              if not name or not fix:
+                  continue
+              # Use the lowest available fix version (minimum safe bump).
+              from packaging.version import Version
+              new = str(min((Version(v) for v in fix)))
+              pattern = re.compile(rf"(?<![A-Za-z0-9_.\-]){re.escape(name)}==[A-Za-z0-9_.\-]+")
+              new_text, n = pattern.subn(f"{name}=={new}", text)
+              if n:
+                  changed.append(f"{name} -> {new}")
+                  text = new_text
+          if changed:
+              df_path.write_text(text)
+              print("Applied Dockerfile bumps: " + ", ".join(changed))
+          else:
+              print("No Dockerfile substitutions applied.")
+          PY
+
+      - name: Clean up intermediates
+        run: rm -f dockerfile-pins.txt df-audit.json
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: ${{ env.AUTO_BRANCH }}
+          delete-branch: true
+          title: "[auto] foundation-model-serve: vulnerability patches"
+          commit-message: "chore(fm-serve): bump vulnerable packages per pip-audit"
+          body: |
+            Automated vulnerability audit for `assets/training/model_management/environments/foundation-model-serve/*`.
+
+            Scope:
+            - `context/requirements.txt`
+            - Pinned packages (`name==version`) in `context/Dockerfile` `RUN pip install` lines
+
+            Fix versions applied are the minimum safe versions reported by `pip-audit`
+            (sourced from the GitHub Advisory Database / PyPI JSON API).
+
+            Schedule: every alternate day at 08:00 IST.
+
+            If no advisories are found, the workflow produces no diff and no PR is opened.
+          reviewers: ${{ github.event.inputs.reviewer || 'pabhatia-ms' }}
+          labels: |
+            automated
+            security
