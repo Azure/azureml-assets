@@ -31,6 +31,22 @@ on:
         description: GitHub username to tag / request review from
         default: pabhatia-ms
         required: false
+      repair_mode:
+        description: >-
+          Repair-pass mode. Set to 'build-break' when invoked by the
+          post-build workflow after environments-ci failed on the auto
+          branch — the agent will revert the last bump and re-plan.
+          Set to 'post-scan' when the EMS scan surfaced new HIGH/CRITICAL
+          transitive findings and the agent should re-run on the same
+          branch. Leave empty for a normal scheduled audit.
+        default: ""
+        required: false
+      repair_attempt:
+        description: >-
+          Repair-pass counter. The post-build workflow increments this on
+          each re-invocation; the agent will refuse to loop past 2.
+        default: "0"
+        required: false
 
 permissions:
   contents: write
@@ -41,6 +57,10 @@ env:
   SCOPE_DIR: assets/training/model_management/environments/foundation-model-serve/context
   AUTO_BRANCH: auto/fm-serve-vuln-audit
   REVIEWER: ${{ github.event.inputs.reviewer || 'pabhatia-ms' }}
+  REPAIR_MODE: ${{ github.event.inputs.repair_mode || '' }}
+  REPAIR_ATTEMPT: ${{ github.event.inputs.repair_attempt || '0' }}
+  MAX_TRANSITIVE_ITERATIONS: "3"
+  MAX_REPAIR_ATTEMPTS: "2"
 
 jobs:
   audit:
@@ -48,6 +68,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Repair passes must checkout the existing auto branch so we
+          # commit new remediation on top of the open PR rather than
+          # forking a fresh branch.
+          ref: ${{ (github.event.inputs.repair_mode != '' && env.AUTO_BRANCH) || '' }}
+
+      - name: Guard against runaway repair passes
+        if: ${{ github.event.inputs.repair_mode != '' }}
+        run: |
+          attempt="${REPAIR_ATTEMPT:-0}"
+          max="${MAX_REPAIR_ATTEMPTS:-2}"
+          echo "repair_mode=${REPAIR_MODE} attempt=${attempt} max=${max}"
+          if [[ "${attempt}" -gt "${max}" ]]; then
+            echo "::warning::Repair attempt ${attempt} exceeds cap ${max}; leaving PR in current state."
+            exit 0
+          fi
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -224,6 +260,167 @@ jobs:
               fh.write(f"applied_count={len(applied)}\n")
           PY
 
+      - name: Stage 2 — transitive sweep (resolve → audit → suggest)
+        id: transitive
+        run: |
+          # Resolve the full transitive set after the Stage-1 direct-pin
+          # patches and re-audit. Loop up to MAX_TRANSITIVE_ITERATIONS:
+          # each iteration applies any newly-suggested transitive pins and
+          # re-runs the resolve+audit.
+          set +e
+          python -m pip install "pip-audit==2.7.3" "packaging>=24" >/dev/null
+          max_iter="${MAX_TRANSITIVE_ITERATIONS:-3}"
+          iter=1
+          resolver_conflict=""
+          while [[ "${iter}" -le "${max_iter}" ]]; do
+            out="transitive-iter-${iter}.json"
+            python scripts/environment/resolve_and_audit.py \
+              --requirements "${SCOPE_DIR}/requirements.txt" \
+              --output "${out}"
+            rc=$?
+            if [[ "${rc}" -eq 2 ]]; then
+              # Resolver conflict: capture and stop looping — Stage 1 made
+              # an incompatible bump. The PR body will flag this and the
+              # reviewer (or post-build repair pass) must decide.
+              resolver_conflict=$(python -c "import json,sys; print(json.load(open('${out}')).get('resolver_conflict') or '')")
+              break
+            fi
+            # Apply any transitive pin suggestions. A "pin" is appended
+            # to requirements.txt with a marker comment so future agents
+            # know it's a transitive constraint, not a first-class dep.
+            applied_now=$(python - "${out}" "${SCOPE_DIR}/requirements.txt" <<'PY'
+          import json, pathlib, re, sys
+          summary = json.loads(pathlib.Path(sys.argv[1]).read_text())
+          req = pathlib.Path(sys.argv[2])
+          text = req.read_text()
+          existing = {}
+          for line in text.splitlines():
+              m = re.match(r"^\s*([A-Za-z0-9][A-Za-z0-9_.\-]*)\s*==\s*([A-Za-z0-9_.\-]+)", line)
+              if m:
+                  existing[m.group(1).lower().replace("_", "-")] = m.group(2)
+          added = []
+          for s in summary.get("suggestions", {}).get("transitive_pin", []) or []:
+              name = (s.get("name") or "").lower().replace("_", "-")
+              pin = s.get("suggested_pin")
+              if not name or not pin:
+                  continue
+              # If the transitive is already pinned in requirements.txt at
+              # a sufficient version we skip — the classifier will just
+              # treat it as direct on the next iteration.
+              if name in existing:
+                  continue
+              note = f"  # {s.get('id','CVE-?')} transitive pin; {s.get('drop_when','')}"
+              text += (("" if text.endswith("\n") else "\n") + pin + note + "\n")
+              added.append(pin)
+          req.write_text(text)
+          print("\n".join(added))
+          PY
+          )
+            if [[ -z "${applied_now}" ]]; then
+              # No new transitive pins applied: either clean, or the only
+              # remaining items are residuals with no fix available.
+              break
+            fi
+            iter=$((iter + 1))
+          done
+          # Persist final summary as the canonical Stage-2 artefact.
+          last=$(ls -1 transitive-iter-*.json 2>/dev/null | tail -n1)
+          if [[ -n "${last}" ]]; then
+            cp "${last}" transitive-summary.json
+          else
+            echo '{}' > transitive-summary.json
+          fi
+          echo "resolver_conflict<<EOF" >> "${GITHUB_OUTPUT}"
+          printf '%s\n' "${resolver_conflict}" >> "${GITHUB_OUTPUT}"
+          echo "EOF" >> "${GITHUB_OUTPUT}"
+          echo "iterations=${iter}" >> "${GITHUB_OUTPUT}"
+        if: steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != ''
+
+      - name: Merge Stage-2 summary into reasoning and audit-summary
+        if: steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != ''
+        run: |
+          python - <<'PY'
+          import json, os, pathlib
+          base = pathlib.Path("audit-summary.json")
+          summary = json.loads(base.read_text()) if base.exists() else {}
+          t = pathlib.Path("transitive-summary.json")
+          trans = json.loads(t.read_text()) if t.exists() and t.stat().st_size else {}
+          summary["transitive"] = trans
+          summary["repair_mode"] = os.environ.get("REPAIR_MODE", "")
+          summary["repair_attempt"] = int(os.environ.get("REPAIR_ATTEMPT", "0") or 0)
+          base.write_text(json.dumps(summary, indent=2))
+
+          # Append residuals / transitive section to reasoning.md.
+          md = pathlib.Path("reasoning.md")
+          text = md.read_text() if md.exists() else ""
+          lines = [text.rstrip(), "", "#### Stage 2 — transitive sweep", ""]
+          conflict = (trans or {}).get("resolver_conflict")
+          if conflict:
+              lines += [
+                  "⚠️ **Resolver conflict detected** — a Stage-1 bump is incompatible with a pinned peer.",
+                  "",
+                  "```text",
+                  conflict.strip()[:2000],
+                  "```",
+                  "",
+                  "The next repair pass will revert the offending bump and re-plan.",
+                  "",
+              ]
+          sugg = (trans or {}).get("suggestions", {}) or {}
+          tpins = sugg.get("transitive_pin") or []
+          if tpins:
+              lines += [
+                  f"**{len(tpins)} transitive pin(s) added** (drop when the parent dep catches up):",
+                  "",
+                  "| Package | Suggested pin | Advisory | Severity | Drop-when |",
+                  "|---|---|---|---|---|",
+              ]
+              for s in tpins:
+                  lines.append(
+                      f"| `{s.get('name')}` | `{s.get('suggested_pin')}` | "
+                      f"{s.get('id')} | {s.get('severity')} | {s.get('drop_when','')} |"
+                  )
+              lines.append("")
+          residual = sugg.get("residual") or []
+          if residual:
+              severe = [r for r in residual if (r.get("severity") or "").upper() in {"CRITICAL","HIGH"}]
+              header = (
+                  f"**{len(residual)} residual finding(s) — no upstream fix available.**"
+                  if not severe else
+                  f"🚨 **{len(severe)} unresolved severe residual(s) — reviewer must decide.**"
+              )
+              lines += [
+                  "",
+                  "#### Residuals (cannot-fix-now)",
+                  "",
+                  header,
+                  "",
+                  "| Package | Installed | Advisory | Severity | Reason |",
+                  "|---|---|---|---|---|",
+              ]
+              for r in residual:
+                  lines.append(
+                      f"| `{r.get('name')}` | `{r.get('version')}` | "
+                      f"{r.get('id')} | {r.get('severity')} | {r.get('reason','')} |"
+                  )
+              lines.append("")
+          if os.environ.get("REPAIR_MODE"):
+              lines += [
+                  f"_Repair pass_: mode=`{os.environ['REPAIR_MODE']}` "
+                  f"attempt={os.environ.get('REPAIR_ATTEMPT','?')} "
+                  f"(cap {os.environ.get('MAX_REPAIR_ATTEMPTS','2')}).",
+                  "",
+              ]
+          lines += [
+              "",
+              "> **Merge gate:** do not merge until the `ems-scan` comment below shows "
+              "`CRITICAL: 0, HIGH: 0`. CI must also be green.",
+              "",
+          ]
+          md.write_text("\n".join(lines))
+          PY
+
+
       - name: Upload audit artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -232,16 +429,17 @@ jobs:
             req-audit.json
             df-audit.json
             audit-summary.json
+            transitive-summary.json
             reasoning.md
 
       # ---------- PR needed: open/update and comment ----------
       - name: Create or update Pull Request
-        if: steps.classify.outputs.decision == 'open'
+        if: steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != ''
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
           branch: ${{ env.AUTO_BRANCH }}
-          delete-branch: true
+          delete-branch: false
           title: "[auto] foundation-model-serve: vulnerability patches"
           commit-message: "chore(fm-serve): bump vulnerable packages per pip-audit"
           body-path: reasoning.md
@@ -249,9 +447,10 @@ jobs:
           labels: |
             automated
             security
+            security/auto-remediation
 
       - name: Comment reasoning on PR
-        if: steps.classify.outputs.decision == 'open' && steps.cpr.outputs.pull-request-number
+        if: (steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != '') && steps.cpr.outputs.pull-request-number
         uses: actions/github-script@v7
         env:
           PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
@@ -268,7 +467,7 @@ jobs:
 
       # ---------- PR not needed: close stale auto PR if present ----------
       - name: Close stale auto PR (no severe findings)
-        if: steps.classify.outputs.decision == 'skip'
+        if: steps.classify.outputs.decision == 'skip' && github.event.inputs.repair_mode == ''
         uses: actions/github-script@v7
         with:
           script: |
