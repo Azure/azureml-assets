@@ -9,3 +9,4 @@ croniter=={{latest-pypi-version}}
 azure-monitor-opentelemetry==1.8.0
 promptflow-azure=={{latest-pypi-version}}
 azure-identity=={{latest-pypi-version}}
+cryptography>=46.0.6
