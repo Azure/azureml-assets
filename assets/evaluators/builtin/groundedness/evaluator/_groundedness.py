@@ -1254,9 +1254,11 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
         parsed_result: Dict[str, Union[str, int, float, Dict, None]] = {
             self._result_key: score,
+            f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
             f"{self._result_key}_threshold": self.threshold,
             f"{self._result_key}_reason": reason,
+            f"{self._result_key}_details": properties,
             f"{self._result_key}_properties": properties,
             f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
             f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
