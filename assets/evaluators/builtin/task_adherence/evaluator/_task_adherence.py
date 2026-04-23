@@ -1106,6 +1106,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         resolved_threshold = threshold if threshold is not None else self._threshold
         return {
             self._result_key: score,
+            f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
             f"{self._result_key}_threshold": resolved_threshold,
             f"{self._result_key}_reason": reason,
