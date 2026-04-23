@@ -4,7 +4,7 @@ version: 2
 path: ./
 tags:
   foundryLocal: "test"
-  license: "mit"
+  license: "MIT"
   licenseDescription: "This model is provided under the License Terms available at <https://github.com/microsoft/Foundry-Local/blob/main/licenses/nemotron-speech-streaming.md>."
   author: Microsoft
   inputModalities: "audio"
