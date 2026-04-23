@@ -549,8 +549,8 @@ ExtendedErrorTarget = _create_extended_error_target()
 
 
 # Thresholds for response quality checks (first prompt)
-_RESPONSE_QUALITY_RELEVANCE_THRESHOLD = 2.5
-_RESPONSE_QUALITY_ANSWER_COMPLETENESS_THRESHOLD = 1.5
+_QUALITY_RELEVANCE_THRESHOLD = 2.5
+_ANSWER_COMPLETENESS_THRESHOLD = 1.5
 
 # Thresholds for groundedness checks (second prompt)
 _GROUNDEDNESS_THRESHOLD = 2.5
@@ -746,18 +746,18 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         if abstention is True:
             failure_reasons.append("abstention is true (expected false)")
-        if isinstance(relevance, (int, float)) and relevance <= _RESPONSE_QUALITY_RELEVANCE_THRESHOLD:
+        if isinstance(relevance, (int, float)) and relevance <= _QUALITY_RELEVANCE_THRESHOLD:
             failure_reasons.append(
-                f"relevance is {relevance} (must be > {_RESPONSE_QUALITY_RELEVANCE_THRESHOLD})"
+                f"relevance is {relevance} (must be > {_QUALITY_RELEVANCE_THRESHOLD})"
             )
         elif relevance is None or relevance == "null":
-            failure_reasons.append(f"relevance is null (must be > {_RESPONSE_QUALITY_RELEVANCE_THRESHOLD})")
-        if isinstance(answer_completeness, (int, float)) and answer_completeness <= _RESPONSE_QUALITY_ANSWER_COMPLETENESS_THRESHOLD:
+            failure_reasons.append(f"relevance is null (must be > {_QUALITY_RELEVANCE_THRESHOLD})")
+        if isinstance(answer_completeness, (int, float)) and answer_completeness <= _ANSWER_COMPLETENESS_THRESHOLD:
             failure_reasons.append(
-                f"answerCompleteness is {answer_completeness} (must be > {_RESPONSE_QUALITY_ANSWER_COMPLETENESS_THRESHOLD})"
+                f"answerCompleteness is {answer_completeness} (must be > {_ANSWER_COMPLETENESS_THRESHOLD})"
             )
         elif answer_completeness is None or answer_completeness == "null":
-            failure_reasons.append(f"answerCompleteness is null (must be > {_RESPONSE_QUALITY_ANSWER_COMPLETENESS_THRESHOLD})")
+            failure_reasons.append(f"answerCompleteness is null (must be > {_ANSWER_COMPLETENESS_THRESHOLD})")
 
         if failure_reasons:
             return self._build_result(
