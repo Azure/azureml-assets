@@ -3,7 +3,7 @@
 import math
 import os
 import logging
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List, Optional, Tuple
 
 from typing_extensions import overload, override
 
@@ -11,11 +11,23 @@ from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, Err
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
 from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response
+from azure.ai.evaluation._common.utils import (
+    construct_prompty_model_config,
+    validate_model_config,
+    _extract_text_from_content,
+    _get_agent_response,
+    _pretty_format_conversation_history,
+)
 from azure.ai.evaluation._common._experimental import experimental
 from enum import Enum
 
 from abc import ABC, abstractmethod
 from typing import Any
+
+if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
+    from promptflow.core._flow import AsyncPrompty
+else:
+    from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 
 # region Validators
@@ -37,6 +49,79 @@ class MessageRole(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+    DEVELOPER = "developer"
+
+
+class EvaluationLevel(str, Enum):
+    """Supported evaluation levels for CustomerSatisfactionEvaluator.
+
+    - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
+    - ``TURN``: Force turn-level evaluation using the single-turn query/response path.
+    """
+
+    CONVERSATION = "conversation"
+    TURN = "turn"
+
+
+def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
+    """Merge query and response message lists into a single conversation."""
+    return [*query, *response]
+
+
+def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+    """Split messages into query/response slices at the latest user turn."""
+    latest_user_index = max(i for i, message in enumerate(messages) if message["role"] == MessageRole.USER)
+    return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
+
+
+def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:
+    """Wrap string query/response into separate message lists."""
+    return (
+        [{"role": "user", "content": [{"type": "text", "text": query}]}],
+        [{"role": "assistant", "content": [{"type": "text", "text": response}]}],
+    )
+
+
+def _resolve_evaluation_level(
+    evaluation_level: Optional[Union[EvaluationLevel, str]],
+    error_target: ErrorTarget,
+) -> Optional[EvaluationLevel]:
+    """Validate and normalize the evaluation_level parameter.
+
+    :param evaluation_level: The evaluation level to resolve.
+    :type evaluation_level: Optional[Union[EvaluationLevel, str]]
+    :param error_target: The error target for exceptions.
+    :type error_target: ErrorTarget
+    :return: The resolved EvaluationLevel or None for auto-detect.
+    :rtype: Optional[EvaluationLevel]
+    """
+    valid = [level.value for level in EvaluationLevel]
+    if evaluation_level is None:
+        return None
+    if isinstance(evaluation_level, EvaluationLevel):
+        return evaluation_level
+    if isinstance(evaluation_level, str):
+        try:
+            return EvaluationLevel(evaluation_level)
+        except ValueError:
+            raise EvaluationException(
+                message=(
+                    f"Invalid evaluation_level '{evaluation_level}'. "
+                    f"Must be one of: {valid}."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=error_target,
+            )
+    raise EvaluationException(
+        message=(
+            f"Invalid evaluation_level '{evaluation_level}'. "
+            f"Must be one of: {valid}."
+        ),
+        blame=ErrorBlame.USER_ERROR,
+        category=ErrorCategory.INVALID_VALUE,
+        target=error_target,
+    )
 
 
 class ContentType(str, Enum):
@@ -463,13 +548,121 @@ class ConversationValidator(ValidatorInterface):
 
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
-        """Validate the evaluation input dictionary."""
+        """Validate the evaluation input dictionary.
+
+        Supports three input modes:
+        1. ``messages`` — flat list of message dicts for multi-turn session evaluation
+        2. ``conversation`` — dict with a ``messages`` key (legacy conversation format)
+        3. ``query`` / ``response`` — single-turn evaluation
+        """
+        # Multi-turn path (messages list)
+        messages = eval_input.get("messages")
+        if messages is not None:
+            if not isinstance(messages, list):
+                raise EvaluationException(
+                    message="messages must be provided as a list of message dictionaries.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if len(messages) == 0:
+                raise EvaluationException(
+                    message="messages list must not be empty.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+
+            # Per-message structural checks
+            valid_roles = {r.value for r in MessageRole}
+            roles_present: set = set()
+            for i, msg in enumerate(messages):
+                if not isinstance(msg, dict):
+                    raise EvaluationException(
+                        message=(
+                            f"Each item in 'messages' must be a dictionary, "
+                            f"but item at index {i} is {type(msg).__name__}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                role = msg.get("role")
+                if role is None:
+                    raise EvaluationException(
+                        message=f"Each message must contain a 'role' key, but message at index {i} is missing it.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if role not in valid_roles:
+                    raise EvaluationException(
+                        message=(
+                            f"Invalid role '{role}' at message index {i}. "
+                            f"Must be one of: {sorted(valid_roles)}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                roles_present.add(role)
+
+            # Conversation-level checks
+            if MessageRole.USER not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'user'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if MessageRole.ASSISTANT not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'assistant'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if messages[-1]["role"] != MessageRole.ASSISTANT:
+                raise EvaluationException(
+                    message=(
+                        f"The last message must have role 'assistant', "
+                        f"but found role '{messages[-1]['role']}'."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            # The final assistant message must contain text
+            last_content = messages[-1].get("content", "")
+            if isinstance(last_content, list):
+                has_text = any(
+                    isinstance(c, dict) and c.get("type") in ("text",)
+                    or isinstance(c, str)
+                    for c in last_content
+                )
+                if not has_text:
+                    raise EvaluationException(
+                        message=(
+                            "The last assistant message must contain text content, "
+                            "not only tool calls. The conversation appears to be "
+                            "mid-execution — provide the agent's final text response."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+
+            return True
+
+        # Legacy conversation path
         conversation = eval_input.get("conversation")
         if conversation:
             conversation_validation_exception = self._validate_conversation(conversation)
             if conversation_validation_exception:
                 raise conversation_validation_exception
             return True
+
+        # Single-turn query/response path
         query = eval_input.get("query")
         response = eval_input.get("response")
         query_validation_exception = self._validate_query(query)
@@ -499,6 +692,164 @@ def _is_intermediate_response(response):
                         last_content.get("type") in ("function_call", "mcp_approval_request")):
                     return True
     return False
+
+
+def _drop_mcp_approval_messages(messages):
+    """Remove MCP approval request/response messages."""
+    if not isinstance(messages, list):
+        return messages
+    return [
+        msg for msg in messages
+        if not (
+            isinstance(msg, dict)
+            and isinstance(msg.get("content"), list)
+            and (
+                (msg.get("role") == "assistant" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_request" for c in msg["content"]))
+                or (msg.get("role") == "tool" and any(
+                    isinstance(c, dict) and c.get("type") == "mcp_approval_response" for c in msg["content"]))
+            )
+        )
+    ]
+
+
+def _normalize_function_call_types(messages):
+    """Normalize function_call/function_call_output/openapi_call/openapi_call_output types to tool_call/tool_result."""
+    if not isinstance(messages, list):
+        return messages
+    for msg in messages:
+        if not isinstance(msg, dict) or not isinstance(msg.get("content"), list):
+            continue
+        for item in msg["content"]:
+            if not isinstance(item, dict):
+                continue
+            t = item.get("type")
+            if t == "function_call":
+                item["type"] = "tool_call"
+            elif t == "function_call_output":
+                item["type"] = "tool_result"
+                if "function_call_output" in item:
+                    item["tool_result"] = item.pop("function_call_output")
+            elif t == "openapi_call":
+                item["type"] = "tool_call"
+            elif t == "openapi_call_output":
+                item["type"] = "tool_result"
+                if "openapi_call_output" in item:
+                    item["tool_result"] = item.pop("openapi_call_output")
+    return messages
+
+
+def _preprocess_messages(messages):
+    """Drop MCP approval messages and normalize function call types."""
+    messages = _drop_mcp_approval_messages(messages)
+    messages = _normalize_function_call_types(messages)
+    return messages
+
+
+def serialize_messages(messages: List[dict]) -> str:
+    """Serialize a list of chat messages into a labeled text transcript for the multi-turn prompty.
+
+    **Input format:** List of message dicts, each with ``"role"`` (``user``, ``assistant``, ``tool``,
+    ``system``, ``developer``) and ``"content"`` (string or list of content-block dicts like
+    ``{"type": "text", "text": "..."}``). Tool messages may include ``tool_call_id`` and content
+    blocks of type ``tool_result``/``tool_call``.
+
+    **Output format:** Plain-text transcript with labeled turns::
+
+        User turn 1:
+          <user text>
+
+        Agent turn 1:
+          <assistant text>
+          [TOOL_CALL] func_name({"arg": "val"})
+          [TOOL_RESULT] <result>
+
+        User turn 2:
+          <user text>
+        ...
+
+    System/developer messages are included as a system preamble. Consecutive messages of the same
+    role are grouped into a single turn. Assistant string content is auto-normalized to content-block
+    format for consistent formatting.
+
+    :param messages: Chat messages with role and content.
+    :type messages: List[dict]
+    :return: Formatted text transcript.
+    :rtype: str
+    """
+    if not messages:
+        return ""
+
+    all_user_queries: List = []
+    all_agent_responses: List = []
+    cur_user_query: List = []
+    cur_agent_response: List = []
+    system_message = None
+
+    for msg in messages:
+        if not isinstance(msg, dict):
+            continue
+        role = msg.get("role")
+        if not role:
+            continue
+
+        # Normalize string content to list format for _get_agent_response
+        normalized = msg
+        if role == MessageRole.ASSISTANT and isinstance(msg.get("content"), str):
+            normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
+
+        if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
+            system_message = msg.get("content", "")
+
+        elif role == MessageRole.USER and "content" in msg:
+            if cur_agent_response:
+                formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+                all_agent_responses.append([formatted])
+                cur_agent_response = []
+            content = msg["content"]
+            if isinstance(content, str):
+                text_in_msg = [content]
+            else:
+                text_in_msg = _extract_text_from_content(content)
+            if text_in_msg:
+                cur_user_query.append(text_in_msg)
+
+        elif role in (MessageRole.ASSISTANT, MessageRole.TOOL):
+            if cur_user_query:
+                all_user_queries.append(cur_user_query)
+                cur_user_query = []
+            cur_agent_response.append(normalized)
+
+    if cur_user_query:
+        all_user_queries.append(cur_user_query)
+    if cur_agent_response:
+        formatted = _get_agent_response(cur_agent_response, include_tool_messages=True)
+        all_agent_responses.append([formatted])
+
+    conversation_history: Dict = {
+        "user_queries": all_user_queries,
+        "agent_responses": all_agent_responses[:len(all_user_queries) - 1]
+        if len(all_user_queries) > 0
+        else [],
+    }
+    if system_message:
+        conversation_history["system_message"] = system_message
+
+    result = _pretty_format_conversation_history(conversation_history)
+
+    # Append any trailing agent turns that the main formatter didn't cover
+    start = max(len(all_user_queries) - 1, 0)
+    for i, agent_response in enumerate(all_agent_responses[start:], start=start):
+        result += f"Agent turn {i + 1}:\n"
+        for msg_text in agent_response:
+            if isinstance(msg_text, list):
+                for submsg in msg_text:
+                    result += "  " + "\n  ".join(submsg.split("\n")) + "\n"
+            else:
+                result += "  " + "\n  ".join(msg_text.split("\n")) + "\n"
+        result += "\n"
+
+    return result.rstrip("\n")
 
 
 # endregion Helper Functions
@@ -556,8 +907,9 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
 
     _PROMPTY_FILE = "customer_satisfaction.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "customer_satisfaction_multi_turn.prompty"
     _RESULT_KEY = "customer_satisfaction"
-    _OPTIONAL_PARAMS = []
+    _OPTIONAL_PARAMS = ["messages"]
 
     _validator: ValidatorInterface
 
@@ -565,7 +917,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, credential=None, threshold=3, **kwargs):
+    def __init__(self, model_config, *, credential=None, threshold=3, evaluation_level=None, **kwargs):
         """Initialize the CustomerSatisfactionEvaluator.
 
         :param model_config: Configuration for the Azure OpenAI model.
@@ -574,12 +926,22 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :type credential: Optional[TokenCredential]
         :keyword threshold: The threshold for the evaluator. Default is 3.
         :type threshold: int
+        :keyword evaluation_level: Force a specific evaluation level for this invocation. When ``None``
+            (default), the level is auto-detected from input shape (``messages`` -> conversation,
+            ``query``/``response`` -> turn). Set to ``EvaluationLevel.CONVERSATION`` or
+            ``EvaluationLevel.TURN`` to override auto-detection.
+        :type evaluation_level: Optional[Union[EvaluationLevel, str]]
         :keyword kwargs: Additional keyword arguments.
         """
         current_dir = os.path.dirname(__file__)
         prompty_path = os.path.join(current_dir, self._PROMPTY_FILE)
         self._threshold = threshold
         self._higher_is_better = True
+
+        # Validate and store evaluation level
+        self._evaluation_level = _resolve_evaluation_level(
+            evaluation_level, ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR
+        )
 
         # Initialize input validator
         self._validator = ConversationValidator(
@@ -597,6 +959,20 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             **kwargs,
         )
 
+        # Load the multi-turn prompty flow for multi-turn evaluation
+        multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
+        prompty_model_config = construct_prompty_model_config(
+            validate_model_config(model_config),
+            self._DEFAULT_OPEN_API_VERSION,
+            f"azure-ai-evaluation (type=evaluator subtype={self.__class__.__name__})",
+        )
+        self._multi_turn_flow = AsyncPrompty.load(
+            source=multi_turn_prompty_path,
+            model=prompty_model_config,
+            token_credential=credential,
+            is_reasoning_model=self._is_reasoning_model,
+        )
+
     @overload
     def __call__(
         self,
@@ -604,7 +980,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         query: Union[str, List[dict]],
         response: Union[str, List[dict]],
     ) -> Dict[str, Union[str, float]]:
-        """Evaluate customer satisfaction for a given query and response.
+        """Evaluate customer satisfaction for last agent response given a query, response.
 
         The query and response can be either a string or a list of messages.
 
@@ -619,6 +995,30 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :paramtype query: Union[str, List[dict]]
         :keyword response: The response being evaluated, either a string or a list of messages
         :paramtype response: Union[str, List[dict]]
+        :return: A dictionary with the customer satisfaction evaluation results.
+        :rtype: Dict[str, Union[str, float]]
+        """
+
+    @overload
+    def __call__(
+        self,
+        *,
+        messages: List[dict],
+    ) -> Dict[str, Union[str, float]]:
+        """Evaluate customer satisfaction for a full multi-turn conversation session.
+
+        Example with messages:
+            evaluator = CustomerSatisfactionEvaluator(model_config)
+            messages = [
+                {'role': 'user', 'content': [{'type': 'text', 'text': 'I need to cancel my order'}]},
+                {'role': 'assistant', 'content': [{'type': 'text', 'text': 'I have cancelled it.'}]},
+                {'role': 'user', 'content': [{'type': 'text', 'text': 'What about the refund?'}]},
+                {'role': 'assistant', 'content': [{'type': 'text', 'text': 'Refund processed in 3-5 days.'}]},
+            ]
+            result = evaluator(messages=messages)
+
+        :keyword messages: The full multi-turn conversation as a list of message dicts.
+        :paramtype messages: List[dict]
         :return: A dictionary with the customer satisfaction evaluation results.
         :rtype: Dict[str, Union[str, float]]
         """
@@ -669,6 +1069,24 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_sample_output": "",
         }
 
+    def _should_use_conversation_level(self, eval_input: Dict) -> bool:
+        """Determine whether to use conversation-level evaluation.
+
+        When ``_evaluation_level`` is set, it takes precedence. Otherwise, auto-detect
+        based on whether ``messages`` is present in the input.
+
+        :param eval_input: The evaluation input.
+        :type eval_input: Dict
+        :return: True if conversation-level evaluation should be used.
+        :rtype: bool
+        """
+        if self._evaluation_level == EvaluationLevel.CONVERSATION:
+            return True
+        if self._evaluation_level == EvaluationLevel.TURN:
+            return False
+        # Auto-detect (_evaluation_level is None)
+        return eval_input.get("messages") is not None
+
     @override
     async def _real_call(self, **kwargs):
         """Perform asynchronous call where real end-to-end evaluation logic is executed.
@@ -678,7 +1096,20 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
-        # Validate input before processing
+        # Reshape inputs based on evaluation level before validation
+        if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+            query = kwargs.get("query")
+            response = kwargs.get("response")
+            if isinstance(query, str) and isinstance(response, str) and query and response:
+                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, list) and isinstance(response, list):
+                kwargs["messages"] = _merge_query_response_messages(query, response)
+        elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
+            if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
+                query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
+                kwargs["query"] = query_messages
+                kwargs["response"] = response_messages
+
         self._validator.validate_eval_input(kwargs)
 
         return await super()._real_call(**kwargs)
@@ -687,12 +1118,21 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
         """Do Customer Satisfaction evaluation.
 
+        Routes to conversation-level or turn-level evaluation based on
+        ``_evaluation_level`` (if set)
+        or auto-detects from input shape (default).
+
         :param eval_input: The input to the evaluator.
         :type eval_input: Dict
         :return: The evaluation result.
         :rtype: Dict
         """
-        if "query" not in eval_input and "response" not in eval_input:
+        # Multi-turn path (messages)
+        if self._should_use_conversation_level(eval_input):
+            return await self._do_eval_multi_turn(eval_input)
+
+        # Single-turn path (query/response)
+        if eval_input.get("query") is None or eval_input.get("response") is None:
             raise EvaluationException(
                 message="Both query and response must be provided as input to the Customer Satisfaction evaluator.",
                 internal_message="Both query and response required for Customer Satisfaction evaluator.",
@@ -707,6 +1147,11 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 self._threshold,
             )
 
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
+
         # Reformat inputs if they are lists of messages
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = reformat_conversation_history(
@@ -718,6 +1163,36 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    async def _do_eval_multi_turn(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
+        """Evaluate customer satisfaction for a full multi-turn conversation session.
+
+        :param eval_input: The input containing ``messages``.
+        :type eval_input: Dict
+        :return: The evaluation result.
+        :rtype: Dict
+        """
+        messages = eval_input["messages"]
+
+        messages = _preprocess_messages(messages)
+        conversation_text = serialize_messages(messages)
+
+        prompty_kwargs: Dict[str, Any] = {"conversation": conversation_text}
+
+        prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Union[float, str]]:
+        """Parse the prompty output into a standardized result dictionary.
+
+        Shared between single-turn and multi-turn evaluation paths.
+
+        :param prompty_output_dict: Raw output from the prompty flow.
+        :type prompty_output_dict: Dict
+        :return: The parsed evaluation result.
+        :rtype: Dict
+        """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):

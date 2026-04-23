@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: OpenAI-CLIP-Image-Text-Embeddings-vit-base-patch32
 path: ./
 properties:
-    SharedComputeCapacityEnabled: true
+    SharedComputeCapacityEnabled: "True"
     inference-min-sku-spec: 2|0|7|14
     inference-recommended-sku: Standard_DS2_v2, Standard_D2a_v4, Standard_D2as_v4, Standard_DS3_v2,
         Standard_D4a_v4, Standard_D4as_v4, Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4,
@@ -20,7 +20,7 @@ tags:
     Preview: ''
     huggingface_model_id: openai/clip-vit-base-patch32
     SharedComputeCapacityEnabled: ''
-    license: mit
+    license: MIT
     task: embeddings
     hiddenlayerscanned: ''
     inference_compute_allow_list:
