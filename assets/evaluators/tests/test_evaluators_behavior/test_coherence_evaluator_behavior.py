@@ -61,7 +61,7 @@ class TestCoherenceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluati
 
     test_openapi_expected_flow_inputs = {
         "query": data.OPENAPI_QUERY,
-        "response": data.OPENAPI_RESPONSE,
+        "response": data.OPENAPI_NORMALIZED_RESPONSE,
     }
 
     test_web_search_expected_flow_inputs = {
