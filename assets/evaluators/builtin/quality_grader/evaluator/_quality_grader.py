@@ -24,8 +24,11 @@ try:
 except ImportError:
 
     class UserAgentSingleton:
+        """Fallback singleton for user agent when import fails."""
+
         @property
         def value(self) -> str:
+            """Return the user agent value."""
             return "None"
 
 
@@ -593,6 +596,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     def __init__(self, model_config, *, credential=None, **kwargs):
+        """Initialize a QualityGraderEvaluator instance."""
         current_dir = os.path.dirname(__file__)
         response_quality_prompty_path = os.path.join(current_dir, self._RESPONSE_QUALITY_PROMPTY)
 
@@ -667,6 +671,11 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     @override
     def __call__(self, *args, **kwargs):
+        """Evaluate quality for a query/response pair with optional context for groundedness or a conversation.
+
+        :return: The quality grader result.
+        :rtype: Dict[str, Union[str, float]]
+        """
         return super().__call__(*args, **kwargs)
 
     def _not_applicable_result(
