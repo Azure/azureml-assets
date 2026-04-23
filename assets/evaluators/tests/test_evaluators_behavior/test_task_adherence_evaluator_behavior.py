@@ -243,7 +243,7 @@ class TestTaskAdherenceMultiturnBehavior:
         assert result["task_adherence"] in (0.0, 1.0)
 
     def test_messages_uses_multi_turn_flow(self):
-        """messages input calls _multi_turn_flow and not _flow."""
+        """Messages input calls _multi_turn_flow and not _flow."""
         evaluator = _create_mocked_evaluator()
         evaluator(messages=VALID_MESSAGES)
 
@@ -259,7 +259,7 @@ class TestTaskAdherenceMultiturnBehavior:
         evaluator._multi_turn_flow.assert_not_called()
 
     def test_messages_without_tool_definitions(self):
-        """messages path does not inject tool_definitions when absent."""
+        """Messages path does not inject tool_definitions when absent."""
         evaluator = _create_mocked_evaluator()
         evaluator(messages=VALID_MESSAGES)
 
