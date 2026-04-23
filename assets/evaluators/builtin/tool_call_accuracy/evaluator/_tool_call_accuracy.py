@@ -787,9 +787,10 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     .. note::
 
-        To align with our support of a diverse set of models, an output key without the `gpt_` prefix has been added.
-        To maintain backwards compatibility, the old key with the `gpt_` prefix is still be present in the output;
-        however, it is recommended to use the new key moving forward as the old key will be deprecated in the future.
+        The output field "details" has been renamed to "tool_call_accuracy_properties" for clarity.
+
+        The `gpt_` prefix is deprecated. Use `_score` suffix instead.
+
     """
 
     _PROMPTY_FILE = "tool_call_accuracy.prompty"
