@@ -91,8 +91,11 @@ RUN pip install --no-cache-dir \
 # by fixing dependencies in the base packages
 RUN pip list && \
     pip install pyarrow==14.0.2 \
-                accelerate==1.12.0 \
-                'transformers[sentencepiece,torch]==4.53.0'
+                accelerate==1.12.0 
+
+# Override transformers to fix GHSA-69w3-r845-3855
+# Root cause: azureml-automl-dnn-nlp==1.62.0 (latest) pins transformers==4.53.0; cannot upgrade parent
+RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
 
 # Override transformers to fix GHSA-69w3-r845-3855
 # Root cause: azureml-automl-dnn-nlp==1.62.0 (latest) pins transformers==4.53.0; cannot upgrade parent
