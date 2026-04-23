@@ -554,10 +554,10 @@ class TestTaskCompletionEvaluationLevel:
         evaluator._flow.assert_not_called()
         assert "task_completion" in result
 
-    def test_forced_trace_with_query_response(self):
-        """Forced trace level works with query/response."""
+    def test_forced_turn_with_query_response(self):
+        """Forced turn level works with query/response."""
         evaluator = _create_mocked_evaluator_with_level(
-            evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TURN
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
@@ -579,10 +579,10 @@ class TestTaskCompletionEvaluationLevel:
         assert "Done! Your flight is booked. Confirmation sent." in merged_messages
         assert "task_completion" in result
 
-    def test_forced_trace_with_messages_converts(self):
-        """Forced trace level converts messages into query/response around the latest user turn."""
+    def test_forced_turn_with_messages_converts(self):
+        """Forced turn level converts messages into query/response around the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TURN
         )
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._flow.assert_called_once()
@@ -618,10 +618,10 @@ class TestTaskCompletionEvaluationLevel:
         with pytest.raises(EvaluationException):
             evaluator(query="", response="Here's your itinerary.")
 
-    def test_forced_trace_with_messages_without_response_raises_invalid_value(self):
-        """Forced trace level requires response messages after the latest user turn."""
+    def test_forced_turn_with_messages_without_response_raises_invalid_value(self):
+        """Forced turn level requires response messages after the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TURN
         )
         with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
             evaluator(
@@ -640,9 +640,9 @@ class TestTaskCompletionEvaluationLevel:
         evaluator._flow.assert_not_called()
         assert "task_completion" in result
 
-    def test_string_level_trace(self):
-        """String 'trace' is accepted as evaluation_level."""
-        evaluator = _create_mocked_evaluator_with_level(evaluation_level="trace")
+    def test_string_level_turn(self):
+        """String 'turn' is accepted as evaluation_level."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
