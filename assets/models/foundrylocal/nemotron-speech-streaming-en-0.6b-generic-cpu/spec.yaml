@@ -1,18 +1,18 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: nemotron-speech-streaming-en-0.6b-generic-cpu
-version: 1
+version: 2
 path: ./
 tags:
   foundryLocal: "test"
-  license: "apache-2.0"
-  licenseDescription: "This model is provided under the License Terms available at <https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b/blob/main/LICENSE>."
+  license: "mit"
+  licenseDescription: "This model is provided under the License Terms available at <https://github.com/microsoft/Foundry-Local/blob/main/licenses/nemotron-speech-streaming.md>."
   author: Microsoft
   inputModalities: "audio"
   outputModalities: "text"
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: nemotron-speech-streaming-en-0.6b
-  directoryPath: v1
+  directoryPath: v2
   promptTemplate: ""
   capabilities: ""
   supportsReasoning: ""
@@ -30,5 +30,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 730744832
-    vRamFootprintBytes: 730744832
+    fileSizeBytes: 730746286
+    vRamFootprintBytes: 730746286
