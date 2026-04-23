@@ -1090,24 +1090,48 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
+    def _build_result(
+        self,
+        score: Optional[Union[int, float]],
+        result: str,
+        reason: str,
+        details: Dict[str, Any],
+        properties: Dict[str, Any],
+        *,
+        threshold: Optional[Union[int, float]] = None,
+        prompty_output_dict: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Union[str, int, float, Dict[str, Any], None]]:
+        """Build a standardized task adherence result dictionary."""
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        resolved_threshold = threshold if threshold is not None else self._threshold
+        return {
+            self._result_key: score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_threshold": resolved_threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_details": details,
+            f"{self._result_key}_properties": properties,
+            f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
+            f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
+            f"{self._result_key}_total_tokens": p.get("total_token_count", 0),
+            f"{self._result_key}_finish_reason": p.get("finish_reason", ""),
+            f"{self._result_key}_model": p.get("model_id", ""),
+            f"{self._result_key}_sample_input": p.get("sample_input", ""),
+            f"{self._result_key}_sample_output": p.get("sample_output", ""),
+        }
+
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
         """Return a result indicating that the evaluation is not applicable."""
-        return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_details": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
-        }
+        return self._build_result(
+            score=threshold,
+            result="pass",
+            reason=f"Not applicable: {error_message}",
+            details={},
+            properties={},
+            threshold=threshold,
+        )
 
     def _should_use_conversation_level(self, eval_input: Dict[str, Any]) -> bool:
         """Determine whether to use conversation-level evaluation."""
@@ -1248,31 +1272,31 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Parse prompty output into the task adherence result shape."""
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
-        if isinstance(llm_output, dict):
-            flagged = llm_output.get("flagged", False)
-            reasoning = llm_output.get("reasoning", "")
-            # Convert flagged to numeric score for backward compatibility (1 = pass, 0 = fail)
-            score = 0.0 if flagged else 1.0
-            score_result = "fail" if flagged else "pass"
+        if not isinstance(llm_output, dict):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            )
 
-            return {
-                f"{self._result_key}": score,
-                f"{self._result_key}_result": score_result,
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_reason": reasoning,
-                f"{self._result_key}_details": llm_output.get("details", {}),
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
-            }
+        flagged = llm_output.get("flagged", False)
+        reasoning = llm_output.get("reasoning") if llm_output.get("reasoning") else llm_output.get("reason", "No reasoning provided.")
+        # Convert flagged to numeric score for backward compatibility (1 = pass, 0 = fail)
+        score = 0.0 if flagged else 1.0
+        score_result = "fail" if flagged else "pass"
+        details = llm_output.get("details", {})
+        if not isinstance(details, dict):
+            details = {}
+        properties = llm_output.get("properties", {})
+        if not isinstance(properties, dict):
+            properties = {}
 
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
-            blame=ErrorBlame.SYSTEM_ERROR,
-            category=ErrorCategory.FAILED_EXECUTION,
-            target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+        return self._build_result(
+            score=score,
+            result=score_result,
+            reason=reasoning,
+            details=details,
+            properties=properties,
+            prompty_output_dict=prompty_output_dict,
         )

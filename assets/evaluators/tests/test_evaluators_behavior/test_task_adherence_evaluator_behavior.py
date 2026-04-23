@@ -141,7 +141,7 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 
-    _additional_expected_field_suffixes = ["details"]
+    _additional_expected_field_suffixes = ["details", "properties"]
 
 
 def _create_mocked_evaluator():
@@ -208,6 +208,7 @@ class TestTaskAdherenceMultiturnBehavior:
         assert "task_adherence_result" in result
         assert "task_adherence_reason" in result
         assert "task_adherence_details" in result
+        assert "task_adherence_properties" in result
         assert "task_adherence_threshold" in result
         assert result["task_adherence"] in (0.0, 1.0)
 
