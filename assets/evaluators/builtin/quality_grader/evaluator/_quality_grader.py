@@ -773,7 +773,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # --- Stage 2: Groundedness (only if context is provided) ---
         stage2_parsed = None
-        if context and isinstance(context, str) and context.strip():
+        if context:
             stage2_input = {"question": query, "response": response, "context": context}
             stage2_output = await self._groundedness_flow(timeout=self._LLM_CALL_TIMEOUT, **stage2_input)
 

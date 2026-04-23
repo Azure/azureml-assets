@@ -2,13 +2,14 @@ type: "evaluator"
 name: "builtin.quality_grader"
 version: 1
 displayName: "Quality-Grader-Evaluator"
-description: "Evaluates overall response quality using a two-stage grading pipeline. Stage 1 assesses response quality (relevance, abstention, answer completeness). Stage 2 (if context provided) assesses groundedness and context coverage. Returns pass/fail with detailed failure reasons."
+description: "Assesses the quality of an AI assistant's response at the turn level, evaluating dimensions such as relevance, abstention, and answer completeness. When context is provided, it additionally evaluates groundedness and context coverage. Use this evaluator for chatbots, virtual assistants, and retrieval-augmented generation (RAG) systems where per-turn response quality is critical."
 evaluatorType: "builtin"
 evaluatorSubType: "code"
 categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
+supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
   properties:
