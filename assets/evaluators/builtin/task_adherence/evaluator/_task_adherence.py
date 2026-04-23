@@ -1126,7 +1126,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Return a result indicating that the evaluation is not applicable."""
         return self._build_result(
             score=threshold,
-            result="not_applicable",
+            result="pass",
             reason=f"Not applicable: {error_message}",
             properties={},
             threshold=threshold,

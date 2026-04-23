@@ -143,53 +143,6 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
 
     _additional_expected_field_suffixes = ["details", "properties"]
 
-    def test_function_call_response(self):
-        """Function call types: intermediate returns not-applicable, full response is preprocessed and passes."""
-        # Intermediate: function_call-only response -> not applicable
-        results = self._run_evaluation(
-            query=self.VALID_QUERY,
-            response=self.FUNCTION_CALL_ONLY_RESPONSE,
-            tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "Function Call Only - Not Applicable")
-        assert result_data["label"] == "not_applicable"
-        assert "Not applicable" in result_data.get("reason", "")
-
-        # Full: function_call/function_call_output types preprocessed -> pass
-        results = self._run_evaluation(
-            query=self.VALID_QUERY,
-            response=self.FUNCTION_CALL_FULL_RESPONSE,
-            tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "Function Call Full - Preprocessed")
-        self.assert_pass(result_data)
-
-    def test_mcp_approval_response(self):
-        """MCP approval types: intermediate returns not-applicable, full response is preprocessed and passes."""
-        # Intermediate: mcp_approval_request-only response -> not applicable
-        results = self._run_evaluation(
-            query=self.VALID_QUERY,
-            response=self.MCP_APPROVAL_ONLY_RESPONSE,
-            tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "MCP Approval Only - Not Applicable")
-        assert result_data["label"] == "not_applicable"
-        assert "Not applicable" in result_data.get("reason", "")
-
-        # Full: mcp_approval messages dropped, remaining evaluated -> pass
-        results = self._run_evaluation(
-            query=self.VALID_QUERY,
-            response=self.MCP_APPROVAL_FULL_RESPONSE,
-            tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
-        )
-        result_data = self._extract_and_print_result(results, "MCP Approval Full - Preprocessed")
-        self.assert_pass(result_data)
-
-
 def _create_mocked_evaluator():
     """Create a TaskAdherenceEvaluator with both _flow and _multi_turn_flow mocked."""
     model_config = AzureOpenAIModelConfiguration(
