@@ -256,13 +256,10 @@ class BaseEvaluatorRunner(ABC):
         """
         label_key = "label"
         score_key = "score"
-        if result_data[label_key] == "not_applicable":
-            assert result_data[label_key] == "not_applicable", \
-                f"Expected 'not_applicable' but got '{result_data[label_key]}'"
-            assert result_data[score_key] is None, \
-                f"Expected score to be None for not-applicable result but got '{result_data[score_key]}'"
-        else:
-            self._assert_pass_result(result_data)
+        assert result_data[label_key] == "pass", \
+            f"Expected 'pass' but got '{result_data[label_key]}'"
+        assert result_data[score_key] is None, \
+            f"Expected score to be None for not-applicable result but got '{result_data[score_key]}'"
         assert "Not applicable" in result_data.get("reason", ""), \
             f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
 
