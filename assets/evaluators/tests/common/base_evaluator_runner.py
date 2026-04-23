@@ -13,11 +13,7 @@ from unittest.mock import MagicMock
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._exceptions import EvaluationException
 
-from .evaluator_mock_config import (
-    EVALUATOR_CONFIGS,
-    get_flow_side_effect_for_evaluator,
-    create_quality_grader_flow_side_effect,
-)
+from .evaluator_mock_config import EVALUATOR_CONFIGS, get_flow_side_effect_for_evaluator
 
 
 class BaseEvaluatorRunner(ABC):
@@ -120,12 +116,6 @@ class BaseEvaluatorRunner(ABC):
             # Special handling for groundedness evaluator to disable flow reloading
             if hasattr(evaluator, "_ensure_query_prompty_loaded"):
                 evaluator._ensure_query_prompty_loaded = MagicMock()
-
-            # Special handling for quality grader evaluator to mock groundedness flow
-            if hasattr(evaluator, "_groundedness_flow"):
-                evaluator._groundedness_flow = MagicMock(
-                    side_effect=create_quality_grader_flow_side_effect("groundedness")
-                )
 
         try:
             results = evaluator(**call_kwargs)
