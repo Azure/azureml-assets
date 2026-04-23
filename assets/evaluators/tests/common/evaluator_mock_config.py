@@ -106,6 +106,21 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
             "result": score,
             "explanation": explanation,
             "reasoning": explanation,
+            "status": "completed",
+            "properties": {
+                "abstention": False,
+                "relevance": GRADERS_SUCCESS_SCORE,
+                "answerCompleteness": GRADERS_SUCCESS_SCORE,
+                "queryType": "factual",
+                "conversationIncomplete": False,
+                "judgeConfidence": "high",
+                "groundedness": GRADERS_SUCCESS_SCORE,
+                "contextCoverage": GRADERS_SUCCESS_SCORE,
+                "documentUtility": "high",
+                "missingContextParts": [],
+                "unsupportedClaims": [],
+                "explanation": {},
+            },
         }
     }
 

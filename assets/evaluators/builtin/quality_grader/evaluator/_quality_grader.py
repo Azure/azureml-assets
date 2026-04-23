@@ -722,11 +722,12 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self, error_message: str,
     ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the evaluation is not applicable."""
+        score = 1.0
         return {
-            self._result_key: None,
-            f"{self._result_key}_score": None,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_passed": None,
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_result": self._PASS_RESULT,
+            f"{self._result_key}_passed": True,
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_status": "skipped",
             f"{self._result_key}_threshold": self._threshold,
