@@ -110,6 +110,73 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
     }
 
 
+def get_quality_grader_response_quality_output(explanation: str = DEFAULT_EXPLANATION) -> Dict[str, Any]:
+    """
+    Generate mock output for quality grader's stage 1 (response quality) flow.
+
+    Returns output with properties matching the quality grader's expected format.
+
+    Args:
+        explanation: The explanation text
+
+    Returns:
+        Dictionary output matching quality grader stage 1 format
+    """
+    return {
+        "llm_output": {
+            "properties": {
+                "abstention": False,
+                "relevance": GRADERS_SUCCESS_SCORE,
+                "answerCompleteness": GRADERS_SUCCESS_SCORE,
+                "queryType": "factual",
+                "conversationIncomplete": False,
+                "judgeConfidence": GRADERS_SUCCESS_SCORE,
+                "explanation": {"text": explanation},
+            },
+            "reasoning": explanation,
+            "score": GRADERS_SUCCESS_SCORE,
+            "status": "pass",
+        },
+        "input_token_count": 100,
+        "output_token_count": 50,
+        "total_token_count": 150,
+        "model_id": "mock-model",
+    }
+
+
+def get_quality_grader_groundedness_output(explanation: str = DEFAULT_EXPLANATION) -> Dict[str, Any]:
+    """
+    Generate mock output for quality grader's stage 2 (groundedness) flow.
+
+    Returns output with properties matching the quality grader's expected format.
+
+    Args:
+        explanation: The explanation text
+
+    Returns:
+        Dictionary output matching quality grader stage 2 format
+    """
+    return {
+        "llm_output": {
+            "properties": {
+                "groundedness": GRADERS_SUCCESS_SCORE,
+                "contextCoverage": GRADERS_SUCCESS_SCORE,
+                "documentUtility": "high",
+                "missingContextParts": [],
+                "unsupportedClaims": [],
+                "explanation": {"text": explanation},
+            },
+            "reasoning": explanation,
+            "score": GRADERS_SUCCESS_SCORE,
+            "status": "pass",
+        },
+        "input_token_count": 100,
+        "output_token_count": 50,
+        "total_token_count": 150,
+        "model_id": "mock-model",
+    }
+
+
 def create_flow_side_effect(
     score: int, output_type: OutputType, explanation: str = DEFAULT_EXPLANATION
 ) -> Callable[[int], Awaitable[str | Dict[str, Any]]]:
@@ -136,6 +203,27 @@ def create_flow_side_effect(
     return flow_side_effect
 
 
+def create_quality_grader_flow_side_effect(
+    stage: str = "response_quality",
+) -> Callable[[int], Awaitable[Dict[str, Any]]]:
+    """
+    Create async side effect for quality grader flows.
+
+    Args:
+        stage: Which stage to mock - "response_quality" or "groundedness"
+
+    Returns:
+        Async function that can be used as a mock side effect
+    """
+
+    async def flow_side_effect(timeout, **kwargs):
+        if stage == "groundedness":
+            return get_quality_grader_groundedness_output()
+        return get_quality_grader_response_quality_output()
+
+    return flow_side_effect
+
+
 def get_flow_side_effect_for_evaluator(
     evaluator_name: str,
 ) -> Callable[[int], Awaitable[str | Dict[str, Any]]]:
@@ -155,6 +243,10 @@ def get_flow_side_effect_for_evaluator(
         raise ValueError(
             f"Evaluator '{evaluator_name}' not recognized. Available evaluators: {list(EVALUATOR_CONFIGS.keys())}"
         )
+
+    # Quality grader has a custom output format for stage 1
+    if evaluator_name == "quality_grader":
+        return create_quality_grader_flow_side_effect("response_quality")
 
     config = EVALUATOR_CONFIGS[evaluator_name]
     return create_flow_side_effect(config.score, config.output_type)
