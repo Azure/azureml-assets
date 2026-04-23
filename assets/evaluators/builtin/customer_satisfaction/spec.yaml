@@ -10,7 +10,7 @@ tags:
   provider: "Microsoft"
   preview: "true"
   is_continuous_scenario: "true"
-  supportedEvaluationLevels: ["conversation", "turn"]
+supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
   properties:
