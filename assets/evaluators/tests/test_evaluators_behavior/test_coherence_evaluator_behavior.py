@@ -261,7 +261,7 @@ class TestCoherenceMultiturnBehavior:
 
         assert result["coherence"] is None
         assert result["coherence_score"] is None
-        assert result["coherence_result"] == "skipped"
+        assert result["coherence_result"] == "not_applicable"
         assert result["coherence_status"] == "skipped"
         assert result["coherence_properties"] == {}
 
