@@ -129,13 +129,13 @@ class TestTaskCompletionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseTo
     _additional_expected_field_suffixes = ["details", "status"]
 
     def assert_not_applicable(self, result_data):
-        """Assert a not-applicable (skipped) result for TaskCompletionEvaluator.
+        """Assert a not-applicable (not_applicable) result for TaskCompletionEvaluator.
 
-        Task completion returns score=None and label='skipped' for intermediate/not-applicable
+        Task completion returns score=None and label='not_applicable' for intermediate/not-applicable
         responses, unlike the base class which expects a passing score.
         """
-        assert result_data["label"] == "skipped", \
-            f"Expected 'skipped' but got '{result_data['label']}'"
+        assert result_data["label"] == "not_applicable", \
+            f"Expected 'not_applicable' but got '{result_data['label']}'"
         assert result_data["score"] is None, \
             f"Expected score to be None for not-applicable result, got '{result_data['score']}'"
         assert "Not applicable" in result_data.get("reason", ""), \

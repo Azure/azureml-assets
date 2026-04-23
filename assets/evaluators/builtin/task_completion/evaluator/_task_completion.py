@@ -1233,6 +1233,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_reason": reason,
             f"{self._result_key}_status": status,
+            f"{self._result_key}_details": properties,
             f"{self._result_key}_properties": properties,
             f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
             f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
@@ -1253,7 +1254,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         return self._build_result(
             score=None,
-            result="skipped",
+            result="not_applicable",
             reason=f"Not applicable: {error_message}",
             status="skipped",
             properties={},
@@ -1378,7 +1379,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
             if status == "skipped":
                 score = None
-                result = "skipped"
+                result = "not_applicable"
             else:
                 score_value = llm_output.get("score", 0)
                 if isinstance(score_value, str):
