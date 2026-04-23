@@ -944,7 +944,9 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             reasoning_parts.append(stage2_parsed["reasoning"])
         llm_reasoning = " ".join(reasoning_parts)
 
-        reason = llm_reasoning if llm_reasoning else ("All quality checks passed." if passed else "; ".join(failure_reasons))
+        reason = llm_reasoning if llm_reasoning else (
+            "All quality checks passed." if passed else "; ".join(failure_reasons)
+        )
 
         properties = {}
         if stage1_parsed:
