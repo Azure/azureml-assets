@@ -1126,7 +1126,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """Return a result indicating that the evaluation is not applicable."""
         return self._build_result(
             score=threshold,
-            result="pass",
+            result="not_applicable",
             reason=f"Not applicable: {error_message}",
             details={},
             properties={},
@@ -1281,7 +1281,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
         flagged = llm_output.get("flagged", False)
-        reasoning = llm_output.get("reasoning") if llm_output.get("reasoning") else llm_output.get("reason", "No reasoning provided.")
+        reasoning = llm_output.get("reasoning", llm_output.get("reason", ""))
         # Convert flagged to numeric score for backward compatibility (1 = pass, 0 = fail)
         score = 0.0 if flagged else 1.0
         score_result = "fail" if flagged else "pass"
