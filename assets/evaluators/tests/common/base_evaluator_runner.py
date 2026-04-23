@@ -171,8 +171,6 @@ class BaseEvaluatorRunner(ABC):
 
         # Optional fields
         reason = results.get(f"{self.result_key}_reason")
-        if reason is None:
-            reason = results.get(f"{self._result_prefix}_reasoning")
         status = results.get(f"{self.result_key}_status")
         threshold = results.get(f"{self._result_prefix}_threshold")
         precision = results.get(f"{self._result_prefix}_precision")

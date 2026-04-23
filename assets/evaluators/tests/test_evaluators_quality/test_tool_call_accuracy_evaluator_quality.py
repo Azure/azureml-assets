@@ -21,11 +21,13 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
     def expected_result_fields(self) -> List[str]:
         """Get the expected result fields for tools evaluators."""
         return [
+            f"{self.result_key}",
             f"{self.result_key}_score",
-            f"{self.result_key}_reasoning",
+            f"{self.result_key}_result",
+            f"{self.result_key}_passed",
+            f"{self.result_key}_reason",
             f"{self.result_key}_status",
             f"{self.result_key}_threshold",
-            f"{self.result_key}_result",
             f"{self.result_key}_properties",
         ]
 
