@@ -85,8 +85,9 @@ def _create_multi_turn_mock_side_effect():
         return {
             "llm_output": {
                 "score": 5,
-                "explanation": "All responses are grounded.",
-                "details": {
+                "reason": "All responses are grounded in the provided conversation evidence.",
+                "status": "completed",
+                "properties": {
                     "grounding_sources": ["Tool result"],
                     "grounded_claims": "All claims supported.",
                     "ungrounded_claims": "None",
@@ -174,7 +175,8 @@ class TestGroundednessMultiturnBehavior:
         assert "groundedness" in result
         assert "groundedness_result" in result
         assert "groundedness_reason" in result
-        assert "groundedness_details" in result
+        assert "groundedness_properties" in result
+        assert "groundedness_status" in result
         assert "groundedness_threshold" in result
         assert 1 <= result["groundedness"] <= 5
 
@@ -192,6 +194,45 @@ class TestGroundednessMultiturnBehavior:
 
         assert "groundedness" in result
         assert 1 <= result["groundedness"] <= 5
+
+    def test_messages_parses_canonical_schema_skipped_output(self):
+        """Canonical skipped output is returned as not_applicable with no score."""
+        evaluator = _create_mocked_groundedness_evaluator()
+
+        async def canonical_skipped_output(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": None,
+                    "reason": "No agent responses to evaluate for groundedness.",
+                    "status": "skipped",
+                    "properties": None,
+                }
+            }
+
+        evaluator._multi_turn_flow = MagicMock(side_effect=canonical_skipped_output)
+        result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
+
+        assert result["groundedness"] is None
+        assert result["groundedness_result"] == "not_applicable"
+        assert result["groundedness_reason"] == "No agent responses to evaluate for groundedness."
+        assert result["groundedness_status"] == "skipped"
+        assert result["groundedness_properties"] == {}
+
+    def test_messages_invalid_output_returns_error_result(self):
+        """Invalid non-dict output returns structured error result instead of raising."""
+        evaluator = _create_mocked_groundedness_evaluator()
+
+        async def invalid_output(timeout, **kwargs):
+            return {"llm_output": "invalid"}
+
+        evaluator._multi_turn_flow = MagicMock(side_effect=invalid_output)
+        result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
+
+        assert result["groundedness"] is None
+        assert result["groundedness_result"] == "error"
+        assert result["groundedness_reason"] == "Evaluator returned invalid output."
+        assert result["groundedness_status"] == "error"
+        assert result["groundedness_properties"] == {}
 
     def test_messages_empty_list_raises_error(self):
         """Empty messages list raises validation error."""
@@ -434,9 +475,9 @@ class TestGroundednessEvaluationLevel:
         evaluator._multi_turn_flow.assert_called_once()
         assert "groundedness" in result
 
-    def test_string_level_trace(self):
-        """String 'trace' is accepted as evaluation_level."""
-        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="trace")
+    def test_string_level_turn(self):
+        """String 'turn' is accepted as evaluation_level."""
+        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="turn")
         evaluator(response="The sky is blue.", context="The sky is blue due to scattering.")
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()

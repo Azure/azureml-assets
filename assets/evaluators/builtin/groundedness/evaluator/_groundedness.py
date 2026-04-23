@@ -20,6 +20,7 @@ from azure.ai.evaluation._common.utils import (
     ErrorTarget,
     EvaluationException,
     ErrorCategory,
+    check_score_is_valid,
     construct_prompty_model_config,
     validate_model_config,
     _extract_text_from_content,
@@ -1000,6 +1001,8 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     _PROMPTY_FILE_WITH_QUERY = "groundedness_with_query.prompty"
     _MULTI_TURN_PROMPTY_FILE = "groundedness_multi_turn.prompty"
     _RESULT_KEY = "groundedness"
+    _MIN_GROUNDEDNESS_SCORE = 1
+    _MAX_GROUNDEDNESS_SCORE = 5
     _OPTIONAL_PARAMS = ["query", "messages", "tool_definitions"]
     _SUPPORTED_TOOLS = ["file_search"]
 
@@ -1238,23 +1241,45 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return bool(context.strip())
         return True
 
+    def _build_result(
+        self,
+        score: Optional[Union[int, float]],
+        result: str,
+        reason: str,
+        properties: Dict,
+        prompty_output_dict: Optional[Dict] = None,
+        status: Optional[str] = None,
+    ) -> Dict[str, Union[str, int, float, Dict, None]]:
+        """Build a standardized groundedness result dictionary."""
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        parsed_result: Dict[str, Union[str, int, float, Dict, None]] = {
+            self._result_key: score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_threshold": self.threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_properties": properties,
+            f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
+            f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
+            f"{self._result_key}_total_tokens": p.get("total_token_count", 0),
+            f"{self._result_key}_finish_reason": p.get("finish_reason", ""),
+            f"{self._result_key}_model": p.get("model_id", ""),
+            f"{self._result_key}_sample_input": p.get("sample_input", ""),
+            f"{self._result_key}_sample_output": p.get("sample_output", ""),
+        }
+        if status is not None:
+            parsed_result[f"{self._result_key}_status"] = status
+        return parsed_result
+
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
         """Return a result indicating that the evaluation is not applicable."""
-        return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
-        }
+        return self._build_result(
+            score=threshold,
+            result="not_applicable",
+            reason=f"Not applicable: {error_message}",
+            properties={},
+        )
 
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
         """Determine whether to use conversation-level evaluation.
@@ -1344,10 +1369,10 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
-        return self._parse_conversation_prompty_output(prompty_output_dict)
+        return self._parse_prompty_output(prompty_output_dict)
 
-    def _parse_conversation_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Union[float, str]]:
-        """Parse the multi-turn prompty output into a standardized result dictionary.
+    def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Any]:
+        """Parse the prompty output into a standardized result dictionary.
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -1356,37 +1381,54 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
+        score: Optional[Union[int, float]] = None
+        score_result = "error"
+        reason = "Evaluator returned invalid output."
+        status = "error"
+        properties: Dict[str, Any] = {}
+
         if isinstance(llm_output, dict):
-            score = llm_output.get("score", None)
-            if score is None or not isinstance(score, (int, float)):
-                raise EvaluationException(
-                    message="Evaluator returned invalid output: missing or invalid 'score' field.",
-                    blame=ErrorBlame.SYSTEM_ERROR,
-                    category=ErrorCategory.FAILED_EXECUTION,
-                    target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
-                )
-            score = int(score)
-            score_result = "pass" if score >= self.threshold else "fail"
-            reason = llm_output.get("reason", "")
-            return {
-                self._result_key: score,
-                f"{self._result_key}_result": score_result,
-                f"{self._result_key}_threshold": self.threshold,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_details": llm_output.get("properties", {}),
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
-            }
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
-            blame=ErrorBlame.SYSTEM_ERROR,
-            category=ErrorCategory.FAILED_EXECUTION,
-            target=ErrorTarget.GROUNDEDNESS_EVALUATOR,
+            status = str(llm_output.get("status", "completed")).strip().lower()
+            reason = llm_output.get("reason", llm_output.get("explanation", ""))
+            properties = llm_output.get("properties", llm_output.get("properties", {})) or {}
+            if not isinstance(properties, dict):
+                properties = {}
+
+            if status in ["skipped", "error"]:
+                score = None
+                score_result = "not_applicable"
+            else:
+                score_value = llm_output.get("score", self.threshold)
+                if isinstance(score_value, str):
+                    normalized_score = score_value.strip()
+                    score = float(normalized_score) if normalized_score.replace(".", "", 1).isdigit() else None
+                elif isinstance(score_value, (int, float)):
+                    score = float(score_value)
+                else:
+                    score = None
+
+                if score is None or not check_score_is_valid(
+                    score,
+                    GroundednessEvaluator._MIN_GROUNDEDNESS_SCORE,
+                    GroundednessEvaluator._MAX_GROUNDEDNESS_SCORE,
+                ):
+                    score_result = "error"
+                    reason = reason or (
+                        f"Invalid score value: {score}. Expected a number in range "
+                        f"[{GroundednessEvaluator._MIN_GROUNDEDNESS_SCORE}, "
+                        f"{GroundednessEvaluator._MAX_GROUNDEDNESS_SCORE}]."
+                    )
+                    status = "error"
+                else:
+                    score_result = "pass" if score >= self.threshold else "fail"
+
+        return self._build_result(
+            score=score,
+            result=score_result,
+            reason=reason,
+            properties=properties,
+            status=status,
+            prompty_output_dict=prompty_output_dict,
         )
 
     async def _real_call(self, **kwargs):
@@ -1424,20 +1466,12 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return await super()._real_call(**kwargs)
         except EvaluationException as ex:
             if ex.category == ErrorCategory.NOT_APPLICABLE:
-                return {
-                    self._result_key: self.threshold,
-                    f"{self._result_key}_result": "pass",
-                    f"{self._result_key}_threshold": self.threshold,
-                    f"{self._result_key}_reason": f"Not applicable: {ex.message}",
-                    f"{self._result_key}_details": {},
-                    f"{self._result_key}_prompt_tokens": 0,
-                    f"{self._result_key}_completion_tokens": 0,
-                    f"{self._result_key}_total_tokens": 0,
-                    f"{self._result_key}_finish_reason": "",
-                    f"{self._result_key}_model": "",
-                    f"{self._result_key}_sample_input": "",
-                    f"{self._result_key}_sample_output": "",
-                }
+                return self._build_result(
+                    score=self.threshold,
+                    result="pass",
+                    reason=f"Not applicable: {ex.message}",
+                    properties={},
+                )
             else:
                 raise ex
 
