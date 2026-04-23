@@ -2734,9 +2734,6 @@ LOCAL_CALLS_GROUNDEDNESS_EXPECTED_FLOW_RESPONSE = [
                 "arguments": {
                     "sign": "Aquarius",
                 },
-                "tool_result": {
-                    "horoscope": "Aquarius: Next Tuesday you will befriend a baby otter.",
-                },
             },
         ],
     },
