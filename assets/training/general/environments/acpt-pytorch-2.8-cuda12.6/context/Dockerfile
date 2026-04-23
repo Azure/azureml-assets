@@ -1,13 +1,13 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.6-ubuntu24.04:{{latest-image-tag}}
 
-# Install pip dependencies
-COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
-
-# Inference requirements
+# OS updates + openssh (DeepSpeed multi-node launcher requires passwordless ssh)
+# + inference-server scaffolding. This curated env is dual-use: its
+# requirements.txt installs azureml-inference-server-http and inference-schema,
+# so the nginx / runit / rsyslog / port layer below is part of the image's
+# contract for online-endpoint deployments.
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
 RUN apt-get update && \
-    apt-get upgrade -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
         libcurl4 \
         liblttng-ust1 \
@@ -17,8 +17,11 @@ RUN apt-get update && \
         psmisc \
         rsyslog \
         runit \
-        unzip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+        unzip \
+        openssh-server \
+        openssh-client && \
+    apt-get autoremove -y && apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*.deb && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
@@ -27,18 +30,35 @@ ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
-# support Deepspeed launcher requirement of passwordless ssh login
-RUN apt-get update
-RUN apt-get install -y openssh-server openssh-client
+# Upgrade pip toolchain before any package install so resolver sees patched versions
+RUN pip install --no-cache-dir --upgrade \
+        'pip>=26.0' \
+        'setuptools>=82.0.1' \
+        'wheel>=0.46.2'
 
+# PyTorch 2.8 stack pinned to CUDA 12.6 wheels (base image ships CUDA 12.6.3)
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu126 \
+        'torch==2.8.0' \
+        'torchvision==0.23.0' \
+        'torchaudio==2.8.0'
 
-# Fix security vulnerabilities
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1'
-# vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0'
-# pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -y -n ptca pip>=26.0.1
-RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
+# DeepSpeed is required by pytorch2_8_sample_test.py (--deepspeed ds_config.json)
+RUN pip install --no-cache-dir 'deepspeed>=0.15'
+
+# AzureML integration + training toolchain. Security floors that upstream deps
+# accept naturally (urllib3, pillow, aiohttp, filelock, requests) live in
+# requirements.txt so pip resolves them in one pass.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Force-upgrade only packages whose parent pins cap below the patched version:
+#   - cryptography: azureml-mlflow~=1.62 caps <46
+#   - protobuf:     azureml-mlflow / azureml-automl transitively cap <5
+#   - PyJWT:        transitively capped below 2.12 by some azureml deps
+RUN pip install --no-cache-dir --upgrade \
+        'cryptography>=46.0.5' \
+        'protobuf>=6.33.5' \
+        'PyJWT>=2.12.0'
+
+# Remove conda + pip caches to avoid opt/conda/pkgs/ scanner false-positives
+RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /root/.cache/pip
