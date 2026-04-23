@@ -538,6 +538,46 @@ def _preprocess_messages(messages):
     return messages
 
 
+def _coerce_bool(value) -> Optional[bool]:
+    """Coerce an LLM output value to bool or None.
+
+    Handles Python booleans, and string variants like 'true', 'false', 'null'.
+    """
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return None
+    if isinstance(value, str):
+        lower = value.strip().lower()
+        if lower == "true":
+            return True
+        if lower == "false":
+            return False
+    return None
+
+
+def _coerce_number(value) -> Optional[float]:
+    """Coerce an LLM output value to a number or None.
+
+    Handles Python ints/floats, and string variants like '3', '2.5', 'null'.
+    """
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return value
+    if value is None:
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.lower() in ("null", "none", ""):
+            return None
+        try:
+            return float(stripped)
+        except ValueError:
+            return None
+    return None
+
+
 # Create extended ErrorTarget enum with the new member
 def _create_extended_error_target():
     """Create an extended ErrorTarget enum that includes QUALITY_GRADER_EVALUATOR."""
@@ -680,18 +720,17 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     def _not_applicable_result(
         self, error_message: str,
-    ) -> Dict[str, Union[str, float, Dict]]:
+    ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the evaluation is not applicable."""
         return {
-            self._result_key: 1.0,
-            f"{self._result_key}_result": self._PASS_RESULT,
-            f"{self._result_key}_threshold": self._threshold,
+            self._result_key: None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_passed": None,
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_details": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_model": "",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": None,
         }
 
     @override
@@ -746,12 +785,18 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         total_tokens += stage1_output.get("total_token_count", 0) if stage1_output else 0
         model_id = stage1_output.get("model_id", "") if stage1_output else ""
 
+        # If stage 1 was skipped (conversationIncomplete = true), return not applicable
+        if stage1_parsed.get("status") == "skipped":
+            return self._not_applicable_result(
+                "Conversation is incomplete or consists only of greetings/closings with no task to evaluate.",
+            )
+
         # Check stage 1 conditions
         failure_reasons = []
         stage1_props = stage1_parsed.get("properties", {})
-        abstention = stage1_props.get("abstention")
-        relevance = stage1_props.get("relevance")
-        answer_completeness = stage1_props.get("answerCompleteness")
+        abstention = _coerce_bool(stage1_props.get("abstention"))
+        relevance = _coerce_number(stage1_props.get("relevance"))
+        answer_completeness = _coerce_number(stage1_props.get("answerCompleteness"))
 
         if abstention is True:
             failure_reasons.append("abstention is true (expected false)")
@@ -759,13 +804,13 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             failure_reasons.append(
                 f"relevance is {relevance} (must be > {_QUALITY_RELEVANCE_THRESHOLD})"
             )
-        elif relevance is None or relevance == "null":
+        elif relevance is None:
             failure_reasons.append(f"relevance is null (must be > {_QUALITY_RELEVANCE_THRESHOLD})")
         if isinstance(answer_completeness, (int, float)) and answer_completeness <= _ANSWER_COMPLETENESS_THRESHOLD:
             failure_reasons.append(
                 f"answerCompleteness is {answer_completeness} (must be > {_ANSWER_COMPLETENESS_THRESHOLD})"
             )
-        elif answer_completeness is None or answer_completeness == "null":
+        elif answer_completeness is None:
             failure_reasons.append(f"answerCompleteness is null (must be > {_ANSWER_COMPLETENESS_THRESHOLD})")
 
         if failure_reasons:
@@ -774,6 +819,8 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 failure_reasons=failure_reasons,
                 stage1_parsed=stage1_parsed,
                 stage2_parsed=None,
+                stage1_output=stage1_output,
+                stage2_output=None,
                 prompt_tokens=total_prompt_tokens,
                 completion_tokens=total_completion_tokens,
                 total_tokens=total_tokens,
@@ -782,6 +829,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # --- Stage 2: Groundedness (only if context is provided) ---
         stage2_parsed = None
+        stage2_output = None
         if context:
             stage2_input = {"question": query, "response": response, "context": context}
             stage2_output = await self._groundedness_flow(timeout=self._LLM_CALL_TIMEOUT, **stage2_input)
@@ -792,21 +840,21 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             total_tokens += stage2_output.get("total_token_count", 0) if stage2_output else 0
 
             stage2_props = stage2_parsed.get("properties", {})
-            groundedness = stage2_props.get("groundedness")
-            context_coverage = stage2_props.get("contextCoverage")
+            groundedness = _coerce_number(stage2_props.get("groundedness"))
+            context_coverage = _coerce_number(stage2_props.get("contextCoverage"))
 
             if isinstance(groundedness, (int, float)) and groundedness <= _GROUNDEDNESS_THRESHOLD:
                 failure_reasons.append(
                     f"groundedness is {groundedness} (must be > {_GROUNDEDNESS_THRESHOLD})"
                 )
-            elif groundedness is None or groundedness == "null":
+            elif groundedness is None:
                 failure_reasons.append(f"groundedness is null (must be > {_GROUNDEDNESS_THRESHOLD})")
 
             if isinstance(context_coverage, (int, float)) and context_coverage <= _CONTEXT_COVERAGE_THRESHOLD:
                 failure_reasons.append(
                     f"contextCoverage is {context_coverage} (must exceed {_CONTEXT_COVERAGE_THRESHOLD})"
                 )
-            elif context_coverage is None or context_coverage == "null":
+            elif context_coverage is None:
                 failure_reasons.append(f"contextCoverage is null (must exceed {_CONTEXT_COVERAGE_THRESHOLD})")
 
             if failure_reasons:
@@ -815,6 +863,8 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     failure_reasons=failure_reasons,
                     stage1_parsed=stage1_parsed,
                     stage2_parsed=stage2_parsed,
+                    stage1_output=stage1_output,
+                    stage2_output=stage2_output,
                     prompt_tokens=total_prompt_tokens,
                     completion_tokens=total_completion_tokens,
                     total_tokens=total_tokens,
@@ -827,6 +877,8 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             failure_reasons=[],
             stage1_parsed=stage1_parsed,
             stage2_parsed=stage2_parsed,
+            stage1_output=stage1_output,
+            stage2_output=stage2_output,
             prompt_tokens=total_prompt_tokens,
             completion_tokens=total_completion_tokens,
             total_tokens=total_tokens,
@@ -860,6 +912,8 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         failure_reasons: List[str],
         stage1_parsed: Optional[Dict],
         stage2_parsed: Optional[Dict],
+        stage1_output: Optional[Dict],
+        stage2_output: Optional[Dict],
         prompt_tokens: int,
         completion_tokens: int,
         total_tokens: int,
@@ -871,6 +925,8 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :param failure_reasons: List of reasons for failure (empty if passed).
         :param stage1_parsed: Parsed output from stage 1 (response quality).
         :param stage2_parsed: Parsed output from stage 2 (groundedness), or None if not run.
+        :param stage1_output: Raw prompty output from stage 1.
+        :param stage2_output: Raw prompty output from stage 2, or None if not run.
         :param prompt_tokens: Total prompt tokens used.
         :param completion_tokens: Total completion tokens used.
         :param total_tokens: Total tokens used.
@@ -879,42 +935,67 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         score = 1.0 if passed else 0.0
         result_label = self._PASS_RESULT if passed else self._FAIL_RESULT
-        reason = "All quality checks passed." if passed else "; ".join(failure_reasons)
 
-        details = {}
+        # Build reason from LLM reasoning fields, concatenating both stages when available.
+        reasoning_parts = []
+        if stage1_parsed and stage1_parsed.get("reasoning"):
+            reasoning_parts.append(stage1_parsed["reasoning"])
+        if stage2_parsed and stage2_parsed.get("reasoning"):
+            reasoning_parts.append(stage2_parsed["reasoning"])
+        llm_reasoning = " ".join(reasoning_parts)
+
+        reason = llm_reasoning if llm_reasoning else ("All quality checks passed." if passed else "; ".join(failure_reasons))
+
+        properties = {}
         if stage1_parsed:
             stage1_props = stage1_parsed.get("properties", {})
-            details["abstention"] = stage1_props.get("abstention")
-            details["relevance"] = stage1_props.get("relevance")
-            details["answerCompleteness"] = stage1_props.get("answerCompleteness")
-            details["queryType"] = stage1_props.get("queryType")
-            details["conversationIncomplete"] = stage1_props.get("conversationIncomplete")
-            details["judgeConfidence"] = stage1_props.get("judgeConfidence")
-            details["stage1_explanation"] = stage1_props.get("explanation", {})
-            details["stage1_reasoning"] = stage1_parsed.get("reasoning", "")
-            details["stage1_score"] = stage1_parsed.get("score")
-            details["stage1_status"] = stage1_parsed.get("status", "")
+            properties["abstention"] = stage1_props.get("abstention")
+            properties["relevance"] = stage1_props.get("relevance")
+            properties["answerCompleteness"] = stage1_props.get("answerCompleteness")
+            properties["queryType"] = stage1_props.get("queryType")
+            properties["conversationIncomplete"] = stage1_props.get("conversationIncomplete")
+            properties["judgeConfidence"] = stage1_props.get("judgeConfidence")
+            properties["stage1_explanation"] = stage1_props.get("explanation", {})
+            properties["stage1_reasoning"] = stage1_parsed.get("reasoning", "")
+            properties["stage1_score"] = stage1_parsed.get("score")
+            properties["stage1_status"] = stage1_parsed.get("status", "")
 
         if stage2_parsed:
             stage2_props = stage2_parsed.get("properties", {})
-            details["groundedness"] = stage2_props.get("groundedness")
-            details["contextCoverage"] = stage2_props.get("contextCoverage")
-            details["documentUtility"] = stage2_props.get("documentUtility")
-            details["missingContextParts"] = stage2_props.get("missingContextParts", [])
-            details["unsupportedClaims"] = stage2_props.get("unsupportedClaims", [])
-            details["stage2_explanation"] = stage2_props.get("explanation", {})
-            details["stage2_reasoning"] = stage2_parsed.get("reasoning", "")
-            details["stage2_score"] = stage2_parsed.get("score")
-            details["stage2_status"] = stage2_parsed.get("status", "")
+            properties["groundedness"] = stage2_props.get("groundedness")
+            properties["contextCoverage"] = stage2_props.get("contextCoverage")
+            properties["documentUtility"] = stage2_props.get("documentUtility")
+            properties["missingContextParts"] = stage2_props.get("missingContextParts", [])
+            properties["unsupportedClaims"] = stage2_props.get("unsupportedClaims", [])
+            properties["stage2_explanation"] = stage2_props.get("explanation", {})
+            properties["stage2_reasoning"] = stage2_parsed.get("reasoning", "")
+            properties["stage2_score"] = stage2_parsed.get("score")
+            properties["stage2_status"] = stage2_parsed.get("status", "")
+
+        # Build per-stage diagnostic lists; only include entries for stages that ran.
+        finish_reasons = []
+        sample_inputs = []
+        sample_outputs = []
+        for raw in [stage1_output, stage2_output]:
+            if raw:
+                finish_reasons.append(raw.get("finish_reason", ""))
+                sample_inputs.append(raw.get("sample_input", ""))
+                sample_outputs.append(raw.get("sample_output", ""))
 
         return {
             self._result_key: score,
+            f"{self._result_key}_score": score,
             f"{self._result_key}_result": result_label,
+            f"{self._result_key}_passed": passed,
             f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": "completed",
             f"{self._result_key}_threshold": self._threshold,
-            f"{self._result_key}_details": details,
+            f"{self._result_key}_properties": properties,
             f"{self._result_key}_prompt_tokens": prompt_tokens,
             f"{self._result_key}_completion_tokens": completion_tokens,
             f"{self._result_key}_total_tokens": total_tokens,
+            f"{self._result_key}_finish_reason": finish_reasons,
             f"{self._result_key}_model": model_id,
+            f"{self._result_key}_sample_input": sample_inputs,
+            f"{self._result_key}_sample_output": sample_outputs,
         }
