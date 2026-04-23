@@ -18,7 +18,6 @@ RUN pip install --no-cache-dir \
 
 # onnx and onnxruntime-training installation
 RUN pip uninstall -y onnxruntime
-RUN pip install onnx==1.21.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
 
