@@ -143,6 +143,7 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
 
     _additional_expected_field_suffixes = ["details", "properties"]
 
+
 def _create_mocked_evaluator():
     """Create a TaskAdherenceEvaluator with both _flow and _multi_turn_flow mocked."""
     model_config = AzureOpenAIModelConfiguration(
