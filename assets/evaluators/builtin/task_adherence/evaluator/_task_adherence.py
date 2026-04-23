@@ -1095,7 +1095,6 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         score: Optional[Union[int, float]],
         result: str,
         reason: str,
-        details: Dict[str, Any],
         properties: Dict[str, Any],
         *,
         threshold: Optional[Union[int, float]] = None,
@@ -1110,7 +1109,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_result": result,
             f"{self._result_key}_threshold": resolved_threshold,
             f"{self._result_key}_reason": reason,
-            f"{self._result_key}_details": details,
+            f"{self._result_key}_details": properties,
             f"{self._result_key}_properties": properties,
             f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
             f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
@@ -1129,7 +1128,6 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             score=threshold,
             result="not_applicable",
             reason=f"Not applicable: {error_message}",
-            details={},
             properties={},
             threshold=threshold,
         )
@@ -1286,18 +1284,12 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Convert flagged to numeric score for backward compatibility (1 = pass, 0 = fail)
         score = 0.0 if flagged else 1.0
         score_result = "fail" if flagged else "pass"
-        details = llm_output.get("details", {})
-        if not isinstance(details, dict):
-            details = {}
-        properties = llm_output.get("properties", {})
-        if not isinstance(properties, dict):
-            properties = {}
+        properties = llm_output.get("details", llm_output.get("properties", {}))
 
         return self._build_result(
             score=score,
             result=score_result,
             reason=reasoning,
-            details=details,
             properties=properties,
             prompty_output_dict=prompty_output_dict,
         )
