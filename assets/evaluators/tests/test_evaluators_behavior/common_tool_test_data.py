@@ -2044,14 +2044,95 @@ MCP_TCS_EXPECTED_FLOW_TOOL_DEFINITIONS = (
 )
 
 # ----- TCS expected flow response -----
-# For LOCAL_CALLS, FILE_SEARCH, IMAGE_GEN, MEMORY_SEARCH: _preprocess_messages is a no-op.
-LOCAL_CALLS_TCS_EXPECTED_FLOW_RESPONSE = LOCAL_CALLS_RESPONSE
+# _preprocess_messages normalizes function_call/function_call_output types to tool_call/tool_result.
+LOCAL_CALLS_TCS_EXPECTED_FLOW_RESPONSE = [
+    {
+        "run_id": "",
+        "role": "assistant",
+        "content": [
+            {
+                "type": "tool_call",
+                "tool_call_id": "call_ASUI6ResxjPRW7JDubafRBQX",
+                "name": "get_horoscope",
+                "arguments": {"sign": "Aquarius"},
+            }
+        ],
+    },
+    {
+        "run_id": "",
+        "tool_call_id": "call_ASUI6ResxjPRW7JDubafRBQX",
+        "role": "tool",
+        "content": [
+            {
+                "type": "tool_result",
+                "tool_result": {"horoscope": "Aquarius: Next Tuesday you will befriend a baby otter."},
+            }
+        ],
+    },
+    {
+        "role": "assistant",
+        "content": [
+            {
+                "annotations": [],
+                "text": "Your horoscope for Aquarius is: Next Tuesday you will befriend a baby otter.",
+                "type": "output_text",
+                "logprobs": [],
+            }
+        ],
+    },
+]
 FILE_SEARCH_TCS_EXPECTED_FLOW_RESPONSE = FILE_SEARCH_RESPONSE
 IMAGE_GEN_TCS_EXPECTED_FLOW_RESPONSE = IMAGE_GEN_RESPONSE
 MEMORY_SEARCH_TCS_EXPECTED_FLOW_RESPONSE = MEMORY_SEARCH_RESPONSE
 # For KB_MCP and MCP: _preprocess_messages drops the first 2 MCP approval messages.
 KB_MCP_TCS_EXPECTED_FLOW_RESPONSE = KB_MCP_RESPONSE[2:]
 MCP_TCS_EXPECTED_FLOW_RESPONSE = MCP_RESPONSE[2:]
+
+# Normalized OPENAPI_RESPONSE: openapi_call -> tool_call, openapi_call_output -> tool_result
+OPENAPI_NORMALIZED_RESPONSE = [
+    {
+        "run_id": "",
+        "role": "assistant",
+        "content": [
+            {
+                "type": "tool_call",
+                "tool_call_id": "call_cfb55a91a58c44ea9217b34174aad2ab",
+                "name": "weather_GetCurrentWeather",
+                "arguments": {"location": "Cairo", "format": "j1"},
+            }
+        ],
+    },
+    {
+        "run_id": "",
+        "tool_call_id": "call_cfb55a91a58c44ea9217b34174aad2ab",
+        "role": "tool",
+        "content": [{"type": "tool_result", "tool_result": ""}],
+    },
+    {
+        "role": "assistant",
+        "content": [
+            {
+                "annotations": [],
+                "text": (
+                    "**Current weather in Cairo:**\n\n- **Temperature:** 26\u00b0C (feels like 25\u00b0C)\n"
+                    "- **Condition:** Sand (likely some dusty or sandy winds)\n"
+                    "- **Humidity:** 28%\n"
+                    "- **Cloud Cover:** 0% (clear skies)\n"
+                    "- **Wind:** SW at 23 km/h\n"
+                    "- **Visibility:** Moderate (4 km)\n"
+                    "- **No precipitation**\n"
+                    "- **UV Index:** 2\n\n"
+                    "**Summary:** Cairo is experiencing warm, dry, and sunny weather, but there is "
+                    "sand or dust in the air which may reduce visibility. Skies are clear and "
+                    "it\u2019s breezy. Make sure to protect yourself from the dust if you\u2019re "
+                    "heading outside!"
+                ),
+                "type": "output_text",
+                "logprobs": [],
+            }
+        ],
+    },
+]
 
 
 # =============================================================================
