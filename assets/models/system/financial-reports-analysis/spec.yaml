@@ -7,20 +7,18 @@ properties:
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: en
-  SharedComputeCapacityEnabled: true
-
+  SharedComputeCapacityEnabled: "True"
 tags:
   author: Microsoft
   Preview: ""
   Featured: ""
   languages: "en"
-  keywords: ""
   inputModalities: "text"
   outputModalities: "text"
   industry: financial-services
   inference_supported_envs:
     - vllm
-  license: mit
+  license: MIT
   task: chat-completion
   hiddenlayerscanned: ""
   SharedComputeCapacityEnabled: ""

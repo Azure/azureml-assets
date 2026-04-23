@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: sshleifer-distilbart-cnn-12-6
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: a4f8f3ea906ed274767e9906dbaede7531d660ff
   evaluation-min-sku-spec: 4|0|28|56
   inference-min-sku-spec: 2|0|8|28

@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: facebook-sam-vit-base
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: b5fc59950038394bae73f549a55a9b46bc6f3d96
   inference-min-sku-spec: 4|0|32|64
   inference-recommended-sku: Standard_DS5_v2, Standard_D8a_v4, Standard_D8as_v4,
