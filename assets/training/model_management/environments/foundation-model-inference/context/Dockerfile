@@ -35,17 +35,11 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 WORKDIR /
 
 # torch installation
-# --- Install PyTorch 2.8.0 FIRST with CUDA 12.8 support (compatible with vLLM 0.13.0) ---
 RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
     torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
     
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.54 --no-cache-dir
-
-# Patch Ray bundled vulnerabilities:
-RUN rm -f $(python -c "import ray;print(ray.__path__[0])")/jars/ray_dist.jar && \
-    rm -rf $(python -c "import ray;print(ray.__path__[0])")/_private/runtime_env/agent/thirdparty_files/*aiohttp* && \
-    pip install --no-cache-dir --force-reinstall aiohttp==3.13.4
+RUN pip install llm-optimized-inference==0.2.55 --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip && \
