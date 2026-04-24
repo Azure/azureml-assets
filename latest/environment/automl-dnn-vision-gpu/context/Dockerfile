@@ -84,32 +84,40 @@ RUN pip install --no-cache-dir \
 # Security: fix torch remote code execution (CVE-2025-32434)
 RUN pip install --upgrade torch==2.8.0 torchvision==0.23.0
 # Security: fix urllib3 (CVE-2026-37152) — transitive dep of azureml SDK
-RUN pip install --upgrade urllib3>=2.6.3
+RUN pip install --upgrade 'urllib3>=2.6.3'
+# Security: fix onnx (multiple CVEs) — transitive dep of azureml-automl-runtime via onnxruntime; parent pinned, cannot upgrade
+RUN pip install --upgrade 'onnx>=1.21.0'
 
 # Security: fix base conda env (python 3.13) — aiohttp (CVE-2026-37899), wheel (CVE-2026-24049),
 # cryptography (CVE-2026-41727), PyJWT (CVE-2026-32597), urllib3, filelock, pillow, bokeh
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade requests 'urllib3>=2.6.3' 'aiohttp>=3.13.3' 'wheel>=0.46.2' \
-    'setuptools>=82.0.1' 'cryptography>=46.0.5' 'PyJWT>=2.12.0' 'pip>=26.0' \
-    'filelock>=3.20.3' 'pillow>=12.1.1' \
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.6.3' 'aiohttp>=3.13.4' 'wheel>=0.46.2' \
+    'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' 'pip>=26.0' \
+    'filelock>=3.20.3' 'pillow>=12.2.0' 'onnx>=1.21.0' \
     'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 # Security: fix ptca conda env — torch (CVE-2025-32434), protobuf (CVE-2026-40186),
 # wheel/setuptools, urllib3, filelock, pillow, PyJWT, bokeh overrides for conda env
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0 
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.6.3' 'filelock>=3.20.3' \
     'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
-    'PyJWT>=2.12.0' 'pillow>=12.1.1' \
+    'PyJWT>=2.12.0' 'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' \
+    'aiohttp>=3.13.4' 'cryptography>=46.0.7' 'pytest>=9.0.3' \
     'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 
-# Patch pillow vulnerability (CVE-2026-45483) across all three conda environments
-RUN pip install --upgrade pillow==12.1.1
-RUN /opt/conda/bin/pip install --upgrade pillow==12.1.1 
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade pillow==12.1.1 
+# Patch pillow vulnerability (GHSA-whj4-6x5x-4v2j) across all three conda environments
+RUN pip install --upgrade 'pillow>=12.2.0'
+RUN /opt/conda/bin/pip install --upgrade 'pillow>=12.2.0'
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow>=12.2.0'
 
 # Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu)
 # aiohttp (CVE-2026-37899), bokeh (GHSA-793v-589g-574v), distributed (CVE-2026-23528),
 # protobuf (CVE-2026-40186), cryptography, filelock, wheel, setuptools, PyJWT, urllib3, pillow
-RUN pip install --upgrade 'aiohttp>=3.13.3' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.0' 'cryptography>=46.0.5' \
-    'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.1.1' \
+# onnx: transitive dep of azureml-automl-runtime (via onnxruntime); parent uses template version, cannot upgrade parent
+# requests: transitive dep of azure SDK packages; parent uses template version, cannot upgrade parent
+# aiohttp: transitive dep of azure SDK; parent uses template version, cannot upgrade parent
+# pytest: dev dep in ptca base image; no parent to upgrade
+RUN pip install --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.0' 'cryptography>=46.0.7' \
+    'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.2.0' \
+    'onnx>=1.21.0' 'requests>=2.33.0' \
     'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
 # Remove stale vendored metadata that scanners pick up
 RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \

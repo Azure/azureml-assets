@@ -5,7 +5,7 @@ RUN conda install -n base -c conda-forge pip=26.0 -y
 # These are from base image adding till we get new base image tag
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
 # aiohttp 3.12.14 (8 CVEs) and urllib3 2.5.0 (3 CVEs) are also in base env from base image
-RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.3' 'urllib3>=2.6.3'
+RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'urllib3>=2.6.3' 'requests>=2.33.0'
 
 
 # Upgrade ptca environment conda packages
@@ -47,7 +47,7 @@ RUN apt-get install -y openssh-server openssh-client
 
 # Fix Vulnerability 
 # TODO: latest version of azureml-mlflow ~ 1.62.0 depends on cryptography<46.0.0
-RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
+RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.7'
 # CVE-2026-23949 (jaraco.context) & CVE-2026-24049 (wheel) - upgrade setuptools in ptca and base envs
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN pip install --force-reinstall --no-deps 'setuptools>=82.0.1'

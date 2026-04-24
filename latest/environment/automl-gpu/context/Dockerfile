@@ -47,9 +47,18 @@ RUN pip install cryptography>=46.0.5
 # fix until the base packages are updated with the new cryptography version. 
 # distributed is transitively pinned at 2023.2.0 by azureml-train-automl-runtime, which depends on dask==2023.2.0 
 # that in turn pulls in the matching distributed version, so it cannot be upgraded independently without updating azureml-train-automl-runtime itself.
+#
+# onnx>=1.21.0 — GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
+#                GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
+#   Parent packages cap onnx<=1.17.0; upgrading the parent is not possible because
+#   both azureml-automl-runtime==1.62.0 and azureml-train-automl-runtime==1.62.0
+#   (the latest releases) still enforce onnx<=1.17.0,>=1.16.1.
+#   Override is required to remediate the vulnerability.
+#   Chain: azureml-automl-runtime / azureml-train-automl-runtime -> onnx<=1.17.0
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --upgrade --no-cache-dir \
     'cryptography>=46.0.5' 'setuptools>=79.0.0' 'distributed>=2026.1.0' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'bokeh>=3.8.2' \
+    'onnx>=1.21.0'
 
 # Clean conda pkgs cache to remove stale vendored copies
 RUN rm -rf /opt/miniconda/pkgs/

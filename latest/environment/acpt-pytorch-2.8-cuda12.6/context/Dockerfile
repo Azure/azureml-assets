@@ -35,10 +35,12 @@ RUN apt-get install -y openssh-server openssh-client
 # Fix security vulnerabilities
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1'
+# pytest 7.4.3 (GHSA-6w46-j5rx-g56g) is installed in ptca env from ACPT base image; overriding since base image hasn't been patched yet
+RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'pytest>=9.0.3'
 # vulnerability in base conda env
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0'
+# aiohttp 3.13.3 (GHSA-63hf-3vf5-4wqf et al.) is in base conda env; upgrading to >=3.13.4 for multiple CVE fixes
+RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -y -n ptca pip>=26.0.1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
