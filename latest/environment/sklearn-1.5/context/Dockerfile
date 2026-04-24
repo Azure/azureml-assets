@@ -29,7 +29,7 @@ RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.0 'pandas~=1.5.3' 'sc
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
-    scikit-learn-intelex==2025.11.0 \
+    scikit-learn-intelex==2026.0.0 \
     azureml-core==1.61.0.post3 \
     azureml-defaults==1.62.0 \
     azureml-inference-server-http==1.5.1 \
