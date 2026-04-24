@@ -240,7 +240,6 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
-RUN conda run -p $CONDA_PREFIX
 
 RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --no-cache-dir --no-build-isolation horovod["tensorflow"]==0.28.1
 
