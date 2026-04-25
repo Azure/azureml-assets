@@ -88,14 +88,21 @@ OUTPUT FORMAT
 =============
 Output a JSON object with these keys:
 {
-  "score": <1, 2, 3, 4, or 5>,
-  "explanation": "<30-60 words explaining the predicted satisfaction level>",
-  "dimensions": {
+  "reason": "<30-60 words explaining the predicted satisfaction level>",
+  "properties": {
     "helpfulness": "<1-2 sentences assessing helpfulness>",
     "completeness": "<1-2 sentences assessing completeness>",
     "tone": "<1-2 sentences assessing tone>"
-  }
+  },
+  "score": <1, 2, 3, 4, or 5, or null when skipped>,
+  "status": "completed",
 }
+
+**Status: Skipped**
+If the USER QUERY or AGENT_RESPONSE is empty or not provided, return status "skipped" immediately without scoring:
+```json
+{"reason": "<explain why evaluation was skipped>", "properties": null, "score": null, "status": "skipped"}
+```
 
 EXAMPLES
 ========
@@ -108,13 +115,14 @@ AGENT RESPONSE: "I've successfully cancelled your order #12345. Your payment of 
 
 OUTPUT:
 {
-  "score": 5,
-  "explanation": "The agent immediately resolved the cancellation request, provided clear refund timeline, and confirmed next steps. Customer would be very satisfied with the efficient and complete resolution.",
-  "dimensions": {
+  "reason": "The agent immediately resolved the cancellation request, provided clear refund timeline, and confirmed next steps. Customer would be very satisfied with the efficient and complete resolution.",
+  "properties": {
     "helpfulness": "Directly addressed the cancellation request and completed it immediately.",
     "completeness": "Provided all relevant details: confirmation, refund amount, timeline, and email notification.",
     "tone": "Professional and helpful, ended with an offer for further assistance."
-  }
+  },
+  "score": 5,
+  "status": "completed",
 }
 
 ### Score 3 - Neutral
@@ -125,13 +133,14 @@ AGENT RESPONSE: "Our return policy allows returns within 30 days."
 
 OUTPUT:
 {
-  "score": 3,
-  "explanation": "The agent provided basic information about the return window but lacked important details like conditions, process, or refund method. Customer got a partial answer but might need to ask follow-up questions.",
-  "dimensions": {
+  "reason": "The agent provided basic information about the return window but lacked important details like conditions, process, or refund method. Customer got a partial answer but might need to ask follow-up questions.",
+  "properties": {
     "helpfulness": "Answered the basic question but minimal detail provided.",
     "completeness": "Missing key information about conditions, exceptions, and return process.",
     "tone": "Neutral tone, neither particularly warm nor cold."
-  }
+  },
+  "score": 3,
+  "status": "completed"
 }
 
 ### Score 1 - Very Dissatisfied
@@ -142,13 +151,14 @@ AGENT RESPONSE: "According to our records, the package was delivered. Have you c
 
 OUTPUT:
 {
-  "score": 1,
-  "explanation": "The agent dismissed the customer's concern and offered no real help beyond a generic suggestion. Customer has a real problem that wasn't addressed, leaving them frustrated with no resolution path.",
-  "dimensions": {
+  "reason": "The agent dismissed the customer's concern and offered no real help beyond a generic suggestion. Customer has a real problem that wasn't addressed, leaving them frustrated with no resolution path.",
+  "properties": {
     "helpfulness": "Failed to offer any meaningful assistance or resolution options.",
     "completeness": "Did not offer to investigate, file a claim, or provide alternatives.",
     "tone": "Dismissive tone that implies the customer is wrong or didn't look properly."
-  }
+  },
+  "score": 1,
+  "status": "completed"
 }
 
 # Output
