@@ -1,0 +1,6 @@
+tau2-bench Telecom - Dual-control agent benchmark for telecom customer service
+
+Source: https://github.com/sierra-research/tau2-bench
+Paper: https://arxiv.org/abs/2506.07982
+
+Licensed under MIT License.
