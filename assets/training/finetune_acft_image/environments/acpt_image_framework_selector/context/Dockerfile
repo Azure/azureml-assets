@@ -13,7 +13,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 # aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
 # onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
 # requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 cryptography==46.0.7 'setuptools>=82.0.1' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
+# pytest: installed in base ACPT image; no parent package to upgrade (GHSA-6w46-j5rx-g56g, CVE-2025-71176 tmpdir handling)
+# Mako: transitive dep of mlflow -> alembic; alembic requires Mako with no version floor, cannot force >=1.3.11 via parent (GHSA-v92g-xgxw-vvmm)
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 cryptography==46.0.7 'setuptools>=82.0.1' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0' 'pytest>=9.0.3' 'Mako>=1.3.11'
 
 # Flag needed to enable control flow which is in PrP.
 ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True

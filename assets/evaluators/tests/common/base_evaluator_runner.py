@@ -113,6 +113,12 @@ class BaseEvaluatorRunner(ABC):
                 flow_mock = MagicMock(side_effect=get_flow_side_effect_for_evaluator(self.result_key))
                 evaluator._flow = flow_mock
 
+            # Mock secondary flows (e.g., quality grader's groundedness flow)
+            if hasattr(evaluator, "_groundedness_flow"):
+                evaluator._groundedness_flow = MagicMock(
+                    side_effect=get_flow_side_effect_for_evaluator(self.result_key)
+                )
+
             # Special handling for groundedness evaluator to disable flow reloading
             if hasattr(evaluator, "_ensure_query_prompty_loaded"):
                 evaluator._ensure_query_prompty_loaded = MagicMock()
