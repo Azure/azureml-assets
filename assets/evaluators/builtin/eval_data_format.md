@@ -255,3 +255,101 @@ Agent turn 2:
 | Multi-line text | Each line is indented with two spaces |
 | Consecutive same-role messages | Grouped into a single turn |
 | Trailing agent turn | Included (unlike single-turn reformatting) |
+
+---
+
+## Prompty Output Schema
+
+LLM-based evaluators (defined via `.prompty` files) emit a JSON object with the following keys:
+
+```jsonc
+{
+  "reason": "<string>",            // Step-by-step reasoning. Starts with "Let's think step by step:".
+                                   // When status is "skipped", explains why the evaluation was skipped.
+  "score": <number | null>,        // Numeric score (e.g., integer 1-5, or 0/1 for binary).
+                                   // Set to null when status is "skipped".
+  "status": "<completed|skipped>", // Must be "completed" or "skipped".
+  "properties": { ... } | null     // Optional. Evaluator-specific extra data. null when not applicable
+                                   // or when status is "skipped".
+}
+```
+
+### Field Definitions
+
+| Field | Type | Description |
+|---|---|---|
+| `reason` | `string` | The model's chain-of-thought reasoning that justifies the score, following the rubric definitions. Begins with `Let's think step by step:`. When `status` is `"skipped"`, this field explains why the evaluation was skipped. |
+| `score` | `integer`, `number`, or `null` | The numeric assessment of the evaluator's quality dimension (e.g., 1-5 for quality evaluators, 0 or 1 for binary evaluators). Must be `null` when `status` is `"skipped"`. |
+| `status` | `string` | One of: <br>• `"completed"` — evaluation was performed normally. <br>• `"skipped"` — evaluation could not be performed (e.g., missing or empty inputs, no tool calls to evaluate, missing tool definitions). When skipped, `score` must be `null` and `properties` should be `null`. |
+| `properties` | `object` or `null` | Optional. Evaluator-specific structured data that does not fit into the standard fields (e.g., per-tool details, sub-scores, faulty-detail lists, parameter extraction accuracy). `null` when no extra data is needed or when the evaluation is skipped. |
+
+### Example: Completed Evaluation
+
+```json
+{
+  "reason": "Let's think step by step: The response is grammatically correct, uses varied sentence structures, and conveys the meaning fluently without awkward phrasing.",
+  "score": 5,
+  "status": "completed"
+}
+```
+
+### Example: Skipped Evaluation
+
+When required input is empty or not applicable:
+
+```json
+{
+  "reason": "Let's think step by step: The RESPONSE field is empty, so fluency cannot be assessed.",
+  "score": null,
+  "status": "skipped"
+}
+```
+
+### Example: Evaluator with `properties`
+
+Tool-related evaluators (e.g., `ToolCallAccuracy`, `ToolInputAccuracy`, `ToolSelection`, `ToolOutputUtilization`) include structured per-tool details in `properties`:
+
+```json
+{
+  "reason": "Let's think step by step: The agent invoked get_weather with the correct location parameter, matching the user's query.",
+  "score": 5,
+  "status": "completed",
+  "properties": {
+    "tool_calls_made_by_agent": 1,
+    "correct_tool_calls_made_by_agent": 1,
+    "per_tool_call_details": [
+      { "tool_name": "get_weather", "is_correct": true, "reasoning": "Matches user's location query." }
+    ]
+  }
+}
+```
+
+### Skipped Conditions by Evaluator
+
+| Evaluator(s) | Skipped When |
+|---|---|
+| `Fluency` | `RESPONSE` is empty or not provided. |
+| `Coherence`, `Relevance`, `IntentResolution` | `CONVERSATION_HISTORY` or `RESPONSE`/`AGENT_RESPONSE` is empty or not provided. |
+| `Groundedness` | `CONTEXT`, `QUERY`, or `RESPONSE` is empty or not provided. |
+| `Retrieval` | `QUERY` or `CONTEXT` is empty or not provided. |
+| `ResponseCompleteness` | `RESPONSE` or `GROUND_TRUTH` is empty or not provided. |
+| `TaskAdherence`, `TaskCompletion` | `USER_QUERY`/`CONVERSATION_HISTORY` or `AGENT_RESPONSE` is empty or not provided. |
+| `ToolCallAccuracy`, `ToolSelection`, `ToolInputAccuracy` | No tool calls to evaluate, missing tool definitions, or no conversation context. |
+| `ToolCallSuccess` | `TOOL_CALLS` input is empty or not provided. |
+| `ToolOutputUtilization` | `CONVERSATION_HISTORY`/`AGENT_RESPONSE` is empty, or no tool outputs are present in the conversation. |
+| `Similarity` (Equivalence) | `query`, `response`, or `ground_truth` is empty or not provided. |
+
+### Mapping to Evaluator Result Keys
+
+The Python evaluator wrapper translates the LLM output into the public result dictionary using the evaluator's `_KEY_PREFIX`:
+
+| LLM output field | Evaluator result key |
+|---|---|
+| `score` | `<prefix>_score` (also exposed as `<prefix>` for backward compatibility) |
+| `reason` | `<prefix>_reason` |
+| `status` | `<prefix>_status` |
+| `properties` | `<prefix>_properties` (merged with token-usage metadata: `prompt_tokens`, `completion_tokens`, `total_tokens`, `finish_reason`, `model`, `sample_input`, `sample_output`) |
+| (derived from `score` vs. threshold) | `<prefix>_passed` (`bool` or `None` when skipped) |
+| (evaluator config) | `<prefix>_threshold` |
+
+When `status` is `"skipped"`, the wrapper returns `<prefix>_score = None`, `<prefix>_passed = None`, `<prefix>_status = "skipped"`, and `<prefix>_properties = None`, with `<prefix>_reason` containing the skip explanation prefixed by `Not applicable: `.
