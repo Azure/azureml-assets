@@ -1,10 +1,65 @@
-# Reformatting Output Formats
+# Evaluator Data Formats
 
-This document describes how conversation messages are reformatted into human-readable text for LLM evaluation prompts. Raw message lists (as produced by the converter) are transformed into labeled turn-based transcripts.
+This document describes the data formats used by the built-in evaluators — from how prompt templates are structured, to how conversation messages are reformatted into human-readable text before being injected into those prompts.
 
 ---
 
-## Evaluator Reformatting Summary
+## 1. Prompt Template Format
+
+Evaluator prompts are defined in `.prompty` files. Each file contains a YAML front-matter block followed by the prompt body, which is split into **role sections** using plain `system:` and `user:` headers.
+
+### Structure
+
+```yaml
+---
+name: ExampleEvaluator
+description: Evaluates something useful.
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 4096
+    response_format:
+      type: json_object
+
+inputs:
+  query:
+    type: string
+  response:
+    type: string
+
+---
+system:
+# Instruction
+## Goal
+You are an expert evaluator. Assess the following response.
+
+user:
+# Data
+**Query:** {{query}}
+**Response:** {{response}}
+
+# Output format
+Return a JSON object with a "score" and "reason".
+```
+
+### Role Headers
+
+Prompts use **API-style role headers** — bare `system:` and `user:` labels on their own line — to delineate which part of the prompt maps to each chat-API message role. These map directly to the `role` field in the chat completions API (`"role": "system"`, `"role": "user"`).
+
+They are **not** the ChatML token markers `<|im_start|>` / `<|im_end|>` used at the tokenizer level by some models. The `.prompty` format operates at the API abstraction layer, not the token layer.
+
+### Template Variables
+
+Within the `system:` and `user:` sections, Jinja2-style `{{variable}}` placeholders reference the inputs declared in the YAML front-matter. At evaluation time, these are substituted with the actual data — including the reformatted conversation text described in the sections below.
+
+---
+
+## 2. Reformatted Output Formats
+
+Raw conversation message lists (as produced by the converter) are transformed into labeled, turn-based transcripts before being injected into the prompt templates above. This section describes those reformatting rules.
+
+### Evaluator Reformatting Summary
 
 Each evaluator includes different elements in its reformatted output. The table below shows what each evaluator includes:
 
@@ -22,20 +77,21 @@ Each evaluator includes different elements in its reformatted output. The table 
 | **ToolOutputUtilization** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 > **Notes:**
+>
 > - **ToolCallAccuracy** reformats both the conversation history and agent response including tool calls and system messages. However, it does **not** include the agent's text response — only tool call information is used.
 > - **ToolSelection** parses only the tool names from the conversation; it does not reformat the full agent response.
 
 ---
 
-## Single-Turn Evaluation
+### Single-Turn Evaluation
 
 In single-turn evaluation, the conversation history (query) and agent response are reformatted **separately**.
 
-### Conversation History Reformatting
+#### Conversation History Reformatting
 
 The conversation history is reformatted into labeled user and agent turns. The conversation must end with a user turn.
 
-#### Basic Output
+##### Basic Output
 
 ```
 User turn 1:
@@ -49,7 +105,7 @@ User turn 2:
 
 ```
 
-#### With System Messages
+##### With System Messages
 
 When system messages are included, they are prepended:
 
@@ -68,7 +124,7 @@ User turn 2:
 
 ```
 
-#### With Tool Messages
+##### With Tool Messages
 
 Tool calls and tool results are inlined inside the agent turn where they occur:
 
@@ -86,7 +142,7 @@ User turn 2:
 
 ```
 
-#### Multiple Tool Calls in One Turn
+##### Multiple Tool Calls in One Turn
 
 When the assistant invokes multiple tools, each call is followed by its result:
 
@@ -106,11 +162,11 @@ User turn 2:
 
 ```
 
-### Agent Response Reformatting
+#### Agent Response Reformatting
 
 The agent response is reformatted into a single joined string (newline-separated).
 
-#### Without Tool Messages (default)
+##### Without Tool Messages (default)
 
 Only text content from assistant messages is included. Tool calls and results are **excluded**:
 
@@ -119,7 +175,7 @@ Let me check that for you.
 You have one order on file.
 ```
 
-#### With Tool Messages
+##### With Tool Messages
 
 Tool calls and results are **included** between the assistant text messages:
 
@@ -130,7 +186,7 @@ Let me check that for you.
 You have one order on file.
 ```
 
-### Formatting Rules
+#### Formatting Rules
 
 | Element | Format |
 |---|---|
@@ -145,7 +201,7 @@ You have one order on file.
 | None arguments | `key=None` |
 | Other arguments (int, bool, etc.) | Unquoted: `key=value` |
 
-### Edge Cases
+#### Edge Cases
 
 | Scenario | Behavior |
 |---|---|
@@ -156,16 +212,17 @@ You have one order on file.
 
 ---
 
-## Multi-Turn Evaluation
+### Multi-Turn Evaluation
 
 In multi-turn (conversation-level) evaluation, the **entire conversation** is reformatted as a single unified transcript rather than separate query and response fields.
 
 Key differences from single-turn reformatting:
+
 - **Always includes** system/developer messages, tool calls, and tool results (no opt-in flags)
 - The conversation can **end with an agent turn** (no requirement for a trailing user turn)
 - Consecutive messages of the same role are grouped into a single turn
 
-### Output Format
+#### Output Format
 
 ```
 SYSTEM_PROMPT:
@@ -186,7 +243,7 @@ Agent turn 2:
   I found a Holiday Inn 0.3 miles from ExCeL London at $120/night for 3 nights.
 ```
 
-### Formatting Rules
+#### Formatting Rules
 
 | Element | Format |
 |---|---|
