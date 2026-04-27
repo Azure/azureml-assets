@@ -105,7 +105,7 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
             "tool_calls_success_level": GRADERS_SUCCESS_SCORE,
             "result": score,
             "explanation": explanation,
-            "reasoning": explanation,
+            "reason": explanation,
             "status": "completed",
             "properties": {
                 "abstention": False,
