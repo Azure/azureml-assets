@@ -5,11 +5,11 @@ azureml-acft-image-components=={{latest-pypi-version}}
 azureml-core=={{latest-pypi-version}}
 requests>=2.33.0
 datasets==2.19.0
-transformers==4.53.0
+transformers==5.0.0rc3
 accelerate==0.29.3
 optimum==1.24.0
 diffusers==0.27.2
 huggingface-hub==0.30.0
 setuptools>=82.0.0
-mlflow==3.10.1
+mlflow==3.11.1
 filelock>=3.20.1

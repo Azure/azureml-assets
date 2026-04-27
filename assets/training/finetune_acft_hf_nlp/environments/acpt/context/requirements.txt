@@ -4,7 +4,7 @@ azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 mltable=={{latest-pypi-version}}
 sentencepiece==0.2.1
-transformers==4.55.0
+transformers==5.0.0
 huggingface-hub==0.34.3
 datasets==4.0.0
 evaluate==0.4.5

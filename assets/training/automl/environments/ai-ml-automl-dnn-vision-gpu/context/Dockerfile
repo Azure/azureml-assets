@@ -74,7 +74,7 @@ RUN pip install --no-cache-dir \
                 azureml-interpret=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
                 'azure-identity>=1.25.1' \
-                'pillow==12.1.1'
+                'pillow==12.2.0'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -85,19 +85,25 @@ RUN pip install --no-cache-dir \
                 
 # Vulnerability patches for conda environment
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# NOTE: azureml-automl-runtime pins onnx<=1.17.0,>=1.16.1; force-installing onnx>=1.21.0 to fix
+#       GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj,
+#       GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m. Parent azureml-automl-runtime (1.62.0) cannot
+#       be upgraded as latest still constrains onnx<=1.17.0.
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'distributed>=2026.1.0' \
                 'mlflow-skinny>=2.16.0' \ 
                 'bokeh>=3.8.2' \
-                'pillow==12.1.1'
+                'pillow==12.2.0' \
+                'onnx>=1.21.0'
 
 
 
 
 # Vulnerability patches for ptca environment
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-                'pillow==12.1.1' 'filelock>=3.20.3' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2'
+                'pillow==12.2.0' 'filelock>=3.20.3' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2' \
+                'pytest>=9.0.3'
 # setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
@@ -105,7 +111,8 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'wheel>=0.46.2' \
-                'PyJWT>=2.12.0'
+                'PyJWT>=2.12.0' \
+                'aiohttp>=3.13.4'
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
