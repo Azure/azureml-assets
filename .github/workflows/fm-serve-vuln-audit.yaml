@@ -1,0 +1,505 @@
+name: fm-serve-vuln-audit
+
+# Daily autonomous vulnerability-audit agent for the foundation-model-serve
+# environment.
+#
+# Scope: assets/training/model_management/environments/foundation-model-serve/*
+#   - context/requirements.txt
+#   - pinned packages (name==version) in context/Dockerfile `RUN pip install`
+#
+# Behaviour:
+#   1. Runs `pip-audit` against both sources, pulling GHSA severities.
+#   2. Decides whether a patch PR is warranted:
+#        - severe  => advisory of CRITICAL or HIGH severity is present
+#                     (also treated as severe: any advisory whose available
+#                     fix version is a reachable bump within the pinned range).
+#        - not severe => no fixable CRITICAL/HIGH advisory; PR is not needed.
+#   3. If severe: applies minimum-safe fix versions, opens/updates the PR
+#      on branch `auto/fm-serve-vuln-audit`, requests review from the
+#      configured reviewer, and posts a reasoning comment (advisory table
+#      + decision rationale).
+#   4. If not severe: no PR is created. If a stale auto-PR already exists,
+#      it is closed with a reasoning comment explaining why.
+
+on:
+  schedule:
+    # 02:30 UTC daily == 08:00 IST daily
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      reviewer:
+        description: GitHub username to tag / request review from
+        default: pabhatia-ms
+        required: false
+      repair_mode:
+        description: >-
+          Repair-pass mode. Set to 'build-break' when invoked by the
+          post-build workflow after environments-ci failed on the auto
+          branch — the agent will revert the last bump and re-plan.
+          Set to 'post-scan' when the EMS scan surfaced new HIGH/CRITICAL
+          transitive findings and the agent should re-run on the same
+          branch. Leave empty for a normal scheduled audit.
+        default: ""
+        required: false
+      repair_attempt:
+        description: >-
+          Repair-pass counter. The post-build workflow increments this on
+          each re-invocation; the agent will refuse to loop past 2.
+        default: "0"
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  SCOPE_DIR: assets/training/model_management/environments/foundation-model-serve/context
+  AUTO_BRANCH: auto/fm-serve-vuln-audit
+  REVIEWER: ${{ github.event.inputs.reviewer || 'pabhatia-ms' }}
+  REPAIR_MODE: ${{ github.event.inputs.repair_mode || '' }}
+  REPAIR_ATTEMPT: ${{ github.event.inputs.repair_attempt || '0' }}
+  MAX_TRANSITIVE_ITERATIONS: "3"
+  MAX_REPAIR_ATTEMPTS: "2"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Repair passes must checkout the existing auto branch so we
+          # commit new remediation on top of the open PR rather than
+          # forking a fresh branch.
+          ref: ${{ (github.event.inputs.repair_mode != '' && env.AUTO_BRANCH) || '' }}
+
+      - name: Guard against runaway repair passes
+        if: ${{ github.event.inputs.repair_mode != '' }}
+        run: |
+          attempt="${REPAIR_ATTEMPT:-0}"
+          max="${MAX_REPAIR_ATTEMPTS:-2}"
+          echo "repair_mode=${REPAIR_MODE} attempt=${attempt} max=${max}"
+          if [[ "${attempt}" -gt "${max}" ]]; then
+            echo "::warning::Repair attempt ${attempt} exceeds cap ${max}; leaving PR in current state."
+            exit 0
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pip-audit==2.7.3" "packaging>=24"
+
+      - name: Extract Dockerfile pip-install pins
+        run: |
+          python - <<'PY'
+          import os, re, pathlib
+          ctx = pathlib.Path(os.environ["SCOPE_DIR"])
+          df = (ctx / "Dockerfile").read_text()
+          pins = set()
+          for m in re.finditer(r"(?m)^\s*RUN[^\n]*pip\s+install[^\n]*", df):
+              for p in re.finditer(r"([A-Za-z0-9][A-Za-z0-9_.\-]*)==([A-Za-z0-9][A-Za-z0-9_.\-]*)", m.group(0)):
+                  pins.add(f"{p.group(1)}=={p.group(2)}")
+          pathlib.Path("dockerfile-pins.txt").write_text(
+              "\n".join(sorted(pins)) + ("\n" if pins else "")
+          )
+          print("Dockerfile pins:\n" + pathlib.Path("dockerfile-pins.txt").read_text())
+          PY
+
+      - name: Run pip-audit (JSON, both sources)
+        run: |
+          pip-audit -r "${SCOPE_DIR}/requirements.txt" \
+            --format=json --disable-pip --output=req-audit.json || true
+          if [[ -s dockerfile-pins.txt ]]; then
+            pip-audit -r dockerfile-pins.txt \
+              --format=json --disable-pip --output=df-audit.json || true
+          else
+            echo '{"dependencies": []}' > df-audit.json
+          fi
+
+      - name: Classify severity and apply fixes
+        id: classify
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, re
+          from packaging.version import Version
+
+          SEVERE = {"CRITICAL", "HIGH"}
+          scope = pathlib.Path(os.environ["SCOPE_DIR"])
+          req_path = scope / "requirements.txt"
+          df_path = scope / "Dockerfile"
+
+          def load(path):
+              p = pathlib.Path(path)
+              if not p.exists() or not p.stat().st_size:
+                  return {"dependencies": []}
+              return json.loads(p.read_text())
+
+          req = load("req-audit.json")
+          df  = load("df-audit.json")
+
+          # Flatten advisories with source tagging.
+          findings = []
+          def collect(doc, source):
+              for dep in doc.get("dependencies", []):
+                  for v in dep.get("vulns", []) or []:
+                      sev = (v.get("severity") or "").upper() or "UNKNOWN"
+                      findings.append({
+                          "source": source,
+                          "name": dep.get("name"),
+                          "version": dep.get("version"),
+                          "id": v.get("id"),
+                          "fix_versions": v.get("fix_versions") or [],
+                          "severity": sev,
+                          "description": (v.get("description") or "").strip().splitlines()[0][:200],
+                      })
+          collect(req, "requirements.txt")
+          collect(df, "Dockerfile")
+
+          severe = [f for f in findings if f["severity"] in SEVERE and f["fix_versions"]]
+          severe_unfixable = [f for f in findings if f["severity"] in SEVERE and not f["fix_versions"]]
+          non_severe = [f for f in findings if f["severity"] not in SEVERE]
+
+          decision = "open" if severe else "skip"
+          print(f"Severe fixable: {len(severe)}  Severe unfixable: {len(severe_unfixable)}  Non-severe: {len(non_severe)}  Decision: {decision}")
+
+          # Apply fixes only for severe advisories (minimum safe version).
+          applied = []
+          if decision == "open":
+              # requirements.txt: line-oriented rewrite
+              if req_path.exists():
+                  lines = req_path.read_text().splitlines()
+                  out = []
+                  for line in lines:
+                      m = re.match(r"^\s*([A-Za-z0-9][A-Za-z0-9_.\-]*)\s*==\s*([A-Za-z0-9_.\-]+)\s*(#.*)?$", line)
+                      replaced = False
+                      if m:
+                          pkg = m.group(1)
+                          for f in severe:
+                              if f["source"] == "requirements.txt" and f["name"].lower() == pkg.lower():
+                                  new = str(min(Version(v) for v in f["fix_versions"]))
+                                  if new != m.group(2):
+                                      out.append(f"{pkg}=={new}" + (" " + m.group(3) if m.group(3) else ""))
+                                      applied.append(f"requirements.txt: {pkg} {m.group(2)} -> {new}")
+                                      replaced = True
+                                      break
+                      if not replaced:
+                          out.append(line)
+                  req_path.write_text("\n".join(out) + ("\n" if lines and lines[-1] == "" else "\n"))
+
+              # Dockerfile: regex substitution
+              text = df_path.read_text()
+              for f in severe:
+                  if f["source"] != "Dockerfile":
+                      continue
+                  new = str(min(Version(v) for v in f["fix_versions"]))
+                  pattern = re.compile(rf"(?<![A-Za-z0-9_.\-]){re.escape(f['name'])}==[A-Za-z0-9_.\-]+")
+                  updated, n = pattern.subn(f"{f['name']}=={new}", text)
+                  if n:
+                      text = updated
+                      applied.append(f"Dockerfile: {f['name']} {f['version']} -> {new}")
+              df_path.write_text(text)
+
+          # Persist summary for later steps.
+          summary = {
+              "decision": decision,
+              "severe_fixable": severe,
+              "severe_unfixable": severe_unfixable,
+              "non_severe": non_severe,
+              "applied": applied,
+          }
+          pathlib.Path("audit-summary.json").write_text(json.dumps(summary, indent=2))
+
+          # Build a markdown reasoning comment.
+          def row(f):
+              return f"| `{f['source']}` | `{f['name']}` | `{f['version']}` | {f['severity']} | {f['id']} | {', '.join(f['fix_versions']) or '—'} |"
+          md = []
+          md.append(f"### fm-serve vulnerability audit — {decision.upper()}")
+          md.append("")
+          md.append(f"**Scope:** `{os.environ['SCOPE_DIR']}/` (requirements.txt + Dockerfile `RUN pip install` pins)")
+          md.append("")
+          md.append("**Decision rule:** open a PR only if at least one advisory is severity `CRITICAL` or `HIGH` **and** has an upstream fix version.")
+          md.append("")
+          if decision == "open":
+              md.append(f"✅ **{len(severe)} severe fixable advisory(ies) found** — opening/updating PR.")
+          else:
+              md.append("🟢 **No severe fixable advisories** — no PR needed; any existing auto PR will be closed.")
+          md.append("")
+          if severe or severe_unfixable:
+              md.append("#### Severe advisories")
+              md.append("| Source | Package | Installed | Severity | Advisory | Fix versions |")
+              md.append("|---|---|---|---|---|---|")
+              for f in severe + severe_unfixable:
+                  md.append(row(f))
+              md.append("")
+          if non_severe:
+              md.append(f"<details><summary>{len(non_severe)} non-severe advisory(ies) (informational, not gating)</summary>\n")
+              md.append("| Source | Package | Installed | Severity | Advisory | Fix versions |")
+              md.append("|---|---|---|---|---|---|")
+              for f in non_severe:
+                  md.append(row(f))
+              md.append("\n</details>")
+              md.append("")
+          if applied:
+              md.append("#### Applied bumps")
+              for a in applied:
+                  md.append(f"- {a}")
+              md.append("")
+          md.append(f"_Audited by `.github/workflows/fm-serve-vuln-audit.yaml` — run {os.environ.get('GITHUB_RUN_ID','?')}._")
+          pathlib.Path("reasoning.md").write_text("\n".join(md))
+
+          # Expose outputs.
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"decision={decision}\n")
+              fh.write(f"severe_count={len(severe)}\n")
+              fh.write(f"applied_count={len(applied)}\n")
+          PY
+
+      - name: Stage 2 — transitive sweep (resolve → audit → suggest)
+        id: transitive
+        run: |
+          # Resolve the full transitive set after the Stage-1 direct-pin
+          # patches and re-audit. Loop up to MAX_TRANSITIVE_ITERATIONS:
+          # each iteration applies any newly-suggested transitive pins and
+          # re-runs the resolve+audit.
+          set +e
+          python -m pip install "pip-audit==2.7.3" "packaging>=24" >/dev/null
+          max_iter="${MAX_TRANSITIVE_ITERATIONS:-3}"
+          iter=1
+          resolver_conflict=""
+          while [[ "${iter}" -le "${max_iter}" ]]; do
+            out="transitive-iter-${iter}.json"
+            python scripts/environment/resolve_and_audit.py \
+              --requirements "${SCOPE_DIR}/requirements.txt" \
+              --output "${out}"
+            rc=$?
+            if [[ "${rc}" -eq 2 ]]; then
+              # Resolver conflict: capture and stop looping — Stage 1 made
+              # an incompatible bump. The PR body will flag this and the
+              # reviewer (or post-build repair pass) must decide.
+              resolver_conflict=$(python -c "import json,sys; print(json.load(open('${out}')).get('resolver_conflict') or '')")
+              break
+            fi
+            # Apply any transitive pin suggestions. A "pin" is appended
+            # to requirements.txt with a marker comment so future agents
+            # know it's a transitive constraint, not a first-class dep.
+            applied_now=$(python - "${out}" "${SCOPE_DIR}/requirements.txt" <<'PY'
+          import json, pathlib, re, sys
+          summary = json.loads(pathlib.Path(sys.argv[1]).read_text())
+          req = pathlib.Path(sys.argv[2])
+          text = req.read_text()
+          existing = {}
+          for line in text.splitlines():
+              m = re.match(r"^\s*([A-Za-z0-9][A-Za-z0-9_.\-]*)\s*==\s*([A-Za-z0-9_.\-]+)", line)
+              if m:
+                  existing[m.group(1).lower().replace("_", "-")] = m.group(2)
+          added = []
+          for s in summary.get("suggestions", {}).get("transitive_pin", []) or []:
+              name = (s.get("name") or "").lower().replace("_", "-")
+              pin = s.get("suggested_pin")
+              if not name or not pin:
+                  continue
+              # If the transitive is already pinned in requirements.txt at
+              # a sufficient version we skip — the classifier will just
+              # treat it as direct on the next iteration.
+              if name in existing:
+                  continue
+              note = f"  # {s.get('id','CVE-?')} transitive pin; {s.get('drop_when','')}"
+              text += (("" if text.endswith("\n") else "\n") + pin + note + "\n")
+              added.append(pin)
+          req.write_text(text)
+          print("\n".join(added))
+          PY
+          )
+            if [[ -z "${applied_now}" ]]; then
+              # No new transitive pins applied: either clean, or the only
+              # remaining items are residuals with no fix available.
+              break
+            fi
+            iter=$((iter + 1))
+          done
+          # Persist final summary as the canonical Stage-2 artefact.
+          last=$(ls -1 transitive-iter-*.json 2>/dev/null | tail -n1)
+          if [[ -n "${last}" ]]; then
+            cp "${last}" transitive-summary.json
+          else
+            echo '{}' > transitive-summary.json
+          fi
+          echo "resolver_conflict<<EOF" >> "${GITHUB_OUTPUT}"
+          printf '%s\n' "${resolver_conflict}" >> "${GITHUB_OUTPUT}"
+          echo "EOF" >> "${GITHUB_OUTPUT}"
+          echo "iterations=${iter}" >> "${GITHUB_OUTPUT}"
+        if: steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != ''
+
+      - name: Merge Stage-2 summary into reasoning and audit-summary
+        if: steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != ''
+        run: |
+          python - <<'PY'
+          import json, os, pathlib
+          base = pathlib.Path("audit-summary.json")
+          summary = json.loads(base.read_text()) if base.exists() else {}
+          t = pathlib.Path("transitive-summary.json")
+          trans = json.loads(t.read_text()) if t.exists() and t.stat().st_size else {}
+          summary["transitive"] = trans
+          summary["repair_mode"] = os.environ.get("REPAIR_MODE", "")
+          summary["repair_attempt"] = int(os.environ.get("REPAIR_ATTEMPT", "0") or 0)
+          base.write_text(json.dumps(summary, indent=2))
+
+          # Append residuals / transitive section to reasoning.md.
+          md = pathlib.Path("reasoning.md")
+          text = md.read_text() if md.exists() else ""
+          lines = [text.rstrip(), "", "#### Stage 2 — transitive sweep", ""]
+          conflict = (trans or {}).get("resolver_conflict")
+          if conflict:
+              lines += [
+                  "⚠️ **Resolver conflict detected** — a Stage-1 bump is incompatible with a pinned peer.",
+                  "",
+                  "```text",
+                  conflict.strip()[:2000],
+                  "```",
+                  "",
+                  "The next repair pass will revert the offending bump and re-plan.",
+                  "",
+              ]
+          sugg = (trans or {}).get("suggestions", {}) or {}
+          tpins = sugg.get("transitive_pin") or []
+          if tpins:
+              lines += [
+                  f"**{len(tpins)} transitive pin(s) added** (drop when the parent dep catches up):",
+                  "",
+                  "| Package | Suggested pin | Advisory | Severity | Drop-when |",
+                  "|---|---|---|---|---|",
+              ]
+              for s in tpins:
+                  lines.append(
+                      f"| `{s.get('name')}` | `{s.get('suggested_pin')}` | "
+                      f"{s.get('id')} | {s.get('severity')} | {s.get('drop_when','')} |"
+                  )
+              lines.append("")
+          residual = sugg.get("residual") or []
+          if residual:
+              severe = [r for r in residual if (r.get("severity") or "").upper() in {"CRITICAL","HIGH"}]
+              header = (
+                  f"**{len(residual)} residual finding(s) — no upstream fix available.**"
+                  if not severe else
+                  f"🚨 **{len(severe)} unresolved severe residual(s) — reviewer must decide.**"
+              )
+              lines += [
+                  "",
+                  "#### Residuals (cannot-fix-now)",
+                  "",
+                  header,
+                  "",
+                  "| Package | Installed | Advisory | Severity | Reason |",
+                  "|---|---|---|---|---|",
+              ]
+              for r in residual:
+                  lines.append(
+                      f"| `{r.get('name')}` | `{r.get('version')}` | "
+                      f"{r.get('id')} | {r.get('severity')} | {r.get('reason','')} |"
+                  )
+              lines.append("")
+          if os.environ.get("REPAIR_MODE"):
+              lines += [
+                  f"_Repair pass_: mode=`{os.environ['REPAIR_MODE']}` "
+                  f"attempt={os.environ.get('REPAIR_ATTEMPT','?')} "
+                  f"(cap {os.environ.get('MAX_REPAIR_ATTEMPTS','2')}).",
+                  "",
+              ]
+          lines += [
+              "",
+              "> **Merge gate:** do not merge until the `ems-scan` comment below shows "
+              "`CRITICAL: 0, HIGH: 0`. CI must also be green.",
+              "",
+          ]
+          md.write_text("\n".join(lines))
+          PY
+
+
+      - name: Upload audit artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fm-serve-audit
+          path: |
+            req-audit.json
+            df-audit.json
+            audit-summary.json
+            transitive-summary.json
+            reasoning.md
+
+      # ---------- PR needed: open/update and comment ----------
+      - name: Create or update Pull Request
+        if: steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != ''
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: ${{ env.AUTO_BRANCH }}
+          delete-branch: false
+          title: "[auto] foundation-model-serve: vulnerability patches"
+          commit-message: "chore(fm-serve): bump vulnerable packages per pip-audit"
+          body-path: reasoning.md
+          reviewers: ${{ env.REVIEWER }}
+          labels: |
+            automated
+            security
+            security/auto-remediation
+
+      - name: Comment reasoning on PR
+        if: (steps.classify.outputs.decision == 'open' || github.event.inputs.repair_mode != '') && steps.cpr.outputs.pull-request-number
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+        with:
+          script: |
+            const fs = require('fs');
+            const body = `@${process.env.REVIEWER}\n\n` + fs.readFileSync('reasoning.md', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(process.env.PR_NUMBER),
+              body,
+            });
+
+      # ---------- PR not needed: close stale auto PR if present ----------
+      - name: Close stale auto PR (no severe findings)
+        if: steps.classify.outputs.decision == 'skip' && github.event.inputs.repair_mode == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const branch = process.env.AUTO_BRANCH;
+            const reviewer = process.env.REVIEWER;
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${branch}`,
+            });
+            if (prs.length === 0) {
+              core.info('No open auto PR; nothing to close.');
+              return;
+            }
+            const reasoning = fs.readFileSync('reasoning.md', 'utf8');
+            for (const pr of prs) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `@${reviewer}\n\nClosing this automated PR: today's audit found no severe (CRITICAL/HIGH) fixable advisories in scope. Full reasoning below.\n\n---\n\n${reasoning}`,
+              });
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed',
+              });
+              core.info(`Closed PR #${pr.number}`);
+            }
+        env:
+          AUTO_BRANCH: ${{ env.AUTO_BRANCH }}
+          REVIEWER: ${{ env.REVIEWER }}

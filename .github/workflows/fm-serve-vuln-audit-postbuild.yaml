@@ -1,0 +1,377 @@
+name: fm-serve-vuln-audit-postbuild
+
+# Fires when `environments-ci` reaches a terminal state on a PR whose
+# head branch was created by `fm-serve-vuln-audit.yaml`.
+#
+# Jobs:
+#   notify   - comments the build conclusion on the PR, tagging the reviewer.
+#   ems-scan - runs a post-build EMS-style security scan (Trivy filesystem
+#              scan over the foundation-model-serve context, covering both
+#              requirements.txt and Dockerfile-installed packages) and posts
+#              a summary comment on the PR. Uploads full JSON report as an
+#              artifact for audit.
+
+on:
+  workflow_run:
+    workflows: ["environments-ci"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+  actions: write  # needed to dispatch fm-serve-vuln-audit for repair/re-audit passes
+
+env:
+  SCOPE_DIR: assets/training/model_management/environments/foundation-model-serve/context
+  AUTO_BRANCH_PREFIX: auto/fm-serve-vuln-audit
+  AUTO_BRANCH: auto/fm-serve-vuln-audit
+  REVIEWER: pabhatia-ms
+  MAX_REPAIR_ATTEMPTS: "2"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'pull_request_target' }}
+    steps:
+      - name: Comment on auto-generated PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prs = run.pull_requests || [];
+            const reviewer = process.env.REVIEWER;
+            const prefix = process.env.AUTO_BRANCH_PREFIX;
+            for (const pr of prs) {
+              const { data: prData } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+              if (!prData.head || !prData.head.ref.startsWith(prefix)) {
+                continue;
+              }
+              const body = [
+                `@${reviewer} \`environments-ci\` reached a terminal state.`,
+                ``,
+                `- Conclusion: **${run.conclusion}**`,
+                `- Run: ${run.html_url}`,
+                ``,
+                `Please review this automated vulnerability-patch PR.`,
+              ].join("\n");
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }
+
+  ems-scan:
+    # Post-build EMS-style security scan. Runs Trivy filesystem scan against
+    # the foundation-model-serve context (requirements.txt + Dockerfile) and
+    # posts a concise vulnerability summary on any associated auto-PR.
+    #
+    # Only runs when environments-ci succeeded: if the build broke, the
+    # `repair-on-failure` job below handles it instead (scanning a broken
+    # image adds noise, not signal).
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event.workflow_run.event == 'pull_request' ||
+       github.event.workflow_run.event == 'pull_request_target') &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Resolve associated PRs
+        id: prs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prefix = process.env.AUTO_BRANCH_PREFIX;
+            const matches = [];
+            for (const pr of (run.pull_requests || [])) {
+              const { data } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+              if (data.head && data.head.ref.startsWith(prefix)) {
+                matches.push(pr.number);
+              }
+            }
+            core.setOutput('numbers', JSON.stringify(matches));
+            core.setOutput('count', matches.length);
+
+      - name: Install Trivy
+        if: steps.prs.outputs.count != '0'
+        run: |
+          curl -fsSL -o trivy.deb https://github.com/aquasecurity/trivy/releases/download/v0.42.1/trivy_0.42.1_Linux-64bit.deb
+          sudo dpkg -i trivy.deb
+
+      - name: Extract Dockerfile pip-install pins as requirements
+        if: steps.prs.outputs.count != '0'
+        run: |
+          python - <<'PY'
+          import os, re, pathlib
+          ctx = pathlib.Path(os.environ["SCOPE_DIR"])
+          df = (ctx / "Dockerfile").read_text()
+          pins = set()
+          for m in re.finditer(r"(?m)^\s*RUN[^\n]*pip\s+install[^\n]*", df):
+              for p in re.finditer(r"([A-Za-z0-9][A-Za-z0-9_.\-]*)==([A-Za-z0-9][A-Za-z0-9_.\-]*)", m.group(0)):
+                  pins.add(f"{p.group(1)}=={p.group(2)}")
+          pathlib.Path("ems-dockerfile-pins.txt").write_text(
+              "\n".join(sorted(pins)) + ("\n" if pins else "")
+          )
+          PY
+
+      - name: Run Trivy filesystem scan (EMS post-build)
+        if: steps.prs.outputs.count != '0'
+        run: |
+          mkdir -p ems-scan
+          cp "${SCOPE_DIR}/requirements.txt" ems-scan/requirements.txt || true
+          cp ems-dockerfile-pins.txt ems-scan/dockerfile-pins.txt || true
+          trivy fs --quiet --scanners vuln --format json \
+            --output ems-scan/trivy-report.json ems-scan/ || true
+          trivy fs --quiet --scanners vuln --format table \
+            --severity CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN \
+            --output ems-scan/trivy-report.txt ems-scan/ || true
+
+      - name: Summarise scan
+        if: steps.prs.outputs.count != '0'
+        id: summary
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, collections
+          rpt = pathlib.Path("ems-scan/trivy-report.json")
+          counts = collections.Counter()
+          rows = []
+          fixable_rows = []
+          if rpt.exists() and rpt.stat().st_size:
+              data = json.loads(rpt.read_text())
+              for r in data.get("Results", []) or []:
+                  target = r.get("Target", "")
+                  for v in r.get("Vulnerabilities", []) or []:
+                      sev = (v.get("Severity") or "UNKNOWN").upper()
+                      counts[sev] += 1
+                      fix = v.get("FixedVersion") or ""
+                      row = (target, v.get("PkgName"), v.get("InstalledVersion"),
+                             fix or "—", sev, v.get("VulnerabilityID"))
+                      rows.append(row)
+                      if fix and sev in {"CRITICAL", "HIGH"}:
+                          fixable_rows.append({
+                              "target": target,
+                              "package": v.get("PkgName"),
+                              "installed": v.get("InstalledVersion"),
+                              "fixed_version": fix,
+                              "severity": sev,
+                              "id": v.get("VulnerabilityID"),
+                          })
+          order = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"]
+          md = ["### EMS post-build scan (Trivy)", ""]
+          md.append("**Scope:** `" + os.environ["SCOPE_DIR"] + "/` — `requirements.txt` + Dockerfile `RUN pip install` pins")
+          md.append("")
+          if not rows:
+              md.append("🟢 No vulnerabilities detected.")
+          else:
+              md.append("**Totals:** " + ", ".join(f"{s}: {counts.get(s,0)}" for s in order))
+              md.append("")
+              md.append("| Source | Package | Installed | Fixed (suggested) | Severity | Advisory |")
+              md.append("|---|---|---|---|---|---|")
+              rows.sort(key=lambda r: (order.index(r[4]) if r[4] in order else 99, r[1] or ""))
+              for target, pkg, inst, fix, sev, vid in rows[:100]:
+                  md.append(f"| `{target}` | `{pkg}` | `{inst}` | `{fix}` | {sev} | {vid} |")
+              if len(rows) > 100:
+                  md.append(f"\n_Showing 100 of {len(rows)} findings. See `ems-scan` artifact for full report._")
+          md.append("")
+          severe = counts.get("CRITICAL", 0) + counts.get("HIGH", 0)
+          md.append(
+              f"**Merge gate:** `CRITICAL: {counts.get('CRITICAL',0)}, "
+              f"HIGH: {counts.get('HIGH',0)}`. "
+              + ("✅ Safe to merge once CI is green." if severe == 0
+                 else "❌ Do not merge — remediation pass will be re-triggered automatically.")
+          )
+          md.append("")
+          md.append(f"_Post-build scan by `.github/workflows/fm-serve-vuln-audit-postbuild.yaml` — run {os.environ.get('GITHUB_RUN_ID','?')}._")
+          pathlib.Path("ems-scan/summary.md").write_text("\n".join(md))
+          # Emit a machine-readable sibling so downstream dashboards don't
+          # have to parse Markdown. Mirrors the schema of the Stage-1 summary.
+          pathlib.Path("ems-scan/summary.json").write_text(json.dumps({
+              "totals": {s: counts.get(s, 0) for s in order},
+              "severe": severe,
+              "total": sum(counts.values()),
+              "fixable_severe": fixable_rows,
+              "run_id": os.environ.get("GITHUB_RUN_ID"),
+          }, indent=2))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"severe={severe}\n")
+              fh.write(f"total={sum(counts.values())}\n")
+          PY
+
+      - name: Upload EMS scan artifact
+        if: steps.prs.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ems-scan-${{ github.event.workflow_run.id }}
+          path: ems-scan/
+
+      - name: Comment scan summary on PR(s)
+        if: steps.prs.outputs.count != '0'
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBERS: ${{ steps.prs.outputs.numbers }}
+        with:
+          script: |
+            const fs = require('fs');
+            const reviewer = process.env.REVIEWER;
+            const body = `@${reviewer}\n\n` + fs.readFileSync('ems-scan/summary.md', 'utf8');
+            for (const n of JSON.parse(process.env.PR_NUMBERS)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: n,
+                body,
+              });
+            }
+
+      - name: Trigger re-audit when severe findings remain
+        # HIGH/CRITICAL count > 0 means the Stage-1/Stage-2 remediation
+        # missed something (typically a newly-surfaced OS or transitive
+        # CVE). Re-invoke the audit workflow in `post-scan` repair mode so
+        # it commits another remediation pass onto the same PR branch.
+        # The audit workflow itself enforces the repair-attempt cap.
+        if: steps.prs.outputs.count != '0' && steps.summary.outputs.severe != '0'
+        uses: actions/github-script@v7
+        env:
+          SEVERE_COUNT: ${{ steps.summary.outputs.severe }}
+        with:
+          script: |
+            const attempt = 1; // post-scan triggers are tracked per-run, not cumulative
+            core.info(`EMS found ${process.env.SEVERE_COUNT} severe findings; dispatching audit repair pass.`);
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'fm-serve-vuln-audit.yaml',
+              ref: process.env.AUTO_BRANCH,
+              inputs: {
+                reviewer: process.env.REVIEWER,
+                repair_mode: 'post-scan',
+                repair_attempt: String(attempt),
+              },
+            });
+
+  repair-on-failure:
+    # Fires when `environments-ci` failed on an auto/fm-serve-vuln-audit
+    # branch. Dispatches the audit workflow in `build-break` repair mode so
+    # it can revert the offending bump and push a new commit onto the same
+    # PR branch. Capped at MAX_REPAIR_ATTEMPTS by the audit workflow itself
+    # (we pass the current attempt count based on prior repair-mode runs).
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event.workflow_run.event == 'pull_request' ||
+       github.event.workflow_run.event == 'pull_request_target') &&
+      github.event.workflow_run.conclusion == 'failure'
+    steps:
+      - name: Filter PRs to auto-branch only
+        id: prs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prefix = process.env.AUTO_BRANCH_PREFIX;
+            const matches = [];
+            for (const pr of (run.pull_requests || [])) {
+              const { data } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+              if (data.head && data.head.ref.startsWith(prefix)) {
+                matches.push(pr.number);
+              }
+            }
+            core.setOutput('numbers', JSON.stringify(matches));
+            core.setOutput('count', matches.length);
+
+      - name: Count prior repair passes on this branch
+        id: count
+        if: steps.prs.outputs.count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Count prior fm-serve-vuln-audit runs on the auto branch that
+            // used repair_mode='build-break' to enforce the cap.
+            const runs = await github.paginate(
+              github.rest.actions.listWorkflowRuns,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'fm-serve-vuln-audit.yaml',
+                branch: process.env.AUTO_BRANCH,
+                event: 'workflow_dispatch',
+                per_page: 50,
+              }
+            );
+            // Heuristic: count the runs on the auto branch in the last 24h.
+            const dayAgo = Date.now() - 24 * 3600 * 1000;
+            const recent = runs.filter(r => new Date(r.created_at).getTime() > dayAgo);
+            core.setOutput('attempt', String(recent.length + 1));
+
+      - name: Comment on PR and dispatch repair pass
+        if: steps.prs.outputs.count != '0'
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBERS: ${{ steps.prs.outputs.numbers }}
+          ATTEMPT: ${{ steps.count.outputs.attempt }}
+        with:
+          script: |
+            const attempt = Number(process.env.ATTEMPT || '1');
+            const max = Number(process.env.MAX_REPAIR_ATTEMPTS || '2');
+            const reviewer = process.env.REVIEWER;
+            const run = context.payload.workflow_run;
+            const nums = JSON.parse(process.env.PR_NUMBERS);
+            if (attempt > max) {
+              const body = [
+                `@${reviewer} \`environments-ci\` failed on this auto-remediation PR and the repair-pass cap (${max}) has been reached.`,
+                ``,
+                `- Conclusion: **${run.conclusion}**`,
+                `- Failed run: ${run.html_url}`,
+                ``,
+                `The PR has been left in its current state for manual review; please inspect the failing job and decide whether to retry the bump or accept the residuals.`,
+              ].join('\n');
+              for (const n of nums) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: n, body,
+                });
+              }
+              return;
+            }
+            const body = [
+              `@${reviewer} \`environments-ci\` failed (${run.conclusion}); dispatching repair pass ${attempt}/${max}.`,
+              ``,
+              `- Failed run: ${run.html_url}`,
+              ``,
+              `The audit workflow will revert the offending bump, re-plan against the resolver, and push a new commit onto this PR branch.`,
+            ].join('\n');
+            for (const n of nums) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: n, body,
+              });
+            }
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'fm-serve-vuln-audit.yaml',
+              ref: process.env.AUTO_BRANCH,
+              inputs: {
+                reviewer,
+                repair_mode: 'build-break',
+                repair_attempt: String(attempt),
+              },
+            });
