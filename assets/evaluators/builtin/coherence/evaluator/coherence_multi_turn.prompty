@@ -1,0 +1,169 @@
+---
+name: Coherence Multi-Turn
+description: Evaluates conversation-level coherence with simple skip gating
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 2500
+    top_p: 1.0
+    presence_penalty: 0
+    frequency_penalty: 0
+    response_format:
+      type: json_object
+inputs:
+  messages:
+    type: string
+---
+system:
+# Instruction
+You are an expert evaluator for conversation-level coherence.
+
+user:
+# Definition
+**Coherence** is how logically consistent, well-connected, and easy to follow the AGENT's responses are across the full conversation.
+
+## Agent-primary scope
+- Primary target is AGENT coherence across the session.
+- Do not score only the last AGENT response.
+- Use the full trajectory and how responses connect over time.
+
+## Simple skip gating (conversation-level)
+Before scoring the AGENT:
+1. Check whether user turns after the first are logical follow-ups to prior context.
+2. If user topics are broadly scattered and the conversation is mostly derailed, mark the evaluation as skipped.
+3. Distinguish user pivots:
+   - Pivot while the current task is still active/unresolved: treat as derail evidence.
+   - Pivot after the AGENT has clearly completed the prior task: treat as a new valid thread; do not skip for this alone.
+
+Use **skipped** only when conversation flow is clearly non-evaluable, such as:
+- most follow-up user turns are unrelated topic jumps, and
+- there is no stable conversational thread to judge AGENT coherence fairly.
+
+If there is a usable conversation thread, do **not** skip; score AGENT coherence.
+
+## Conversation examples for skip gating
+Use these examples as guidance for when to skip vs continue scoring.
+
+### Example A: Prior task completed, then user starts a new task (do not skip)
+- User Turn 1: "Can you summarize this release note?"
+- Agent Turn 1: "Here is a concise summary with key changes."
+- User Turn 2: "Great, that solves it. Now help me draft an email to the team."
+- Agent Turn 2: "Sure, here is an email draft."
+Expected gating outcome: `completed` (not skipped). The pivot happens after the first task is clearly completed.
+
+### Example B: User pivots mid-task and keeps jumping topics (skip)
+- User Turn 1: "Help me fix this Python import error."
+- Agent Turn 1: "Share the traceback and your import statements."
+- User Turn 2: "Also, what is the weather in Tokyo?"
+- Agent Turn 2: "I can help with weather, but please share the traceback for the error."
+- User Turn 3: "Actually suggest a beach vacation plan."
+- Agent Turn 3: "Where would you like to travel for vacation?"
+Expected gating outcome: `skipped`. The original task stays unresolved and most follow-ups are unrelated jumps.
+
+### Example C: Mostly stable thread with one brief side jump (do not skip)
+- User Turn 1: "Plan a 3-day Rome itinerary."
+- Agent Turn 1: "Day-by-day plan with museums and food spots."
+- User Turn 2: "Quick one: what time zone is Rome?"
+- Agent Turn 2: "Central European Time."
+- User Turn 3: "Great, continue with restaurant options near the day-2 route."
+- Agent Turn 3: "Sure, let me search for restaurants.."
+Expected gating outcome: `completed` (not skipped). There is still a stable conversation thread.
+
+# Ratings
+## [Coherence: 1] (Severely Incoherent Conversation)
+AGENT responses are disjointed or contradictory across turns, fail to track context, and are hard to follow.
+
+### Example
+- User Turn 1: "Help me compare renting vs buying."
+- Agent Turn 1: "Renting has lower upfront cost."
+- User Turn 2: "Can you include monthly cost factors?"
+- Agent Turn 2: "Bananas are yellow and trains are fast."
+- User Turn 3: "Please answer my housing question."
+- Agent Turn 3: "I already explained quantum physics."
+
+## [Coherence: 2] (Poor Conversation Coherence)
+AGENT responses show major flow problems, frequent context breaks, and weak turn-to-turn continuity.
+
+### Example
+- User Turn 1: "Plan a simple workout for beginners."
+- Agent Turn 1: "Start with 20 minutes of light cardio."
+- User Turn 2: "What should I do on day two?"
+- Agent Turn 2: "You should learn SQL joins."
+- User Turn 3: "I meant the workout plan."
+- Agent Turn 3: "Maybe do squats, but also think about web hosting."
+
+## [Coherence: 3] (Partially Coherent Conversation)
+AGENT responses are somewhat connected but with noticeable jumps, weak transitions, or missed context links.
+
+### Example
+- User Turn 1: "Help me prepare for a product manager interview."
+- Agent Turn 1: "Start with product sense and execution questions."
+- User Turn 2: "Can you suggest a 2-week plan?"
+- Agent Turn 2: "Week 1: product sense. Week 2: execution and metrics."
+- User Turn 3: "How should I practice daily?"
+- Agent Turn 3: "Do one mock daily, and also maybe learn guitar theory."
+
+## [Coherence: 4] (Coherent Conversation)
+AGENT responses are mostly well-structured across turns, with clear continuity and understandable progression.
+
+### Example
+- User Turn 1: "Help me draft a customer apology email."
+- Agent Turn 1: "Start with apology, impact acknowledgement, and next steps."
+- User Turn 2: "Can you make it shorter and warmer?"
+- Agent Turn 2: "Sure, here is a concise version with a friendlier tone."
+- User Turn 3: "Add one sentence about refund timing."
+- Agent Turn 3: "Added a sentence that the refund will post within 5 business days."
+
+## [Coherence: 5] (Highly Coherent Conversation)
+AGENT responses are consistently logical and seamless across turns, preserving context and progression with excellent clarity.
+
+### Example
+- User Turn 1: "I need a migration plan from MySQL to PostgreSQL."
+- Agent Turn 1: "Phase 1: schema mapping and compatibility checks."
+- User Turn 2: "What should Phase 2 include?"
+- Agent Turn 2: "Phase 2: data migration rehearsal, validation, and rollback plan."
+- User Turn 3: "Now give me a risk table by phase."
+- Agent Turn 3: "Here is a phase-by-phase risk table with mitigation and owners."
+
+## Conversation examples by coherence score
+Use these examples to anchor scoring after skip gating passes.
+
+# Data
+CONVERSATION: {{messages}}
+
+# Tasks
+Return ONLY a JSON object with:
+- `score`: integer 1-5 if completed, or null if skipped
+- `status`: "completed" or "skipped"
+- `reason`: short explanation (15-60 words)
+- `properties`: object for completed, null for skipped
+
+For `properties` in completed evaluations, include:
+- `gating_summary`: short summary of the user-flow gate outcome
+- `conversation_flow_summary`: how AGENT responses flowed across the session
+- `agent_coherence_issues`: concrete AGENT coherence issues, or "None"
+
+## Output format (completed)
+{
+  "score": 4,
+  "status": "completed",
+  "reason": "The conversation is coherent overall. The agent mostly keeps topic continuity and logical flow, with minor transition roughness in one follow-up.",
+  "properties": {
+    "gating_summary": "User flow remained mostly on-topic, so scoring proceeded.",
+    "conversation_flow_summary": "Agent responses stayed aligned with prior turns and maintained a clear progression.",
+    "agent_coherence_issues": "Minor abrupt shift in one follow-up explanation."
+  }
+}
+
+## Output format for skipped conversations (example)
+{
+  "score": null,
+  "status": "skipped",
+  "reason": "Conversation is mostly derailed by unrelated user topic jumps, so agent coherence cannot be judged fairly.",
+  "properties": null
+}
+
+Return valid JSON only. No markdown. No extra keys.
+
+# Output
