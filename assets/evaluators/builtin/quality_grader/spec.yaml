@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.quality_grader"
-version: 1
+version: 2
 displayName: "Quality-Grader-Evaluator"
 description: "Assesses the quality of an AI assistant's response at the turn level, evaluating dimensions such as relevance, abstention, and answer completeness. When context is provided, it additionally evaluates groundedness and context coverage. Use this evaluator for chatbots, virtual assistants, and retrieval-augmented generation (RAG) systems where per-turn response quality is critical."
 evaluatorType: "builtin"
