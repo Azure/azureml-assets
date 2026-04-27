@@ -99,8 +99,16 @@ RUN pip install \
 # bokeh>=3.8.2             GHSA-793v-589g-574v  conda env installs 2.4.3, pip can't auto-upgrade
 #                          Chain (L1): azureml-train-automl-runtime -> bokeh
 #                          Chain (L2): prophet -> dask -> bokeh
+#
+# onnx>=1.21.0             GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6,
+#                          GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
+#                          azureml-automl-runtime pins onnx<=1.17.0; latest release (1.62.0)
+#                          still carries that upper bound, so a parent-package upgrade cannot
+#                          resolve the CVEs.  Override required.
+#                          Chain (L1): azureml-automl-runtime -> onnx
 RUN pip install --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'bokeh>=3.8.2' \
+    'onnx>=1.21.0'  # onnx: override azureml-automl-runtime pin for 6 GHSA CVEs
 RUN rm -rf /opt/miniconda/pkgs/
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

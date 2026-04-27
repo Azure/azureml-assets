@@ -3211,3 +3211,56 @@ LOCAL_CALLS_COHERENCE_EXPECTED_FLOW_RESPONSE = [
         ],
     },
 ]
+
+# =============================================================================
+# Tool definitions for FUNCTION_CALL_*_RESPONSE / MCP_APPROVAL_*_RESPONSE
+# test data defined in base_evaluator_behavior_test.py.
+# =============================================================================
+
+# Tool definitions matching FUNCTION_CALL_ONLY_RESPONSE / FUNCTION_CALL_FULL_RESPONSE
+# (uses the `get_horoscope` function tool).
+FUNCTION_CALL_RESPONSE_TOOL_DEFINITIONS = [
+    {
+        "name": "get_horoscope",
+        "type": "function",
+        "description": "Get today's horoscope for an astrological sign.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "sign": {
+                    "type": "string",
+                    "description": "An astrological sign like Taurus or Aquarius",
+                }
+            },
+            "required": ["sign"],
+            "additionalProperties": False,
+        },
+    },
+]
+
+# Tool definitions matching MCP_APPROVAL_ONLY_RESPONSE / MCP_APPROVAL_FULL_RESPONSE
+# (uses the `microsoft_docs_search` tool surfaced via MCP).
+MCP_APPROVAL_RESPONSE_TOOL_DEFINITIONS = [
+    {
+        "name": "microsoft_docs_search",
+        "type": "function",
+        "description": (
+            "Search official Microsoft/Azure documentation to find the most relevant "
+            "and trustworthy content for a user's query."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": (
+                        "a query or topic about Microsoft/Azure products, services, "
+                        "platforms, developer tools, frameworks, or APIs"
+                    ),
+                },
+            },
+            "required": ["query"],
+            "additionalProperties": False,
+        },
+    },
+]

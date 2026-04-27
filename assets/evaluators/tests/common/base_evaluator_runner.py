@@ -113,6 +113,12 @@ class BaseEvaluatorRunner(ABC):
                 flow_mock = MagicMock(side_effect=get_flow_side_effect_for_evaluator(self.result_key))
                 evaluator._flow = flow_mock
 
+            # Mock secondary flows (e.g., quality grader's groundedness flow)
+            if hasattr(evaluator, "_groundedness_flow"):
+                evaluator._groundedness_flow = MagicMock(
+                    side_effect=get_flow_side_effect_for_evaluator(self.result_key)
+                )
+
             # Special handling for groundedness evaluator to disable flow reloading
             if hasattr(evaluator, "_ensure_query_prompty_loaded"):
                 evaluator._ensure_query_prompty_loaded = MagicMock()
@@ -156,6 +162,8 @@ class BaseEvaluatorRunner(ABC):
             Dictionary with standardized result fields.
         """
         score = results.get(self.result_key)
+        if score is None:
+            score = results.get(f"{self.result_key}_score")
 
         if f"{self.result_key}_error_message" not in results and score != "not applicable":
             for field in self.expected_result_fields:
@@ -169,6 +177,7 @@ class BaseEvaluatorRunner(ABC):
 
         # Optional fields
         reason = results.get(f"{self.result_key}_reason")
+        status = results.get(f"{self.result_key}_status")
         threshold = results.get(f"{self._result_prefix}_threshold")
         precision = results.get(f"{self._result_prefix}_precision")
         recall = results.get(f"{self._result_prefix}_recall")
@@ -189,6 +198,9 @@ class BaseEvaluatorRunner(ABC):
         if threshold is not None:
             print(f"  Threshold: {threshold}")
             result["threshold"] = threshold
+        if status is not None:
+            print(f"  Status: {status}")
+            result["status"] = status
         if precision is not None:
             print(f"  Precision: {precision}")
             result["precision"] = precision
@@ -240,7 +252,7 @@ class BaseEvaluatorRunner(ABC):
         self._assert_pass_result(result_data)
 
     def assert_not_applicable(self, result_data: Dict[str, Any]):
-        """Assert a not-applicable result (intermediate response).
+        """Assert a not-applicable result (intermediate response or skipped evaluation).
 
         Args:
             result_data: Dictionary containing evaluation result data.
@@ -248,7 +260,12 @@ class BaseEvaluatorRunner(ABC):
         Raises:
             AssertionError: If the result is not a valid not-applicable result.
         """
-        self._assert_pass_result(result_data)
+        label_key = "label"
+        score_key = "score"
+        assert result_data[label_key] == "pass", \
+            f"Expected 'pass' but got '{result_data[label_key]}'"
+        assert result_data[score_key] is None, \
+            f"Expected score to be None for not-applicable result but got '{result_data[score_key]}'"
         assert "Not applicable" in result_data.get("reason", ""), \
             f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
 
