@@ -10,7 +10,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
-RUN pip install transformers==4.56.0
+# transformers 5.5.4: fixes GHSA-69w3-r845-3855 (arbitrary code execution in Trainer class);
+# advisory requires >=5.0.0rc3; upgrading to latest stable 5.x
+RUN pip install transformers==5.5.4
 
 # mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635); upgrade after azureml packages
 # azureml-evaluate-mlflow → azureml-mlflow pins mlflow-skinny<=3.5.0, conflicting with mlflow 3.10.1
@@ -24,16 +26,19 @@ RUN pip install --no-cache-dir mlflow==3.10.1
 # nltk: GHSA-gfwx-w7gr-fvh7; >=3.9.4 required
 # filelock: transitive dep of torch/huggingface-hub; parents use loose floor (GHSA-qmgc-5h2g-mvrw)
 # urllib3: transitive dep of requests; parent uses urllib3>=1.21.1,<3 (GHSA-38jv-5279-wg99)
-# ray: GHSA-q5fh-2hc8-f6rq; >=2.54.0 required
+# ray: GHSA-q5fh-2hc8-f6rq; >=2.54.0 required; also bundles log4j-core in JARs
+#   log4j-core 2.25.3→2.25.4: GHSA-3pxv-7cmr-fjr4, GHSA-445c-vh5m-36rj, GHSA-6hg6-v5c8-fphq
 # azure-core: transitive dep of Azure SDKs; parents use loose floor (GHSA-jm66-cg57-jjv5)
+# pytest: GHSA-6w46-j5rx-g56g (vulnerable tmpdir handling); from base image, override needed
 # cbor2: transitive dep via azure-identity → msal-extensions; parent uses loose floor (GHSA-3c37-wwvx-h642)
 # jaraco.context: transitive dep of keyring; parent uses loose floor (GHSA-58pv-8j8x-9vj2)
 # mlflow: GHSA-r23q-823p-vmf7 etc.; azureml-mlflow pins mlflow-skinny<=3.5.0, override needed
 # vllm: GHSA-pq5c-rjhq-qp7p, GHSA-3mwp-wvh9-7528 etc.; >=0.19.0 required
 RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 protobuf==6.33.5 cryptography==46.0.7 'xgrammar>=0.1.32' \
     'aiohttp>=3.13.4' 'requests>=2.33.0' 'onnx>=1.21.0' 'nltk>=3.9.4' 'pyasn1>=0.6.3' \
-    'python-multipart>=0.0.22' 'pillow>=12.1.1' 'filelock>=3.20.3' 'urllib3>=2.6.3' 'ray>=2.54.0' \
-    'azure-core>=1.38.0' 'cbor2>=5.9.0' 'jaraco.context>=6.1.0' 'PyJWT>=2.12.0' 'mlflow>=3.8.1,<4.0.0' 'vllm>=0.19.0'
+    'python-multipart>=0.0.22' 'pillow>=12.1.1' 'filelock>=3.20.3' 'urllib3>=2.6.3' 'ray>=2.55.0' \
+    'azure-core>=1.38.0' 'cbor2>=5.9.0' 'jaraco.context>=6.1.0' 'PyJWT>=2.12.0' 'mlflow>=3.8.1,<4.0.0' 'vllm>=0.19.0' \
+    'pytest>=9.0.3'
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
