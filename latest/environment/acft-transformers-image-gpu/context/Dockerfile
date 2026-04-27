@@ -17,7 +17,11 @@ RUN pip install -r requirements.txt --no-cache-dir
 # onnx: onnxruntime/azureml-acft-accelerator require onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
 # fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
 # requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.7 pyasn1==0.6.3 pillow==12.1.1 'fastmcp>=3.2.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
+# Mako: transitive dep (mlflow -> alembic -> Mako); alembic requires Mako>=1.1.0 (loose floor),
+#   upgrading mlflow alone does not force Mako upgrade; override needed (GHSA-v92g-xgxw-vvmm)
+# pytest: transitive dep from azureml packages; parent packages use loose floors so pip resolves
+#   to 7.4.3 which has CVE-2025-71176 (GHSA-6w46-j5rx-g56g); override to 9.0.3
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.7 pyasn1==0.6.3 pillow==12.2.0 'fastmcp>=3.2.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0' Mako==1.3.11 pytest==9.0.3
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2
 # vulnerability in base conda env

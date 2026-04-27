@@ -13,6 +13,9 @@ RUN apt-get update && apt-get -y upgrade && \
 RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 'aiohttp>=3.13.4' 'requests>=2.33.0'
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+# GHSA-jx93-g359-86wm, GHSA-hvwj-8w5g-28rg: sglang vulnerabilities; patched in >=0.5.10
+# specforge 0.1.0 pins sglang==0.5.5; override needed after specforge install.
+RUN pip install --no-cache-dir --force-reinstall "sglang>=0.5.10"
 
 RUN pip install azureml-acft-common-components==0.0.89
 RUN pip install numpy==2.2.5
@@ -21,10 +24,14 @@ RUN pip install azureml-evaluate-mlflow==0.0.89
 # following are for vulnerability overrides at later\
 # release of following packages consider moving then to requirements.txt
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
-RUN pip install --no-cache-dir --upgrade "wandb>=0.23.0"
+# wandb>=0.26.0: fixes Go stdlib vulnerabilities (GO-2026-4864/4865/4866/4869/4870/4946/4947)
+# in bundled wandb-core binary (Go stdlib v1.26.1 -> v1.26.2)
+RUN pip install --no-cache-dir --upgrade "wandb>=0.26.0"
 # GHSA-7rgv-gqhr-fxg3: xgrammar stack exhaustion DoS; patched in 0.1.32
 RUN pip install xgrammar==0.1.32
-RUN pip install transformers==4.57.1
+# GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
+# patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
+RUN pip install transformers==5.5.4
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
 # protobuf: wandb/google-cloud-storage cap <7, override needed
 # cryptography: azureml-mlflow pins <46.0.0; override needed for CVE fix
@@ -35,6 +42,11 @@ RUN pip install transformers==4.57.1
 # requests: transitive dep of azure-core/mlflow/transformers; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
 RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 protobuf==6.33.5 \
     'aiohttp>=3.13.4' 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'anthropic>=0.87.0'
+# GHSA-6w46-j5rx-g56g (CVE-2025-71176): pytest tmpdir vulnerability; patched in >=9.0.3
+# pytest is a transitive dep from base image; no parent upgrade available, override needed.
+# GHSA-v92g-xgxw-vvmm: Mako XSS vulnerability; patched in >=1.3.11
+# Mako is a transitive dep of alembic; alembic does not yet pin Mako>=1.3.11, override needed.
+RUN pip install --no-cache-dir --upgrade "pytest>=9.0.3" "Mako>=1.3.11"
 # Fix vulnerabilities in the ptca conda environment (pre-built in base image, not targeted by above installs)
 # CVE-2026-1703 (pip), CVE-2026-24049 (wheel)
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade "pip>=26.0" "wheel>=0.46.2" && \
