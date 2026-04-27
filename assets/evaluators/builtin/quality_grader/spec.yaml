@@ -8,7 +8,6 @@ evaluatorSubType: "code"
 categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
-  preview: "true"
   is_continuous_scenario: "true"
 supportedEvaluationLevels: ["turn"]
 initParameterSchema:
