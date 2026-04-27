@@ -4,6 +4,7 @@
 """Quality tests for Tool Call Accuracy Evaluator with real flow execution."""
 
 import pytest
+from typing import List
 from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner, ExpectedResult
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import ToolCallAccuracyEvaluator
 
@@ -15,6 +16,20 @@ class TestToolCallAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
 
     Tests actual LLM evaluation with real flow execution (no mocking).
     """
+
+    @property
+    def expected_result_fields(self) -> List[str]:
+        """Get the expected result fields for tools evaluators."""
+        return [
+            f"{self.result_key}",
+            f"{self.result_key}_score",
+            f"{self.result_key}_result",
+            f"{self.result_key}_passed",
+            f"{self.result_key}_reason",
+            f"{self.result_key}_status",
+            f"{self.result_key}_threshold",
+            f"{self.result_key}_properties",
+        ]
 
     evaluator_type = ToolCallAccuracyEvaluator
 
