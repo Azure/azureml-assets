@@ -255,8 +255,8 @@ class BaseEvaluatorRunner(ABC):
         """Assert a not-applicable result (intermediate response or skipped evaluation).
 
         Not-applicable results always have label='pass' and a reason starting with
-        'Not applicable'. The score is set to the evaluator's threshold (a numeric value)
-        rather than None, so this method accepts any numeric score or None.
+        'Not applicable'. The score is either None (e.g. ToolCallAccuracyEvaluator) or
+        equal to the evaluator's threshold (most other evaluators).
 
         Args:
             result_data: Dictionary containing evaluation result data.
@@ -269,9 +269,9 @@ class BaseEvaluatorRunner(ABC):
         assert result_data[label_key] == "pass", \
             f"Expected 'pass' but got '{result_data[label_key]}'"
         score = result_data[score_key]
-        if score is not None:
-            assert isinstance(score, (int, float)), \
-                f"Score should be numeric or None for not-applicable result but got type {type(score)}"
+        threshold = self._get_threshold(result_data)
+        assert score is None or score == threshold, \
+            f"Expected score to be None or equal to threshold {threshold} for not-applicable result but got '{score}'"
         assert "Not applicable" in result_data.get("reason", ""), \
             f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
 
