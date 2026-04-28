@@ -1,8 +1,10 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
-# Security: upgrade all OS packages and remove stale kernel headers to patch USN vulnerabilities
+# Security: upgrade all OS packages and patch USN-8176-1 (.NET 8.0 vulnerabilities)
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
+        dotnet-host-8.0 dotnet-hostfxr-8.0 dotnet-runtime-8.0 2>/dev/null || true && \
     apt-get autoremove -y && \
     apt-get autoclean && \
     apt-get clean && \
@@ -56,8 +58,11 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 #   azureml-acft-accelerator (require >=1.16.0), no parent upgrade resolves this
 # fastmcp>=3.2.0: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767
 # Mako>=1.3.11: CVE-2025-46803; transitive dep of alembic, parent uses loose floor
-# pytest>=8.4.2: GHSA-6w46-j5rx-g56g; pre-installed in ptca env from base image, no parent to upgrade
-RUN pip install --upgrade aiohttp==3.13.4 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.7 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'pytest>=8.4.2'
+# pytest>=9.0.3: GHSA-6w46-j5rx-g56g; pre-installed in ptca env from base image, no parent to upgrade
+# lxml>=6.1.0: GHSA-vfmq-68hx-4jfw; transitive dep of multiple packages, parent uses loose floor
+# transformers: GHSA-69w3-r845-3855 requires >=5.0.0rc3 but no such version exists on PyPI
+#   (latest stable is 4.57.6); cannot fix until upstream publishes a patched release
+RUN pip install --upgrade aiohttp==3.13.4 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.7 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'pytest>=9.0.3' 'lxml>=6.1.0'
 # Fix vulnerabilities in base conda env (python 3.13) from ACPT base image (biweekly.202603.1)
 # Base env ships: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1), aiohttp(3.12.x)
 # Same CVEs as ptca env above; base env is separate and must be patched independently
