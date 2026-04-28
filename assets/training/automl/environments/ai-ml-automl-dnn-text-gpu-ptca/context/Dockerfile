@@ -46,6 +46,7 @@ RUN pip install --upgrade 'pillow>=12.1.1'
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
 RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'bokeh>=3.8.2' 'protobuf>=6.33.5' 'onnx>=1.21.0'
 
+
 # Vulnerability patches for ptca environment
 # pytest override: GHSA-6w46-j5rx-g56g — from ACPT base image ptca env; base image not yet patched
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pytest>=9.0.3'
