@@ -6,4 +6,5 @@ dependencies:
 - pip=26.0
 - setuptools<82
 - pip:
+  - cryptography>=46.0.7
   - mldesigner=={{latest-pypi-version:pre}}

@@ -6,6 +6,7 @@ dependencies:
 - pip=26.0
 - setuptools<82
 - pip:
+  - cryptography>=46.0.7
   - azure-ai-ml=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - mldesigner=={{latest-pypi-version:pre}}
