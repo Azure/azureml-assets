@@ -16,7 +16,7 @@ sentencepiece==0.2.1
 peft==0.17.1
 ninja==1.11.1.1
 kornia==0.7.3
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 einops==0.8.0 
 mup==1.0.0 
 pydicom>=2.4.5
