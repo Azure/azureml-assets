@@ -28,19 +28,32 @@ ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 # support Deepspeed launcher requirement of passwordless ssh login
-RUN apt-get update
-RUN apt-get install -y openssh-server openssh-client
+RUN apt-get update && \
+    apt-get install -y openssh-server openssh-client && \
+    apt-get upgrade -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
-# Fix security vulnerabilities
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# pytest 7.4.3 (GHSA-6w46-j5rx-g56g) is installed in ptca env from ACPT base image; overriding since base image hasn't been patched yet
-RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'pytest>=9.0.3'
-# vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-# aiohttp 3.13.3 (GHSA-63hf-3vf5-4wqf et al.) is in base conda env; upgrading to >=3.13.4 for multiple CVE fixes
-RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.5' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4'
+# Fix security vulnerabilities in ptca conda env (active environment)
+# pip>=26.0: GHSA-4xh5-x5gv-qwph, GHSA-6vgw-5pg2-w6jp
+# wheel>=0.46.2: CVE-2026-24049
+# cryptography>=46.0.7: CVE-2026-41727 (NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway)
+# pillow>=12.1.1: GHSA-cfh3-3jmp-rvhc; transitive dep of matplotlib (requires >=8), no parent upgrade resolves this
+# protobuf>=6.33.5: CVE-2026-40186; transitive dep of onnxruntime/tensorboard, parents use loose floors
+# setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2 (vendored jaraco.context), GHSA-8rrh-rw8j-w5fx (vendored wheel)
+# pytest>=9.0.3: GHSA-6w46-j5rx-g56g; pre-installed in ptca env from ACPT base image (7.4.3), no parent to upgrade
+RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.7' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'pytest>=9.0.3'
+
+# Fix security vulnerabilities in base conda env (python 3.13)
+# Same CVEs as above for pip/wheel/cryptography/pillow/protobuf/setuptools, plus:
+# PyJWT>=2.12.0: CVE-2026-32597; transitive dep of msal (>=1.0.0,<3) and azureml-core (<3.0.0), no parent pins safe floor
+# aiohttp>=3.13.4: GHSA-63hf-3vf5-4wqf et al. (8 CVEs); transitive dep of azure SDK, parents use loose floors
+# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive dep chain: azureml-defaults
+#   -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0.
+#   pydantic-settings (all versions through 2.14.0) only requires >=0.21.0, no parent upgrade resolves this
+# requests>=2.33.0: GHSA-gc5v-m9x4-r6x2; transitive dep of msal (>=2.0.0,<3) and azureml-core (>=2.19.1,<3), no parent pins safe floor
+# urllib3>=2.6.3: CVE-2026-37152; transitive dep of requests/azure SDK, parents use loose floors
+RUN conda run -n base python -m pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.7' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'python-dotenv>=1.2.2' 'requests>=2.33.0' 'urllib3>=2.6.3'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -y -n ptca pip>=26.0.1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

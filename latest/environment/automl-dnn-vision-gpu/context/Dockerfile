@@ -90,10 +90,14 @@ RUN pip install --upgrade 'onnx>=1.21.0'
 
 # Security: fix base conda env (python 3.13) — aiohttp (CVE-2026-37899), wheel (CVE-2026-24049),
 # cryptography (CVE-2026-41727), PyJWT (CVE-2026-32597), urllib3, filelock, pillow, bokeh
+# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive dep chain: azureml-defaults
+#   -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0.
+#   pydantic-settings (all versions through 2.14.0) only requires >=0.21.0, no parent upgrade resolves this
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.6.3' 'aiohttp>=3.13.4' 'wheel>=0.46.2' \
     'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' 'pip>=26.0' \
     'filelock>=3.20.3' 'pillow>=12.2.0' 'onnx>=1.21.0' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'python-dotenv>=1.2.2' \
+    'bokeh>=3.8.2'
 # Security: fix ptca conda env — torch (CVE-2025-32434), protobuf (CVE-2026-40186),
 # wheel/setuptools, urllib3, filelock, pillow, PyJWT, bokeh overrides for conda env
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0 
@@ -101,7 +105,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.6.
     'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
     'PyJWT>=2.12.0' 'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' \
     'aiohttp>=3.13.4' 'cryptography>=46.0.7' 'pytest>=9.0.3' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'python-dotenv>=1.2.2' 'bokeh>=3.8.2'
 
 # Patch pillow vulnerability (GHSA-whj4-6x5x-4v2j) across all three conda environments
 RUN pip install --upgrade 'pillow>=12.2.0'
@@ -115,10 +119,13 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow>=12.2.0'
 # requests: transitive dep of azure SDK packages; parent uses template version, cannot upgrade parent
 # aiohttp: transitive dep of azure SDK; parent uses template version, cannot upgrade parent
 # pytest: dev dep in ptca base image; no parent to upgrade
+# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive dep chain: azureml-defaults
+#   -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0.
+#   pydantic-settings (all versions through 2.14.0) only requires >=0.21.0, no parent upgrade resolves this
 RUN pip install --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.0' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.2.0' \
-    'onnx>=1.21.0' 'requests>=2.33.0' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
+    'bokeh>=3.8.2'
 # Remove stale vendored metadata that scanners pick up
 RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
     /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
