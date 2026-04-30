@@ -22,7 +22,8 @@ RUN pip install --no-cache-dir mlflow-skinny==3.10.1
 # nltk: GHSA-gfwx-w7gr-fvh7; >=3.9.4 required
 # pydicom: GHSA-v856-2rf8-9f28; requirements.txt pins ~=2.4.0 allowing vulnerable 2.4.4; override to >=2.4.5
 # requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools>=82.0.1 protobuf==6.33.5 cryptography==46.0.7 pillow==12.1.1 'requests>=2.33.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'nltk>=3.9.4' 'pydicom>=2.4.5'
+# pytest: transitive dep from base image; not a direct requirement of any parent package (GHSA-6w46-j5rx-g56g)
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools>=82.0.1 protobuf==6.33.5 cryptography==46.0.7 pillow==12.2.0 'requests>=2.33.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'nltk>=3.9.4' 'pydicom>=2.4.5' 'pytest>=9.0.3'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2
 # vulnerability in base conda env

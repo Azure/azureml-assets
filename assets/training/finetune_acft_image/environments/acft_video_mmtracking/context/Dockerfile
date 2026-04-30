@@ -16,6 +16,11 @@ RUN pip install -r requirements.txt --no-cache-dir
 # # Note: mmdet should be installed via mim to access the model zoo config folder.
 # RUN mim install mmdet==2.28.2
 
+# Override transformers to fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer)
+# Root cause: azureml-acft-image-components pins transformers==4.53.0; cannot upgrade parent
+# Using --no-deps to avoid pulling incompatible transitive deps for the older HF stack
+RUN pip install --no-cache-dir --no-deps 'transformers==5.5.4'
+
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
 RUN pip install scipy==1.10.1
 RUN pip install gunicorn==23.0.0
@@ -32,7 +37,9 @@ RUN pip install yapf==0.40.1
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # aiohttp: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
 # requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.7 pillow==12.1.1 'aiohttp>=3.13.4' 'requests>=2.33.0'
+# pillow: upgrade 12.1.1→12.2.0 for GHSA-whj4-6x5x-4v2j
+# pytest: from ACPT base image ptca env; no parent to upgrade (GHSA-6w46-j5rx-g56g, CVE-2025-71176 tmpdir handling)
+RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.7 pillow==12.2.0 'aiohttp>=3.13.4' 'requests>=2.33.0' 'pytest>=9.0.3'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
 # Upgrade requests, urllib3, aiohttpin the system Python (3.13) for fixing vulnerability

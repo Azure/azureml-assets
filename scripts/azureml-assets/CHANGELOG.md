@@ -1,3 +1,7 @@
+## 1.17.2 (2026-04-17)
+### 🚀 New Features
+- [#4939](https://github.com/Azure/azureml-assets/pull/4939) Add HumanEvaluationTemplate AssetType
+
 ## 1.17.1 (2026-04-14)
 ### 🐛 Bugs Fixed
 - [#4929](https://github.com/Azure/azureml-assets/pull/4929) Add ACR throttle retry and submission delay for environment builds

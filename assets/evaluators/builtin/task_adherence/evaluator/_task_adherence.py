@@ -2,21 +2,31 @@
 # Licensed under the MIT License.
 import os
 import logging
-from typing import Dict, Union, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typing_extensions import overload, override
 
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._common.utils import (
+    _extract_text_from_content,
+    _get_agent_response,
+    _pretty_format_conversation_history,
+    construct_prompty_model_config,
     reformat_conversation_history,
     reformat_agent_response,
+    reformat_tool_definitions,
+    validate_model_config,
 )
 from azure.ai.evaluation._common._experimental import experimental
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any
+
+if os.getenv("AI_EVALS_USE_PF_PROMPTY", "false").lower() == "true":
+    from promptflow.core._flow import AsyncPrompty
+else:
+    from azure.ai.evaluation._legacy.prompty import AsyncPrompty
 
 
 # region Validators
@@ -54,6 +64,66 @@ class ContentType(str, Enum):
     MCP_APPROVAL_RESPONSE = "mcp_approval_response"
     OPENAPI_CALL = "openapi_call"
     OPENAPI_CALL_OUTPUT = "openapi_call_output"
+
+
+class EvaluationLevel(str, Enum):
+    """Supported evaluation levels for TaskAdherenceEvaluator."""
+
+    CONVERSATION = "conversation"
+    TURN = "turn"
+
+
+def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
+    """Merge query and response message lists into a single conversation."""
+    return [*query, *response]
+
+
+def _split_messages_at_latest_user(messages: List[dict]) -> Tuple[List[dict], List[dict]]:
+    """Split messages into query/response slices at the latest user turn."""
+    latest_user_index = max(i for i, message in enumerate(messages) if message["role"] == MessageRole.USER)
+    return messages[: latest_user_index + 1], messages[latest_user_index + 1:]
+
+
+def _wrap_string_messages(query: str, response: str) -> Tuple[List[dict], List[dict]]:
+    """Wrap string query/response into separate message lists."""
+    return (
+        [{"role": "user", "content": [{"type": "text", "text": query}]}],
+        [{"role": "assistant", "content": [{"type": "text", "text": response}]}],
+    )
+
+
+def _resolve_evaluation_level(
+    evaluation_level: Optional[Union[EvaluationLevel, str]],
+    error_target: ErrorTarget,
+) -> Optional[EvaluationLevel]:
+    """Validate and normalize the evaluation_level parameter."""
+    valid = [level.value for level in EvaluationLevel]
+    if evaluation_level is None:
+        return None
+    if isinstance(evaluation_level, EvaluationLevel):
+        return evaluation_level
+    if isinstance(evaluation_level, str):
+        try:
+            return EvaluationLevel(evaluation_level)
+        except ValueError as exc:
+            raise EvaluationException(
+                message=(
+                    f"Invalid evaluation_level '{evaluation_level}'. "
+                    f"Must be one of: {valid}."
+                ),
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=error_target,
+            ) from exc
+    raise EvaluationException(
+        message=(
+            f"Invalid evaluation_level '{evaluation_level}'. "
+            f"Must be one of: {valid}."
+        ),
+        blame=ErrorBlame.USER_ERROR,
+        category=ErrorCategory.INVALID_VALUE,
+        target=error_target,
+    )
 
 
 class ConversationValidator(ValidatorInterface):
@@ -555,7 +625,200 @@ class ToolDefinitionsValidator(ConversationValidator):
         return True
 
 
+class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
+    """Validator that supports both single-turn (query/response) and multi-turn (messages) inputs."""
+
+    @override
+    def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
+        """Validate evaluation input, supporting messages as an alternative to query/response."""
+        messages = eval_input.get("messages")
+        if messages is not None:
+            if not isinstance(messages, list):
+                raise EvaluationException(
+                    message="messages must be provided as a list of message dictionaries.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if len(messages) == 0:
+                raise EvaluationException(
+                    message="messages list must not be empty.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+
+            valid_roles = {role.value for role in MessageRole}
+            roles_present = set()
+            for index, message in enumerate(messages):
+                if not isinstance(message, dict):
+                    raise EvaluationException(
+                        message=(
+                            f"Each item in 'messages' must be a dictionary, "
+                            f"but item at index {index} is {type(message).__name__}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                role = message.get("role")
+                if role is None:
+                    raise EvaluationException(
+                        message=f"Each message must contain a 'role' key, but message at index {index} is missing it.",
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                if role not in valid_roles:
+                    raise EvaluationException(
+                        message=(
+                            f"Invalid role '{role}' at message index {index}. "
+                            f"Must be one of: {sorted(valid_roles)}."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+                roles_present.add(role)
+
+            if MessageRole.USER not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'user'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if MessageRole.ASSISTANT not in roles_present:
+                raise EvaluationException(
+                    message="messages must contain at least one message with role 'assistant'.",
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+            if messages[-1]["role"] != MessageRole.ASSISTANT:
+                raise EvaluationException(
+                    message=(
+                        f"The last message must have role 'assistant', "
+                        f"but found role '{messages[-1]['role']}'."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+
+            last_content = messages[-1].get("content", "")
+            if isinstance(last_content, list):
+                has_text = any(
+                    (
+                        isinstance(content_item, dict)
+                        and content_item.get("type") in (
+                            ContentType.TEXT,
+                            ContentType.INPUT_TEXT,
+                            ContentType.OUTPUT_TEXT,
+                        )
+                    )
+                    or isinstance(content_item, str)
+                    for content_item in last_content
+                )
+                if not has_text:
+                    raise EvaluationException(
+                        message=(
+                            "The last assistant message must contain text content, "
+                            "not only tool calls. The conversation appears to be "
+                            "mid-execution — provide the agent's final text response."
+                        ),
+                        blame=ErrorBlame.USER_ERROR,
+                        category=ErrorCategory.INVALID_VALUE,
+                        target=self.error_target,
+                    )
+
+            for message in messages:
+                error = self._validate_message_dict(message)
+                if error:
+                    raise error
+
+            tool_definitions = eval_input.get("tool_definitions")
+            tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
+            if tool_definitions_validation_exception:
+                raise tool_definitions_validation_exception
+            return True
+
+        return super().validate_eval_input(eval_input)
+
+
 # endregion Validators
+
+
+def serialize_messages(messages: List[dict]) -> str:
+    """Serialize chat messages into a labeled transcript for the multi-turn prompty."""
+    if not messages:
+        return ""
+
+    all_user_queries: List = []
+    all_agent_responses: List = []
+    current_user_query: List = []
+    current_agent_response: List = []
+    system_message = None
+
+    for message in messages:
+        if not isinstance(message, dict):
+            continue
+        role = message.get("role")
+        if not role:
+            continue
+
+        normalized_message = message
+        if role == MessageRole.ASSISTANT and isinstance(message.get("content"), str):
+            normalized_message = {**message, "content": [{"type": "text", "text": message["content"]}]}
+
+        if role == MessageRole.SYSTEM:
+            system_message = message.get("content", "")
+        elif role == MessageRole.USER and "content" in message:
+            if current_agent_response:
+                formatted = _get_agent_response(current_agent_response, include_tool_messages=True)
+                all_agent_responses.append([formatted])
+                current_agent_response = []
+            content = message["content"]
+            if isinstance(content, str):
+                text_in_message = [content]
+            else:
+                text_in_message = _extract_text_from_content(content)
+            if text_in_message:
+                current_user_query.append(text_in_message)
+        elif role in (MessageRole.ASSISTANT, MessageRole.TOOL):
+            if current_user_query:
+                all_user_queries.append(current_user_query)
+                current_user_query = []
+            current_agent_response.append(normalized_message)
+
+    if current_user_query:
+        all_user_queries.append(current_user_query)
+    if current_agent_response:
+        formatted = _get_agent_response(current_agent_response, include_tool_messages=True)
+        all_agent_responses.append([formatted])
+
+    conversation_history: Dict[str, Any] = {
+        "user_queries": all_user_queries,
+        "agent_responses": all_agent_responses[: len(all_user_queries) - 1] if len(all_user_queries) > 0 else [],
+    }
+    if system_message:
+        conversation_history["system_message"] = system_message
+
+    result = _pretty_format_conversation_history(conversation_history)
+
+    start_index = max(len(all_user_queries) - 1, 0)
+    for index, agent_response in enumerate(all_agent_responses[start_index:], start=start_index):
+        result += f"Agent turn {index + 1}:\n"
+        for message_text in agent_response:
+            if isinstance(message_text, list):
+                for sub_message in message_text:
+                    result += "  " + "\n  ".join(sub_message.split("\n")) + "\n"
+            else:
+                result += "  " + "\n  ".join(message_text.split("\n")) + "\n"
+        result += "\n"
+
+    return result.rstrip("\n")
+
 
 logger = logging.getLogger(__name__)
 
@@ -669,18 +932,29 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
 
     _PROMPTY_FILE = "task_adherence.prompty"
+    _MULTI_TURN_PROMPTY_FILE = "task_adherence_multi_turn.prompty"
     _RESULT_KEY = "task_adherence"
-    _OPTIONAL_PARAMS = ["tool_definitions"]
+    _OPTIONAL_PARAMS = ["tool_definitions", "messages"]
 
     _DEFAULT_TASK_ADHERENCE_SCORE = 0
 
     _validator: ValidatorInterface
+    _evaluation_level: Optional[EvaluationLevel]
+    _multi_turn_flow: AsyncPrompty
 
     id = "azureai://built-in/evaluators/task_adherence"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
     @override
-    def __init__(self, model_config, *, threshold=_DEFAULT_TASK_ADHERENCE_SCORE, credential=None, **kwargs):
+    def __init__(
+        self,
+        model_config,
+        *,
+        threshold=_DEFAULT_TASK_ADHERENCE_SCORE,
+        credential=None,
+        evaluation_level=None,
+        **kwargs,
+    ):
         """Initialize the TaskAdherenceEvaluator.
 
         :param model_config: Configuration for the model
@@ -693,8 +967,13 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         higher_is_better_value = kwargs.pop("_higher_is_better", True)
         self.threshold = threshold_value  # to be removed in favor of _threshold
 
-        # Initialize input validator
-        self._validator = ToolDefinitionsValidator(error_target=ErrorTarget.TASK_ADHERENCE_EVALUATOR)
+        self._evaluation_level = _resolve_evaluation_level(
+            evaluation_level, ErrorTarget.TASK_ADHERENCE_EVALUATOR
+        )
+
+        self._validator = MessagesOrQueryResponseInputValidator(
+            error_target=ErrorTarget.TASK_ADHERENCE_EVALUATOR
+        )
 
         super().__init__(
             model_config=model_config,
@@ -704,6 +983,19 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             credential=credential,
             _higher_is_better=higher_is_better_value,
             **kwargs,
+        )
+
+        multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
+        prompty_model_config = construct_prompty_model_config(
+            validate_model_config(model_config),
+            self._DEFAULT_OPEN_API_VERSION,
+            f"azure-ai-evaluation (type=evaluator subtype={self.__class__.__name__})",
+        )
+        self._multi_turn_flow = AsyncPrompty.load(
+            source=multi_turn_prompty_path,
+            model=prompty_model_config,
+            token_credential=credential,
+            is_reasoning_model=self._is_reasoning_model,
         )
 
     @overload
@@ -776,6 +1068,15 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :rtype: Dict[str, Union[str, float, bool]]
         """
 
+    @overload
+    def __call__(
+        self,
+        *,
+        messages: List[dict],
+        tool_definitions: Optional[Union[dict, List[dict]]] = None,
+    ) -> Dict[str, Union[str, float]]:
+        """Evaluate task adherence for a full multi-turn conversation."""
+
     @override
     def __call__(  # pylint: disable=docstring-missing-param
         self,
@@ -789,24 +1090,55 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
+    def _build_result(
+        self,
+        score: Optional[Union[int, float]],
+        result: str,
+        reason: str,
+        properties: Dict[str, Any],
+        *,
+        threshold: Optional[Union[int, float]] = None,
+        prompty_output_dict: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Union[str, int, float, Dict[str, Any], None]]:
+        """Build a standardized task adherence result dictionary."""
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        resolved_threshold = threshold if threshold is not None else self._threshold
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_threshold": resolved_threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_details": properties,
+            f"{self._result_key}_properties": properties,
+            f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
+            f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
+            f"{self._result_key}_total_tokens": p.get("total_token_count", 0),
+            f"{self._result_key}_finish_reason": p.get("finish_reason", ""),
+            f"{self._result_key}_model": p.get("model_id", ""),
+            f"{self._result_key}_sample_input": p.get("sample_input", ""),
+            f"{self._result_key}_sample_output": p.get("sample_output", ""),
+        }
+
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
         """Return a result indicating that the evaluation is not applicable."""
-        return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_details": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
-        }
+        return self._build_result(
+            score=threshold,
+            result="pass",
+            reason=f"Not applicable: {error_message}",
+            properties={},
+            threshold=threshold,
+        )
+
+    def _should_use_conversation_level(self, eval_input: Dict[str, Any]) -> bool:
+        """Determine whether to use conversation-level evaluation."""
+        if self._evaluation_level == EvaluationLevel.CONVERSATION:
+            return True
+        if self._evaluation_level == EvaluationLevel.TURN:
+            return False
+        return eval_input.get("messages") is not None
 
     @override
     async def _real_call(self, **kwargs):
@@ -817,7 +1149,19 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
         """
-        # Validate input before processing
+        if self._evaluation_level == EvaluationLevel.CONVERSATION and not kwargs.get("messages"):
+            query = kwargs.get("query")
+            response = kwargs.get("response")
+            if isinstance(query, str) and isinstance(response, str) and query and response:
+                query, response = _wrap_string_messages(query, response)
+            if isinstance(query, list) and isinstance(response, list):
+                kwargs["messages"] = _merge_query_response_messages(query, response)
+        elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
+            if any(message.get("role") == MessageRole.USER for message in kwargs["messages"]):
+                query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
+                kwargs["query"] = query_messages
+                kwargs["response"] = response_messages
+
         self._validator.validate_eval_input(kwargs)
 
         return await super()._real_call(**kwargs)
@@ -832,8 +1176,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Dict
         """
-        # we override the _do_eval method as we want the output to be a dictionary,
-        # which is a different schema than _base_prompty_eval.py
+        if self._should_use_conversation_level(eval_input):
+            return await self._do_eval_conversation(eval_input)
         if "query" not in eval_input or "response" not in eval_input:
             raise EvaluationException(
                 message="Both query and response must be provided as input to the Task Adherence evaluator.",
@@ -906,34 +1250,46 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             "tool_calls": tool_calls,
         }
 
+        prompty_input.pop("messages", None)
         prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_input)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    async def _do_eval_conversation(self, eval_input: Dict[str, Any]) -> Dict[str, Union[float, str, bool]]:
+        """Evaluate task adherence across a full conversation."""
+        messages = _preprocess_messages(eval_input["messages"])
+        conversation_text = serialize_messages(messages)
+
+        prompty_kwargs: Dict[str, Any] = {"messages": conversation_text}
+        tool_definitions = eval_input.get("tool_definitions")
+        if tool_definitions:
+            prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
+
+        prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        return self._parse_prompty_output(prompty_output_dict)
+
+    def _parse_prompty_output(self, prompty_output_dict: Dict[str, Any]) -> Dict[str, Union[float, str, bool]]:
+        """Parse prompty output into the task adherence result shape."""
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
-        if isinstance(llm_output, dict):
-            flagged = llm_output.get("flagged", False)
-            reasoning = llm_output.get("reasoning", "")
-            # Convert flagged to numeric score for backward compatibility (1 = pass, 0 = fail)
-            score = 0.0 if flagged else 1.0
-            score_result = "fail" if flagged else "pass"
+        if not isinstance(llm_output, dict):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+            )
 
-            return {
-                f"{self._result_key}": score,
-                f"{self._result_key}_result": score_result,
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_reason": reasoning,
-                f"{self._result_key}_details": llm_output.get("details", {}),
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
-            }
+        flagged = llm_output.get("flagged", False)
+        reasoning = llm_output.get("reasoning", llm_output.get("reason", ""))
+        # Convert flagged to numeric score for backward compatibility (1 = pass, 0 = fail)
+        score = 0.0 if flagged else 1.0
+        score_result = "fail" if flagged else "pass"
+        properties = llm_output.get("details", llm_output.get("properties", {}))
 
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
-            blame=ErrorBlame.SYSTEM_ERROR,
-            category=ErrorCategory.FAILED_EXECUTION,
-            target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
+        return self._build_result(
+            score=score,
+            result=score_result,
+            reason=reasoning,
+            properties=properties,
+            prompty_output_dict=prompty_output_dict,
         )
