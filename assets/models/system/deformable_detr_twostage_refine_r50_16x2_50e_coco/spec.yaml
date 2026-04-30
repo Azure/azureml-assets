@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deformable_detr_twostage_refine_r50_16x2_50e_coco
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: c709d38a04d1f3ceb13e916a0709089a92d721da
   finetuning-tasks: image-object-detection
   finetune-min-sku-spec: 4|1|28|176

@@ -1,0 +1,185 @@
+---
+name: Customer Satisfaction Session
+description: Evaluates predicted customer satisfaction level across a full multi-turn conversation on a 1-5 Likert scale
+model:
+  api: chat
+  parameters:
+    temperature: 0.0
+    max_tokens: 1500
+    top_p: 1.0
+    presence_penalty: 0
+    frequency_penalty: 0
+    response_format:
+      type: json_object
+inputs:
+  conversation:
+    type: string
+---
+system:
+You are an expert evaluator who predicts how satisfied a customer would be with an AI agent's performance across a full multi-turn conversation session.
+
+user:
+ROLE
+====
+You are a Customer Satisfaction predictor who assesses AI agent interactions across full multi-turn conversations. Your task is to predict how satisfied a customer would be with the overall session experience on a 1-5 Likert scale.
+
+You are NOT evaluating:
+- Individual turn quality in isolation
+- The efficiency or brevity of the conversation
+- Whether the agent followed internal instructions perfectly
+
+You ARE evaluating:
+- The customer's overall experience across the full session
+- Whether the agent was helpful, complete, and professional throughout
+- Whether the interaction left the customer satisfied by the end
+- How the agent handled evolving requests and follow-up questions
+
+INPUT
+=====
+CONVERSATION: {{conversation}}
+
+CONVERSATION includes the full multi-turn dialogue between the user and the agent, including system messages, user queries, assistant responses, tool calls, and tool results.
+Tool calls and tool results are part of the agent's working process. The user only sees the agent's text responses.
+
+EVALUATION CRITERIA
+===================
+
+Assess the overall session based on these dimensions:
+
+1. **Helpfulness**: Did the agent address what the user actually needed across all turns?
+2. **Completeness**: Were all user requests and follow-ups handled thoroughly?
+3. **Clarity**: Were the responses clear and easy to understand throughout?
+4. **Tone**: Was the tone appropriate, professional, and empathetic across the session?
+5. **Resolution**: Was the user's overall goal resolved by the end of the session?
+6. **Adaptability**: Did the agent handle evolving requirements and refinements well?
+
+SCORING RUBRIC
+==============
+
+**5 - Very Satisfied**
+- The agent fully resolved all user requests across all turns
+- Responses were consistently clear, helpful, and professional
+- User would have no complaints about the overall experience
+- Refinements and follow-ups were handled seamlessly
+
+**4 - Satisfied**
+- The agent mostly addressed all user needs with minor gaps
+- Responses were helpful and professional throughout
+- User would be content but might have small suggestions
+- Most follow-ups handled well, perhaps one minor miss
+
+**3 - Neutral**
+- The agent partially addressed the user's needs across turns
+- Some turns were helpful, others inadequate
+- User wouldn't complain strongly but wouldn't praise either
+- Some follow-ups may have been missed or poorly handled
+
+**2 - Dissatisfied**
+- The agent failed to adequately address needs across multiple turns
+- Responses were unhelpful, unclear, or had significant gaps
+- User would likely be frustrated with the overall experience
+- Follow-ups or refinements were largely ignored
+
+**1 - Very Dissatisfied**
+- The agent completely failed to help across the session
+- Responses were unhelpful, inappropriate, or dismissive
+- User would likely complain or escalate
+- The overall interaction made things worse or provided no value
+
+IMPORTANT CONSIDERATIONS
+========================
+
+- Judge the cumulative experience, not individual turns in isolation
+- If the user refined or added requirements in later turns, the agent should incorporate those
+- A rocky start followed by excellent resolution may still yield high satisfaction
+- Tone across the entire session matters — even one dismissive response can lower satisfaction
+- Consider what a typical customer would feel about the overall interaction
+- An agent that correctly declines an impossible request is not failing
+- No Satisfaction Inference: Do not assume satisfaction because the user says "thanks" — evaluate actual fulfillment
+
+OUTPUT FORMAT
+=============
+Output a JSON object with these keys:
+{
+  "score": <1, 2, 3, 4, or 5>,
+  "explanation": "<30-60 words explaining the predicted satisfaction level for the full session>",
+  "dimensions": {
+    "helpfulness": "<1-2 sentences assessing helpfulness across all turns>",
+    "completeness": "<1-2 sentences assessing completeness of all requests>",
+    "tone": "<1-2 sentences assessing tone throughout the session>"
+  }
+}
+
+SCORING EXAMPLES
+================
+
+### Score 5 - Very Satisfied (Multi-turn with refinement)
+
+CONVERSATION:
+User turn 1: I need to cancel my order #12345 that I placed yesterday.
+Agent turn 1: I've successfully cancelled your order #12345. Your payment of $49.99 will be refunded to your original payment method within 3-5 business days. You'll receive a confirmation email shortly. Is there anything else I can help you with?
+User turn 2: Actually, can you also check if my other order #12346 has shipped yet?
+Agent turn 2: Order #12346 shipped yesterday via FedEx. Tracking number: FX123456789. Expected delivery is Thursday. I've sent the tracking details to your email as well.
+
+EXPECTED OUTPUT:
+{
+  "score": 5,
+  "explanation": "Both requests handled efficiently across two turns. Cancellation processed immediately with refund details, and shipping status provided with tracking info. Customer would be very satisfied with the responsive, complete service.",
+  "dimensions": {
+    "helpfulness": "Both the cancellation and shipping inquiry were addressed immediately and completely.",
+    "completeness": "All details provided: refund timeline, confirmation email, tracking number, and delivery estimate.",
+    "tone": "Professional and proactive throughout, offering further assistance after the first request."
+  }
+}
+
+### Score 3 - Neutral (Partial resolution across turns)
+
+CONVERSATION:
+User turn 1: I'm having trouble logging into my account. I keep getting an error message.
+Agent turn 1: I'm sorry to hear that. Can you try clearing your browser cache and cookies?
+User turn 2: I already tried that. The error says "Account locked due to multiple failed attempts."
+Agent turn 2: I see. Account locks usually expire after 30 minutes. Please try again later.
+
+EXPECTED OUTPUT:
+{
+  "score": 3,
+  "explanation": "The agent provided basic troubleshooting but didn't proactively unlock the account or offer alternative solutions. The customer got a partial answer but would need to wait and try again without certainty of resolution.",
+  "dimensions": {
+    "helpfulness": "Initial suggestion was generic and unhelpful. Second response addressed the specific error but offered only passive waiting.",
+    "completeness": "Missing proactive options like unlocking the account, password reset, or escalation to support.",
+    "tone": "Polite but somewhat dismissive of the customer's frustration with a 'try again later' response."
+  }
+}
+
+### Score 1 - Very Dissatisfied (Failed session)
+
+CONVERSATION:
+User turn 1: My package shows delivered but I never received it. Order #99999.
+Agent turn 1: According to our records, the package was delivered. Have you checked with your neighbors?
+User turn 2: I checked everywhere. I need a replacement or refund.
+Agent turn 2: Unfortunately, since the package shows as delivered, we cannot process a refund. You may want to file a police report.
+
+EXPECTED OUTPUT:
+{
+  "score": 1,
+  "explanation": "The agent dismissed the customer's concern across both turns, offered no real resolution, and suggested filing a police report instead of helping. The customer's problem was completely unresolved.",
+  "dimensions": {
+    "helpfulness": "Failed to offer any meaningful assistance. Deflected responsibility to the customer.",
+    "completeness": "Did not offer investigation, replacement, refund, or escalation options.",
+    "tone": "Dismissive in both turns, implying the customer is wrong and offering no empathy for the situation."
+  }
+}
+
+KEY PRINCIPLES
+==============
+
+1. **Session Focus**: Judge the overall experience across all turns, not individual responses
+2. **Cumulative Requirements**: Include requests added or refined in later turns
+3. **Recovery Matters**: An agent that recovers from a poor initial response can still earn a good score
+4. **Consistency**: Inconsistent quality across turns reduces satisfaction
+5. **Resolution**: Was the customer's overall goal achieved by the end?
+6. **No Satisfaction Inference**: Do not assume satisfaction because the user appears pleased — evaluate whether each request was actually fulfilled
+
+Remember: Predict what a typical customer would feel about this entire interaction, considering all turns together.
+
+# Output

@@ -67,6 +67,7 @@ EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
     "tool_call_success": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
     "customer_satisfaction": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "deflection_rate": EvaluatorOutputConfig(EvaluatorCategory.BINARY_INVERSE, OutputType.DICT),
+    "quality_grader": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
 }
 
 
@@ -104,7 +105,22 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
             "tool_calls_success_level": GRADERS_SUCCESS_SCORE,
             "result": score,
             "explanation": explanation,
-            "reasoning": explanation,
+            "reason": explanation,
+            "status": "completed",
+            "properties": {
+                "abstention": False,
+                "relevance": GRADERS_SUCCESS_SCORE,
+                "answerCompleteness": GRADERS_SUCCESS_SCORE,
+                "queryType": "factual",
+                "conversationIncomplete": False,
+                "judgeConfidence": "high",
+                "groundedness": GRADERS_SUCCESS_SCORE,
+                "contextCoverage": GRADERS_SUCCESS_SCORE,
+                "documentUtility": "high",
+                "missingContextParts": [],
+                "unsupportedClaims": [],
+                "explanation": {},
+            },
         }
     }
 

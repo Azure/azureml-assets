@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: microsoft-Orca-2-7b
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 60e31e6bdcf582ad103b807cb74b73ee1d2c4b17
   inference-min-sku-spec: 24|1|220|64
   inference-recommended-sku: Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2

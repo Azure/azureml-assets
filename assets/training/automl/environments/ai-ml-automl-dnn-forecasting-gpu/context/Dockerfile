@@ -85,9 +85,12 @@ RUN pip install --no-cache-dir \
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.1.1: CVE-2026-25990 (via matplotlib, bokeh, tensorboard)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
+# onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
+#   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (via azureml-automl-runtime -> onnxconverter-common/skl2onnx)
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.1.1' \
-                          'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+                          'bokeh>=3.8.2' \
+                          'onnx>=1.21.0'  # onnx: parent azureml packages cap at <1.18; override for 6 GHSAs
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

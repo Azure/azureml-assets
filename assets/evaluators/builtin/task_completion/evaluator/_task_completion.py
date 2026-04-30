@@ -54,11 +54,11 @@ class EvaluationLevel(str, Enum):
     """Supported evaluation levels for TaskCompletionEvaluator.
 
     - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
-    - ``TRACE``: Force trace-level evaluation using the single-turn query/response path.
+    - ``TURN``: Force turn-level evaluation using the single-turn query/response path.
     """
 
     CONVERSATION = "conversation"
-    TRACE = "trace"
+    TURN = "turn"
 
 
 def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
@@ -1013,8 +1013,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :type credential: Optional[TokenCredential]
         :keyword evaluation_level: Force a specific evaluation level for this invocation. When ``None``
             (default), the level is auto-detected from input shape (``messages`` -> conversation,
-            ``query``/``response`` -> trace). Set to ``EvaluationLevel.CONVERSATION`` or
-            ``EvaluationLevel.TRACE`` to override auto-detection.
+            ``query``/``response`` -> turn). Set to ``EvaluationLevel.CONVERSATION`` or
+            ``EvaluationLevel.TURN`` to override auto-detection.
         :type evaluation_level: Optional[Union[EvaluationLevel, str]]
         :keyword kwargs: Additional keyword arguments.
         """
@@ -1201,7 +1201,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         if self._evaluation_level == EvaluationLevel.CONVERSATION:
             return True
-        if self._evaluation_level == EvaluationLevel.TRACE:
+        if self._evaluation_level == EvaluationLevel.TURN:
             return False
         # Auto-detect (_evaluation_level is None)
         return eval_input.get("messages") is not None
@@ -1242,7 +1242,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 query, response = _wrap_string_messages(query, response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
-        elif self._evaluation_level == EvaluationLevel.TRACE and kwargs.get("messages"):
+        elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
             if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages
@@ -1256,7 +1256,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[int, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
 
-        Routes to conversation-level or trace-level evaluation based on
+        Routes to conversation-level or turn-level evaluation based on
         ``_evaluation_level`` (if set)
         or auto-detects from input shape (default).
 

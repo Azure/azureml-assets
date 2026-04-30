@@ -85,9 +85,13 @@ jobs:
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # - name: Validate models with model schema
-      #   id: validate-models
-      #   run: python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
+      - name: Validate models with model schema
+        id: validate-models
+        run: |
+          python -u -m azureml.registry.data.validate_model_schema -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" --allow-additional-properties || {
+            echo "::error::Model specs are not compliant with the model schema. Please update your model spec or request a change to the model schema. See https://aka.ms/azureml/model-system-metadata for more details. Reach out to System Registry Content team if you have any questions."
+            exit 1
+          }
 
       - name: Check PR labels for "mlflow noncompliant exception" label if new MLFlow model was detected
         if: fromJSON(steps.validate_assets.outputs.mlflow_model_detected || 'false') && !contains(github.event.pull_request.labels.*.name, 'mlflow noncompliant exception')
