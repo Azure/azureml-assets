@@ -14,7 +14,7 @@ COPY finetune_run.py /azureml/finetune/run.py
 RUN pip install mpi4py==4.1.1 --no-cache-dir
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install mlflow==3.10.1
+RUN pip install mlflow==3.11.1
 RUN python -m nltk.downloader punkt
 RUN python -m nltk.downloader punkt_tab
 RUN MAX_JOBS=$(nproc) pip install --no-cache-dir --upgrade flash-attn==2.8.3 --no-build-isolation
@@ -32,7 +32,12 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # aiohttp: transitive dep of ray/vllm/azure-core; parents use loose floors (>=3.10); override needed (GHSA-mwh4-6h8g-pg8w etc.)
 # onnx: onnxruntime/azureml-acft-accelerator require onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
 # requests: transitive dep of azure-core/mlflow/transformers; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.7 pillow==12.1.1 python-multipart==0.0.22 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
+# pillow: GHSA-whj4-6x5x-4v2j; >=12.2.0 required
+# pytest: pre-installed in ACPT base image; no parent package to upgrade (GHSA-6w46-j5rx-g56g)
+# transformers: final override to ensure >=5.0.0 after azureml-* installs (GHSA-69w3-r845-3855)
+# python-multipart: transitive dep (fastmcp → fastapi → python-multipart); parent uses loose floor; override needed (GHSA-mj87-hwqh-73pj)
+# Mako: transitive dep (mlflow → alembic → Mako); parent uses loose floor; override needed (GHSA-v92g-xgxw-vvmm)
+RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.7 pillow==12.2.0 'python-multipart>=0.0.26' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0' 'pytest>=9.0.3' 'transformers>=5.0.0' 'Mako>=1.3.11'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y wheel>=0.46.2 pip>=26.0.1
 # vulnerability in base conda env

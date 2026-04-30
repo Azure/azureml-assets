@@ -65,7 +65,7 @@ RUN pip install \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
-                'pillow==12.1.1'
+                'pillow==12.2.0'
                 # end pypi dependencies
 # end pip install
 
@@ -97,5 +97,11 @@ RUN pip install --upgrade \
     'cryptography>=46.0.5' \
     'protobuf>=5.29.6' \
     'distributed>=2026.1.0' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'bokeh>=3.8.2' \
+    'onnx>=1.21.0' \
+    'pillow>=12.2.0'
+# onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
+#   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
+#   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
+# pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
 # end pip ad-hoc

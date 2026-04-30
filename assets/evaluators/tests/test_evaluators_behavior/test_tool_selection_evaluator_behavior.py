@@ -73,8 +73,11 @@ class TestToolSelectionEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, Base
         "tool_definitions": data.FABRIC_TOOL_DEFINITIONS,
     }
 
-    # OpenAPI: ToolSelection flow is not called (no extractable tool calls)
-    # Expected flow inputs not used since the test will not reach flow assertion
+    test_openapi_expected_flow_inputs = {
+        "query": data.OPENAPI_EXPECTED_FLOW_QUERY,
+        "tool_calls": ["weather_GetCurrentWeather"],
+        "tool_definitions": data.OPENAPI_TOOL_DEFINITIONS,
+    }
 
     test_web_search_expected_flow_inputs = {
         "query": data.WEB_SEARCH_EXPECTED_FLOW_QUERY,
