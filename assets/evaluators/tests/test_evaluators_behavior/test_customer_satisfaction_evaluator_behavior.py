@@ -14,7 +14,6 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import (
     CustomerSatisfactionEvaluator,
-    EvaluationLevel,
 )
 from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
 
