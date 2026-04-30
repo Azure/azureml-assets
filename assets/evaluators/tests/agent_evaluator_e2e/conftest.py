@@ -112,6 +112,20 @@ def project_endpoint():
 
 
 @pytest.fixture(scope="session")
+def eval_endpoint():
+    """Provide the Azure AI eval endpoint for evaluation.
+
+    Falls back to AZURE_AI_PROJECT_ENDPOINT if AZURE_AI_EVAL_ENDPOINT is not set.
+    When using a separate eval endpoint, the x-agent-base-url-override header
+    allows the eval service to reach agents/responses created on a different endpoint.
+    """
+    endpoint = os.environ.get("AZURE_AI_EVAL_ENDPOINT") or os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
+    if not endpoint:
+        pytest.skip("AZURE_AI_EVAL_ENDPOINT / AZURE_AI_PROJECT_ENDPOINT not set")
+    return endpoint
+
+
+@pytest.fixture(scope="session")
 def model_deployment_name():
     """Provide the model deployment name from environment."""
     name = os.environ.get("AZURE_AI_MODEL_DEPLOYMENT_NAME")
@@ -142,6 +156,24 @@ def openai_client(project_client):
     client = project_client.get_openai_client()
     yield client
     client.close()
+
+
+@pytest.fixture(scope="session")
+def eval_client(eval_endpoint, project_endpoint, credential):
+    """OpenAI client for evaluation – points at the eval endpoint.
+
+    Uses x-agent-base-url-override header so the eval service can resolve
+    agents/responses created on the PROD endpoint.
+    """
+    prod_base_url = project_endpoint.rstrip("/") + "/openai/v1"
+    eval_project = AIProjectClient(endpoint=eval_endpoint, credential=credential)
+    base_client = eval_project.get_openai_client()
+    client = base_client.with_options(
+        default_headers={"x-agent-base-url-override": prod_base_url}
+    )
+    yield client
+    client.close()
+    eval_project.close()
 
 
 # ---------------------------------------------------------------------------

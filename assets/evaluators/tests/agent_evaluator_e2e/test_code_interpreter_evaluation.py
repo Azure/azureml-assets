@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class TestCodeInterpreterEvaluation:
     """Test agent evaluation with Code Interpreter tool."""
 
-    def test_evaluate_agent_with_code_interpreter(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_code_interpreter(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses the Code Interpreter."""
         tool = CodeInterpreterTool()
         agent_name = unique_name("E2E-CodeInterpreter")
@@ -46,7 +46,7 @@ class TestCodeInterpreterEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

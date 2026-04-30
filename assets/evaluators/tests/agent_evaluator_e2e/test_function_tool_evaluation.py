@@ -56,7 +56,7 @@ TOOLS: list[Tool] = [FUNCTION_TOOL]
 class TestFunctionToolEvaluation:
     """Test agent evaluation with a local Function Tool."""
 
-    def test_evaluate_agent_with_function_tool(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_function_tool(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that calls a local function tool."""
         agent_name = unique_name("E2E-FunctionTool")
         agent = project_client.agents.create_version(
@@ -104,7 +104,7 @@ class TestFunctionToolEvaluation:
 
             # Evaluate
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

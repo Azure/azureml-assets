@@ -25,7 +25,7 @@ PRODUCT_FILE = os.path.join(ASSET_DIR, "sample_product_info.txt")
 class TestFileSearchEvaluation:
     """Test agent evaluation with File Search tool."""
 
-    def test_evaluate_agent_with_file_search(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_file_search(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses File Search on a vector store."""
         # Setup: create vector store and upload document
         vector_store = openai_client.vector_stores.create(name=unique_name("E2E-VectorStore"))
@@ -57,7 +57,7 @@ class TestFileSearchEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

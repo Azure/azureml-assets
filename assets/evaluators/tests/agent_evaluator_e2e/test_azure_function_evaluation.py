@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 class TestAzureFunctionEvaluation:
     """Test agent evaluation with Azure Function tool."""
 
-    def test_evaluate_agent_with_azure_function(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_azure_function(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses an Azure Function."""
         tool = AzureFunctionTool(
             azure_function=AzureFunctionDefinition(
@@ -96,7 +96,7 @@ class TestAzureFunctionEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

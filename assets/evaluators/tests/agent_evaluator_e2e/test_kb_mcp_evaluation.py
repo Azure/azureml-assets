@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class TestKBMCPEvaluation:
     """Test agent evaluation with Knowledge Base MCP tool."""
 
-    def test_evaluate_agent_with_kb_mcp(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_kb_mcp(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses a Knowledge Base via MCP."""
         server_url = os.environ["MCP_KB_SERVER_URL"]
         connection_id = os.environ["MCP_KB_PROJECT_CONNECTION_ID"]
@@ -64,7 +64,7 @@ class TestKBMCPEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 class TestAISearchEvaluation:
     """Test agent evaluation with Azure AI Search tool."""
 
-    def test_evaluate_agent_with_ai_search(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_ai_search(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses Azure AI Search."""
         tool = AzureAISearchTool(
             azure_ai_search=AzureAISearchToolResource(
@@ -74,7 +74,7 @@ class TestAISearchEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

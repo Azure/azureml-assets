@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 class TestMemorySearchEvaluation:
     """Test agent evaluation with Memory Search tool."""
 
-    def test_evaluate_agent_with_memory_search(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_memory_search(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses a memory store for search."""
         memory_store_name = os.environ.get("MEMORY_STORE_NAME", "my_memory_store")
         user_scope = unique_name("e2e_user")
@@ -102,7 +102,7 @@ class TestMemorySearchEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

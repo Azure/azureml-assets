@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class TestBingCustomSearchEvaluation:
     """Test agent evaluation with Bing Custom Search tool."""
 
-    def test_evaluate_agent_with_bing_custom_search(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_bing_custom_search(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses Bing Custom Search."""
         tool = BingCustomSearchPreviewTool(
             bing_custom_search_preview=BingCustomSearchToolParameters(
@@ -103,7 +103,7 @@ class TestBingCustomSearchEvaluation:
             assert response.output_text, "No text output from agent"
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

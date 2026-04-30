@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class TestMCPEvaluation:
     """Test agent evaluation with MCP tool."""
 
-    def test_evaluate_agent_with_mcp(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_mcp(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses an MCP server."""
         server_url = os.environ.get("MCP_LEARN_SERVER_URL", "https://learn.microsoft.com/api/mcp")
         connection_id = os.environ.get("MCP_LEARN_PROJECT_CONNECTION_ID", "MicrosoftLearn2")
@@ -53,7 +53,7 @@ class TestMCPEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

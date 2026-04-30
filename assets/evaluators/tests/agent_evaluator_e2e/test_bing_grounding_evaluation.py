@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class TestBingGroundingEvaluation:
     """Test agent evaluation with Bing Grounding tool."""
 
-    def test_evaluate_agent_with_bing_grounding(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_bing_grounding(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses Bing Grounding."""
         tool = BingGroundingTool(
             bing_grounding=BingGroundingSearchToolParameters(
@@ -68,7 +68,7 @@ class TestBingGroundingEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

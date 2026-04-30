@@ -99,7 +99,7 @@ def _handle_action_and_screenshot(action, current_state, screenshots):
 class TestComputerUseEvaluation:
     """Test agent evaluation with Computer Use tool."""
 
-    def test_evaluate_agent_with_computer_use(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_computer_use(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses the Computer Use tool."""
         computer_model = os.environ.get("COMPUTER_USE_MODEL_DEPLOYMENT_NAME", "computer-use-preview")
 
@@ -211,7 +211,7 @@ class TestComputerUseEvaluation:
             logger.info("Final response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

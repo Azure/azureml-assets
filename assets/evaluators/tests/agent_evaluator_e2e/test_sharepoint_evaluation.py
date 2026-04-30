@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class TestSharePointEvaluation:
     """Test agent evaluation with SharePoint tool."""
 
-    def test_evaluate_agent_with_sharepoint(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_sharepoint(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses a SharePoint tool."""
         tool = SharepointPreviewTool(
             sharepoint_grounding_preview=SharepointGroundingToolParameters(
@@ -69,7 +69,7 @@ class TestSharePointEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

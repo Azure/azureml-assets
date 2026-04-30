@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class TestImageGenerationEvaluation:
     """Test agent evaluation with Image Generation tool."""
 
-    def test_evaluate_agent_with_image_generation(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_image_generation(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses the Image Generation tool."""
         image_model = os.environ["IMAGE_GENERATION_MODEL_DEPLOYMENT_NAME"]
         tool = ImageGenTool(
@@ -63,7 +63,7 @@ class TestImageGenerationEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

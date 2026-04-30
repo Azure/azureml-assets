@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class TestWebSearchEvaluation:
     """Test agent evaluation with Web Search tool."""
 
-    def test_evaluate_agent_with_web_search(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_web_search(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses the Web Search tool."""
         tool = WebSearchPreviewTool(
             user_location=WebSearchApproximateLocation(country="US", city="Seattle", region="Washington")
@@ -102,7 +102,7 @@ class TestWebSearchEvaluation:
             ), "Expected web_search_call in output but got: " + str(output_types)
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

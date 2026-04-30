@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class TestFabricEvaluation:
     """Test agent evaluation with Microsoft Fabric tool."""
 
-    def test_evaluate_agent_with_fabric(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_fabric(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that uses a Microsoft Fabric tool."""
         tool = MicrosoftFabricPreviewTool(
             fabric_dataagent_preview=FabricDataAgentToolParameters(
@@ -69,7 +69,7 @@ class TestFabricEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,

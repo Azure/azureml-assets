@@ -33,7 +33,7 @@ with open(ASSETS_DIR / "weather_openapi.json") as f:
 class TestOpenAPIEvaluation:
     """Test agent evaluation with OpenAPI tool."""
 
-    def test_evaluate_agent_with_openapi(self, project_client, openai_client, model_deployment_name):
+    def test_evaluate_agent_with_openapi(self, project_client, openai_client, eval_client, model_deployment_name):
         """Evaluate an agent that calls an OpenAPI endpoint."""
         tool = OpenApiTool(
             openapi=OpenApiFunctionDefinition(
@@ -65,7 +65,7 @@ class TestOpenAPIEvaluation:
             logger.info("Response:\n%s", response.model_dump_json(indent=2))
 
             eval_run, output_items = run_evaluation(
-                openai_client,
+                eval_client,
                 model_deployment_name,
                 response.id,
                 agent.name,
