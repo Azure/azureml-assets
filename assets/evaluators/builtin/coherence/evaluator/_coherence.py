@@ -85,7 +85,7 @@ def _resolve_evaluation_level(
 ) -> Optional[EvaluationLevel]:
     """Validate and normalize the evaluation_level parameter."""
     valid = [level.value for level in EvaluationLevel]
-    if evaluation_level is None:
+    if evaluation_level is None or evaluation_level == '':
         return None
     if isinstance(evaluation_level, EvaluationLevel):
         return evaluation_level
