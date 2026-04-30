@@ -16,11 +16,20 @@ Use an already built local Docker image, generate an SPDX SBOM with Trivy, and r
 ## Prerequisites
 1. Docker daemon is running.
 2. Built image exists locally (`docker image inspect <image>` passes).
-3. `vcm` CLI is installed and available in PATH.
+3. Python and pip are available to install VCM when missing.
 
 ## Workflow
-1. Validate image exists locally.
-2. Generate SBOM from the image using Trivy container:
+1. Ensure `vcm` CLI is available.
+
+```bash
+if ! command -v vcm >/dev/null 2>&1; then
+   pip install -i https://msdata.pkgs.visualstudio.com/_packaging/Vienna/pypi/simple/ vienna-container-management
+fi
+vcm version
+```
+
+2. Validate image exists locally.
+3. Generate SBOM from the image using Trivy container:
 
 ```bash
 docker run --rm \
@@ -34,14 +43,14 @@ docker run --rm \
   "$IMAGE"
 ```
 
-3. Confirm `sbom.json` exists in the working directory.
-4. Run VCM vulnerability listing:
+4. Confirm `sbom.json` exists in the working directory.
+5. Run VCM vulnerability listing:
 
 ```bash
 vcm image vulnerabilities show --sbom "<absolute-path-to-sbom.json>"
 ```
 
-5. Parse and summarize vulnerabilities by severity and package.
+6. Parse and summarize vulnerabilities by severity and package.
 
 ## Disk/Space Failure Handling
 If Trivy/VCM fails with disk-space errors:
