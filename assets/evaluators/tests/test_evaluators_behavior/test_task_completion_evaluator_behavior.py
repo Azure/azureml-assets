@@ -634,6 +634,21 @@ class TestTaskCompletionEvaluationLevel:
         evaluator._multi_turn_flow.assert_not_called()
         assert "task_completion" in result
 
+    def test_empty_string_level_defaults_to_auto_detect_messages(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+        assert "task_completion" in result
+
+    def test_empty_string_level_defaults_to_auto_detect_query_response(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses single-turn for query/response."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        evaluator(query="Plan a trip.", response="Here's your itinerary.")
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
+
     def test_invalid_string_level_raises(self):
         """Invalid string evaluation_level raises at init time."""
         with pytest.raises(EvaluationException, match="Invalid evaluation_level"):

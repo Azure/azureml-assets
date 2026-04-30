@@ -14,6 +14,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import (
     CustomerSatisfactionEvaluator,
+    EvaluationLevel,
 )
 from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
 
@@ -350,6 +351,57 @@ class TestCustomerSatisfactionSessionBehavior:
 
         assert "customer_satisfaction" in result
         assert 1.0 <= result["customer_satisfaction"] <= 5.0
+
+
+# endregion
+
+
+# region evaluation_level tests
+
+def _create_mocked_evaluator_with_level(evaluation_level=None):
+    """Create a CustomerSatisfactionEvaluator with evaluation_level and mocked flows."""
+    model_config = AzureOpenAIModelConfiguration(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    )
+    evaluator = CustomerSatisfactionEvaluator(
+        model_config=model_config,
+        evaluation_level=evaluation_level,
+    )
+    mock_side_effect = get_flow_side_effect_for_evaluator("customer_satisfaction")
+    evaluator._flow = MagicMock(side_effect=mock_side_effect)
+    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
+    return evaluator
+
+
+@pytest.mark.unittest
+class TestCustomerSatisfactionEvaluationLevel:
+    """Tests for the evaluation_level parameter."""
+
+    def test_empty_string_level_defaults_to_auto_detect_messages(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+        assert "customer_satisfaction" in result
+
+    def test_empty_string_level_defaults_to_auto_detect_query_response(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses single-turn for query/response."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        evaluator(query="How do I return an item?", response="You can return within 30 days.")
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
+
+    def test_invalid_string_level_raises(self):
+        """Invalid string evaluation_level raises at init time."""
+        with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
+            _create_mocked_evaluator_with_level(evaluation_level="batch")
+
+    def test_invalid_type_level_raises(self):
+        """Non-string/non-enum evaluation_level raises at init time."""
+        with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
+            _create_mocked_evaluator_with_level(evaluation_level=42)
 
 
 # endregion
