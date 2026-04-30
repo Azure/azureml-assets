@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.task_adherence"
-version: 7
+version: 8
 displayName: "Task-Adherence-Evaluator-(Preview)"
 description: "Evaluates whether the agent completed the task within the confines of the instructions given to the agentic system. Higher scores indicate better compliance with the instructions. This evaluator is useful when useful for end-to-end system-level task evaluation for agents. Example outputs include actions such as updating a database and textual responses such as writing a report."
 evaluatorType: "builtin"
@@ -12,6 +12,7 @@ tags:
   scenario: "red_team"
   is_red_team_scenario: "true"
   azure_ai_agent_default: "true"
+supportedEvaluationLevels: ["conversation", "turn"]
 initParameterSchema:
   type: "object"
   properties:
@@ -22,6 +23,8 @@ initParameterSchema:
       minimum: 1
       maximum: 5
       multipleOf: 1
+    evaluation_level:
+      type: "string"
   required: ["deployment_name"]
 dataMappingSchema:
   type: "object"
@@ -44,7 +47,13 @@ dataMappingSchema:
         - type: "array"
           items:
             type: "object"
-  required: ["query", "response"]
+    messages:
+      type: "array"
+      items:
+        type: "object"
+  anyOf:
+    - required: ["query", "response"]
+    - required: ["messages"]
 outputSchema:
   task_adherence:
     type: "boolean"
