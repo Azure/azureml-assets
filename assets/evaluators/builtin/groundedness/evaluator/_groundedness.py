@@ -95,7 +95,7 @@ def _resolve_evaluation_level(
     :rtype: Optional[EvaluationLevel]
     """
     valid = [level.value for level in EvaluationLevel]
-    if evaluation_level is None:
+    if evaluation_level is None or evaluation_level == '':
         return None
     if isinstance(evaluation_level, EvaluationLevel):
         return evaluation_level
