@@ -34,22 +34,16 @@ class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
 
     @property
     def expected_result_fields(self):
-        """Get the expected result fields for customer satisfaction evaluator."""
+        """Get expected result fields — metadata now lives inside properties, not as top-level keys."""
         return [
             f"{self._result_prefix}",
             f"{self._result_prefix}_score",
             f"{self._result_prefix}_reason",
             f"{self._result_prefix}_threshold",
             f"{self._result_prefix}_result",
+            f"{self._result_prefix}_passed",
             f"{self._result_prefix}_status",
             f"{self._result_prefix}_properties",
-            f"{self._result_prefix}_prompt_tokens",
-            f"{self._result_prefix}_completion_tokens",
-            f"{self._result_prefix}_total_tokens",
-            f"{self._result_prefix}_finish_reason",
-            f"{self._result_prefix}_model",
-            f"{self._result_prefix}_sample_input",
-            f"{self._result_prefix}_sample_output",
         ]
 
     def assert_not_applicable(self, result_data: Dict[str, Any]):
@@ -232,7 +226,12 @@ class TestCustomerSatisfactionSessionBehavior:
         assert result["customer_satisfaction_result"] == "not_applicable"
         assert result["customer_satisfaction_status"] == "skipped"
         assert result["customer_satisfaction_reason"].startswith("Not applicable:")
-        assert result["customer_satisfaction_properties"] == {}
+        # properties contains default metadata (all zeros/empty) when no prompty output
+        props = result["customer_satisfaction_properties"]
+        assert isinstance(props, dict)
+        assert props["prompt_tokens"] == 0
+        assert props["completion_tokens"] == 0
+        assert props["total_tokens"] == 0
 
     def test_messages_uses_multi_turn_flow(self):
         """Verify that the session path calls _multi_turn_flow, not _flow."""

@@ -1052,23 +1052,18 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
-        return {
-            self._result_key: None,
-            f"{self._result_key}_score": None,
-            f"{self._result_key}_result": "not_applicable",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_status": "skipped",
-            f"{self._result_key}_properties": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
-        }
+        """Return a result indicating that the evaluation is not applicable (skipped).
+
+        Not-applicable results have no score since the evaluator cannot make a judgment
+        (e.g., intermediate responses that are not final agent responses).
+        """
+        return self._build_result(
+            score=None,
+            result="not_applicable",
+            reason=f"Not applicable: {error_message}",
+            status="skipped",
+            properties={},
+        )
 
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
         """Determine whether to use conversation-level evaluation.
@@ -1204,21 +1199,24 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The standardized result dictionary.
         """
         p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        metadata = {
+            "prompt_tokens": p.get("input_token_count", 0),
+            "completion_tokens": p.get("output_token_count", 0),
+            "total_tokens": p.get("total_token_count", 0),
+            "finish_reason": p.get("finish_reason", ""),
+            "model": p.get("model_id", ""),
+            "sample_input": p.get("sample_input", ""),
+            "sample_output": p.get("sample_output", ""),
+        }
         return {
             self._result_key: score,
             f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
+            f"{self._result_key}_passed": result == "pass" if result in ["pass", "fail"] else None,
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_reason": reason,
             f"{self._result_key}_status": status,
-            f"{self._result_key}_properties": properties,
-            f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
-            f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
-            f"{self._result_key}_total_tokens": p.get("total_token_count", 0),
-            f"{self._result_key}_finish_reason": p.get("finish_reason", ""),
-            f"{self._result_key}_model": p.get("model_id", ""),
-            f"{self._result_key}_sample_input": p.get("sample_input", ""),
-            f"{self._result_key}_sample_output": p.get("sample_output", ""),
+            f"{self._result_key}_properties": {**properties, **metadata},
         }
 
     def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Any]:
