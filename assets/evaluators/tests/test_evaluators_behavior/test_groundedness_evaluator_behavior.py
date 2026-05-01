@@ -482,6 +482,20 @@ class TestGroundednessEvaluationLevel:
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
 
+    def test_empty_string_level_defaults_to_auto_detect_messages(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
+        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="")
+        evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+
+    def test_empty_string_level_defaults_to_auto_detect_response_context(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses single-turn for response/context."""
+        evaluator = _create_mocked_groundedness_evaluator_with_level(evaluation_level="")
+        evaluator(response="The sky is blue.", context="The sky is blue due to Rayleigh scattering.")
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
+
     def test_invalid_string_level_raises(self):
         """Invalid string evaluation_level raises at init time."""
         with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
