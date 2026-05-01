@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: nemotron-speech-streaming-en-0.6b-generic-cpu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: "test"
@@ -13,7 +13,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: nemotron-speech-streaming-en-0.6b
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: ""
   capabilities: ""
   supportsReasoning: ""
@@ -32,8 +32,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 730746286
-    vRamFootprintBytes: 730746286
+    fileSizeBytes: 730746534
+    vRamFootprintBytes: 730746534
 description: |
   This model is an optimized version of nemotron-speech-streaming-en-0.6b to enable local inference on CPUs. This model uses RTN quantization.
 
