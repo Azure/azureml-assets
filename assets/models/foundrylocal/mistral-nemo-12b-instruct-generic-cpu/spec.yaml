@@ -14,7 +14,14 @@ tags:
   alias: mistral-nemo-12b-instruct
   directoryPath: v1
   promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\", \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"}"
-  capabilities: ""
+  supportsToolCalling: "true"
+  toolCallStart: "[TOOL_CALLS]"
+  toolCallEnd: "</s>"
+  toolRegisterStart: "[AVAILABLE_TOOLS]"
+  toolRegisterEnd: "[/AVAILABLE_TOOLS]"
+  toolResponseStart: "[TOOL_RESULTS]"
+  toolResponseEnd: "[/TOOL_RESULTS]"
+  capabilities: "tool-calling"
   supportsReasoning: ""
   reasoningStart: ""
   reasoningEnd: ""
