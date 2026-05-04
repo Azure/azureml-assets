@@ -1,16 +1,6 @@
 #PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 USER root
-# Security: upgrade all OS packages, pin linux headers to patched versions, and upgrade binutils/git/wget
-RUN apt-get update && apt-get -y upgrade && \
-    apt-get install -y --only-upgrade linux-headers-5.15.0-163-generic=5.15.0-163.173 linux-headers-5.15.0-163=5.15.0-163.173 linux-libc-dev=5.15.0-163.173 || \
-    apt-get install -y --only-upgrade linux-headers-generic linux-libc-dev && \
-    apt-get install -y --only-upgrade git tar binutils binutils-common binutils-x86-64-linux-gnu libbinutils wget && \
-    apt-get autoremove -y linux-headers-5.15.0-153 linux-headers-5.15.0-153-generic linux-headers-5.15.0-161 linux-headers-5.15.0-161-generic 2>/dev/null && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-# Security: upgrade base conda env (python3.13) from ACPT base image (biweekly.202603.1)
-# Still vulnerable: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1)
-RUN conda run -n base python -m pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 'aiohttp>=3.13.4' 'requests>=2.33.0'
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # GHSA-jx93-g359-86wm, GHSA-hvwj-8w5g-28rg: sglang vulnerabilities; patched in >=0.5.10
@@ -21,7 +11,7 @@ RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install numpy==2.2.5
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
 
-# following are for vulnerability overrides at later\
+# following are for vulnerability overrides at later
 # release of following packages consider moving then to requirements.txt
 RUN pip install --no-cache-dir --force-reinstall "mlflow>=3.2.0,<4.0.0"
 # wandb>=0.26.0: fixes Go stdlib vulnerabilities (GO-2026-4864/4865/4866/4869/4870/4946/4947)
@@ -32,28 +22,6 @@ RUN pip install xgrammar==0.1.32
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 RUN pip install transformers==5.5.4
-# upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
-# protobuf: google-cloud-storage caps <7 (extras); wandb now allows <8; override to ensure patched version
-# cryptography: azureml-mlflow pins <47.0.0; override needed to ensure patched 46.x installed
-# aiohttp: transitive dep of ray/vllm/azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
-# onnx: onnxruntime accepts onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
-# fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
-# anthropic: GHSA-q5f5-3gjm-7mfm, GHSA-w828-4qhx-vxx3; >=0.87.0 required
-# requests: transitive dep of azure-core/mlflow/transformers; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-# python-dotenv: GHSA-mf9w-mj56-hr94; transitive dep of fastmcp(>=1.1.0) and uvicorn(>=0.13);
-#   parents accept >=1.2.2 via loose floors, pin to ensure patched version on rebuild
-RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 protobuf==6.33.5 \
-    'aiohttp>=3.13.4' 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'anthropic>=0.87.0' \
-    'python-dotenv>=1.2.2'
-# GHSA-6w46-j5rx-g56g (CVE-2025-71176): pytest tmpdir vulnerability; patched in >=9.0.3
-# pytest is a transitive dep from base image; no parent upgrade available, override needed.
-# GHSA-v92g-xgxw-vvmm: Mako XSS vulnerability; patched in >=1.3.11
-# Mako is a transitive dep of alembic; alembic requires Mako (no version pin), override ensures patched version.
-RUN pip install --no-cache-dir --upgrade "pytest>=9.0.3" "Mako>=1.3.11"
-# Fix vulnerabilities in the ptca conda environment (pre-built in base image, not targeted by above installs)
-# CVE-2026-1703 (pip), CVE-2026-24049 (wheel)
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade "pip>=26.0" "wheel>=0.46.2" && \
-    rm -f /opt/conda/envs/ptca/conda-meta/wheel-0.45.1*.json /opt/conda/envs/ptca/conda-meta/pip-25.3*.json
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
