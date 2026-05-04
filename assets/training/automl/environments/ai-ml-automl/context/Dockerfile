@@ -66,15 +66,12 @@ RUN pip install \
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
 #
-# pip>=26.0 (CVE-2025-8869): symlink path traversal during tar extraction
-#   Chain: direct conda dep (pip=26.0), upgraded for security
-#
-# wheel>=0.46.2 (CVE-2026-24049): path traversal & privilege escalation via malicious wheel unpack
-#   Chain: setuptools[core] -> wheel (build dependency)
 #
 # cryptography>=46.0.5 (CVE-2026-26007): EC subgroup validation flaw in ECDH/ECDSA on SECT curves
 #   Chain: mltable -> cryptography (direct dep)
 #   Also:  mltable -> azureml-dataprep -> azure-identity -> cryptography
+#   azureml-mlflow 1.61.0 caps cryptography<46.0.0; base image has 46.0.5 but automl env
+#   would resolve to <46.0.0 without this override.
 #
 # protobuf>=5.29.6 (CVE-2025-4565): DoS via uncontrolled recursion in pure-Python decoder
 #   Chain: mlflow-skinny -> protobuf (direct dep)
@@ -85,9 +82,12 @@ RUN pip install \
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
+#
+# python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): symlink-following file overwrite
+#   Chain: azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv
+#   pydantic-settings (all versions through 2.14.0) only requires python-dotenv>=0.21.0;
+#   no parent package pins >=1.2.2, so direct override is required (checked 2026-05-04).
 RUN pip install --upgrade \
-    'pip>=26.0' \
-    'wheel>=0.46.2' \
     'cryptography>=46.0.5,<47' \
     'protobuf>=5.29.6,<6' \
     'distributed>=2026.1.0' \
@@ -99,9 +99,4 @@ RUN pip install --upgrade \
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
 # pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
-#
-# python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): symlink-following file overwrite
-#   Chain: azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv
-#   pydantic-settings (all versions through 2.14.0) only requires python-dotenv>=0.21.0;
-#   no parent package pins >=1.2.2, so direct override is required (checked 2026-05-04).
 # end pip ad-hoc
