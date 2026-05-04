@@ -31,18 +31,24 @@ EXPOSE 5001 8883 8888
 RUN apt-get update && \
     apt-get install -y openssh-server openssh-client && \
     apt-get upgrade -y && \
+    apt-get install -y --only-upgrade \
+        dotnet-host-8.0 \
+        dotnet-hostfxr-8.0 \
+        dotnet-runtime-8.0 || true && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
 # Fix security vulnerabilities in ptca conda env (active environment)
 # pip>=26.0: GHSA-4xh5-x5gv-qwph, GHSA-6vgw-5pg2-w6jp
 # wheel>=0.46.2: CVE-2026-24049
-# cryptography>=46.0.7: CVE-2026-41727 (NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway)
+# cryptography>=46.0.7: CVE-2026-41727 (NOTE: azureml-mlflow~=1.62.0 pins cryptography<47.0.0; compatible)
 # pillow>=12.1.1: GHSA-cfh3-3jmp-rvhc; transitive dep of matplotlib (requires >=8), no parent upgrade resolves this
 # protobuf>=6.33.5: CVE-2026-40186; transitive dep of onnxruntime/tensorboard, parents use loose floors
 # setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2 (vendored jaraco.context), GHSA-8rrh-rw8j-w5fx (vendored wheel)
 # pytest>=9.0.3: GHSA-6w46-j5rx-g56g; pre-installed in ptca env from ACPT base image (7.4.3), no parent to upgrade
-RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.7' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'pytest>=9.0.3'
+# GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep chain: azureml-mlflow -> mlflow-skinny
+#   -> GitPython (>=3.1.9,<4). mlflow-skinny (all versions through 3.11.1) uses loose floor, no parent upgrade resolves this
+RUN pip install --upgrade 'pip>=26.0' 'wheel>=0.46.2' 'cryptography>=46.0.7' 'pillow>=12.1.1' 'protobuf>=6.33.5' 'setuptools>=82.0.1' 'pytest>=9.0.3' 'GitPython>=3.1.47'
 
 # Fix security vulnerabilities in base conda env (python 3.13)
 # Same CVEs as above for pip/wheel/cryptography/pillow/protobuf/setuptools, plus:

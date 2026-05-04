@@ -39,3 +39,8 @@ python-dotenv>=1.2.2
 #   No parent version constrains PyJWT to a CVE-safe floor.
 #   Floor pin required to fix CVE-2026-32597.
 PyJWT>=2.12.0
+# GitPython: transitive dep chain: azureml-mlflow -> mlflow-skinny -> GitPython (>=3.1.9,<4).
+#   mlflow-skinny (all versions through 3.11.1) only requires >=3.1.9,<4 which does not
+#   constrain to a CVE-safe floor. No parent upgrade resolves this.
+#   Floor pin required to fix GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
+GitPython>=3.1.47

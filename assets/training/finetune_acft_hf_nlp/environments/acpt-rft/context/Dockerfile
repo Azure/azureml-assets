@@ -62,11 +62,15 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # lxml>=6.1.0: GHSA-vfmq-68hx-4jfw; transitive dep of multiple packages, parent uses loose floor
 # transformers>=5.0.0rc3: GHSA-69w3-r845-3855 (CVE-2026-1839); arbitrary code execution via torch.load()
 #   in Trainer._load_rng_state(). Direct dep — upgraded from 4.57.6 to patched 5.x
-RUN pip install --upgrade aiohttp==3.13.4 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.7 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'pytest>=9.0.3' 'lxml>=6.1.0' 'transformers>=5.0.0rc3'
+# GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep of wandb (requires
+#   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
+RUN pip install --upgrade aiohttp==3.13.4 protobuf==6.33.5 setuptools==82.0.0 pip==26.0 wheel==0.46.2 cryptography==46.0.7 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'pytest>=9.0.3' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47'
 # Fix vulnerabilities in base conda env (python 3.13) from ACPT base image (biweekly.202603.1)
 # Base env ships: cryptography(44.0.1), pip(25.3), setuptools(80.9.0), wheel(0.45.1), aiohttp(3.12.x)
 # Same CVEs as ptca env above; base env is separate and must be patched independently
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 aiohttp==3.13.4
+# python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0)
+#   and uvicorn (optional, requires >=0.13). No parent release forces >=1.2.2 as of 2026-05-04.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 aiohttp==3.13.4 'python-dotenv>=1.2.2'
 # ray vendors its own copy of aiohttp inside thirdparty_files/ for runtime_env agent;
 # the vendored copy is not upgraded by pip install above. Patching all copies in-place.
 RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \

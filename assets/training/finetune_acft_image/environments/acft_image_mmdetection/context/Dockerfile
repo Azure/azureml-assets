@@ -3,7 +3,6 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 RUN apt-get -y update && apt-get -y upgrade && \
-    apt-get install -y --only-upgrade udev libsystemd0 libudev1 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
@@ -24,14 +23,15 @@ RUN pip install --no-cache-dir --upgrade setuptools==82.0.0
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
 
 # upgrade pip, wheel, setuptools and transitive dependencies in ptca env
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# NOTE: azureml-mlflow~=1.62.0.post2 pins cryptography<47.0.0; upgrading anyway for CVE fix
 # protobuf is required by azureml-acft-accelerator but it is not pinned hence upgrade
 RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 setuptools==82.0.0 cryptography==46.0.7 pillow==12.2.0 \
     'requests>=2.33.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'pytest>=9.0.3'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y 'pip>=26.0.1' 'wheel>=0.46.2'
 # vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+# python-dotenv 1.2.1 (GHSA-mf9w-mj56-hr94): brought in by azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0;
+#   parent packages do not upper-bound python-dotenv so upgrading them won't force >=1.2.2; direct override required (checked 2026-05-04)
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.0.1' 'wheel>=0.46.2' 'setuptools>=82.0.1' \
-    cryptography==46.0.7 'PyJWT>=2.12.0' 'requests>=2.33.0' 'aiohttp>=3.13.4'
+    cryptography==46.0.7 'requests>=2.33.0' 'aiohttp>=3.13.4' 'python-dotenv>=1.2.2'
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

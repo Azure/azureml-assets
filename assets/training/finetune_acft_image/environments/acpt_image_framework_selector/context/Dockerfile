@@ -7,7 +7,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
 # upgrade pip, wheel, protobuf vulnerabilities in ptca env
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# NOTE: azureml-mlflow~=1.62.0 pins cryptography<47.0.0; upgrading anyway for CVE fix
 # setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
 # protobuf parent is mlflow (already latest) which accepts protobuf>=3.12.0, cannot force 6.33.5 via parent
 # aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
@@ -22,7 +22,8 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 
 # vulnerability in base conda env
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.7 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'requests>=2.33.0'
+# python-dotenv: transitive dep of uvicorn[standard] (>=0.13) and pydantic-settings (>=0.21.0) in base conda env; parents use loose floors, cannot force >=1.2.2 via parent (GHSA-mf9w-mj56-hr94)
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.7 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'requests>=2.33.0' 'python-dotenv>=1.2.2'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

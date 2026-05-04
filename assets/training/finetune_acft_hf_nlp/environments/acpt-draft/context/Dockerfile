@@ -33,19 +33,22 @@ RUN pip install xgrammar==0.1.32
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 RUN pip install transformers==5.5.4
 # upgrade pip, wheel, setuptools and transitive deps to fix vulnerabilities
-# protobuf: wandb/google-cloud-storage cap <7, override needed
-# cryptography: azureml-mlflow pins <46.0.0; override needed for CVE fix
+# protobuf: google-cloud-storage caps <7 (extras); wandb now allows <8; override to ensure patched version
+# cryptography: azureml-mlflow pins <47.0.0; override needed to ensure patched 46.x installed
 # aiohttp: transitive dep of ray/vllm/azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
 # onnx: onnxruntime accepts onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
 # fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
 # anthropic: GHSA-q5f5-3gjm-7mfm, GHSA-w828-4qhx-vxx3; >=0.87.0 required
 # requests: transitive dep of azure-core/mlflow/transformers; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
+# python-dotenv: GHSA-mf9w-mj56-hr94; transitive dep of fastmcp(>=1.1.0) and uvicorn(>=0.13);
+#   parents accept >=1.2.2 via loose floors, pin to ensure patched version on rebuild
 RUN pip install --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 protobuf==6.33.5 \
-    'aiohttp>=3.13.4' 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'anthropic>=0.87.0'
+    'aiohttp>=3.13.4' 'requests>=2.33.0' 'onnx>=1.21.0' 'fastmcp>=3.2.0' 'anthropic>=0.87.0' \
+    'python-dotenv>=1.2.2'
 # GHSA-6w46-j5rx-g56g (CVE-2025-71176): pytest tmpdir vulnerability; patched in >=9.0.3
 # pytest is a transitive dep from base image; no parent upgrade available, override needed.
 # GHSA-v92g-xgxw-vvmm: Mako XSS vulnerability; patched in >=1.3.11
-# Mako is a transitive dep of alembic; alembic does not yet pin Mako>=1.3.11, override needed.
+# Mako is a transitive dep of alembic; alembic requires Mako (no version pin), override ensures patched version.
 RUN pip install --no-cache-dir --upgrade "pytest>=9.0.3" "Mako>=1.3.11"
 # Fix vulnerabilities in the ptca conda environment (pre-built in base image, not targeted by above installs)
 # CVE-2026-1703 (pip), CVE-2026-24049 (wheel)

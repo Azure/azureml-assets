@@ -13,18 +13,15 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
 # System package security upgrades
+# Note: libpam0g, libpam-modules, libpam-modules-bin, libpam-runtime overrides
+# removed -- base image (openmpi5.0-ubuntu24.04) already ships patched versions
+# (1.5.3-5ubuntu5.5). Verified 2026-05-04.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
-        libpam0g \
-        libpam-modules \
-        libpam-modules-bin \
-        libpam-runtime && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
 # begin conda create
-# Create conda environment (minimal — packages installed via pip to avoid solver OOM)
+# Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     -c conda-forge && \
@@ -94,14 +91,20 @@ RUN pip install \
 RUN pip install --upgrade \
     'pip>=26.0' \
     'wheel>=0.46.2' \
-    'cryptography>=46.0.5' \
-    'protobuf>=5.29.6' \
+    'cryptography>=46.0.5,<47' \
+    'protobuf>=5.29.6,<6' \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
-    'pillow>=12.2.0'
+    'pillow>=12.2.0' \
+    'python-dotenv>=1.2.2'
 # onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
 # pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
+#
+# python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): symlink-following file overwrite
+#   Chain: azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv
+#   pydantic-settings (all versions through 2.14.0) only requires python-dotenv>=0.21.0;
+#   no parent package pins >=1.2.2, so direct override is required (checked 2026-05-04).
 # end pip ad-hoc

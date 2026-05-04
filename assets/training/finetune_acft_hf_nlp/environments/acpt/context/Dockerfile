@@ -25,19 +25,18 @@ RUN pip install nltk==3.9.4 # Pinning to fix the unsafe deserialization vulnerab
 RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 
 # protobuf is required by onnxruntime, mlflow
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# pyans1 is required by azureml-acft-accelerator, mlflow and both dont pin the libs hence upgrade
+# NOTE: mlflow 3.11.1 pins cryptography<47,>=43.0.0; pinning to 46.0.7 for CVE fix
 # pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
 # parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
 # aiohttp: transitive dep of ray/vllm/azure-core; parents use loose floors (>=3.10); override needed (GHSA-mwh4-6h8g-pg8w etc.)
 # onnx: onnxruntime/azureml-acft-accelerator require onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
-# requests: transitive dep of azure-core/mlflow/transformers; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-# pillow: GHSA-whj4-6x5x-4v2j; >=12.2.0 required
+# requests: transitive dep of azure-core/mlflow/vllm; parents use loose floors (>=2.21.0/>=2.26.0) (GHSA-gc5v-m9x4-r6x2)
+# pillow: GHSA-whj4-6x5x-4v2j; >=12.2.0 required; transformers only pins >=10.0.1
 # pytest: pre-installed in ACPT base image; no parent package to upgrade (GHSA-6w46-j5rx-g56g)
-# transformers: final override to ensure >=5.0.0 after azureml-* installs (GHSA-69w3-r845-3855)
-# python-multipart: transitive dep (fastmcp → fastapi → python-multipart); parent uses loose floor; override needed (GHSA-mj87-hwqh-73pj)
-# Mako: transitive dep (mlflow → alembic → Mako); parent uses loose floor; override needed (GHSA-v92g-xgxw-vvmm)
-RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.7 pillow==12.2.0 'python-multipart>=0.0.26' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0' 'pytest>=9.0.3' 'transformers>=5.0.0' 'Mako>=1.3.11'
+# python-multipart: transitive dep (fastmcp → fastapi → python-multipart); fastapi pins >=0.0.18; override needed (GHSA-mj87-hwqh-73pj)
+# Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
+# python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
+RUN pip install --upgrade pip>=26.0 wheel>=0.46.2 protobuf==6.33.5 pyasn1==0.6.3 cryptography==46.0.7 pillow==12.2.0 'python-multipart>=0.0.26' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0' 'pytest>=9.0.3' 'Mako>=1.3.11' 'python-dotenv>=1.2.2'
 # pip install updates the binary but conda-meta still references old versions; conda install syncs both
 RUN conda install -n ptca -y wheel>=0.46.2 pip>=26.0.1
 # vulnerability in base conda env
