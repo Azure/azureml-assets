@@ -13,9 +13,6 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
 # System package security upgrades
-# Note: libpam0g, libpam-modules, libpam-modules-bin, libpam-runtime overrides
-# removed -- base image (openmpi5.0-ubuntu24.04) already ships patched versions
-# (1.5.3-5ubuntu5.5). Verified 2026-05-04.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get clean && \
