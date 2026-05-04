@@ -28,6 +28,7 @@ ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 # support Deepspeed launcher requirement of passwordless ssh login
+# Remove dotnet-* packages once its fixed in base image (04-05-2026)
 RUN apt-get update && \
     apt-get install -y openssh-server openssh-client && \
     apt-get upgrade -y && \
