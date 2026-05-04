@@ -17,6 +17,7 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
 # begin conda create
 # Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
@@ -31,8 +32,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==82.0.1' \
     'psutil>5.0.0,<6.0.0' \
-    'torch==2.8.0' \
-    'pip>=26.0'
+    'torch==2.8.0'
 # end conda create
 
 # begin pip install
@@ -66,35 +66,16 @@ RUN pip install \
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
 #
-#
-# cryptography>=46.0.5 (CVE-2026-26007): EC subgroup validation flaw in ECDH/ECDSA on SECT curves
-#   Chain: mltable -> cryptography (direct dep)
-#   Also:  mltable -> azureml-dataprep -> azure-identity -> cryptography
-#   azureml-mlflow 1.61.0 caps cryptography<46.0.0; base image has 46.0.5 but automl env
-#   would resolve to <46.0.0 without this override.
-#
-# protobuf>=5.29.6 (CVE-2025-4565): DoS via uncontrolled recursion in pure-Python decoder
-#   Chain: mlflow-skinny -> protobuf (direct dep)
-#   Also:  mlflow-skinny -> databricks-sdk -> protobuf
-#
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
-#
-# python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): symlink-following file overwrite
-#   Chain: azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv
-#   pydantic-settings (all versions through 2.14.0) only requires python-dotenv>=0.21.0;
-#   no parent package pins >=1.2.2, so direct override is required (checked 2026-05-04).
 RUN pip install --upgrade \
-    'cryptography>=46.0.5,<47' \
-    'protobuf>=5.29.6,<6' \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
-    'pillow>=12.2.0' \
-    'python-dotenv>=1.2.2'
+    'pillow>=12.2.0'
 # onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m

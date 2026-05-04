@@ -9,11 +9,7 @@ inference-schema
 MarkupSafe
 regex
 pybind11
-urllib3>=2.6.3
-requests>=2.33.0
-pillow>=12.1.1
 transformers
-aiohttp>=3.13.4
 py-spy
 debugpy
 ipykernel
@@ -23,22 +19,14 @@ matplotlib
 tqdm
 py-cpuinfo
 torch-tb-profiler
-filelock>=3.20.1
+# starlette: transitive dep of azureml-inference-server-http -> fastapi -> starlette.
+#   Not pre-installed in base ptca env; fastapi uses loose floor.
 starlette>=0.49.1
-wheel>=0.46.2
-protobuf>=6.33.5
-# onnx: transitive dep of onnxruntime in base image; parent uses loose floor (>=1.16.0);
-# override needed for GHSA-p433-9wv8-28xj, GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp
-onnx>=1.21.0
 # python-dotenv: transitive dep chain: azureml-defaults -> azureml-inference-server-http
 #   -> pydantic-settings -> python-dotenv>=0.21.0. pydantic-settings (all versions through
 #   2.14.0) only requires >=0.21.0 which does not constrain to a CVE-safe version.
 #   No parent upgrade resolves this. Floor pin required to fix CVE-2026-28684 (GHSA-mf9w-mj56-hr94).
 python-dotenv>=1.2.2
-# PyJWT: transitive dep of msal (requires >=1.0.0,<3) and azureml-core (requires <3.0.0).
-#   No parent version constrains PyJWT to a CVE-safe floor.
-#   Floor pin required to fix CVE-2026-32597.
-PyJWT>=2.12.0
 # GitPython: transitive dep chain: azureml-mlflow -> mlflow-skinny -> GitPython (>=3.1.9,<4).
 #   mlflow-skinny (all versions through 3.11.1) only requires >=3.1.9,<4 which does not
 #   constrain to a CVE-safe floor. No parent upgrade resolves this.
