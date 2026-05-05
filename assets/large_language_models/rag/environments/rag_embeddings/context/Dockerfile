@@ -31,7 +31,8 @@ RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download
 RUN set -eux; \
     apt-get update; \
     # Update system packages to fix PAM vulnerability (USN-7580-1)
-    apt-get upgrade -y; \
+    # ACCEPT_EULA=Y required for msodbcsql17 package upgrade
+    ACCEPT_EULA=Y apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
     # utilities for keeping Debian and OpenJDK CA certificates in sync
     ca-certificates p11-kit wget \
