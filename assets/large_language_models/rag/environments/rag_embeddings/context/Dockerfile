@@ -17,7 +17,9 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # Patch vulnerable Python packages shipped in the base image's Miniconda (outside the AzureML conda env)
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
     urllib3==2.6.3 \
-    setuptools==80.10.2
+    setuptools==80.10.2 \
+    cryptography==46.0.7 \
+    requests==2.33.0
 
 # Sentence Transformers CPU only install
 RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cpu && \
