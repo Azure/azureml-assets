@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Patch Ray's vendored Log4j classes in its distribution jar."""
+
 import hashlib
 import io
 import os
@@ -36,6 +38,7 @@ SKIP_REPLACEMENT_PREFIXES = (
 
 
 def find_ray_dist() -> pathlib.Path:
+    """Find the Ray distribution fat jar."""
     ray_root = pathlib.Path(ray.__file__).resolve().parent
     matches = [
         candidate
@@ -48,6 +51,7 @@ def find_ray_dist() -> pathlib.Path:
 
 
 def download_log4j_jars(version: str) -> dict[str, bytes]:
+    """Download Log4j jars and verify their checksums."""
     jars = {}
     for artifact, checksum_env in LOG4J_ARTIFACTS.items():
         expected_sha1 = os.environ[checksum_env]
@@ -67,6 +71,7 @@ def download_log4j_jars(version: str) -> dict[str, bytes]:
 
 
 def is_log4j_owned_entry(filename: str) -> bool:
+    """Return whether a jar entry belongs to Log4j."""
     return filename.startswith(LOG4J_PREFIXES) or any(
         path_fragment in filename
         for path_fragment in (
@@ -78,6 +83,7 @@ def is_log4j_owned_entry(filename: str) -> bool:
 
 
 def copy_zip_info(source_info: zipfile.ZipInfo, filename: str) -> zipfile.ZipInfo:
+    """Copy zip metadata for a replacement entry."""
     target_info = zipfile.ZipInfo(filename, source_info.date_time)
     target_info.comment = source_info.comment
     target_info.extra = source_info.extra
@@ -89,6 +95,7 @@ def copy_zip_info(source_info: zipfile.ZipInfo, filename: str) -> zipfile.ZipInf
 
 
 def build_replacement_entries(jars: dict[str, bytes]) -> dict[str, tuple[zipfile.ZipInfo, bytes]]:
+    """Build replacement entries from official Log4j jars."""
     replacements = {}
     for artifact, payload in jars.items():
         with zipfile.ZipFile(io.BytesIO(payload), "r") as jar:
@@ -115,6 +122,7 @@ def patch_ray_dist(
     version: str,
     replacements: dict[str, tuple[zipfile.ZipInfo, bytes]],
 ) -> None:
+    """Overlay Log4j replacement entries into Ray's distribution jar."""
     fd, patched_name = tempfile.mkstemp(suffix=".jar")
     os.close(fd)
     patched_path = pathlib.Path(patched_name)
@@ -154,6 +162,7 @@ def patch_ray_dist(
 
 
 def validate_patch(ray_dist: pathlib.Path, version: str) -> None:
+    """Validate that Ray's jar reports the expected Log4j version."""
     with zipfile.ZipFile(ray_dist, "r") as jar:
         for artifact in LOG4J_ARTIFACTS:
             properties_name = (
@@ -166,6 +175,7 @@ def validate_patch(ray_dist: pathlib.Path, version: str) -> None:
 
 
 def main() -> None:
+    """Patch Ray's vendored Log4j contents."""
     version = os.environ["LOG4J_VERSION"]
     ray_dist = find_ray_dist()
     jars = download_log4j_jars(version)

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Smoke-test the slime curated environment image."""
+
 import pathlib
 import zipfile
 
@@ -17,6 +19,7 @@ RAY_DIST_NAMES = ("ray_dist.jar", "ray__dist.jar")
 
 
 def find_ray_dist() -> pathlib.Path:
+    """Find the Ray distribution fat jar."""
     ray_root = pathlib.Path(ray.__file__).resolve().parent
     matches = [
         candidate
