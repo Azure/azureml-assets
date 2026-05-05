@@ -15,16 +15,11 @@ ENV ENABLE_METADATA=true
 # System package security upgrades
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
-        libpam0g \
-        libpam-modules \
-        libpam-modules-bin \
-        libpam-runtime && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # begin conda create
-# Create conda environment (minimal — packages installed via pip to avoid solver OOM)
+# Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     -c conda-forge && \
@@ -37,8 +32,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==82.0.1' \
     'psutil>5.0.0,<6.0.0' \
-    'torch==2.8.0' \
-    'pip>=26.0'
+    'torch==2.8.0'
 # end conda create
 
 # begin pip install
@@ -72,30 +66,12 @@ RUN pip install \
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
 #
-# pip>=26.0 (CVE-2025-8869): symlink path traversal during tar extraction
-#   Chain: direct conda dep (pip=26.0), upgraded for security
-#
-# wheel>=0.46.2 (CVE-2026-24049): path traversal & privilege escalation via malicious wheel unpack
-#   Chain: setuptools[core] -> wheel (build dependency)
-#
-# cryptography>=46.0.5 (CVE-2026-26007): EC subgroup validation flaw in ECDH/ECDSA on SECT curves
-#   Chain: mltable -> cryptography (direct dep)
-#   Also:  mltable -> azureml-dataprep -> azure-identity -> cryptography
-#
-# protobuf>=5.29.6 (CVE-2025-4565): DoS via uncontrolled recursion in pure-Python decoder
-#   Chain: mlflow-skinny -> protobuf (direct dep)
-#   Also:  mlflow-skinny -> databricks-sdk -> protobuf
-#
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
 RUN pip install --upgrade \
-    'pip>=26.0' \
-    'wheel>=0.46.2' \
-    'cryptography>=46.0.5' \
-    'protobuf>=5.29.6' \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
