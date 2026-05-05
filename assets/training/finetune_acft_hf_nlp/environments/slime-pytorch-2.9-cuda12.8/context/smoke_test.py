@@ -31,6 +31,8 @@ def find_ray_dist() -> pathlib.Path:
 assert torch.cuda.is_available() or torch.version.cuda
 assert torch.__version__.startswith("2.9.1")
 assert Version(PIL.__version__) >= Version("12.2.0")
+assert sglang
+assert slime
 
 ray_dist = find_ray_dist()
 for artifact in LOG4J_ARTIFACTS:
