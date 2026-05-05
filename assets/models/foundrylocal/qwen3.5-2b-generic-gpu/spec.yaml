@@ -26,7 +26,7 @@ tags:
   reasoningStart: "<think>"
   reasoningEnd: "</think>"
   contextLength: 262144
-  minFLVersion: "0.0.0"
+  minFLVersion: "1.1.0"
   disable-maap: "true"
 type: custom_model
 variantInfo:
