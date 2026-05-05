@@ -106,6 +106,11 @@ RUN python -m pip install "numpy<2" \
         'PyJWT>=2.12.0'
 
 COPY patch_ray_log4j.py /tmp/patch_ray_log4j.py
+# Ray vendors Log4j inside ray_dist.jar as expanded fat-jar contents plus
+# Maven metadata. Installing newer Log4j jars beside Ray would not change the
+# classes or package metadata that runtime and vulnerability scanners observe,
+# so overlay the fixed Log4j artifacts directly into Ray's fat jar until Ray
+# publishes a wheel with the patched dependency.
 RUN LOG4J_VERSION=${LOG4J_VERSION} \
     LOG4J_API_SHA1=89ff2217b193fb187b134aa6ebcbfa8a28b018a9 \
     LOG4J_CORE_SHA1=b963c3d6bfdf05c61ad47a74e9f9295131607df2 \
