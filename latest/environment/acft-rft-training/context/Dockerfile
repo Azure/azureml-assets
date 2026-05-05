@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202604.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.1
 USER root
 # Security: upgrade all OS packages and patch USN-8176-1 (.NET 8.0 vulnerabilities)
 RUN apt-get update && \
