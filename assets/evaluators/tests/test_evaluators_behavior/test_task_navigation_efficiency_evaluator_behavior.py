@@ -3,6 +3,7 @@
 
 """Behavioral tests for Task Navigation Efficiency Evaluator."""
 
+import json
 import pytest
 from typing import Any, Dict, List
 
@@ -536,6 +537,19 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "String Actions")
         self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_json_stringified_valid_inputs(self):
+        """Test that JSON-stringified valid actions and expected_actions are parsed and evaluated correctly."""
+        results = self._run_evaluation(
+            actions=json.dumps(self.VALID_ACTIONS),
+            expected_actions=json.dumps(self.VALID_EXPECTED_ACTIONS),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "JSON-Stringified Valid Inputs")
+        self.assert_pass(result_data)
+        assert result_data["properties"]["precision_score"] == 1.0
+        assert result_data["properties"]["recall_score"] == 1.0
+        assert result_data["properties"]["f1_score"] == 1.0
 
     def test_none_actions(self):
         """Test with None actions (should error)."""
