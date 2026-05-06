@@ -166,6 +166,63 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
 
         return None
 
+    def _validate_tool_names_and_params(
+        self, tool_names: Any, parameters: Any
+    ) -> Optional[EvaluationException]:
+        """Validate tool names list and parameters dict for tuple-form expected_actions."""
+        # Validate tool names list
+        if not isinstance(tool_names, list):
+            return EvaluationException(
+                message="First element of 'expected_actions' tuple must be a list of tool names.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
+
+        if len(tool_names) == 0:
+            return EvaluationException(
+                message="Tool names list in 'expected_actions' cannot be empty.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
+
+        for idx, name in enumerate(tool_names):
+            if not isinstance(name, str):
+                return EvaluationException(
+                    message=(
+                        f"Tool name at index {idx} in 'expected_actions' must be a string, "
+                        f"got {type(name).__name__}."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+
+        # Validate parameters dict
+        if not isinstance(parameters, dict):
+            return EvaluationException(
+                message="Second element of 'expected_actions' tuple must be a dictionary of parameters.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=self.error_target,
+            )
+
+        # Validate parameter values are dicts
+        for tool_name, params in parameters.items():
+            if not isinstance(params, dict):
+                return EvaluationException(
+                    message=(
+                        f"Parameters for tool '{tool_name}' in 'expected_actions' must be "
+                        f"a dictionary, got {type(params).__name__}."
+                    ),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=self.error_target,
+                )
+
+        return None
+
     def _validate_expected_actions(self, expected_actions: Any) -> Optional[EvaluationException]:
         """Validate the expected_actions parameter."""
         if not expected_actions:
@@ -179,6 +236,7 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
         # expected_actions can be either:
         # 1. A list of tool names (strings)
         # 2. A tuple of (list of tool names, dict of parameters)
+        # 3. A 2-element list [list_of_names, params_dict] (JSON round-trip of tuple form)
 
         if isinstance(expected_actions, tuple):
             # Validate tuple format: (list, dict)
@@ -194,59 +252,18 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
                 )
 
             tool_names, parameters = expected_actions
-
-            # Validate tool names list
-            if not isinstance(tool_names, list):
-                return EvaluationException(
-                    message="First element of 'expected_actions' tuple must be a list of tool names.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            if len(tool_names) == 0:
-                return EvaluationException(
-                    message="Tool names list in 'expected_actions' cannot be empty.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            for idx, name in enumerate(tool_names):
-                if not isinstance(name, str):
-                    return EvaluationException(
-                        message=(
-                            f"Tool name at index {idx} in 'expected_actions' must be a string, "
-                            f"got {type(name).__name__}."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
-
-            # Validate parameters dict
-            if not isinstance(parameters, dict):
-                return EvaluationException(
-                    message="Second element of 'expected_actions' tuple must be a dictionary of parameters.",
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
-            # Validate parameter values are dicts
-            for tool_name, params in parameters.items():
-                if not isinstance(params, dict):
-                    return EvaluationException(
-                        message=(
-                            f"Parameters for tool '{tool_name}' in 'expected_actions' must be "
-                            f"a dictionary, got {type(params).__name__}."
-                        ),
-                        blame=ErrorBlame.USER_ERROR,
-                        category=ErrorCategory.INVALID_VALUE,
-                        target=self.error_target,
-                    )
+            return self._validate_tool_names_and_params(tool_names, parameters)
 
         elif isinstance(expected_actions, list):
+            # Check if it's a 2-element list [list, dict] (JSON round-trip of tuple form)
+            if (
+                len(expected_actions) == 2
+                and isinstance(expected_actions[0], list)
+                and isinstance(expected_actions[1], dict)
+            ):
+                tool_names, parameters = expected_actions
+                return self._validate_tool_names_and_params(tool_names, parameters)
+
             # Validate list of tool names
             if len(expected_actions) == 0:
                 return EvaluationException(
@@ -473,6 +490,30 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
 
         super().__init__(threshold=1.0)
 
+    @staticmethod
+    def _maybe_json_decode(value: Any, field_name: str) -> Any:
+        """Decode a JSON-encoded string into a Python object.
+
+        The cloud Foundry / ACA evaluation runtime delivers list/object fields to
+        code-type evaluators as JSON-encoded strings via dataMapping templating
+        (e.g. ${data.actions}). Accept that shape transparently so that callers
+        using either the in-process Python SDK or the cloud runtime work.
+        """
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise EvaluationException(
+                    message=(
+                        f"'{field_name}' arrived as a string but is not valid JSON: {exc}"
+                    ),
+                    internal_message=str(exc),
+                    blame=ErrorBlame.USER_ERROR,
+                    category=ErrorCategory.INVALID_VALUE,
+                    target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR,
+                )
+        return value
+
     @override
     async def _real_call(self, **kwargs):
         """Perform asynchronous call where real end-to-end evaluation logic is executed.
@@ -482,6 +523,12 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        if "actions" in kwargs:
+            kwargs["actions"] = self._maybe_json_decode(kwargs["actions"], "actions")
+        if "expected_actions" in kwargs:
+            kwargs["expected_actions"] = self._maybe_json_decode(
+                kwargs["expected_actions"], "expected_actions"
+            )
         self._validator.validate_eval_input(kwargs)
         return await super()._real_call(**kwargs)
 
