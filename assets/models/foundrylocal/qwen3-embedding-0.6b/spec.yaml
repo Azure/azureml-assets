@@ -3,5 +3,5 @@ name: qwen3-embedding-0.6b
 version: 1
 path: ./
 tags:
-  foundryLocal: "test"
+  foundryLocal: ""
 type: custom_model
