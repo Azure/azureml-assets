@@ -1,11 +1,13 @@
-This model is a fine-tuned version of nemotron-speech-streaming-en-0.6b for the Spanish language. The model is optimized for local inference. Optimized models are published here in ONNX format to run on CPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs.
-
+This model is a fine-tuned and optimized derivative of nemotron-speech-streaming-en-0.6b, adapted for Spanish speech recognition. The model is optimized for local inference.
+ 
 # Model Description
-- **Developed by:** Microsoft
-- **Model type:** ONNX
-- **License:** MIT
-- **Model Description:** This is a fine-tuned version of the nemotron-speech-streaming-en-0.6b for the Spanish language. It has been converted and optimized for local inference.
-- **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
-
+ 
+- **Developed by:** Microsoft 
+- **Model type:** ONNX 
+- **License:** MIT 
+- **Model Description:** This model is derived from nemotron-speech-streaming-en-0.6b and has been fine-tuned for Spanish speech recognition. It has been converted and optimized for efficient local inference across a wide range of CPU devices. 
+- **Disclaimer:** This model is a fine-tuned and optimized derivative of the base model, adapted for Spanish speech recognition. Due to this adaptation, its capabilities differ substantially from the original English model and are specialized for Spanish-language use cases. The model may not perform as expected on other languages or tasks. Users are responsible for evaluating the model in their specific application context.
+ 
 # Base Model Information
-See Hugging Face model [nemotron-speech-streaming-en-0.6b](https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b) for details.
+ 
+See Hugging Face model https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b for details.
