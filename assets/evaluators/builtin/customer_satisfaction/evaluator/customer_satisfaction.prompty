@@ -84,7 +84,6 @@ IMPORTANT CONSIDERATIONS
 - Partial help is better than no help
 - Tone matters - even a correct answer delivered rudely affects satisfaction
 - **Explicit user dissatisfaction signals**: If the query contains follow-up messages where the user explicitly expresses dissatisfaction (e.g., "that didn't help", "this is useless", "I'm frustrated", "that's not what I asked"), treat this as strong evidence of low satisfaction. A polite but ultimately unhelpful response that the user explicitly rejects MUST score 1 or 2. The agent's professional tone does not compensate for failing to meet the user's stated needs when the user has confirmed the failure.
-- **Unresolved core requests**: If the agent cannot fulfill the user's primary request and only offers workarounds or redirects to external resources, the score should not exceed 3 even if tone and clarity are good — the user's goal was not met.
 
 OUTPUT FORMAT
 =============
