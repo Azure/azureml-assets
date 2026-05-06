@@ -1,0 +1,57 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: mistral-nemo-12b-instruct-generic-gpu
+version: 1
+path: ./
+tags:
+  foundryLocal: "test"
+  license: "apache-2.0"
+  licenseDescription: "This model is provided under the License Terms available at
+    <https://www.apache.org/licenses/LICENSE-2.0.html>."
+  author: Microsoft
+  inputModalities: "text"
+  outputModalities: "text"
+  task: chat-completion
+  maxOutputTokens: 2048
+  alias: mistral-nemo-12b-instruct
+  directoryPath: v1
+  promptTemplate: "{\"system\": \"<s>\", \"user\": \"[INST]\\n{Content}\\n[/INST]\"\
+    , \"assistant\": \"{Content}</s>\", \"prompt\": \"[INST]\\n{Content}\\n[/INST]\"\
+    }"
+  supportsToolCalling: "true"
+  toolCallStart: "[TOOL_CALLS]"
+  toolCallEnd: "</s>"
+  toolRegisterStart: "[AVAILABLE_TOOLS]"
+  toolRegisterEnd: "[/AVAILABLE_TOOLS]"
+  toolResponseStart: "[TOOL_RESULTS]"
+  toolResponseEnd: "[/TOOL_RESULTS]"
+  capabilities: "tool-calling"
+  supportsReasoning: ""
+  reasoningStart: ""
+  reasoningEnd: ""
+  contextLength: 131072
+  minFLVersion: "0.0.0"
+  disable-maap: "true"
+type: custom_model
+variantInfo:
+  parents:
+  - assetId: 
+      azureml://registries/azureml/models/mistral-nemo-12b-instruct/versions/1
+  variantMetadata:
+    modelType: 'ONNX'
+    quantization: ['GPTQ']
+    device: 'gpu'
+    executionProvider: 'WebGPUExecutionProvider'
+    fileSizeBytes: 7828528461
+    vRamFootprintBytes: 7828528461
+description: |-
+  This model is an optimized version of Mistral-Nemo-Instruct-2407 to enable local inference on GPUs. This model uses GPTQ quantization.
+
+  # Model Description
+  - **Developed by:** Microsoft
+  - **Model type:** ONNX
+  - **License:** apache-2.0
+  - **Model Description:** This is a conversion of the Mistral-Nemo-Instruct-2407 for local inference on GPUs.
+  - **Disclaimer:** Model is only an optimization of the base model, any risk associated with the model is the responsibility of the user of the model. Please verify and test for your scenarios. There may be a slight difference in output from the base model with the optimizations applied. Note that optimizations applied are distinct from fine tuning and thus do not alter the intended uses or capabilities of the model.
+
+  # Base Model Information
+  See Hugging Face model [Mistral-Nemo-Instruct-2407](https://huggingface.co/mistralai/Mistral-Nemo-Instruct-2407) for details.
