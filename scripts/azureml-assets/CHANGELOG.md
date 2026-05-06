@@ -1,3 +1,12 @@
+## 1.17.3 (2026-05-06)
+### 🐛 Bugs Fixed
+- Pin `azure-cli~=2.81.0` in `install_requires` to match the version required by
+  `msftkube[base-envs,templates,packaged-distribution]` 2026.4.x+. The package
+  already invokes `az` as a subprocess (see `publish_utils.py`,
+  `environment/build.py`); this just declares the dependency explicitly so pip
+  can resolve `azureml-assets` and `msftkube` together. Also adds Python 3.12
+  to the trove classifiers.
+
 ## 1.17.2 (2026-04-17)
 ### 🚀 New Features
 - [#4939](https://github.com/Azure/azureml-assets/pull/4939) Add HumanEvaluationTemplate AssetType

@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
    name="azureml-assets",
-   version="1.17.2",
+   version="1.17.3",
    description="Utilities for publishing assets to Azure Machine Learning system registries.",
    author="Microsoft Corp",
    packages=find_packages(),
@@ -20,6 +20,13 @@ setup(
       "tenacity>=8.2.2",
       "azure-ai-ml>=1.9.0",
       "azure-identity>=1.16.0",
+      # azure-cli is invoked via subprocess (e.g. publish_utils.py, environment/build.py).
+      # Pinned compatible with msftkube[base-envs,templates,packaged-distribution]
+      # 2026.4.x+, which requires azure-cli~=2.81.0. Without this declaration the
+      # joint pip resolution of azureml-assets + msftkube cannot find a solution
+      # (azureml-assets's transitive azure-ai-ml tree fights msftkube's azure-cli
+      # tree), causing ResolutionImpossible in pipelines that install both.
+      "azure-cli~=2.81.0",
    ],
    python_requires=">=3.8,<4.0",
    license="MIT",
@@ -32,6 +39,7 @@ setup(
       "Programming Language :: Python :: 3.9",
       "Programming Language :: Python :: 3.10",
       "Programming Language :: Python :: 3.11",
+      "Programming Language :: Python :: 3.12",
    ],
    project_urls={
         # 'Documentation': "https://example.com/documentation/",
