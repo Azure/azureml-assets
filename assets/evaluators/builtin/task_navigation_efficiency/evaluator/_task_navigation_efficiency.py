@@ -295,6 +295,15 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
         Raises:
             EvaluationException: If validation fails.
         """
+        # If actions or expected_actions is a string, try to parse it as a JSON list
+        for key in ("actions", "expected_actions"):
+            value = eval_input.get(key)
+            if isinstance(value, str):
+                try:
+                    eval_input[key] = json.loads(value)
+                except (ValueError, TypeError):
+                    pass
+
         # Validate actions
         actions = eval_input.get("actions")
         error = self._validate_actions(actions)
@@ -728,6 +737,15 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        # If actions or expected_actions is a string, try to parse it as a JSON list
+        for key in ("actions", "expected_actions"):
+            value = eval_input.get(key)
+            if isinstance(value, str):
+                try:
+                    eval_input[key] = json.loads(value)
+                except (ValueError, TypeError):
+                    pass
+
         actions = eval_input["actions"]
         expected_actions = eval_input["expected_actions"]
 
