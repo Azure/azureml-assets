@@ -7,6 +7,7 @@ dependencies:
 - setuptools<82
 - pip:
   - urllib3>=2.6.0
+  - cryptography>=46.0.7
   - azure-ml-component=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
   - pyarrow>=14.0.1

@@ -26,8 +26,13 @@ RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
 # aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
 # onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
 # requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
+# pytest comes from the base ACPT image (not a transitive dep of any requirements.txt package);
+# no parent package to upgrade — explicit override required (GHSA-6w46-j5rx-g56g)
+# Mako: transitive dep of mlflow → alembic → Mako; alembic uses loose floor (no version pin),
+# so upgrading mlflow/alembic won't force >=1.3.11 — explicit override required (GHSA-v92g-xgxw-vvmm)
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'skops>=0.13.0' 'wheel>=0.46.2' \
-    cryptography==46.0.7 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
+    cryptography==46.0.7 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0' 'pytest>=9.0.3' \
+    'Mako>=1.3.11'
 
 # Upgrade requests, urllib3, aiohttpin the system Python (3.13) for fixing vulnerability
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet

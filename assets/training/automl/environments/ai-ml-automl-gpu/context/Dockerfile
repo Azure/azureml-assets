@@ -107,7 +107,16 @@ RUN pip install \
 #   conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain L1: azureml-train-automl-runtime -> bokeh<3.0.0
 #   Chain L2: azureml-train-automl-runtime -> dask[complete] -> bokeh (via [diagnostics] extra)
+#
+# onnx>=1.21.0 — GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
+#                GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
+#   Parent packages cap onnx<=1.17.0; upgrading the parent is not possible because
+#   both azureml-automl-runtime==1.62.0 and azureml-train-automl-runtime==1.62.0
+#   (the latest releases) still enforce onnx<=1.17.0,>=1.16.1.
+#   Override is required to remediate the vulnerability.
+#   Chain: azureml-automl-runtime / azureml-train-automl-runtime -> onnx<=1.17.0
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'bokeh>=3.8.2' \
+    'onnx>=1.21.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
