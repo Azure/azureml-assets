@@ -809,7 +809,11 @@ def serialize_messages(messages: List[dict]) -> str:
             normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
 
         if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
-            system_message = msg.get("content", "")
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                system_message = "\n".join(_extract_text_from_content(content))
+            else:
+                system_message = content
 
         elif role == MessageRole.USER and "content" in msg:
             # A new user message after agent messages ends the current agent turn
