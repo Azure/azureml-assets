@@ -16,6 +16,7 @@ USER root:root
 
 ARG IMAGE_NAME=None
 ARG BUILD_NUMBER=None
+ARG OPENSSH_VERSION=1:8.9p1-3ubuntu0.15
 
 ENV com.nvidia.cuda.version $CUDA_VERSION
 ENV com.nvidia.volumes.needed nvidia_driver
@@ -229,7 +230,12 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # Enable debug
 RUN apt-get update && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server openssh-client && \
+    apt-get install --reinstall -y \
+        openssl \
+        libssl-dev \
+        openssh-client=${OPENSSH_VERSION} \
+        openssh-server=${OPENSSH_VERSION} \
+        openssh-sftp-server=${OPENSSH_VERSION} && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

@@ -9,10 +9,15 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Update package lists, upgrade all OS packages, and reinstall system OpenSSL & OpenSSH
+# Update package lists, upgrade all OS packages, and reinstall patched system OpenSSL & OpenSSH
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server && \
+    apt-get install --reinstall -y \
+        openssl \
+        libssl-dev \
+        openssh-client=1:9.6p1-3ubuntu13.16 \
+        openssh-server=1:9.6p1-3ubuntu13.16 \
+        openssh-sftp-server=1:9.6p1-3ubuntu13.16 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

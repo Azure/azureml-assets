@@ -14,7 +14,7 @@ ENV ENABLE_METADATA=true
 # Upgrade critical system and python packages
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
         systemd \
         systemd-sysv \
         libudev1 \
@@ -30,7 +30,14 @@ RUN apt-get update && \
         libpam-modules-bin \
         libpam-modules \
         libpam-runtime \
-        libarchive13 && \
+        libarchive13 \
+        openssh-client \
+        openssh-server \
+        openssh-sftp-server && \
+    for pkg in openssh-client openssh-server openssh-sftp-server; do \
+        installed_version="$(dpkg-query -W -f='${Version}' "$pkg")"; \
+        dpkg --compare-versions "$installed_version" ge "1:8.9p1-3ubuntu0.15"; \
+    done && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create conda environment

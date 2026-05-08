@@ -1,5 +1,6 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# torch>=2.8.0 is required to remediate GHSA-887c-mr87-cxwp.
 # Upgrade pip in base conda env (CVE-2026-1703 requires pip>=26.0; base image ships pip 25.3)
 RUN conda install -n base -c conda-forge 'pip>=26.0' -y
 # Base image packages requiring security upgrades (base image biweekly.202601.1 not yet patched):

@@ -15,6 +15,19 @@ ENV ENABLE_METADATA=true
 # System package security upgrades
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --only-upgrade \
+        openssh-client \
+        openssh-server \
+        openssh-sftp-server && \
+    for package in openssh-client openssh-server openssh-sftp-server; do \
+        version="$(dpkg-query -W -f='${Version}' "$package" 2>/dev/null || true)"; \
+        if [ -n "$version" ]; then \
+            case "$version" in \
+                1:8.9p1-3ubuntu0.*) dpkg --compare-versions "$version" ge "1:8.9p1-3ubuntu0.15" ;; \
+                *) dpkg --compare-versions "$version" ge "1:9.6p1-3ubuntu13.16" ;; \
+            esac; \
+        fi; \
+    done && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -71,13 +84,18 @@ RUN pip install \
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
-RUN pip install --upgrade \
+RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade \
+    'python-dotenv==1.2.2' && \
+    pip install --no-cache-dir --upgrade \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
-    'pillow>=12.2.0'
+    'pillow>=12.2.0' \
+    'python-dotenv==1.2.2'
 # onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
 # pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
+# python-dotenv: upgraded from 1.2.1 for GHSA-mf9w-mj56-hr94 in both
+#   /opt/conda and the AzureML environment
 # end pip ad-hoc

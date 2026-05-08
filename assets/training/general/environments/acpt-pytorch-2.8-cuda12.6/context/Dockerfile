@@ -1,5 +1,9 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
+# Upgrade pip in conda envs (GHSA-jp4c-xjxw-mgf9 requires pip>=26.1; base image ships 26.0.1)
+RUN conda install -n base -c conda-forge 'pip>=26.1' -y && \
+    conda install -n ptca -c conda-forge 'pip>=26.1' -y
+
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir

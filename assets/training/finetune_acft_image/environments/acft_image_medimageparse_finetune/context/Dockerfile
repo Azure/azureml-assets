@@ -10,3 +10,6 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN pip install --no-build-isolation git+https://github.com/facebookresearch/detectron2.git@a1ce2f9
+
+# python-dotenv 1.2.1 in the base conda Python 3.13 env is vulnerable to GHSA-mf9w-mj56-hr94.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'

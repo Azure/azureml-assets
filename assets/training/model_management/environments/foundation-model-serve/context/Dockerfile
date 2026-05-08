@@ -43,7 +43,7 @@ WORKDIR /
 COPY . .
 RUN pip install -e ./ --no-cache-dir
 
-RUN pip install --no-cache-dir torch==2.8.0
+RUN pip install --no-cache-dir torch==2.8.0 pillow==12.2.0
 
 RUN rm -rf ~/.cache/pip
 

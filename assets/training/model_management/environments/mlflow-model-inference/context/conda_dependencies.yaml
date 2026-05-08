@@ -17,3 +17,5 @@ dependencies:
   - joblib
   - h2==4.3.0
   - fastmcp==3.2.0
+  - Mako==1.3.11
+  - python-multipart==0.0.26
