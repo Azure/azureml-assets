@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/models/nemotron-speech-streaming-es-0.6b-ft/onnx/cpu_and_mobile/v1
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md
