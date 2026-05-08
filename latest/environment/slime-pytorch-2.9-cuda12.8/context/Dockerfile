@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260409.v4
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:20260507.v1
 
 USER root
 WORKDIR /root

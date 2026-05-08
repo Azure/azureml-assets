@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "tau2_telecom"
+version: "1"
+tags:
+  azureml.Designer: false
+description: "τ²-bench Telecom - Dual-control agent benchmark for telecom customer
+  service tasks"
+type: uri_folder
+path: sample_data/
