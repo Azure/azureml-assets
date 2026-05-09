@@ -30,7 +30,11 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
 # python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
 # onnx: azureml-acft-accelerator 0.0.89 caps onnx<=1.17.0; override needed for GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m etc.
-RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0'
+# skops: transitive dep with loose floor; override needed (GHSA-m7f4-hrc6-fwg3 etc.)
+RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'pip>=26.1'
+
+# pip install updates the binary but conda-meta still references old versions; conda install syncs both
+RUN conda install -n ptca -y -c conda-forge 'pip>=26.1'
 
 # python-dotenv 1.2.1 in base conda env (python3.13) from ACPT base image needs upgrade (GHSA-mf9w-mj56-hr94)
 RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2'
@@ -38,4 +42,3 @@ RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dot
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
-
