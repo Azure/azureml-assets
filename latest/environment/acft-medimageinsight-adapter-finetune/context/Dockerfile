@@ -17,5 +17,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 # python-dotenv: mlflow → mlflow-skinny → python-dotenv<2,>=0.19.0;
 #   mlflow 3.11.1 (latest as of 2026-05-04) allows >=1.2.2 but pip may resolve older (GHSA-mf9w-mj56-hr94)
 RUN pip install --no-cache-dir --upgrade 'pyasn1>=0.6.3' 'Mako>=1.3.11' 'python-dotenv>=1.2.2'
+# python-dotenv in /opt/conda Python 3.13 also ships as vulnerable 1.2.1 in the base image.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

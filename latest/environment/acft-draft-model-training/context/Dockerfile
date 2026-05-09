@@ -22,6 +22,8 @@ RUN pip install xgrammar==0.1.32
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 RUN pip install transformers==5.5.4
+# python-dotenv in /opt/conda Python 3.13 ships as vulnerable 1.2.1 in the base image.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
