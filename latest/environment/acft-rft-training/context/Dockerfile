@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install azureml-acft-common-components==0.0.89
 RUN pip install azureml-evaluate-mlflow==0.0.89
-RUN pip install verl==0.7.0
+RUN pip install verl==0.7.1
 RUN pip install sacrebleu==2.5.1
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
 
@@ -35,6 +35,7 @@ COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/r
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
 RUN pip install vllm==0.19.0
+RUN python -c "from transformers import HybridCache; import verl.utils.model; from verl.utils.transformers_compat import get_auto_model_for_vision2seq; assert get_auto_model_for_vision2seq() is not None"
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
@@ -65,4 +66,3 @@ RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/
-
