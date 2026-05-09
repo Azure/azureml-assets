@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-base-generic-cpu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-base
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
   contextLength: 448
@@ -32,8 +32,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 402590167
-    vRamFootprintBytes: 402590167
+    fileSizeBytes: 215285518
+    vRamFootprintBytes: 215285518
 description: |-
   This model is an optimized version of Whisper Base for local inference. Optimized models are published here in ONNX format to run on CPU devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
 
