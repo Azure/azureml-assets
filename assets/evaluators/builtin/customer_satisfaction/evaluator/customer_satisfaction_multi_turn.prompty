@@ -96,6 +96,8 @@ IMPORTANT CONSIDERATIONS
 - Consider what a typical customer would feel about the overall interaction
 - An agent that correctly declines an impossible request is not failing
 - No Satisfaction Inference: Do not assume satisfaction because the user says "thanks" — evaluate actual fulfillment
+- **Explicit user dissatisfaction signals**: If the user explicitly expresses dissatisfaction at any point (e.g., "that didn't help", "this is useless", "I'm frustrated", "that's not what I asked"), treat this as strong evidence of low satisfaction. A polite but ultimately unhelpful session that the user explicitly rejects MUST score 1 or 2. The agent must demonstrate meaningful recovery after such signals to earn a higher score. Professional tone does not compensate for failing to meet the user's stated needs when the user has confirmed the failure.
+- **Trailing user messages without agent response**: If the conversation ends with a user message (especially one expressing frustration) and no agent follow-up, this indicates the session ended on a negative note and should be scored accordingly.
 
 OUTPUT FORMAT
 =============

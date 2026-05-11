@@ -3,33 +3,41 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 
-# Install unzip and upgrade OS packages to fix vulnerabilities
+# Install unzip and upgrade OS packages to fix vulnerabilities.
+# `apt-get -y upgrade` against the current ACPT base image (biweekly.202605.1) already pulls
+# openssh-client to 1:8.9p1-3ubuntu0.15 (USN-8222-1 fix) and keeps dotnet-{host,hostfxr,runtime}-8.0
+# at 8.0.26-0ubuntu1~22.04.1 (USN-8176-1 fix), so no explicit `apt-get install` overrides are
+# required. Verified via `apt-get install` returning "0 upgraded, 0 newly installed" for these
+# packages on top of the upgraded layer (build run ca42, 2026-05-08).
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# upgrade pip, wheel and transitive deps to fix vulnerabilities
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# protobuf is a transitive dep of mlflow-skinny/onnx; parents use loose floors (>=3.12.0), cannot force 6.33.5
-# mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635); upgrade after requirements install
-# azureml-mlflow pins mlflow-skinny<=3.5.0, so mlflow must be upgraded separately to avoid resolution conflict
-# mlflow 3.11.1: GHSA-fh64-r2vc-xvhr requires >=3.11.1
+# mlflow 3.5.0 has CVEs (CVE-2025-14287, CVE-2026-2033, CVE-2026-2635, GHSA-fh64-r2vc-xvhr);
+# upgrade after requirements install. azureml-mlflow 1.62.0.post2 pins mlflow-skinny<=3.9.0,
+# so mlflow must be upgraded separately (post-pip-install) to avoid resolver conflict.
 RUN pip install --no-cache-dir mlflow==3.11.1
-# pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
-# parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
-# onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
-# fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
-# requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-# pillow: GHSA-whj4-6x5x-4v2j requires >=12.2.0; direct dep override
-# Mako: GHSA-v92g-xgxw-vvmm requires >=1.3.11; transitive via alembic→mlflow, alembic has no version floor on Mako so override needed
-# pytest: GHSA-6w46-j5rx-g56g requires >=9.0.3; installed by base image, no parent to upgrade so override needed
-RUN pip install --no-cache-dir --upgrade protobuf==6.33.5 cryptography==46.0.7 pyasn1==0.6.3 pillow==12.2.0 wheel>=0.46.2 'fastmcp>=3.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' 'Mako>=1.3.11' 'pytest>=9.0.3'
+# fastmcp + mcp were installed as regular deps of mlflow 3.5.0 (fastmcp→mcp) but orphaned after
+# mlflow 3.11.1 (fastmcp moved to optional "mcp" extra); uninstall both to remove vulnerable packages
+RUN pip uninstall -y fastmcp mcp
 
-# pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
+# Override vulnerable transitive deps in the ptca env (Python 3.10) that pip won't auto-upgrade:
+# Mako: transitive dep (mlflow → alembic 1.18.4 → Mako); alembic 1.18.4 declares "Mako" with no
+#   version pin at all, so pip resolves to 1.3.10 which has GHSA-v92g-xgxw-vvmm. No parent
+#   release floors Mako >= 1.3.11, so explicit override is the only fix.
+# GitPython: transitive dep (mlflow → mlflow-skinny 3.11.1 requires gitpython<4,>=3.1.9); the
+#   loose floor lets pip resolve 3.1.46 which has GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
+#   mlflow-skinny has no release that pins gitpython>=3.1.47, so explicit override is required.
+# pytest: shipped by the ACPT base image (NOT pulled in by any package in requirements.txt nor
+#   any of their transitive deps; verified by inspecting requires_dist of mlflow, mlflow-skinny,
+#   azureml-mlflow, transformers, etc.). No parent package to bump — the base image pre-installs
+#   pytest 7.4.3 and the ACPT base hasn't been rebuilt with a fix yet, so explicit override
+#   to >=9.0.3 is required (GHSA-6w46-j5rx-g56g).
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3'
 
-# Upgrade packages in the system Python(3.13) for fixing vulnerability
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade urllib3==2.6.3 aiohttp==3.13.4 PyNaCl==1.6.2 pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 'PyJWT>=2.12.0' 'requests>=2.33.0'
+# Upgrade python-dotenv in the system Python(3.13)
+# python-dotenv: transitive dep via pydantic-settings (>=0.21.0 floor); parent uses loose floor so base resolves to
+# vulnerable 1.2.1 (GHSA-mf9w-mj56-hr94); override to >=1.2.2
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'

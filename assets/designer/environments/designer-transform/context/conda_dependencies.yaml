@@ -6,4 +6,5 @@ dependencies:
   - pip:
       - pip>=25.3
       - urllib3>=2.6.0
+      - cryptography>=46.0.7
       - azureml-designer-datatransform-modules==0.0.103

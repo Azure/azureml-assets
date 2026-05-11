@@ -48,6 +48,7 @@ class MessageRole(str, Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+    DEVELOPER = "developer"
 
 
 class ContentType(str, Enum):
@@ -98,7 +99,7 @@ def _resolve_evaluation_level(
 ) -> Optional[EvaluationLevel]:
     """Validate and normalize the evaluation_level parameter."""
     valid = [level.value for level in EvaluationLevel]
-    if evaluation_level is None:
+    if evaluation_level is None or evaluation_level == '':
         return None
     if isinstance(evaluation_level, EvaluationLevel):
         return evaluation_level
@@ -771,8 +772,12 @@ def serialize_messages(messages: List[dict]) -> str:
         if role == MessageRole.ASSISTANT and isinstance(message.get("content"), str):
             normalized_message = {**message, "content": [{"type": "text", "text": message["content"]}]}
 
-        if role == MessageRole.SYSTEM:
-            system_message = message.get("content", "")
+        if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
+            content = message.get("content", "")
+            if isinstance(content, list):
+                system_message = "\n".join(_extract_text_from_content(content))
+            else:
+                system_message = content
         elif role == MessageRole.USER and "content" in message:
             if current_agent_response:
                 formatted = _get_agent_response(current_agent_response, include_tool_messages=True)

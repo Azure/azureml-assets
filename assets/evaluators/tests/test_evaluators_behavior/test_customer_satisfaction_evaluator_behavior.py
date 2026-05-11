@@ -14,6 +14,7 @@ from azure.ai.evaluation._exceptions import EvaluationException
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.customer_satisfaction.evaluator._customer_satisfaction import (
     CustomerSatisfactionEvaluator,
+    serialize_messages,
 )
 from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
 
@@ -389,6 +390,133 @@ class TestCustomerSatisfactionSessionBehavior:
 
         assert "customer_satisfaction" in result
         assert 1.0 <= result["customer_satisfaction"] <= 5.0
+
+
+# endregion
+
+
+# region evaluation_level tests
+
+def _create_mocked_evaluator_with_level(evaluation_level=None):
+    """Create a CustomerSatisfactionEvaluator with evaluation_level and mocked flows."""
+    model_config = AzureOpenAIModelConfiguration(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    )
+    evaluator = CustomerSatisfactionEvaluator(
+        model_config=model_config,
+        evaluation_level=evaluation_level,
+    )
+    mock_side_effect = get_flow_side_effect_for_evaluator("customer_satisfaction")
+    evaluator._flow = MagicMock(side_effect=mock_side_effect)
+    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
+    return evaluator
+
+
+@pytest.mark.unittest
+class TestCustomerSatisfactionEvaluationLevel:
+    """Tests for the evaluation_level parameter."""
+
+    def test_empty_string_level_defaults_to_auto_detect_messages(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+        assert "customer_satisfaction" in result
+
+    def test_empty_string_level_defaults_to_auto_detect_query_response(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses single-turn for query/response."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        evaluator(query="How do I return an item?", response="You can return within 30 days.")
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
+
+    def test_invalid_string_level_raises(self):
+        """Invalid string evaluation_level raises at init time."""
+        with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
+            _create_mocked_evaluator_with_level(evaluation_level="batch")
+
+    def test_invalid_type_level_raises(self):
+        """Non-string/non-enum evaluation_level raises at init time."""
+        with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
+            _create_mocked_evaluator_with_level(evaluation_level=42)
+
+
+# region serialize_messages tests
+
+
+@pytest.mark.unittest
+class TestCustomerSatisfactionSerializeMessages:
+    """Unit tests for the serialize_messages helper used by customer satisfaction."""
+
+    def test_system_content_block_list_flattened_to_string(self):
+        """System message with content-block list is flattened, not passed as raw list."""
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "You are a helpful assistant." in result
+        assert "SYSTEM_PROMPT:" in result
+
+    def test_developer_content_block_list_flattened_to_string(self):
+        """Developer message with content-block list is treated like system."""
+        messages = [
+            {"role": "developer", "content": [{"type": "text", "text": "Be concise."}]},
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": "Hello!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Be concise." in result
+
+    def test_system_string_content_still_works(self):
+        """System message with plain string content still works after the fix."""
+        messages = [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "You are helpful." in result
+
+    def test_user_content_block_list_produces_flat_turns(self):
+        """User messages with content-block lists produce correctly flattened turns."""
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Question one."}]},
+            {"role": "assistant", "content": "Answer one."},
+        ]
+        result = serialize_messages(messages)
+        assert "Question one." in result
+        assert "User turn 1:" in result
+
+    def test_multi_text_block_user_message(self):
+        """User message with multiple text blocks produces flat turn content."""
+        messages = [
+            {"role": "user", "content": [
+                {"type": "text", "text": "Part A."},
+                {"type": "text", "text": "Part B."},
+            ]},
+            {"role": "assistant", "content": "Got it."},
+        ]
+        result = serialize_messages(messages)
+        assert "Part A." in result
+        assert "Part B." in result
+
+    def test_system_content_block_multi_text(self):
+        """System message with multiple text blocks joins them with newline."""
+        messages = [
+            {"role": "system", "content": [
+                {"type": "text", "text": "Rule 1."},
+                {"type": "text", "text": "Rule 2."},
+            ]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Rule 1." in result
+        assert "Rule 2." in result
 
 
 # endregion
