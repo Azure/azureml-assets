@@ -10,7 +10,7 @@ tags:
   author: Microsoft
   inputModalities: "text,image"
   outputModalities: "text"
-  task: chat-completion
+  task: vision-language-chat
   maxOutputTokens: 2048
   alias: qwen3.5-9b
   directoryPath: v2
