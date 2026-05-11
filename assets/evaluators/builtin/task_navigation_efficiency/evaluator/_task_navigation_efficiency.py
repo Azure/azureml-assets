@@ -295,6 +295,8 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
         Raises:
             EvaluationException: If validation fails.
         """
+        _normalize_task_navigation_efficiency_eval_input(eval_input)
+
         # If actions or expected_actions is a string, try to parse it as a JSON list
         for key in ("actions", "expected_actions"):
             value = eval_input.get(key)
@@ -320,6 +322,14 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
 
 
 # endregion Validators
+
+
+def _normalize_task_navigation_efficiency_eval_input(eval_input: Dict[str, Any]) -> None:
+    """Normalize SDK-compatible aliases to the assets evaluator input names."""
+    if "actions" not in eval_input and "response" in eval_input:
+        eval_input["actions"] = eval_input["response"]
+    if "expected_actions" not in eval_input and "ground_truth" in eval_input:
+        eval_input["expected_actions"] = eval_input["ground_truth"]
 
 
 # Extend ErrorTarget enum if needed
@@ -737,6 +747,8 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        _normalize_task_navigation_efficiency_eval_input(eval_input)
+
         # If actions or expected_actions is a string, try to parse it as a JSON list
         for key in ("actions", "expected_actions"):
             value = eval_input.get(key)
@@ -891,4 +903,5 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The task navigation efficiency scores and results.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        _normalize_task_navigation_efficiency_eval_input(kwargs)
         return super().__call__(*args, **kwargs)
