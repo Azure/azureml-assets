@@ -4,7 +4,7 @@ hydra-core==1.3.2
 marshmallow==3.26.2
 azure-ai-ml==1.16.1
 azure-identity==1.16.1
-mlflow-skinny==2.13.2
+mlflow-skinny==3.11.1
 azureml-mlflow==1.56.0
 azureml-dataprep==5.4.1
 timm==0.9.16
@@ -16,6 +16,11 @@ sentencepiece==0.2.1
 peft==0.17.1
 ninja==1.11.1.1
 kornia==0.7.3
+# python-dotenv: CVE-2026-28684 / GHSA-mf9w-mj56-hr94 (fixed in 1.2.2).
+# Parent transitive dep chain: mlflow-skinny -> python-dotenv<2,>=0.19.0.
+# mlflow-skinny 3.11.1 (latest) still uses the loose floor >=0.19.0, so a
+# parent upgrade alone resolves to 1.2.1. Direct pin retained until mlflow
+# tightens the floor to >=1.2.2.
 python-dotenv==1.2.2
 einops==0.8.0 
 mup==1.0.0 
@@ -23,12 +28,11 @@ pydicom>=2.4.5
 SimpleITK==2.4.0
 scikit-image==0.24.0 
 arrow==1.3.0 
-nltk==3.9.3 
+nltk==3.9.4 
 dotmap==1.3.30
 h5py==3.14.0
 appdirs==1.4.4
 ffmpeg==1.4
-wheel==0.46.3
 lightning==2.5.5
 azureml-acft-image-components[mip]=={{latest-pypi-version}}
 filelock>=3.20.1

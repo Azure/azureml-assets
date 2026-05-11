@@ -6,7 +6,7 @@ mltable=={{latest-pypi-version}}
 sentencepiece==0.2.1
 transformers==5.0.0
 huggingface-hub>=1.3.0
-datasets==4.0.0
+datasets==4.7.0
 evaluate==0.4.5
 optimum==1.27.0
 accelerate==1.7.0
@@ -16,14 +16,12 @@ rouge-score==0.1.2
 sacrebleu==2.4.0
 bitsandbytes==0.46.0
 einops==0.7.0
-aiohttp==3.13.3
-peft==0.17.0
+aiohttp>=3.13.5
+peft==0.18.0
 deepspeed==0.17.4
-trl==0.21.0
+trl==1.3.0
 tiktoken==0.6.0
 scipy==1.14.0
 catalogue==2.0.10
-cryptography==46.0.7
-setuptools==82.0.0
 requests>=2.33.0
 filelock>=3.20.1
