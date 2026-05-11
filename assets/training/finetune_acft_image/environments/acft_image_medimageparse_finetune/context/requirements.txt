@@ -16,6 +16,11 @@ sentencepiece==0.2.1
 peft==0.17.1
 ninja==1.11.1.1
 kornia==0.7.3
+# python-dotenv: CVE-2026-28684 / GHSA-mf9w-mj56-hr94 (fixed in 1.2.2).
+# Parent transitive dep chain: mlflow-skinny -> python-dotenv<2,>=0.19.0.
+# mlflow-skinny 3.11.1 (latest) still uses the loose floor >=0.19.0, so a
+# parent upgrade alone resolves to 1.2.1. Direct pin retained until mlflow
+# tightens the floor to >=1.2.2.
 python-dotenv==1.2.2
 einops==0.8.0 
 mup==1.0.0 
