@@ -227,9 +227,15 @@ ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.16-cuda12
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-# Enable debug
+# Enable debug + USN-8222-1 OpenSSH upgrade
+# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414) requires openssh >= 1:8.9p1-3ubuntu0.15.
+# openssh-client/openssh-server/openssh-sftp-server are root-level OS packages from the
+# 'openssh' Debian source package (no transitive parent); the fixed parent is published in
+# the jammy-security archive (2026-04-29), so we install them directly to pick up the patched
+# version (plain `apt-get install` after `apt-get update` resolves to the latest candidate).
 RUN apt-get update && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server openssh-client && \
+    apt-get install --reinstall -y openssl libssl-dev && \
+    apt-get install -y openssh-server openssh-client openssh-sftp-server && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
