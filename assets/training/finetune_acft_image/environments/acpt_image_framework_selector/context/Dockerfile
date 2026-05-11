@@ -11,6 +11,7 @@ ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
 
 # vulnerability overrides in base conda env (python3.13)
 # setuptools: base image has 82.0.0, need >=82.0.1 for GHSA-58pv-8j8x-9vj2
-# python-dotenv: transitive dep of uvicorn[standard] (>=0.13) and pydantic-settings (>=0.21.0); parents use loose floors, cannot force >=1.2.2 via parent (GHSA-mf9w-mj56-hr94)
+# python-dotenv: transitive dep of pydantic-settings (requires python-dotenv>=0.21.0) and anaconda-auth (requires python-dotenv with no version floor);
+#   even latest pydantic-settings 2.14.0 and anaconda-auth 0.14.4 use the same loose floors, so >=1.2.2 cannot be forced via parents (GHSA-mf9w-mj56-hr94)
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'python-dotenv>=1.2.2'
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
