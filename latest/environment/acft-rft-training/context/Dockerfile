@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install azureml-acft-common-components==0.0.89
 RUN pip install azureml-evaluate-mlflow==0.0.89
-RUN pip install verl==0.7.1
+RUN pip install verl==0.7.0
 RUN pip install sacrebleu==2.5.1
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
 
@@ -34,8 +34,16 @@ COPY __init__ /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/rewar
 COPY azure_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_grader.py
 COPY azure_python_grader /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/reward_score/azure_python_grader.py
 COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/utils.py
-RUN pip install vllm==0.19.0
-RUN python -c "from transformers import HybridCache; import verl.utils.model; from verl.utils.transformers_compat import get_auto_model_for_vision2seq; assert get_auto_model_for_vision2seq() is not None"
+# vllm pinned to 0.19.1 to fix GHSA-6c4r-fmh3-7rh8 (CVE in librosa transitive dep).
+# Root-cause analysis: librosa was vendored via vllm's `audio` extra; vllm PR #37058 removed
+# librosa entirely. PyPI metadata confirms vllm 0.18.0 still lists `librosa; extra == "audio"`
+# while 0.18.1+ (incl. 0.19.1) do NOT. 0.19.1 also fixes CVE-2026-7141.
+# Parent package (verl 0.7.0) constrains `vllm<=0.12.0,>=0.8.5` only with the [vllm] extra,
+# which is not used here; verl is installed without the extra, so we override vllm directly.
+# Staying on the 0.19.x line (same torch==2.10.0 ABI as 0.19.0) preserves compatibility with
+# the pinned flash-attn wheel and the verl/vLLM internal API patches in vllm_async_server,
+# vllm_rollout, and utils. 0.20.x bumps torch to 2.11.0 and was avoided.
+RUN pip install vllm==0.19.1
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
@@ -52,9 +60,12 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep of wandb (requires
 #   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
 RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47'
-# python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0)
-#   and uvicorn (optional, requires >=0.13). Base image ships 1.2.1 in base conda env.
+# python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0),
+#   uvicorn (optional, requires >=0.13), and fastmcp (requires >=1.1.0). All parents use loose floors,
+#   so no parent upgrade can force >=1.2.2. Base image ships 1.2.1 in base conda env; we patch
+#   both base (python 3.13) and ptca (python 3.10) envs to cover all install paths.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
 # ray vendors its own copy of aiohttp inside thirdparty_files/ for runtime_env agent;
 # the vendored copy is not upgraded by pip install above. Patching all copies in-place.
 RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
@@ -66,3 +77,4 @@ RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/ /opt/conda/pkgs/
+

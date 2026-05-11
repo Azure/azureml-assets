@@ -28,13 +28,14 @@ RUN pip install --no-cache-dir mlflow==3.10.1
 # azure-core, cbor2, jaraco.context, PyJWT: transitive deps with loose floors
 # nltk: GHSA-gfwx-w7gr-fvh7; pyasn1/python-multipart/xgrammar: CVE floors
 # mlflow: azureml-mlflow pins mlflow-skinny<=3.9.0; override needed
-# vllm: GHSA-pq5c-rjhq-qp7p, GHSA-3mwp-wvh9-7528 etc.; >=0.19.0 required
+# vllm: GHSA-pq5c-rjhq-qp7p, GHSA-3mwp-wvh9-7528, GHSA-6c4r-fmh3-7rh8 (librosa LFE); >=0.20.1 required
+#   vllm is a top-level dep in requirements.txt; pin floor here as a safety net
 # pyOpenSSL: GHSA-vp96-hxj8-p424, GHSA-5pwr-322w-8jr4; >=26.0.0 required
 #   azureml-core 1.61.0.post3 pins pyopenssl<26.0.0; no newer azureml-core available (2026-05-04)
 RUN pip install --upgrade 'protobuf>=6.33.5,<7' 'cryptography>=46.0.7,<47' 'xgrammar>=0.1.32' \
     'nltk>=3.9.4' 'pyasn1>=0.6.3' 'python-multipart>=0.0.22' 'ray>=2.55.0' \
     'azure-core>=1.38.0' 'cbor2>=5.9.0' 'jaraco.context>=6.1.0' 'PyJWT>=2.12.0' \
-    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.19.0' 'pyOpenSSL>=26.0.0'
+    'mlflow>=3.8.1,<4.0.0' 'vllm>=0.20.1' 'pyOpenSSL>=26.0.0'
 RUN rm -rf ~/.cache/pip
 # python-dotenv in base conda env: GHSA-mf9w-mj56-hr94; base ships 1.2.1, need >=1.2.2
 #   parent packages: uvicorn (>=0.13), pydantic-settings (>=0.21.0) — both use loose floors
