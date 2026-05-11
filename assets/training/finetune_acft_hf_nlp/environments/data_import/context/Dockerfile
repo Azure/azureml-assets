@@ -3,6 +3,19 @@ FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:{{latest-image-tag}}
 
 USER root
 
+# The base image's miniconda shipped Python 3.10 through tag 20260409.v4, but tag
+# 20260507.v1 upgraded it to Python 3.12 (`MINICONDA_VERSION=py312_26.1.1-1` in the
+# base image history). The packages installed below — azureml-acft-common-components
+# and azureml-acft-contrib-hf-nlp — declare `Requires-Python >=3.8,<3.12` for every
+# released version (latest 0.0.89, checked against PyPI 2026-05-11), so the build
+# fails on the new base if we use the default base env directly. Until the upstream
+# packages add Python 3.12 support we provision a dedicated Python 3.10 conda env
+# at $AZUREML_CONDA_ENVIRONMENT_PATH and prepend it to PATH so subsequent `pip`
+# calls target it. Same pattern is used by
+# assets/training/automl/environments/ai-ml-automl-dnn-gpu/context/Dockerfile.
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/azureml-acft-hf-nlp-data-import
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+
 # sudo is expected by Singularity inside the image
 # Security: upgrade all OS packages and install security-patched system libraries.
 # `apt-get -y upgrade` brings every base-image package to its latest noble-updates
@@ -26,13 +39,25 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
     apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Security: upgrade pip in BASE miniconda (/opt/miniconda) to fix CVE-2026-6357
+# (GHSA-jp4c-xjxw-mgf9). The base miniconda is independent of the Python 3.10 env
+# created below; the vulnerability scanner reports pip from any Python installation
+# in the image, so both must be patched. pip has no upstream parent package to bump,
+# so a direct override is the only fix. Tag 20260507.v1+ already ships pip 26.1.1
+# in the base, making this a no-op for newer bases.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && rm -rf /root/.cache/pip
+
+# Provision the Python 3.10 conda env. We don't constrain pip here because the
+# `defaults` conda channel may not yet have pip 26.1+; we upgrade with `pip install
+# --upgrade pip>=26.1` immediately after env creation (next RUN below).
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip -y && \
+    conda clean -afy
+
 COPY requirements.txt .
 
-# Security: upgrade pip to fix CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). The
-# openmpi5.0-ubuntu24.04 base image ships pip 26.0.1; we need >= 26.1. pip has
-# no upstream parent package to bump, so a direct override is the only fix. Done
-# before `pip install -r requirements.txt` so the patched pip is what installs
-# the rest of the dependencies.
+# Security: upgrade pip in the new Python 3.10 env to fix CVE-2026-6357
+# (GHSA-jp4c-xjxw-mgf9). PATH is already prepended with the new env, so `pip`
+# resolves to $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip.
 RUN pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 RUN pip install -r requirements.txt --no-cache-dir
