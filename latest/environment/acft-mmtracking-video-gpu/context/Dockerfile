@@ -17,8 +17,15 @@ RUN pip install -r requirements.txt --no-cache-dir
 # RUN mim install mmdet==2.28.2
 
 # Override transformers to fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer)
-# Root cause: azureml-acft-image-components pins transformers==4.53.0; cannot upgrade parent
-# Using --no-deps to avoid pulling incompatible transitive deps for the older HF stack
+# Root cause (verified 2026-05 via importlib.metadata against the built image):
+#   - requirements.txt line 8 directly pins `transformers==4.53.0` for compatibility with the
+#     pinned HF stack (accelerate==0.25.0, optimum==1.23.3, diffusers==0.24.0, peft==0.15.2).
+#   - azureml-acft-image-components==0.0.89 (current latest) only constrains transformers via
+#     optional extras (hf/all -> ==4.33.0; mip/mip3d -> >=4.40); none of those extras are
+#     activated in this image, so the parent does NOT block an upgrade.
+#   - Bumping the explicit requirements.txt pin to 5.x is a major-version jump that risks
+#     breaking the rest of the pinned HF stack and is out of scope for a CVE-only patch.
+# Using --no-deps to avoid pulling incompatible transitive deps for the older HF stack.
 RUN pip install --no-cache-dir --no-deps 'transformers==5.5.4'
 
 # vulnerability fixes - this will be removed once we update to MMTracking's latest version
@@ -33,6 +40,14 @@ RUN pip install numpy==1.23.5
 # https://github.com/open-mmlab/mmdetection/issues/10962
 RUN pip install yapf==0.40.1
 
-# python-dotenv 1.2.1 in system Python (3.13) needs upgrade to 1.2.2 (GHSA-mf9w-mj56-hr94, symlink overwrite);
-# transitive dep of mlflow-skinny (>=0.19.0,<2) and pydantic-settings (>=0.21.0) — parents use loose floors
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+# python-dotenv 1.2.1 in system Python (3.13) needs upgrade to 1.2.2 (GHSA-mf9w-mj56-hr94, symlink overwrite).
+# Root cause (verified 2026-05 via importlib.metadata against /opt/conda py3.13):
+#   - python-dotenv is installed in the base /opt/conda env (py3.13) by the upstream
+#     base image, brought in transitively by anaconda-auth (no version constraint) and
+#     pydantic-settings (>=0.21.0); both parents accept any 1.x including 1.2.2.
+#   - No parent in /opt/conda blocks the upgrade, but neither parent has been re-released
+#     to require >=1.2.2 yet, so we must override here until the base image catches up.
+#   - The ptca conda env (py3.10) already gets 1.2.2 transitively via mlflow-skinny when
+#     requirements.txt is installed above, so this RUN only needs to fix the py3.13 env.
+# Bound the upgrade to the 1.x line to keep rebuilds reproducible without locking out future patches.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2,<2'

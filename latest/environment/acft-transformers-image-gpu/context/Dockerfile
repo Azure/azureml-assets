@@ -21,7 +21,14 @@ RUN pip install -r requirements.txt --no-cache-dir
 #   pip resolves to 3.1.46 which has GHSA-rpm5-65cw-6hj4, GHSA-x2qx-6953-8485; override to >=3.1.47
 # python-dotenv: transitive dep (mlflow → mlflow-skinny requires python-dotenv<2,>=0.19.0); loose floor,
 #   pip resolves to 1.2.1 which has GHSA-mf9w-mj56-hr94; override to >=1.2.2
-RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0' pyasn1==0.6.3 'fastmcp>=3.2.0' Mako==1.3.11 'GitPython>=3.1.47' 'python-dotenv>=1.2.2'
+# pillow: comes from the base ACPT image (not a hard runtime dep of any requirements.txt package;
+#   transformers/datasets/diffusers/optimum/huggingface-hub only require Pillow under extras_require
+#   like [vision]/[dev]/[testing]); base image ships 12.1.1 which has GHSA-whj4-6x5x-4v2j;
+#   no parent package to upgrade — explicit override required (>=12.2.0)
+# pytest: comes from the base ACPT image (not a hard runtime dep of any requirements.txt package;
+#   azureml-acft-accelerator only pins pytest~=5.3.0 under extras_require [test]); base image ships
+#   7.4.3 which has GHSA-6w46-j5rx-g56g; no parent package to upgrade — explicit override required (>=9.0.3)
+RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0' pyasn1==0.6.3 'fastmcp>=3.2.0' Mako==1.3.11 'GitPython>=3.1.47' 'python-dotenv>=1.2.2' 'pillow>=12.2.0' 'pytest>=9.0.3'
 # python-dotenv in base conda env: transitive dep of uvicorn[standard] (>=0.13); loose floor,
 #   base image has 1.2.1 which has GHSA-mf9w-mj56-hr94; override to >=1.2.2
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
