@@ -2,7 +2,14 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.1
 
 USER root
-RUN apt-get -y update && apt-get -y upgrade
+# openssh-client is reinstalled explicitly after `apt-get upgrade` to force pickup
+# of USN-8222-1 (>= 1:8.9p1-3ubuntu0.15). The stable-ubuntu2204-cu126-py310-torch280
+# base image (biweekly.202605.1) layer pins/holds the older 1:8.9p1-3ubuntu0.14 and
+# `apt-get upgrade` alone does not bump it. openssh is shipped by the Ubuntu base
+# (no parent package in this context), so the only fix is the apt upgrade itself.
+RUN apt-get -y update && apt-get -y upgrade && \
+    apt-get install --reinstall -y openssh-client && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir

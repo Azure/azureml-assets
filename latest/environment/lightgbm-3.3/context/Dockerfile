@@ -23,8 +23,10 @@ RUN apt-get update && \
 # conda and pip dependencies together. Splitting them avoids the memory spike.
 
 # Step 1: Create conda env with only conda-channel packages (small, fast solve)
+# pip=26.1.1: fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Pip <26.1 ran self-update
+# check after wheel install which could import newly-installed packages.
 COPY conda_dependencies.yaml .
-RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.0 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
+RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.1 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
@@ -51,7 +53,20 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes
-# cryptography, pip, setuptools, urllib3, wheel already fixed in openmpi base (20260315.v1)
-# Only override packages still vulnerable after conda env create
-RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.13.5' 'protobuf>=6.33.5' 'distributed>=2026.1.0'
+# setuptools, urllib3, wheel already fixed in openmpi base (latest tag).
+# pip: openmpi base (20260409.v4) still ships pip=26.0.1 in /opt/miniconda which is
+#   vulnerable to CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Upgrade /opt/miniconda's pip to
+#   26.1.1 explicitly here. (The azureml-envs/lightgbm-3.3 conda env is created with
+#   pip=26.1.1 via the conda create command above.)
+# cryptography: azureml-core==1.61.0.post3 pulls pyopenssl<26.0.0 which caps cryptography
+#   transitively, causing the conda env to resolve to 45.0.7 (vulnerable to CVE-2026-26007,
+#   CVE-2026-34073, CVE-2026-39892 / GHSA-r6ph-v2qm-q3c2, GHSA-m959-cc7f-wv43,
+#   GHSA-p423-j2cm-9vmq). azureml-mlflow==1.62.0.post2 caps cryptography<47.0.0, so pin
+#   46.0.7 explicitly (latest within the cap). Parent package (azureml-core) cannot be
+#   upgraded past 1.61.0.post3 as that is the latest released version.
+# aiohttp / protobuf / distributed: kept overrides to ensure latest patched versions;
+#   parent constraints (mlflow-skinny -> protobuf<6, dask -> distributed) cap older
+#   versions so direct upgrade is required.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade pip==26.1.1 && \
+    conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
+    'aiohttp>=3.13.5' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==46.0.7
