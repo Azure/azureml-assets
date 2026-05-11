@@ -26,6 +26,13 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Upgrade pip in the base miniconda (/opt/miniconda) to fix CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9.
+# The base miniconda ships with the parent image (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04)
+# and is independent of the conda env created below at $AZUREML_CONDA_ENVIRONMENT_PATH.
+# Pinning 'pip>=26.1' inside the env (line below) does not patch /opt/miniconda's pip, which is
+# still flagged by SCA scanners. No parent-package upgrade is possible because pip is the package
+# itself; the only fix is upgrading pip directly to >= 26.1.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # begin conda create
 # Create conda environment (minimal — packages installed via pip to avoid solver OOM)
@@ -41,7 +48,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'pandas>=1.5.3,<1.6' \
     'scipy==1.10.1' \
     'psutil>=5.2.2,<6.0.0' \
-    'pip>=26.0' \
+    'pip>=26.1' \
     'setuptools>=82.0.1' \
     'wheel>=0.46.2'
 # end conda create
