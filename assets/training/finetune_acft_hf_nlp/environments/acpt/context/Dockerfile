@@ -13,6 +13,9 @@ COPY finetune_run.py /azureml/finetune/run.py
 # mpi4py 3.x uses distutils APIs removed in setuptools>=81; upgrade to 4.x which is compatible
 RUN pip install mpi4py==4.1.1 --no-cache-dir
 RUN pip install -r requirements.txt --no-cache-dir
+# Verify QLoRA dependencies in the ptca runtime env during image build.
+RUN /opt/conda/envs/ptca/bin/python -c "import bitsandbytes as bnb; print(bnb.__version__)" && \
+    /opt/conda/envs/ptca/bin/python -c "from transformers import BitsAndBytesConfig; print(BitsAndBytesConfig(load_in_4bit=True))"
 
 RUN pip install mlflow==3.11.1
 RUN python -m nltk.downloader punkt
