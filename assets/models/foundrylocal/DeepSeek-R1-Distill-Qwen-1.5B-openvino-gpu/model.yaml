@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/models/DeepSeek-R1-Distill-Qwen-1.5B/onnx/openvino_gpu/v2
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md
