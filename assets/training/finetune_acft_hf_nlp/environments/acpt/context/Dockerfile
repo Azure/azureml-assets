@@ -33,7 +33,8 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
 # python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
 # onnx: azureml-acft-accelerator 0.0.89 caps onnx<=1.17.0; override needed for GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m etc.
-RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0'
+# skops: transitive dep resolved to 0.11.0; override needed for GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm
+RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' skops==0.13.0
 
 # python-dotenv 1.2.1 in base conda env (python3.13) from ACPT base image needs upgrade (GHSA-mf9w-mj56-hr94)
 # parents in base env are anaconda-auth (no version pin) and pydantic-settings (>=0.21.0); both use loose floors
