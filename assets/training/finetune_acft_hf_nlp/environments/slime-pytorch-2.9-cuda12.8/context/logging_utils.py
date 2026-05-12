@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Logging utilities for slime with MLflow / Azure ML metric tracking support."""
+
 import logging
 import os
 
@@ -16,6 +18,7 @@ _MLFLOW_AVAILABLE = False
 
 # ref: SGLang
 def configure_logger(prefix: str = ""):
+    """Configure the root logger with a standard format (idempotent)."""
     global _LOGGER_CONFIGURED
     if _LOGGER_CONFIGURED:
         return
@@ -72,6 +75,7 @@ def _log_mlflow(metrics: dict, step: int):
 
 
 def init_tracking(args, primary: bool = True, **kwargs):
+    """Initialize wandb and MLflow tracking for the current run."""
     if primary:
         wandb_utils.init_wandb_primary(args, **kwargs)
     else:
@@ -81,10 +85,12 @@ def init_tracking(args, primary: bool = True, **kwargs):
 
 
 def update_tracking_open_metrics(args, router_addr):
+    """Reinitialize wandb primary with open metrics for the given router address."""
     wandb_utils.reinit_wandb_primary_with_open_metrics(args, router_addr)
 
 
 def finish_tracking(args):
+    """Finish the active wandb run, if any."""
     if not args.use_wandb:
         return
     try:
@@ -96,6 +102,7 @@ def finish_tracking(args):
 
 # TODO further refactor, e.g. put TensorBoard init to the "init" part
 def log(args, metrics, step_key: str):
+    """Log metrics to wandb, TensorBoard, and MLflow as enabled."""
     if args.use_wandb:
         wandb.log(metrics)
 
