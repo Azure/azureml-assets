@@ -20,6 +20,7 @@ tags:
   OS: Ubuntu24.04
   Training: ""
   Preview: ""
+  Foundry: ""
   Python: "3.10"
   slime: "THUDM"
   SGLang: "0.5.10.post1"

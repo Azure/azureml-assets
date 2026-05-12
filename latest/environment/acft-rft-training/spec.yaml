@@ -4,7 +4,7 @@ description: >-
   Environment used by Multi-Strategy Reinforcement Finetuning Trainer
 
 name: "acft-rft-training"
-version: "12"
+version: "13"
 
 build:
   path: "context"
@@ -14,3 +14,4 @@ os_type: linux
 
 tags:
   Preview: ""
+  Foundry: ""
