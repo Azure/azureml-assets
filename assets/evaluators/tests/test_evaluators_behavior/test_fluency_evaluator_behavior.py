@@ -19,6 +19,8 @@ class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluation
     """
 
     # region Expected flow inputs for each test
+    # Fluency calls reformat_agent_response() which extracts text-only content
+    # from assistant messages, so expected inputs are the reformatted strings.
     test_function_tool_local_calls_expected_flow_inputs = {
         "response": data.LOCAL_CALLS_IR_EXPECTED_FLOW_RESPONSE,
     }

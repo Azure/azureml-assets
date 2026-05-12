@@ -7,6 +7,7 @@ Base class for all evaluator tests.
 Provides common interfaces and assertion helpers shared by both prompty-based and code-based evaluators.
 """
 
+import copy
 from abc import ABC
 from typing import Any, Dict, List, Optional, Tuple, Type
 from unittest.mock import MagicMock
@@ -105,6 +106,10 @@ class BaseEvaluatorRunner(ABC):
                 call_kwargs[key] = value
 
         evaluator = self._init_evaluator(**constructor_kwargs)
+
+        # Deep-copy call_kwargs to prevent evaluator preprocessing (e.g.,
+        # _normalize_function_call_types) from mutating shared test data.
+        call_kwargs = copy.deepcopy(call_kwargs)
 
         # Mock the flow only for behavioral tests
         flow_mock = None
