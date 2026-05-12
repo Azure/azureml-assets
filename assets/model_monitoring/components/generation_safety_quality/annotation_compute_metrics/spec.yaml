@@ -70,7 +70,7 @@ conf:
       - python=3.10
       - pip:
         - azure-cli-core~=2.66.0
-        - azure-ai-evaluation~=1.0.1
+        - azure-ai-evaluation~=1.16.7
         - azure-ai-ml~=1.30.0
         - openai~=1.56.2
         - json5==0.9.11
