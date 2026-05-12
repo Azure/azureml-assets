@@ -551,6 +551,29 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         assert result_data["properties"]["recall_score"] == 1.0
         assert result_data["properties"]["f1_score"] == 1.0
 
+    def test_sdk_alias_inputs(self):
+        """Test that SDK-compatible response and ground_truth aliases are accepted."""
+        results = self._run_evaluation(
+            response=self.VALID_ACTIONS,
+            ground_truth=self.VALID_EXPECTED_ACTIONS,
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "SDK Alias Inputs")
+        self.assert_pass(result_data)
+
+    def test_json_stringified_sdk_alias_inputs(self):
+        """Test that JSON-stringified SDK aliases are parsed and evaluated correctly."""
+        results = self._run_evaluation(
+            response=json.dumps(self.VALID_ACTIONS),
+            ground_truth=json.dumps(self.VALID_EXPECTED_ACTIONS),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "JSON-Stringified SDK Alias Inputs")
+        self.assert_pass(result_data)
+        assert result_data["properties"]["precision_score"] == 1.0
+        assert result_data["properties"]["recall_score"] == 1.0
+        assert result_data["properties"]["f1_score"] == 1.0
+
     def test_none_actions(self):
         """Test with None actions (should error)."""
         results = self._run_evaluation(
