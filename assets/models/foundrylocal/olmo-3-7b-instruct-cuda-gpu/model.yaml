@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/models/olmo-3-7b-instruct/onnx/cuda/v1
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md

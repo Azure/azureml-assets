@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/models/mistral-nemo-12b-instruct/onnx/cpu_and_mobile/v1
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md
