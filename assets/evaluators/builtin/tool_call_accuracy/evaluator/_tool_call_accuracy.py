@@ -978,7 +978,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             llm_status = llm_output.get("status", "completed")
             if llm_status == "skipped":
                 reason = llm_output.get("reason", "")
-                return self._not_applicable_result(reason, self.threshold)
+                return self._return_not_applicable_result(reason, self._threshold)
 
             score = llm_output.get(self._LLM_SCORE_KEY, None)
             if not score or not check_score_is_valid(
@@ -998,7 +998,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             # Format the output
             reason = llm_output.get("reason", "")
             score = float(score)
-            score_result = "pass" if score >= self.threshold else "fail"
+            score_result = "pass" if score >= self._threshold else "fail"
             llm_properties = llm_output.get("properties", {}) or {}
             llm_properties.update(
                 {
@@ -1044,9 +1044,9 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         response = kwargs.get("response")
         if _is_intermediate_response(response):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
-                self.threshold,
+                self._threshold,
             )
         if "response" in kwargs:
             kwargs["response"] = _preprocess_messages(kwargs["response"])
@@ -1056,33 +1056,24 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
             # If there is an error message, return not applicable result
-            return self._not_applicable_result(eval_input.get("error_message"), self.threshold)
+            return self._return_not_applicable_result(eval_input.get("error_message"), self._threshold)
         # Do the evaluation
         result = await self._do_eval(eval_input)
         # Return the result
         return result
 
-    def _not_applicable_result(
+    def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict, None]]:
-        """Return a result indicating that the tool call is not applicable for evaluation.
-
-        :param error_message: The error message indicating why the evaluation is not applicable.
-        :type error_message: str
-        :param threshold: The threshold value for the evaluation.
-        :type threshold: Union[int, float]
-        :return: A dictionary containing the result of the evaluation.
-        :rtype: Dict[str, Union[str, float, None]]
-        """
+        """Return a result indicating that the evaluation is not applicable (skipped)."""
         return {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
-            f"{self._result_key}_result": "pass",
             f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_status": "skipped",
             f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_properties": None,
         }
 
     def _extract_needed_tool_definitions(self, tool_calls, tool_definitions):

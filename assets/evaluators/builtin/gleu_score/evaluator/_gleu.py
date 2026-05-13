@@ -92,9 +92,14 @@ class GleuScoreEvaluator(EvaluatorBase):
             if score <= self._threshold:
                 binary_result = True
         return {
+            "gleu": score,
             "gleu_score": score,
+            "gleu_passed": binary_result,
             "gleu_result": EVALUATION_PASS_FAIL_MAPPING[binary_result],
+            "gleu_reason": None,
+            "gleu_status": "completed",
             "gleu_threshold": self._threshold,
+            "gleu_properties": None,
         }
 
     @overload  # type: ignore

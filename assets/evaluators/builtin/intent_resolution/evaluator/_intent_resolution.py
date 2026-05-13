@@ -814,22 +814,31 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
-    def _not_applicable_result(
+    def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the evaluation is not applicable (skipped)."""
         return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+        }
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
         }
 
     @override
@@ -868,7 +877,7 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.INTENT_RESOLUTION_EVALUATOR,
             )
         if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
                 self._threshold,
             )
@@ -884,6 +893,12 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
         score = math.nan
         if isinstance(llm_output, dict):
+            # Handle skipped status from LLM
+            llm_status = llm_output.get("status", "completed")
+            if llm_status == "skipped":
+                reason = llm_output.get("reason", "")
+                return self._return_not_applicable_result(reason, self._threshold)
+
             score = llm_output.get("score", math.nan)
             if not check_score_is_valid(
                 score,
@@ -898,22 +913,21 @@ class IntentResolutionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
                 )
-            reason = llm_output.get("explanation", "")
+            reason = llm_output.get("reason", "")
             score = float(score)
             score_result = "pass" if score >= self._threshold else "fail"
+            llm_properties = llm_output.get("properties", {}) or {}
+            llm_properties.update(self._get_token_metadata(prompty_output_dict))
 
             response_dict = {
-                f"{self._result_key}": score,
+                self._result_key: score,
+                f"{self._result_key}_score": score,
+                f"{self._result_key}_passed": score_result == "pass",
                 f"{self._result_key}_result": score_result,
-                f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_reason": reason,
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
+                f"{self._result_key}_status": "completed",
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_properties": llm_properties,
             }
             return response_dict
         raise EvaluationException(

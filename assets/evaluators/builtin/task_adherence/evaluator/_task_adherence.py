@@ -1125,17 +1125,32 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_sample_output": p.get("sample_output", ""),
         }
 
-    def _not_applicable_result(
+    def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
-        return self._build_result(
-            score=threshold,
-            result="pass",
-            reason=f"Not applicable: {error_message}",
-            properties={},
-            threshold=threshold,
-        )
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the evaluation is not applicable (skipped)."""
+        return {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+        }
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
+        }
 
     def _should_use_conversation_level(self, eval_input: Dict[str, Any]) -> bool:
         """Determine whether to use conversation-level evaluation."""
@@ -1193,7 +1208,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             )
 
         if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
                 self._threshold,
             )
@@ -1284,17 +1299,25 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
             )
 
-        flagged = llm_output.get("flagged", False)
-        reasoning = llm_output.get("reasoning", llm_output.get("reason", ""))
-        # Convert flagged to numeric score for backward compatibility (1 = pass, 0 = fail)
-        score = 0.0 if flagged else 1.0
-        score_result = "fail" if flagged else "pass"
-        properties = llm_output.get("details", llm_output.get("properties", {}))
+        # Handle skipped status from LLM
+        llm_status = llm_output.get("status", "completed")
+        if llm_status == "skipped":
+            reason = llm_output.get("reason", "")
+            return self._return_not_applicable_result(reason, self._threshold)
 
-        return self._build_result(
-            score=score,
-            result=score_result,
-            reason=reasoning,
-            properties=properties,
-            prompty_output_dict=prompty_output_dict,
-        )
+        reasoning = llm_output.get("reason", "")
+        score = float(llm_output.get("score", 0.0))
+        score_result = "pass" if score >= 1.0 else "fail"
+        llm_properties = llm_output.get("properties", {}) or {}
+        llm_properties.update(self._get_token_metadata(prompty_output_dict))
+
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": score_result == "pass",
+            f"{self._result_key}_result": score_result,
+            f"{self._result_key}_reason": reasoning,
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": llm_properties,
+        }

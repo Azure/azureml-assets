@@ -1277,16 +1277,19 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             parsed_result[f"{self._result_key}_status"] = status
         return parsed_result
 
-    def _not_applicable_result(
+    def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
-        return self._build_result(
-            score=threshold,
-            result="not_applicable",
-            reason=f"Not applicable: {error_message}",
-            properties={},
-        )
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the evaluation is not applicable (skipped)."""
+        return {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+        }
 
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
         """Determine whether to use conversation-level evaluation.
@@ -1313,7 +1316,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return await self._do_eval_conversation_level(eval_input)
 
         if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
                 self.threshold,
             )
@@ -1473,12 +1476,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return await super()._real_call(**kwargs)
         except EvaluationException as ex:
             if ex.category == ErrorCategory.NOT_APPLICABLE:
-                return self._build_result(
-                    score=self.threshold,
-                    result="pass",
-                    reason=f"Not applicable: {ex.message}",
-                    properties={},
-                )
+                return self._return_not_applicable_result(ex.message, self.threshold)
             else:
                 raise ex
 

@@ -117,9 +117,14 @@ class MeteorScoreEvaluator(EvaluatorBase):
             if score <= self._threshold:
                 binary_result = True
         return {
+            "meteor": score,
             "meteor_score": score,
+            "meteor_passed": binary_result,
             "meteor_result": EVALUATION_PASS_FAIL_MAPPING[binary_result],
+            "meteor_reason": None,
+            "meteor_status": "completed",
             "meteor_threshold": self._threshold,
+            "meteor_properties": None,
         }
 
     @overload  # type: ignore

@@ -1171,37 +1171,41 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if isinstance(llm_output, dict):
-            result = llm_output.get("result", None)
-            if result not in [0, 1]:
+            # Handle skipped status from LLM
+            llm_status = llm_output.get("status", "completed")
+            if llm_status == "skipped":
+                reason = llm_output.get("reason", "")
+                return self._return_not_applicable_result(reason, self._threshold)
+
+            score = llm_output.get("score", None)
+            if score not in [0, 1]:
                 raise EvaluationException(
-                    message=f"Invalid result value: {result}. Expected 0 or 1.",
-                    internal_message="Invalid result value.",
+                    message=f"Invalid score value: {score}. Expected 0 or 1.",
+                    internal_message="Invalid score value.",
                     category=ErrorCategory.FAILED_EXECUTION,
                     blame=ErrorBlame.SYSTEM_ERROR,
                 )
 
             # Add parameter extraction accuracy post-processing
-            details = llm_output.get("details", {})
-            if details:
-                parameter_extraction_accuracy = self._calculate_parameter_extraction_accuracy(details)
-                details["parameter_extraction_accuracy"] = parameter_extraction_accuracy
+            llm_properties = llm_output.get("properties", {}) or {}
+            if llm_properties:
+                parameter_extraction_accuracy = self._calculate_parameter_extraction_accuracy(llm_properties)
+                llm_properties["parameter_extraction_accuracy"] = parameter_extraction_accuracy
 
             # Format the output
-            explanation = llm_output.get("chain_of_thought", "")
-            score_result = "pass" if result == 1 else "fail"
+            reason = llm_output.get("reason", "")
+            score = float(score)
+            score_result = "pass" if score == 1 else "fail"
+            llm_properties.update(self._get_token_metadata(prompty_output_dict))
             response_dict = {
-                self._result_key: result,
+                self._result_key: score,
+                f"{self._result_key}_score": score,
+                f"{self._result_key}_passed": score_result == "pass",
                 f"{self._result_key}_result": score_result,
+                f"{self._result_key}_reason": reason,
+                f"{self._result_key}_status": "completed",
                 f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_reason": explanation,
-                f"{self._result_key}_details": details,
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
+                f"{self._result_key}_properties": llm_properties,
             }
             return response_dict
 
@@ -1226,9 +1230,9 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         response = kwargs.get("response")
         if _is_intermediate_response(response):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
-                1,
+                self._threshold,
             )
         if "response" in kwargs:
             kwargs["response"] = _preprocess_messages(kwargs["response"])
@@ -1239,7 +1243,7 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
             # If there is an error message, return not applicable result
             error_message = eval_input.get("error_message", "Unknown error")
-            return self._not_applicable_result(error_message, 1)
+            return self._return_not_applicable_result(error_message, self._threshold)
         # Do the evaluation
         result = await self._do_eval(eval_input)
         # Return the result
@@ -1262,31 +1266,31 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         accuracy = (correct_parameters / total_parameters) * 100
         return round(accuracy, 2)
 
-    def _not_applicable_result(
+    def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable.
-
-        :param error_message: The error message explaining why evaluation is not applicable.
-        :type error_message: str
-        :param threshold: The threshold value for the evaluator.
-        :type threshold: Union[int, float]
-        :return: A dictionary containing the result of the evaluation.
-        :rtype: Dict[str, Union[str, float, Dict]]
-        """
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the evaluation is not applicable (skipped)."""
         return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_details": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+        }
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
         }
 
     @override

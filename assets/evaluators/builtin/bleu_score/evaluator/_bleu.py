@@ -91,9 +91,14 @@ class BleuScoreEvaluator(EvaluatorBase):
             binary_result = score <= self._threshold
 
         return {
+            "bleu": score,
             "bleu_score": score,
+            "bleu_passed": binary_result,
             "bleu_result": EVALUATION_PASS_FAIL_MAPPING[binary_result],
+            "bleu_reason": None,
+            "bleu_status": "completed",
             "bleu_threshold": self._threshold,
+            "bleu_properties": None,
         }
 
     @overload  # type: ignore
