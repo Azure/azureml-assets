@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-evaluate-mlflow=={{latest-pypi-version}}
-RUN pip install verl==0.7.0
+RUN pip install verl==0.7.1
 RUN pip install sacrebleu==2.5.1
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
 
@@ -38,7 +38,7 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 # Root-cause analysis: librosa was vendored via vllm's `audio` extra; vllm PR #37058 removed
 # librosa entirely. PyPI metadata confirms vllm 0.18.0 still lists `librosa; extra == "audio"`
 # while 0.18.1+ (incl. 0.19.1) do NOT. 0.19.1 also fixes CVE-2026-7141.
-# Parent package (verl 0.7.0) constrains `vllm<=0.12.0,>=0.8.5` only with the [vllm] extra,
+# Parent package (verl 0.7.1) constrains `vllm<=0.12.0,>=0.8.5` only with the [vllm] extra,
 # which is not used here; verl is installed without the extra, so we override vllm directly.
 # Staying on the 0.19.x line (same torch==2.10.0 ABI as 0.19.0) preserves compatibility with
 # the pinned flash-attn wheel and the verl/vLLM internal API patches in vllm_async_server,
@@ -60,6 +60,7 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep of wandb (requires
 #   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
 RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47'
+RUN python -c "from transformers import Cache, DynamicCache, EncoderDecoderCache, PreTrainedModel; import peft; import verl.utils.model; from verl.utils.transformers_compat import get_auto_model_for_vision2seq; assert get_auto_model_for_vision2seq() is not None; print('verl-transformers compatibility ok')"
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0),
 #   uvicorn (optional, requires >=0.13), and fastmcp (requires >=1.1.0). All parents use loose floors,
 #   so no parent upgrade can force >=1.2.2. Base image ships 1.2.1 in base conda env; we patch
