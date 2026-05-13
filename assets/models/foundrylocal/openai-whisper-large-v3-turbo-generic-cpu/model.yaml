@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/models/openai-whisper-large-v3-turbo/onnx/cpu_and_mobile/v3
-  storage_name: foundrylocalassetdata
+  storage_name: foundrylocalmodels
   type: azureblob
 publish:
   description: description.md
