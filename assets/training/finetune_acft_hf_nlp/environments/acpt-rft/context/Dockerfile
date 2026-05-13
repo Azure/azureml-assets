@@ -60,7 +60,7 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep of wandb (requires
 #   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
 RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47'
-RUN python -c "from transformers import HybridCache; import verl.utils.model; from verl.utils.transformers_compat import get_auto_model_for_vision2seq; assert get_auto_model_for_vision2seq() is not None; print('verl-transformers compatibility ok')"
+RUN python -c "from transformers import Cache, DynamicCache, EncoderDecoderCache, PreTrainedModel; import peft; import verl.utils.model; from verl.utils.transformers_compat import get_auto_model_for_vision2seq; assert get_auto_model_for_vision2seq() is not None; print('verl-transformers compatibility ok')"
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0),
 #   uvicorn (optional, requires >=0.13), and fastmcp (requires >=1.1.0). All parents use loose floors,
 #   so no parent upgrade can force >=1.2.2. Base image ships 1.2.1 in base conda env; we patch
