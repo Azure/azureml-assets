@@ -812,6 +812,28 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     id = "azureai://built-in/evaluators/tool_call_accuracy"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
+    # region Vendored base helpers (copied from azure-sdk-for-python PR #46436)
+    # The following methods are inlined copies of helpers from
+    # azure.ai.evaluation._evaluators._common._base_eval / _base_prompty_eval.
+    # They are vendored here because the runtime environment ships an older
+    # version of those base files. Do not modify without re-syncing with
+    # upstream PR #46436.
+
+    def _return_not_applicable_result(self, error_message, threshold):
+        """Return a result indicating that the tool call is not applicable for evaluation."""
+        return {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+
+    # endregion
+
     @override
     def __init__(self, model_config, *, threshold=_DEFAULT_TOOL_CALL_ACCURACY_SCORE, credential=None, **kwargs):
         """Initialize the Tool Call Accuracy evaluator.
@@ -1061,20 +1083,6 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         result = await self._do_eval(eval_input)
         # Return the result
         return result
-
-    def _return_not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict, None]]:
-        """Return a result indicating that the evaluation is not applicable (skipped)."""
-        return {
-            f"{self._result_key}": None,
-            f"{self._result_key}_score": None,
-            f"{self._result_key}_passed": None,
-            f"{self._result_key}_result": "not_applicable",
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_status": "skipped",
-            f"{self._result_key}_threshold": threshold,
-        }
 
     def _extract_needed_tool_definitions(self, tool_calls, tool_definitions):
         """Extract the tool definitions that are needed for the provided tool calls."""
