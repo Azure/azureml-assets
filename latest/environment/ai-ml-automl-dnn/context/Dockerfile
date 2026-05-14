@@ -60,7 +60,7 @@ RUN pip install \
                 azureml-telemetry==1.62.0 \
                 azureml-interpret==1.62.0 \
                 azureml-responsibleai==1.62.0 \
-                azureml-automl-core==1.62.0 \
+                azureml-automl-core==1.62.0.post3 \
                 azureml-automl-runtime==1.62.0 \
                 azureml-train-automl-client==1.62.0 \
                 azureml-train-automl-runtime==1.62.0 \

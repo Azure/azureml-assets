@@ -71,7 +71,7 @@ RUN pip install --no-cache-dir \
                 # begin pypi dependencies
                 azureml-core==1.61.0.post3 \
                 azureml-mlflow==1.62.0.post2 \
-                azureml-automl-core==1.62.0 \
+                azureml-automl-core==1.62.0.post3 \
                 azureml-automl-runtime==1.62.0 \
                 azureml-defaults==1.62.0 \
                 'azure-identity>=1.25.1' \
