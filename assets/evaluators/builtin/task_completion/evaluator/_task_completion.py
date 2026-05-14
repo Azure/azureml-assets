@@ -1007,6 +1007,41 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     id = "azureai://built-in/evaluators/task_completion"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
+    # region Vendored base helpers (copied from azure-sdk-for-python PR #46436)
+    # The following methods are inlined copies of helpers from
+    # azure.ai.evaluation._evaluators._common._base_eval / _base_prompty_eval.
+    # They are vendored here because the runtime environment ships an older
+    # version of those base files. Do not modify without re-syncing with
+    # upstream PR #46436.
+
+    def _return_not_applicable_result(self, error_message, threshold):
+        """Return a result indicating that the tool call is not applicable for evaluation."""
+        return {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+
+    @staticmethod
+    def _get_token_metadata(prompty_output):
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
+        }
+
+    # endregion
+
     @override
     def __init__(self, model_config, *, credential=None, evaluation_level=None, **kwargs):
         """Initialize the TaskCompletionEvaluator.
@@ -1250,22 +1285,6 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._result_key}_properties": {**properties, **metadata}
         }
 
-    def _not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable (skipped).
-
-        Not-applicable results have no score since the evaluator cannot make a judgment
-        (e.g., intermediate responses that are not final agent responses).
-        """
-        return self._build_result(
-            score=None,
-            result="not_applicable",
-            reason=f"Not applicable: {error_message}",
-            status="skipped",
-            properties={},
-        )
-
     @override
     async def _real_call(self, **kwargs):
         """Perform asynchronous call where real end-to-end evaluation logic is executed.
@@ -1319,7 +1338,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             )
         if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
                 self._threshold,
             )
@@ -1373,34 +1392,31 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
         if not isinstance(llm_output, dict):
-            score = None
-            result = "error"
-            reason = "Evaluator returned invalid output."
-            status = "error"
-            properties = {}
-        else:
-            status = llm_output.get("status", "completed")
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+            )
+
+        # Handle skipped status from LLM
+        llm_status = llm_output.get("status", "completed")
+        if llm_status == "skipped":
             reason = llm_output.get("reason", "")
-            properties = llm_output.get("properties") or {}
+            return self._return_not_applicable_result(reason, self._threshold)
 
-            if status == "skipped":
-                score = None
-                result = "not_applicable"
-            else:
-                score_value = llm_output.get("score", 0)
-                if isinstance(score_value, str):
-                    score = 1 if score_value.strip() in ("1", "true") else 0
-                elif isinstance(score_value, (int, float)):
-                    score = 1 if score_value == 1 else 0
-                else:
-                    score = 1 if score_value else 0
-                result = "pass" if score == 1 else "fail"
-
-        return self._build_result(
-            score=score,
-            result=result,
-            reason=reason,
-            status=status,
-            properties=properties,
-            prompty_output_dict=prompty_output_dict,
-        )
+        score = float(llm_output.get("score", 0))
+        success_result = "pass" if score >= 1.0 else "fail"
+        reason = llm_output.get("reason", "")
+        llm_properties = llm_output.get("properties", {}) or {}
+        llm_properties.update(self._get_token_metadata(prompty_output_dict))
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": success_result == "pass",
+            f"{self._result_key}_result": success_result,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": llm_properties,
+        }
