@@ -8,8 +8,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get clean && rm -rf /var/lib/apt
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN pip install azureml-evaluate-mlflow==0.0.89
-RUN pip install azureml-acft-common-components==0.0.89
+RUN pip install azureml-evaluate-mlflow==0.0.90
+RUN pip install azureml-acft-common-components==0.0.90
 # transformers 5.5.4: fixes GHSA-69w3-r845-3855 (arbitrary code execution in Trainer class);
 # advisory requires >=5.0.0rc3; upgrading to latest stable 5.x
 RUN pip install transformers==5.5.4

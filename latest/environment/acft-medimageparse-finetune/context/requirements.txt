@@ -34,5 +34,5 @@ h5py==3.14.0
 appdirs==1.4.4
 ffmpeg==1.4
 lightning==2.5.5
-azureml-acft-image-components[mip]==0.0.89
+azureml-acft-image-components[mip]==0.0.90
 filelock>=3.20.1

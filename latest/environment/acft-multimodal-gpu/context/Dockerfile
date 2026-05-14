@@ -17,8 +17,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Removing it from requirements.txt to avoid conflict with scikit-learn version
 RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 
-RUN pip install azureml-acft-common-components==0.0.89
-RUN pip install azureml-acft-accelerator==0.0.89
+RUN pip install azureml-acft-common-components==0.0.90
+RUN pip install azureml-acft-accelerator==0.0.90
 
 # setuptools: >=82.0.1 patches jaraco.context (GHSA-58pv-8j8x-9vj2); base ships 82.0.0
 # nltk: >=3.9.4 required (GHSA-gfwx-w7gr-fvh7)

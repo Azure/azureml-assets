@@ -8,9 +8,9 @@ RUN pip install -r requirements.txt --no-cache-dir
 # specforge 0.1.0 pins sglang==0.5.5; override needed after specforge install.
 RUN pip install --no-cache-dir --force-reinstall "sglang>=0.5.10"
 
-RUN pip install azureml-acft-common-components==0.0.89
+RUN pip install azureml-acft-common-components==0.0.90
 RUN pip install numpy==2.2.5
-RUN pip install azureml-evaluate-mlflow==0.0.89
+RUN pip install azureml-evaluate-mlflow==0.0.90
 
 # following are for vulnerability overrides at later
 # release of following packages consider moving then to requirements.txt

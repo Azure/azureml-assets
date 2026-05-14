@@ -9,8 +9,8 @@ RUN apt-get update && \
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
-RUN pip install azureml-acft-common-components==0.0.89
-RUN pip install azureml-evaluate-mlflow==0.0.89
+RUN pip install azureml-acft-common-components==0.0.90
+RUN pip install azureml-evaluate-mlflow==0.0.90
 RUN pip install verl==0.7.1
 RUN pip install sacrebleu==2.5.1
 COPY tracking /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/tracking.py
