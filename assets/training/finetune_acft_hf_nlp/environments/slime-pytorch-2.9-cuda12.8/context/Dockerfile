@@ -105,6 +105,9 @@ RUN cd /root/slime && \
 RUN cd /root/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
 
+# Patch logging_utils with MLflow support
+COPY logging_utils.py /root/slime/slime/utils/logging_utils.py
+
 COPY smoke_test.py /tmp/smoke_test.py
 RUN python /tmp/smoke_test.py && \
     rm /tmp/smoke_test.py
