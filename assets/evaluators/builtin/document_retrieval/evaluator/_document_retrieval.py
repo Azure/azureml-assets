@@ -12,8 +12,9 @@ from typing_extensions import override, overload
 import logging
 
 
-
 logger = logging.getLogger(__name__)
+
+
 RetrievalGroundTruthDocument = TypedDict(
     "RetrievalGroundTruthDocument", {"document_id": str, "query_relevance_label": int}
 )

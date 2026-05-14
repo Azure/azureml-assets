@@ -12,9 +12,9 @@ from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 import logging
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory, ErrorTarget
 
-
-
 logger = logging.getLogger(__name__)
+
+
 class GleuScoreEvaluator(EvaluatorBase):
     """
     Calculates the GLEU (Google-BLEU) score between a response and the ground truth.

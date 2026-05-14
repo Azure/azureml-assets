@@ -20,9 +20,9 @@ from azure.ai.evaluation._exceptions import (
 )
 import logging
 
-
-
 logger = logging.getLogger(__name__)
+
+
 # region Validators
 
 
