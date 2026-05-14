@@ -1018,6 +1018,41 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     id = "azureai://built-in/evaluators/groundedness"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
 
+    # region Vendored base helpers (copied from azure-sdk-for-python PR #46436)
+    # The following methods are inlined copies of helpers from
+    # azure.ai.evaluation._evaluators._common._base_eval / _base_prompty_eval.
+    # They are vendored here because the runtime environment ships an older
+    # version of those base files. Do not modify without re-syncing with
+    # upstream PR #46436.
+
+    def _return_not_applicable_result(self, error_message, threshold):
+        """Return a result indicating that the tool call is not applicable for evaluation."""
+        return {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+
+    @staticmethod
+    def _get_token_metadata(prompty_output):
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
+        }
+
+    # endregion
+
     @override
     def __init__(self, model_config, *, threshold=3, credential=None, evaluation_level=None, **kwargs):
         """Initialize a GroundednessEvaluator instance.
@@ -1276,20 +1311,6 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if status is not None:
             parsed_result[f"{self._result_key}_status"] = status
         return parsed_result
-
-    def _return_not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict, None]]:
-        """Return a result indicating that the evaluation is not applicable (skipped)."""
-        return {
-            f"{self._result_key}": None,
-            f"{self._result_key}_score": None,
-            f"{self._result_key}_passed": None,
-            f"{self._result_key}_result": "not_applicable",
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_status": "skipped",
-            f"{self._result_key}_threshold": threshold,
-        }
 
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
         """Determine whether to use conversation-level evaluation.
