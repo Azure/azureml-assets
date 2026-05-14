@@ -459,6 +459,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :type kwargs: Dict
         :return: The evaluation result.
         """
+        self._validator.validate_eval_input(kwargs)
         # Convert inputs into list of evaluable inputs.
         try:
             eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)

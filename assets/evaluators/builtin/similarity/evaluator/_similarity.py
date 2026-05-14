@@ -16,9 +16,9 @@ from azure.ai.evaluation._common.constants import PROMPT_BASED_REASON_EVALUATORS
 from azure.ai.evaluation._common.utils import parse_quality_evaluator_reason_score
 from azure.ai.evaluation._evaluators._common._base_prompty_eval import _is_intermediate_response, _preprocess_messages
 
-
-
 logger = logging.getLogger(__name__)
+
+
 class SimilarityEvaluator(PromptyEvaluatorBase):
     """
     Evaluates similarity score for a given query, response, and ground truth.
