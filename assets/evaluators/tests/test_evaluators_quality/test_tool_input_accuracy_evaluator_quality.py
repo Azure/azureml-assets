@@ -399,3 +399,63 @@ class TestToolInputAccuracyEvaluatorQuality(BaseQualityEvaluatorRunner):
             ],
             tool_definitions=[ToolDefinitions.PRODUCT_SEARCH],
         )
+
+    # ==================== SKIPPED CASES ====================
+
+    def test_skipped_missing_tool_definition_for_called_tool(self) -> None:
+        """Test case: SKIPPED - Tool definitions don't cover the tool the agent called.
+
+        The agent calls ``product_search`` but only ``send_email`` is in the
+        tool definitions, so the evaluator returns a not-applicable result
+        (pre-LLM skip) because tool definitions are missing for the called tool.
+        """
+        self.run_quality_test(
+            test_label="SKIPPED-missing-tool-definition-for-called-tool",
+            expected=ExpectedResult.SKIPPED,
+            query=[
+                {"role": "user", "content": [{"type": "text", "text": "Search for blue shoes"}]}
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "tool_call",
+                            "tool_call_id": "call_1",
+                            "name": "product_search",
+                            "arguments": {"query": "blue shoes"},
+                        }
+                    ],
+                }
+            ],
+            tool_definitions=[ToolDefinitions.SEND_EMAIL_BASIC],
+        )
+
+    def test_skipped_intermediate_response(self) -> None:
+        """Test case: SKIPPED - Response is intermediate (ends with function_call).
+
+        The assistant response ends with a ``function_call`` content item with
+        no final answer or completed tool result, so the evaluator treats it as
+        an intermediate response and returns a not-applicable result.
+        """
+        self.run_quality_test(
+            test_label="SKIPPED-intermediate-response",
+            expected=ExpectedResult.SKIPPED,
+            query=[
+                {"role": "user", "content": [{"type": "text", "text": "Search for blue shoes"}]}
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "function_call",
+                            "tool_call_id": "call_1",
+                            "name": "product_search",
+                            "arguments": {"query": "blue shoes"},
+                        }
+                    ],
+                }
+            ],
+            tool_definitions=[ToolDefinitions.PRODUCT_SEARCH],
+        )

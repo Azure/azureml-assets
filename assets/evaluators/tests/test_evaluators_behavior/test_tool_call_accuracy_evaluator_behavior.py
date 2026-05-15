@@ -70,17 +70,3 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
     is_tool_definition_required = True
 
     MINIMAL_RESPONSE = BaseToolCallEvaluatorBehaviorTest.email_tool_call_and_assistant_response
-
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for tools evaluators."""
-        return [
-            f"{self.result_key}",
-            f"{self.result_key}_score",
-            f"{self.result_key}_result",
-            f"{self.result_key}_passed",
-            f"{self.result_key}_reason",
-            f"{self.result_key}_status",
-            f"{self.result_key}_threshold",
-            f"{self.result_key}_properties",
-        ]

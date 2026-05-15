@@ -56,46 +56,9 @@ dataMappingSchema:
         required: ["document_id", "relevance_score"]
   required: ["retrieval_ground_truth", "retrieved_documents"]
 outputSchema:
-  ndcg@3:
+  document_retrieval:
     type: "continuous"
     desirable_direction: "increase"
     min_value: 0
     max_value: 1
-  xdcg@3:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  fidelity:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  top1_relevance:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  top3_max_relevance:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  holes:
-    type: "ordinal"
-    desirable_direction: "decrease"
-    min_value: 0
-  holes_ratio:
-    type: "continuous"
-    desirable_direction: "decrease"
-    min_value: 0
-    max_value: 1
-  total_retrieved_documents:
-    type: "ordinal"
-    desirable_direction: "increase"
-    min_value: 0
-  total_ground_truth_documents:
-    type: "ordinal"
-    desirable_direction: "increase"
-    min_value: 0
 path: ./evaluator

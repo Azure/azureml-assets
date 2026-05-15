@@ -29,15 +29,6 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
     evaluator_type = SimilarityEvaluator
     use_mocking = True
 
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for prompty evaluators."""
-        return [
-            f"{self._result_prefix}",
-            f"{self._result_prefix}_result",
-            f"{self._result_prefix}_threshold"
-        ]
-
     constructor_arg_names = ["threshold"]
 
     # region Test Data

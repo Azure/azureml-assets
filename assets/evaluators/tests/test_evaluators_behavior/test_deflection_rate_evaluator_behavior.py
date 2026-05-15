@@ -26,8 +26,6 @@ class TestDeflectionRateEvaluatorBehavior(BaseEvaluatorBehaviorTest):
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.MINIMAL_RESPONSE
 
-    _additional_expected_field_suffixes = ["deflection_type"]
-
     @property
     def expected_result_fields(self):
         """Get the expected result fields for deflection rate evaluator."""

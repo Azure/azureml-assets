@@ -49,7 +49,16 @@ class BaseEvaluatorRunner(ABC):
     @property
     def expected_result_fields(self) -> List[str]:
         """Get the expected result fields for the evaluator."""
-        return []
+        return [
+            self._result_prefix,
+            f"{self._result_prefix}_score",
+            f"{self._result_prefix}_passed",
+            f"{self._result_prefix}_result",
+            f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_status",
+            f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_properties",
+            ]
 
     @property
     def _result_prefix(self) -> str:
@@ -58,7 +67,7 @@ class BaseEvaluatorRunner(ABC):
             return self.result_prefix
         if self.result_key is None:
             return None
-        # Auto-derive: "bleu_score" -> "bleu", "f1_score" -> "f1"
+        # Auto-derive: "bleu_score" -> "bleu", "f1_score_score" -> "f1_score"
         if self.result_key.endswith("_score"):
             return self.result_key[:-6]  # Strip "_score"
         return self.result_key
@@ -176,22 +185,21 @@ class BaseEvaluatorRunner(ABC):
                     raise ValueError(f"Expected result field '{field}' not found in results.")
 
         label = results.get(f"{self._result_prefix}_result")
+        passed = results.get(f"{self._result_prefix}_passed")
+        threshold = results.get(f"{self._result_prefix}_threshold")
+        reason = results.get(f"{self.result_key}_reason")
+        status = results.get(f"{self.result_key}_status")
+        properties = results.get(f"{self.result_key}_properties")
 
         error_message = results.get(f"{self.result_key}_error_message")
         error_code = results.get(f"{self.result_key}_error_code")
-
-        # Optional fields
-        reason = results.get(f"{self.result_key}_reason")
-        status = results.get(f"{self.result_key}_status")
-        threshold = results.get(f"{self._result_prefix}_threshold")
-        precision = results.get(f"{self._result_prefix}_precision")
-        recall = results.get(f"{self._result_prefix}_recall")
-        f1_score = results.get(f"{self._result_prefix}_f1_score")
 
         result = {
             "evaluator": self.result_key,
             "score": score,
             "label": label,
+            "status": status,
+            "passed": passed,
         }
 
         print(f"\nEvaluation Result for {self.result_key}:")
@@ -203,18 +211,9 @@ class BaseEvaluatorRunner(ABC):
         if threshold is not None:
             print(f"  Threshold: {threshold}")
             result["threshold"] = threshold
-        if status is not None:
-            print(f"  Status: {status}")
-            result["status"] = status
-        if precision is not None:
-            print(f"  Precision: {precision}")
-            result["precision"] = precision
-        if recall is not None:
-            print(f"  Recall: {recall}")
-            result["recall"] = recall
-        if f1_score is not None:
-            print(f"  F1 Score: {f1_score}")
-            result["f1_score"] = f1_score
+        if properties is not None:
+            print(f"  Properties: {properties}")
+            result["properties"] = properties
         if error_message or error_code:
             print(f"  Error Message: {error_message}")
             print(f"  Error Code: {error_code}")
@@ -236,8 +235,12 @@ class BaseEvaluatorRunner(ABC):
         """
         score_key = "score"
         label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
         threshold = self._get_threshold(result_data)
         assert result_data[label_key] == "pass", f"Expected 'pass' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] is True, f"Expected passed=True but got {result_data[passed_key]}"
+        assert result_data[status_key] == "completed", f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
@@ -269,16 +272,20 @@ class BaseEvaluatorRunner(ABC):
         Raises:
             AssertionError: If the result is not a valid not-applicable result.
         """
-        label_key = "label"
         score_key = "score"
-        assert result_data[label_key] == "pass", \
-            f"Expected 'pass' but got '{result_data[label_key]}'"
+        label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
+        assert result_data[label_key] == "not_applicable", \
+            f"Expected 'not_applicable' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] is None, f"Expected passed=None but got {result_data[passed_key]}"
+        assert result_data[status_key] == "skipped", \
+            f"Expected status 'skipped' but got '{result_data[status_key]}'"
         score = result_data[score_key]
-        threshold = self._get_threshold(result_data)
-        assert score is None or score == threshold, \
-            f"Expected score to be None or equal to threshold {threshold} for not-applicable result but got '{score}'"
-        assert "Not applicable" in result_data.get("reason", ""), \
-            f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
+        assert score is None, \
+            f"Expected score to be None for not-applicable result but got '{score}'"
+        assert "not applicable" in result_data.get("reason", "").lower(), \
+            f"Expected reason to contain 'not applicable' but got '{result_data.get('reason')}'"
 
     def assert_fail(self, result_data: Dict[str, Any]):
         """Assert a failing result.
@@ -291,8 +298,12 @@ class BaseEvaluatorRunner(ABC):
         """
         score_key = "score"
         label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
         threshold = self._get_threshold(result_data)
         assert result_data[label_key] == "fail", f"Expected 'fail' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] is False, f"Expected passed=False but got {result_data[passed_key]}"
+        assert result_data[status_key] == "completed", f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
@@ -311,8 +322,13 @@ class BaseEvaluatorRunner(ABC):
         """
         score_key = "score"
         label_key = "label"
+        passed_key = "passed"
+        status_key = "status"
         assert result_data[label_key] in ["pass", "fail"], \
             f"Expected 'pass' or 'fail' but got '{result_data[label_key]}'"
+        assert result_data[passed_key] in [True, False], \
+            f"Expected passed=True or False but got {result_data[passed_key]}"
+        assert result_data[status_key] == "completed", f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
@@ -348,6 +364,8 @@ class BaseEvaluatorRunner(ABC):
         Raises:
             AssertionError: If no error is present or error type doesn't match.
         """
+        assert result_data["passed"] is None
+        assert result_data["label"] is None
         assert result_data.get("error_message") is not None, "Expected an error message"
         if error_code is not None:
             assert result_data["error_code"] == error_code, \

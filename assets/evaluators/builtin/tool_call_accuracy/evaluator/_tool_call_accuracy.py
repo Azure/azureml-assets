@@ -18,6 +18,7 @@ from azure.ai.evaluation._converters._models import (
     _BUILT_IN_DESCRIPTIONS,
     _BUILT_IN_PARAMS,
 )
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from enum import Enum
 
 from abc import ABC, abstractmethod
@@ -978,7 +979,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             llm_status = llm_output.get("status", "completed")
             if llm_status == "skipped":
                 reason = llm_output.get("reason", "")
-                return self._not_applicable_result(reason, self.threshold)
+                return self._return_not_applicable_result(reason, self._threshold)
 
             score = llm_output.get(self._LLM_SCORE_KEY, None)
             if not score or not check_score_is_valid(
@@ -998,7 +999,7 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             # Format the output
             reason = llm_output.get("reason", "")
             score = float(score)
-            score_result = "pass" if score >= self.threshold else "fail"
+            score_result = "pass" if score >= self._threshold else "fail"
             llm_properties = llm_output.get("properties", {}) or {}
             llm_properties.update(
                 {
@@ -1044,9 +1045,9 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         response = kwargs.get("response")
         if _is_intermediate_response(response):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
-                self.threshold,
+                self._threshold,
             )
         if "response" in kwargs:
             kwargs["response"] = _preprocess_messages(kwargs["response"])
@@ -1056,33 +1057,92 @@ class ToolCallAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         eval_input = self._convert_kwargs_to_eval_input(**kwargs)
         if isinstance(eval_input, dict) and eval_input.get("error_message"):
             # If there is an error message, return not applicable result
-            return self._not_applicable_result(eval_input.get("error_message"), self.threshold)
+            return self._return_not_applicable_result(eval_input.get("error_message"), self._threshold)
         # Do the evaluation
         result = await self._do_eval(eval_input)
         # Return the result
         return result
 
-    def _not_applicable_result(
+    async def _the_super_real_call(self, **kwargs):
+        """The asynchronous call where real end-to-end evaluation logic is performed.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                )
+
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
+
+    def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict, None]]:
-        """Return a result indicating that the tool call is not applicable for evaluation.
-
-        :param error_message: The error message indicating why the evaluation is not applicable.
-        :type error_message: str
-        :param threshold: The threshold value for the evaluation.
-        :type threshold: Union[int, float]
-        :return: A dictionary containing the result of the evaluation.
-        :rtype: Dict[str, Union[str, float, None]]
-        """
+        """Return a result indicating that the evaluation is not applicable (skipped)."""
         return {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
-            f"{self._result_key}_result": "pass",
             f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_status": "skipped",
             f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_properties": None,
         }
 
     def _extract_needed_tool_definitions(self, tool_calls, tool_definitions):

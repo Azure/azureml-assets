@@ -28,6 +28,7 @@ from azure.ai.evaluation._common.utils import (
     _pretty_format_conversation_history,
 )
 from azure.ai.evaluation._common.utils import reformat_tool_definitions
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -1277,16 +1278,19 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             parsed_result[f"{self._result_key}_status"] = status
         return parsed_result
 
-    def _not_applicable_result(
+    def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
-        return self._build_result(
-            score=threshold,
-            result="not_applicable",
-            reason=f"Not applicable: {error_message}",
-            properties={},
-        )
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the evaluation is not applicable (skipped)."""
+        return {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_reason": f"Not applicable: {error_message}",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+        }
 
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
         """Determine whether to use conversation-level evaluation.
@@ -1313,7 +1317,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             return await self._do_eval_conversation_level(eval_input)
 
         if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
                 self.threshold,
             )
@@ -1470,17 +1474,80 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Convert inputs into list of evaluable inputs.
         try:
-            return await super()._real_call(**kwargs)
+            return await self._the_super_real_call(**kwargs)
         except EvaluationException as ex:
             if ex.category == ErrorCategory.NOT_APPLICABLE:
-                return self._build_result(
-                    score=self.threshold,
-                    result="pass",
-                    reason=f"Not applicable: {ex.message}",
-                    properties={},
-                )
+                return self._return_not_applicable_result(ex.message, self.threshold)
             else:
                 raise ex
+
+    async def _the_super_real_call(self, **kwargs):
+        """The asynchronous call where real end-to-end evaluation logic is performed.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                )
+
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
 
     def _is_single_entry(self, value):
         """Determine if the input value represents a single entry, unsure is returned as False."""

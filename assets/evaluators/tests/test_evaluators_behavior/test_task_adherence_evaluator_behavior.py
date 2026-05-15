@@ -141,8 +141,6 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 
-    _additional_expected_field_suffixes = ["details", "properties"]
-
 
 def _create_mocked_evaluator():
     """Create a TaskAdherenceEvaluator with both _flow and _multi_turn_flow mocked."""
