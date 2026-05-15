@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import logging
-from typing import Dict, Union
+from typing import Dict
 from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 from typing_extensions import overload, override
 
@@ -107,7 +107,7 @@ class BleuScoreEvaluator(EvaluatorBase):
 
     @override
     async def _real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict

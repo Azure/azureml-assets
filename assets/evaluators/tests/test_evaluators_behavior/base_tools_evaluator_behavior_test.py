@@ -8,7 +8,6 @@ Tests various input scenarios: query, response, and tool_definitions.
 """
 
 import json
-from typing import List
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 
 

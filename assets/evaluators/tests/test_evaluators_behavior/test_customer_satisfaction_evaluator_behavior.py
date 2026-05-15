@@ -31,6 +31,7 @@ class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.MINIMAL_RESPONSE
 
+
 def _create_mocked_evaluator():
     """Create a CustomerSatisfactionEvaluator with both _flow and _multi_turn_flow mocked."""
     model_config = AzureOpenAIModelConfiguration(

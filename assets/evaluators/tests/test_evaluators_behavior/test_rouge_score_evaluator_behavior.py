@@ -5,7 +5,7 @@
 
 import pytest
 import math
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 try:
     from typing import override
@@ -34,8 +34,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     """
 
     evaluator_type = RougeScoreEvaluator
-    result_key = "rouge_f1_score"
-    result_prefix = "rouge"
+    result_key = "rouge"
     constructor_arg_names = ["rouge_type", "precision_threshold", "recall_threshold", "f1_score_threshold"]
 
     # region Test Data
@@ -119,7 +118,7 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """
         result = super()._extract_and_print_result(results, test_label)
 
-        properties = results.get("properties", {})
+        properties = result.get("properties", {})
         # Extract ROUGE-specific fields
         precision = properties.get("rouge_precision")
         recall = properties.get("rouge_recall")
@@ -422,9 +421,11 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
         evaluator = RougeScoreEvaluator(rouge_type=RougeType.ROUGE_1)
         results = evaluator(response=self.IDENTICAL_TEXT, ground_truth=self.IDENTICAL_TEXT)
 
-        assert results["rouge_precision_threshold"] == 0.5
-        assert results["rouge_recall_threshold"] == 0.5
-        assert results["rouge_f1_score_threshold"] == 0.5
+        # Sub-metric thresholds are nested under rouge_properties.
+        properties = results["rouge_properties"]
+        assert properties["rouge_precision_threshold"] == 0.5
+        assert properties["rouge_recall_threshold"] == 0.5
+        assert properties["rouge_f1_score_threshold"] == 0.5
 
     # ==================== WORD ORDER TESTS ====================
 
@@ -699,18 +700,21 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.IDENTICAL_TEXT,
             rouge_type=RougeType.ROUGE_1,
         )
+        # Sub-metric keys are nested under rouge_properties.
+        assert "rouge_properties" in results
+        properties = results["rouge_properties"]
         # Score keys
-        assert "rouge_precision" in results
-        assert "rouge_recall" in results
-        assert "rouge_f1_score" in results
+        assert "rouge_precision" in properties
+        assert "rouge_recall" in properties
+        assert "rouge_f1_score" in properties
         # Result keys
-        assert "rouge_precision_result" in results
-        assert "rouge_recall_result" in results
-        assert "rouge_f1_score_result" in results
+        assert "rouge_precision_result" in properties
+        assert "rouge_recall_result" in properties
+        assert "rouge_f1_score_result" in properties
         # Threshold keys
-        assert "rouge_precision_threshold" in results
-        assert "rouge_recall_threshold" in results
-        assert "rouge_f1_score_threshold" in results
+        assert "rouge_precision_threshold" in properties
+        assert "rouge_recall_threshold" in properties
+        assert "rouge_f1_score_threshold" in properties
 
     def test_output_score_types(self):
         """Test that scores are floats."""
@@ -719,9 +723,10 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.IDENTICAL_TEXT,
             rouge_type=RougeType.ROUGE_1,
         )
-        assert isinstance(results["rouge_precision"], float)
-        assert isinstance(results["rouge_recall"], float)
-        assert isinstance(results["rouge_f1_score"], float)
+        properties = results["rouge_properties"]
+        assert isinstance(properties["rouge_precision"], float)
+        assert isinstance(properties["rouge_recall"], float)
+        assert isinstance(properties["rouge_f1_score"], float)
 
     def test_output_result_values(self):
         """Test that results are 'pass' or 'fail'."""
@@ -730,9 +735,10 @@ class TestRougeScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.IDENTICAL_TEXT,
             rouge_type=RougeType.ROUGE_1,
         )
-        assert results["rouge_precision_result"] in ["pass", "fail"]
-        assert results["rouge_recall_result"] in ["pass", "fail"]
-        assert results["rouge_f1_score_result"] in ["pass", "fail"]
+        properties = results["rouge_properties"]
+        assert properties["rouge_precision_result"] in ["pass", "fail"]
+        assert properties["rouge_recall_result"] in ["pass", "fail"]
+        assert properties["rouge_f1_score_result"] in ["pass", "fail"]
 
     # ==================== F1 SCORE CALCULATION TESTS ====================
 

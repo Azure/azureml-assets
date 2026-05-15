@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 import os
 import logging
 import math
+import re
 from typing import Dict, List, Optional, Union, Any, Tuple
 
 from typing_extensions import overload, override
@@ -15,6 +17,7 @@ else:
 
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
+from azure.ai.evaluation._common.constants import PROMPT_BASED_REASON_EVALUATORS
 from azure.ai.evaluation._common.utils import (
     ErrorBlame,
     ErrorTarget,
@@ -23,6 +26,7 @@ from azure.ai.evaluation._common.utils import (
     check_score_is_valid,
     construct_prompty_model_config,
     validate_model_config,
+    parse_quality_evaluator_reason_score,
     _extract_text_from_content,
     _get_agent_response,
     _pretty_format_conversation_history,
@@ -1258,21 +1262,15 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     ) -> Dict[str, Union[str, int, float, Dict, None]]:
         """Build a standardized groundedness result dictionary."""
         p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        properties = dict(properties) if isinstance(properties, dict) else {}
+        properties.update(self._get_token_metadata(p))
         parsed_result: Dict[str, Union[str, int, float, Dict, None]] = {
             self._result_key: score,
             f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
             f"{self._result_key}_threshold": self.threshold,
             f"{self._result_key}_reason": reason,
-            f"{self._result_key}_details": properties,
             f"{self._result_key}_properties": properties,
-            f"{self._result_key}_prompt_tokens": p.get("input_token_count", 0),
-            f"{self._result_key}_completion_tokens": p.get("output_token_count", 0),
-            f"{self._result_key}_total_tokens": p.get("total_token_count", 0),
-            f"{self._result_key}_finish_reason": p.get("finish_reason", ""),
-            f"{self._result_key}_model": p.get("model_id", ""),
-            f"{self._result_key}_sample_input": p.get("sample_input", ""),
-            f"{self._result_key}_sample_output": p.get("sample_output", ""),
         }
         if status is not None:
             parsed_result[f"{self._result_key}_status"] = status
@@ -1281,7 +1279,15 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict, None]]:
-        """Return a result indicating that the evaluation is not applicable (skipped)."""
+        """Return a result indicating that the tool call is not applicable for evaluation.
+
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
+        :return: A dictionary containing the result of the evaluation.
+        :rtype: Dict[str, Union[str, float, None]]
+        """
         return {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
@@ -1290,6 +1296,97 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_status": "skipped",
             f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+
+    async def _the_super_do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
+        """Do a relevance evaluation.
+
+        :param eval_input: The input to the evaluator.
+        :type eval_input: Dict
+        :return: The evaluation result.
+        :rtype: Dict
+        """
+        if "query" not in eval_input and "response" not in eval_input:
+            raise EvaluationException(
+                message="Only text conversation inputs are supported.",
+                internal_message="Only text conversation inputs are supported.",
+                blame=ErrorBlame.USER_ERROR,
+                category=ErrorCategory.INVALID_VALUE,
+                target=ErrorTarget.CONVERSATION,
+            )
+        # Check for intermediate response
+        if _is_intermediate_response(eval_input.get("response")):
+            return self._return_not_applicable_result(
+                "Intermediate response. Please provide the agent's final response for evaluation.",
+                self._threshold,
+            )
+        # Preprocess messages if they are lists
+        if isinstance(eval_input.get("response"), list):
+            eval_input["response"] = _preprocess_messages(eval_input["response"])
+        if isinstance(eval_input.get("query"), list):
+            eval_input["query"] = _preprocess_messages(eval_input["query"])
+        # Call the prompty flow to get the evaluation result.
+        prompty_output_dict = await self._flow(timeout=self._LLM_CALL_TIMEOUT, **eval_input)
+        score = math.nan
+        reason = ""
+        llm_properties = {}
+        if prompty_output_dict:
+            llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+            parsed_output = None
+            if isinstance(llm_output, dict):
+                parsed_output = llm_output
+            elif isinstance(llm_output, str):
+                try:
+                    parsed_output = json.loads(llm_output)
+                except (json.JSONDecodeError, TypeError):
+                    parsed_output = None
+            if parsed_output and isinstance(parsed_output, dict):
+                llm_status = parsed_output.get("status", "completed")
+                if llm_status == "skipped":
+                    skip_reason = parsed_output.get("reason", "")
+                    return self._return_not_applicable_result(skip_reason, self._threshold)
+                score = parsed_output.get("score", math.nan)
+                reason = parsed_output.get("reason", "")
+                llm_properties = parsed_output.get("properties", {}) or {}
+            else:
+                if isinstance(llm_output, str) and self._result_key in PROMPT_BASED_REASON_EVALUATORS:
+                    score, reason = parse_quality_evaluator_reason_score(llm_output)
+                elif isinstance(llm_output, str):
+                    match = re.search(r"\d", llm_output)
+                    if match:
+                        score = float(match.group())
+            score = float(score) if score is not None else math.nan
+            score_result = self._get_binary_result(score)
+            llm_properties.update(self._get_token_metadata(prompty_output_dict))
+            return {
+                self._result_key: score,
+                f"{self._result_key}_score": score,
+                f"{self._result_key}_passed": score_result == "pass",
+                f"{self._result_key}_result": score_result,
+                f"{self._result_key}_reason": reason,
+                f"{self._result_key}_status": "completed",
+                f"{self._result_key}_threshold": self._threshold,
+                f"{self._result_key}_properties": llm_properties,
+            }
+        raise EvaluationException(
+            message="Evaluator returned invalid output.",
+            blame=ErrorBlame.SYSTEM_ERROR,
+            category=ErrorCategory.FAILED_EXECUTION,
+            target=ErrorTarget.EVALUATE,
+        )
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
         }
 
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
@@ -1326,7 +1423,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if isinstance(eval_input.get("query"), list):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         if eval_input.get("query", None) is None:
-            result = await super()._do_eval(eval_input)
+            result = await self._the_super_do_eval(eval_input)
             # Check if base returned nan (invalid output case)
             if math.isnan(result.get(self._result_key, 0)):
                 raise EvaluationException(
@@ -1350,7 +1447,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         }
 
         # Replace and call the parent method
-        result = await super()._do_eval(simplified_eval_input)
+        result = await self._the_super_do_eval(simplified_eval_input)
         # Check if base returned nan (invalid output case)
         if math.isnan(result.get(self._result_key, 0)):
             raise EvaluationException(
@@ -1482,7 +1579,7 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 raise ex
 
     async def _the_super_real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict

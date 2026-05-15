@@ -7,7 +7,7 @@ Base class for code-based evaluator tests.
 Supports deterministic evaluators that don't require LLM calls (e.g., BLEU, F1, ROUGE, METEOR, GLEU).
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from .base_evaluator_runner import BaseEvaluatorRunner
 

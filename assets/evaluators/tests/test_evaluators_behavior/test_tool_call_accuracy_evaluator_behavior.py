@@ -8,7 +8,6 @@ Tests various input scenarios: query, response, tool_definitions, and tool_calls
 """
 
 import pytest
-from typing import List
 from .base_tool_calls_evaluator_behavior_test import BaseToolCallEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data

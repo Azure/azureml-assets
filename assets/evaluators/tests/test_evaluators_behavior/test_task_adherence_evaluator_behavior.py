@@ -205,7 +205,6 @@ class TestTaskAdherenceMultiturnBehavior:
         assert "task_adherence" in result
         assert "task_adherence_result" in result
         assert "task_adherence_reason" in result
-        assert "task_adherence_details" in result
         assert "task_adherence_properties" in result
         assert "task_adherence_threshold" in result
         assert result["task_adherence"] in (0.0, 1.0)

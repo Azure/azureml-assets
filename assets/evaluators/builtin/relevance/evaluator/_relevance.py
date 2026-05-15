@@ -711,7 +711,15 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
     def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict, None]]:
-        """Return a result indicating that the evaluation is not applicable (skipped)."""
+        """Return a result indicating that the tool call is not applicable for evaluation.
+
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
+        :return: A dictionary containing the result of the evaluation.
+        :rtype: Dict[str, Union[str, float, None]]
+        """
         return {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
@@ -720,6 +728,7 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_status": "skipped",
             f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
         }
 
     @staticmethod
@@ -750,7 +759,7 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         return await self._the_super_real_call(**kwargs)
 
     async def _the_super_real_call(self, **kwargs):
-        """The asynchronous call where real end-to-end evaluation logic is performed.
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
 
         :keyword kwargs: The inputs to evaluate.
         :type kwargs: Dict
