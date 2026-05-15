@@ -5,7 +5,7 @@ description: >-
   the slime framework with Megatron and SGLang.
 
 name: "slime-pytorch-2.9-cuda12.8"
-version: "2"
+version: "3"
 
 build:
   path: "context"

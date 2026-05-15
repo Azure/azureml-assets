@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260507.v1
+FROM mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:20260514.v1
 
 # Security: upgrade all OS packages to patch USN vulnerabilities (incl. USN-8222-1 openssh 1:9.6p1-3ubuntu13.16)
 # Reinstall openssh-* explicitly so the upgrade is forced even if the base image pins a held version.
