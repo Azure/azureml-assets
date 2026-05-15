@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import logging
 from enum import Enum
 
 from typing import Dict
@@ -9,7 +10,10 @@ from typing_extensions import overload, override
 from azure.ai.evaluation._vendor.rouge_score import rouge_scorer
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
 from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory, ErrorTarget
 import math
+
+logger = logging.getLogger(__name__)
 
 
 class RougeType(str, Enum):
@@ -153,9 +157,9 @@ class RougeScoreEvaluator(EvaluatorBase):
         """
         # Initialize results with False for NaN values
         results = {
-            "rouge_precision_result": False,
-            "rouge_recall_result": False,
-            "rouge_f1_score_result": False,
+            "rouge_precision_passed": False,
+            "rouge_recall_passed": False,
+            "rouge_f1_score_passed": False,
         }
 
         # Check if values are valid (not NaN) before comparison
@@ -165,18 +169,18 @@ class RougeScoreEvaluator(EvaluatorBase):
 
         if self._higher_is_better:
             if precision_valid:
-                results["rouge_precision_result"] = rouge_precision >= self._threshold["precision"]
+                results["rouge_precision_passed"] = rouge_precision >= self._threshold["precision"]
             if recall_valid:
-                results["rouge_recall_result"] = rouge_recall >= self._threshold["recall"]
+                results["rouge_recall_passed"] = rouge_recall >= self._threshold["recall"]
             if f1_valid:
-                results["rouge_f1_score_result"] = rouge_f1_score >= self._threshold["f1_score"]
+                results["rouge_f1_score_passed"] = rouge_f1_score >= self._threshold["f1_score"]
         else:
             if precision_valid:
-                results["rouge_precision_result"] = rouge_precision <= self._threshold["precision"]
+                results["rouge_precision_passed"] = rouge_precision <= self._threshold["precision"]
             if recall_valid:
-                results["rouge_recall_result"] = rouge_recall <= self._threshold["recall"]
+                results["rouge_recall_passed"] = rouge_recall <= self._threshold["recall"]
             if f1_valid:
-                results["rouge_f1_score_result"] = rouge_f1_score <= self._threshold["f1_score"]
+                results["rouge_f1_score_passed"] = rouge_f1_score <= self._threshold["f1_score"]
 
         return results
 
@@ -194,9 +198,9 @@ class RougeScoreEvaluator(EvaluatorBase):
         scorer = rouge_scorer.RougeScorer(rouge_types=[self._rouge_type])
         metrics = scorer.score(ground_truth, response)[self._rouge_type]
         binary_results = {
-            "rouge_precision_result": False,
-            "rouge_recall_result": False,
-            "rouge_f1_score_result": False,
+            "rouge_precision_passed": False,
+            "rouge_recall_passed": False,
+            "rouge_f1_score_passed": False,
         }
         # Convert metrics to floats, using nan for None or non-convertible values
         rouge_precision = float(metrics.precision) if metrics.precision is not None else float("nan")
@@ -207,17 +211,96 @@ class RougeScoreEvaluator(EvaluatorBase):
             rouge_recall=rouge_recall,
             rouge_f1_score=rouge_f1_score,
         )
+        is_passed = binary_results["rouge_f1_score_passed"]
         return {
-            "rouge_precision": rouge_precision,
-            "rouge_recall": rouge_recall,
-            "rouge_f1_score": rouge_f1_score,
-            "rouge_precision_result": EVALUATION_PASS_FAIL_MAPPING[binary_results["rouge_precision_result"]],
-            "rouge_recall_result": EVALUATION_PASS_FAIL_MAPPING[binary_results["rouge_recall_result"]],
-            "rouge_f1_score_result": EVALUATION_PASS_FAIL_MAPPING[binary_results["rouge_f1_score_result"]],
-            "rouge_precision_threshold": self._threshold["precision"],
-            "rouge_recall_threshold": self._threshold["recall"],
-            "rouge_f1_score_threshold": self._threshold["f1_score"],
+            "rouge": rouge_f1_score,
+            "rouge_score": rouge_f1_score,
+            "rouge_passed": is_passed,
+            "rouge_result": EVALUATION_PASS_FAIL_MAPPING[is_passed],
+            "rouge_reason": None,
+            "rouge_status": "completed",
+            "rouge_threshold": self._threshold["f1_score"],
+            "rouge_properties": {
+                "rouge_precision": rouge_precision,
+                "rouge_recall": rouge_recall,
+                "rouge_f1_score": rouge_f1_score,
+                "rouge_precision_result": EVALUATION_PASS_FAIL_MAPPING[binary_results["rouge_precision_passed"]],
+                "rouge_recall_result": EVALUATION_PASS_FAIL_MAPPING[binary_results["rouge_recall_passed"]],
+                "rouge_f1_score_result": EVALUATION_PASS_FAIL_MAPPING[binary_results["rouge_f1_score_passed"]],
+                "rouge_precision_passed": binary_results["rouge_precision_passed"],
+                "rouge_recall_passed": binary_results["rouge_recall_passed"],
+                "rouge_f1_score_passed": binary_results["rouge_f1_score_passed"],
+                "rouge_precision_threshold": self._threshold["precision"],
+                "rouge_recall_threshold": self._threshold["recall"],
+                "rouge_f1_score_threshold": self._threshold["f1_score"],
+            },
         }
+
+    @override
+    async def _real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                )
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
 
     @overload  # type: ignore
     def __call__(self, *, ground_truth: str, response: str) -> Dict[str, float]:

@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.f1_score"
-version: 1
+version: 2
 displayName: "F1Score-Evaluator"
 description: "Balances correctness and completeness when comparing predictions to
   true results. Higher scores indicate better overall accuracy. It’s best used for

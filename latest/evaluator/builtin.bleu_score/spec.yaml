@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.bleu_score"
-version: 1
+version: 2
 displayName: "Bleu-Score-Evaluator"
 description: "Measures how similar the model’s output is to a reference text. Useful
   for assessing alignment between generated and expected responses. It’s best used
