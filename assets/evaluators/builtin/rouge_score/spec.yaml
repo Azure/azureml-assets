@@ -39,17 +39,7 @@ dataMappingSchema:
       type: "string"
   required: ["ground_truth", "response"]
 outputSchema:
-  rouge_precision:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  rouge_recall:
-    type: "continuous"
-    desirable_direction: "increase"
-    min_value: 0
-    max_value: 1
-  rouge_f1_score:
+  rouge:
     type: "continuous"
     desirable_direction: "increase"
     min_value: 0
