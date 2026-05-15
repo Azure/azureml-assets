@@ -28,6 +28,8 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
                              "xdcg_threshold", "fidelity_threshold", "top1_relevance_threshold",
                              "top3_max_relevance_threshold"]
 
+    result_key = "document_retrieval"
+
     # region Test Data
     # Perfect retrieval scenario - top 3 documents match ideal ranking
     PERFECT_GROUND_TRUTH: List[Dict[str, Any]] = [
@@ -160,7 +162,7 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """
         result = super()._extract_and_print_result(results, test_label)
 
-        properties = results.get("properties", {})
+        properties = result.get("properties", {})
         # Document Retrieval Evaluator specific fields
         ndcg = properties.get("ndcg@3")
         xdcg = properties.get("xdcg@3")
@@ -272,7 +274,7 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        assert result_data["xdcg3"] < perfect_results["xdcg@3"]
+        assert result_data["xdcg3"] < perfect_results["document_retrieval_properties"]["xdcg@3"]
 
     # ==================== HOLES TESTS ====================
 
@@ -311,8 +313,9 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
         # Verify holes result passes with threshold of 0
-        assert results.get("holes_result") == "pass"
-        assert results.get("holes_ratio_result") == "pass"
+        properties = results.get("document_retrieval_properties", {})
+        assert properties.get("holes_result") == "pass"
+        assert properties.get("holes_ratio_result") == "pass"
 
     # ==================== EMPTY RETRIEVED DOCUMENTS TESTS ====================
 
@@ -407,7 +410,8 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieved_documents=self.PERFECT_RETRIEVED,
             ndcg_threshold=0.5,
         )
-        assert results.get("ndcg@3_result") == "pass"
+        properties = results.get("document_retrieval_properties", {})
+        assert properties.get("ndcg@3_result") == "pass"
 
     def test_ndcg_threshold_fail(self):
         """Test NDCG fails with high threshold on suboptimal retrieval."""
@@ -417,7 +421,8 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ndcg_threshold=0.9,
         )
         # Suboptimal retrieval should fail with high threshold
-        assert results.get("ndcg@3_result") == "fail"
+        properties = results.get("document_retrieval_properties", {})
+        assert properties.get("ndcg@3_result") == "fail"
 
     def test_fidelity_threshold(self):
         """Test fidelity threshold evaluation."""
@@ -427,7 +432,8 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             fidelity_threshold=0.9,
         )
         # Perfect retrieval should pass fidelity threshold
-        assert results.get("fidelity_result") == "pass"
+        properties = results.get("document_retrieval_properties", {})
+        assert properties.get("fidelity_result") == "pass"
 
     def test_all_thresholds_present(self):
         """Test that all threshold-related keys are present in output."""
@@ -435,14 +441,15 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        # Check threshold values are in output
-        assert "ndcg@3_threshold" in results
-        assert "xdcg@3_threshold" in results
-        assert "fidelity_threshold" in results
-        assert "top1_relevance_threshold" in results
-        assert "top3_max_relevance_threshold" in results
-        assert "holes_threshold" in results
-        assert "holes_ratio_threshold" in results
+        # Check threshold values are in output (nested under properties).
+        properties = results.get("document_retrieval_properties", {})
+        assert "ndcg@3_threshold" in properties
+        assert "xdcg@3_threshold" in properties
+        assert "fidelity_threshold" in properties
+        assert "top1_relevance_threshold" in properties
+        assert "top3_max_relevance_threshold" in properties
+        assert "holes_threshold" in properties
+        assert "holes_ratio_threshold" in properties
 
     # ==================== ERROR HANDLING TESTS ====================
 
@@ -573,16 +580,17 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        # Core metrics
-        assert "ndcg@3" in results
-        assert "xdcg@3" in results
-        assert "fidelity" in results
-        assert "top1_relevance" in results
-        assert "top3_max_relevance" in results
-        assert "holes" in results
-        assert "holes_ratio" in results
-        assert "total_retrieved_documents" in results
-        assert "total_ground_truth_documents" in results
+        # Core metrics (nested under properties)
+        properties = results.get("document_retrieval_properties", {})
+        assert "ndcg@3" in properties
+        assert "xdcg@3" in properties
+        assert "fidelity" in properties
+        assert "top1_relevance" in properties
+        assert "top3_max_relevance" in properties
+        assert "holes" in properties
+        assert "holes_ratio" in properties
+        assert "total_retrieved_documents" in properties
+        assert "total_ground_truth_documents" in properties
 
     def test_output_contains_result_keys(self):
         """Test that output contains pass/fail result keys."""
@@ -590,14 +598,15 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        # Result keys
-        assert "ndcg@3_result" in results
-        assert "xdcg@3_result" in results
-        assert "fidelity_result" in results
-        assert "top1_relevance_result" in results
-        assert "top3_max_relevance_result" in results
-        assert "holes_result" in results
-        assert "holes_ratio_result" in results
+        # Result keys (nested under properties)
+        properties = results.get("document_retrieval_properties", {})
+        assert "ndcg@3_result" in properties
+        assert "xdcg@3_result" in properties
+        assert "fidelity_result" in properties
+        assert "top1_relevance_result" in properties
+        assert "top3_max_relevance_result" in properties
+        assert "holes_result" in properties
+        assert "holes_ratio_result" in properties
 
     def test_output_contains_higher_is_better_keys(self):
         """Test that output contains higher_is_better indicator keys."""
@@ -605,13 +614,14 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
+        properties = results.get("document_retrieval_properties", {})
         # Higher is better for main metrics
-        assert results.get("ndcg@3_higher_is_better") is True
-        assert results.get("xdcg@3_higher_is_better") is True
-        assert results.get("fidelity_higher_is_better") is True
+        assert properties.get("ndcg@3_higher_is_better") is True
+        assert properties.get("xdcg@3_higher_is_better") is True
+        assert properties.get("fidelity_higher_is_better") is True
         # Lower is better for holes
-        assert results.get("holes_higher_is_better") is False
-        assert results.get("holes_ratio_higher_is_better") is False
+        assert properties.get("holes_higher_is_better") is False
+        assert properties.get("holes_ratio_higher_is_better") is False
 
     def test_result_values_are_pass_or_fail(self):
         """Test that result values are either 'pass' or 'fail'."""
@@ -619,9 +629,10 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        result_keys = [k for k in results.keys() if k.endswith("_result")]
+        properties = results.get("document_retrieval_properties", {})
+        result_keys = [k for k in properties.keys() if k.endswith("_result")]
         for key in result_keys:
-            assert results[key] in ["pass", "fail"], f"{key} should be 'pass' or 'fail'"
+            assert properties[key] in ["pass", "fail"], f"{key} should be 'pass' or 'fail'"
 
     # ==================== METRICS RANGE TESTS ====================
 
@@ -631,13 +642,13 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        assert 0.0 <= results["ndcg@3"] <= 1.0
+        assert 0.0 <= results["document_retrieval_properties"]["ndcg@3"] <= 1.0
 
         results_suboptimal = self._run_evaluation(
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.SUBOPTIMAL_RETRIEVED,
         )
-        assert 0.0 <= results_suboptimal["ndcg@3"] <= 1.0
+        assert 0.0 <= results_suboptimal["document_retrieval_properties"]["ndcg@3"] <= 1.0
 
     def test_holes_ratio_range(self):
         """Test that holes_ratio is within valid range [0, 1]."""
@@ -646,14 +657,14 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        assert 0.0 <= results["holes_ratio"] <= 1.0
+        assert 0.0 <= results["document_retrieval_properties"]["holes_ratio"] <= 1.0
 
         # All holes
         results_holes = self._run_evaluation(
             retrieval_ground_truth=self.PARTIAL_GROUND_TRUTH,
             retrieved_documents=self.ALL_HOLES_RETRIEVED,
         )
-        assert 0.0 <= results_holes["holes_ratio"] <= 1.0
+        assert 0.0 <= results_holes["document_retrieval_properties"]["holes_ratio"] <= 1.0
 
     def test_fidelity_range(self):
         """Test that fidelity is within valid range [0, 1]."""
@@ -661,7 +672,7 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        assert 0.0 <= results["fidelity"] <= 1.0
+        assert 0.0 <= results["document_retrieval_properties"]["fidelity"] <= 1.0
 
     # ==================== DOCUMENT COUNT TESTS ====================
 
@@ -671,8 +682,9 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PERFECT_GROUND_TRUTH,
             retrieved_documents=self.PERFECT_RETRIEVED,
         )
-        assert results["total_retrieved_documents"] == len(self.PERFECT_RETRIEVED)
-        assert results["total_ground_truth_documents"] == len(self.PERFECT_GROUND_TRUTH)
+        properties = results["document_retrieval_properties"]
+        assert properties["total_retrieved_documents"] == len(self.PERFECT_RETRIEVED)
+        assert properties["total_ground_truth_documents"] == len(self.PERFECT_GROUND_TRUTH)
 
     def test_partial_retrieval_counts(self):
         """Test document counts with partial retrieval."""
@@ -680,8 +692,9 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
             retrieval_ground_truth=self.PARTIAL_GROUND_TRUTH,
             retrieved_documents=self.PARTIAL_RETRIEVED_WITH_HOLES,
         )
-        assert results["total_retrieved_documents"] == len(self.PARTIAL_RETRIEVED_WITH_HOLES)
-        assert results["total_ground_truth_documents"] == len(self.PARTIAL_GROUND_TRUTH)
+        properties = results["document_retrieval_properties"]
+        assert properties["total_retrieved_documents"] == len(self.PARTIAL_RETRIEVED_WITH_HOLES)
+        assert properties["total_ground_truth_documents"] == len(self.PARTIAL_GROUND_TRUTH)
 
     # ==================== INTEGER RELEVANCE SCORE TESTS ====================
 

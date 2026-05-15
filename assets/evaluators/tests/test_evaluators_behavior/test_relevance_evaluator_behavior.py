@@ -4,7 +4,6 @@
 """Behavioral tests for Relevance Evaluator."""
 
 import pytest
-from typing import List
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data

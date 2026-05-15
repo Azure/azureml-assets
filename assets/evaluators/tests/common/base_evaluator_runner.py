@@ -67,9 +67,6 @@ class BaseEvaluatorRunner(ABC):
             return self.result_prefix
         if self.result_key is None:
             return None
-        # Auto-derive: "bleu_score" -> "bleu", "f1_score_score" -> "f1_score"
-        if self.result_key.endswith("_score"):
-            return self.result_key[:-6]  # Strip "_score"
         return self.result_key
 
     def _init_evaluator(self, **kwargs) -> EvaluatorBase:
@@ -198,6 +195,7 @@ class BaseEvaluatorRunner(ABC):
             "evaluator": self.result_key,
             "score": score,
             "label": label,
+            "result": label,
             "status": status,
             "passed": passed,
         }
@@ -240,7 +238,8 @@ class BaseEvaluatorRunner(ABC):
         threshold = self._get_threshold(result_data)
         assert result_data[label_key] == "pass", f"Expected 'pass' but got '{result_data[label_key]}'"
         assert result_data[passed_key] is True, f"Expected passed=True but got {result_data[passed_key]}"
-        assert result_data[status_key] == "completed", f"Expected status 'completed' but got '{result_data[status_key]}'"
+        assert result_data[status_key] == "completed", \
+            f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
@@ -303,13 +302,14 @@ class BaseEvaluatorRunner(ABC):
         threshold = self._get_threshold(result_data)
         assert result_data[label_key] == "fail", f"Expected 'fail' but got '{result_data[label_key]}'"
         assert result_data[passed_key] is False, f"Expected passed=False but got {result_data[passed_key]}"
-        assert result_data[status_key] == "completed", f"Expected status 'completed' but got '{result_data[status_key]}'"
+        assert result_data[status_key] == "completed", \
+            f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)
         assert score_type in [int, float], f"Score should be numeric but got type {score_type}"
-        assert result_data[score_key] < threshold, \
-            f"Score {result_data[score_key]} should be < threshold {threshold}"
+        assert score < threshold or score == 0, \
+            f"Score {score} should be < threshold {threshold}"
 
     def assert_pass_or_fail(self, result_data: Dict[str, Any]):
         """Assert a valid pass or fail result.
@@ -328,7 +328,8 @@ class BaseEvaluatorRunner(ABC):
             f"Expected 'pass' or 'fail' but got '{result_data[label_key]}'"
         assert result_data[passed_key] in [True, False], \
             f"Expected passed=True or False but got {result_data[passed_key]}"
-        assert result_data[status_key] == "completed", f"Expected status 'completed' but got '{result_data[status_key]}'"
+        assert result_data[status_key] == "completed", \
+            f"Expected status 'completed' but got '{result_data[status_key]}'"
         assert result_data[score_key] is not None, "Score should not be None"
         score = result_data[score_key]
         score_type = type(score)

@@ -4,7 +4,6 @@
 """Behavioral tests for Similarity Evaluator."""
 
 import pytest
-from typing import List
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..common import BasePromptyEvaluatorRunner
 

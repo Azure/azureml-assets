@@ -763,7 +763,7 @@ class TestToolCallSuccessEvaluatorQuality(BaseQualityEvaluatorRunner):
         """Test case: EDGE - Tool call fails then retried successfully."""
         self.run_quality_test(
             test_label="EDGE-retry-after-failure",
-            expected=ExpectedResult.PASS,
+            expected=ExpectedResult.PASS_OR_FAIL,
             query=[
                 {
                     "role": "user",

@@ -4,7 +4,6 @@
 """Quality tests for Tool Call Accuracy Evaluator with real flow execution."""
 
 import pytest
-from typing import List
 from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner, ExpectedResult
 from ...builtin.tool_call_accuracy.evaluator._tool_call_accuracy import ToolCallAccuracyEvaluator
 

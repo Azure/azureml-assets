@@ -126,6 +126,7 @@ class TestTaskCompletionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseTo
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 
+
 def _create_mocked_evaluator():
     """Create a TaskCompletionEvaluator with both _flow and _multi_turn_flow mocked."""
     model_config = AzureOpenAIModelConfiguration(

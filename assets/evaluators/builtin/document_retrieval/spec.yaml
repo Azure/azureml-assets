@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.document_retrieval"
-version: 2
+version: 3
 displayName: "Document-Retrieval-Evaluator"
 description: "Checks how accurately relevant documents are retrieved. Higher scores mean better matching to user intent. Use this metric when assessing search engines, recommendation systems, or any system tasked with retrieving documents from a large dataset."
 evaluatorType: "builtin"

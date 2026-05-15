@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.tool_selection"
-version: 8
+version: 9
 displayName: "Tool-Selection-Evaluator"
 description: "Evaluates whether an AI agent selected the most appropriate and efficient tools for a given task, avoiding redundancy or missing essentials. Use it to assess tool choice quality in agent-based systems, orchestration platforms, and AI assistants that must pick the right tools from available options."
 evaluatorType: "builtin"

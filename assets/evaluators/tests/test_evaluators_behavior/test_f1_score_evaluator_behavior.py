@@ -646,8 +646,8 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             threshold=0.5,
         )
         assert "f1_score" in results
-        assert "f1_result" in results
-        assert "f1_threshold" in results
+        assert "f1_score_result" in results
+        assert "f1_score_threshold" in results
 
     def test_output_score_type(self):
         """Test that f1_score is a float."""
@@ -665,7 +665,7 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.IDENTICAL_TEXT,
             threshold=0.5,
         )
-        assert results["f1_result"] in ["pass", "fail"]
+        assert results["f1_score_result"] in ["pass", "fail"]
 
     def test_output_threshold_matches_input(self):
         """Test that output threshold matches input threshold."""
@@ -675,7 +675,7 @@ class TestF1ScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
             ground_truth=self.IDENTICAL_TEXT,
             threshold=threshold,
         )
-        assert results["f1_threshold"] == threshold
+        assert results["f1_score_threshold"] == threshold
 
     # ==================== F1 SCORE RANGE TESTS ====================
 
