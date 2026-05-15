@@ -1118,3 +1118,88 @@ class TestToolOutputUtilizationEvaluatorQuality(BaseQualityEvaluatorRunner):
                 },
             ],
         )
+
+    # ==================== SKIPPED CASES ====================
+
+    def test_skipped_no_tool_outputs_in_conversation(self) -> None:
+        """Test case: SKIPPED - Conversation has no tool outputs to evaluate.
+
+        Both the query (conversation history) and response contain text only,
+        with no tool calls or tool results. Per the evaluator's prompty, this
+        triggers an LLM-side skipped status because there are no tool outputs
+        in the conversation to evaluate.
+        """
+        self.run_quality_test(
+            test_label="SKIPPED-no-tool-outputs-in-conversation",
+            expected=ExpectedResult.SKIPPED,
+            query=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "What is the capital of France?"}],
+                }
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "The capital of France is Paris."}],
+                }
+            ],
+            tool_definitions=[
+                {
+                    "name": "get_weather",
+                    "description": "Get current weather for a location",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "location": {"type": "string", "description": "City name"}
+                        },
+                        "required": ["location"],
+                    },
+                }
+            ],
+        )
+
+    def test_skipped_intermediate_response(self) -> None:
+        """Test case: SKIPPED - Response is intermediate (ends with function_call).
+
+        The assistant response ends with a ``function_call`` content item with
+        no final textual answer or completed tool result, so the evaluator
+        treats it as an intermediate response and returns a not-applicable
+        result.
+        """
+        self.run_quality_test(
+            test_label="SKIPPED-intermediate-response",
+            expected=ExpectedResult.SKIPPED,
+            query=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "What's the weather in Seattle?"}],
+                }
+            ],
+            response=[
+                {
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "function_call",
+                            "tool_call_id": "call_1",
+                            "name": "get_weather",
+                            "arguments": {"location": "Seattle"},
+                        }
+                    ],
+                }
+            ],
+            tool_definitions=[
+                {
+                    "name": "get_weather",
+                    "description": "Get current weather for a location",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "location": {"type": "string", "description": "City name"}
+                        },
+                        "required": ["location"],
+                    },
+                }
+            ],
+        )

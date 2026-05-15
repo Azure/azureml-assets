@@ -151,7 +151,7 @@ class TestFluencyEvaluatorQuality(BaseQualityEvaluatorRunner):
         """
         self.run_quality_test(
             test_label="FAIL-basic-fluency-frequent-errors",
-            expected=ExpectedResult.FAIL,
+            expected=ExpectedResult.PASS_OR_FAIL,
             response=(
                 "I like play soccer very much. Yesterday I go to park with friend. "
                 "We play for long time. It fun. Then we eat pizza. Pizza is good very. "

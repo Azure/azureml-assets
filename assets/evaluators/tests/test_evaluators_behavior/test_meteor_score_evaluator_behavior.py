@@ -26,7 +26,7 @@ class TestMeteorScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     """
 
     evaluator_type = MeteorScoreEvaluator
-    result_key = "meteor_score"
+    result_key = "meteor"
     constructor_arg_names = ["alpha", "beta", "gamma", "threshold"]
 
     # region Test Data

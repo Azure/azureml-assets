@@ -4,7 +4,6 @@
 """Behavioral tests for Relevance Evaluator."""
 
 import pytest
-from typing import List
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
@@ -97,20 +96,3 @@ class TestRelevanceEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluati
     # endregion
 
     evaluator_type = RelevanceEvaluator
-
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for relevance evaluator."""
-        return [
-            f"{self._result_prefix}",
-            f"{self._result_prefix}_reason",
-            f"{self._result_prefix}_result",
-            f"{self._result_prefix}_threshold",
-            f"{self._result_prefix}_prompt_tokens",
-            f"{self._result_prefix}_completion_tokens",
-            f"{self._result_prefix}_total_tokens",
-            f"{self._result_prefix}_finish_reason",
-            f"{self._result_prefix}_model",
-            f"{self._result_prefix}_sample_input",
-            f"{self._result_prefix}_sample_output",
-        ]
