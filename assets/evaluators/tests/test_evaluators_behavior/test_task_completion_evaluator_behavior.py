@@ -126,7 +126,30 @@ class TestTaskCompletionEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseTo
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 
-    _additional_expected_field_suffixes = ["details"]
+    _additional_expected_field_suffixes = ["status", "properties", "score", "passed"]
+
+    @property
+    def expected_result_fields(self) -> List[str]:
+        """Get expected result fields — metadata now lives inside properties, not as top-level keys."""
+        return [
+            f"{self._result_prefix}",
+            f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_result",
+        ] + [f"{self._result_prefix}_{suffix}" for suffix in self._additional_expected_field_suffixes]
+
+    def assert_not_applicable(self, result_data):
+        """Assert a not-applicable (not_applicable) result for TaskCompletionEvaluator.
+
+        Task completion returns score=None and label='not_applicable' for intermediate/not-applicable
+        responses, unlike the base class which expects a passing score.
+        """
+        assert result_data["label"] == "not_applicable", \
+            f"Expected 'not_applicable' but got '{result_data['label']}'"
+        assert result_data["score"] is None, \
+            f"Expected score to be None for not-applicable result, got '{result_data['score']}'"
+        assert "Not applicable" in result_data.get("reason", ""), \
+            f"Expected reason to contain 'Not applicable' but got '{result_data.get('reason')}'"
 
 
 def _create_mocked_evaluator():
@@ -192,8 +215,11 @@ class TestTaskCompletionMultiturnBehavior:
         assert "task_completion" in result
         assert "task_completion_result" in result
         assert "task_completion_reason" in result
-        assert "task_completion_details" in result
+        assert "task_completion_properties" in result
+        assert "task_completion_status" in result
         assert "task_completion_threshold" in result
+        assert "task_completion_score" in result
+        assert "task_completion_passed" in result
         assert result["task_completion"] in (0, 1)
 
     def test_messages_with_tool_definitions(self):
@@ -540,10 +566,10 @@ class TestTaskCompletionEvaluationLevel:
         evaluator._flow.assert_not_called()
         assert "task_completion" in result
 
-    def test_forced_trace_with_query_response(self):
-        """Forced trace level works with query/response."""
+    def test_forced_turn_with_query_response(self):
+        """Forced turn level works with query/response."""
         evaluator = _create_mocked_evaluator_with_level(
-            evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TURN
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
@@ -565,10 +591,10 @@ class TestTaskCompletionEvaluationLevel:
         assert "Done! Your flight is booked. Confirmation sent." in merged_messages
         assert "task_completion" in result
 
-    def test_forced_trace_with_messages_converts(self):
-        """Forced trace level converts messages into query/response around the latest user turn."""
+    def test_forced_turn_with_messages_converts(self):
+        """Forced turn level converts messages into query/response around the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TURN
         )
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._flow.assert_called_once()
@@ -604,10 +630,10 @@ class TestTaskCompletionEvaluationLevel:
         with pytest.raises(EvaluationException):
             evaluator(query="", response="Here's your itinerary.")
 
-    def test_forced_trace_with_messages_without_response_raises_invalid_value(self):
-        """Forced trace level requires response messages after the latest user turn."""
+    def test_forced_turn_with_messages_without_response_raises_invalid_value(self):
+        """Forced turn level requires response messages after the latest user turn."""
         evaluator = _create_mocked_evaluator_with_level(
-            evaluation_level=EvaluationLevel.TRACE
+            evaluation_level=EvaluationLevel.TURN
         )
         with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
             evaluator(
@@ -626,13 +652,28 @@ class TestTaskCompletionEvaluationLevel:
         evaluator._flow.assert_not_called()
         assert "task_completion" in result
 
-    def test_string_level_trace(self):
-        """String 'trace' is accepted as evaluation_level."""
-        evaluator = _create_mocked_evaluator_with_level(evaluation_level="trace")
+    def test_string_level_turn(self):
+        """String 'turn' is accepted as evaluation_level."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
         evaluator._multi_turn_flow.assert_not_called()
         assert "task_completion" in result
+
+    def test_empty_string_level_defaults_to_auto_detect_messages(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+        assert "task_completion" in result
+
+    def test_empty_string_level_defaults_to_auto_detect_query_response(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses single-turn for query/response."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        evaluator(query="Plan a trip.", response="Here's your itinerary.")
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
 
     def test_invalid_string_level_raises(self):
         """Invalid string evaluation_level raises at init time."""
@@ -778,6 +819,74 @@ class TestSerializeMessages:
             "  You are welcome!"
         )
         assert serialize_messages(messages) == expected
+
+    def test_system_content_block_list_flattened_to_string(self):
+        """System message with content-block list is flattened, not passed as raw list."""
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "You are a helpful assistant." in result
+        assert "SYSTEM_PROMPT:" in result
+
+    def test_developer_content_block_list_flattened_to_string(self):
+        """Developer message with content-block list is treated like system."""
+        messages = [
+            {"role": "developer", "content": [{"type": "text", "text": "Be concise."}]},
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": "Hello!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Be concise." in result
+
+    def test_system_string_content_still_works(self):
+        """System message with plain string content still works after the fix."""
+        messages = [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "You are helpful." in result
+
+    def test_user_content_block_list_produces_flat_turns(self):
+        """User messages with content-block lists produce correctly flattened turns."""
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Question one."}]},
+            {"role": "assistant", "content": "Answer one."},
+        ]
+        result = serialize_messages(messages)
+        assert "Question one." in result
+        assert "User turn 1:" in result
+
+    def test_multi_text_block_user_message(self):
+        """User message with multiple text blocks produces flat turn content."""
+        messages = [
+            {"role": "user", "content": [
+                {"type": "text", "text": "Part A."},
+                {"type": "text", "text": "Part B."},
+            ]},
+            {"role": "assistant", "content": "Got it."},
+        ]
+        result = serialize_messages(messages)
+        assert "Part A." in result
+        assert "Part B." in result
+
+    def test_system_content_block_multi_text(self):
+        """System message with multiple text blocks joins them with newline."""
+        messages = [
+            {"role": "system", "content": [
+                {"type": "text", "text": "Rule 1."},
+                {"type": "text", "text": "Rule 2."},
+            ]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Rule 1." in result
+        assert "Rule 2." in result
 
 
 # endregion

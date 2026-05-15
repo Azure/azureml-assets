@@ -1,0 +1,6 @@
+type: "humanevaluationtemplate"
+name: "builtin.quality"
+version: 1
+displayName: "Thumbs Up/Down"
+description: "Human evaluation template using a simple thumbs up/down approach."
+feedbackQuestions: [{ type: "YesNo", questionText: "Rate this response" }]

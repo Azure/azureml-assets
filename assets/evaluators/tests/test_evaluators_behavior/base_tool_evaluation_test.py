@@ -10,6 +10,7 @@ Uses the base class _run_evaluation_and_return_mocked_flow with use_mocking=True
 and asserts correct behavior using assert_expected_behavior and assert_called_once_with.
 """
 
+import copy
 from typing import Any, Dict, Optional
 
 from . import common_tool_test_data as data
@@ -92,7 +93,7 @@ class BaseToolEvaluationTest(BasePromptyEvaluatorRunner):
             Dictionary containing the extracted result data.
         """
         results, flow_mock = self._run_evaluation_and_return_mocked_flow(
-            **evaluation_inputs,
+            **copy.deepcopy(evaluation_inputs),
         )
         result_data = self._extract_and_print_result(results, test_label)
         self.assert_expected_behavior(assert_type, result_data)

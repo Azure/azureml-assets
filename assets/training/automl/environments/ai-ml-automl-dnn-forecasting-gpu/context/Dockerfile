@@ -26,6 +26,13 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Upgrade pip in the base miniconda (/opt/miniconda) to fix CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9.
+# The base miniconda ships with the parent image (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04)
+# and is independent of the conda env created below at $AZUREML_CONDA_ENVIRONMENT_PATH.
+# Pinning 'pip>=26.1' inside the env (line below) does not patch /opt/miniconda's pip, which is
+# still flagged by SCA scanners. No parent-package upgrade is possible because pip is the package
+# itself; the only fix is upgrading pip directly to >= 26.1.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # begin conda create
 # Create conda environment (minimal — packages installed via pip to avoid solver OOM)
@@ -41,7 +48,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'pandas>=1.5.3,<1.6' \
     'scipy==1.10.1' \
     'psutil>=5.2.2,<6.0.0' \
-    'pip>=26.0' \
+    'pip>=26.1' \
     'setuptools>=82.0.1' \
     'wheel>=0.46.2'
 # end conda create
@@ -85,9 +92,12 @@ RUN pip install --no-cache-dir \
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.1.1: CVE-2026-25990 (via matplotlib, bokeh, tensorboard)
 # bokeh>=3.8.2: GHSA-793v-589g-574v CSWSH (overrides azureml-train-automl-runtime's bokeh<3.0.0 cap)
+# onnx>=1.21.0: GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6, GHSA-538c-55jv-c5g9,
+#   GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m (via azureml-automl-runtime -> onnxconverter-common/skl2onnx)
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'mlflow-skinny>=2.16.0' \
                           'protobuf>=5.29.6' 'pillow>=12.1.1' \
-                          'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+                          'bokeh>=3.8.2' \
+                          'onnx>=1.21.0'  # onnx: parent azureml packages cap at <1.18; override for 6 GHSAs
 RUN pip install --no-cache-dir torch==2.8.0
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \

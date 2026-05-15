@@ -10,6 +10,14 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
+# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414): openssh-client must be
+# >= 1:8.9p1-3ubuntu0.15. openssh-client is shipped by the Ubuntu 22.04 ACPT base
+# image (no pip parent in this asset's context); the only fix path is the OS package
+# manager. `apt-get upgrade` alone has been observed to leave the held openssh
+# version in place when an older base layer is cached, so reinstall openssh-client
+# explicitly to force pickup of the patched version. Only openssh-client is
+# pre-installed in this base image — openssh-server / openssh-sftp-server are not
+# present (and would pull in systemd and fail postinst inside docker build).
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
@@ -22,6 +30,7 @@ RUN apt-get update && \
         rsyslog \
         runit \
         unzip && \
+    apt-get install --reinstall -y openssh-client && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -74,7 +83,7 @@ RUN pip install --no-cache-dir \
                 azureml-interpret=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4' \
                 'azure-identity>=1.25.1' \
-                'pillow==12.1.1'
+                'pillow==12.2.0'
                 # end pypi dependencies
 
 # Install packages with torch packages separately to reduce layer size
@@ -85,33 +94,68 @@ RUN pip install --no-cache-dir \
                 
 # Vulnerability patches for conda environment
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# NOTE: azureml-automl-runtime pins onnx<=1.17.0,>=1.16.1; force-installing onnx>=1.21.0 to fix
+#       GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj,
+#       GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m. Parent azureml-automl-runtime (1.62.0) cannot
+#       be upgraded as latest still constrains onnx<=1.17.0.
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'distributed>=2026.1.0' \
                 'mlflow-skinny>=2.16.0' \ 
                 'bokeh>=3.8.2' \
-                'pillow==12.1.1'
+                'pillow==12.2.0' \
+                'onnx>=1.21.0'
 
 
 
 
 # Vulnerability patches for ptca environment
+# pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
+#   well-known module names until after wheel install, allowing a freshly-installed
+#   wheel to be imported during the self-update check. ptca env ships pip 26.0.1
+#   from the ACPT base image; pip is its own parent (no upstream package can pull
+#   in a fixed pip via dependency resolution), so explicit override is required.
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
-                'pillow==12.1.1' 'filelock>=3.20.3' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2'
+                'pillow==12.2.0' 'filelock>=3.20.3' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2' \
+                'pytest>=9.0.3' 'pip>=26.1'
 # setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
+# python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94 / CVE-2026-28684): set_key()/unset_key()
+#   follow symlinks on cross-device .env writes, allowing arbitrary file overwrite.
+#   python-dotenv 1.2.1 is shipped in the base conda env (python 3.13) of the ACPT
+#   base image as a transitive dep via pydantic-settings (declares python-dotenv>=0.21.0
+#   with no upper-bound tightening through 2.14.0), so no parent package release pins
+#   python-dotenv>=1.2.2 — explicit override of /opt/conda is the only fix path until
+#   the ACPT base image is rebuilt with the patch.
+# pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
+#   well-known module names until after wheel install, allowing a freshly-installed
+#   wheel to be imported during the self-update check. Base conda env ships pip 26.0.1
+#   from the ACPT base image; pip is its own parent (no upstream package can pull in
+#   a fixed pip via dependency resolution), so explicit override is required.
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'wheel>=0.46.2' \
-                'PyJWT>=2.12.0'
+                'PyJWT>=2.12.0' \
+                'aiohttp>=3.13.4' \
+                'python-dotenv>=1.2.2' \
+                'pip>=26.1'
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN rm -rf /opt/conda/pkgs/
+
+# Remove stale conda-meta entries for pip 26.0.x in both base and ptca envs.
+# `pip install --upgrade pip` (above) replaces the wheel under site-packages but
+# does NOT update conda's package database (conda-meta/pip-*.json), so SCA
+# scanners that read conda-meta keep flagging CVE-2026-6357 even though the
+# running pip is 26.1.x. Removing the stale json makes scanners pick up the
+# pip dist-info from site-packages (which reflects the upgraded version).
+RUN rm -f /opt/conda/conda-meta/pip-26.0.*.json \
+          /opt/conda/envs/ptca/conda-meta/pip-26.0.*.json
 
 # end pip install
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

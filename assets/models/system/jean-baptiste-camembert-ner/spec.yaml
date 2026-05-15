@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Jean-Baptiste-camembert-ner
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: ef35fe7767c1dad71f5c853838cdd80d0b3441ed
   evaluation-min-sku-spec: 4|0|28|56
   inference-min-sku-spec: 4|0|28|56
@@ -13,7 +13,7 @@ properties:
   finetuning-tasks: text-classification, token-classification
   languages: fr
 tags:
-  license: mit
+  license: MIT
   task: token-classification
   hiddenlayerscanned: ""
   training_datasets: Jean-Baptiste/wikiner_fr

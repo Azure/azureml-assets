@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: stabilityai-stable-diffusion-xl-refiner-1-0
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: 5d4cfe854c9a9a87939ff3653551c2b3c99a4356
   inference-min-sku-spec: 6|1|112|736
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,

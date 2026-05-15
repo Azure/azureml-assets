@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: t5-small
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: df1b051c49625cf57a3d0d8d3863ed4d13564fe4
   evaluation-min-sku-spec: 4|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2, Standard_D8a_v4, Standard_D8as_v4, Standard_DS5_v2, Standard_DS12_v2, Standard_D16a_v4, Standard_D16as_v4, Standard_D32a_v4, Standard_D32as_v4, Standard_D48a_v4, Standard_D48as_v4, Standard_D64a_v4, Standard_D64as_v4, Standard_D96a_v4, Standard_D96as_v4, Standard_FX4mds, Standard_FX12mds, Standard_F16s_v2, Standard_F32s_v2, Standard_F48s_v2, Standard_F64s_v2, Standard_F72s_v2, Standard_FX24mds, Standard_FX36mds, Standard_FX48mds, Standard_E4s_v3, Standard_E8s_v3, Standard_E16s_v3, Standard_E32s_v3, Standard_E48s_v3, Standard_E64s_v3, Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3, Standard_NC16as_T4_v3, Standard_NC24s_v3, Standard_NC64as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2

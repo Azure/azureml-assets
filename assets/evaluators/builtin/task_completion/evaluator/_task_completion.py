@@ -54,11 +54,11 @@ class EvaluationLevel(str, Enum):
     """Supported evaluation levels for TaskCompletionEvaluator.
 
     - ``CONVERSATION``: Force conversation-level evaluation using the multi-turn path.
-    - ``TRACE``: Force trace-level evaluation using the single-turn query/response path.
+    - ``TURN``: Force turn-level evaluation using the single-turn query/response path.
     """
 
     CONVERSATION = "conversation"
-    TRACE = "trace"
+    TURN = "turn"
 
 
 def _merge_query_response_messages(query: List[dict], response: List[dict]) -> List[dict]:
@@ -94,7 +94,7 @@ def _resolve_evaluation_level(
     :rtype: Optional[EvaluationLevel]
     """
     valid = [level.value for level in EvaluationLevel]
-    if evaluation_level is None:
+    if evaluation_level is None or evaluation_level == '':
         return None
     if isinstance(evaluation_level, EvaluationLevel):
         return evaluation_level
@@ -809,7 +809,11 @@ def serialize_messages(messages: List[dict]) -> str:
             normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
 
         if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
-            system_message = msg.get("content", "")
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                system_message = "\n".join(_extract_text_from_content(content))
+            else:
+                system_message = content
 
         elif role == MessageRole.USER and "content" in msg:
             # A new user message after agent messages ends the current agent turn
@@ -1013,8 +1017,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :type credential: Optional[TokenCredential]
         :keyword evaluation_level: Force a specific evaluation level for this invocation. When ``None``
             (default), the level is auto-detected from input shape (``messages`` -> conversation,
-            ``query``/``response`` -> trace). Set to ``EvaluationLevel.CONVERSATION`` or
-            ``EvaluationLevel.TRACE`` to override auto-detection.
+            ``query``/``response`` -> turn). Set to ``EvaluationLevel.CONVERSATION`` or
+            ``EvaluationLevel.TURN`` to override auto-detection.
         :type evaluation_level: Optional[Union[EvaluationLevel, str]]
         :keyword kwargs: Additional keyword arguments.
         """
@@ -1201,29 +1205,66 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         if self._evaluation_level == EvaluationLevel.CONVERSATION:
             return True
-        if self._evaluation_level == EvaluationLevel.TRACE:
+        if self._evaluation_level == EvaluationLevel.TURN:
             return False
         # Auto-detect (_evaluation_level is None)
         return eval_input.get("messages") is not None
 
+    def _build_result(
+        self,
+        score: Optional[int],
+        result: str,
+        reason: str,
+        status: str,
+        properties: Dict,
+        prompty_output_dict: Optional[Dict] = None,
+    ) -> Dict[str, Union[str, int, float, Dict, None]]:
+        """Build a standardized result dictionary.
+
+        :param score: The evaluation score (1, 0, or None).
+        :param result: The result label ("pass", "fail", "skipped", or "error").
+        :param reason: The reasoning or explanation string.
+        :param status: The evaluation status ("completed", "skipped", or "error").
+        :param properties: The properties dictionary.
+        :param prompty_output_dict: Optional raw prompty output for extracting token metadata.
+        :return: The standardized result dictionary.
+        """
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        metadata = {
+            "prompt_tokens": p.get("input_token_count", 0),
+            "completion_tokens": p.get("output_token_count", 0),
+            "total_tokens": p.get("total_token_count", 0),
+            "finish_reason": p.get("finish_reason", ""),
+            "model": p.get("model_id", ""),
+            "sample_input": p.get("sample_input", ""),
+            "sample_output": p.get("sample_output", ""),
+        }
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_passed": result == "pass" if result in ["pass", "fail"] else None,
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": status,
+            f"{self._result_key}_properties": {**properties, **metadata}
+        }
+
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
-        return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_details": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
-        }
+        """Return a result indicating that the evaluation is not applicable (skipped).
+
+        Not-applicable results have no score since the evaluator cannot make a judgment
+        (e.g., intermediate responses that are not final agent responses).
+        """
+        return self._build_result(
+            score=None,
+            result="not_applicable",
+            reason=f"Not applicable: {error_message}",
+            status="skipped",
+            properties={},
+        )
 
     @override
     async def _real_call(self, **kwargs):
@@ -1242,7 +1283,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 query, response = _wrap_string_messages(query, response)
             if isinstance(query, list) and isinstance(response, list):
                 kwargs["messages"] = _merge_query_response_messages(query, response)
-        elif self._evaluation_level == EvaluationLevel.TRACE and kwargs.get("messages"):
+        elif self._evaluation_level == EvaluationLevel.TURN and kwargs.get("messages"):
             if any(m.get("role") == MessageRole.USER for m in kwargs["messages"]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages
@@ -1256,7 +1297,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[int, str]]:  # type: ignore[override]
         """Do Task Completion evaluation.
 
-        Routes to conversation-level or trace-level evaluation based on
+        Routes to conversation-level or turn-level evaluation based on
         ``_evaluation_level`` (if set)
         or auto-detects from input shape (default).
 
@@ -1322,6 +1363,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """Parse the prompty output into a standardized result dictionary.
 
         Shared between single-turn and multi-turn evaluation paths.
+        Expects the canonical schema: score (int), reason (str), status (str), properties (dict|null).
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -1330,31 +1372,35 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
-        if isinstance(llm_output, dict):
-            success_value = llm_output.get("success", False)
-            if isinstance(success_value, str):
-                success = 1 if success_value.lower() == "true" else 0
+        if not isinstance(llm_output, dict):
+            score = None
+            result = "error"
+            reason = "Evaluator returned invalid output."
+            status = "error"
+            properties = {}
+        else:
+            status = llm_output.get("status", "completed")
+            reason = llm_output.get("reason", "")
+            properties = llm_output.get("properties") or {}
+
+            if status == "skipped":
+                score = None
+                result = "not_applicable"
             else:
-                success = 1 if success_value else 0
-            success_result = "pass" if success == 1 else "fail"
-            reason = llm_output.get("explanation", "")
-            return {
-                self._result_key: success,
-                f"{self._result_key}_result": success_result,
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_details": llm_output.get("details", {}),
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
-            }
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
-            blame=ErrorBlame.SYSTEM_ERROR,
-            category=ErrorCategory.FAILED_EXECUTION,
-            target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+                score_value = llm_output.get("score", 0)
+                if isinstance(score_value, str):
+                    score = 1 if score_value.strip() in ("1", "true") else 0
+                elif isinstance(score_value, (int, float)):
+                    score = 1 if score_value == 1 else 0
+                else:
+                    score = 1 if score_value else 0
+                result = "pass" if score == 1 else "fail"
+
+        return self._build_result(
+            score=score,
+            result=result,
+            reason=reason,
+            status=status,
+            properties=properties,
+            prompty_output_dict=prompty_output_dict,
         )

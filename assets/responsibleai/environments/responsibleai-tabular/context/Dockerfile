@@ -50,8 +50,8 @@ RUN pip install 'cryptography>=46.0.5'
 # TODO: remove rai-core-flask pin with next raiwidgets release
 RUN pip install 'rai-core-flask==0.7.6'
 
-# To resolve vulnerability issue (GHSA-xch3-2f9x-wh9f, GHSA-q2r8-vmq7-fpx2, GHSA-gq3w-7jj3-x7gr)
-RUN pip install 'mlflow>=3.8.0,<=3.10.0'
+# To resolve vulnerability issue (GHSA-xch3-2f9x-wh9f, GHSA-q2r8-vmq7-fpx2, GHSA-gq3w-7jj3-x7gr, GHSA-fh64-r2vc-xvhr)
+RUN pip install 'mlflow>=3.11.1'
 RUN pip install 'gunicorn>=22.0.0'
 RUN pip install 'Werkzeug>=3.0.3'
 RUN pip install 'tqdm>=4.66.3'

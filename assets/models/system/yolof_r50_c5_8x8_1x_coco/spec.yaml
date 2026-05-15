@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: yolof_r50_c5_8x8_1x_coco
 path: ./
 properties:
-  SharedComputeCapacityEnabled: true
+  SharedComputeCapacityEnabled: "True"
   SHA: d7734ddf3b7b680440bf025ac90590bb45814462
   evaluation-min-sku-spec: 4|1|28|176
   evaluation-recommended-sku: Standard_NC4as_T4_v3, Standard_NC6s_v3, Standard_NC8as_T4_v3, Standard_NC12s_v3,

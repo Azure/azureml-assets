@@ -295,6 +295,15 @@ class TaskNavigationEfficiencyValidator(ValidatorInterface):
         Raises:
             EvaluationException: If validation fails.
         """
+        # If actions or expected_actions is a string, try to parse it as a JSON list
+        for key in ("actions", "expected_actions"):
+            value = eval_input.get(key)
+            if isinstance(value, str):
+                try:
+                    eval_input[key] = json.loads(value)
+                except (ValueError, TypeError):
+                    pass
+
         # Validate actions
         actions = eval_input.get("actions")
         error = self._validate_actions(actions)
@@ -471,7 +480,7 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             error_target=ErrorTarget.TASK_NAVIGATION_EFFICIENCY_EVALUATOR
         )
 
-        super().__init__()
+        super().__init__(threshold=1.0)
 
     @override
     async def _real_call(self, **kwargs):
@@ -728,6 +737,15 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict[str, Union[float, str, Dict[str, float]]]
         """
+        # If actions or expected_actions is a string, try to parse it as a JSON list
+        for key in ("actions", "expected_actions"):
+            value = eval_input.get(key)
+            if isinstance(value, str):
+                try:
+                    eval_input[key] = json.loads(value)
+                except (ValueError, TypeError):
+                    pass
+
         actions = eval_input["actions"]
         expected_actions = eval_input["expected_actions"]
 
@@ -808,9 +826,13 @@ class TaskNavigationEfficiencyEvaluator(EvaluatorBase):
             )
 
             return {
-                "task_navigation_efficiency_label": match_result,
+                "task_navigation_efficiency_score": float(match_result),
                 "task_navigation_efficiency_result": EVALUATION_PASS_FAIL_MAPPING[match_result],
-                "task_navigation_efficiency_details": additional_properties_metrics,
+                "task_navigation_efficiency_passed": match_result,
+                "task_navigation_efficiency_reason": None,
+                "task_navigation_efficiency_status": "completed",
+                "task_navigation_efficiency_threshold": 1.0,
+                "task_navigation_efficiency_properties": additional_properties_metrics,
             }
         else:
             raise EvaluationException(

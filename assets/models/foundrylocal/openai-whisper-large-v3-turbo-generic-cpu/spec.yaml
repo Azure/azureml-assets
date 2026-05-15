@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large-v3-turbo-generic-cpu
-version: 2
+version: 3
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +12,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-large-v3-turbo
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
   contextLength: 448
   capabilities: ""
@@ -20,7 +20,7 @@ tags:
   reasoningStart: ""
   reasoningEnd: ""
   minFLVersion: "0.0.0"
-  disable-maap: true
+  disable-maap: "true"
 type: custom_model
 variantInfo:
   parents:
@@ -30,5 +30,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 9438190632
-    vRamFootprintBytes: 9438528266
+    fileSizeBytes: 1678544910
+    vRamFootprintBytes: 1678544910

@@ -81,6 +81,8 @@ RUN apt-get update && \
         linux-headers-generic \
         locales \
         openssl \
+        libssl-dev \
+        libssl3 \
         gnupg2 \
         systemd \
         systemd-sysv \
@@ -225,9 +227,15 @@ ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.16-cuda12
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-# Enable debug
+# Enable debug + USN-8222-1 OpenSSH upgrade
+# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414) requires openssh >= 1:8.9p1-3ubuntu0.15.
+# openssh-client/openssh-server/openssh-sftp-server are root-level OS packages from the
+# 'openssh' Debian source package (no transitive parent); the fixed parent is published in
+# the jammy-security archive (2026-04-29), so we install them directly to pick up the patched
+# version (plain `apt-get install` after `apt-get update` resolves to the latest candidate).
 RUN apt-get update && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server openssh-client && \
+    apt-get install --reinstall -y openssl libssl-dev && \
+    apt-get install -y openssh-server openssh-client openssh-sftp-server && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -238,7 +246,6 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
 
-RUN conda run -p $CONDA_PREFIX
 
 RUN HOROVOD_WITH_TENSORFLOW=1  HOROVOD_CUDA_HOME=/usr/local/cuda pip  install --no-cache-dir --no-build-isolation horovod["tensorflow"]==0.28.1
 
@@ -248,7 +255,14 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # Security vulnerability fixes
 # NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
 # setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'protobuf>=5.29.6'
+# Upgrade vulnerable packages in the conda env
+# cryptography>=46.0.7 fixes GHSA-m959-cc7f-wv43 and GHSA-p423-j2cm-9vmq
+# requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
+# pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0'
+
+# Upgrade vulnerable packages in the base miniconda env (python3.10)
+RUN pip install --upgrade 'cryptography>=46.0.7' 'requests>=2.33.0'
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH

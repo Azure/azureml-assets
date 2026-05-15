@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 import json
 import copy
 from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
+from . import common_tool_test_data as _tool_data
 
 
 class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
@@ -862,7 +863,7 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
             query=self.VALID_QUERY,
             response=self.FUNCTION_CALL_ONLY_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+            tool_definitions=_tool_data.FUNCTION_CALL_RESPONSE_TOOL_DEFINITIONS,
         )
         result_data = self._extract_and_print_result(results, "Function Call Only - Not Applicable")
         self.assert_not_applicable(result_data)
@@ -872,7 +873,7 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
             query=self.VALID_QUERY,
             response=self.FUNCTION_CALL_FULL_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+            tool_definitions=_tool_data.FUNCTION_CALL_RESPONSE_TOOL_DEFINITIONS,
         )
         result_data = self._extract_and_print_result(results, "Function Call Full - Preprocessed")
         self.assert_pass(result_data)
@@ -884,7 +885,7 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
             query=self.VALID_QUERY,
             response=self.MCP_APPROVAL_ONLY_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+            tool_definitions=_tool_data.MCP_APPROVAL_RESPONSE_TOOL_DEFINITIONS,
         )
         result_data = self._extract_and_print_result(results, "MCP Approval Only - Not Applicable")
         self.assert_not_applicable(result_data)
@@ -894,7 +895,7 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
             query=self.VALID_QUERY,
             response=self.MCP_APPROVAL_FULL_RESPONSE,
             tool_calls=self.VALID_TOOL_CALLS,
-            tool_definitions=self.VALID_TOOL_DEFINITIONS,
+            tool_definitions=_tool_data.MCP_APPROVAL_RESPONSE_TOOL_DEFINITIONS,
         )
         result_data = self._extract_and_print_result(results, "MCP Approval Full - Preprocessed")
         self.assert_pass(result_data)
