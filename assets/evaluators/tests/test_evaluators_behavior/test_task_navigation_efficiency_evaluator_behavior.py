@@ -31,19 +31,6 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
     result_key = "task_navigation_efficiency"
     constructor_arg_names = ["matching_mode"]
 
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Expected result fields for Task Navigation Efficiency Evaluator."""
-        return [
-            "task_navigation_efficiency_score",
-            "task_navigation_efficiency_result",
-            "task_navigation_efficiency_passed",
-            "task_navigation_efficiency_reason",
-            "task_navigation_efficiency_status",
-            "task_navigation_efficiency_threshold",
-            "task_navigation_efficiency_properties",
-        ]
-
     # region Test Data
     VALID_ACTIONS: List[Dict[str, Any]] = [
         # Allow extra non-tool-call messages
@@ -275,70 +262,12 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # endregion
 
     @override
-    def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
-        """Extract result fields specific for Task Navigation Efficiency Evaluator and print them.
-
-        Args:
-            results: Raw evaluation results from the evaluator.
-            test_label: Label for the test (used in print output).
-
-        Returns:
-            Dictionary with standardized result fields.
-        """
-        if f"{self.result_key}_error_message" not in results:
-            for field in self.expected_result_fields:
-                if field not in results:
-                    raise ValueError(f"Expected result field '{field}' not found in results.")
-
-        score = results.get("task_navigation_efficiency_score")
-        result = results.get("task_navigation_efficiency_result")
-        passed = results.get("task_navigation_efficiency_passed")
-        properties = results.get("task_navigation_efficiency_properties")
-        error_message = results.get("task_navigation_efficiency_error_message")
-        error_code = results.get("task_navigation_efficiency_error_code")
-
-        print(f"\n[{test_label}] Result: {result}")
-        print(f"  Score: {score}")
-        print(f"  Passed: {passed}")
-        print(f"  Properties: {properties}")
-        if error_message or error_code:
-            print(f"  Error Message: {error_message}")
-            print(f"  Error Code: {error_code}")
-
-        return {
-            "score": score,
-            "result": result,
-            "passed": passed,
-            "properties": properties,
-            "error_message": error_message,
-            "error_code": error_code,
-        }
-
-    @override
     def assert_pass(self, result_data: Dict[str, Any]):
         """Assert a passing result."""
-        assert result_data["result"] == "pass"
-        assert result_data["passed"] is True
-        assert result_data["properties"] is not None
+        super().assert_pass(result_data)
         assert "precision_score" in result_data["properties"]
         assert "recall_score" in result_data["properties"]
         assert "f1_score" in result_data["properties"]
-
-    @override
-    def assert_fail(self, result_data: Dict[str, Any]):
-        """Assert a failing result."""
-        assert result_data["result"] == "fail"
-        assert result_data["passed"] is False
-        assert result_data["properties"] is not None
-
-    @override
-    def assert_error(self, result_data: Dict[str, Any], error_code: str = None):
-        """Assert an error result."""
-        assert result_data["passed"] is None
-        assert result_data["result"] is None
-        assert result_data["error_message"] is not None
-        if error_code:
-            assert result_data["error_code"] == error_code
 
     # ==================== EXACT MATCH MODE TESTS ====================
 

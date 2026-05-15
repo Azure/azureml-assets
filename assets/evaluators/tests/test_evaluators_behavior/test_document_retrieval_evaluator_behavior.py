@@ -24,19 +24,9 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
     """
 
     evaluator_type = DocumentRetrievalEvaluator
-    result_key = "ndcg3"  # Primary metric for assertions
     constructor_arg_names = ["ground_truth_label_min", "ground_truth_label_max", "ndcg_threshold",
                              "xdcg_threshold", "fidelity_threshold", "top1_relevance_threshold",
                              "top3_max_relevance_threshold"]
-
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for document retrieval evaluator."""
-        return [
-            "ndcg@3", "xdcg@3", "fidelity", "top1_relevance",
-            "top3_max_relevance", "holes", "holes_ratio",
-            "total_retrieved_documents", "total_ground_truth_documents"
-        ]
 
     # region Test Data
     # Perfect retrieval scenario - top 3 documents match ideal ranking
@@ -170,16 +160,17 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         """
         result = super()._extract_and_print_result(results, test_label)
 
+        properties = results.get("properties", {})
         # Document Retrieval Evaluator specific fields
-        ndcg = results.get("ndcg@3")
-        xdcg = results.get("xdcg@3")
-        fidelity = results.get("fidelity")
-        top1_relevance = results.get("top1_relevance")
-        top3_max_relevance = results.get("top3_max_relevance")
-        holes = results.get("holes")
-        holes_ratio = results.get("holes_ratio")
-        total_retrieved = results.get("total_retrieved_documents")
-        total_ground_truth = results.get("total_ground_truth_documents")
+        ndcg = properties.get("ndcg@3")
+        xdcg = properties.get("xdcg@3")
+        fidelity = properties.get("fidelity")
+        top1_relevance = properties.get("top1_relevance")
+        top3_max_relevance = properties.get("top3_max_relevance")
+        holes = properties.get("holes")
+        holes_ratio = properties.get("holes_ratio")
+        total_retrieved = properties.get("total_retrieved_documents")
+        total_ground_truth = properties.get("total_ground_truth_documents")
         if ndcg is not None:
             print(f"  NDCG@3: {ndcg}")
             result["ndcg3"] = ndcg
@@ -231,6 +222,7 @@ class TestDocumentRetrievalEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "Perfect Retrieval")
         self.assert_valid_metrics(result_data)
+        self.assert_pass(result_data)
         # Perfect retrieval should have NDCG = 1.0
         assert result_data["ndcg3"] == 1.0
         # No holes expected
