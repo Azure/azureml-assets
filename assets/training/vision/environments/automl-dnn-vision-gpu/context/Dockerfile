@@ -92,19 +92,29 @@ RUN pip install --upgrade 'onnx>=1.21.0'
 # cryptography (CVE-2026-41727), PyJWT (CVE-2026-32597), urllib3, filelock, pillow, bokeh
 # python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive dep chain: azureml-defaults
 #   -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0.
-#   pydantic-settings (all versions through 2.14.0) only requires >=0.21.0, no parent upgrade resolves this
+#   pydantic-settings (all versions through 2.14.1) only requires >=0.21.0, no parent upgrade resolves this
+# pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of well-known
+#   module names until after wheel install, allowing a freshly-installed wheel to be imported
+#   during the self-update check. pip is its own bootstrap installer — no upstream package
+#   pulls in pip transitively at a fixable floor — so explicit override is the only fix.
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.6.3' 'aiohttp>=3.13.4' 'wheel>=0.46.2' \
-    'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' 'pip>=26.0' \
+    'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' 'pip>=26.1' \
     'filelock>=3.20.3' 'pillow>=12.2.0' 'onnx>=1.21.0' \
     'python-dotenv>=1.2.2' \
     'bokeh>=3.8.2'
 # Security: fix ptca conda env — torch (CVE-2025-32434), protobuf (CVE-2026-40186),
 # wheel/setuptools, urllib3, filelock, pillow, PyJWT, bokeh overrides for conda env
+# pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): ptca env ships pip 26.0.1 from the ACPT
+#   base image (conda install pip -n ptca above resolves to 26.0.1). pip is its own bootstrap
+#   installer — no upstream package pulls in pip transitively — so explicit override is the only fix.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0 
+# Upgrade pip itself first via python -m pip so the bootstrap rewrites the dist-info
+# (combining pip>=26.1 in the larger pip install below leaves /opt/conda/envs/ptca pinned at 26.0.1)
+RUN /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'pip>=26.1'
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.6.3' 'filelock>=3.20.3' \
     'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
     'PyJWT>=2.12.0' 'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' \
-    'aiohttp>=3.13.4' 'cryptography>=46.0.7' 'pytest>=9.0.3' \
+    'aiohttp>=3.13.4' 'cryptography>=46.0.7' 'pytest>=9.0.3' 'pip>=26.1' \
     'python-dotenv>=1.2.2' 'bokeh>=3.8.2'
 
 # Patch pillow vulnerability (GHSA-whj4-6x5x-4v2j) across all three conda environments
@@ -121,8 +131,10 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow>=12.2.0'
 # pytest: dev dep in ptca base image; no parent to upgrade
 # python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive dep chain: azureml-defaults
 #   -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0.
-#   pydantic-settings (all versions through 2.14.0) only requires >=0.21.0, no parent upgrade resolves this
-RUN pip install --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.0' 'cryptography>=46.0.7' \
+#   pydantic-settings (all versions through 2.14.1) only requires >=0.21.0, no parent upgrade resolves this
+# pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip is its own bootstrap installer; no
+#   upstream package pulls it transitively at a fixable floor — explicit override is the only fix.
+RUN pip install --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.1' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
     'bokeh>=3.8.2'
