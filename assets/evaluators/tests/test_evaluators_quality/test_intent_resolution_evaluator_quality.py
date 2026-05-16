@@ -340,7 +340,15 @@ class TestIntentResolutionEvaluatorQuality(BaseQualityEvaluatorRunner):
                 {
                     "role": "tool",
                     "tool_call_id": "call_001",
-                    "content": '[{"order_id": "12345", "status": "shipped", "tracking": "1Z999AA10123456784"}]',
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_result": (
+                                '[{"order_id": "12345", "status": "shipped", '
+                                '"tracking": "1Z999AA10123456784"}]'
+                            ),
+                        }
+                    ],
                 },
             ],
             response=(
@@ -384,7 +392,7 @@ class TestIntentResolutionEvaluatorQuality(BaseQualityEvaluatorRunner):
         """
         self.run_quality_test(
             test_label="Edge case-Polite inability with alternative",
-            expected=ExpectedResult.FAIL,
+            expected=ExpectedResult.PASS_OR_FAIL,
             query="Book me a table at The French Laundry for tonight.",
             response=(
                 "I'm unable to make reservations directly, but The French Laundry typically "

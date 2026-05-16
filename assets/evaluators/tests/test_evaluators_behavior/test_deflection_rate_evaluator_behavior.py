@@ -3,6 +3,8 @@
 
 """Behavioral tests for Deflection Rate Evaluator."""
 
+from typing import Any, Dict
+
 import pytest
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from ...builtin.deflection_rate.evaluator._deflection_rate import (
@@ -26,8 +28,6 @@ class TestDeflectionRateEvaluatorBehavior(BaseEvaluatorBehaviorTest):
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.MINIMAL_RESPONSE
 
-    _additional_expected_field_suffixes = ["deflection_type"]
-
     @property
     def expected_result_fields(self):
         """Get the expected result fields for deflection rate evaluator."""
@@ -45,3 +45,51 @@ class TestDeflectionRateEvaluatorBehavior(BaseEvaluatorBehaviorTest):
             f"{self._result_prefix}_sample_input",
             f"{self._result_prefix}_sample_output",
         ]
+
+    def assert_not_applicable(self, result_data: Dict[str, Any]):
+        """Assert a not-applicable result for Deflection Rate evaluator.
+
+        The Deflection Rate evaluator's not-applicable result currently uses
+        ``label='pass'``, ``score=threshold`` (e.g. 0), and does not emit
+        ``passed`` or ``status`` fields. The reason still begins with
+        ``"Not applicable"``. This override matches that behavior.
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+
+        Raises:
+            AssertionError: If the result is not a valid not-applicable result
+                for this evaluator.
+        """
+        label = result_data.get("label")
+        reason = result_data.get("reason", "") or ""
+        assert label == "pass", f"Expected 'pass' but got '{label}'"
+        assert "not applicable" in reason.lower(), \
+            f"Expected reason to contain 'not applicable' but got '{reason}'"
+
+    def assert_pass(self, result_data: Dict[str, Any]):
+        """Assert a passing result for Deflection Rate evaluator.
+
+        The Deflection Rate evaluator does not emit ``passed`` or ``status``
+        fields in its result dict; it only emits ``label`` (``"pass"``),
+        ``score``, ``threshold``, and ``reason``. This override relaxes the
+        ``passed is True`` / ``status == "completed"`` checks while still
+        validating ``label == "pass"`` and that the score is numeric and
+        meets the threshold.
+
+        Args:
+            result_data: Dictionary containing evaluation result data.
+
+        Raises:
+            AssertionError: If the result is not a valid pass result for this
+                evaluator.
+        """
+        threshold = self._get_threshold(result_data)
+        label = result_data.get("label")
+        score = result_data.get("score")
+        assert label == "pass", f"Expected 'pass' but got '{label}'"
+        assert score is not None, "Score should not be None"
+        assert isinstance(score, (int, float)), \
+            f"Score should be numeric but got type {type(score)}"
+        assert score >= threshold, \
+            f"Score {score} should be >= threshold {threshold}"

@@ -1,13 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import logging
 import math
 import operator
 from itertools import starmap
 from typing import Any, Dict, List, TypedDict, Tuple, Optional
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._evaluators._common import EvaluatorBase
-from azure.ai.evaluation._exceptions import EvaluationException
+from azure.ai.evaluation._exceptions import EvaluationException, ErrorCategory, ErrorTarget
 from typing_extensions import override, overload
+
+logger = logging.getLogger(__name__)
 
 
 RetrievalGroundTruthDocument = TypedDict(
@@ -104,7 +108,10 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
         self.ground_truth_label_min = ground_truth_label_min
         self.ground_truth_label_max = ground_truth_label_max
 
-        # The default threshold for metrics where higher numbers are better.
+        # Primary metric threshold (NDCG@3) used for top-level score/result
+        self._threshold: float = ndcg_threshold if ndcg_threshold is not None else 0.5
+
+        # Per-metric thresholds stored in properties
         self._threshold_metrics: Dict[str, Any] = {
             "ndcg@3": ndcg_threshold,
             "xdcg@3": xdcg_threshold,
@@ -237,6 +244,7 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
                 result[f"{metric_name}_result"] = (
                     "pass" if metric_value >= self._threshold_metrics[metric_name] else "fail"
                 )
+                result[f"{metric_name}_passed"] = metric_value >= self._threshold_metrics[metric_name]
                 result[f"{metric_name}_threshold"] = self._threshold_metrics[metric_name]
                 result[f"{metric_name}_higher_is_better"] = True
 
@@ -244,6 +252,7 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
                 result[f"{metric_name}_result"] = (
                     "pass" if metric_value <= self._threshold_holes[metric_name] else "fail"
                 )
+                result[f"{metric_name}_passed"] = metric_value <= self._threshold_holes[metric_name]
                 result[f"{metric_name}_threshold"] = self._threshold_holes[metric_name]
                 result[f"{metric_name}_higher_is_better"] = False
 
@@ -370,7 +379,18 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
             for k, v in binary_result.items():
                 metrics[k] = v
 
-            return metrics
+            ndcg_score = 0.0
+            ndcg_passed = ndcg_score >= self._threshold
+            return {
+                "document_retrieval": ndcg_score,
+                "document_retrieval_score": ndcg_score,
+                "document_retrieval_passed": ndcg_passed,
+                "document_retrieval_result": EVALUATION_PASS_FAIL_MAPPING[ndcg_passed],
+                "document_retrieval_reason": None,
+                "document_retrieval_status": "completed",
+                "document_retrieval_threshold": self._threshold,
+                "document_retrieval_properties": metrics,
+            }
 
         # flatten qrels and results to normal dictionaries
         qrels_lookup = {x["document_id"]: x["query_relevance_label"] for x in qrels}
@@ -407,7 +427,18 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
             for k, v in binary_result.items():
                 metrics[k] = v
 
-            return metrics
+            ndcg_score = float(metrics.get(f"ndcg@{self.k}", 0.0))
+            ndcg_passed = ndcg_score >= self._threshold
+            return {
+                "document_retrieval": ndcg_score,
+                "document_retrieval_score": ndcg_score,
+                "document_retrieval_passed": ndcg_passed,
+                "document_retrieval_result": EVALUATION_PASS_FAIL_MAPPING[ndcg_passed],
+                "document_retrieval_reason": None,
+                "document_retrieval_status": "completed",
+                "document_retrieval_threshold": self._threshold,
+                "document_retrieval_properties": metrics,
+            }
 
         metrics = {
             f"ndcg@{self.k}": self._compute_ndcg(
@@ -428,7 +459,84 @@ class DocumentRetrievalEvaluator(EvaluatorBase):
         for k, v in binary_result.items():
             metrics[k] = v
 
-        return metrics
+        ndcg_score = float(metrics.get(f"ndcg@{self.k}", 0.0))
+        ndcg_passed = ndcg_score >= self._threshold
+        return {
+            "document_retrieval": ndcg_score,
+            "document_retrieval_score": ndcg_score,
+            "document_retrieval_passed": ndcg_passed,
+            "document_retrieval_result": EVALUATION_PASS_FAIL_MAPPING[ndcg_passed],
+            "document_retrieval_reason": None,
+            "document_retrieval_status": "completed",
+            "document_retrieval_threshold": self._threshold,
+            "document_retrieval_properties": metrics,
+        }
+
+    @override
+    async def _real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                )
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
 
     @overload
     def __call__(  # type: ignore

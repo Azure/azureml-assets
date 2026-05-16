@@ -31,28 +31,6 @@ class TestCustomerSatisfactionEvaluatorBehavior(BaseEvaluatorBehaviorTest):
 
     MINIMAL_RESPONSE = BaseEvaluatorBehaviorTest.MINIMAL_RESPONSE
 
-    _additional_expected_field_suffixes = ["status", "properties"]
-
-    @property
-    def expected_result_fields(self):
-        """Get expected result fields — metadata now lives inside properties, not as top-level keys."""
-        return [
-            f"{self._result_prefix}",
-            f"{self._result_prefix}_score",
-            f"{self._result_prefix}_reason",
-            f"{self._result_prefix}_threshold",
-            f"{self._result_prefix}_result",
-            f"{self._result_prefix}_passed",
-            f"{self._result_prefix}_status",
-            f"{self._result_prefix}_properties",
-        ]
-
-    def assert_not_applicable(self, result_data: Dict[str, Any]):
-        """Assert that the result is not applicable."""
-        assert result_data["score"] is None
-        assert result_data["label"] == "not_applicable"
-        assert "Not applicable" in result_data.get("reason", "")
-
 
 def _create_mocked_evaluator():
     """Create a CustomerSatisfactionEvaluator with both _flow and _multi_turn_flow mocked."""

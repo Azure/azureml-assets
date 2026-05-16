@@ -20,7 +20,7 @@ class TestGleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     """
 
     evaluator_type = GleuScoreEvaluator
-    result_key = "gleu_score"
+    result_key = "gleu"
 
     # region Test Data
     # Perfect match scenarios
