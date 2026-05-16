@@ -119,7 +119,19 @@ RUN apt-get update && \
         libgcc-s1 \
         libgomp1 \
         gcc-12-base \
-        libitm1 && \
+        libitm1 \
+        # USN-8233-1 (libnghttp2-14 1.43.0-1ubuntu0.3), USN-8227-1 (curl/libcurl 7.81.0-1ubuntu1.24),
+        # USN-8229-1 (sed 4.8-1ubuntu2.1), USN-8226-1 (libkmod2 29-1ubuntu1.1).
+        # These are root-level OS packages from individual Ubuntu source packages
+        # (nghttp2/curl/sed/kmod) - no transitive parent. Fixed versions are published
+        # in the jammy-security archive (uploaded 2026-04-17 .. 2026-04-30), so we install
+        # them via --only-upgrade to pick the patched candidates.
+        libnghttp2-14 \
+        curl \
+        libcurl4 \
+        libcurl3-gnutls \
+        sed \
+        libkmod2 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
                
@@ -259,10 +271,18 @@ RUN conda run -p $CONDA_PREFIX conda install -c conda-forge openssl
 # cryptography>=46.0.7 fixes GHSA-m959-cc7f-wv43 and GHSA-p423-j2cm-9vmq
 # requests>=2.33.0 fixes GHSA-gc5v-m9x4-r6x2
 # pillow>=12.2.0 fixes GHSA-whj4-6x5x-4v2j
-RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.0' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0'
+# pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (bumped from >=26.0 which resolved to 26.0.1)
+RUN conda run -p $CONDA_PREFIX pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'protobuf>=5.29.6' 'requests>=2.33.0' 'pillow>=12.2.0'
 
 # Upgrade vulnerable packages in the base miniconda env (python3.10)
-RUN pip install --upgrade 'cryptography>=46.0.7' 'requests>=2.33.0'
+# Use the absolute path to /opt/miniconda's pip because $CONDA_PREFIX/bin precedes /opt/miniconda/bin in PATH.
+# pip>=26.1 fixes GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 in the base miniconda env install path.
+RUN /opt/miniconda/bin/pip install --upgrade 'pip>=26.1' 'cryptography>=46.0.7' 'requests>=2.33.0' && \
+    # Remove the conda pkgs cache — conda env create / conda install repopulate it with
+    # pip-26.0.1-pyh8b19718__0 which still ships vulnerable pip 26.0.1 metadata
+    # (scanned at opt/miniconda/pkgs/pip-26.0.1-pyh8b19718__0/site-packages/pip-26.0.1.dist-info).
+    rm -rf /opt/miniconda/pkgs && \
+    find / -type d -name __pycache__ -prune -exec rm -rf {} +
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH

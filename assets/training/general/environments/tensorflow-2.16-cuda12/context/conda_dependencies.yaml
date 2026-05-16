@@ -4,7 +4,7 @@ channels:
 - anaconda
 dependencies:
 - python=3.11
-- pip=26.0
+- pip=26.1  # GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 - bumped from 26.0
 - pandas=2.2.2
 - numpy=1.23.5
 - scipy~=1.14.0

@@ -59,17 +59,17 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes
-# setuptools, urllib3, wheel already fixed in openmpi base (latest tag).
-# pip: openmpi base (20260409.v4) still ships pip=26.0.1 in /opt/miniconda which is
-#   vulnerable to CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Upgrade /opt/miniconda's pip to
-#   26.1.1 explicitly here. (The azureml-envs/sklearn-1.5 conda env is created with
-#   pip=26.1.1 via the conda create command above.)
+# pip, setuptools, urllib3, wheel already fixed in openmpi base (latest tag).
+#   /opt/miniconda pip override removed: base openmpi5.0-ubuntu24.04:20260507.v1 now
+#   ships pip=26.1.1 in /opt/miniconda (verified via docker inspect on 2026-05-12),
+#   so the explicit `/opt/miniconda/bin/pip install --upgrade pip==26.1.1` step is
+#   redundant. The azureml-envs/sklearn-1.5 conda env still pins pip=26.1.1 via the
+#   conda create above to lock in the CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9) fix.
 # cryptography: azureml-mlflow==1.62.0.post2 (latest) caps cryptography<47.0.0 (was
 #   <46.0.0 in 1.62.0); cap no longer prevents 46.x but pip's resolver may still pick
 #   an older 46.x patch via transitive constraints (azureml-core -> pyopenssl<26.0.0,
 #   pyopenssl -> cryptography>=...). Pin 46.0.7 explicitly to ensure latest patch.
 # aiohttp / distributed: kept overrides to ensure latest patched versions; transitive
 #   parent constraints (mlflow-skinny, dask) don't require these specific patches.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade pip==26.1.1 && \
-    conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
+RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
     aiohttp==3.13.4 cryptography==46.0.7 'distributed>=2026.1.0'
