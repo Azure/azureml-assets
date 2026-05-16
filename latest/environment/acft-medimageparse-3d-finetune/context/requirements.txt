@@ -64,4 +64,4 @@ requests==2.33.0
 pytest==9.0.3
 
 # MIP-3D component (built from AzureMlCli, includes olympus_biomed_parse_3d)
-azureml-acft-image-components[mip3d]==0.0.90
+azureml-acft-image-components[mip3d]==0.0.91
