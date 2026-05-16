@@ -29,14 +29,15 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # dpkg, dpkg-dev, libdpkg-perl, libssl3, openssl) were removed because they are
 # all already installed by the base image and `apt-get -y upgrade` covers their
 # security patches — re-listing them was redundant.
-# openssh-{client,server,sftp-server} are reinstalled explicitly after `apt-get upgrade`
-# to force pickup of USN-8222-1 (>= 1:9.6p1-3ubuntu13.16) even when the base image
-# layer pins/holds the older 1:9.6p1-3ubuntu13.15. openssh is shipped by the
-# openmpi5.0-ubuntu24.04 base image (no parent package in this context), so the
-# only fix is the apt upgrade itself.
+# openssh USN-8222-1 (>= 1:9.6p1-3ubuntu13.16): no longer needs an explicit
+# `apt-get install --reinstall -y openssh-{client,server,sftp-server}` override.
+# Verified 2026-05-12 that base mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04
+# at the latest tag (20260507.v1) plus current noble-security state lets
+# `apt-get -y upgrade` alone bring openssh to 1:9.6p1-3ubuntu13.16 (test build
+# `:test-cleanup`, ACR run ca6n). openssh is shipped by the base image (no
+# upstream parent package in this context), so the apt upgrade is the only fix.
 RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
     apt-get install -y sudo locales libssl-dev sqlite3 && \
-    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Security: upgrade pip in BASE miniconda (/opt/miniconda) to fix CVE-2026-6357
@@ -77,5 +78,5 @@ RUN pip install --no-cache-dir 'aiohttp>=3.13.4' 'requests>=2.33.0' 'cryptograph
 # The below file is required for baking the code into the environment 
 COPY data_import_run.py /azureml/data_import/run.py
 
-# dummy number to change when needing to force rebuild without changing the definition: 2
+# dummy number to change when needing to force rebuild without changing the definition: 3
 

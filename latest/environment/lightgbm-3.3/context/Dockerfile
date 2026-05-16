@@ -9,10 +9,18 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Update package lists, upgrade all OS packages, and reinstall system OpenSSL & OpenSSH
+# Update package lists and upgrade all OS packages to pull latest security patches
+# (e.g. openssh USN-8222-1, curl USN-8227-1, kmod USN-8226-1, sed USN-8229-1,
+# nghttp2 USN-8233-1 currently outstanding in base image openmpi5.0-ubuntu24.04:latest).
+# Previously this step also did `apt-get install --reinstall -y openssl libssl-dev
+# openssh-server` but those reinstalls became redundant after `apt-get upgrade` was
+# added: verified 2026-05-12 against base openmpi5.0-ubuntu24.04:20260507.v1 that a
+# fresh build with `apt-get upgrade` alone brings openssh to 1:9.6p1-3ubuntu13.16,
+# curl/libcurl* to 8.5.0-2ubuntu10.9, libnghttp2-14 to 1.59.0-1ubuntu0.3, sed to
+# 4.9-2ubuntu0.24.04.1, and libkmod2 to 31+20240202-2ubuntu7.2 - all USN fixes.
+# Removed --reinstall to keep the layer minimal.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -54,19 +62,22 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 
 # Security vulnerability fixes
 # setuptools, urllib3, wheel already fixed in openmpi base (latest tag).
-# pip: openmpi base (20260409.v4) still ships pip=26.0.1 in /opt/miniconda which is
-#   vulnerable to CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Upgrade /opt/miniconda's pip to
-#   26.1.1 explicitly here. (The azureml-envs/lightgbm-3.3 conda env is created with
-#   pip=26.1.1 via the conda create command above.)
-# cryptography: azureml-core==1.61.0.post3 pulls pyopenssl<26.0.0 which caps cryptography
-#   transitively, causing the conda env to resolve to 45.0.7 (vulnerable to CVE-2026-26007,
-#   CVE-2026-34073, CVE-2026-39892 / GHSA-r6ph-v2qm-q3c2, GHSA-m959-cc7f-wv43,
-#   GHSA-p423-j2cm-9vmq). azureml-mlflow==1.62.0.post2 caps cryptography<47.0.0, so pin
-#   46.0.7 explicitly (latest within the cap). Parent package (azureml-core) cannot be
-#   upgraded past 1.61.0.post3 as that is the latest released version.
+# pip: /opt/miniconda pip override removed: base openmpi5.0-ubuntu24.04:20260507.v1
+#   now ships pip=26.1.1 in /opt/miniconda (verified 2026-05-12 via SBOM scan), so the
+#   explicit `/opt/miniconda/bin/pip install --upgrade pip==26.1.1` step that fixed
+#   CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9) on older base tags is now redundant. The
+#   azureml-envs/lightgbm-3.3 conda env still pins pip=26.1.1 via the conda create
+#   above to lock in the fix.
+# cryptography: azureml-core==1.61.0.post3 (latest) pulls pyopenssl<26.0.0 which caps
+#   cryptography transitively, causing the conda env to resolve to 45.0.7 (vulnerable
+#   to CVE-2026-26007, CVE-2026-34073, CVE-2026-39892 / GHSA-r6ph-v2qm-q3c2,
+#   GHSA-m959-cc7f-wv43, GHSA-p423-j2cm-9vmq). azureml-mlflow==1.62.0.post2 (latest)
+#   caps cryptography<47.0.0, so pin 46.0.7 explicitly (latest within the cap).
+#   Parent package (azureml-core) cannot be upgraded past 1.61.0.post3 as that is
+#   the latest released version on PyPI as of 2026-05-12.
 # aiohttp / protobuf / distributed: kept overrides to ensure latest patched versions;
-#   parent constraints (mlflow-skinny -> protobuf<6, dask -> distributed) cap older
-#   versions so direct upgrade is required.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade pip==26.1.1 && \
-    conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
+#   parent constraints (azureml-mlflow caps mlflow-skinny<=3.9.0 -> protobuf<7,
+#   dask~=2026.3.0 -> distributed<2026.3.1) would otherwise allow older patch
+#   levels with outstanding CVEs, so explicit floor pins are required.
+RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
     'aiohttp>=3.13.5' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==46.0.7
