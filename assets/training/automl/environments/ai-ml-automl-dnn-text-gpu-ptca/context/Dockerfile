@@ -21,6 +21,21 @@ RUN apt-get update && \
 RUN conda install pip -n base -y
 RUN conda install pip -n ptca -y
 
+# Security: upgrade pip to >=26.1 to fix GHSA-jp4c-xjxw-mgf9. Two pips need
+# upgrading because they live in independent prefixes:
+#   1. /opt/conda/bin/pip — conda base env (python 3.13) from the ACPT base image
+#      (mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.1).
+#      VCM SCA scans this site-packages tree at
+#      opt/conda/lib/python3.13/site-packages/pip-26.0.1.dist-info/METADATA.
+#   2. /opt/conda/envs/ptca/bin/pip — ptca env (python 3.10) from the same base
+#      image, scanned at opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0.1.dist-info/METADATA.
+# The `conda install pip -n {base,ptca}` lines above currently resolve to pip==26.0.1
+# from conda-forge, so a follow-up `pip install --upgrade` is required.
+# pip is its own parent (no upstream package can pull in a fixed pip), so explicit
+# upgrades are the only available remediation.
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
+
 RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
     'azureml-defaults=={{latest-pypi-version}}'
