@@ -51,3 +51,17 @@ RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.7'
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
 RUN conda run -n base pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
+
+# torch 2.7.1+cu118: GHSA-887c-mr87-cxwp / CVE-2025-3730 (local DoS in ctc_loss; fixed in torch 2.8.0).
+# Parent: torch is shipped by the base image (mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271);
+# no pip package in requirements.txt pulls torch transitively at a fixable floor.
+# Override NOT possible in this image:
+#   1. PyTorch upstream dropped CUDA 11.8 wheels starting with torch 2.8.0. The cu118 wheel index
+#      (https://download.pytorch.org/whl/cu118/torch/) lists 2.7.1 as the highest stable release;
+#      only a 2.8.0.dev* nightly exists for cu118 and PEP 440 dev versions still satisfy <2.8.0.
+#   2. Installing the PyPI default torch 2.8.0 wheel (bundled cu126) would mismatch the rest of the
+#      cu118-built GPU stack baked into the base image (DeepSpeed 0.13.1, onnxruntime-training-gpu 1.17.1,
+#      torch-ort 1.17.0), breaking ABI / CUDA compatibility.
+#   3. Latest base image tag is biweekly.202601.1 (verified via mcr.microsoft.com tag list); no
+#      patched cu118 base image is published.
+# Permanent fix path: migrate workloads to acpt-pytorch-2.8-cuda12.6 (cu126 + torch 2.8.0).

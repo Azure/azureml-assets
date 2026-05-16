@@ -35,11 +35,17 @@ RUN apt-get update && \
 
 # Fix security vulnerabilities in ptca conda env (active environment)
 # setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx; base image has 82.0.0
-RUN pip install --upgrade 'setuptools>=82.0.1'
+# pip>=26.1: CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9); base image has pip 26.0.1.
+#   pip is a root tool (no parent package) installed directly by conda; only a
+#   direct upgrade can fix this.
+RUN pip install --upgrade 'setuptools>=82.0.1' 'pip>=26.1'
 
 # Fix security vulnerabilities in base conda env (python 3.13)
 # setuptools>=82.0.1: same CVEs as above; base image has 82.0.0
 # python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); base env ships 1.2.1
-RUN conda run -n base python -m pip install --upgrade 'setuptools>=82.0.1' 'python-dotenv>=1.2.2'
+# pip>=26.1: CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9); base env ships pip 26.0.1.
+#   pip is a root tool (no parent package) installed directly by conda; only a
+#   direct upgrade can fix this.
+RUN conda run -n base python -m pip install --upgrade 'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
