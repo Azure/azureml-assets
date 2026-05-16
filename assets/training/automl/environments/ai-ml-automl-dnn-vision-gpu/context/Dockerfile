@@ -10,12 +10,17 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
-# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414): openssh-client must be
-# >= 1:8.9p1-3ubuntu0.15. openssh-client is shipped by the Ubuntu 22.04 ACPT base
-# image (no pip parent in this asset's context); the only fix path is the OS package
-# manager. `apt-get upgrade` alone has been observed to leave the held openssh
-# version in place when an older base layer is cached, so reinstall openssh-client
-# explicitly to force pickup of the patched version. Only openssh-client is
+# OS security upgrades against the Ubuntu 22.04 ACPT base image
+# (mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:latest); these are
+# all OS packages with no pip parent, so the apt package manager is the only fix path.
+#   USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414): openssh-client >= 1:8.9p1-3ubuntu0.15
+#   USN-8226-1: kmod, libkmod2 >= 29-1ubuntu1.1
+#   USN-8227-1: curl, libcurl4, libcurl3-gnutls >= 7.81.0-1ubuntu1.24
+#   USN-8229-1: sed >= 4.8-1ubuntu2.1
+#   USN-8233-1: libnghttp2-14 >= 1.43.0-1ubuntu0.3
+# `apt-get upgrade -y` covers all of the above except openssh-client — that one has
+# been observed to stay at the held version when an older base layer is cached, so
+# reinstall it explicitly to force pickup of the patched build. Only openssh-client is
 # pre-installed in this base image — openssh-server / openssh-sftp-server are not
 # present (and would pull in systemd and fail postinst inside docker build).
 RUN apt-get update && \
@@ -50,21 +55,34 @@ RUN conda install pip -n ptca -y
 
 # Create conda environment
 # begin conda create
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.10 \
-    # begin conda dependencies
-    pip \
-    numpy~=1.23.5\
-    libffi=3.4.4 \
-    pycocotools=2.0.4 \
-    shap=0.39.0 \
-    llvmlite=0.39.1 \
-    scipy=1.10.1 \
-    setuptools=82.0.1 \
-    wheel=0.46.2 \
-    tbb=2021.1.1 \
-    # end conda dependencies
-    -c conda-forge -c cerebis && \
+# Retry conda create up to 3 times to tolerate transient repodata sqlite cache locks
+# observed when many builds run in parallel on a shared docker daemon.
+RUN for i in 1 2 3; do \
+        conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+            python=3.10 \
+            # begin conda dependencies
+            # pip=26.1.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pin the patched pip at env-create
+            # time so that (a) all subsequent pip installs in this env run under the fixed pip
+            # rather than the vulnerable 26.0.x picked by conda's default resolver, and (b) the
+            # conda-meta record for pip in $AZUREML_CONDA_ENVIRONMENT_PATH/conda-meta/ is
+            # written for 26.1.1, avoiding the stale-conda-meta scanner false positive that the
+            # base/ptca envs work around with `rm /opt/conda*/conda-meta/pip-26.0.*.json`. pip
+            # is its own parent (no upstream pypi/conda package can pull a fixed pip via dependency
+            # resolution), so an explicit pin is the only remediation path.
+            pip=26.1.1 \
+            numpy~=1.23.5 \
+            libffi=3.4.4 \
+            pycocotools=2.0.4 \
+            shap=0.39.0 \
+            llvmlite=0.39.1 \
+            scipy=1.10.1 \
+            setuptools=82.0.1 \
+            wheel=0.46.2 \
+            tbb=2021.1.1 \
+            # end conda dependencies
+            -c conda-forge -c cerebis -y && break || \
+        { echo "conda create attempt $i failed, retrying..."; rm -rf /opt/conda/pkgs/cache/*; sleep 10; }; \
+    done && \
     conda clean -a -y
 # end conda create
 
@@ -101,7 +119,7 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'distributed>=2026.1.0' \
-                'mlflow-skinny>=2.16.0' \ 
+                'mlflow-skinny>=2.16.0' \
                 'bokeh>=3.8.2' \
                 'pillow==12.2.0' \
                 'onnx>=1.21.0'
