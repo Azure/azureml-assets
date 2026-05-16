@@ -12,9 +12,23 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
-# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
+# System package security upgrades.
+# USN-8222-1: openssh-{client,server,sftp-server} 1:8.9p1-3ubuntu0.14 -> 1:8.9p1-3ubuntu0.15
+# USN-8227-1: curl/libcurl4/libcurl3-gnutls 7.81.0-1ubuntu1.23 -> 7.81.0-1ubuntu1.24
+# USN-8229-1: sed 4.8-1ubuntu2 -> 4.8-1ubuntu2.1
+# USN-8233-1: libnghttp2-14 1.43.0-1ubuntu0.2 -> 1.43.0-1ubuntu0.3
+# Parent: ubuntu 22.04 jammy base image (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04).
+# `apt-get -y upgrade` alone has been observed to leave the held openssh version in
+# place when an older base layer is cached, so reinstall the openssh-* packages
+# explicitly to force pickup of the patched version (same pattern used in
+# assets/training/aoai/proxy_components/environments/context/Dockerfile,
+# assets/training/automl/environments/ai-ml-automl/context/Dockerfile and
+# assets/training/automl/environments/ai-ml-automl-dnn-gpu/context/Dockerfile).
+# curl/sed/nghttp2 USNs are picked up by the standard `apt-get upgrade` from
+# jammy-updates; no reinstall needed for them.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
