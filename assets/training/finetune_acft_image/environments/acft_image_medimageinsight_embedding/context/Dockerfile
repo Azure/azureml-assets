@@ -11,6 +11,23 @@ USER root
 # packages on top of the upgraded layer (build run ca42, 2026-05-08).
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# pip 26.0.1 in both the ptca conda env (Python 3.10) and the /opt/conda base env (Python 3.13)
+# has GHSA-jp4c-xjxw-mgf9 (fixed in pip>=26.1). pip is the bootstrap installer — no Python
+# package in requirements.txt or any of their transitive deps declares pip as a runtime dep
+# (verified against requires_dist of azureml-acft-*, mlflow, mlflow-skinny, azureml-mlflow,
+# transformers, torch, etc.), so an upstream parent-package upgrade is not possible. The ACPT
+# base image (stable-ubuntu2204-cu126-py310-torch280, biweekly tag) ships pip 26.0.1 and has
+# not yet been rebuilt with pip>=26.1. Latest pip on PyPI is 26.1.1 (verified 2026-05-12);
+# the conda `defaults` channel only has up to pip 26.0.1 (conda-forge has 26.1.1 but is not
+# enabled in the base image), so `conda install pip==26.1.1` fails — we use `pip install
+# --upgrade` (from PyPI) and then explicitly remove the stale conda-meta JSON for pip 26.0.1
+# so the SBOM scanner does not re-flag it. Done before pip-installing requirements so all
+# subsequent installs use the patched pip.
+RUN pip install --no-cache-dir --upgrade 'pip==26.1.1' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
+    /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'pip==26.1.1' && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json
+
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir

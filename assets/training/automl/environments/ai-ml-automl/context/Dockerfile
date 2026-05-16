@@ -12,38 +12,25 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
-# System package security upgrades.
-# USN-8222-1: openssh-{client,server,sftp-server} 1:9.6p1-3ubuntu13.15 -> 1:9.6p1-3ubuntu13.16
-# Parent: ubuntu 24.04 noble base image (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04).
-# `apt-get -y upgrade` alone has been observed to leave the held openssh version in
-# place when an older base layer is cached, so reinstall the openssh-* packages
-# explicitly to force pickup of the patched version (same pattern used in
-# assets/training/aoai/proxy_components/environments/context/Dockerfile and
-# assets/training/finetune_acft_hf_nlp/environments/data_import/context/Dockerfile).
+# General system package security upgrades from Ubuntu noble-security feed.
+# (USN-8222-1 openssh fix is now in the base image at 1:9.6p1-3ubuntu13.16,
+# so the previous explicit openssh reinstall override has been removed.)
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # begin conda create
-# Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
+# Create conda environment (minimal -- packages installed via pip to avoid solver OOM).
+# Pin pip>=26.1 here to deterministically remediate CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9)
+# at env-creation time. The base image's /opt/miniconda already ships pip 26.1.1, so
+# no separate upgrade step is required for that prefix. pip is its own parent (no
+# upstream package can pull in a fixed pip), so this pin is the parent-level fix.
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
+    'pip>=26.1' \
     -c conda-forge && \
     conda clean -a -y
-
-# Security: upgrade pip to fix CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Two pips need
-# upgrading because they live in independent prefixes:
-#   1. /opt/miniconda/bin/pip — ships with the parent base image
-#      (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04) at version 26.0.1.
-#      VCM SCA scans this site-packages tree at
-#      opt/miniconda/lib/python3.10/site-packages/pip-26.0.1.dist-info/METADATA.
-#   2. $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip — created by `conda create` above.
-# pip is its own parent (no upstream package can pull in a fixed pip), so explicit
-# upgrades are the only available remediation.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Install packages via pip (avoids conda solver OOM)
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
@@ -102,14 +89,17 @@ RUN pip install \
 #   mlflow-skinny declares python-dotenv<2,>=0.19.0 but the pinned mlflow-skinny==2.16.0
 #   does not; it is brought in by another transitive path). No parent constraint
 #   blocks 1.2.2, so override directly.
+# onnx>=1.21.0 (GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
+#   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m)
+#   Chain: azureml-automl-runtime -> onnx (and azureml-train-automl-runtime -> onnx)
+#   Both parents (azureml-automl-runtime==1.62.0 / azureml-train-automl-runtime==1.62.0,
+#   latest) still pin onnx<=1.17.0,>=1.16.1; parent fix not available, override required.
+#
+# pillow note: 'pillow==12.2.0' is already pinned in the main pip install block
+#   above (latest, fixes GHSA-whj4-6x5x-4v2j), so no override needed here.
 RUN pip install --upgrade \
     'distributed>=2026.1.0' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \
-    'pillow>=12.2.0' \
     'python-dotenv>=1.2.2'
-# onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
-#   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
-#   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
-# pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
 # end pip ad-hoc
