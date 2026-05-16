@@ -44,3 +44,11 @@ RUN pip install -r requirements.txt --no-cache-dir
 #   resolves to 0.11.0 which has CVE-2025-54412/54413/54886 (arbitrary code execution).
 #   mlflow-skinny has no release that bumps the floor, so explicit override is required.
 RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3' 'skops>=0.13.0'
+
+# python-dotenv: pre-installed in the /opt/conda base env (Python 3.13) by the ACPT base image
+#   at version 1.2.1 which has GHSA-mf9w-mj56-hr94. Not pulled in by any package in
+#   requirements.txt nor their transitive deps, so the ptca env (Python 3.10) gets the
+#   already-patched 1.2.2 from the base image's own upgrades. The /opt/conda Python 3.13 env
+#   is unaffected by `pip install -r requirements.txt` (which targets ptca's pip), so an
+#   explicit upgrade against /opt/conda/bin/python3.13 is required to reach >= 1.2.2.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
