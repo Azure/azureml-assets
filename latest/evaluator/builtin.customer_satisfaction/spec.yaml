@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.customer_satisfaction"
-version: 9
+version: 10
 displayName: "Customer-Satisfaction-Evaluator"
 description: "Evaluates the predicted customer satisfaction level of an AI agent interaction
   on a 1-5 Likert scale. This evaluator assesses whether the agent's response would

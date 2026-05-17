@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.quality_grader"
-version: 4
+version: 5
 displayName: "Quality-Grader-Evaluator-(Preview)"
 description: "Assesses the quality of an AI assistant's response at the turn level,
   evaluating dimensions such as relevance, abstention, and answer completeness. When
