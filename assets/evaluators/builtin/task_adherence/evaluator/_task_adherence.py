@@ -938,7 +938,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     """
 
     _PROMPTY_FILE = "task_adherence.prompty"
-    _MULTI_TURN_PROMPTY_FILE = "task_adherence_multi_turn.prompty"
+    _GOAL_PROMPTY_FILE = "task_adherence_goal.prompty"
+    _EXECUTION_PROMPTY_FILE = "task_adherence_execution.prompty"
     _RESULT_KEY = "task_adherence"
     _OPTIONAL_PARAMS = ["tool_definitions", "messages"]
 
@@ -946,7 +947,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
     _validator: ValidatorInterface
     _evaluation_level: Optional[EvaluationLevel]
-    _multi_turn_flow: AsyncPrompty
+    _goal_flow: AsyncPrompty
+    _execution_flow: AsyncPrompty
 
     id = "azureai://built-in/evaluators/task_adherence"
     """Evaluator identifier, experimental and to be used only with evaluation in cloud."""
@@ -991,14 +993,23 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             **kwargs,
         )
 
-        multi_turn_prompty_path = os.path.join(current_dir, self._MULTI_TURN_PROMPTY_FILE)
         prompty_model_config = construct_prompty_model_config(
             validate_model_config(model_config),
             self._DEFAULT_OPEN_API_VERSION,
             f"azure-ai-evaluation (type=evaluator subtype={self.__class__.__name__})",
         )
-        self._multi_turn_flow = AsyncPrompty.load(
-            source=multi_turn_prompty_path,
+
+        goal_prompty_path = os.path.join(current_dir, self._GOAL_PROMPTY_FILE)
+        self._goal_flow = AsyncPrompty.load(
+            source=goal_prompty_path,
+            model=prompty_model_config,
+            token_credential=credential,
+            is_reasoning_model=self._is_reasoning_model,
+        )
+
+        execution_prompty_path = os.path.join(current_dir, self._EXECUTION_PROMPTY_FILE)
+        self._execution_flow = AsyncPrompty.load(
+            source=execution_prompty_path,
             model=prompty_model_config,
             token_credential=credential,
             is_reasoning_model=self._is_reasoning_model,
@@ -1347,7 +1358,15 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         return self._parse_prompty_output(prompty_output_dict)
 
     async def _do_eval_conversation(self, eval_input: Dict[str, Any]) -> Dict[str, Union[float, str, bool]]:
-        """Evaluate task adherence across a full conversation."""
+        """Evaluate task adherence across a full conversation using a two-stage pipeline.
+
+        Stage 1 (Goal Adherence): Checks whether the assistant pursued the user's objective
+            and respected stated constraints.
+        Stage 2 (Execution Adherence): Checks whether tool usage, workflow compliance,
+            and rule adherence were correct.
+
+        Both stages always run. The overall score is pass only if both stages pass.
+        """
         messages = _preprocess_messages(eval_input["messages"])
         conversation_text = serialize_messages(messages)
 
@@ -1356,8 +1375,140 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         if tool_definitions:
             prompty_kwargs["tool_definitions"] = reformat_tool_definitions(tool_definitions, logger)
 
-        prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
-        return self._parse_prompty_output(prompty_output_dict)
+        # Stage 1: Goal Adherence
+        goal_output = await self._goal_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        goal_parsed = self._parse_stage_output(goal_output)
+
+        # If goal stage signals skipped, the conversation is not evaluable
+        if goal_parsed.get("status") == "skipped":
+            return self._return_not_applicable_result(
+                goal_parsed.get("reason", "No assistant responses to evaluate."),
+                self._threshold,
+            )
+
+        # Stage 2: Execution Adherence (always runs)
+        execution_output = await self._execution_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
+        execution_parsed = self._parse_stage_output(execution_output)
+
+        return self._build_conversation_result(
+            goal_parsed=goal_parsed,
+            execution_parsed=execution_parsed,
+            goal_output=goal_output,
+            execution_output=execution_output,
+        )
+
+    @staticmethod
+    def _parse_stage_output(prompty_output_dict: Optional[Dict]) -> Dict:
+        """Parse the JSON output from a single stage prompty call.
+
+        :param prompty_output_dict: The raw output dict from the prompty flow.
+        :return: Parsed JSON dict from the LLM output.
+        """
+        if not prompty_output_dict:
+            return {}
+        llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
+        if isinstance(llm_output, dict):
+            return llm_output
+        return {}
+
+    def _build_conversation_result(
+        self,
+        *,
+        goal_parsed: Dict,
+        execution_parsed: Dict,
+        goal_output: Optional[Dict],
+        execution_output: Optional[Dict],
+    ) -> Dict[str, Union[str, float, bool, Dict, None]]:
+        """Combine results from both stages into a single task adherence result.
+
+        :param goal_parsed: Parsed LLM output from the goal adherence stage.
+        :param execution_parsed: Parsed LLM output from the execution adherence stage.
+        :param goal_output: Raw prompty output from the goal adherence stage.
+        :param execution_output: Raw prompty output from the execution adherence stage.
+        :return: Standardized task adherence result dict.
+        """
+        # Determine overall pass/fail from both stage scores
+        failure_reasons: List[str] = []
+
+        goal_score = float(goal_parsed.get("score", 0.0))
+        if goal_score < 1.0:
+            failure_reasons.append("goal_adherence: " + goal_parsed.get("reason", "failed"))
+
+        execution_score = float(execution_parsed.get("score", 0.0))
+        if execution_score < 1.0:
+            failure_reasons.append("execution_adherence: " + execution_parsed.get("reason", "failed"))
+
+        passed = len(failure_reasons) == 0
+        score = 1.0 if passed else 0.0
+
+        # Combine reasoning from both stages
+        reasoning_parts = []
+        if goal_parsed.get("reason"):
+            reasoning_parts.append(goal_parsed["reason"])
+        if execution_parsed.get("reason"):
+            reasoning_parts.append(execution_parsed["reason"])
+        reason = " ".join(reasoning_parts) if reasoning_parts else (
+            "All task adherence checks passed." if passed else "; ".join(failure_reasons)
+        )
+
+        # Merge properties from both stages
+        properties: Dict[str, Any] = {}
+        goal_props = goal_parsed.get("properties", {}) or {}
+        execution_props = execution_parsed.get("properties", {}) or {}
+
+        properties["goal_pursuit"] = goal_props.get("goal_pursuit")
+        properties["goal_evidence"] = goal_props.get("evidence", "")
+        properties["goal_reasoning"] = goal_parsed.get("reason", "")
+        properties["goal_score"] = goal_parsed.get("score")
+
+        properties["instruction_compliance"] = execution_props.get("instruction_compliance")
+        properties["claim_veracity"] = execution_props.get("claim_veracity")
+        properties["execution_evidence"] = execution_props.get("evidence", "")
+        properties["execution_reasoning"] = execution_parsed.get("reason", "")
+        properties["execution_score"] = execution_parsed.get("score")
+
+        # Token aggregation across stages
+        prompt_tokens = (
+            (goal_output or {}).get("input_token_count", 0)
+            + (execution_output or {}).get("input_token_count", 0)
+        )
+        completion_tokens = (
+            (goal_output or {}).get("output_token_count", 0)
+            + (execution_output or {}).get("output_token_count", 0)
+        )
+        total_tokens = (
+            (goal_output or {}).get("total_token_count", 0)
+            + (execution_output or {}).get("total_token_count", 0)
+        )
+
+        # Per-stage diagnostic lists
+        finish_reasons = []
+        sample_inputs = []
+        sample_outputs = []
+        for raw in [goal_output, execution_output]:
+            if raw:
+                finish_reasons.append(raw.get("finish_reason", ""))
+                sample_inputs.append(raw.get("sample_input", ""))
+                sample_outputs.append(raw.get("sample_output", ""))
+
+        properties["prompt_tokens"] = prompt_tokens
+        properties["completion_tokens"] = completion_tokens
+        properties["total_tokens"] = total_tokens
+        properties["finish_reason"] = finish_reasons
+        properties["model"] = (goal_output or {}).get("model_id", "")
+        properties["sample_input"] = sample_inputs
+        properties["sample_output"] = sample_outputs
+
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": passed,
+            f"{self._result_key}_result": "pass" if passed else "fail",
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": properties,
+        }
 
     def _parse_prompty_output(self, prompty_output_dict: Dict[str, Any]) -> Dict[str, Union[float, str, bool]]:
         """Parse prompty output into the task adherence result shape."""
