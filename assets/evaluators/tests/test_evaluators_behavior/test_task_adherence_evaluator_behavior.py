@@ -141,8 +141,6 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
 
     MINIMAL_RESPONSE = BaseToolsEvaluatorBehaviorTest.email_tool_call_and_assistant_response
 
-    _additional_expected_field_suffixes = ["details", "properties"]
-
 
 def _create_mocked_evaluator():
     """Create a TaskAdherenceEvaluator with both _flow and _multi_turn_flow mocked."""
@@ -207,7 +205,6 @@ class TestTaskAdherenceMultiturnBehavior:
         assert "task_adherence" in result
         assert "task_adherence_result" in result
         assert "task_adherence_reason" in result
-        assert "task_adherence_details" in result
         assert "task_adherence_properties" in result
         assert "task_adherence_threshold" in result
         assert result["task_adherence"] in (0.0, 1.0)
@@ -468,6 +465,21 @@ class TestTaskAdherenceEvaluationLevel:
         evaluator._multi_turn_flow.assert_not_called()
         assert "task_adherence" in result
 
+    def test_empty_string_level_defaults_to_auto_detect_messages(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        result = evaluator(messages=VALID_MESSAGES)
+        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._flow.assert_not_called()
+        assert "task_adherence" in result
+
+    def test_empty_string_level_defaults_to_auto_detect_query_response(self):
+        """Empty string evaluation_level is treated as None (auto-detect) and uses single-turn for query/response."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
+        evaluator(query="Plan a trip.", response="Here's your itinerary.")
+        evaluator._flow.assert_called_once()
+        evaluator._multi_turn_flow.assert_not_called()
+
     def test_invalid_string_level_raises(self):
         """Invalid string evaluation_level raises at init time."""
         with pytest.raises(EvaluationException, match="Invalid evaluation_level"):
@@ -500,6 +512,74 @@ class TestTaskAdherenceSerializeMessages:
         assert "What color is the sky?" in result
         assert "Agent turn 1:" in result
         assert "The sky is blue." in result
+
+    def test_system_content_block_list_flattened_to_string(self):
+        """System message with content-block list is flattened, not passed as raw list."""
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "You are a helpful assistant." in result
+        assert "SYSTEM_PROMPT:" in result
+
+    def test_developer_content_block_list_flattened_to_string(self):
+        """Developer message with content-block list is treated like system."""
+        messages = [
+            {"role": "developer", "content": [{"type": "text", "text": "Be concise."}]},
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": "Hello!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Be concise." in result
+
+    def test_system_string_content_still_works(self):
+        """System message with plain string content still works after the fix."""
+        messages = [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "You are helpful." in result
+
+    def test_user_content_block_list_produces_flat_turns(self):
+        """User messages with content-block lists produce correctly flattened turns."""
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Question one."}]},
+            {"role": "assistant", "content": "Answer one."},
+        ]
+        result = serialize_messages(messages)
+        assert "Question one." in result
+        assert "User turn 1:" in result
+
+    def test_multi_text_block_user_message(self):
+        """User message with multiple text blocks produces flat turn content."""
+        messages = [
+            {"role": "user", "content": [
+                {"type": "text", "text": "Part A."},
+                {"type": "text", "text": "Part B."},
+            ]},
+            {"role": "assistant", "content": "Got it."},
+        ]
+        result = serialize_messages(messages)
+        assert "Part A." in result
+        assert "Part B." in result
+
+    def test_system_content_block_multi_text(self):
+        """System message with multiple text blocks joins them with newline."""
+        messages = [
+            {"role": "system", "content": [
+                {"type": "text", "text": "Rule 1."},
+                {"type": "text", "text": "Rule 2."},
+            ]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Rule 1." in result
+        assert "Rule 2." in result
 
 
 # endregion

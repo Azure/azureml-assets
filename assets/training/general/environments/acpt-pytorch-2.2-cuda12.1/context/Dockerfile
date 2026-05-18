@@ -1,15 +1,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
-# Upgrade base conda packages
-RUN conda install -n base -c conda-forge pip=26.0 -y
-# These are from base image adding till we get new base image tag
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-# aiohttp 3.12.14 (8 CVEs) and urllib3 2.5.0 (3 CVEs) are also in base env from base image
-RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.3' 'urllib3>=2.6.3'
+# Upgrade pip in base conda env (CVE-2026-1703 requires pip>=26.0; base image ships pip 25.3)
+RUN conda install -n base -c conda-forge 'pip>=26.0' -y
+# Base image packages requiring security upgrades (base image biweekly.202601.1 not yet patched):
+# PyJWT 2.10.1 (CVE-2026-32597), aiohttp 3.12.14, urllib3 2.5.0, python-dotenv 1.1.0 (GHSA-mf9w-mj56-hr94),
+# cryptography 44.0.1, setuptools 80.9.0, wheel 0.45.1, requests 2.32.4
+# No parent pip packages in the base env pull these at fixed versions; direct overrides required.
+RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'urllib3>=2.6.3' 'requests>=2.33.0' 'python-dotenv>=1.2.2'
 
-
-# Upgrade ptca environment conda packages
-RUN conda install -c conda-forge pip=26.0 -y && \
+# Upgrade pip in ptca conda env (CVE-2026-1703 requires pip>=26.0; base image ships pip 25.3)
+RUN conda install -c conda-forge 'pip>=26.0' -y && \
     conda clean -a -y
 
 # Install pip dependencies
@@ -45,10 +45,23 @@ EXPOSE 5001 8883 8888
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
 
-# Fix Vulnerability 
-# TODO: latest version of azureml-mlflow ~ 1.62.0 depends on cryptography<46.0.0
-RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.5'
+# Fix Vulnerability: cryptography (azureml-mlflow 1.62.0 allows cryptography<47.0.0)
+RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.7'
 # CVE-2026-23949 (jaraco.context) & CVE-2026-24049 (wheel) - upgrade setuptools in ptca and base envs
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
 RUN conda run -n base pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
+
+# torch 2.7.1+cu118: GHSA-887c-mr87-cxwp / CVE-2025-3730 (local DoS in ctc_loss; fixed in torch 2.8.0).
+# Parent: torch is shipped by the base image (mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271);
+# no pip package in requirements.txt pulls torch transitively at a fixable floor.
+# Override NOT possible in this image:
+#   1. PyTorch upstream dropped CUDA 11.8 wheels starting with torch 2.8.0. The cu118 wheel index
+#      (https://download.pytorch.org/whl/cu118/torch/) lists 2.7.1 as the highest stable release;
+#      only a 2.8.0.dev* nightly exists for cu118 and PEP 440 dev versions still satisfy <2.8.0.
+#   2. Installing the PyPI default torch 2.8.0 wheel (bundled cu126) would mismatch the rest of the
+#      cu118-built GPU stack baked into the base image (DeepSpeed 0.13.1, onnxruntime-training-gpu 1.17.1,
+#      torch-ort 1.17.0), breaking ABI / CUDA compatibility.
+#   3. Latest base image tag is biweekly.202601.1 (verified via mcr.microsoft.com tag list); no
+#      patched cu118 base image is published.
+# Permanent fix path: migrate workloads to acpt-pytorch-2.8-cuda12.6 (cu126 + torch 2.8.0).

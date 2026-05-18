@@ -12,23 +12,38 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
-# System package security upgrades
+# System package security upgrades.
+# USN-8222-1: openssh-{client,server,sftp-server} 1:9.6p1-3ubuntu13.15 -> 1:9.6p1-3ubuntu13.16
+# Parent: ubuntu 24.04 noble base image (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04).
+# `apt-get -y upgrade` alone has been observed to leave the held openssh version in
+# place when an older base layer is cached, so reinstall the openssh-* packages
+# explicitly to force pickup of the patched version (same pattern used in
+# assets/training/aoai/proxy_components/environments/context/Dockerfile and
+# assets/training/finetune_acft_hf_nlp/environments/data_import/context/Dockerfile).
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install -y --only-upgrade \
-        libpam0g \
-        libpam-modules \
-        libpam-modules-bin \
-        libpam-runtime && \
+    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # begin conda create
-# Create conda environment (minimal — packages installed via pip to avoid solver OOM)
+# Create conda environment (minimal -- packages installed via pip to avoid solver OOM)
 RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     python=3.10 \
     -c conda-forge && \
     conda clean -a -y
+
+# Security: upgrade pip to fix CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Two pips need
+# upgrading because they live in independent prefixes:
+#   1. /opt/miniconda/bin/pip — ships with the parent base image
+#      (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04) at version 26.0.1.
+#      VCM SCA scans this site-packages tree at
+#      opt/miniconda/lib/python3.10/site-packages/pip-26.0.1.dist-info/METADATA.
+#   2. $AZUREML_CONDA_ENVIRONMENT_PATH/bin/pip — created by `conda create` above.
+# pip is its own parent (no upstream package can pull in a fixed pip), so explicit
+# upgrades are the only available remediation.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir --upgrade 'pip>=26.1'
 
 # Install packages via pip (avoids conda solver OOM)
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
@@ -37,8 +52,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'setuptools-git' \
     'setuptools==82.0.1' \
     'psutil>5.0.0,<6.0.0' \
-    'torch==2.8.0' \
-    'pip>=26.0'
+    'torch==2.8.0'
 # end conda create
 
 # begin pip install
@@ -65,37 +79,37 @@ RUN pip install \
                 'prophet==1.1.4' \
                 'inference-schema' \
                 'mltable>=1.0.0' \
-                'pillow==12.1.1'
+                'pillow==12.2.0'
                 # end pypi dependencies
 # end pip install
 
 # begin pip ad-hoc
 # Install pip ad-hoc dependencies for security updates
 #
-# pip>=26.0 (CVE-2025-8869): symlink path traversal during tar extraction
-#   Chain: direct conda dep (pip=26.0), upgraded for security
-#
-# wheel>=0.46.2 (CVE-2026-24049): path traversal & privilege escalation via malicious wheel unpack
-#   Chain: setuptools[core] -> wheel (build dependency)
-#
-# cryptography>=46.0.5 (CVE-2026-26007): EC subgroup validation flaw in ECDH/ECDSA on SECT curves
-#   Chain: mltable -> cryptography (direct dep)
-#   Also:  mltable -> azureml-dataprep -> azure-identity -> cryptography
-#
-# protobuf>=5.29.6 (CVE-2025-4565): DoS via uncontrolled recursion in pure-Python decoder
-#   Chain: mlflow-skinny -> protobuf (direct dep)
-#   Also:  mlflow-skinny -> databricks-sdk -> protobuf
-#
 # distributed>=2026.1.0 (CVE-2026-23528): XSS leading to RCE via Dask dashboard
 #   Chain: azureml-train-automl-runtime -> dask[complete] -> distributed
+#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins dask[complete]<=2023.2.0;
+#   parent fix not available, override required.
 #
 # bokeh>=3.8.2 (GHSA-793v-589g-574v): conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain: azureml-train-automl-runtime -> bokeh
+#   Parent (azureml-train-automl-runtime==1.62.0, latest) still pins bokeh<3.0.0;
+#   parent fix not available, override required.
+#
+# python-dotenv>=1.2.2 (GHSA-mf9w-mj56-hr94): set_key()/unset_key() follow symlinks
+#   on cross-device .env writes, allowing arbitrary file overwrite.
+#   Pulled in transitively (no direct top-level package declares it; latest
+#   mlflow-skinny declares python-dotenv<2,>=0.19.0 but the pinned mlflow-skinny==2.16.0
+#   does not; it is brought in by another transitive path). No parent constraint
+#   blocks 1.2.2, so override directly.
 RUN pip install --upgrade \
-    'pip>=26.0' \
-    'wheel>=0.46.2' \
-    'cryptography>=46.0.5' \
-    'protobuf>=5.29.6' \
     'distributed>=2026.1.0' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'bokeh>=3.8.2' \
+    'onnx>=1.21.0' \
+    'pillow>=12.2.0' \
+    'python-dotenv>=1.2.2'
+# onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
+#   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
+#   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
+# pillow: upgraded from 12.1.1 for GHSA-whj4-6x5x-4v2j
 # end pip ad-hoc

@@ -2,7 +2,15 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
-RUN apt-get -y update && apt-get -y upgrade
+# linux-headers-* and linux-libc-dev ship multiple HIGH CVEs (CVE-2024-35870,
+# CVE-2024-53179, CVE-2024-56692, CVE-2025-37899, CVE-2025-38118) with no
+# fixed version available upstream. These kernel build-time packages are
+# unnecessary at container runtime (the host provides the kernel), so the
+# only available remediation is to purge them.
+RUN apt-get -y update && apt-get -y upgrade && \
+    apt-get -y purge 'linux-headers-*' 'linux-libc-dev' && \
+    apt-get -y autoremove && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
@@ -13,15 +21,19 @@ RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 
-# protobuf is a transitive dep of onnxruntime-training; base image has older version pre-installed
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# aiohttp: transitive dep of azure-core/datasets; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
-# onnx: onnxruntime-training accepts onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
-# nltk: GHSA-gfwx-w7gr-fvh7; >=3.9.4 required
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.7 pillow==12.1.1 setuptools>=82.0.1 'requests>=2.33.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'nltk>=3.9.4'
-# pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2 
-# vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip>=26.0.1 wheel>=0.46.2 setuptools>=82.0.1 cryptography==46.0.7 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'requests>=2.33.0'
+# setuptools: >=82.0.1 patches jaraco.context (GHSA-58pv-8j8x-9vj2); base ships 82.0.0
+# nltk: >=3.9.4 required (GHSA-gfwx-w7gr-fvh7)
+# transformers: ensure >=5.0.0 after azureml-* installs (GHSA-69w3-r845-3855)
+# onnx: onnxruntime-training has loose onnx dep; pip resolves to 1.17.0 which has multiple CVEs
+# pip: >=26.1.1 patches CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9 (base ships 26.0.1).
+# pip is the Python package installer itself — it has NO parent/transitive package
+# that pulls it in (it is bootstrapped by the conda/python distribution), so the
+# only available remediation is to upgrade pip directly in each conda environment.
+# pyOpenSSL: >=26.0.0 patches CVE-2026-27459 (transitive dep, force-bump needed).
+# urllib3: >=2.7.0 patches CVE-2026-44431, CVE-2026-44432 (transitive dep).
+RUN pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
+# base conda env: pip, setuptools and python-dotenv need upgrades above what base image ships
+# python-dotenv: transitive dep of mlflow-skinny (accepts >=0.19.0,<2); base ships 1.2.1 (GHSA-mf9w-mj56-hr94)
+# pip: see note above — standalone bootstrap tool with no parent package; must be upgraded directly
+# pyOpenSSL/urllib3: same CVEs as main env (CVE-2026-27459, CVE-2026-44431, CVE-2026-44432)
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'

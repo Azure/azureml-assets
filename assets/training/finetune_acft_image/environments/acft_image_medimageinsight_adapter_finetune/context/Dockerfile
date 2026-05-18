@@ -4,27 +4,50 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 USER root
 RUN apt-get -y update && apt-get -y upgrade
 
-# Install unzip
-RUN apt-get -y install unzip libc-bin libc-bin libc-dev locales libc6 dpkg-dev dpkg libdpkg-perl libssl-dev libssl3 openssl
+RUN apt-get -y install unzip
+
+# pip 26.0.1 in both the base (py3.13) and ptca (py3.10) conda envs is
+# vulnerable to GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (fixed in pip>=26.1).
+# pip is a build/install tool installed by conda from the upstream base image
+# (mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280, biweekly
+# tag) — there is no parent Python package that brings it in, so an upstream
+# parent upgrade is not possible. The base ACPT image has not yet refreshed to
+# pip 26.1+ as of 2026-05-12, so we override here. We use `conda install`
+# (rather than `pip install --upgrade`) so that conda-meta JSON and
+# /opt/conda/pkgs cache are also updated, and we additionally remove stray
+# pip-26.0*.dist-info / conda-meta entries from prior pip self-upgrades that
+# conda does not track — otherwise the SBOM scanner re-flags them. Done before
+# the requirements install so requirements are installed with the patched pip.
+RUN conda install -y -n base -c conda-forge pip==26.1.1 && \
+    conda install -y -n ptca -c conda-forge pip==26.1.1 && \
+    rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0*.dist-info && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
+    conda clean -ay
 
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# upgrade pip, wheel, protobuf vulnerabilities in ptca env
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# protobuf parent is mlflow==3.5.0 (already latest) which accepts protobuf>=3.12.0, cannot force 6.33.5 via parent
-# pyasn1 is a transitive dep (mlflow → databricks-sdk → google-auth → pyasn1-modules → pyasn1);
-# parent packages use loose floors so pip resolves to 0.6.2 which has CVE-2026-30922; override to >=0.6.3
-# aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
-# onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
-# fastmcp: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767; >=3.2.0 required
-# requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-RUN pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 protobuf==6.33.5 cryptography==46.0.7 pyasn1==0.6.3 pillow==12.1.1 'fastmcp>=3.2.0' 'requests>=2.33.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0'
-# pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -n ptca -y pip>=26.0.1 wheel>=0.46.2 
-# vulnerability in base conda env
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 setuptools==82.0.0 cryptography==46.0.7 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'requests>=2.33.0'
+# Transitive dep overrides where pip may not resolve to the patched version.
+# The image has two conda envs: base (py3.13) and ptca (py3.10); the default
+# `pip` resolves to the ptca env, so base-env overrides need /opt/conda/bin/pip.
+#
+# ptca env (py3.10):
+#   pyasn1: mlflow -> databricks-sdk -> google-auth -> pyasn1-modules -> pyasn1;
+#     pyasn1-modules pins pyasn1 with no version floor so pip may resolve <0.6.3 (CVE-2026-30922)
+#   Mako: mlflow -> alembic -> Mako; alembic 1.18.4 uses unpinned `Requires-Dist: Mako`
+#   python-dotenv: mlflow -> mlflow-skinny -> python-dotenv<2,>=0.19.0;
+#     mlflow 3.11.1 (latest as of 2026-05-08) keeps that wide range so pip may resolve <1.2.2 (GHSA-mf9w-mj56-hr94)
+#
+# base conda env (py3.13):
+#   python-dotenv 1.2.1 is brought in by anaconda-auth 0.13.1 (`Requires-Dist: python-dotenv`,
+#   no version pin) and pydantic-settings 2.12.0 (`python-dotenv>=0.21.0`); both are shipped
+#   pre-installed in the base env from the upstream base image and neither parent ships a
+#   tighter pin in its latest release as of 2026-05-08, so we patch python-dotenv directly
+#   in the base env via /opt/conda/bin/pip.
+RUN pip install --no-cache-dir --upgrade 'pyasn1>=0.6.3' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' \
+ && /opt/conda/bin/pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

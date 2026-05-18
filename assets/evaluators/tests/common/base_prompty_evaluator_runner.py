@@ -42,16 +42,6 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
     use_mocking: bool = True  # Set to False for quality tests with real flow execution
 
     @property
-    def expected_result_fields(self) -> List[str]:
-        """Get the expected result fields for prompty evaluators."""
-        return [
-            f"{self._result_prefix}",
-            f"{self._result_prefix}_reason",
-            f"{self._result_prefix}_result",
-            f"{self._result_prefix}_threshold"
-        ]
-
-    @property
     def result_key(self) -> str:
         """Get the result key from the evaluator type."""
         return self.evaluator_type._RESULT_KEY
@@ -204,6 +194,7 @@ class BasePromptyEvaluatorRunner(BaseEvaluatorRunner):
             AssertionError: If the result does not match the expected error state.
         """
         assert result_data["label"] is None
+        assert result_data["passed"] is None
         assert result_data["score"] is None
         assert result_data["error_code"] == error_code
 

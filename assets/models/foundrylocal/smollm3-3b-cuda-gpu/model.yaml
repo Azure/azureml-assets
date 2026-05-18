@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: foundrylocal/models/smollm3-3b/onnx/cuda/v1
+  storage_name: foundrylocalassetdata
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

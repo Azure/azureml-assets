@@ -15,7 +15,13 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# Security: upgrade all OS packages to fix USN vulnerabilities (libssh, curl, etc.)
+# Defensive OS-package upgrade: pulls in any USN-patched packages published after
+# the base image was built. The latest parent image
+# (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04, resolved via
+# {{latest-image-tag}}) already ships the fixes for USN-8222-1 (openssh),
+# USN-8227-1 (curl/libcurl*), USN-8229-1 (sed) and USN-8233-1 (libnghttp2-14),
+# so no explicit per-package reinstall is required here -- `apt-get -y upgrade`
+# is sufficient and also covers any future USNs published after a base-image build.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
@@ -25,7 +31,22 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y
+# pip remediated to >=26.1 (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357).
+# Why a two-step install instead of a single `conda create ... pip=26.1`:
+#   The Anaconda defaults channel currently ships only pip 26.0.1; pip 26.1 lives
+#   on conda-forge (verified via repodata: defaults has [25.1, 25.2, 25.3, 26.0.1],
+#   conda-forge has 26.1.1). Mixing channels in the conda create solve has caused
+#   solver instability for this image in the past, so we keep `conda create` on
+#   defaults and explicitly upgrade pip afterwards. This mirrors the same pattern
+#   used in assets/training/automl/environments/ai-ml-automl/context/Dockerfile.
+# `python -m pip` is the recommended self-upgrade form (avoids running the pip
+# script while it is being replaced). Upper bound `<27` guards against an
+# unattended jump to a future major release that could break the rest of the
+# image. opt/miniconda's pip is already 26.1.1 in the latest parent base image,
+# so no secondary upgrade for that prefix is required here.
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 -y && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -m pip install --no-cache-dir --upgrade 'pip>=26.1,<27' && \
+    conda clean -a -y
 
 ###############################
 # Pre-Build LightGBM

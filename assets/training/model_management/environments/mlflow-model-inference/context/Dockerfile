@@ -37,7 +37,8 @@ RUN apt-get update && \
         libunwind8 \
         systemd \
         libudev1 \
-        libssl3 && \
+        libssl3 \
+        sed=4.8-1ubuntu2.1 && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     rm -rf /usr/share/man/* && \

@@ -2,9 +2,18 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root:root
 
-# Update system package index and upgrade Python 3.10 packages to required versions
+# Update system package index and upgrade Python 3.10 packages to required versions.
+# openssh-client is reinstalled explicitly after `apt-get upgrade` to force pickup
+# of USN-8222-1 (>= 1:8.9p1-3ubuntu0.15). The stable-ubuntu2204-cu126-py310-torch280
+# base image (biweekly.202605.1) ALREADY ships 1:8.9p1-3ubuntu0.15 (verified with
+# `dpkg -l openssh-client`), but `apt-get upgrade` alone has been observed to leave
+# an older 1:8.9p1-3ubuntu0.14 in place when older base layers are cached during
+# rebuilds, so the explicit reinstall is kept as a defensive measure (same pattern
+# as assets/training/finetune_acft_multimodal/.../Dockerfile). openssh is shipped
+# by the Ubuntu base, so the only available remediation is the apt upgrade itself.
 RUN apt-get update && \
     apt-get upgrade -y && \
+    apt-get install --reinstall -y openssh-client && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
 
@@ -18,7 +27,6 @@ RUN pip install --no-cache-dir \
 
 # onnx and onnxruntime-training installation
 RUN pip uninstall -y onnxruntime
-RUN pip install onnx==1.21.0
 RUN pip uninstall -y onnxruntime-training
 RUN pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ onnxruntime-training==1.18.0
 
@@ -45,15 +53,25 @@ RUN pip install --upgrade 'pillow>=12.1.1'
 # setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
-RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'bokeh>=3.8.2' 'protobuf>=6.33.5' 
+RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'bokeh>=3.8.2' 'protobuf>=6.33.5' 'onnx>=1.21.0'
+
 
 # Vulnerability patches for ptca environment
 # pytest override: GHSA-6w46-j5rx-g56g — from ACPT base image ptca env; base image not yet patched
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pytest>=9.0.3'
 
-# Fix security vulnerabilities (conda base env)
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-# aiohttp override: GHSA-63hf-3vf5-4wqf, GHSA-2vrm-gr82-f7m5, GHSA-c427-h43c-vf67, GHSA-w2fm-2cpv-w7v5, etc. — from ACPT base image; base image not yet patched
-RUN /opt/conda/bin/pip install --upgrade 'cryptography>=46.0.5' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4'
+# Fix security vulnerabilities (conda base env, python 3.13 at /opt/conda)
+# Verified against base image biweekly.202605.1 (2026-05-08):
+#   cryptography 46.0.7, wheel 0.46.3, PyJWT 2.12.1, aiohttp 3.13.5 — already patched
+#     in base image, so the previous overrides for these were removed (cleanup).
+#   setuptools 82.0.0 — base ships 82.0.0 but jaraco.context fix (GHSA-58pv-8j8x-9vj2)
+#     requires >=82.0.1, so override is retained.
+#   python-dotenv 1.2.1 — base ships 1.2.1 (GHSA-mf9w-mj56-hr94, set_key()/unset_key()
+#     follow symlinks on cross-device .env writes -> arbitrary file overwrite). Required
+#     version is >=1.2.2. Brought in transitively by anaconda-auth==0.14.2 (Requires-Dist:
+#     python-dotenv with no version pin) and pydantic-settings==2.12.0 (python-dotenv>=0.21.0,
+#     via anaconda-cli-base -> anaconda-auth). Latest releases on PyPI as of 2026-05-08
+#     (anaconda-auth==0.14.4, pydantic-settings==2.14.0) still use the same loose floors,
+#     so a parent upgrade cannot force >=1.2.2 — direct override required.
+RUN /opt/conda/bin/pip install --upgrade 'setuptools>=82.0.1' 'python-dotenv>=1.2.2'
 

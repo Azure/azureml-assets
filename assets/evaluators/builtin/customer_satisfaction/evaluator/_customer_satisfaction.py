@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-import math
 import os
 import logging
 from typing import Dict, Union, List, Optional, Tuple
@@ -10,6 +9,7 @@ from typing_extensions import overload, override
 from azure.ai.evaluation._exceptions import EvaluationException, ErrorBlame, ErrorCategory, ErrorTarget
 from azure.ai.evaluation._evaluators._common import PromptyEvaluatorBase
 from azure.ai.evaluation._model_configurations import Conversation
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common.utils import reformat_conversation_history, reformat_agent_response
 from azure.ai.evaluation._common.utils import (
     construct_prompty_model_config,
@@ -96,7 +96,7 @@ def _resolve_evaluation_level(
     :rtype: Optional[EvaluationLevel]
     """
     valid = [level.value for level in EvaluationLevel]
-    if evaluation_level is None:
+    if evaluation_level is None or evaluation_level == '':
         return None
     if isinstance(evaluation_level, EvaluationLevel):
         return evaluation_level
@@ -799,7 +799,11 @@ def serialize_messages(messages: List[dict]) -> str:
             normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
 
         if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
-            system_message = msg.get("content", "")
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                system_message = "\n".join(_extract_text_from_content(content))
+            else:
+                system_message = content
 
         elif role == MessageRole.USER and "content" in msg:
             if cur_agent_response:
@@ -1053,21 +1057,18 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
     def _not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
     ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
-        return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
-            f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_dimensions": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
-        }
+        """Return a result indicating that the evaluation is not applicable (skipped).
+
+        Not-applicable results have no score since the evaluator cannot make a judgment
+        (e.g., intermediate responses that are not final agent responses).
+        """
+        return self._build_result(
+            score=None,
+            result="not_applicable",
+            reason=f"Not applicable: {error_message}",
+            status="skipped",
+            properties={},
+        )
 
     def _should_use_conversation_level(self, eval_input: Dict) -> bool:
         """Determine whether to use conversation-level evaluation.
@@ -1112,7 +1113,72 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         self._validator.validate_eval_input(kwargs)
 
-        return await super()._real_call(**kwargs)
+        return await self._the_super_real_call(**kwargs)
+
+    async def _the_super_real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                )
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
 
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:  # type: ignore[override]
@@ -1183,7 +1249,47 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         prompty_output_dict = await self._multi_turn_flow(timeout=self._LLM_CALL_TIMEOUT, **prompty_kwargs)
         return self._parse_prompty_output(prompty_output_dict)
 
-    def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Union[float, str]]:
+    def _build_result(
+        self,
+        score: Optional[int],
+        result: str,
+        reason: str,
+        status: str,
+        properties: Dict,
+        prompty_output_dict: Optional[Dict] = None,
+    ) -> Dict[str, Union[str, int, float, Dict, None]]:
+        """Build a standardized result dictionary.
+
+        :param score: The evaluation score (1, 0, or None).
+        :param result: The result label ("pass", "fail", "not_applicable", or "error").
+        :param reason: The reasoning or explanation string.
+        :param status: The evaluation status ("completed", "skipped", or "error").
+        :param properties: The properties dictionary.
+        :param prompty_output_dict: Optional raw prompty output for extracting token metadata.
+        :return: The standardized result dictionary.
+        """
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        metadata = {
+            "prompt_tokens": p.get("input_token_count", 0),
+            "completion_tokens": p.get("output_token_count", 0),
+            "total_tokens": p.get("total_token_count", 0),
+            "finish_reason": p.get("finish_reason", ""),
+            "model": p.get("model_id", ""),
+            "sample_input": p.get("sample_input", ""),
+            "sample_output": p.get("sample_output", ""),
+        }
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_passed": result == "pass" if result in ["pass", "fail"] else None,
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": status,
+            f"{self._result_key}_properties": {**properties, **metadata},
+        }
+
+    def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Any]:
         """Parse the prompty output into a standardized result dictionary.
 
         Shared between single-turn and multi-turn evaluation paths.
@@ -1195,47 +1301,29 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
-        if isinstance(llm_output, dict):
-            score_value = llm_output.get("score", 3)
-            if isinstance(score_value, str):
-                score = float(score_value) if score_value.replace(".", "").isdigit() else 3.0
+        if not isinstance(llm_output, dict):
+            score = None
+            result = "error"
+            reason = "Evaluator returned invalid output."
+            status = "error"
+            properties = {}
+        else:
+            status = llm_output.get("status", "completed")
+            reason = llm_output.get("reason", "")
+            properties = llm_output.get("properties") or {}
+
+            if status == "skipped":
+                score = None
+                result = "skipped"
             else:
-                score = float(score_value) if score_value else 3.0
+                score = llm_output.get("score", self._threshold)
+                result = "pass" if score >= self._threshold else "fail"
 
-            # Clamp score to 1-5 range
-            score = max(1.0, min(5.0, score))
-
-            success_result = "pass" if score >= self._threshold else "fail"
-            reason = llm_output.get("explanation", "")
-            dimensions = llm_output.get("dimensions", {})
-
-            return {
-                self._result_key: score,
-                f"{self._result_key}_result": success_result,
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_dimensions": dimensions,
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
-            }
-
-        # Check if base returned nan (invalid output case)
-        if isinstance(llm_output, float) and math.isnan(llm_output):
-            raise EvaluationException(
-                message="Evaluator returned invalid output.",
-                blame=ErrorBlame.SYSTEM_ERROR,
-                category=ErrorCategory.FAILED_EXECUTION,
-                target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
-            )
-
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
-            blame=ErrorBlame.SYSTEM_ERROR,
-            category=ErrorCategory.FAILED_EXECUTION,
-            target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
+        return self._build_result(
+            score=score,
+            result=result,
+            reason=reason,
+            status=status,
+            properties=properties,
+            prompty_output_dict=prompty_output_dict,
         )

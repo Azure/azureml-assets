@@ -1,0 +1,40 @@
+{
+  "columnAttributes": [
+    {
+      "name": "problem",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "answer",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "problem_topic",
+      "type": "String",
+      "isFeature": true,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    },
+    {
+      "name": "canary",
+      "type": "String",
+      "isFeature": false,
+      "elementType": {
+        "typeName": "str",
+        "isNullable": false
+      }
+    }
+  ]
+}

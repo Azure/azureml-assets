@@ -3,6 +3,7 @@
 
 """Behavioral tests for Task Navigation Efficiency Evaluator."""
 
+import json
 import pytest
 from typing import Any, Dict, List
 
@@ -29,15 +30,6 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
     evaluator_type = TaskNavigationEfficiencyEvaluator
     result_key = "task_navigation_efficiency"
     constructor_arg_names = ["matching_mode"]
-
-    @property
-    def expected_result_fields(self) -> List[str]:
-        """Expected result fields for Task Navigation Efficiency Evaluator."""
-        return [
-            "task_navigation_efficiency_label",
-            "task_navigation_efficiency_result",
-            "task_navigation_efficiency_details",
-        ]
 
     # region Test Data
     VALID_ACTIONS: List[Dict[str, Any]] = [
@@ -270,67 +262,12 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
     # endregion
 
     @override
-    def _extract_and_print_result(self, results: Dict[str, Any], test_label: str) -> Dict[str, Any]:
-        """Extract result fields specific for Task Navigation Efficiency Evaluator and print them.
-
-        Args:
-            results: Raw evaluation results from the evaluator.
-            test_label: Label for the test (used in print output).
-
-        Returns:
-            Dictionary with standardized result fields.
-        """
-        if f"{self.result_key}_error_message" not in results:
-            for field in self.expected_result_fields:
-                if field not in results:
-                    raise ValueError(f"Expected result field '{field}' not found in results.")
-
-        label = results.get("task_navigation_efficiency_label")
-        result = results.get("task_navigation_efficiency_result")
-        details = results.get("task_navigation_efficiency_details")
-        error_message = results.get("task_navigation_efficiency_error_message")
-        error_code = results.get("task_navigation_efficiency_error_code")
-
-        print(f"\n[{test_label}] Result: {result}")
-        print(f"  Label: {label}")
-        print(f"  Details: {details}")
-        if error_message or error_code:
-            print(f"  Error Message: {error_message}")
-            print(f"  Error Code: {error_code}")
-
-        return {
-            "label": label,
-            "result": result,
-            "details": details,
-            "error_message": error_message,
-            "error_code": error_code,
-        }
-
-    @override
     def assert_pass(self, result_data: Dict[str, Any]):
         """Assert a passing result."""
-        assert result_data["result"] == "pass"
-        assert result_data["label"] is True
-        assert result_data["details"] is not None
-        assert "precision_score" in result_data["details"]
-        assert "recall_score" in result_data["details"]
-        assert "f1_score" in result_data["details"]
-
-    @override
-    def assert_fail(self, result_data: Dict[str, Any]):
-        """Assert a failing result."""
-        assert result_data["result"] == "fail"
-        assert result_data["label"] is False
-        assert result_data["details"] is not None
-
-    @override
-    def assert_error(self, result_data: Dict[str, Any], error_code: str = None):
-        """Assert an error result."""
-        assert result_data["label"] is None
-        assert result_data["result"] is None
-        assert result_data["error_message"] is not None
-        if error_code:
-            assert result_data["error_code"] == error_code
+        super().assert_pass(result_data)
+        assert "precision_score" in result_data["properties"]
+        assert "recall_score" in result_data["properties"]
+        assert "f1_score" in result_data["properties"]
 
     # ==================== EXACT MATCH MODE TESTS ====================
 
@@ -344,9 +281,9 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Exact Match - Perfect Match")
         self.assert_pass(result_data)
         # Should have perfect precision, recall, and F1
-        assert result_data["details"]["precision_score"] == 1.0
-        assert result_data["details"]["recall_score"] == 1.0
-        assert result_data["details"]["f1_score"] == 1.0
+        assert result_data["properties"]["precision_score"] == 1.0
+        assert result_data["properties"]["recall_score"] == 1.0
+        assert result_data["properties"]["f1_score"] == 1.0
 
     def test_exact_match_with_extra_step(self):
         """Test exact match with extra step (should fail)."""
@@ -516,9 +453,9 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         result_data = self._extract_and_print_result(results, "Empty Actions")
         self.assert_fail(result_data)
         # Empty actions should have zero scores
-        assert result_data["details"]["precision_score"] == 0.0
-        assert result_data["details"]["recall_score"] == 0.0
-        assert result_data["details"]["f1_score"] == 0.0
+        assert result_data["properties"]["precision_score"] == 0.0
+        assert result_data["properties"]["recall_score"] == 0.0
+        assert result_data["properties"]["f1_score"] == 0.0
 
     def test_string_actions(self):
         """Test with actions as a string (should error)."""
@@ -529,6 +466,19 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         )
         result_data = self._extract_and_print_result(results, "String Actions")
         self.assert_error(result_data, ErrorCategory.INVALID_VALUE.name)
+
+    def test_json_stringified_valid_inputs(self):
+        """Test that JSON-stringified valid actions and expected_actions are parsed and evaluated correctly."""
+        results = self._run_evaluation(
+            actions=json.dumps(self.VALID_ACTIONS),
+            expected_actions=json.dumps(self.VALID_EXPECTED_ACTIONS),
+            matching_mode=TaskNavigationEfficiencyMatchingMode.EXACT_MATCH,
+        )
+        result_data = self._extract_and_print_result(results, "JSON-Stringified Valid Inputs")
+        self.assert_pass(result_data)
+        assert result_data["properties"]["precision_score"] == 1.0
+        assert result_data["properties"]["recall_score"] == 1.0
+        assert result_data["properties"]["f1_score"] == 1.0
 
     def test_none_actions(self):
         """Test with None actions (should error)."""
@@ -592,9 +542,9 @@ class TestTaskNavigationEfficiencyEvaluatorBehavior(BaseCodeEvaluatorRunner):
         # Precision = 2/(2+1) = 0.666...
         # Recall = 2/(2+1) = 0.666...
         # F1 = 2*0.666*0.666/(0.666+0.666) = 0.666...
-        assert 0.66 <= result_data["details"]["precision_score"] <= 0.67
-        assert 0.66 <= result_data["details"]["recall_score"] <= 0.67
-        assert 0.66 <= result_data["details"]["f1_score"] <= 0.67
+        assert 0.66 <= result_data["properties"]["precision_score"] <= 0.67
+        assert 0.66 <= result_data["properties"]["recall_score"] <= 0.67
+        assert 0.66 <= result_data["properties"]["f1_score"] <= 0.67
 
     # ==================== PARAMETER TYPE NORMALIZATION TESTS ====================
 

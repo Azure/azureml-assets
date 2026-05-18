@@ -9,11 +9,7 @@ inference-schema
 MarkupSafe
 regex
 pybind11
-urllib3>=2.6.3
-requests
-pillow>=12.1.1
 transformers
-aiohttp>=3.13.3
 py-spy
 debugpy
 ipykernel
@@ -23,4 +19,16 @@ matplotlib
 tqdm
 py-cpuinfo
 torch-tb-profiler
-filelock>=3.20.1
+# starlette: transitive dep of azureml-inference-server-http -> fastapi -> starlette.
+#   Not pre-installed in base ptca env; fastapi uses loose floor.
+starlette>=0.49.1
+# python-dotenv: transitive dep chain: azureml-defaults -> azureml-inference-server-http
+#   -> pydantic-settings -> python-dotenv>=0.21.0. pydantic-settings (all versions through
+#   2.14.0) only requires >=0.21.0 which does not constrain to a CVE-safe version.
+#   No parent upgrade resolves this. Floor pin required to fix CVE-2026-28684 (GHSA-mf9w-mj56-hr94).
+python-dotenv>=1.2.2
+# GitPython: transitive dep chain: azureml-mlflow -> mlflow-skinny -> GitPython (>=3.1.9,<4).
+#   mlflow-skinny (all versions through 3.11.1) only requires >=3.1.9,<4 which does not
+#   constrain to a CVE-safe floor. No parent upgrade resolves this.
+#   Floor pin required to fix GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
+GitPython>=3.1.47

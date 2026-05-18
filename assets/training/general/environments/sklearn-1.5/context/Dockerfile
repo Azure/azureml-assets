@@ -9,10 +9,17 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-# Update package lists, upgrade all OS packages, and reinstall system OpenSSL & OpenSSH
+# Update package lists and upgrade all OS packages to pull latest security patches
+# (e.g. openssh USN-8222-1, curl USN-8227-1, kmod USN-8226-1, sed USN-8229-1,
+# nghttp2 USN-8233-1 currently outstanding in base image openmpi5.0-ubuntu24.04:latest).
+# Previously this step also did `apt-get install --reinstall openssl libssl-dev
+# openssh-server libpam-runtime libc-bin dpkg-dev` but those reinstalls became
+# redundant after `apt-get upgrade` was added: a fresh scan of the base image
+# (mcr.microsoft.com/azureml/openmpi5.0-ubuntu24.04:latest, digest 53c17a5a) shows
+# none of those packages other than openssh have an outstanding USN, and openssh
+# is already fixed by the upgrade above. Removed to keep the layer minimal.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
-    apt-get install --reinstall -y openssl libssl-dev openssh-server libpam-runtime libc-bin dpkg-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -23,8 +30,10 @@ RUN apt-get update && \
 # conda and pip dependencies together. Splitting them avoids the memory spike.
 
 # Step 1: Create conda env with only conda-channel packages (small, fast solve)
+# pip=26.1.1: fixes CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Pip <26.1 ran self-update
+# check after wheel install which could import newly installed packages.
 COPY conda_dependencies.yaml .
-RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.0 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
+RUN conda create -p $CONDA_PREFIX -q -y python=3.10 pip=26.1.1 'pandas~=1.5.3' 'scipy~=1.10.0' 'numpy~=1.22.0' -c conda-forge -c anaconda && \
     conda clean -a -y
 
 # Step 2: Install pip packages separately (pip resolver uses less memory than conda's SAT solver)
@@ -50,8 +59,17 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes
-# cryptography, pip, setuptools, urllib3, wheel already fixed in openmpi base (20260315.v1)
-# cryptography: azureml-mlflow==1.62.0 (latest) caps cryptography<46.0.0, so conda env installs 44.x;
-#   override after conda env create to restore 46.0.5
+# pip, setuptools, urllib3, wheel already fixed in openmpi base (latest tag).
+#   /opt/miniconda pip override removed: base openmpi5.0-ubuntu24.04:20260507.v1 now
+#   ships pip=26.1.1 in /opt/miniconda (verified via docker inspect on 2026-05-12),
+#   so the explicit `/opt/miniconda/bin/pip install --upgrade pip==26.1.1` step is
+#   redundant. The azureml-envs/sklearn-1.5 conda env still pins pip=26.1.1 via the
+#   conda create above to lock in the CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9) fix.
+# cryptography: azureml-mlflow==1.62.0.post2 (latest) caps cryptography<47.0.0 (was
+#   <46.0.0 in 1.62.0); cap no longer prevents 46.x but pip's resolver may still pick
+#   an older 46.x patch via transitive constraints (azureml-core -> pyopenssl<26.0.0,
+#   pyopenssl -> cryptography>=...). Pin 46.0.7 explicitly to ensure latest patch.
+# aiohttp / distributed: kept overrides to ensure latest patched versions; transitive
+#   parent constraints (mlflow-skinny, dask) don't require these specific patches.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    aiohttp==3.13.3 cryptography==46.0.5 'distributed>=2026.1.0'
+    aiohttp==3.13.4 cryptography==46.0.7 'distributed>=2026.1.0'

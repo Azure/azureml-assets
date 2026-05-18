@@ -15,10 +15,22 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 ENV ENABLE_METADATA=true
 
 RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
-# Security: upgrade all OS packages to fix USN vulnerabilities
-# Using --fix-missing to avoid failures when Ubuntu mirrors are mid-sync (systemd 404s)
+
+# System package security upgrades for the Ubuntu 22.04 (jammy) base image
+# (mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04). All listed CVEs
+# have patched versions available in jammy-updates:
+#   USN-8222-1: openssh-{client,server,sftp-server} 1:8.9p1-3ubuntu0.14 -> 0.15
+#   USN-8227-1: curl/libcurl4/libcurl3-gnutls       7.81.0-1ubuntu1.23 -> 1.24
+#   USN-8229-1: sed                                 4.8-1ubuntu2       -> 4.8-1ubuntu2.1
+#   USN-8233-1: libnghttp2-14                       1.43.0-1ubuntu0.2  -> 0.3
+# `apt-get -y upgrade` alone has been observed to leave the held openssh version in
+# place when an older base layer is cached (and `--fix-missing` can silently skip
+# packages on mirror flakes), so reinstall the openssh-* packages explicitly to
+# force pickup of the patched version (same pattern as the sibling
+# assets/training/automl/environments/ai-ml-automl/context/Dockerfile).
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get install --reinstall -y openssh-client openssh-server openssh-sftp-server && \
     apt-get install -y --no-install-recommends \
         cmake \
         libboost-dev \
@@ -26,7 +38,7 @@ RUN apt-get update && \
         libboost-filesystem-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 pip=26.0 conda-forge::tzdata -y
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH python=3.10 'conda-forge::pip>=26.1,<27' conda-forge::tzdata -y
 
 ###############################
 # Pre-Build LightGBM
@@ -38,8 +50,23 @@ RUN pip install --upgrade lightgbm==4.6.0
 ###############################
 RUN pip install --upgrade --force-reinstall xgboost==1.5.2 pandas==1.5.3
 
-# try updating pip for base env using conda
-RUN conda install pip -n base -y
+# Security: upgrade pip to fix CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Three pip
+# install paths exist on disk and each must be remediated:
+#   1. /opt/miniconda/lib/python3.10/site-packages/pip-* (base miniconda from
+#      the parent image at version 26.0.1)
+#   2. /opt/miniconda/pkgs/pip-* (conda package cache; cleared via conda clean)
+#   3. $AZUREML_CONDA_ENVIRONMENT_PATH/lib/python3.10/site-packages/pip-*
+#      (already pinned to >=26.1 above via `conda create`)
+# pip is its own parent (no upstream package can pull in a fixed pip), so explicit
+# upgrades are the only available remediation. We use `conda install -n base ...`
+# (rather than direct `pip install --upgrade`) so conda metadata stays consistent
+# and any future `conda install -n base ...` operations don't reintroduce the old
+# pip. `conda clean -a -y` then drops the now-unused 26.0.1 entry from
+# /opt/miniconda/pkgs and we additionally rm any leftover pip-26.0.1* directories
+# defensively because the SBOM scanner inspects that path.
+RUN conda install -n base 'conda-forge::pip>=26.1,<27' -y && \
+    conda clean -a -y && \
+    rm -rf /opt/miniconda/pkgs/pip-26.0* /opt/miniconda/pkgs/pip-26.0.1*
 
 # begin conda create
 # Install cudatoolkit via conda (not available on pip; single-package solve is trivial)
@@ -56,7 +83,7 @@ RUN pip install --no-cache-dir \
     'wheel>=0.46.2' \
     'scipy==1.10.1' \
     'psutil>5.0.0,<6.0.0' \
-    'pip>=26.0'
+    'pip>=26.1,<27'
 # end conda create
 
 # begin pip install
@@ -100,14 +127,25 @@ RUN pip install \
 #
 # mlflow-skinny>=2.16.0 — CVE-2024-37059 (unsafe deserialization, CVSS 8.8),
 #                          CVE-2025-11201 (directory traversal RCE, CVSS 9.8)
-#   Chain L1: azureml-mlflow -> mlflow-skinny<=3.5.0
+#   Chain L1: azureml-mlflow==1.62.0.post2 (latest) -> mlflow-skinny<=3.9.0
 #   Chain L2: azureml-train-automl-runtime -> azureml-mlflow -> mlflow-skinny
+#   Override required: even the latest azureml-mlflow does not auto-pull a
+#   patched mlflow-skinny.
 #
 # bokeh>=3.8.2 — GHSA-793v-589g-574v (WebSocket origin validation bypass, CVSS 5.4)
 #   conda env installs 2.4.3, pip can't auto-upgrade
 #   Chain L1: azureml-train-automl-runtime -> bokeh<3.0.0
 #   Chain L2: azureml-train-automl-runtime -> dask[complete] -> bokeh (via [diagnostics] extra)
+#
+# onnx>=1.21.0 — GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
+#                GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
+#   Parent packages cap onnx<=1.17.0; upgrading the parent is not possible because
+#   both azureml-automl-runtime==1.62.0 and azureml-train-automl-runtime==1.62.0
+#   (the latest releases) still enforce onnx<=1.17.0,>=1.16.1.
+#   Override is required to remediate the vulnerability.
+#   Chain: azureml-automl-runtime / azureml-train-automl-runtime -> onnx<=1.17.0
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'mlflow-skinny>=2.16.0' \
-    'bokeh>=3.8.2'  # bokeh: conda env installs 2.4.3, override needed for GHSA-793v-589g-574v
+    'bokeh>=3.8.2' \
+    'onnx>=1.21.0'
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
