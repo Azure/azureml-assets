@@ -6,6 +6,26 @@ RUN apt-get -y update && apt-get -y upgrade
 
 RUN apt-get -y install unzip
 
+# pip 26.0.1 in both the base (py3.13) and ptca (py3.10) conda envs is
+# vulnerable to GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357 (fixed in pip>=26.1).
+# pip is a build/install tool installed by conda from the upstream base image
+# (mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280, biweekly
+# tag) — there is no parent Python package that brings it in, so an upstream
+# parent upgrade is not possible. The base ACPT image has not yet refreshed to
+# pip 26.1+ as of 2026-05-12, so we override here. We use `conda install`
+# (rather than `pip install --upgrade`) so that conda-meta JSON and
+# /opt/conda/pkgs cache are also updated, and we additionally remove stray
+# pip-26.0*.dist-info / conda-meta entries from prior pip self-upgrades that
+# conda does not track — otherwise the SBOM scanner re-flags them. Done before
+# the requirements install so requirements are installed with the patched pip.
+RUN conda install -y -n base -c conda-forge pip==26.1.1 && \
+    conda install -y -n ptca -c conda-forge pip==26.1.1 && \
+    rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json && \
+    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0*.dist-info && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
+    conda clean -ay
+
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir

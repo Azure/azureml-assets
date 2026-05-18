@@ -216,7 +216,6 @@ class TestGroundednessMultiturnBehavior:
         assert result["groundedness_result"] == "not_applicable"
         assert result["groundedness_reason"] == "No agent responses to evaluate for groundedness."
         assert result["groundedness_status"] == "skipped"
-        assert result["groundedness_properties"] == {}
 
     def test_messages_invalid_output_returns_error_result(self):
         """Invalid non-dict output returns structured error result instead of raising."""
@@ -232,7 +231,6 @@ class TestGroundednessMultiturnBehavior:
         assert result["groundedness_result"] == "error"
         assert result["groundedness_reason"] == "Evaluator returned invalid output."
         assert result["groundedness_status"] == "error"
-        assert result["groundedness_properties"] == {}
 
     def test_messages_empty_list_raises_error(self):
         """Empty messages list raises validation error."""

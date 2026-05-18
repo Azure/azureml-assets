@@ -3,37 +3,52 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root
 
-# Install unzip and upgrade OS packages to fix vulnerabilities
+# Install unzip and upgrade OS packages to fix vulnerabilities.
+# `apt-get -y upgrade` against the current ACPT base image (biweekly.202605.1) already pulls
+# dotnet-{host,hostfxr,runtime}-8.0 to 8.0.26-0ubuntu1~22.04.1 (USN-8176-1 fix), so no
+# explicit `apt-get install` overrides are required.
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# pip 26.0.1 in both the ptca conda env (Python 3.10) and the /opt/conda base env (Python 3.13)
+# has GHSA-jp4c-xjxw-mgf9 (fixed in pip>=26.1). pip is the bootstrap installer — no Python
+# package in requirements.txt or any of their transitive deps declares pip as a runtime dep
+# (verified against requires_dist of azureml-acft-*, mlflow, mlflow-skinny, transformers,
+# torch, etc.), so an upstream parent-package upgrade is not possible. The conda `defaults`
+# channel only has up to pip 26.0.1 (conda-forge has 26.1.1 but is not enabled in the base
+# image), so `conda install pip==26.1.1` fails — we use `pip install --upgrade` (from PyPI)
+# and then explicitly remove the stale conda-meta JSON for pip 26.0.1 so the SBOM scanner
+# does not re-flag it. Done before pip-installing requirements so all subsequent installs
+# use the patched pip.
+RUN pip install --no-cache-dir --upgrade 'pip==26.1.1' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
+    /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'pip==26.1.1' && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json
 
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# protobuf is a transitive dep of mlflow-skinny/onnx; parents use loose floors (>=3.12.0), cannot force 6.33.5
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
+# Override vulnerable transitive deps in the ptca env (Python 3.10) that pip won't auto-upgrade:
+# Mako: transitive dep (mlflow → alembic 1.18.4 → Mako); alembic 1.18.4 declares "Mako" with no
+#   version pin at all, so pip resolves to 1.3.10 which has GHSA-v92g-xgxw-vvmm. No parent
+#   release floors Mako >= 1.3.11, so explicit override is the only fix.
+# GitPython: transitive dep (mlflow → mlflow-skinny 3.11.1 requires gitpython<4,>=3.1.9); the
+#   loose floor lets pip resolve 3.1.46 which has GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
+#   mlflow-skinny has no release that pins gitpython>=3.1.47, so explicit override is required.
+# pytest: shipped by the ACPT base image (NOT pulled in by any package in requirements.txt nor
+#   any of their transitive deps; verified by inspecting requires_dist of mlflow, mlflow-skinny,
+#   transformers, azureml-acft-*, etc.). No parent package to bump — the base image pre-installs
+#   pytest 7.4.3 and the ACPT base hasn't been rebuilt with a fix yet, so explicit override
+#   to >=9.0.3 is required (GHSA-6w46-j5rx-g56g).
+# skops: transitive dep (mlflow → mlflow-skinny 3.11.1 requires skops<1 with no minimum), pip
+#   resolves to 0.11.0 which has CVE-2025-54412/54413/54886 (arbitrary code execution).
+#   mlflow-skinny has no release that bumps the floor, so explicit override is required.
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3' 'skops>=0.13.0'
 
-# pip install updates the binary but conda-meta still references old versions; conda install syncs both
-RUN conda install -y -n ptca pip>=26.0.1 wheel>=0.46.2
-
-# Fix vulnerabilities from base image transitive deps
-# skops 0.11.0 → ≥0.13.0 (CVE-2025-54412, CVE-2025-54413, CVE-2025-54886 — arbitrary code execution)
-#   Required-by: mlflow; all mlflow versions (up to 3.11.0rc0) specify skops<1 with no minimum,
-#   so no mlflow upgrade can fix this — explicit override is required.
-# wheel ≥0.46.2 via pip as fallback in case conda version lags (CVE-2026-24049)
-# cryptography (GHSA-m959-cc7f-wv43, GHSA-p423-j2cm-9vmq): azureml-mlflow pins <46.0.0; override to 46.0.6
-# aiohttp: transitive dep of azure-core; parents use loose floors (GHSA-mwh4-6h8g-pg8w etc.)
-# onnx: transitive dep of onnxruntime; parent uses onnx>=1.16.0; override needed (GHSA-p433-9wv8-28xj etc.)
-# requests: transitive dep of azure-core/mlflow; parents use loose floors (GHSA-gc5v-m9x4-r6x2)
-# pytest comes from the base ACPT image (not a transitive dep of any requirements.txt package);
-# no parent package to upgrade — explicit override required (GHSA-6w46-j5rx-g56g)
-# Mako: transitive dep of mlflow → alembic → Mako; alembic uses loose floor (no version pin),
-# so upgrading mlflow/alembic won't force >=1.3.11 — explicit override required (GHSA-v92g-xgxw-vvmm)
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'skops>=0.13.0' 'wheel>=0.46.2' \
-    cryptography==46.0.7 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0' 'pytest>=9.0.3' \
-    'Mako>=1.3.11'
-
-# Upgrade requests, urllib3, aiohttpin the system Python (3.13) for fixing vulnerability
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade pip==26.0 wheel==0.46.2 'setuptools>=82.0.1' cryptography==46.0.7 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'onnx>=1.21.0' 'requests>=2.33.0'
+# python-dotenv: pre-installed in the /opt/conda base env (Python 3.13) by the ACPT base image
+#   at version 1.2.1 which has GHSA-mf9w-mj56-hr94. Not pulled in by any package in
+#   requirements.txt nor their transitive deps, so the ptca env (Python 3.10) gets the
+#   already-patched 1.2.2 from the base image's own upgrades. The /opt/conda Python 3.13 env
+#   is unaffected by `pip install -r requirements.txt` (which targets ptca's pip), so an
+#   explicit upgrade against /opt/conda/bin/python3.13 is required to reach >= 1.2.2.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
