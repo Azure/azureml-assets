@@ -143,7 +143,7 @@ class TestTaskAdherenceEvaluatorBehavior(BaseToolsEvaluatorBehaviorTest, BaseToo
 
 
 def _create_mocked_evaluator():
-    """Create a TaskAdherenceEvaluator with both _flow and _multi_turn_flow mocked."""
+    """Create a TaskAdherenceEvaluator with _flow, _goal_flow, and _execution_flow mocked."""
     model_config = AzureOpenAIModelConfiguration(
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
@@ -151,7 +151,8 @@ def _create_mocked_evaluator():
     evaluator = TaskAdherenceEvaluator(model_config=model_config)
     mock_side_effect = get_flow_side_effect_for_evaluator("task_adherence")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
+    evaluator._goal_flow = MagicMock(side_effect=mock_side_effect)
+    evaluator._execution_flow = MagicMock(side_effect=mock_side_effect)
     return evaluator
 
 
@@ -241,28 +242,32 @@ class TestTaskAdherenceMultiturnBehavior:
         assert result["task_adherence"] in (0.0, 1.0)
 
     def test_messages_uses_multi_turn_flow(self):
-        """Messages input calls _multi_turn_flow and not _flow."""
+        """Messages input calls _goal_flow and _execution_flow, not _flow."""
         evaluator = _create_mocked_evaluator()
         evaluator(messages=VALID_MESSAGES)
 
-        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._goal_flow.assert_called_once()
+        evaluator._execution_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
     def test_query_response_uses_single_turn_flow(self):
-        """query/response input still calls _flow and not _multi_turn_flow."""
+        """query/response input still calls _flow and not the multi-turn flows."""
         evaluator = _create_mocked_evaluator()
         evaluator(query="Plan a trip.", response="Here's your itinerary.")
 
         evaluator._flow.assert_called_once()
-        evaluator._multi_turn_flow.assert_not_called()
+        evaluator._goal_flow.assert_not_called()
+        evaluator._execution_flow.assert_not_called()
 
     def test_messages_without_tool_definitions(self):
         """Messages path does not inject tool_definitions when absent."""
         evaluator = _create_mocked_evaluator()
         evaluator(messages=VALID_MESSAGES)
 
-        call_kwargs = evaluator._multi_turn_flow.call_args
-        assert "tool_definitions" not in call_kwargs.kwargs
+        goal_call_kwargs = evaluator._goal_flow.call_args
+        assert "tool_definitions" not in goal_call_kwargs.kwargs
+        execution_call_kwargs = evaluator._execution_flow.call_args
+        assert "tool_definitions" not in execution_call_kwargs.kwargs
 
     def test_messages_rejects_invalid_role(self):
         """Messages with invalid role raise validation error."""
@@ -324,6 +329,228 @@ class TestTaskAdherenceMultiturnBehavior:
         with pytest.raises(EvaluationException, match="must contain text content"):
             evaluator(messages=messages)
 
+    def test_messages_both_stages_called_with_same_kwargs(self):
+        """Both goal and execution flows receive the same prompty kwargs."""
+        evaluator = _create_mocked_evaluator()
+        evaluator(messages=VALID_MESSAGES, tool_definitions=VALID_TOOL_DEFINITIONS)
+
+        goal_kwargs = evaluator._goal_flow.call_args.kwargs
+        execution_kwargs = evaluator._execution_flow.call_args.kwargs
+        assert "messages" in goal_kwargs
+        assert "messages" in execution_kwargs
+        assert goal_kwargs["messages"] == execution_kwargs["messages"]
+        assert "tool_definitions" in goal_kwargs
+        assert "tool_definitions" in execution_kwargs
+
+    def test_messages_result_contains_stage_properties(self):
+        """Multi-turn result properties include both goal and execution stage sub-properties."""
+        evaluator = _create_mocked_evaluator()
+        result = evaluator(messages=VALID_MESSAGES)
+
+        properties = result.get("task_adherence_properties", {})
+        assert properties is not None
+        # Goal stage properties
+        assert "goal_pursuit" in properties
+        assert "goal_evidence" in properties
+        assert "goal_reasoning" in properties
+        assert "goal_score" in properties
+        # Execution stage properties
+        assert "instruction_compliance" in properties
+        assert "claim_veracity" in properties
+        assert "execution_evidence" in properties
+        assert "execution_reasoning" in properties
+        assert "execution_score" in properties
+        # Token aggregation
+        assert "prompt_tokens" in properties
+        assert "completion_tokens" in properties
+        assert "total_tokens" in properties
+        assert "finish_reason" in properties
+        assert isinstance(properties["finish_reason"], list)
+
+    def test_messages_result_has_correct_keys(self):
+        """Multi-turn result has all standard task_adherence output keys."""
+        evaluator = _create_mocked_evaluator()
+        result = evaluator(messages=VALID_MESSAGES)
+
+        assert "task_adherence" in result
+        assert "task_adherence_score" in result
+        assert "task_adherence_passed" in result
+        assert "task_adherence_result" in result
+        assert "task_adherence_reason" in result
+        assert "task_adherence_status" in result
+        assert "task_adherence_threshold" in result
+        assert "task_adherence_properties" in result
+        assert result["task_adherence_status"] == "completed"
+
+    def test_messages_both_pass_overall_pass(self):
+        """When both stages pass, overall result is pass."""
+        evaluator = _create_mocked_evaluator()
+        result = evaluator(messages=VALID_MESSAGES)
+
+        assert result["task_adherence"] == 1.0
+        assert result["task_adherence_passed"] is True
+        assert result["task_adherence_result"] == "pass"
+
+    def test_messages_goal_fail_overall_fail(self):
+        """When goal stage fails, overall result is fail even if execution passes."""
+        evaluator = _create_mocked_evaluator()
+
+        async def goal_fail_side_effect(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": 0,
+                    "reason": "Assistant abandoned user objective.",
+                    "status": "completed",
+                    "properties": {
+                        "goal_pursuit": "fail",
+                        "constraint_compliance": "pass",
+                        "evidence": "The assistant went off-topic.",
+                    },
+                }
+            }
+
+        evaluator._goal_flow = MagicMock(side_effect=goal_fail_side_effect)
+        result = evaluator(messages=VALID_MESSAGES)
+
+        assert result["task_adherence"] == 0.0
+        assert result["task_adherence_passed"] is False
+        assert result["task_adherence_result"] == "fail"
+        assert "abandoned" in result["task_adherence_reason"].lower()
+
+    def test_messages_execution_fail_overall_fail(self):
+        """When execution stage fails, overall result is fail even if goal passes."""
+        evaluator = _create_mocked_evaluator()
+
+        async def execution_fail_side_effect(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": 0,
+                    "reason": "Assistant claimed action without tool evidence.",
+                    "status": "completed",
+                    "properties": {
+                        "rule_compliance": "pass",
+                        "procedural_correctness": "pass",
+                        "claim_veracity": "fail",
+                        "evidence": "No matching tool call found.",
+                    },
+                }
+            }
+
+        evaluator._execution_flow = MagicMock(side_effect=execution_fail_side_effect)
+        result = evaluator(messages=VALID_MESSAGES)
+
+        assert result["task_adherence"] == 0.0
+        assert result["task_adherence_passed"] is False
+        assert result["task_adherence_result"] == "fail"
+
+    def test_messages_both_fail_combined_reason(self):
+        """When both stages fail, reason includes information from both."""
+        evaluator = _create_mocked_evaluator()
+
+        async def goal_fail(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": 0,
+                    "reason": "Goal was not pursued.",
+                    "status": "completed",
+                    "properties": {"goal_pursuit": "fail", "constraint_compliance": "fail", "evidence": ""},
+                }
+            }
+
+        async def execution_fail(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": 0,
+                    "reason": "Procedure was violated.",
+                    "status": "completed",
+                    "properties": {
+                        "rule_compliance": "fail",
+                        "procedural_correctness": "fail",
+                        "claim_veracity": "fail",
+                        "evidence": "",
+                    },
+                }
+            }
+
+        evaluator._goal_flow = MagicMock(side_effect=goal_fail)
+        evaluator._execution_flow = MagicMock(side_effect=execution_fail)
+        result = evaluator(messages=VALID_MESSAGES)
+
+        assert result["task_adherence"] == 0.0
+        assert "Goal was not pursued" in result["task_adherence_reason"]
+        assert "Procedure was violated" in result["task_adherence_reason"]
+
+    def test_messages_skipped_status_returns_not_applicable(self):
+        """When goal stage returns skipped, result is not_applicable and execution is not called."""
+        evaluator = _create_mocked_evaluator()
+
+        async def skipped_side_effect(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": None,
+                    "reason": "No assistant responses to evaluate.",
+                    "status": "skipped",
+                    "properties": None,
+                }
+            }
+
+        evaluator._goal_flow = MagicMock(side_effect=skipped_side_effect)
+        result = evaluator(messages=VALID_MESSAGES)
+
+        assert result["task_adherence_result"] == "not_applicable"
+        assert result["task_adherence_status"] == "skipped"
+        evaluator._execution_flow.assert_not_called()
+
+    def test_messages_token_aggregation(self):
+        """Token counts from both stages are summed in properties."""
+        evaluator = _create_mocked_evaluator()
+
+        async def goal_with_tokens(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": 1,
+                    "reason": "Goal passed.",
+                    "status": "completed",
+                    "properties": {"goal_pursuit": "pass", "constraint_compliance": "pass", "evidence": ""},
+                },
+                "input_token_count": 100,
+                "output_token_count": 50,
+                "total_token_count": 150,
+                "finish_reason": "stop",
+                "model_id": "gpt-4o",
+            }
+
+        async def execution_with_tokens(timeout, **kwargs):
+            return {
+                "llm_output": {
+                    "score": 1,
+                    "reason": "Execution passed.",
+                    "status": "completed",
+                    "properties": {
+                        "rule_compliance": "pass",
+                        "procedural_correctness": "pass",
+                        "claim_veracity": "pass",
+                        "evidence": "",
+                    },
+                },
+                "input_token_count": 200,
+                "output_token_count": 75,
+                "total_token_count": 275,
+                "finish_reason": "stop",
+                "model_id": "gpt-4o",
+            }
+
+        evaluator._goal_flow = MagicMock(side_effect=goal_with_tokens)
+        evaluator._execution_flow = MagicMock(side_effect=execution_with_tokens)
+        result = evaluator(messages=VALID_MESSAGES)
+
+        properties = result["task_adherence_properties"]
+        assert properties["prompt_tokens"] == 300
+        assert properties["completion_tokens"] == 125
+        assert properties["total_tokens"] == 425
+        assert len(properties["finish_reason"]) == 2
+        assert properties["model"] == "gpt-4o"
+
 # endregion
 
 
@@ -341,7 +568,8 @@ def _create_mocked_evaluator_with_level(evaluation_level=None):
     )
     mock_side_effect = get_flow_side_effect_for_evaluator("task_adherence")
     evaluator._flow = MagicMock(side_effect=mock_side_effect)
-    evaluator._multi_turn_flow = MagicMock(side_effect=mock_side_effect)
+    evaluator._goal_flow = MagicMock(side_effect=mock_side_effect)
+    evaluator._execution_flow = MagicMock(side_effect=mock_side_effect)
     return evaluator
 
 
@@ -353,7 +581,8 @@ class TestTaskAdherenceEvaluationLevel:
         """Default (None) mode auto-detects multi-turn when messages provided."""
         evaluator = _create_mocked_evaluator_with_level(evaluation_level=None)
         evaluator(messages=VALID_MESSAGES)
-        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._goal_flow.assert_called_once()
+        evaluator._execution_flow.assert_called_once()
         evaluator._flow.assert_not_called()
 
     def test_auto_detect_uses_single_turn_for_query_response(self):
@@ -361,7 +590,8 @@ class TestTaskAdherenceEvaluationLevel:
         evaluator = _create_mocked_evaluator_with_level(evaluation_level=None)
         evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
-        evaluator._multi_turn_flow.assert_not_called()
+        evaluator._goal_flow.assert_not_called()
+        evaluator._execution_flow.assert_not_called()
 
     def test_forced_conversation_with_messages(self):
         """Forced conversation level works with messages."""
@@ -369,7 +599,8 @@ class TestTaskAdherenceEvaluationLevel:
             evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(messages=VALID_MESSAGES)
-        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._goal_flow.assert_called_once()
+        evaluator._execution_flow.assert_called_once()
         evaluator._flow.assert_not_called()
         assert "task_adherence" in result
 
@@ -380,7 +611,8 @@ class TestTaskAdherenceEvaluationLevel:
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
-        evaluator._multi_turn_flow.assert_not_called()
+        evaluator._goal_flow.assert_not_called()
+        evaluator._execution_flow.assert_not_called()
         assert "task_adherence" in result
 
     def test_forced_conversation_with_query_response_message_lists_converts(self):
@@ -389,9 +621,10 @@ class TestTaskAdherenceEvaluationLevel:
             evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(query=VALID_MESSAGES[:3], response=VALID_MESSAGES[3:])
-        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._goal_flow.assert_called_once()
+        evaluator._execution_flow.assert_called_once()
         evaluator._flow.assert_not_called()
-        call_kwargs = evaluator._multi_turn_flow.call_args
+        call_kwargs = evaluator._goal_flow.call_args
         merged_messages = call_kwargs.kwargs.get("messages", "")
         assert "Book a flight from NYC to London for next Friday." in merged_messages
         assert "Yes, book it." in merged_messages
@@ -405,7 +638,8 @@ class TestTaskAdherenceEvaluationLevel:
         )
         result = evaluator(messages=VALID_MESSAGES)
         evaluator._flow.assert_called_once()
-        evaluator._multi_turn_flow.assert_not_called()
+        evaluator._goal_flow.assert_not_called()
+        evaluator._execution_flow.assert_not_called()
         call_kwargs = evaluator._flow.call_args
         query_text = call_kwargs.kwargs.get("query", "")
         response_text = call_kwargs.kwargs.get("response", "")
@@ -419,9 +653,10 @@ class TestTaskAdherenceEvaluationLevel:
             evaluation_level=EvaluationLevel.CONVERSATION
         )
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
-        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._goal_flow.assert_called_once()
+        evaluator._execution_flow.assert_called_once()
         evaluator._flow.assert_not_called()
-        call_kwargs = evaluator._multi_turn_flow.call_args
+        call_kwargs = evaluator._goal_flow.call_args
         conversation_text = call_kwargs.kwargs.get("messages", "")
         assert "Plan a trip." in conversation_text
         assert "Here's your itinerary." in conversation_text
@@ -453,7 +688,8 @@ class TestTaskAdherenceEvaluationLevel:
         """String 'conversation' is accepted as evaluation_level."""
         evaluator = _create_mocked_evaluator_with_level(evaluation_level="conversation")
         result = evaluator(messages=VALID_MESSAGES)
-        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._goal_flow.assert_called_once()
+        evaluator._execution_flow.assert_called_once()
         evaluator._flow.assert_not_called()
         assert "task_adherence" in result
 
@@ -462,14 +698,16 @@ class TestTaskAdherenceEvaluationLevel:
         evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
         result = evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
-        evaluator._multi_turn_flow.assert_not_called()
+        evaluator._goal_flow.assert_not_called()
+        evaluator._execution_flow.assert_not_called()
         assert "task_adherence" in result
 
     def test_empty_string_level_defaults_to_auto_detect_messages(self):
         """Empty string evaluation_level is treated as None (auto-detect) and uses multi-turn for messages."""
         evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
         result = evaluator(messages=VALID_MESSAGES)
-        evaluator._multi_turn_flow.assert_called_once()
+        evaluator._goal_flow.assert_called_once()
+        evaluator._execution_flow.assert_called_once()
         evaluator._flow.assert_not_called()
         assert "task_adherence" in result
 
@@ -478,7 +716,8 @@ class TestTaskAdherenceEvaluationLevel:
         evaluator = _create_mocked_evaluator_with_level(evaluation_level="")
         evaluator(query="Plan a trip.", response="Here's your itinerary.")
         evaluator._flow.assert_called_once()
-        evaluator._multi_turn_flow.assert_not_called()
+        evaluator._goal_flow.assert_not_called()
+        evaluator._execution_flow.assert_not_called()
 
     def test_invalid_string_level_raises(self):
         """Invalid string evaluation_level raises at init time."""
