@@ -1,7 +1,11 @@
 FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04:{{latest-image-tag}}
 
 USER root
-WORKDIR /root
+# Editable sources live under /opt so AML/Singularity jobs (uid 9000) can
+# read them. /root is mode 700 and would make `import slime`, the slime
+# train.py entrypoint, and the Megatron-LM editable install unreachable
+# from a non-root job user.
+WORKDIR /opt
 
 ARG SLIME_COMMIT=9b50665190d70cefcc9cc42e5994ad4de5f0cd88
 ARG PATCH_VERSION=latest
@@ -14,7 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_NO_CACHE_DIR=1
 ENV PYTHONUNBUFFERED=1
 ENV MAX_JOBS=1
-ENV PYTHONPATH=/root/Megatron-LM:${PYTHONPATH}
+ENV PYTHONPATH=/opt/Megatron-LM:${PYTHONPATH}
 
 RUN set -eux; \
     find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
@@ -47,8 +51,8 @@ RUN python -m pip install --no-cache-dir \
         flash-linear-attention==0.4.1 \
         tilelang -f https://tile-ai.github.io/whl/nightly/cu128/
 
-RUN git clone https://github.com/THUDM/slime.git /root/slime && \
-    cd /root/slime && \
+RUN git clone https://github.com/THUDM/slime.git /opt/slime && \
+    cd /opt/slime && \
     git checkout ${SLIME_COMMIT}
 
 RUN NVCC_APPEND_FLAGS="--threads 1" \
@@ -57,10 +61,10 @@ RUN NVCC_APPEND_FLAGS="--threads 1" \
         --config-settings "--build-option=--cpp_ext --cuda_ext --parallel 1" \
         git+https://github.com/NVIDIA/apex.git@10417aceddd7d5d05d7cbf7b0fc2daad1105f8b4
 
-RUN git clone https://github.com/NVIDIA/Megatron-LM.git --recursive /root/Megatron-LM && \
-    cd /root/Megatron-LM && \
+RUN git clone https://github.com/NVIDIA/Megatron-LM.git --recursive /opt/Megatron-LM && \
+    cd /opt/Megatron-LM && \
     git checkout ${MEGATRON_COMMIT} && \
-    git apply /root/slime/docker/patch/${PATCH_VERSION}/megatron.patch --3way && \
+    git apply /opt/slime/docker/patch/${PATCH_VERSION}/megatron.patch --3way && \
     if grep -R -n '^<<<<<<< ' .; then \
         echo "Megatron patch failed to apply cleanly." && \
         exit 1; \
@@ -99,12 +103,23 @@ RUN LOG4J_VERSION=${LOG4J_VERSION} \
     python /tmp/patch_ray_log4j.py && \
     rm /tmp/patch_ray_log4j.py
 
-RUN cd /root/slime && \
+RUN cd /opt/slime && \
     python -m pip install --no-cache-dir -e . --no-deps
 
-RUN cd /root/slime/slime/backends/megatron_utils/kernels/int4_qat && \
+RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
     python -m pip install --no-cache-dir . --no-build-isolation
+
+# AML/Singularity jobs run as uid 9000 (aiscuser). Explicitly grant
+# world read + traverse on the editable slime and Megatron-LM trees so
+# `import slime`, `python /opt/slime/train.py`, and the PYTHONPATH-based
+# Megatron-LM import all succeed without requiring `--user root`.
+RUN chmod -R a+rX /opt/slime /opt/Megatron-LM
 
 COPY smoke_test.py /tmp/smoke_test.py
 RUN python /tmp/smoke_test.py && \
-    rm /tmp/smoke_test.py
+    echo 'import importlib.util' > /tmp/slime_nonroot_check.py && \
+    echo 'import slime' >> /tmp/slime_nonroot_check.py && \
+    echo 'assert importlib.util.find_spec("slime") is not None' >> /tmp/slime_nonroot_check.py && \
+    chmod a+r /tmp/slime_nonroot_check.py && \
+    runuser -u nobody -- python /tmp/slime_nonroot_check.py && \
+    rm /tmp/smoke_test.py /tmp/slime_nonroot_check.py
