@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.2
 
 USER root
 # Pull in latest OS security updates on top of the base image

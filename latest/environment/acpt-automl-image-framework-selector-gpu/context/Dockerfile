@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.2
 
 # Apply latest Ubuntu 22.04 security patches. Fresh rebuild pulls patched
 # versions of curl/libcurl4/libcurl3-gnutls (USN-8227-1, 7.81.0-1ubuntu1.24),

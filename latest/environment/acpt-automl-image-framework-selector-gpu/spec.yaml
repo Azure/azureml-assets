@@ -4,7 +4,7 @@ description: Environment used by framework selector component for automl image
   workloads
 
 name: "acpt-automl-image-framework-selector-gpu"
-version: "74"
+version: "75"
 
 build:
   path: "context"
