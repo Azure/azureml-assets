@@ -3,10 +3,11 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu118-py310-torch271:{{latest
 # Upgrade pip in base conda env (CVE-2026-1703 requires pip>=26.0; base image ships pip 25.3)
 RUN conda install -n base -c conda-forge 'pip>=26.0' -y
 # Base image packages requiring security upgrades (base image biweekly.202601.1 not yet patched):
-# PyJWT 2.10.1 (CVE-2026-32597), aiohttp 3.12.14, urllib3 2.5.0, python-dotenv 1.1.0 (GHSA-mf9w-mj56-hr94),
-# cryptography 44.0.1, setuptools 80.9.0, wheel 0.45.1, requests 2.32.4
+# PyJWT 2.10.1 (CVE-2026-32597), aiohttp 3.12.14, urllib3 2.5.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j),
+# python-dotenv 1.1.0 (GHSA-mf9w-mj56-hr94), cryptography 44.0.1, setuptools 80.9.0,
+# wheel 0.45.1, requests 2.32.4.
 # No parent pip packages in the base env pull these at fixed versions; direct overrides required.
-RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'urllib3>=2.6.3' 'requests>=2.33.0' 'python-dotenv>=1.2.2'
+RUN conda run -n base python -m pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.7' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'aiohttp>=3.13.4' 'urllib3>=2.7.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2'
 
 # Upgrade pip in ptca conda env (CVE-2026-1703 requires pip>=26.0; base image ships pip 25.3)
 RUN conda install -c conda-forge 'pip>=26.0' -y && \

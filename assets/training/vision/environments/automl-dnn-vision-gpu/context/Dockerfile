@@ -53,21 +53,11 @@ RUN apt-get update && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 
-# Upgrade sudo to patch known vulnerability (version resolved by apt-get upgrade above)
-RUN apt-get update && \
-    apt-get install -y sudo && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    apt-get autoremove -y
-
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
-
-# try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y 
-RUN conda install pip -n ptca -y 
 
 # Create conda environment
 COPY conda_dependencies.yaml .
@@ -88,41 +78,32 @@ RUN pip install --upgrade 'urllib3>=2.6.3'
 # Security: fix onnx (multiple CVEs) — transitive dep of azureml-automl-runtime via onnxruntime; parent pinned, cannot upgrade
 RUN pip install --upgrade 'onnx>=1.21.0'
 
-# Security: fix base conda env (python 3.13) — aiohttp (CVE-2026-37899), wheel (CVE-2026-24049),
-# cryptography (CVE-2026-41727), PyJWT (CVE-2026-32597), urllib3, filelock, pillow, bokeh
-# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive dep chain: azureml-defaults
-#   -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0.
-#   pydantic-settings (all versions through 2.14.0) only requires >=0.21.0, no parent upgrade resolves this
+# Security: fix base conda env (python 3.13) — packages present in base image at vulnerable versions.
+# Base image (probed) contains: aiohttp 3.12.14, cryptography 44.0.1, pip 25.3, PyJWT 2.10.1,
+# python-dotenv 1.1.0, requests 2.32.4, setuptools 80.9.0, urllib3 2.5.0, wheel 0.45.1.
+# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive chain in inference layer:
+#   azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0;
+#   pydantic-settings (<=2.14.0) only requires >=0.21.0, no parent upgrade resolves this.
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.6.3' 'aiohttp>=3.13.4' 'wheel>=0.46.2' \
-    'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' 'pip>=26.0' \
-    'filelock>=3.20.3' 'pillow>=12.2.0' 'onnx>=1.21.0' \
-    'python-dotenv>=1.2.2' \
-    'bokeh>=3.8.2'
-# Security: fix ptca conda env — torch (CVE-2025-32434), protobuf (CVE-2026-40186),
-# wheel/setuptools, urllib3, filelock, pillow, PyJWT, bokeh overrides for conda env
+    'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' 'pip>=26.1' \
+    'python-dotenv>=1.2.2'
+# Security: fix ptca conda env (python 3.10) — packages present in base image at vulnerable versions.
+# Base image (probed) contains: aiohttp 3.13.3, filelock 3.20.0, onnx 1.20.1, pillow 12.1.0,
+# pip 25.3, protobuf 6.33.3, pytest 7.4.3, requests 2.32.5, setuptools 80.9.0, urllib3 2.6.3,
+# wheel 0.41.2, torch 2.7.1+cu118, torchvision 0.22.1+cu118.
+# urllib3 already at required 2.6.3 in base — no override needed.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade torch==2.8.0 torchvision==0.23.0 
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.6.3' 'filelock>=3.20.3' \
-    'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
-    'PyJWT>=2.12.0' 'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' \
-    'aiohttp>=3.13.4' 'cryptography>=46.0.7' 'pytest>=9.0.3' \
-    'python-dotenv>=1.2.2' 'bokeh>=3.8.2'
+RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'filelock>=3.20.3' \
+    'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' 'pip>=26.1' \
+    'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' \
+    'aiohttp>=3.13.4' 'pytest>=9.0.3'
 
-# Patch pillow vulnerability (GHSA-whj4-6x5x-4v2j) across all three conda environments
-RUN pip install --upgrade 'pillow>=12.2.0'
-RUN /opt/conda/bin/pip install --upgrade 'pillow>=12.2.0'
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pillow>=12.2.0'
-
-# Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu)
-# aiohttp (CVE-2026-37899), bokeh (GHSA-793v-589g-574v), distributed (CVE-2026-23528),
-# protobuf (CVE-2026-40186), cryptography, filelock, wheel, setuptools, PyJWT, urllib3, pillow
-# onnx: transitive dep of azureml-automl-runtime (via onnxruntime); parent uses template version, cannot upgrade parent
-# requests: transitive dep of azure SDK packages; parent uses template version, cannot upgrade parent
-# aiohttp: transitive dep of azure SDK; parent uses template version, cannot upgrade parent
-# pytest: dev dep in ptca base image; no parent to upgrade
-# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive dep chain: azureml-defaults
-#   -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0.
-#   pydantic-settings (all versions through 2.14.0) only requires >=0.21.0, no parent upgrade resolves this
-RUN pip install --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.0' 'cryptography>=46.0.7' \
+# Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu, python 3.10)
+# aiohttp, bokeh, distributed, protobuf, cryptography, filelock, wheel, setuptools, PyJWT,
+# urllib3, pillow, onnx, requests, python-dotenv — all transitive deps of azureml SDK packages
+# pinned with template versions (cannot upgrade parent during template rendering).
+# python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings (<=2.14.0) requires >=0.21.0 only.
+RUN pip install --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'pip>=26.1' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.6.3' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
     'bokeh>=3.8.2'

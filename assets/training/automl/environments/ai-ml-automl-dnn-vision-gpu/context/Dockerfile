@@ -115,9 +115,14 @@ RUN pip install --no-cache-dir --upgrade \
 #   wheel to be imported during the self-update check. ptca env ships pip 26.0.1
 #   from the ACPT base image; pip is its own parent (no upstream package can pull
 #   in a fixed pip via dependency resolution), so explicit override is required.
+# urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j): urllib3 2.6.3 ships in the
+#   ptca env (py3.10) via the ACPT base image as a transitive dep of requests/botocore.
+#   urllib3 is its own root for security purposes — requests pins urllib3>=1.21.1,<3 and
+#   botocore pins urllib3>=1.25.4,<2.5 (py<3.10) or <3 (py>=3.10), so no parent release
+#   forces urllib3>=2.7.0. Explicit override is the only fix path.
 RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
                 'pillow==12.2.0' 'filelock>=3.20.3' 'cryptography>=46.0.5' 'protobuf>=6.33.5' 'wheel>=0.46.2' \
-                'pytest>=9.0.3' 'pip>=26.1'
+                'pytest>=9.0.3' 'pip>=26.1' 'urllib3>=2.7.0'
 # setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
@@ -134,13 +139,19 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 #   wheel to be imported during the self-update check. Base conda env ships pip 26.0.1
 #   from the ACPT base image; pip is its own parent (no upstream package can pull in
 #   a fixed pip via dependency resolution), so explicit override is required.
+# urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j): urllib3 2.6.3 is shipped
+#   in the base conda env (py3.13) by the ACPT base image. urllib3 is a root security
+#   package — its parents (requests pins urllib3>=1.21.1,<3; botocore pins
+#   urllib3>=1.25.4,<3) do not bound it tightly enough to force 2.7.0, so no parent
+#   upgrade can pull in the fix. Explicit override required.
 RUN conda run -n base pip install --no-cache-dir --upgrade \
                 'cryptography>=46.0.5' \
                 'wheel>=0.46.2' \
                 'PyJWT>=2.12.0' \
                 'aiohttp>=3.13.4' \
                 'python-dotenv>=1.2.2' \
-                'pip>=26.1'
+                'pip>=26.1' \
+                'urllib3>=2.7.0'
 # PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
