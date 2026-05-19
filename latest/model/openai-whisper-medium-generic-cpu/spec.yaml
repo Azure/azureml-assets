@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-medium-generic-cpu
-version: 3
+version: 4
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-medium
-  directoryPath: v3
+  directoryPath: v4
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
   contextLength: 448
@@ -33,8 +33,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 1334385110
-    vRamFootprintBytes: 1334385110
+    fileSizeBytes: 982596829
+    vRamFootprintBytes: 982596829
 description: |-
   This model is an optimized version of Whisper Medium for local inference. Optimized models are published here in ONNX format to run on CPU devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
 

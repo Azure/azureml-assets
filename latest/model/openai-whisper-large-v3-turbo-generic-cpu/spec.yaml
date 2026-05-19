@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large-v3-turbo-generic-cpu
-version: 3
+version: 4
 path: ./
 tags:
   foundryLocal: ""
@@ -13,7 +13,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-large-v3-turbo
-  directoryPath: v3
+  directoryPath: v4
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
   contextLength: 448
@@ -33,8 +33,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 1678544910
-    vRamFootprintBytes: 1678544910
+    fileSizeBytes: 1346943518
+    vRamFootprintBytes: 1346943518
 description: |
   Whisper Large V3 Turbo is an advanced speech recognition model, optimized for high-performance CPU inference. It is suitable for automatic speech recognition (ASR) tasks in various domains, leveraging large-scale training data for robust multilingual transcription. This model is designed for scenarios requiring fast and accurate transcription on generic CPUs.
 
