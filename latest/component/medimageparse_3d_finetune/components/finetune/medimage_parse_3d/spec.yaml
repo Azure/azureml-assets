@@ -1,0 +1,70 @@
+$schema: 
+  https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: medimageparse_3d_finetune
+version: 0.0.1
+
+
+type: command
+
+is_deterministic: true
+
+display_name: MedImageParse3D Finetune
+description: Component to finetune the MedImageParse 3D (MIP-3D) model using 
+  volumetric medical image data (multi-view MIP slices).
+
+environment: 
+  azureml://registries/azureml/environments/acft-medimageparse-3d-finetune/versions/1
+
+code: ../../../src/medimage_parse_3d_finetune
+
+distribution:
+  type: pytorch
+
+# (Optional but recommended) clearer logs & fewer false timeouts
+environment_variables:
+  NCCL_DEBUG: INFO
+  TORCH_DISTRIBUTED_DEBUG: DETAIL
+  TORCH_DIST_INIT_TIMEOUT: "3600"
+  NCCL_SOCKET_IFNAME: eth0
+
+inputs:
+  pretrained_mlflow_model:
+    type: uri_folder
+    optional: false
+    description: Path to the MLflow model (or raw checkpoint folder) to be 
+      imported.
+    mode: ro_mount
+
+  data:
+    type: uri_folder
+    optional: false
+    description: Path to the training data folder (must contain train.json, 
+      train/, train_mask/).
+    mode: ro_mount
+
+  config:
+    type: uri_file
+    optional: false
+    description: Path to the parameters.yaml hydra override file.
+    mode: ro_mount
+
+outputs:
+  out:
+    type: uri_folder
+    description: Path to the output folder where results will be stored.
+    mode: rw_mount
+
+  mlflow_model_folder:
+    type: mlflow_model
+    description: Path to save the output model after fine-tuning.
+    mode: rw_mount
+
+
+command: >-
+  python medimageparse_3d_finetune.py
+  --pretrained_mlflow_model ${{inputs.pretrained_mlflow_model}}
+  --data ${{inputs.data}}
+  --config ${{inputs.config}}
+  --out ${{outputs.out}}
+  --mlflow_model_folder ${{outputs.mlflow_model_folder}}
