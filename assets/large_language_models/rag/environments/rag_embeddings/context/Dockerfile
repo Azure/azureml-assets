@@ -17,7 +17,9 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 # Patch vulnerable Python packages shipped in the base image's Miniconda (outside the AzureML conda env)
 RUN /opt/miniconda/bin/python -m pip install --no-cache-dir --upgrade \
     urllib3==2.6.3 \
-    setuptools==80.10.2
+    setuptools==80.10.2 \
+    cryptography==46.0.7 \
+    requests==2.33.0
 
 # Sentence Transformers CPU only install
 RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cpu && \
@@ -29,7 +31,8 @@ RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download
 RUN set -eux; \
     apt-get update; \
     # Update system packages to fix PAM vulnerability (USN-7580-1)
-    apt-get upgrade -y; \
+    # ACCEPT_EULA=Y required for msodbcsql17 package upgrade
+    ACCEPT_EULA=Y apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
     # utilities for keeping Debian and OpenJDK CA certificates in sync
     ca-certificates p11-kit wget \

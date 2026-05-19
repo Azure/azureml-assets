@@ -22,8 +22,8 @@ dependencies:
   - azureml-telemetry=={{latest-pypi-version}}
     # More packages needed for RAG extras
   - beautifulsoup4~=4.11.2 # explicitly install for [data_generation] [document_parsing]
-  - langchain>=0.3.0,<0.4.0 # explicitly install for [langchain]
-  - langchain-community>=0.3.0,<0.4.0 # explicitly install for [langchain]
+  - langchain>=1.2.17 # explicitly install for [langchain] (upgraded from 0.3.x for CVE fix)
+  - langchain-community>=0.4.0 # explicitly install for [langchain] (matches langchain 1.x)
   - lxml # explicitly install for [data_generation]
   - faiss-cpu~=1.7.3 # explicitly install for [faiss]
   - markdown # explicitly install for [document_parsing]
