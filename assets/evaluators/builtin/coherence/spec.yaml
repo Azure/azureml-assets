@@ -1,6 +1,6 @@
 type: "evaluator"
 name: "builtin.coherence"
-version: 7
+version: 8
 displayName: "Coherence-Evaluator"
 description: "Evaluates how logically connected and consistent the response is. Ensures ideas flow naturally and make sense together. It’s best used for generative business writing such as summarizing meeting notes, creating marketing materials, and drafting emails."
 evaluatorType: "builtin"

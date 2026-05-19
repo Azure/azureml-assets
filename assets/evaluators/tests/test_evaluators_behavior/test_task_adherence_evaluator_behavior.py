@@ -294,8 +294,8 @@ class TestTaskAdherenceMultiturnBehavior:
             evaluator(messages=messages)
 
     def test_messages_rejects_conversation_ending_with_user(self):
-        """Messages ending with user raise validation error."""
-        evaluator = _create_mocked_evaluator()
+        """Messages ending with user raise validation error when evaluation_level is turn."""
+        evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
             {"role": "assistant", "content": [{"type": "text", "text": "Hi"}]},
