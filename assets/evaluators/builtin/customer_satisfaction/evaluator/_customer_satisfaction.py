@@ -164,12 +164,14 @@ class ConversationValidator(ValidatorInterface):
         self,
         error_target: ErrorTarget,
         requires_query: bool = True,
-        check_for_unsupported_tools: bool = False
+        check_for_unsupported_tools: bool = False,
+        evaluation_level: Optional[EvaluationLevel] = None,
     ):
-        """Initialize with error target and query requirement."""
+        """Initialize with error target, query requirement, and evaluation level."""
         self.requires_query = requires_query
         self.check_for_unsupported_tools = check_for_unsupported_tools
         self.error_target = error_target
+        self._evaluation_level = evaluation_level
 
     def _validate_field_exists(
         self, item: Dict[str, Any], field_name: str, context: str
@@ -622,7 +624,7 @@ class ConversationValidator(ValidatorInterface):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            if messages[-1]["role"] != MessageRole.ASSISTANT:
+            if self._evaluation_level == EvaluationLevel.TURN and messages[-1]["role"] != MessageRole.ASSISTANT:
                 raise EvaluationException(
                     message=(
                         f"The last message must have role 'assistant', "
@@ -950,7 +952,8 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Initialize input validator
         self._validator = ConversationValidator(
             error_target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
-            requires_query=True
+            requires_query=True,
+            evaluation_level=self._evaluation_level,
         )
 
         super().__init__(

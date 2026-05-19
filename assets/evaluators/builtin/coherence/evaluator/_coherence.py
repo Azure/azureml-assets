@@ -575,6 +575,21 @@ class MessagesOrQueryResponseInputValidator(ConversationValidator):
     Otherwise, it delegates to the parent ``ConversationValidator`` for the query/response path.
     """
 
+    def __init__(
+        self,
+        error_target: ErrorTarget,
+        requires_query: bool = True,
+        check_for_unsupported_tools: bool = False,
+        evaluation_level: Optional[EvaluationLevel] = None,
+    ):
+        """Initialize with error target, query requirement, and evaluation level."""
+        super().__init__(
+            error_target=error_target,
+            requires_query=requires_query,
+            check_for_unsupported_tools=check_for_unsupported_tools,
+        )
+        self._evaluation_level = evaluation_level
+
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input, supporting messages as an alternative to query/response."""
@@ -644,7 +659,7 @@ class MessagesOrQueryResponseInputValidator(ConversationValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            if messages[-1]["role"] != MessageRole.ASSISTANT:
+            if self._evaluation_level == EvaluationLevel.TURN and messages[-1]["role"] != MessageRole.ASSISTANT:
                 raise EvaluationException(
                     message=(
                         f"The last message must have role 'assistant', "
@@ -919,7 +934,10 @@ class CoherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         )
 
         # Initialize input validator (supports both query/response and messages)
-        self._validator = MessagesOrQueryResponseInputValidator(error_target=ErrorTarget.COHERENCE_EVALUATOR)
+        self._validator = MessagesOrQueryResponseInputValidator(
+            error_target=ErrorTarget.COHERENCE_EVALUATOR,
+            evaluation_level=self._evaluation_level,
+        )
 
         super().__init__(
             model_config=model_config,
