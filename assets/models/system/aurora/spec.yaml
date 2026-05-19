@@ -3,6 +3,10 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Aurora
 path: ./
 
+system_metadata:
+  domain:
+    - "Geospatial & Earth Science"
+    
 properties:
   languages: EN
   inference-min-sku-spec: 24|1|220|64
