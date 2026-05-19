@@ -10,6 +10,12 @@ properties:
   finetuning-tasks: chat-completion
   finetune-min-sku-spec: 96|4|880|256
   finetune-recommended-sku: Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
+system_metadata:
+  deploymentOptions:
+  - UnifiedEndpointMaaS
+  - MaaP
+  - ServerlessMaaS
+
 tags:
   InferenceLegacyDate: '2025-06-09'
   InferenceDeprecationDate: '2025-06-30'
@@ -140,7 +146,6 @@ tags:
   playgroundRateLimitTier: "low"
   Featured: ""
   maas-inference: "true"
-  deploymentOptions: "UnifiedEndpointMaaS, MaaP, ServerlessMaaS"
   license: MIT
   disable-batch: "true"
   task: chat-completion
