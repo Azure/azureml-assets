@@ -44,13 +44,16 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 # no parent that pulls vllm — it is a direct top-level install here, and the only available
 # remediation path is a direct version override.
 #
-# RESIDUAL FINDING: GHSA-hpv8-x276-m59f / VCM 5012004 (multimodal token-injection DoS in vLLM's
-# OpenAI-compatible API server) is fixed only in vllm>=0.20.0. We are NOT upgrading to 0.20.x
-# in this build because the cascade has three concrete blockers verified via PyPI metadata on
-# 2026-05-12:
-#   1. sglang stack: vllm 0.20.0 requires torch==2.11.0 (exact pin); the currently pinned
+# RESIDUAL FINDINGS (not remediated in this build):
+#   - GHSA-hpv8-x276-m59f / VCM 5012004 (multimodal token-injection DoS in vLLM's
+#     OpenAI-compatible API server) — fixed in vllm>=0.20.0.
+#   - GHSA-83vm-p52w-f9pw / VCM 5012192 — fixed in vllm>=0.20.0.
+# We are NOT upgrading to 0.20.x in this build because the cascade has three concrete
+# blockers verified via PyPI metadata on 2026-05-19:
+#   1. sglang stack: vllm 0.20.0 requires torch==2.11.0 (exact pin, verified via
+#      https://pypi.org/pypi/vllm/0.20.0/json `requires_dist`); the currently pinned
 #      sglang==0.5.10 requires torch==2.9.1 (also exact). The minimum sglang line that allows
-#      torch 2.11.0 is sglang==0.5.11 (which also bumps transformers==5.6.0 and pulls a new
+#      torch 2.11.0 is sglang==0.5.11 (also bumps transformers==5.6.0 and pulls a new
 #      sgl-kernel/torch-memory-saver matrix) — a multi-package transition.
 #   2. flash-attn ABI: the prebuilt wheel
 #      https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3-linux-1/
@@ -69,7 +72,8 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 # is limited. The override avoids a high-risk torch / sglang / flash-attn / DeepGEMM /
 # custom-vLLM-patch requalification in a single security bump. Re-evaluate in the next
 # refresh once the flash-attn wheel and the vllm_async_server/vllm_rollout patches are
-# updated for vllm 0.20.x (sister env acpt-grpo already runs vllm==0.20.1 successfully).
+# updated for vllm 0.20.x (sister env acpt-grpo already runs vllm==0.20.1 successfully,
+# but acpt-grpo does NOT pin sglang/flash-attn/torch and so does not hit this cascade).
 RUN pip install vllm==0.19.1
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
@@ -91,13 +95,23 @@ RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' '
 #   uvicorn (optional, requires >=0.13), and fastmcp (requires >=1.1.0). All parents use loose floors,
 #   so no parent upgrade can force >=1.2.2. Base image ships 1.2.1 in base conda env; we patch
 #   both base (python 3.13) and ptca (python 3.10) envs to cover all install paths.
-# pip>=26.1.1: GHSA-jp4c-xjxw-mgf9 / VCM 5011855 (CVE-2026-6357). Base image biweekly.202605.1
+# pip>=26.1.1: GHSA-jp4c-xjxw-mgf9 / VCM 5011855 (CVE-2026-6357). Base image biweekly.202605.x
 #   ships pip 26.0.1 in BOTH the ptca (py3.10) and base (py3.13) conda envs (per scan paths).
 #   pip is the Python package installer itself — it is bootstrapped by the conda/python
 #   distribution and has no parent package that pulls it in, so the only available remediation
 #   is a direct upgrade in each conda environment. Pattern matches sister env acpt-grpo.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1'
-RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1'
+#   NOTE: `pip install --upgrade pip` replaces the on-disk pip files but does NOT update
+#   conda's metadata DB at conda-meta/pip-*.json. SBOM scanners that read conda-meta still
+#   report the old pip version, so we explicitly delete the stale pip-26.0*.json files.
+# urllib3>=2.7.0 (base env, py3.13): GHSA-mf9v-mfxr-j63j / VCM 5012484 and
+#   GHSA-qccp-gfcp-xxvc / VCM 5012480. urllib3 is brought in transitively in the base env by
+#   requests/botocore/azureml-core/kubernetes/etc.; all of these only constrain urllib3<3
+#   (loose), so no parent upgrade forces >=2.7.0. Direct override is the only remediation
+#   (verified via PyPI requires_dist on 2026-05-19; matches sister env acpt-grpo).
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json
+RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
 # ray vendors its own copy of aiohttp inside thirdparty_files/ for runtime_env agent;
 # the vendored copy is not upgraded by pip install above. Patching all copies in-place.
 RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
