@@ -3,6 +3,10 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: MatterSim
 path: ./
 
+system_metadata:
+  domain:
+  - "Molecular & Materials"
+
 properties:
   inference-min-sku-spec: 6|1|112|64
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 

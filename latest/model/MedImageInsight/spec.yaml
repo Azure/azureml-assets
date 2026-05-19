@@ -3,6 +3,10 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: MedImageInsight
 path: ./
 
+system_metadata:
+  domain:
+  - "Biomedical Sciences"
+
 properties:
   inference-min-sku-spec: 4|1|28|64
   inference-recommended-sku: Standard_NC4as_T4_v3, Standard_NC8as_T4_v3, 

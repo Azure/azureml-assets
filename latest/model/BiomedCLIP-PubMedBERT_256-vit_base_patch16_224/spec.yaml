@@ -3,6 +3,10 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
 path: ./
 
+system_metadata:
+  domain:
+  - "Biomedical Sciences"
+
 properties:
   inference-min-sku-spec: 6|1|112|64
   inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, 

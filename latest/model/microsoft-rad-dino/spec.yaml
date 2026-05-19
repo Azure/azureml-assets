@@ -1,6 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: microsoft-rad-dino
 path: ./
+system_metadata:
+  domain:
+  - "Biomedical Sciences"
 properties:
   SharedComputeCapacityEnabled: "True"
   datasets: ''
