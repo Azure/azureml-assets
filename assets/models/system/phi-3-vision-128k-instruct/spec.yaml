@@ -6,6 +6,11 @@ properties:
   languages: en
   inference-min-sku-spec: 48|2|440|128
   inference-recommended-sku: Standard_NC48ads_A100_v4, Standard_NC96ads_A100_v4, Standard_ND96amsr_A100_v4
+system_metadata:
+  deploymentOptions:
+  - UnifiedEndpointMaaS
+  - MaaP
+
 tags:
   InferenceLegacyDate: '2025-06-09'
   InferenceDeprecationDate: '2025-06-30'
@@ -15,7 +20,6 @@ tags:
   Featured: ""
   license: MIT
   disable-batch: "true"
-  deploymentOptions: "UnifiedEndpointMaaS, MaaP"
   task: chat-completion
   hiddenlayerscanned: ""
   author: Microsoft
