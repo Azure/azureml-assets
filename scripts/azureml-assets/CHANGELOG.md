@@ -1,3 +1,7 @@
+## 1.17.4 (2026-05-19)
+### 🚀 New Features
+- [#5036](https://github.com/Azure/azureml-assets/pull/5057) Update Trivy and Oras versions
+
 ## 1.17.3 (2026-05-13)
 ### 🚀 New Features
 - [#5036](https://github.com/Azure/azureml-assets/pull/5036) Add isArchived to unsupported SDK fields list
