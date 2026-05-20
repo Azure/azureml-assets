@@ -6,10 +6,10 @@
 numpy==1.26.4
 pandas==2.2.2
 hydra-core==1.3.2
-marshmallow==3.23.2  # pinned for azure-ai-ml 1.16.1 _T import compat
+marshmallow==3.26.2
 
 # Azure ML SDK
-azure-ai-ml==1.16.1
+azure-ai-ml==1.26.5
 azure-identity==1.16.1
 azureml-mlflow==1.62.0.post2
 azureml-dataprep==5.4.1

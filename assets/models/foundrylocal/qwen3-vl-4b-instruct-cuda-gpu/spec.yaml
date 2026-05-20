@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-vl-4b-instruct-cuda-gpu
 version: 2
+isArchived: true
 path: ./
 tags:
   foundryLocal: ""

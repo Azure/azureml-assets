@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/tool_calling/Phi-4-mini-reasoning-generic-gpu/v3
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md

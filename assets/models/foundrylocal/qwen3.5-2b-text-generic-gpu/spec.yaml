@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3.5-2b-text-generic-gpu
-version: 1
+version: 2
+isArchived: true
 path: ./
 tags:
   foundryLocal: "test"
@@ -12,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen3.5-2b-text
-  directoryPath: v1
+  directoryPath: v2
   promptTemplate: "{\"system\": \"<|im_start|>system\\n{Content}<|im_end|>\", \"user\": \"<|im_start|>user\\n{Content}<|im_end|>\", \"assistant\": \"<|im_start|>assistant\\n{Content}<|im_end|>\", \"prompt\": \"<|im_start|>user\\n{Content}<|im_end|>\\n<|im_start|>assistant\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
@@ -37,5 +38,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'WebGPUExecutionProvider'
-    fileSizeBytes: 1417160957
-    vRamFootprintBytes: 1417160957
+    fileSizeBytes: 2164370322
+    vRamFootprintBytes: 2164370322
