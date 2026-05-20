@@ -13,4 +13,3 @@ pydicom~=2.4.0
 pandas==2.2.3
 mlflow==3.11.1
 setuptools==82.0.0
-filelock>=3.20.1

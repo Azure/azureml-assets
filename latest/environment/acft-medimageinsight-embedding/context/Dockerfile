@@ -3,12 +3,7 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 
 USER root
 
-# Install unzip and upgrade OS packages to fix vulnerabilities.
-# `apt-get -y upgrade` against the current ACPT base image (biweekly.202605.1) already pulls
-# openssh-client to 1:8.9p1-3ubuntu0.15 (USN-8222-1 fix) and keeps dotnet-{host,hostfxr,runtime}-8.0
-# at 8.0.26-0ubuntu1~22.04.1 (USN-8176-1 fix), so no explicit `apt-get install` overrides are
-# required. Verified via `apt-get install` returning "0 upgraded, 0 newly installed" for these
-# packages on top of the upgraded layer (build run ca42, 2026-05-08).
+# Install unzip and upgrade OS packages to pick up any pending security fixes from the base image.
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
@@ -24,6 +19,12 @@ RUN pip install --no-cache-dir mlflow==3.11.1
 RUN pip uninstall -y fastmcp mcp
 
 # Override vulnerable transitive deps in the ptca env (Python 3.10) that pip won't auto-upgrade:
+# pip: shipped by the base image conda env at 26.0.1 (GHSA-jp4c-xjxw-mgf9). pip is a top-level
+#   tool with no parent package; the base image hasn't been rebuilt with pip 26.1 yet, so we
+#   upgrade it explicitly in both the ptca env and the system Python 3.13 env below.
+# urllib3: transitive dep via requests/botocore/etc. (requests pins urllib3<3,>=1.21.1 with a
+#   loose floor); pip resolves to vulnerable 2.6.3 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j).
+#   No parent release floors urllib3>=2.7.0, so explicit override is required.
 # Mako: transitive dep (mlflow → alembic 1.18.4 → Mako); alembic 1.18.4 declares "Mako" with no
 #   version pin at all, so pip resolves to 1.3.10 which has GHSA-v92g-xgxw-vvmm. No parent
 #   release floors Mako >= 1.3.11, so explicit override is the only fix.
@@ -35,9 +36,12 @@ RUN pip uninstall -y fastmcp mcp
 #   azureml-mlflow, transformers, etc.). No parent package to bump — the base image pre-installs
 #   pytest 7.4.3 and the ACPT base hasn't been rebuilt with a fix yet, so explicit override
 #   to >=9.0.3 is required (GHSA-6w46-j5rx-g56g).
-RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3'
+RUN pip install --no-cache-dir --upgrade 'pip>=26.1' 'urllib3>=2.7.0' 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3'
 
-# Upgrade python-dotenv in the system Python(3.13)
+# Upgrade vulnerable packages in the system Python (3.13)
+# pip: base image ships 26.0.1 (GHSA-jp4c-xjxw-mgf9); pip is a top-level tool with no parent, override required.
+# urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3
+#   (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j). No parent release floors urllib3>=2.7.0, override required.
 # python-dotenv: transitive dep via pydantic-settings (>=0.21.0 floor); parent uses loose floor so base resolves to
-# vulnerable 1.2.1 (GHSA-mf9w-mj56-hr94); override to >=1.2.2
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+#   vulnerable 1.2.1 (GHSA-mf9w-mj56-hr94); override to >=1.2.2
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'pip>=26.1' 'urllib3>=2.7.0' 'python-dotenv>=1.2.2'

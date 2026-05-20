@@ -4,9 +4,6 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly
 USER root
 
 # Install unzip and upgrade OS packages to fix vulnerabilities.
-# `apt-get -y upgrade` against the current ACPT base image (biweekly.202605.1) already pulls
-# dotnet-{host,hostfxr,runtime}-8.0 to 8.0.26-0ubuntu1~22.04.1 (USN-8176-1 fix), so no
-# explicit `apt-get install` overrides are required.
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # pip 26.0.1 in both the ptca conda env (Python 3.10) and the /opt/conda base env (Python 3.13)
@@ -43,7 +40,11 @@ RUN pip install -r requirements.txt --no-cache-dir
 # skops: transitive dep (mlflow → mlflow-skinny 3.11.1 requires skops<1 with no minimum), pip
 #   resolves to 0.11.0 which has CVE-2025-54412/54413/54886 (arbitrary code execution).
 #   mlflow-skinny has no release that bumps the floor, so explicit override is required.
-RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3' 'skops>=0.13.0'
+# urllib3: transitive dep (requests>=2.33.0 → urllib3<3,>=1.26); latest requests 2.34.2 still
+#   declares `urllib3<3,>=1.26`, no parent package release floors urllib3>=2.7.0, so explicit
+#   override is the only fix for GHSA-qccp-gfcp-xxvc (CVE-2026-44431) and GHSA-mf9v-mfxr-j63j
+#   (CVE-2026-44432).
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3' 'skops>=0.13.0' 'urllib3>=2.7.0'
 
 # python-dotenv: pre-installed in the /opt/conda base env (Python 3.13) by the ACPT base image
 #   at version 1.2.1 which has GHSA-mf9w-mj56-hr94. Not pulled in by any package in
@@ -51,4 +52,7 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pyt
 #   already-patched 1.2.2 from the base image's own upgrades. The /opt/conda Python 3.13 env
 #   is unaffected by `pip install -r requirements.txt` (which targets ptca's pip), so an
 #   explicit upgrade against /opt/conda/bin/python3.13 is required to reach >= 1.2.2.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+# urllib3: same situation — /opt/conda Python 3.13 ships urllib3 2.6.3 from the base image and
+#   is not reached by ptca pip installs, so an explicit upgrade to >=2.7.0 is required to fix
+#   GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j in this env.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
