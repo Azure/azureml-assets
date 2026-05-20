@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/models/qwen3-embedding-0.6b/onnx/cuda/v1
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md

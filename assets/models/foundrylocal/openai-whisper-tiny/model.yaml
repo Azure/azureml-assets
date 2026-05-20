@@ -1,7 +1,7 @@
 path:
   container_name: whisper-models
   container_path: whisper-tiny/cpu-fp32
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md
