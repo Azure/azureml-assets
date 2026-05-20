@@ -1,7 +1,7 @@
 path:
   container_name: models
   container_path: foundrylocal/models/gpt-oss-20b/onnx/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/v1
-  storage_name: foundrylocalmodels
+  storage_name: foundrylocalassetdata
   type: azureblob
 publish:
   description: description.md

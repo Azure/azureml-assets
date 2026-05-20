@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: mistralai-Mistral-7B-Instruct-v0-2-generic-cpu
 version: 3
+isArchived: true
 path: ./
 tags:
   foundryLocal: ""

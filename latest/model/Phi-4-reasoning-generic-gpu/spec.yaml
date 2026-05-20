@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-4-reasoning-generic-gpu
 version: 1
+isArchived: true
 path: ./
 tags:
   foundryLocal: ""

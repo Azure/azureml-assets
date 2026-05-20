@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: deepseek-r1-distill-qwen-14b-qnn-npu
 version: 2
+isArchived: true
 path: ./
 tags:
   foundryLocal: ""
