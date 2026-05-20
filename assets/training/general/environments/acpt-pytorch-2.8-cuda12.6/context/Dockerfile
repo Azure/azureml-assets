@@ -37,7 +37,7 @@ RUN apt-get update && \
 # setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx (ptca ships 81.0.0).
 # pip>=26.1: GHSA-jp4c-xjxw-mgf9 (ptca ships 26.0.1). pip is a root tool with no
 #   parent package installed directly by conda; only a direct upgrade can fix this.
-RUN pip install --upgrade 'setuptools>=82.0.1' 'pip>=26.1'
+RUN pip install --upgrade --no-cache-dir 'setuptools>=82.0.1' 'pip>=26.1'
 
 # Fix security vulnerabilities in base conda env (python 3.13)
 # setuptools>=82.0.1: same CVEs as above (base ships 82.0.0).
@@ -49,6 +49,6 @@ RUN pip install --upgrade 'setuptools>=82.0.1' 'pip>=26.1'
 # urllib3>=2.7.0: GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc (base ships 2.6.3).
 #   Parent requests (latest 2.34.2) only requires urllib3<3,>=1.26 which does
 #   not pin a CVE-safe floor; no parent upgrade resolves this.
-RUN conda run -n base python -m pip install --upgrade 'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1' 'urllib3>=2.7.0'
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pip>=26.1' 'urllib3>=2.7.0'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
