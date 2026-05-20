@@ -8,7 +8,7 @@ This module provides shared resources to ensure consistency across quality test 
 """
 
 import json
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List
 
 
 # =============================================================================

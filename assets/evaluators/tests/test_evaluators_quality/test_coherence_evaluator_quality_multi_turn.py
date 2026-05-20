@@ -79,7 +79,9 @@ class TestCoherenceEvaluatorQualityMultiTurn(BaseQualityEvaluatorRunner):
                     "For a vegetarian dinner party, I'd suggest starting with a caprese salad, "
                     "followed by mushroom risotto as the main course, and tiramisu for dessert."
                 )},
-                {"role": "user", "content": "That sounds great. Can you give me a shopping list for the mushroom risotto?"},
+                {"role": "user", "content": (
+                    "That sounds great. Can you give me a shopping list for the mushroom risotto?"
+                )},
                 {"role": "assistant", "content": (
                     "The best programming language for web development is JavaScript. You should "
                     "learn React and Node.js to build modern applications. Python is also useful "
