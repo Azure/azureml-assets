@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.2
 
 USER root
 # linux-headers-* and linux-libc-dev ship multiple HIGH CVEs (CVE-2024-35870,
@@ -7,7 +7,8 @@ USER root
 # fixed version available upstream. These kernel build-time packages are
 # unnecessary at container runtime (the host provides the kernel), so the
 # only available remediation is to purge them.
-RUN apt-get -y update && apt-get -y upgrade && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y update && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
     apt-get -y purge 'linux-headers-*' 'linux-libc-dev' && \
     apt-get -y autoremove && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -18,8 +19,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Removing it from requirements.txt to avoid conflict with scikit-learn version
 RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 
-RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
-RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
+RUN pip install azureml-acft-common-components==0.0.89
+RUN pip install azureml-acft-accelerator==0.0.89
 
 # setuptools: >=82.0.1 patches jaraco.context (GHSA-58pv-8j8x-9vj2); base ships 82.0.0
 # nltk: >=3.9.4 required (GHSA-gfwx-w7gr-fvh7)
@@ -31,9 +32,11 @@ RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 # only available remediation is to upgrade pip directly in each conda environment.
 # pyOpenSSL: >=26.0.0 patches CVE-2026-27459 (transitive dep, force-bump needed).
 # urllib3: >=2.7.0 patches CVE-2026-44431, CVE-2026-44432 (transitive dep).
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
+RUN pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
 # base conda env: pip, setuptools and python-dotenv need upgrades above what base image ships
 # python-dotenv: transitive dep of mlflow-skinny (accepts >=0.19.0,<2); base ships 1.2.1 (GHSA-mf9w-mj56-hr94)
 # pip: see note above — standalone bootstrap tool with no parent package; must be upgraded directly
 # pyOpenSSL/urllib3: same CVEs as main env (CVE-2026-27459, CVE-2026-44431, CVE-2026-44432)
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json

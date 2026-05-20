@@ -36,6 +36,9 @@ RUN pip uninstall -y fastmcp mcp
 #   pytest 7.4.3 and the ACPT base hasn't been rebuilt with a fix yet, so explicit override
 #   to >=9.0.3 is required (GHSA-6w46-j5rx-g56g).
 RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3'
+# pyOpenSSL: fix CVE-2026-27459 by upgrading to >=26.0.0; keep cryptography <47 to stay
+# compatible with azureml-mlflow/mlflow while remaining on a fixed 46.x release line.
+RUN pip install --no-cache-dir --upgrade 'pyopenssl>=26.0.0' 'cryptography>=46,<47'
 
 # Upgrade python-dotenv in the system Python(3.13)
 # python-dotenv: transitive dep via pydantic-settings (>=0.21.0 floor); parent uses loose floor so base resolves to

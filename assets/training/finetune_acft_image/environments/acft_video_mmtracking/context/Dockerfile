@@ -8,6 +8,15 @@ RUN apt-get -y update && apt-get -y upgrade
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
+# pyOpenSSL 25.3.0 is introduced by azureml-core==1.61.0.post3 via its current
+# dependency cap `pyopenssl<26.0.0`; the image doesn't use pyOpenSSL APIs directly.
+# Override that leaf dependency in the ptca env until azureml-core widens the cap.
+# Keep cryptography on the 46.x line because azureml-mlflow currently constrains it to <47.
+RUN pip install --no-cache-dir --upgrade 'pyopenssl>=26.0.0' 'cryptography>=46,<47'
+
+# urllib3 2.6.3 remains in the upstream /opt/conda (py3.13) base env; requests/azure deps
+# already allow urllib3<3, so we can safely lift just that leaf package to the patched line.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0,<3'
 
 # [Temp Fix] To address PyTorch Distributed RPC Framework Remote Code Execution (RCE) Vulnerability - Working internally to get a compatbile image, will re-enable
 # RUN mim install mmtrack==0.14.0
@@ -19,8 +28,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 # Override transformers to fix GHSA-69w3-r845-3855 (CVE-2026-1839, arbitrary code execution in Trainer)
 # Root cause (verified 2026-05 via importlib.metadata against the built image):
 #   - requirements.txt line 8 directly pins `transformers==4.53.0` for compatibility with the
-#     pinned HF stack (accelerate==0.25.0, optimum==1.23.3, diffusers==0.24.0, peft==0.15.2).
-#   - azureml-acft-image-components==0.0.89 (current latest) only constrains transformers via
+#     pinned HF stack (accelerate==0.25.0, optimum==1.23.3, diffusers==0.38.0, peft==0.15.2).
+#   - azureml-acft-image-components==0.0.91 (current latest) only constrains transformers via
 #     optional extras (hf/all -> ==4.33.0; mip/mip3d -> >=4.40); none of those extras are
 #     activated in this image, so the parent does NOT block an upgrade.
 #   - Bumping the explicit requirements.txt pin to 5.x is a major-version jump that risks

@@ -20,6 +20,11 @@ RUN mim install mmdet==3.3.0
 RUN mim install mmcv==2.2.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.2/index.html --no-cache-dir
 RUN pip install --no-cache-dir --upgrade setuptools==82.0.0
 RUN sed -i 's/2.2.0/2.3.0/' /opt/conda/envs/ptca/lib/python3.10/site-packages/mmdet/__init__.py
+# huggingface-hub vendors hf-xet, whose native xet-core binary is where the remaining Rust crate findings
+# (bytes/quinn-proto/openssl/tar) were previously reported. Pinning the latest hub/xet pair keeps the bundled
+# binary on the newest available wheel line. diffusers also needs an explicit floor for GHSA-98h9-4798-4q5v,
+# while azureml-core still pulls pyOpenSSL 25.x, so we directly override the affected ptca packages here.
+RUN pip install --no-cache-dir --upgrade 'diffusers>=0.38.0' 'huggingface-hub>=1.8.0' 'hf-xet>=1.5.0' 'pyOpenSSL>=26.2.0' 'cryptography>=48.0.0'
 
 # onnx: azureml-acft-accelerator pins onnx<=1.17.0 but that range has known CVEs;
 #   onnx-weekly 1.22.0.dev20260504 includes main-branch security fixes (GHSA-3r9x-f23j-gc73,
@@ -31,10 +36,18 @@ RUN pip uninstall -y onnx && pip install --no-cache-dir 'onnx-weekly>=1.22.0.dev
 #   (not `pip install`) so both the dist-info METADATA and the conda-meta JSON are refreshed in one step,
 #   ensuring SBOM scanners pick up the new version. `--freeze-installed` keeps the rest of the env intact.
 RUN conda install -n ptca -y -c conda-forge --freeze-installed 'pip=26.1.1'
-# vulnerability in base conda env
+# vulnerability overrides in the base conda env
 # python-dotenv 1.2.1 (GHSA-mf9w-mj56-hr94): brought in by azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0;
 #   parent packages do not upper-bound python-dotenv so upgrading them won't force >=1.2.2; direct override required (checked 2026-05-12)
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+# urllib3 is also scanned directly from the base Python 3.13 site-packages metadata, so refresh that wheel in-place too.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.2.0' 'cryptography>=48.0.0' 'urllib3>=2.7.0'
 # pip 26.0.1 (GHSA-jp4c-xjxw-mgf9) also present in base env (Python 3.13); same direct-upgrade rationale as ptca env above.
 RUN conda install -n base -y -c conda-forge --freeze-installed 'pip=26.1.1'
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/
+# Remove py-rattler: it's conda's Rust solver, only used at install time;
+# its bundled native extension carries Rust crate CVEs we can't otherwise patch.
+RUN set -ex; \
+    conda run -n base python -m pip uninstall -y py-rattler 2>/dev/null || true; \
+    conda run -n base conda remove -y --force py-rattler 2>/dev/null || true; \
+    rm -rf /opt/conda/lib/python3.13/site-packages/rattler /opt/conda/lib/python3.13/site-packages/py_rattler* /opt/conda/lib/python3.13/site-packages/rattler-*.dist-info /opt/conda/lib/python3.13/site-packages/py_rattler-*.dist-info; \
+    conda config --system --set solver classic 2>/dev/null || true
