@@ -17,6 +17,7 @@ import torch
 LOG4J_ARTIFACTS = ("log4j-api", "log4j-core", "log4j-slf4j-impl")
 RAY_DIST_NAMES = ("ray_dist.jar", "ray__dist.jar")
 EXPECTED_SLIME_ROOT = pathlib.Path("/opt/slime")
+SLIME_TRAIN_SHIM = pathlib.Path("/usr/local/bin/slime-train")
 
 
 def find_ray_dist() -> pathlib.Path:
@@ -64,6 +65,24 @@ def assert_world_accessible(path: pathlib.Path) -> None:
         assert mode & 0o001, f"{path} not world-traversable (mode={oct(mode)})"
 
 
+def assert_slime_train_shim() -> None:
+    """Verify the PATH-resolvable `slime-train` shim is installed correctly.
+
+    AML/Singularity sets the job working directory to a per-job path that
+    does not contain slime's `train.py`, so consumers cannot invoke slime
+    via the bare `python train.py`. The shim provides a stable, cwd-agnostic
+    entrypoint.
+    """
+    assert SLIME_TRAIN_SHIM.is_file(), f"missing {SLIME_TRAIN_SHIM}"
+    mode = SLIME_TRAIN_SHIM.stat().st_mode & 0o777
+    assert mode & 0o004, f"{SLIME_TRAIN_SHIM} not world-readable (mode={oct(mode)})"
+    assert mode & 0o001, f"{SLIME_TRAIN_SHIM} not world-executable (mode={oct(mode)})"
+    content = SLIME_TRAIN_SHIM.read_text()
+    assert "/opt/slime/train.py" in content, (
+        f"{SLIME_TRAIN_SHIM} does not invoke /opt/slime/train.py:\n{content}"
+    )
+
+
 assert torch.cuda.is_available() or torch.version.cuda
 assert torch.__version__.startswith("2.9.1")
 assert Version(PIL.__version__) >= Version("12.2.0")
@@ -85,6 +104,8 @@ for path in (
 slime_init = EXPECTED_SLIME_ROOT / "slime" / "__init__.py"
 if slime_init.exists():
     assert_world_accessible(slime_init)
+
+assert_slime_train_shim()
 
 ray_dist = find_ray_dist()
 for artifact in LOG4J_ARTIFACTS:

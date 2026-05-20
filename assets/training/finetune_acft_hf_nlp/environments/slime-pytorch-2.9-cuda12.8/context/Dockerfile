@@ -115,6 +115,18 @@ RUN cd /opt/slime/slime/backends/megatron_utils/kernels/int4_qat && \
 # Megatron-LM import all succeed without requiring `--user root`.
 RUN chmod -R a+rX /opt/slime /opt/Megatron-LM
 
+# Install a PATH-resolvable `slime-train` shim. Slime's entrypoint is the
+# repo-root `train.py` script (not a Python module), so `python train.py`
+# must resolve against the cwd. AML/Singularity sets cwd to a per-job
+# working directory (e.g. /scratch/azureml/cr/j/{uuid}/exe/wd/) that does
+# not contain train.py, so consumers cannot invoke slime via the bare
+# script name. The shim lets callers run `slime-train <args>` from any
+# cwd and additionally cds to /opt/slime so any relative artefact paths
+# the slime entrypoint resolves at runtime stay anchored to the slime
+# source tree.
+RUN printf '#!/usr/bin/env bash\nset -euo pipefail\ncd /opt/slime\nexec python /opt/slime/train.py "$@"\n' > /usr/local/bin/slime-train && \
+    chmod 0755 /usr/local/bin/slime-train
+
 COPY smoke_test.py /tmp/smoke_test.py
 RUN python /tmp/smoke_test.py && \
     echo 'import importlib.util' > /tmp/slime_nonroot_check.py && \
