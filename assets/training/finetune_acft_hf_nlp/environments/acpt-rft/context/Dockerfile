@@ -48,8 +48,10 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 #   - GHSA-hpv8-x276-m59f / VCM 5012004 (multimodal token-injection DoS in vLLM's
 #     OpenAI-compatible API server) — fixed in vllm>=0.20.0.
 #   - GHSA-83vm-p52w-f9pw / VCM 5012192 — fixed in vllm>=0.20.0.
-# We are NOT upgrading to 0.20.x in this build because the cascade has three concrete
-# blockers verified via PyPI metadata on 2026-05-19:
+#   - CVE-2026-44222 (vLLM special-token placeholder DoS) — fixed in vllm>=0.20.0.
+#   - CVE-2026-44223 (vLLM extract_hidden_states speculative-decoding crash) — fixed in vllm>=0.20.0.
+# We are NOT upgrading to 0.20.x in this build because the cascade has four concrete
+# blockers verified via PyPI metadata and an ACR build attempt on 2026-05-20:
 #   1. sglang stack: vllm 0.20.0 requires torch==2.11.0 (exact pin, verified via
 #      https://pypi.org/pypi/vllm/0.20.0/json `requires_dist`); the currently pinned
 #      sglang==0.5.10 requires torch==2.9.1 (also exact). The minimum sglang line that allows
@@ -66,14 +68,19 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 #      `vllm.utils.argparse_utils`, `vllm.utils.network_utils`, `vllm.config.LoRAConfig`. These
 #      v1-engine internals frequently shift across vllm minor lines (0.19→0.20) and would
 #      require a full re-validation of the patches.
+#   4. verl 0.7.0 + transformers 5.6.0 incompatibility (empirically observed on ACR run ca96,
+#      2026-05-20): transformers 5.6.0 (pulled by sglang 0.5.11) removed `AutoModelForVision2Seq`,
+#      which verl 0.7.0/verl.utils.model imports at top level → ImportError on module load.
+#      Upgrading transformers therefore requires a verl bump as well, multiplying scope.
 # Risk acceptance: this image consumes vLLM internally for RFT training rollouts; it is
 # deployed in internal/trusted training workloads and does not expose a public OpenAI
 # endpoint for unauthenticated multimodal traffic, so the practical exposure of the DoS path
 # is limited. The override avoids a high-risk torch / sglang / flash-attn / DeepGEMM /
 # custom-vLLM-patch requalification in a single security bump. Re-evaluate in the next
-# refresh once the flash-attn wheel and the vllm_async_server/vllm_rollout patches are
-# updated for vllm 0.20.x (sister env acpt-grpo already runs vllm==0.20.1 successfully,
-# but acpt-grpo does NOT pin sglang/flash-attn/torch and so does not hit this cascade).
+# refresh once the flash-attn wheel, the vllm_async_server/vllm_rollout patches, and verl
+# are all updated for vllm 0.20.x + transformers 5.6 (sister env acpt-grpo already runs
+# vllm==0.20.1 successfully, but acpt-grpo does NOT pin sglang/flash-attn/torch/verl and so
+# does not hit this cascade).
 RUN pip install vllm==0.19.1
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
@@ -90,7 +97,12 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # transformers>=5.0.0rc3: GHSA-69w3-r845-3855 (CVE-2026-1839); direct dep, upgraded to patched 5.x
 # GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep of wandb (requires
 #   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
-RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47'
+# pyOpenSSL>=26.0.0: CVE-2026-27459 (HIGH, DTLS cookie callback buffer overflow) and
+#   CVE-2026-27448 (LOW, TLS connection bypass via unhandled callback exception). Base image
+#   ships pyOpenSSL 25.3.0; azureml-core 1.61.0.post3 pins pyopenssl<26.0.0 and no newer
+#   azureml-core release exists (verified 2026-05-20), so explicit override is required.
+#   Pattern matches sister env acpt-grpo.
+RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0'
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0),
 #   uvicorn (optional, requires >=0.13), and fastmcp (requires >=1.1.0). All parents use loose floors,
 #   so no parent upgrade can force >=1.2.2. Base image ships 1.2.1 in base conda env; we patch
