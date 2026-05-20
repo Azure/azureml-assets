@@ -293,17 +293,6 @@ class TestTaskAdherenceMultiturnBehavior:
         with pytest.raises(EvaluationException, match="assistant"):
             evaluator(messages=messages)
 
-    def test_messages_rejects_conversation_ending_with_user(self):
-        """Messages ending with user raise validation error when evaluation_level is turn."""
-        evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
-        messages = [
-            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "Hi"}]},
-            {"role": "user", "content": [{"type": "text", "text": "Thanks"}]},
-        ]
-        with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
-            evaluator(messages=messages)
-
     def test_messages_intermediate_response(self):
         """Messages ending with only tool calls are rejected."""
         evaluator = _create_mocked_evaluator()
@@ -440,7 +429,7 @@ class TestTaskAdherenceEvaluationLevel:
         evaluator = _create_mocked_evaluator_with_level(
             evaluation_level=EvaluationLevel.TURN
         )
-        with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
+        with pytest.raises(EvaluationException, match="Response list cannot be empty"):
             evaluator(
                 messages=[
                     {"role": "user", "content": [{"type": "text", "text": "Book a flight."}]},

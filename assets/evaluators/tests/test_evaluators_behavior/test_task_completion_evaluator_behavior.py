@@ -419,20 +419,9 @@ class TestTaskCompletionMultiturnBehavior:
         with pytest.raises(EvaluationException, match="assistant"):
             evaluator(messages=messages)
 
-    def test_messages_rejects_conversation_ending_with_user(self):
-        """Messages ending with a user message raise validation error when evaluation_level is turn."""
-        evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
-        messages = [
-            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
-            {"role": "user", "content": [{"type": "text", "text": "Thanks, bye"}]},
-        ]
-        with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
-            evaluator(messages=messages)
-
     def test_messages_rejects_conversation_ending_with_tool(self):
-        """Messages ending with a tool message raise validation error when evaluation_level is turn."""
-        evaluator = _create_mocked_evaluator_with_level(evaluation_level="turn")
+        """Messages ending with a tool message raise validation error."""
+        evaluator = _create_mocked_evaluator()
         messages = [
             {"role": "user", "content": [{"type": "text", "text": "What's the weather?"}]},
             {
@@ -452,7 +441,7 @@ class TestTaskCompletionMultiturnBehavior:
                 "content": [{"type": "tool_result", "tool_result": {"temp": "14C"}}],
             },
         ]
-        with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
+        with pytest.raises(EvaluationException, match="must contain text content"):
             evaluator(messages=messages)
 
     def test_messages_allows_consecutive_user_messages(self):
@@ -610,7 +599,7 @@ class TestTaskCompletionEvaluationLevel:
         evaluator = _create_mocked_evaluator_with_level(
             evaluation_level=EvaluationLevel.TURN
         )
-        with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
+        with pytest.raises(EvaluationException, match="Response list cannot be empty"):
             evaluator(
                 messages=[
                     {"role": "user", "content": [{"type": "text", "text": "Book a flight."}]},

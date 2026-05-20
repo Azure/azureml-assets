@@ -630,21 +630,6 @@ class ToolDefinitionsValidator(ConversationValidator):
 class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
     """Validator that supports both single-turn (query/response) and multi-turn (messages) inputs."""
 
-    def __init__(
-        self,
-        error_target: ErrorTarget,
-        requires_query: bool = True,
-        check_for_unsupported_tools: bool = False,
-        evaluation_level: Optional[EvaluationLevel] = None,
-    ):
-        """Initialize with error target, query requirement, and evaluation level."""
-        super().__init__(
-            error_target=error_target,
-            requires_query=requires_query,
-            check_for_unsupported_tools=check_for_unsupported_tools,
-        )
-        self._evaluation_level = evaluation_level
-
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input, supporting messages as an alternative to query/response."""
@@ -712,17 +697,6 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            if self._evaluation_level == EvaluationLevel.TURN and messages[-1]["role"] != MessageRole.ASSISTANT:
-                raise EvaluationException(
-                    message=(
-                        f"The last message must have role 'assistant', "
-                        f"but found role '{messages[-1]['role']}'."
-                    ),
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
-
             last_content = messages[-1].get("content", "")
             if isinstance(last_content, list):
                 has_text = any(
@@ -994,7 +968,6 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         self._validator = MessagesOrQueryResponseInputValidator(
             error_target=ErrorTarget.TASK_ADHERENCE_EVALUATOR,
-            evaluation_level=self._evaluation_level,
         )
 
         super().__init__(
@@ -1201,6 +1174,7 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages
                 kwargs["response"] = response_messages
+                kwargs.pop("messages", None)
 
         self._validator.validate_eval_input(kwargs)
 

@@ -164,14 +164,12 @@ class ConversationValidator(ValidatorInterface):
         self,
         error_target: ErrorTarget,
         requires_query: bool = True,
-        check_for_unsupported_tools: bool = False,
-        evaluation_level: Optional[EvaluationLevel] = None,
+        check_for_unsupported_tools: bool = False
     ):
-        """Initialize with error target, query requirement, and evaluation level."""
+        """Initialize with error target and query requirement."""
         self.requires_query = requires_query
         self.check_for_unsupported_tools = check_for_unsupported_tools
         self.error_target = error_target
-        self._evaluation_level = evaluation_level
 
     def _validate_field_exists(
         self, item: Dict[str, Any], field_name: str, context: str
@@ -624,16 +622,7 @@ class ConversationValidator(ValidatorInterface):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            if self._evaluation_level == EvaluationLevel.TURN and messages[-1]["role"] != MessageRole.ASSISTANT:
-                raise EvaluationException(
-                    message=(
-                        f"The last message must have role 'assistant', "
-                        f"but found role '{messages[-1]['role']}'."
-                    ),
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
+
             # The final assistant message must contain text
             last_content = messages[-1].get("content", "")
             if isinstance(last_content, list):
@@ -953,7 +942,6 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self._validator = ConversationValidator(
             error_target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
             requires_query=True,
-            evaluation_level=self._evaluation_level,
         )
 
         super().__init__(
@@ -1113,6 +1101,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages
                 kwargs["response"] = response_messages
+                kwargs.pop("messages", None)
 
         self._validator.validate_eval_input(kwargs)
 
