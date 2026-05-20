@@ -30,14 +30,20 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 # Mako: transitive dep (mlflow → alembic → Mako); alembic has no version constraint; override needed (GHSA-v92g-xgxw-vvmm)
 # python-dotenv: transitive dep (fastmcp → python-dotenv); fastmcp 3.2.4 uses >=1.1.0; override needed (GHSA-mf9w-mj56-hr94)
 # onnx: azureml-acft-accelerator 0.0.89 caps onnx<=1.17.0; override needed for GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m etc.
-# skops: transitive dep (mlflow → skops); pip resolves to 0.11.0 which has CVE-2025-54412/54413/54886
+# skops: transitive dep (mlflow → skops); mlflow 3.12.0 declares 'skops<1' (loose floor), so pip
+#        resolves to 0.11.0 which has CVE-2025-54412/54413/54886
 #        (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm); override to >=0.13.0
-RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0'
+# urllib3: transitive dep brought in by many parents (requests, botocore, kubernetes, etc.); the closest
+#          parent `requests` 2.34.2 declares `urllib3>=1.26,<3` (loose floor) so upgrading requests does
+#          not pull urllib3>=2.7.0; direct override required for GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
+RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
 
-# python-dotenv 1.2.1 in base conda env (python3.13) from ACPT base image needs upgrade (GHSA-mf9w-mj56-hr94)
-# parents in base env are anaconda-auth (no version pin) and pydantic-settings (>=0.21.0); both use loose floors
-# so upgrading parents does not pull in 1.2.2; direct override required until base image refreshes
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2'
+# Base conda env (python3.13) overrides from ACPT base image:
+# - python-dotenv 1.2.1: parents anaconda-auth (no pin) and pydantic-settings (>=0.21.0) use loose
+#   floors so upgrading them does not pull in 1.2.2; direct override (GHSA-mf9w-mj56-hr94).
+# - urllib3 2.6.3: parents requests (>=1.26,<3) and others use loose floors; direct override
+#   required for GHSA-mf9v-mfxr-j63j and GHSA-qccp-gfcp-xxvc until base image refreshes.
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
 
 # pip 26.0.1 in both base (python3.13) and ptca (python3.10) conda envs from ACPT base image needs upgrade
 # (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357; fixed in 26.1). pip is the package manager itself, bundled by conda;
