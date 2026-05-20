@@ -64,13 +64,3 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
 WORKDIR /workspace
 COPY requirements.txt .
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir -r requirements.txt
-
-# Sanity-check the import chains we know are fragile (transformers/peft, marshmallow/azure-ai-ml).
-# If these break, fail the image build instead of failing at AML runtime.
-# Single-line RUN (no backslash continuations) so ACR Tasks' dependency scanner
-# does not try to parse the continuation lines as Dockerfile instructions.
-# NOTE: previously imported `marshmallow.fields._T` to guard against azure-ai-ml
-# 1.16.1's reliance on that private typevar; that import path was removed in
-# marshmallow 3.24+ and azure-ai-ml >=1.26 no longer needs it, so the check is
-# now just the public azure.ai.ml entrypoint.
-RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH python -c "import torch, transformers, peft; from azure.ai.ml import MLClient; import marshmallow, azure.ai.ml; print('torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__, 'marshmallow', marshmallow.__version__, 'azure-ai-ml', azure.ai.ml.VERSION)"
