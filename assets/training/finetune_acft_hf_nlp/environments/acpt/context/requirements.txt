@@ -10,7 +10,7 @@ datasets==4.7.0
 evaluate==0.4.5
 optimum==1.27.0
 accelerate==1.7.0
-diffusers==0.38.0
+diffusers==0.33.1
 onnxruntime==1.22.0
 rouge-score==0.1.2
 sacrebleu==2.4.0

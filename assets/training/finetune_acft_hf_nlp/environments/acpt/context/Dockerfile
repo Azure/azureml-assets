@@ -34,16 +34,10 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 #        (GHSA-m7f4-hrc6-fwg3, GHSA-4v6w-xpmh-gfgp, GHSA-378x-6p4f-8jgm); override to >=0.13.0
 RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0'
 
-# base conda env ships older security-sensitive Python/Conda components.
-# Use conda here so conda metadata and the bundled native `rattler.abi3.so` stay in sync for scanners.
-# This refreshes urllib3 in python3.13 plus the conda/py-rattler stack that bundles the vulnerable Rust crates.
-RUN conda install -n base -c conda-forge -y 'conda>=26.5.0' 'conda-self>=0.2.0' 'conda-rattler-solver>=0.1.0' 'py-rattler>=0.23.0' 'urllib3>=2.7.0'
-
 # python-dotenv 1.2.1 in base conda env (python3.13) from ACPT base image needs upgrade (GHSA-mf9w-mj56-hr94)
 # parents in base env are anaconda-auth (no version pin) and pydantic-settings (>=0.21.0); both use loose floors
-# so upgrading parents does not pull in 1.2.2; direct override required until base image refreshes.
-# pyOpenSSL/cryptography may also already exist in the base env, so upgrade them there as well.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.0.0' 'cryptography>=48.0.0' 'urllib3>=2.7.0'
+# so upgrading parents does not pull in 1.2.2; direct override required until base image refreshes
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2'
 
 # pip 26.0.1 in both base (python3.13) and ptca (python3.10) conda envs from ACPT base image needs upgrade
 # (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357; fixed in 26.1). pip is the package manager itself, bundled by conda;
@@ -52,14 +46,6 @@ RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dot
 # the stale 26.0.1 version. Direct override is the only remediation until the ACPT base image ships pip>=26.1.
 RUN conda install -n base -c conda-forge -y 'pip>=26.1.1' && \
     conda install -n ptca -c conda-forge -y 'pip>=26.1.1'
-
-# Remove py-rattler: it's conda's Rust solver, only used at install time;
-# its bundled native extension carries Rust crate CVEs we can't otherwise patch.
-RUN set -ex; \
-    conda run -n base python -m pip uninstall -y py-rattler 2>/dev/null || true; \
-    conda run -n base conda remove -y --force py-rattler 2>/dev/null || true; \
-    rm -rf /opt/conda/lib/python3.13/site-packages/rattler /opt/conda/lib/python3.13/site-packages/py_rattler* /opt/conda/lib/python3.13/site-packages/rattler-*.dist-info /opt/conda/lib/python3.13/site-packages/py_rattler-*.dist-info; \
-    conda config --system --set solver classic 2>/dev/null || true
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

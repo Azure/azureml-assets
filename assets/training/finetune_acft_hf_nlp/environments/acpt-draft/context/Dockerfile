@@ -4,10 +4,9 @@ USER root
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-# GHSA-jx93-g359-86wm, GHSA-hvwj-8w5g-28rg: sglang vulnerabilities; patched in >=0.5.10.
-# specforge 0.1.0 pins sglang==0.5.5. Reinstall only the top-level wheel to avoid pulling
-# newer torch/flashinfer stacks that bloat the image and break compatibility in this env.
-RUN pip install --no-cache-dir --force-reinstall --no-deps "sglang==0.5.10"
+# GHSA-jx93-g359-86wm, GHSA-hvwj-8w5g-28rg: sglang vulnerabilities; patched in >=0.5.10
+# specforge 0.1.0 pins sglang==0.5.5; override needed after specforge install.
+RUN pip install --no-cache-dir --force-reinstall "sglang>=0.5.10"
 
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install numpy==2.2.5
@@ -24,12 +23,13 @@ RUN pip install xgrammar==0.1.32
 # GHSA-69w3-r845-3855 (CVE-2026-1839): arbitrary code execution in Trainer class;
 # patched only in transformers>=5.0.0rc3. Upgrading to latest stable 5.x.
 RUN pip install transformers==5.5.4
-# pyOpenSSL>=26.0.0 fixes the DTLS cookie callback overflow/bypass issues pulled in via
-# azureml-core; urllib3/cryptography floors keep the transitive SSL stack on patched builds.
-RUN pip install --no-cache-dir --upgrade 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' 'cryptography>=46.0.7'
-# Base conda env (python3.13) carries vulnerable python-dotenv/urllib3/pyOpenSSL/idna builds.
-# Parent packages use loose floors, so direct overrides are required until the base image refreshes.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' 'cryptography>=46.0.7' 'idna>=3.15'
+# python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep in the BASE conda env (python3.13)
+#   shipped by the ACPT base image at 1.2.1. Parent packages are pydantic-settings
+#   (2.14.0 still requires only python-dotenv>=0.21.0), uvicorn (0.46.0 standard extra
+#   requires python-dotenv>=0.13), and fastmcp (3.2.4 requires python-dotenv>=1.1.0) —
+#   all use loose floors and no released parent version forces >=1.2.2, so direct override
+#   in the base conda env is the only fix path.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py

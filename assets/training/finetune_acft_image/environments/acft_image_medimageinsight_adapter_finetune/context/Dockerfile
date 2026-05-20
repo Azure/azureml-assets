@@ -1,5 +1,5 @@
 # PTCA image
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 RUN apt-get -y update && apt-get -y upgrade
@@ -12,21 +12,18 @@ RUN apt-get -y install unzip
 # (mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280, biweekly
 # tag) — there is no parent Python package that brings it in, so an upstream
 # parent upgrade is not possible. The base ACPT image has not yet refreshed to
-# pip 26.1+ as of 2026-05-12, so we override here before installing requirements.
-#
-# We intentionally use `python -m pip install --upgrade` here instead of
-# `conda install -c conda-forge pip==...` because the conda-forge path pulls in
-# rattler/py-rattler into the base env, and the resulting rattler.abi3.so adds a
-# large Rust vulnerability surface (bytes/openssl/tar/rustls-webpki/etc.) that is
-# not needed for runtime. We still remove stale pip 26.0 dist-info, conda-meta,
-# and package-cache entries so the SBOM does not retain the vulnerable pip copy.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'pip==26.1.1' && \
-    /opt/conda/envs/ptca/bin/python -m pip install --no-cache-dir --upgrade 'pip==26.1.1' && \
+# pip 26.1+ as of 2026-05-12, so we override here. We use `conda install`
+# (rather than `pip install --upgrade`) so that conda-meta JSON and
+# /opt/conda/pkgs cache are also updated, and we additionally remove stray
+# pip-26.0*.dist-info / conda-meta entries from prior pip self-upgrades that
+# conda does not track — otherwise the SBOM scanner re-flags them. Done before
+# the requirements install so requirements are installed with the patched pip.
+RUN conda install -y -n base -c conda-forge pip==26.1.1 && \
+    conda install -y -n ptca -c conda-forge pip==26.1.1 && \
     rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json && \
     rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0*.dist-info && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
-    rm -rf /opt/conda/pkgs/pip-26.0* /opt/conda/pkgs/cache/* && \
     conda clean -ay
 
 # Install required packages from pypi
@@ -43,9 +40,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 #   Mako: mlflow -> alembic -> Mako; alembic 1.18.4 uses unpinned `Requires-Dist: Mako`
 #   python-dotenv: mlflow -> mlflow-skinny -> python-dotenv<2,>=0.19.0;
 #     mlflow 3.11.1 (latest as of 2026-05-08) keeps that wide range so pip may resolve <1.2.2 (GHSA-mf9w-mj56-hr94)
-#   pyOpenSSL: azureml-core -> pyOpenSSL; azureml-core leaves the version open and resolves
-#     to pyOpenSSL 25.3.0 without an override, which remains vulnerable to CVE-2026-27459 and
-#     CVE-2026-27448. pyOpenSSL 26.x also requires a modern cryptography floor, so we pin both.
 #
 # base conda env (py3.13):
 #   python-dotenv 1.2.1 is brought in by anaconda-auth 0.13.1 (`Requires-Dist: python-dotenv`,
@@ -53,9 +47,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 #   pre-installed in the base env from the upstream base image and neither parent ships a
 #   tighter pin in its latest release as of 2026-05-08, so we patch python-dotenv directly
 #   in the base env via /opt/conda/bin/pip.
-#   urllib3 2.6.3 is pre-installed in the base env and flagged by CoMET; patch it directly in
-#   the base env via /opt/conda/bin/pip.
-RUN pip install --no-cache-dir --upgrade 'pyasn1>=0.6.3' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.0.0' 'cryptography>=46' \
- && /opt/conda/bin/pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
+RUN pip install --no-cache-dir --upgrade 'pyasn1>=0.6.3' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' \
+ && /opt/conda/bin/pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

@@ -31,8 +31,6 @@ RUN conda install -y --solver=classic -n base -c conda-forge pip==26.1.1 && \
 # Install required packages
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-# pyOpenSSL 26.x remediates CVE-2026-27459/CVE-2026-27448; keep cryptography <47 for mlflow compatibility.
-RUN pip install --no-cache-dir --upgrade 'pyopenssl>=26.0.0,<27' 'cryptography>=46,<47'
 
 # Flag needed to enable control flow which is in PrP.
 ENV AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=True
