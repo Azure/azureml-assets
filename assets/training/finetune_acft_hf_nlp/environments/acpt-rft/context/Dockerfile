@@ -44,13 +44,28 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 # no parent that pulls vllm — it is a direct top-level install here, and the only available
 # remediation path is a direct version override.
 #
-# RESIDUAL FINDINGS (not remediated in this build):
-#   - GHSA-hpv8-x276-m59f / VCM 5012004 (multimodal token-injection DoS in vLLM's
-#     OpenAI-compatible API server) — fixed in vllm>=0.20.0.
-#   - GHSA-83vm-p52w-f9pw / VCM 5012192 — fixed in vllm>=0.20.0.
-#   - CVE-2026-44222 (vLLM special-token placeholder DoS) — fixed in vllm>=0.20.0.
-#   - CVE-2026-44223 (vLLM extract_hidden_states speculative-decoding crash) — fixed in vllm>=0.20.0.
-# We are NOT upgrading to 0.20.x in this build because the cascade has four concrete
+# SURGICAL FIX (CVE-2026-44223 / GHSA-83vm-p52w-f9pw / VCM 5012192):
+#   The upstream fix (vllm-project/vllm#38610) is a single-line change in
+#   vllm/v1/spec_decode/extract_hidden_states.py: `return sampled_token_ids` →
+#   `return sampled_token_ids[:, :1]`. We backport this as a file overlay on the
+#   installed vllm 0.19.1 (see `COPY extract_hidden_states ...` near the end of
+#   this Dockerfile + the build-time verification that asserts the overlay
+#   landed and vllm.__version__ remains 0.19.1). This pattern matches the
+#   existing overlays for vllm_async_server / vllm_rollout / utils.
+#
+# RESIDUAL FINDINGS (accepted risk, not remediated in this build):
+#   - GHSA-hpv8-x276-m59f / VCM 5012004 / CVE-2026-44222 (vLLM multimodal
+#     special-token placeholder DoS via OpenAI-compatible API server) — fixed
+#     in vllm>=0.20.0. The upstream fix (umbrella issue vllm-project/vllm#32656)
+#     is a broad multimodal refactor across per-model files (qwen2_vl,
+#     qwen2_5_vl, qwen2_5_omni_thinker, qwen3_vl, ernie45_vl, glm4v, keye…) that
+#     cannot be backported as a small overlay without significant code-shift
+#     risk. We accept this finding because the RFT image consumes vLLM only as
+#     an in-process rollout backend for trusted training workloads — it does
+#     not expose vLLM's OpenAI-compatible multimodal endpoint to unauthenticated
+#     callers, so the remote DoS vector is unreachable in this deployment.
+#   - GHSA-83vm-p52w-f9pw / VCM 5012192 — see SURGICAL FIX above (REMEDIATED).
+# We are NOT upgrading to vllm 0.20.x in this build because the cascade has four concrete
 # blockers verified via PyPI metadata and an ACR build attempt on 2026-05-20:
 #   1. sglang stack: vllm 0.20.0 requires torch==2.11.0 (exact pin, verified via
 #      https://pypi.org/pypi/vllm/0.20.0/json `requires_dist`); the currently pinned
@@ -94,7 +109,11 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 # fastmcp>=3.2.0: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767
 # Mako>=1.3.11: CVE-2025-46803; transitive dep of alembic, parent uses loose floor
 # lxml>=6.1.0: GHSA-vfmq-68hx-4jfw; transitive dep of multiple packages, parent uses loose floor
-# transformers>=5.0.0rc3: GHSA-69w3-r845-3855 (CVE-2026-1839); direct dep, upgraded to patched 5.x
+# transformers>=5.0.0rc3,<5.6.0: GHSA-69w3-r845-3855 (CVE-2026-1839); direct dep, upgraded to
+#   patched 5.x. UPPER BOUND <5.6.0: transformers 5.6.0 removed `AutoModelForVision2Seq`,
+#   which verl 0.7.0 (`verl.utils.model`) imports at module top-level → ImportError on load.
+#   Empirically observed on ACR run ca96 (2026-05-20) when sglang 0.5.11 pulled transformers
+#   5.6.0 transitively. Cap holds the verl-compatible line until a verl bump lands.
 # GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep of wandb (requires
 #   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
 # pyOpenSSL>=26.0.0: CVE-2026-27459 (HIGH, DTLS cookie callback buffer overflow) and
@@ -102,7 +121,7 @@ RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v
 #   ships pyOpenSSL 25.3.0; azureml-core 1.61.0.post3 pins pyopenssl<26.0.0 and no newer
 #   azureml-core release exists (verified 2026-05-20), so explicit override is required.
 #   Pattern matches sister env acpt-grpo.
-RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0'
+RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3,<5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0'
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0),
 #   uvicorn (optional, requires >=0.13), and fastmcp (requires >=1.1.0). All parents use loose floors,
 #   so no parent upgrade can force >=1.2.2. Base image ships 1.2.1 in base conda env; we patch
@@ -131,6 +150,17 @@ RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'th
       pip install --no-cache-dir --target "$dir" 'aiohttp>=3.13.4'; \
     done
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
+# CVE-2026-44223 surgical backport: overlay the patched extract_hidden_states.py
+# (verbatim copy of vllm v0.19.1 with the one-line PR #38610 fix applied).
+# Must come AFTER every step that could pip-touch vllm; the verification RUN
+# below fails the build fast if the overlay did not land or vllm version drifted.
+COPY extract_hidden_states /opt/conda/envs/ptca/lib/python3.10/site-packages/vllm/v1/spec_decode/extract_hidden_states.py
+RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/vllm -name '*.pyc' -delete && \
+    /opt/conda/envs/ptca/bin/python -c "import vllm; assert vllm.__version__ == '0.19.1', vllm.__version__; \
+import vllm.v1.spec_decode.extract_hidden_states as m, inspect; src = inspect.getsource(m); \
+assert 'sampled_token_ids[:, :1]' in src, 'CVE-2026-44223 overlay missing'; \
+assert 'CVE-2026-44223' in src, 'CVE-2026-44223 marker missing'; \
+print('vllm', vllm.__version__, 'CVE-2026-44223 overlay verified')"
 RUN rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 ENV PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1
