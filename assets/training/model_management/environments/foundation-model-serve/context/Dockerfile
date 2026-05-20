@@ -36,7 +36,7 @@ ENV CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
-RUN python3.12 -m pip install --upgrade pip==26.0
+RUN python3.12 -m pip install --upgrade pip==26.1
 
 WORKDIR /
 
