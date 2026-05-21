@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:latest
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:20260514.v1
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -13,7 +13,9 @@ RUN rm -rf /opt/nvidia/nsight-compute
 RUN apt-get update && \
     apt-get install -y --no-install-recommends cuda-compat-13-1 && \
     rm -rf /var/lib/apt/lists/*
-ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
+# Explicit list (no trailing ${LD_LIBRARY_PATH}) avoids an empty path element
+# that the dynamic loader would resolve to the CWD.
+ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
