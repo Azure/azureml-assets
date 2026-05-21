@@ -18,6 +18,8 @@ RUN apt-get update && \
 RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
     bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
     conda update --all -c conda-forge -y && \
+    /opt/miniconda/bin/pip uninstall -y py-rattler conda-rattler-solver && \
+    /opt/miniconda/bin/pip install --no-cache-dir "idna>=3.15" && \
     conda clean -ay && \
     rm -rf /opt/miniconda/pkgs && \
     rm /tmp/miniconda.sh && \
