@@ -11,6 +11,21 @@ RUN apt-get -y update && apt-get -y upgrade && \
     apt-get -y purge 'linux-headers-*' 'linux-libc-dev' && \
     apt-get -y autoremove && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# pip >=26.1.1 patches CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9 (base ships 26.0.1
+# in the ptca conda env). pip is the Python package installer itself and has
+# NO parent/transitive package that pulls it in (it is bootstrapped by the
+# conda distribution), so the only available remediation is to upgrade it
+# directly. We must use `conda install` (not `pip install --upgrade pip`)
+# because Qualys reads conda-meta JSON records; a pip self-upgrade leaves the
+# old conda-meta entry in place and the scanner continues to flag 26.0.1.
+# `--no-deps` is used so the conda solver does not refresh the root-env
+# `rattler` package (which embeds vulnerable Rust crates in the base image's
+# /opt/conda; touching it triggers CRITICAL Rust-side findings unrelated to
+# this fix).
+RUN conda install -n ptca -c conda-forge -y --no-deps "pip>=26.1.1" && \
+    conda clean -afy
+
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
@@ -21,19 +36,31 @@ RUN pip install azureml-metrics==0.0.33 pyarrow==14.0.1
 RUN pip install azureml-acft-common-components=={{latest-pypi-version}}
 RUN pip install azureml-acft-accelerator=={{latest-pypi-version}}
 
-# setuptools: >=82.0.1 patches jaraco.context (GHSA-58pv-8j8x-9vj2); base ships 82.0.0
-# nltk: >=3.9.4 required (GHSA-gfwx-w7gr-fvh7)
-# transformers: ensure >=5.0.0 after azureml-* installs (GHSA-69w3-r845-3855)
-# onnx: onnxruntime-training has loose onnx dep; pip resolves to 1.17.0 which has multiple CVEs
-# pip: >=26.1.1 patches CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9 (base ships 26.0.1).
-# pip is the Python package installer itself — it has NO parent/transitive package
-# that pulls it in (it is bootstrapped by the conda/python distribution), so the
-# only available remediation is to upgrade pip directly in each conda environment.
-# pyOpenSSL: >=26.0.0 patches CVE-2026-27459 (transitive dep, force-bump needed).
-# urllib3: >=2.7.0 patches CVE-2026-44431, CVE-2026-44432 (transitive dep).
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
-# base conda env: pip, setuptools and python-dotenv need upgrades above what base image ships
-# python-dotenv: transitive dep of mlflow-skinny (accepts >=0.19.0,<2); base ships 1.2.1 (GHSA-mf9w-mj56-hr94)
-# pip: see note above — standalone bootstrap tool with no parent package; must be upgraded directly
-# pyOpenSSL/urllib3: same CVEs as main env (CVE-2026-27459, CVE-2026-44431, CVE-2026-44432)
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1.1' 'setuptools>=82.0.1' 'python-dotenv>=1.2.2' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
+# Final-stage overrides applied AFTER azureml-acft-* installs because those
+# packages can pull vulnerable transitive versions back in.
+# setuptools: >=82.0.1 patches jaraco.context (GHSA-58pv-8j8x-9vj2); base
+#   ships 81.0.0 in ptca and 82.0.0 in base conda env.
+# nltk: >=3.9.4 patches GHSA-gfwx-w7gr-fvh7; pulled transitively by
+#   rouge-score / sacrebleu which still accept the vulnerable range, so no
+#   parent upgrade is available.
+# transformers: ensure >=5.0.0 patches GHSA-69w3-r845-3855; requirements.txt
+#   pins 5.0.0 but azureml-acft-common-components/accelerator may resolve an
+#   older release as a dependency, so the override is reapplied here.
+# onnx: >=1.21.0 - onnxruntime-training==1.18.0 (pinned in requirements.txt)
+#   has a loose onnx dep that pip otherwise resolves to vulnerable 1.17.0.
+# pyOpenSSL: >=26.0.0 patches CVE-2026-27459 - transitive dep of multiple
+#   azure-* SDKs; no fixed parent release pins it.
+# urllib3: >=2.7.0 patches CVE-2026-44431, CVE-2026-44432 - transitive of
+#   requests/azure-* SDKs; no fixed parent release pins it.
+RUN pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
+# base conda env: setuptools + transitive TLS deps + python-dotenv need the
+# same upgrades as ptca. python-dotenv >=1.2.2 patches GHSA-mf9w-mj56-hr94
+# (base conda env ships 1.2.1; mlflow-skinny accepts >=0.19.0,<2 so no parent
+# upgrade can address it). pip upgrade is intentionally NOT applied to the
+# base env because (a) the prescan flags only the ptca env's conda-meta pip
+# entry, and (b) running `conda install` against the base env triggers a
+# refresh of the root-installed `rattler` package whose embedded Rust crates
+# (openssl 0.10.75, aws-lc-sys 0.37.1, rustls-webpki 0.103.9, tar 0.4.44,
+# bytes 1.11.0, rand 0.8.5, astral-tokio-tar 0.6.0) introduce HIGH/CRITICAL
+# findings unrelated to this image's Python surface.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' 'python-dotenv>=1.2.2'
