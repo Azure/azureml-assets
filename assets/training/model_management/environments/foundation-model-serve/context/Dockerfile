@@ -23,13 +23,28 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends git && \
     rm -rf /var/lib/apt/lists/*
 
-# Use the base image's miniconda Python 3.12 directly — no need to create a separate env.
+# Create the AzureML-conventional conda environment so app deps stay isolated from the
+# base image's /opt/miniconda and downstream tooling can find /azureml-envs/default.
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/default
+RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
+    python=3.12 \
+    -c conda-forge -y && \
+    conda clean -ay && \
+    rm -rf /opt/miniconda/pkgs && \
+    find / -type d -name __pycache__ -prune -exec rm -rf {} +
+
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH \
+    CONDA_DEFAULT_ENV=$AZUREML_CONDA_ENVIRONMENT_PATH \
+    CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
+
 RUN python3.12 -m pip install --upgrade pip==26.1
 
 WORKDIR /
 
 COPY . .
-RUN pip install -e ./ --no-cache-dir && \
+# Use `python3.12 -m pip` (not bare `pip`) so the install always targets the
+# /azureml-envs/default interpreter even if PATH ordering changes later.
+RUN python3.12 -m pip install -e ./ --no-cache-dir && \
     rm -rf ~/.cache/pip
 
 # Install our api_server service under /etc/service (empty in the base image).
@@ -41,5 +56,9 @@ RUN sed -i 's/\r$//g' /etc/service/api_server/run && \
 
 ENV SVDIR=/etc/service \
     WORKER_TIMEOUT=3600
+
+# install runit as the CMD below depends on `runsvdir`).
+RUN command -v runsvdir >/dev/null || { echo 'runsvdir missing in base image'; exit 1; }
+
 EXPOSE 5001
 CMD ["runsvdir", "/etc/service"]
