@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get dist-upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip in base conda env (CVE-2026-1703 requires pip>=26.0; base image ships pip 25.3)
+# Upgrade base-env pip for CVE-2026-1703; the base image ships pip 25.3.
 RUN conda install -n base -c conda-forge 'pip>=26.0' -y
 # Base image packages requiring security upgrades (base image biweekly.202601.1 not yet patched):
 # PyJWT 2.10.1 (CVE-2026-32597), aiohttp 3.12.14, urllib3 2.5.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j),
