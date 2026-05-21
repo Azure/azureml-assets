@@ -6,6 +6,15 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive \
     PYTORCH_NVML_BASED_CUDA_CHECK=0
 
+# Remove vulnerable NVIDIA Nsight Compute components
+RUN rm -rf /opt/nvidia/nsight-compute
+
+# CUDA forward-compat: lets CUDA 13.1 userspace run on hosts with older (e.g. 535-series) NVIDIA drivers.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends cuda-compat-13-1 && \
+    rm -rf /var/lib/apt/lists/*
+ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
+
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
 
