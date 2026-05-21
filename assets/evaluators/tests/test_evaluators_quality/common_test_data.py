@@ -7,6 +7,7 @@ Common test data, tool definitions, and constants for quality tests.
 This module provides shared resources to ensure consistency across quality test files.
 """
 
+import json
 from typing import Dict, Any, List
 
 
@@ -445,3 +446,52 @@ def create_tool_result_message(tool_call_id: str, result: Any) -> Dict[str, Any]
         "tool_call_id": tool_call_id,
         "content": [{"type": "tool_result", "tool_result": result}],
     }
+
+
+def normalize_messages_for_evaluator(
+    messages: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Convert OpenAI-format messages to Azure AI Evaluation content-block format.
+
+    Handles two conversions:
+    1. Assistant messages with top-level ``tool_calls`` key → content blocks
+       with ``type: "tool_call"``.
+    2. Tool messages with plain-string ``content`` → content blocks
+       with ``type: "tool_result"``.
+
+    Messages that are already in the correct format or have no tool-related
+    fields are passed through unchanged.
+    """
+    normalized: List[Dict[str, Any]] = []
+    for msg in messages:
+        role = msg.get("role", "")
+
+        if role == "assistant" and "tool_calls" in msg:
+            content_blocks = []
+            for tc in msg["tool_calls"]:
+                func = tc.get("function", {})
+                args = func.get("arguments", "{}")
+                if isinstance(args, str):
+                    try:
+                        args = json.loads(args)
+                    except (json.JSONDecodeError, TypeError):
+                        args = {"_raw": args}
+                content_blocks.append({
+                    "type": "tool_call",
+                    "tool_call_id": tc.get("id", ""),
+                    "name": func.get("name", ""),
+                    "arguments": args,
+                })
+            normalized.append({"role": "assistant", "content": content_blocks})
+
+        elif role == "tool" and isinstance(msg.get("content"), str):
+            normalized.append({
+                "role": "tool",
+                "tool_call_id": msg.get("tool_call_id", ""),
+                "content": [{"type": "tool_result", "tool_result": msg["content"]}],
+            })
+
+        else:
+            normalized.append(msg)
+
+    return normalized
