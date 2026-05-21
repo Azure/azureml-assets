@@ -9,7 +9,6 @@ categories: ["quality", "agents"]
 tags:
   provider: "Microsoft"
   is_continuous_scenario: "true"
-  preview: "true"
 supportedEvaluationLevels: ["turn"]
 initParameterSchema:
   type: "object"
