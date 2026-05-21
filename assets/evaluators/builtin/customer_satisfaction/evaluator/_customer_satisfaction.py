@@ -634,7 +634,7 @@ class ConversationValidator(ValidatorInterface):
                 if not has_text:
                     raise EvaluationException(
                         message=(
-                            "The last assistant message must contain text content, "
+                            "The last message must contain text content, "
                             "not only tool calls. The conversation appears to be "
                             "mid-execution — provide the agent's final text response."
                         ),
