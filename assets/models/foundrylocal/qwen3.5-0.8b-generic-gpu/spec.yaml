@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3.5-0.8b-generic-gpu
 version: 2
+isArchived: true
 path: ./
 tags:
   foundryLocal: ""
@@ -9,7 +10,7 @@ tags:
   author: Microsoft
   inputModalities: "text,image"
   outputModalities: "text"
-  task: chat-completion
+  task: vision-language-chat
   maxOutputTokens: 2048
   alias: qwen3.5-0.8b
   directoryPath: v2

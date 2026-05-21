@@ -21,7 +21,31 @@ RUN pip install -r requirements.txt --no-cache-dir
 #   pip resolves to 3.1.46 which has GHSA-rpm5-65cw-6hj4, GHSA-x2qx-6953-8485; override to >=3.1.47
 # python-dotenv: transitive dep (mlflow → mlflow-skinny requires python-dotenv<2,>=0.19.0); loose floor,
 #   pip resolves to 1.2.1 which has GHSA-mf9w-mj56-hr94; override to >=1.2.2
-RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0' pyasn1==0.6.3 'fastmcp>=3.2.0' Mako==1.3.11 'GitPython>=3.1.47' 'python-dotenv>=1.2.2'
+# pillow: comes from the base ACPT image (not a hard runtime dep of any requirements.txt package;
+#   transformers/datasets/diffusers/optimum/huggingface-hub only require Pillow under extras_require
+#   like [vision]/[dev]/[testing]); base image ships 12.1.1 which has GHSA-whj4-6x5x-4v2j;
+#   no parent package to upgrade — explicit override required (>=12.2.0)
+# pytest: comes from the base ACPT image (not a hard runtime dep of any requirements.txt package;
+#   azureml-acft-accelerator only pins pytest~=5.3.0 under extras_require [test]); base image ships
+#   7.4.3 which has GHSA-6w46-j5rx-g56g; no parent package to upgrade — explicit override required (>=9.0.3)
+# urllib3: transitive dep of requests/botocore/etc.; parent packages use loose
+#   floors (requests>=2.33 allows urllib3<3,>=1.21.1) so pip won't pull a newer
+#   urllib3 on its own. Base image still ships 2.6.3 in the base conda env,
+#   vulnerable to GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j; override to >=2.7.0.
+RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0' pyasn1==0.6.3 'fastmcp>=3.2.0' 'Mako>=1.3.12' 'GitPython>=3.1.47' 'python-dotenv>=1.2.2' 'pillow>=12.2.0' 'pytest>=9.0.3' 'urllib3>=2.7.0'
 # python-dotenv in base conda env: transitive dep of uvicorn[standard] (>=0.13); loose floor,
 #   base image has 1.2.1 which has GHSA-mf9w-mj56-hr94; override to >=1.2.2
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+# urllib3 in base conda env: same root cause as above — base ships 2.6.3 via
+#   requests/botocore transitive chain; override to >=2.7.0 for
+#   GHSA-qccp-gfcp-xxvc and GHSA-mf9v-mfxr-j63j.
+# pip: package installer itself — there is no parent package that brings it in.
+#   Both conda envs (ptca python3.10, base python3.13) ship pip 26.0.1 from the base
+#   image, vulnerable to GHSA-jp4c-xjxw-mgf9. No parent upgrade is possible — pip is
+#   the package manager; direct override to >=26.1 in both envs is the only option.
+#   We also remove the stale conda-meta json files for the old pip, otherwise SBOM
+#   scanners (trivy) read them from /opt/conda*/conda-meta and continue to report
+#   pip 26.0.1 even though the dist-info shows 26.1.x.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'pip>=26.1' && \
+    rm -f /opt/conda/conda-meta/pip-26.0*.json && \
+    python -m pip install --no-cache-dir --upgrade 'pip>=26.1' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json

@@ -3,6 +3,8 @@
 
 """Quality tests for Deflection Rate Evaluator with real flow execution."""
 
+from typing import Any, Dict, List
+
 import pytest
 from ..common.base_quality_evaluator_runner import BaseQualityEvaluatorRunner, ExpectedResult
 from ...builtin.deflection_rate.evaluator._deflection_rate import DeflectionRateEvaluator
@@ -29,6 +31,59 @@ class TestDeflectionRateEvaluatorQuality(BaseQualityEvaluatorRunner):
     """
 
     evaluator_type = DeflectionRateEvaluator
+
+    @property
+    def expected_result_fields(self) -> List[str]:
+        """Return the field schema for DeflectionRate (no _score/_passed/_status/_properties)."""
+        return [
+            self._result_prefix,
+            f"{self._result_prefix}_result",
+            f"{self._result_prefix}_reason",
+            f"{self._result_prefix}_threshold",
+            f"{self._result_prefix}_deflection_type",
+        ]
+
+    # ==================== ASSERTION OVERRIDES ====================
+    # DeflectionRate has inverted score-vs-threshold semantics (lower = better)
+    # and does not emit `_passed` / `_status` fields, so we override the base
+    # assertions to match its schema.
+
+    def assert_pass(self, result_data: Dict[str, Any]) -> None:
+        """Pass = no deflection. For deflection_rate, score <= threshold means pass."""
+        threshold = self._get_threshold(result_data)
+        assert result_data["label"] == "pass", \
+            f"Expected 'pass' but got '{result_data['label']}'"
+        score = result_data["score"]
+        assert score is not None, "Score should not be None"
+        assert type(score) in [int, float], f"Score should be numeric but got type {type(score)}"
+        assert score <= threshold, \
+            f"Score {score} should be <= threshold {threshold} (deflection_rate: lower is better)"
+
+    def assert_fail(self, result_data: Dict[str, Any]) -> None:
+        """Fail = deflection occurred. For deflection_rate, score > threshold means fail."""
+        threshold = self._get_threshold(result_data)
+        assert result_data["label"] == "fail", \
+            f"Expected 'fail' but got '{result_data['label']}'"
+        score = result_data["score"]
+        assert score is not None, "Score should not be None"
+        assert type(score) in [int, float], f"Score should be numeric but got type {type(score)}"
+        assert score > threshold, \
+            f"Score {score} should be > threshold {threshold} (deflection_rate: higher means deflected)"
+
+    def assert_pass_or_fail(self, result_data: Dict[str, Any]) -> None:
+        """Either pass (score <= threshold) or fail (score > threshold) is acceptable."""
+        label = result_data["label"]
+        assert label in ("pass", "fail"), f"Expected 'pass' or 'fail' but got '{label}'"
+        threshold = self._get_threshold(result_data)
+        score = result_data["score"]
+        assert score is not None, "Score should not be None"
+        assert type(score) in [int, float], f"Score should be numeric but got type {type(score)}"
+        if label == "pass":
+            assert score <= threshold, \
+                f"Score {score} should be <= threshold {threshold} when label='pass'"
+        else:
+            assert score > threshold, \
+                f"Score {score} should be > threshold {threshold} when label='fail'"
 
     # ==================== PASS CASES (No Deflection - Score 0) ====================
 

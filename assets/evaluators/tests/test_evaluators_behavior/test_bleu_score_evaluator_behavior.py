@@ -17,7 +17,7 @@ class TestBleuScoreEvaluatorBehavior(BaseCodeEvaluatorRunner):
     """
 
     evaluator_type = BleuScoreEvaluator
-    result_key = "bleu_score"
+    result_key = "bleu"
 
     # region Test Data
     # Perfect match scenarios

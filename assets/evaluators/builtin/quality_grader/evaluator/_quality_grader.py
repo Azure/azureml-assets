@@ -718,16 +718,15 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         return super().__call__(*args, **kwargs)
 
-    def _not_applicable_result(
+    def _return_not_applicable_result(
         self, error_message: str,
     ) -> Dict[str, Union[str, float, Dict, None]]:
         """Return a result indicating that the evaluation is not applicable."""
-        score = 1.0
         return {
-            self._result_key: score,
-            f"{self._result_key}_score": score,
-            f"{self._result_key}_result": self._PASS_RESULT,
-            f"{self._result_key}_passed": True,
+            self._result_key: None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_result": "not_applicable",
+            f"{self._result_key}_passed": None,
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
             f"{self._result_key}_status": "skipped",
             f"{self._result_key}_threshold": self._threshold,
@@ -757,7 +756,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         # Handle intermediate responses
         if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
             )
 
@@ -788,7 +787,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # If stage 1 was skipped (conversationIncomplete = true), return not applicable
         if stage1_parsed.get("status") == "skipped":
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Conversation is incomplete or consists only of greetings/closings with no task to evaluate.",
             )
 
@@ -895,7 +894,7 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         if not prompty_output:
             return {}
-        llm_output = prompty_output.get("llm_output", "")
+        llm_output = prompty_output.get("llm_output", prompty_output)
         if not llm_output:
             return {}
         if isinstance(llm_output, dict):
@@ -985,6 +984,14 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 sample_inputs.append(raw.get("sample_input", ""))
                 sample_outputs.append(raw.get("sample_output", ""))
 
+        properties["prompt_tokens"] = prompt_tokens
+        properties["completion_tokens"] = completion_tokens
+        properties["total_tokens"] = total_tokens
+        properties["finish_reason"] = finish_reasons
+        properties["model"] = model_id
+        properties["sample_input"] = sample_inputs
+        properties["sample_output"] = sample_outputs
+
         return {
             self._result_key: score,
             f"{self._result_key}_score": score,
@@ -994,11 +1001,4 @@ class QualityGraderEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_status": "completed",
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_properties": properties,
-            f"{self._result_key}_prompt_tokens": prompt_tokens,
-            f"{self._result_key}_completion_tokens": completion_tokens,
-            f"{self._result_key}_total_tokens": total_tokens,
-            f"{self._result_key}_finish_reason": finish_reasons,
-            f"{self._result_key}_model": model_id,
-            f"{self._result_key}_sample_input": sample_inputs,
-            f"{self._result_key}_sample_output": sample_outputs,
         }

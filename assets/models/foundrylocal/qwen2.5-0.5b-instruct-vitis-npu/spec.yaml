@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-0.5b-instruct-vitis-npu
 version: 3
+isArchived: true
 path: ./
 tags:
   foundryLocal: ""

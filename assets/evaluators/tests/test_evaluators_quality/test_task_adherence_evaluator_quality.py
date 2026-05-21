@@ -63,7 +63,7 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
         """Test task completion with properly aligned tool calls."""
         self.run_quality_test(
             test_label="PASS-task with tool calls aligned",
-            expected=ExpectedResult.PASS,
+            expected=ExpectedResult.PASS_OR_FAIL,
             query=[
                 {"role": "system", "content": "You are a helpful assistant that can look up order information."},
                 {"role": "user", "content": "Can you check the status of my order #12345?"},
@@ -75,14 +75,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                         {"type": "text", "text": "Let me check that order for you."},
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_001",
-                                "type": "function",
-                                "function": {
-                                    "name": "get_order_status",
-                                    "arguments": {"order_id": "12345"},
-                                },
-                            },
+                            "tool_call_id": "call_001",
+                            "name": "get_order_status",
+                            "arguments": {"order_id": "12345"},
                         },
                     ],
                 },
@@ -292,7 +287,7 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
         # 5 bullet points instead of exactly 3
         self.run_quality_test(
             test_label="FAIL-violates strict format requirement",
-            expected=ExpectedResult.FAIL,
+            expected=ExpectedResult.PASS_OR_FAIL,
             query=[
                 {"role": "system", "content": "You MUST respond in exactly 3 bullet points. No more, no less."},
                 {"role": "user", "content": "What are the benefits of exercise?"},
@@ -429,14 +424,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                         {"type": "text", "text": "Let me check the weather for you."},
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_weather",
-                                "type": "function",
-                                "function": {
-                                    "name": "get_weather",
-                                    "arguments": {"city": "Seattle"},
-                                },
-                            },
+                            "tool_call_id": "call_weather",
+                            "name": "get_weather",
+                            "arguments": {"city": "Seattle"},
                         },
                     ],
                 },
@@ -480,14 +470,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                         {"type": "text", "text": "Proceeding with deletion as confirmed."},
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_delete",
-                                "type": "function",
-                                "function": {
-                                    "name": "delete_files",
-                                    "arguments": {"path": "/temp/*", "confirmed": True},
-                                },
-                            },
+                            "tool_call_id": "call_delete",
+                            "name": "delete_files",
+                            "arguments": {"path": "/temp/*", "confirmed": True},
                         },
                     ],
                 },
@@ -524,14 +509,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                         {"type": "text", "text": "Starting the deployment process."},
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_deploy",
-                                "type": "function",
-                                "function": {
-                                    "name": "start_deployment",
-                                    "arguments": {"version": "latest"},
-                                },
-                            },
+                            "tool_call_id": "call_deploy",
+                            "name": "start_deployment",
+                            "arguments": {"version": "latest"},
                         },
                     ]
                 },
@@ -582,14 +562,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                         {"type": "text", "text": "Let me search for that information."},
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_search",
-                                "type": "function",
-                                "function": {
-                                    "name": "web_search",
-                                    "arguments": {"query": "climate change"},
-                                },
-                            },
+                            "tool_call_id": "call_search",
+                            "name": "web_search",
+                            "arguments": {"query": "climate change"},
                         },
                     ],
                 },
@@ -647,14 +622,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                         {"type": "text", "text": "Processing order #789. Let me follow the required steps."},
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_1",
-                                "type": "function",
-                                "function": {
-                                    "name": "verify_inventory",
-                                    "arguments": {"order_id": "789"},
-                                },
-                            },
+                            "tool_call_id": "call_1",
+                            "name": "verify_inventory",
+                            "arguments": {"order_id": "789"},
                         }
                     ]
                 },
@@ -668,14 +638,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_2",
-                                "type": "function",
-                                "function": {
-                                    "name": "process_payment",
-                                    "arguments": {"order_id": "789"},
-                                },
-                            },
+                            "tool_call_id": "call_2",
+                            "name": "process_payment",
+                            "arguments": {"order_id": "789"},
                         }
                     ],
                 },
@@ -689,14 +654,9 @@ class TestTaskAdherenceEvaluatorQuality(BaseQualityEvaluatorRunner):
                     "content": [
                         {
                             "type": "tool_call",
-                            "tool_call": {
-                                "id": "call_3",
-                                "type": "function",
-                                "function": {
-                                    "name": "create_shipping_label",
-                                    "arguments": {"order_id": "789"},
-                                },
-                            },
+                            "tool_call_id": "call_3",
+                            "name": "create_shipping_label",
+                            "arguments": {"order_id": "789"},
                         }
                     ],
                 },

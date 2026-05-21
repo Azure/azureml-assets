@@ -268,7 +268,7 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
     INVALID_RESPONSE_AS_STRING: str = json.dumps(INVALID_RESPONSE)
     # endregion
 
-    # Intermediate/preprocessing test data
+    # region Intermediate/preprocessing test data
     FUNCTION_CALL_ONLY_RESPONSE: List[Dict[str, Any]] = [
         {
             "run_id": "",
@@ -396,6 +396,8 @@ class BaseEvaluatorBehaviorTest(BasePromptyEvaluatorRunner):
             ],
         },
     ]
+
+    # endregion
 
     def remove_parameter_from_input_content(self, input_data: List[Dict], parameter_name: str) -> List[Dict]:
         """Remove a parameter from the content field of all items in the input data."""

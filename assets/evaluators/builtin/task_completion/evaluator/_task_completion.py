@@ -18,6 +18,7 @@ from azure.ai.evaluation._common.utils import (
     _get_agent_response,
     _pretty_format_conversation_history,
 )
+from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 from azure.ai.evaluation._common._experimental import experimental
 
 from abc import ABC, abstractmethod
@@ -809,7 +810,11 @@ def serialize_messages(messages: List[dict]) -> str:
             normalized = {**msg, "content": [{"type": "text", "text": msg["content"]}]}
 
         if role in (MessageRole.SYSTEM, MessageRole.DEVELOPER):
-            system_message = msg.get("content", "")
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                system_message = "\n".join(_extract_text_from_content(content))
+            else:
+                system_message = content
 
         elif role == MessageRole.USER and "content" in msg:
             # A new user message after agent messages ends the current agent turn
@@ -1206,23 +1211,80 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         # Auto-detect (_evaluation_level is None)
         return eval_input.get("messages") is not None
 
-    def _not_applicable_result(
-        self, error_message: str, threshold: Union[int, float]
-    ) -> Dict[str, Union[str, float, Dict]]:
-        """Return a result indicating that the evaluation is not applicable."""
+    def _build_result(
+        self,
+        score: Optional[int],
+        result: str,
+        reason: str,
+        status: str,
+        properties: Dict,
+        prompty_output_dict: Optional[Dict] = None,
+    ) -> Dict[str, Union[str, int, float, Dict, None]]:
+        """Build a standardized result dictionary.
+
+        :param score: The evaluation score (1, 0, or None).
+        :param result: The result label ("pass", "fail", "skipped", or "error").
+        :param reason: The reasoning or explanation string.
+        :param status: The evaluation status ("completed", "skipped", or "error").
+        :param properties: The properties dictionary.
+        :param prompty_output_dict: Optional raw prompty output for extracting token metadata.
+        :return: The standardized result dictionary.
+        """
+        p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
+        metadata = {
+            "prompt_tokens": p.get("input_token_count", 0),
+            "completion_tokens": p.get("output_token_count", 0),
+            "total_tokens": p.get("total_token_count", 0),
+            "finish_reason": p.get("finish_reason", ""),
+            "model": p.get("model_id", ""),
+            "sample_input": p.get("sample_input", ""),
+            "sample_output": p.get("sample_output", ""),
+        }
         return {
-            self._result_key: threshold,
-            f"{self._result_key}_result": "pass",
-            f"{self._result_key}_threshold": threshold,
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_result": result,
+            f"{self._result_key}_passed": result == "pass" if result in ["pass", "fail"] else None,
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": status,
+            f"{self._result_key}_properties": {**properties, **metadata}
+        }
+
+    def _return_not_applicable_result(
+        self, error_message: str, threshold: Union[int, float]
+    ) -> Dict[str, Union[str, float, Dict, None]]:
+        """Return a result indicating that the tool call is not applicable for evaluation.
+
+        :param error_message: The error message indicating why the evaluation is not applicable.
+        :type error_message: str
+        :param threshold: The threshold value for the evaluation.
+        :type threshold: Union[int, float]
+        :return: A dictionary containing the result of the evaluation.
+        :rtype: Dict[str, Union[str, float, None]]
+        """
+        return {
+            f"{self._result_key}": None,
+            f"{self._result_key}_score": None,
+            f"{self._result_key}_passed": None,
+            f"{self._result_key}_result": "not_applicable",
             f"{self._result_key}_reason": f"Not applicable: {error_message}",
-            f"{self._result_key}_details": {},
-            f"{self._result_key}_prompt_tokens": 0,
-            f"{self._result_key}_completion_tokens": 0,
-            f"{self._result_key}_total_tokens": 0,
-            f"{self._result_key}_finish_reason": "",
-            f"{self._result_key}_model": "",
-            f"{self._result_key}_sample_input": "",
-            f"{self._result_key}_sample_output": "",
+            f"{self._result_key}_status": "skipped",
+            f"{self._result_key}_threshold": threshold,
+            f"{self._result_key}_properties": None,
+        }
+
+    @staticmethod
+    def _get_token_metadata(prompty_output: Dict) -> Dict:
+        """Extract token usage and model metadata from the prompty output dict."""
+        return {
+            "prompt_tokens": prompty_output.get("input_token_count", 0),
+            "completion_tokens": prompty_output.get("output_token_count", 0),
+            "total_tokens": prompty_output.get("total_token_count", 0),
+            "finish_reason": prompty_output.get("finish_reason", ""),
+            "model": prompty_output.get("model_id", ""),
+            "sample_input": prompty_output.get("sample_input", ""),
+            "sample_output": prompty_output.get("sample_output", ""),
         }
 
     @override
@@ -1250,7 +1312,75 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
         self._validator.validate_eval_input(kwargs)
 
-        return await super()._real_call(**kwargs)
+        return await self._the_super_real_call(**kwargs)
+
+    async def _the_super_real_call(self, **kwargs):
+        """Perform the asynchronous call where real end-to-end evaluation logic runs.
+
+        :keyword kwargs: The inputs to evaluate.
+        :type kwargs: Dict
+        :return: The evaluation result.
+        :rtype: Union[DoEvalResult[T_EvalValue], AggregateResult[T_EvalValue]]
+        """
+        # Convert inputs into list of evaluable inputs.
+        try:
+            eval_input_list = self._convert_kwargs_to_eval_input(**kwargs)
+        except Exception as e:
+            logger.error(f"Error converting kwargs to eval_input_list: {e}")
+            raise e
+        per_turn_results = []
+        # Evaluate all inputs.
+        for eval_input in eval_input_list:
+            result = await self._do_eval(eval_input)
+            # logic to determine threshold pass/fail
+            # if it wasn't computed in _do_eval
+            try:
+                keys = list(result.keys())
+                contains_result_key = any(key.endswith("_result") for key in keys)
+                contains_threshold_key = any(key.endswith("_threshold") for key in keys)
+                if not contains_result_key or not contains_threshold_key:
+                    for key in keys:
+                        if key.endswith("_score"):
+                            score_value = result[key]
+                            base_key = key[:-6]  # Remove "_score" suffix
+                            result_key = f"{base_key}_result"
+                            threshold_key = f"{base_key}_threshold"
+                            threshold_value = (
+                                self._threshold.get(base_key) if isinstance(self._threshold, dict) else self._threshold
+                            )
+                            if not isinstance(threshold_value, (int, float)):
+                                raise EvaluationException(
+                                    "Threshold value must be a number.",
+                                    internal_message=str(threshold_value),
+                                    target=ErrorTarget.EVALUATE,
+                                    category=ErrorCategory.INVALID_VALUE,
+                                )
+
+                            if not contains_threshold_key:
+                                result[threshold_key] = threshold_value
+
+                            if not contains_result_key:
+                                if self._higher_is_better:
+                                    if float(score_value) >= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+                                else:
+                                    if float(score_value) <= threshold_value:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[True]
+                                    else:
+                                        result[result_key] = EVALUATION_PASS_FAIL_MAPPING[False]
+            except Exception as e:
+                logger.warning(f"Error calculating binary result: {e}")
+            per_turn_results.append(result)
+        # Return results as-is if only one result was produced.
+
+        if len(per_turn_results) == 1:
+            return per_turn_results[0]
+        if len(per_turn_results) == 0:
+            return {}  # TODO raise something?
+        # Otherwise, aggregate results.
+        return self._aggregate_results(per_turn_results=per_turn_results)
 
     @override
     async def _do_eval(self, eval_input: Dict) -> Dict[str, Union[int, str]]:  # type: ignore[override]
@@ -1278,7 +1408,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
             )
         if _is_intermediate_response(eval_input.get("response")):
-            return self._not_applicable_result(
+            return self._return_not_applicable_result(
                 "Intermediate response. Please provide the agent's final response for evaluation.",
                 self._threshold,
             )
@@ -1322,6 +1452,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """Parse the prompty output into a standardized result dictionary.
 
         Shared between single-turn and multi-turn evaluation paths.
+        Expects the canonical schema: score (int), reason (str), status (str), properties (dict|null).
 
         :param prompty_output_dict: Raw output from the prompty flow.
         :type prompty_output_dict: Dict
@@ -1330,31 +1461,32 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         """
         llm_output = prompty_output_dict.get("llm_output", prompty_output_dict)
 
-        if isinstance(llm_output, dict):
-            success_value = llm_output.get("success", False)
-            if isinstance(success_value, str):
-                success = 1 if success_value.lower() == "true" else 0
-            else:
-                success = 1 if success_value else 0
-            success_result = "pass" if success == 1 else "fail"
-            reason = llm_output.get("explanation", "")
-            return {
-                self._result_key: success,
-                f"{self._result_key}_result": success_result,
-                f"{self._result_key}_threshold": self._threshold,
-                f"{self._result_key}_reason": reason,
-                f"{self._result_key}_details": llm_output.get("details", {}),
-                f"{self._result_key}_prompt_tokens": prompty_output_dict.get("input_token_count", 0),
-                f"{self._result_key}_completion_tokens": prompty_output_dict.get("output_token_count", 0),
-                f"{self._result_key}_total_tokens": prompty_output_dict.get("total_token_count", 0),
-                f"{self._result_key}_finish_reason": prompty_output_dict.get("finish_reason", ""),
-                f"{self._result_key}_model": prompty_output_dict.get("model_id", ""),
-                f"{self._result_key}_sample_input": prompty_output_dict.get("sample_input", ""),
-                f"{self._result_key}_sample_output": prompty_output_dict.get("sample_output", ""),
-            }
-        raise EvaluationException(
-            message="Evaluator returned invalid output.",
-            blame=ErrorBlame.SYSTEM_ERROR,
-            category=ErrorCategory.FAILED_EXECUTION,
-            target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
-        )
+        if not isinstance(llm_output, dict):
+            raise EvaluationException(
+                message="Evaluator returned invalid output.",
+                blame=ErrorBlame.SYSTEM_ERROR,
+                category=ErrorCategory.FAILED_EXECUTION,
+                target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
+            )
+
+        # Handle skipped status from LLM
+        llm_status = llm_output.get("status", "completed")
+        if llm_status == "skipped":
+            reason = llm_output.get("reason", "")
+            return self._return_not_applicable_result(reason, self._threshold)
+
+        score = float(llm_output.get("score", 0))
+        success_result = "pass" if score >= 1.0 else "fail"
+        reason = llm_output.get("reason", "")
+        llm_properties = llm_output.get("properties", {}) or {}
+        llm_properties.update(self._get_token_metadata(prompty_output_dict))
+        return {
+            self._result_key: score,
+            f"{self._result_key}_score": score,
+            f"{self._result_key}_passed": success_result == "pass",
+            f"{self._result_key}_result": success_result,
+            f"{self._result_key}_reason": reason,
+            f"{self._result_key}_status": "completed",
+            f"{self._result_key}_threshold": self._threshold,
+            f"{self._result_key}_properties": llm_properties,
+        }

@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-small-generic-cpu
-version: 2
+version: 4
+isArchived: true
 path: ./
 tags:
   foundryLocal: ""
@@ -12,7 +13,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-small
-  directoryPath: v2
+  directoryPath: v4
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
   contextLength: 448
   capabilities: ""
@@ -30,5 +31,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'cpu'
     executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 1132432089
-    vRamFootprintBytes: 1132432089
+    fileSizeBytes: 459461019
+    vRamFootprintBytes: 459461019

@@ -311,10 +311,10 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
         assert "response_completeness_result" in results
         assert "response_completeness_threshold" in results
 
-    def test_score_is_integer_type(self) -> None:
-        """Test case: Score is returned as integer.
+    def test_score_is_numeric_type(self) -> None:
+        """Test case: Score is returned as numeric.
 
-        Validates that score field contains an integer value (1-5).
+        Validates that score field contains a numeric value (1-5).
         """
         results = self._run_evaluation(
             response="Information here.",
@@ -325,7 +325,6 @@ class TestResponseCompletenessEvaluatorBehavior(BasePromptyEvaluatorRunner):
         # Score should be an integer between 1 and 5, or NaN
         assert isinstance(score, (int, float))
         if not math.isnan(score):
-            assert isinstance(score, int)
             assert 1 <= score <= 5
 
     def test_reason_field_is_string(self) -> None:

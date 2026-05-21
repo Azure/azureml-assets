@@ -51,10 +51,10 @@ class EvaluatorOutputConfig:
 
 # Mapping of evaluator names to their output configurations
 EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
-    "fluency": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.STRING),
-    "coherence": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.STRING),
-    "groundedness": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.STRING),
-    "similarity": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.SIMPLE_STRING),
+    "fluency": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
+    "coherence": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
+    "groundedness": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
+    "similarity": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "intent_resolution": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "relevance": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "response_completeness": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
@@ -99,12 +99,6 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
     return {
         "llm_output": {
             "score": score,
-            "label": "pass",
-            "flagged": False,
-            "success": BINARY_SUCCESS_SCORE,
-            "tool_calls_success_level": GRADERS_SUCCESS_SCORE,
-            "result": score,
-            "explanation": explanation,
             "reason": explanation,
             "status": "completed",
             "properties": {

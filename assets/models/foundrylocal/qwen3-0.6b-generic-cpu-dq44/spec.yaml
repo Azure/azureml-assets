@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen3-0.6b-generic-cpu-dq44
 version: 2
+isArchived: true
 path: ./
 tags:
   foundryLocal: "outlook_test"

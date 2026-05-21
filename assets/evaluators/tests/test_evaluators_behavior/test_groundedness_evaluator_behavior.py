@@ -216,7 +216,6 @@ class TestGroundednessMultiturnBehavior:
         assert result["groundedness_result"] == "not_applicable"
         assert result["groundedness_reason"] == "No agent responses to evaluate for groundedness."
         assert result["groundedness_status"] == "skipped"
-        assert result["groundedness_properties"] == {}
 
     def test_messages_invalid_output_returns_error_result(self):
         """Invalid non-dict output returns structured error result instead of raising."""
@@ -232,7 +231,6 @@ class TestGroundednessMultiturnBehavior:
         assert result["groundedness_result"] == "error"
         assert result["groundedness_reason"] == "Evaluator returned invalid output."
         assert result["groundedness_status"] == "error"
-        assert result["groundedness_properties"] == {}
 
     def test_messages_empty_list_raises_error(self):
         """Empty messages list raises validation error."""
@@ -586,6 +584,64 @@ class TestGroundednessSerializeMessages:
         ]
         result = serialize_messages(messages)
         assert "You are a helpful assistant." in result
+
+    def test_system_content_block_list_flattened_to_string(self):
+        """System message with content-block list is flattened, not passed as raw list."""
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "You are a helpful assistant." in result
+        assert "SYSTEM_PROMPT:" in result
+
+    def test_developer_content_block_list_flattened_to_string(self):
+        """Developer message with content-block list is treated like system."""
+        messages = [
+            {"role": "developer", "content": [{"type": "text", "text": "Be concise."}]},
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": "Hello!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Be concise." in result
+
+    def test_user_content_block_list_produces_flat_turns(self):
+        """User messages with content-block lists produce correctly flattened turns."""
+        messages = [
+            {"role": "user", "content": [{"type": "text", "text": "Question one."}]},
+            {"role": "assistant", "content": "Answer one."},
+        ]
+        result = serialize_messages(messages)
+        assert "Question one." in result
+        assert "User turn 1:" in result
+
+    def test_multi_text_block_user_message(self):
+        """User message with multiple text blocks produces flat turn content."""
+        messages = [
+            {"role": "user", "content": [
+                {"type": "text", "text": "Part A."},
+                {"type": "text", "text": "Part B."},
+            ]},
+            {"role": "assistant", "content": "Got it."},
+        ]
+        result = serialize_messages(messages)
+        assert "Part A." in result
+        assert "Part B." in result
+
+    def test_system_content_block_multi_text(self):
+        """System message with multiple text blocks joins them with newline."""
+        messages = [
+            {"role": "system", "content": [
+                {"type": "text", "text": "Rule 1."},
+                {"type": "text", "text": "Rule 2."},
+            ]},
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi!"},
+        ]
+        result = serialize_messages(messages)
+        assert "Rule 1." in result
+        assert "Rule 2." in result
 
 
 # endregion
