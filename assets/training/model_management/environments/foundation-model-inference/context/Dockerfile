@@ -1,11 +1,10 @@
-FROM nvidia/cuda:13.1.1-devel-ubuntu22.04
-
-RUN rm -rf /opt/nvidia/nsight-compute
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:latest
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Etc/UTC \
-    DEBIAN_FRONTEND=noninteractive
+    DEBIAN_FRONTEND=noninteractive \
+    PYTORCH_NVML_BASED_CUDA_CHECK=0
 
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
@@ -34,23 +33,19 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# torch installation
-RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
-    torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
-    
+
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.55 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.56 --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip && \
     rm -rf /opt/miniconda/lib/python3.10/site-packages 
 
 
-ADD runit_folder/api_server /var/runit/api_server
-RUN sed -i 's/\r$//g' /var/runit/api_server/run
-RUN chmod +x /var/runit/api_server/run
+ADD runit_folder/api_server /etc/service/api_server
+RUN sed -i 's/\r$//g' /etc/service/api_server/run && chmod +x /etc/service/api_server/run
 
-ENV SVDIR=/var/runit
+ENV SVDIR=/etc/service
 ENV WORKER_TIMEOUT=3600
 EXPOSE 5001
-CMD [ "runsvdir", "/var/runit" ]
+CMD [ "runsvdir", "/etc/service" ]
