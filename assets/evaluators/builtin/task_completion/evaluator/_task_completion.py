@@ -714,16 +714,6 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            if messages[-1]["role"] != MessageRole.ASSISTANT:
-                raise EvaluationException(
-                    message=(
-                        f"The last message must have role 'assistant', "
-                        f"but found role '{messages[-1]['role']}'."
-                    ),
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
             # The final assistant message must contain text
             last_content = messages[-1].get("content", "")
             if isinstance(last_content, list):
@@ -1034,7 +1024,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
 
         # Initialize input validator (supports both query/response and messages)
         self._validator = MessagesOrQueryResponseInputValidator(
-            error_target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR
+            error_target=ExtendedErrorTarget.TASK_COMPLETION_EVALUATOR,
         )
 
         super().__init__(
@@ -1309,6 +1299,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages
                 kwargs["response"] = response_messages
+                kwargs.pop("messages", None)
 
         self._validator.validate_eval_input(kwargs)
 

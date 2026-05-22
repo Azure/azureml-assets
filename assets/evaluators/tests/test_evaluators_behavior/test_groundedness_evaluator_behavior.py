@@ -356,17 +356,6 @@ class TestGroundednessMultiturnBehavior:
         with pytest.raises(EvaluationException, match="assistant"):
             evaluator(messages=messages)
 
-    def test_messages_rejects_conversation_ending_with_user(self):
-        """Messages ending with a user message raise validation error."""
-        evaluator = _create_mocked_groundedness_evaluator()
-        messages = [
-            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
-            {"role": "user", "content": [{"type": "text", "text": "Thanks, bye"}]},
-        ]
-        with pytest.raises(EvaluationException, match="last message must have role 'assistant'"):
-            evaluator(messages=messages)
-
     def test_messages_intermediate_response(self):
         """Messages ending with only tool calls (no text) are rejected."""
         evaluator = _create_mocked_groundedness_evaluator()

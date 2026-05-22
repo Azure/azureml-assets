@@ -299,17 +299,6 @@ class TestCustomerSatisfactionSessionBehavior:
         with pytest.raises(EvaluationException):
             evaluator(messages=messages)
 
-    def test_messages_rejects_conversation_ending_with_user(self):
-        """Messages ending with a user message raise validation error."""
-        evaluator = _create_mocked_evaluator()
-        messages = [
-            {"role": "user", "content": [{"type": "text", "text": "Hello"}]},
-            {"role": "assistant", "content": [{"type": "text", "text": "Hi!"}]},
-            {"role": "user", "content": [{"type": "text", "text": "One more thing..."}]},
-        ]
-        with pytest.raises(EvaluationException):
-            evaluator(messages=messages)
-
     def test_messages_rejects_conversation_ending_with_tool(self):
         """Messages ending with a tool message raise validation error."""
         evaluator = _create_mocked_evaluator()
