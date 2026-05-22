@@ -3,7 +3,7 @@ azure-ai-ml==1.13.0
 azureml-mlflow==1.60.0
 azure-identity==1.23.0
 fastapi==0.120.4
-pandas==2.1.4
+pandas==2.2.3
 transformers==5.0.0
 uvicorn==0.38.0
 httpx==0.28.1

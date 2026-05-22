@@ -1,11 +1,21 @@
-FROM nvidia/cuda:13.1.1-devel-ubuntu22.04
-
-RUN rm -rf /opt/nvidia/nsight-compute
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:{{latest-image-tag}}
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Etc/UTC \
-    DEBIAN_FRONTEND=noninteractive
+    DEBIAN_FRONTEND=noninteractive \
+    PYTORCH_NVML_BASED_CUDA_CHECK=0
+
+# Remove vulnerable NVIDIA Nsight Compute components
+RUN rm -rf /opt/nvidia/nsight-compute
+
+# CUDA forward-compat: lets CUDA 13.1 userspace run on hosts with older (e.g. 535-series) NVIDIA drivers.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends cuda-compat-13-1 && \
+    rm -rf /var/lib/apt/lists/*
+# Explicit list (no trailing ${LD_LIBRARY_PATH}) avoids an empty path element
+# that the dynamic loader would resolve to the CWD.
+ENV LD_LIBRARY_PATH=/usr/local/cuda/compat:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
 RUN apt update && apt upgrade -y && apt install software-properties-common -y && add-apt-repository ppa:deadsnakes/ppa -y
 RUN apt install git -y
@@ -34,23 +44,19 @@ ENV CONDA_PREFIX=$AZUREML_CONDA_ENVIRONMENT_PATH
 
 WORKDIR /
 
-# torch installation
-RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 \
-    torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
-    
+
 # When copied to assets repo, change to install from public pypi
-RUN pip install llm-optimized-inference==0.2.55 --no-cache-dir
+RUN pip install llm-optimized-inference==0.2.56 --no-cache-dir
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip && \
     rm -rf /opt/miniconda/lib/python3.10/site-packages 
 
 
-ADD runit_folder/api_server /var/runit/api_server
-RUN sed -i 's/\r$//g' /var/runit/api_server/run
-RUN chmod +x /var/runit/api_server/run
+ADD runit_folder/api_server /etc/service/api_server
+RUN sed -i 's/\r$//g' /etc/service/api_server/run && chmod +x /etc/service/api_server/run
 
-ENV SVDIR=/var/runit
+ENV SVDIR=/etc/service
 ENV WORKER_TIMEOUT=3600
 EXPOSE 5001
-CMD [ "runsvdir", "/var/runit" ]
+CMD [ "runsvdir", "/etc/service" ]
