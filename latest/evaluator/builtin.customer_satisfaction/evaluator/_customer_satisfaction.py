@@ -622,16 +622,7 @@ class ConversationValidator(ValidatorInterface):
                     category=ErrorCategory.INVALID_VALUE,
                     target=self.error_target,
                 )
-            if messages[-1]["role"] != MessageRole.ASSISTANT:
-                raise EvaluationException(
-                    message=(
-                        f"The last message must have role 'assistant', "
-                        f"but found role '{messages[-1]['role']}'."
-                    ),
-                    blame=ErrorBlame.USER_ERROR,
-                    category=ErrorCategory.INVALID_VALUE,
-                    target=self.error_target,
-                )
+
             # The final assistant message must contain text
             last_content = messages[-1].get("content", "")
             if isinstance(last_content, list):
@@ -643,7 +634,7 @@ class ConversationValidator(ValidatorInterface):
                 if not has_text:
                     raise EvaluationException(
                         message=(
-                            "The last assistant message must contain text content, "
+                            "The last message must contain text content, "
                             "not only tool calls. The conversation appears to be "
                             "mid-execution — provide the agent's final text response."
                         ),
@@ -950,7 +941,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         # Initialize input validator
         self._validator = ConversationValidator(
             error_target=ExtendedErrorTarget.CUSTOMER_SATISFACTION_EVALUATOR,
-            requires_query=True
+            requires_query=True,
         )
 
         super().__init__(
@@ -1110,6 +1101,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 query_messages, response_messages = _split_messages_at_latest_user(kwargs["messages"])
                 kwargs["query"] = query_messages
                 kwargs["response"] = response_messages
+                kwargs.pop("messages", None)
 
         self._validator.validate_eval_input(kwargs)
 
