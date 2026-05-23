@@ -115,24 +115,33 @@ RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5
 # only remediation. Kept as its own RUN to avoid the pip self-upgrade race.
 RUN pip install --no-cache-dir --upgrade 'pip>=26.1'
 
-# Upgrade starlette, urllib3, bokeh, PyNaCl & filelock
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# Upgrade bokeh, cryptography, onnx in the AZUREML conda env (py3.10).
+# NOTE: azureml-mlflow==1.62.0.post2 (latest as of 2026-05-19) pins
+# cryptography<47.0.0; we use >=46.0.5 (compatible) to fix prior CVEs.
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
 RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 'bokeh>=3.8.2' 'onnx>=1.21.0'
 
-# CLEANUP 2026-05-12: PTCA env package overrides removed because the ACPT base
-# image biweekly.202605.1 already ships:
-#   filelock 3.25.2 (>= 3.20.3), pillow 12.2.0 (>= 12.1.1),
-#   protobuf 7.34.1 (>= 6.33.5), wheel 0.46.3 (>= 0.46.2), pytest 9.0.3 (>= 9.0.3)
-# (verified by `pip show` in /opt/conda/envs/ptca on the base image). The previous
-# `cryptography>=46.0.5` override was also dropped — cryptography is not installed
-# in the PTCA env at all, so the override only added an unused package. If the
-# base image regresses any of these, restore the relevant overrides.
-# Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in ptca/base setuptools
+# Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in ptca/base setuptools.
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced.
-# Base image ships setuptools 82.0.0; we need 82.0.1 for the vendored fix, so override is retained.
+# Base image biweekly.202605.2 ships: base=82.0.0, ptca=81.0.0 (verified via probe build).
+# Both are below 82.0.1 (which carries the vendored fix), so both overrides are required.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
+
+# Security: upgrade urllib3 2.6.3 -> >=2.7.0 in the BASE conda env only
+# (/opt/conda, py3.13) to fix GHSA-qccp-gfcp-xxvc (CVE-2026-44431, MEDIUM) and
+# GHSA-mf9v-mfxr-j63j (CVE-2026-44432, HIGH) — both affect urllib3's streaming
+# response handling.
+# Probe build (2026-05-19) against base image biweekly.202605.2 confirmed:
+#   /opt/conda (py3.13)        -> urllib3 2.6.3 (vulnerable)
+#   /opt/conda/envs/ptca (3.10) -> urllib3 2.7.0 (already fixed by base image)
+# So no PTCA override is needed; only base env requires upgrade.
+# Parent-upgrade analysis (2026-05-19): urllib3 in the base env is required by
+# `requests` only, which pins urllib3 with a loose floor (>=1.21.1,<3). No
+# package on PyPI as of today pins urllib3>=2.7.0 (urllib3 2.7.0 was published
+# 2026-05-13, same day the CVEs were disclosed), so a parent upgrade cannot
+# force the fixed version — direct override is the only remediation.
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0'
 
 # Security: python-dotenv 1.2.1 -> >=1.2.2 fixes GHSA-mf9w-mj56-hr94 (set_key()/
 # unset_key() follow symlinks on cross-device .env writes -> arbitrary file
