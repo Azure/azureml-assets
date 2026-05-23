@@ -64,4 +64,19 @@ RUN pip install --no-cache-dir --no-deps 'diffusers==0.38.0'
 RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0,<3' \
  && /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0,<3'
 
+# Remove vulnerable py-rattler from the base (py3.13) env.
+# Root cause (verified 2026-05 against the built image and PyPI):
+#   - The base image ships py-rattler 0.23.2 (latest stable) plus the conda-rattler-solver
+#     plugin in /opt/conda (base env). The compiled rattler.abi3.so still bundles
+#     vulnerable Rust crates: openssl 0.10.75 (5 CRITICAL CVEs), aws-lc-sys 0.37.1
+#     (3 HIGH + 2 MEDIUM), bytes 1.11.0 (HIGH), tar 0.4.44 (HIGH + MEDIUM),
+#     rustls-webpki 0.103.9 (4 MEDIUM), rand 0.8.5/0.9.2 (MEDIUM) — 18 findings total.
+#   - py-rattler 0.23.2 is the newest published version on PyPI (checked 2026-05-22),
+#     so an upgrade-in-place cannot pick up patched Rust crates yet.
+#   - rattler is only the conda dependency solver; ML workloads run in the ptca
+#     (py3.10) env and do not import it. Switching conda back to the classic solver
+#     keeps `conda` itself working after the rattler packages are removed.
+RUN conda config --system --set solver classic \
+ && /opt/conda/bin/python3.13 -m pip uninstall -y py-rattler conda-rattler-solver
+
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

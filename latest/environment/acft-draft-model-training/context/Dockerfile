@@ -2,35 +2,6 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.2
 USER root
 
-# USN-8227-1 (curl/libcurl4/libcurl3-gnutls), USN-8233-1 (libnghttp2-14),
-# USN-8251-1 (libpng16-16), USN-8229-1 (sed): Ubuntu 22.04 system packages
-# installed in the base image. The base image tag already pins to the latest
-# biweekly build, but it has not yet picked up these jammy-security updates.
-# Direct apt upgrade is the only fix path.
-RUN apt-get -y update && apt-get -y upgrade && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# GHSA-jp4c-xjxw-mgf9 (CVE-2026-6357): pip<26.1 self-update vulnerability.
-# pip has no parent package — it is shipped directly by the base image in both
-# conda envs (base: python3.13 / ptca: python3.10), so we upgrade both via
-# conda-forge and remove the leftover dist-info / conda-meta entries from the
-# old 26.0.1 so the SBOM scanner does not double-detect the vulnerable version.
-RUN conda install -y -n base -c conda-forge pip==26.1.1 && \
-    conda install -y -n ptca -c conda-forge pip==26.1.1 && \
-    rm -rf /opt/conda/lib/python3.13/site-packages/pip-26.0*.dist-info && \
-    rm -f /opt/conda/conda-meta/pip-26.0*.json && \
-    rm -rf /opt/conda/envs/ptca/lib/python3.10/site-packages/pip-26.0*.dist-info && \
-    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json && \
-    conda clean -ay
-
-# GHSA-qccp-gfcp-xxvc (CVE-2026-44431), GHSA-mf9v-mfxr-j63j (CVE-2026-44432):
-# urllib3 streaming-API vulnerabilities; patched in urllib3>=2.7.0. Only the
-# base conda env (python3.13) ships the vulnerable urllib3 2.6.3 as a transitive
-# dep (pulled by requests/other HTTP clients in the base image). No parent
-# package pins urllib3<2.7.0 with a tight upper bound, so a direct upgrade in
-# the base env is the simplest fix.
-RUN /opt/conda/bin/python -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0'
-
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 # GHSA-jx93-g359-86wm, GHSA-hvwj-8w5g-28rg: sglang vulnerabilities; patched in >=0.5.10
@@ -59,6 +30,19 @@ RUN pip install transformers==5.5.4
 #   all use loose floors and no released parent version forces >=1.2.2, so direct override
 #   in the base conda env is the only fix path.
 RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+# pip>=26.1: GHSA-jp4c-xjxw-mgf9 (CVE-2026-6357); shipped at 26.0.1 in both the BASE
+#   conda env (python3.13) and the PTCA conda env (python3.10). Self-update before
+#   wheel installation prevents newly-installed modules from being imported.
+#   `pip install --upgrade` overwrites the dist-info, but leaves a stale
+#   conda-meta/pip-26.0.1-*.json record in the PTCA env that the SCA scanner still
+#   flags — remove it explicitly after the upgrade.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'pip>=26.1' \
+ && pip install --no-cache-dir --upgrade 'pip>=26.1' \
+ && rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json \
+          /opt/conda/conda-meta/pip-26.0.1-*.json
+# urllib3>=2.7.0: GHSA-qccp-gfcp-xxvc (CVE-2026-44431) and GHSA-mf9v-mfxr-j63j
+#   (CVE-2026-44432); transitive dep at 2.6.3 in the BASE conda env (python3.13).
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0'
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip
 COPY loss /opt/conda/envs/ptca/lib/python3.10/site-packages/specforge/core/loss.py
