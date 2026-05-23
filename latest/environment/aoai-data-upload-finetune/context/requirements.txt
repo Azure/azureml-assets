@@ -8,6 +8,11 @@ azureml-telemetry==1.56.0
 pydantic==2.7.0
 azure-keyvault-secrets==4.8.0
 requests==2.33.0
-urllib3==2.6.3
-pillow==12.2.0
+urllib3==2.7.0
+# cryptography is pulled in transitively by azure-identity / msal /
+# azure-keyvault-secrets, none of which pin a fixed minimum. The base
+# image (openmpi5.0-ubuntu24.04) currently ships cryptography 44.0.3,
+# which is vulnerable to GHSA-r6ph-v2qm-q3c2 (CVE-2026-26007) and
+# GHSA-m959-cc7f-wv43 (CVE-2026-34073). Override to >=46.0.7 (latest
+# fixed line) until the base image upgrades.
 cryptography>=46.0.7
