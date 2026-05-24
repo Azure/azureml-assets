@@ -8,7 +8,7 @@ RUN conda install -n base -c conda-forge 'pip>=26.0' -y
 #  SecretStorage) do not yet pin to patched versions; direct overrides required.
 RUN conda run -n base python -m pip install --upgrade \
     'wheel>=0.46.2' \
-    'cryptography>=46.0.7' \
+    'cryptography>=46.0.7,<47.0.0' \
     'setuptools>=82.0.1' \
     'PyJWT>=2.12.0' \
     'aiohttp>=3.13.4' \
@@ -56,7 +56,7 @@ RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/l
 # PTCA env post-install: azureml-mlflow pulls cryptography (must be >=46.0.7 for CVE coverage;
 # azureml-mlflow caps at <47.0.0). setuptools vendors jaraco.context (CVE-2026-23949) and
 # also fixes wheel CVE-2026-24049; --force-reinstall --no-deps replaces the vendored copies.
-RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.7'
+RUN pip install --upgrade --no-cache-dir 'cryptography>=46.0.7,<47.0.0'
 RUN pip install --force-reinstall --no-deps 'setuptools>=82.0.1'
 
 # torch 2.7.1+cu118: GHSA-887c-mr87-cxwp / CVE-2025-3730 (local DoS in ctc_loss; fixed in torch 2.8.0).
