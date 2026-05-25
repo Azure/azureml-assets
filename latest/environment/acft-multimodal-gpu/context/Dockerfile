@@ -53,14 +53,34 @@ RUN pip install azureml-acft-accelerator==0.0.91
 # urllib3: >=2.7.0 patches CVE-2026-44431, CVE-2026-44432 - transitive of
 #   requests/azure-* SDKs; no fixed parent release pins it.
 RUN pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'nltk>=3.9.4' 'transformers>=5.0.0' 'onnx>=1.21.0' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0'
-# base conda env: setuptools + transitive TLS deps + python-dotenv need the
-# same upgrades as ptca. python-dotenv >=1.2.2 patches GHSA-mf9w-mj56-hr94
-# (base conda env ships 1.2.1; mlflow-skinny accepts >=0.19.0,<2 so no parent
-# upgrade can address it). pip upgrade is intentionally NOT applied to the
-# base env because (a) the prescan flags only the ptca env's conda-meta pip
-# entry, and (b) running `conda install` against the base env triggers a
-# refresh of the root-installed `rattler` package whose embedded Rust crates
-# (openssl 0.10.75, aws-lc-sys 0.37.1, rustls-webpki 0.103.9, tar 0.4.44,
-# bytes 1.11.0, rand 0.8.5, astral-tokio-tar 0.6.0) introduce HIGH/CRITICAL
-# findings unrelated to this image's Python surface.
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' 'python-dotenv>=1.2.2'
+# Base conda env (python 3.13 at /opt/conda) overrides. All findings here are
+# transitive deps with no single upgradeable parent package in the base image:
+#   setuptools >=82.0.1  - patches jaraco.context (GHSA-58pv-8j8x-9vj2)
+#   pyOpenSSL  >=26.0.0  - patches CVE-2026-27459; pulled by azure-* SDKs
+#   urllib3    >=2.7.0   - patches CVE-2026-44431/44432; pulled by requests
+#   python-dotenv >=1.2.2 - GHSA-mf9w-mj56-hr94; mlflow-skinny accepts
+#                           >=0.19.0,<2 so no parent upgrade exists.
+#   pip        >=26.1.1  - GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357. pip is the
+#                          installer itself; no parent. We use pip self-
+#                          upgrade (not `conda install`) because the base-env
+#                          scanner entry is the dist-info METADATA file
+#                          (overwritten by pip), and `conda install` against
+#                          the base env would refresh the root `rattler`
+#                          package whose embedded Rust crates (openssl 0.10.75,
+#                          aws-lc-sys 0.37.1, rustls-webpki 0.103.9, tar
+#                          0.4.44, bytes 1.11.0, rand 0.8.5, astral-tokio-tar
+#                          0.6.0) introduce HIGH/CRITICAL findings unrelated
+#                          to this image's Python surface.
+#   idna       >=3.15    - GHSA-65pc-fj4g-8rjx / CVE-2026-45409. Pulled
+#                          transitively by requests, cryptography, anyio,
+#                          httpx in the base env. requests/cryptography both
+#                          accept idna<4 with no upper pin that excludes
+#                          3.15, so no parent release pins it.
+#   click      >=8.3.3   - GHSA-47fr-3ffg-hgmw / CVE-2026-7246. Pulled
+#                          transitively by mlflow-skinny, typer, uvicorn,
+#                          jupyter-* installed in the base env. mlflow-skinny
+#                          accepts click>=7.0 so no parent release pins a
+#                          fixed version.
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade \
+    'setuptools>=82.0.1' 'pyOpenSSL>=26.0.0' 'urllib3>=2.7.0' \
+    'python-dotenv>=1.2.2' 'pip>=26.1.1' 'idna>=3.15' 'click>=8.3.3'

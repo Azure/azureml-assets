@@ -43,7 +43,12 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 #   floors so upgrading them does not pull in 1.2.2; direct override (GHSA-mf9w-mj56-hr94).
 # - urllib3 2.6.3: parents requests (>=1.26,<3) and others use loose floors; direct override
 #   required for GHSA-mf9v-mfxr-j63j and GHSA-qccp-gfcp-xxvc until base image refreshes.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
+# - idna 3.11: parent `requests` declares `idna<4,>=2.5` (loose floor); upgrading requests does not
+#   pull idna>=3.15; direct override required for GHSA-65pc-fj4g-8rjx (CVE-2026-45409).
+# - click 8.2.1: pulled by multiple base-env CLIs (anaconda-cli-base, conda-libmamba-solver, etc.)
+#   all with loose floors; no single parent upgrade resolves it; direct override required for
+#   GHSA-47fr-3ffg-hgmw (CVE-2026-7246, command injection in click.edit()).
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
 
 # pip 26.0.1 in both base (python3.13) and ptca (python3.10) conda envs from ACPT base image needs upgrade
 # (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357; fixed in 26.1). pip is the package manager itself, bundled by conda;

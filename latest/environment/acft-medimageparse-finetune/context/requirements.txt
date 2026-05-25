@@ -16,13 +16,6 @@ sentencepiece==0.2.1
 peft==0.17.1
 ninja==1.11.1.1
 kornia==0.7.3
-# python-dotenv: GHSA-mf9w-mj56-hr94 (fixed in 1.2.2). In the ptca env the only
-# transitive parent is mlflow-skinny (`python-dotenv<2,>=0.19.0`); latest
-# mlflow-skinny 3.12.0 (verified on PyPI 2026-05-19) still uses that loose
-# floor, so a parent-only upgrade may resolve back to a vulnerable 1.2.1 if
-# PyPI ever caches it. Direct pin retained until mlflow-skinny tightens the
-# floor to >=1.2.2.
-python-dotenv==1.2.2
 einops==0.8.0 
 mup==1.0.0 
 pydicom>=2.4.5
@@ -37,3 +30,10 @@ ffmpeg==1.4
 lightning==2.5.5
 azureml-acft-image-components[mip]==0.0.91
 filelock>=3.20.1
+# GitPython: GHSA-mv93-w799-cj2w (fixed in 3.1.50). Pulled in transitively by
+# mlflow-skinny, whose dependency declaration is `gitpython<4,>=3.1.9` in both
+# 3.11.1 (pinned above) and the latest 3.12.0 (verified on PyPI 2026-05-23).
+# That loose floor resolves back to a vulnerable 3.1.49, so a parent-only
+# upgrade is not possible. Direct pin retained until mlflow-skinny tightens
+# the floor to >=3.1.50.
+GitPython>=3.1.50

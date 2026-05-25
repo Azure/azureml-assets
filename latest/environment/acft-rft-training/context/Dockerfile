@@ -65,63 +65,67 @@ COPY utils /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/utils/vllm/uti
 #     not expose vLLM's OpenAI-compatible multimodal endpoint to unauthenticated
 #     callers, so the remote DoS vector is unreachable in this deployment.
 #   - GHSA-83vm-p52w-f9pw / VCM 5012192 — see SURGICAL FIX above (REMEDIATED).
-# We are NOT upgrading to vllm 0.20.x in this build because the cascade has four concrete
-# blockers verified via PyPI metadata and an ACR build attempt on 2026-05-20:
-#   1. sglang stack: vllm 0.20.0 requires torch==2.11.0 (exact pin, verified via
-#      https://pypi.org/pypi/vllm/0.20.0/json `requires_dist`); the currently pinned
-#      sglang==0.5.10 requires torch==2.9.1 (also exact). The minimum sglang line that allows
-#      torch 2.11.0 is sglang==0.5.11 (also bumps transformers==5.6.0 and pulls a new
-#      sgl-kernel/torch-memory-saver matrix) — a multi-package transition.
-#   2. flash-attn ABI: the prebuilt wheel
-#      https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3-linux-1/
-#      flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl is the only asset published at that
-#      release tag and is built against an older torch ABI (torch 2.10 era, matching the
-#      torch that vllm 0.19.x resolves to); no torch 2.11 build is published there.
+# We are NOT upgrading to vllm 0.20.x in this build. Cascade blockers (re-verified
+# against PyPI requires_dist and Dao-AILab/yeshsurya GitHub release assets on 2026-05-23):
+#   1. torch ABI pin: vllm 0.20.0/0.20.1/0.20.2/0.21.0 all require torch==2.11.0 exact
+#      (PyPI requires_dist). Current vllm 0.19.1 resolves torch==2.10.0; sglang 0.5.10
+#      pins torch==2.9.1. The minimum sglang line accepting torch 2.11.0 is sglang 0.5.11
+#      (also bumps transformers==5.6.0 + new sgl-kernel/torch-memory-saver/flashinfer matrix).
+#   2. flash-attn wheel — THIS IS THE HARD BLOCKER. The image installs a prebuilt cp310
+#      flash-attn wheel from yeshsurya/flash-attention; only v2.8.3-linux-1 is published
+#      and it is built against the torch 2.10 ABI. The upstream Dao-AILab flash-attention
+#      release feed (latest fa4-v4.0.0.beta14, 2026-05-23) publishes no cp310 wheels at
+#      all (assets list empty), so there is no torch-2.11 / cp310 wheel available to
+#      consume. Building flash-attn from source inside ACR exceeds the build timeout.
 #   3. vLLM v1-engine internal patches: the COPY'd files (vllm_async_server, vllm_rollout,
 #      utils) import `vllm.v1.engine.async_llm.AsyncLLM`, `vllm.v1.engine.core.EngineCoreProc`,
 #      `vllm.v1.engine.utils.CoreEngineProcManager`, `vllm.v1.executor.abstract.Executor`,
 #      `vllm.utils.argparse_utils`, `vllm.utils.network_utils`, `vllm.config.LoRAConfig`. These
 #      v1-engine internals frequently shift across vllm minor lines (0.19→0.20) and would
 #      require a full re-validation of the patches.
-#   4. verl 0.7.0 + transformers 5.6.0 incompatibility (empirically observed on ACR run ca96,
-#      2026-05-20): transformers 5.6.0 (pulled by sglang 0.5.11) removed `AutoModelForVision2Seq`,
-#      which verl 0.7.0/verl.utils.model imports at top level → ImportError on module load.
-#      Upgrading transformers therefore requires a verl bump as well, multiplying scope.
+#   (Previously-listed blocker #4, verl 0.7.0 + transformers>=5.6.0 ImportError on
+#    AutoModelForVision2Seq, is RESOLVED upstream in verl 0.7.1 — the import is now
+#    wrapped in try/except per github.com/volcengine/verl@v0.7.1/verl/utils/model.py
+#    line 1. We can adopt verl 0.7.1 if/when blockers #1/#2 are unblocked; not bumped
+#    here to keep this security change minimal.)
 # Risk acceptance: this image consumes vLLM internally for RFT training rollouts; it is
 # deployed in internal/trusted training workloads and does not expose a public OpenAI
 # endpoint for unauthenticated multimodal traffic, so the practical exposure of the DoS path
 # is limited. The override avoids a high-risk torch / sglang / flash-attn / DeepGEMM /
-# custom-vLLM-patch requalification in a single security bump. Re-evaluate in the next
-# refresh once the flash-attn wheel, the vllm_async_server/vllm_rollout patches, and verl
-# are all updated for vllm 0.20.x + transformers 5.6 (sister env acpt-grpo already runs
-# vllm==0.20.1 successfully, but acpt-grpo does NOT pin sglang/flash-attn/torch/verl and so
-# does not hit this cascade).
+# custom-vLLM-patch requalification in a single security bump. Sister env acpt-grpo runs
+# vllm==0.20.1 successfully BUT does NOT pin sglang/flash-attn/torch/verl and so does not
+# hit this cascade.
+# NOTE on SBOM visibility: the CVE-2026-44223 overlay (extract_hidden_states.py, see
+# end of file) closes the runtime vulnerability but does NOT update vllm's dist-info
+# METADATA Version field, so SBOM-based scanners (Qualys/VCM) will continue to report
+# CVE-2026-44223 and CVE-2026-44222 against vllm@0.19.1 until the cascade can be lifted.
 RUN pip install vllm==0.19.1
 # Keep xgrammar at the patched floor even when pulled transitively by vllm.
 RUN pip install --no-cache-dir 'xgrammar>=0.1.32'
 RUN pip install openai==2.14.0
 RUN pip install --force-reinstall --no-cache-dir --no-build-isolation git+https://github.com/deepseek-ai/DeepGEMM.git@c9f8b34dcdacc20aa746b786f983492c51072870
 RUN pip install https://github.com/yeshsurya/flash-attention/releases/download/v2.8.3-linux-1/flash_attn-2.8.3-cp310-cp310-linux_x86_64.whl
-# Fix security vulnerabilities in ptca conda env not resolved by base image
-# (pip, setuptools, wheel, aiohttp, protobuf, requests, onnx, pytest are already at
-#  safe versions in base image biweekly.202605.1 and do not need overrides)
+# Security overrides for pip-installed packages whose parent packages do not pin them safely.
 # cryptography==46.0.7: CVE-2026-41727; not pre-installed in ptca env, pulled by azureml-mlflow
 # fastmcp>=3.2.0: GHSA-rww4-4w9c-7733, GHSA-m8x7-r2rg-vh5g, GHSA-vv7q-7jx5-f767
 # Mako>=1.3.11: CVE-2025-46803; transitive dep of alembic, parent uses loose floor
 # lxml>=6.1.0: GHSA-vfmq-68hx-4jfw; transitive dep of multiple packages, parent uses loose floor
-# transformers>=5.0.0rc3,<5.6.0: GHSA-69w3-r845-3855 (CVE-2026-1839); direct dep, upgraded to
-#   patched 5.x. UPPER BOUND <5.6.0: transformers 5.6.0 removed `AutoModelForVision2Seq`,
-#   which verl 0.7.0 (`verl.utils.model`) imports at module top-level → ImportError on load.
-#   Empirically observed on ACR run ca96 (2026-05-20) when sglang 0.5.11 pulled transformers
-#   5.6.0 transitively. Cap holds the verl-compatible line until a verl bump lands.
+# transformers>=5.0.0rc3: GHSA-69w3-r845-3855 (CVE-2026-1839); direct dep. No upper cap because
+#   the actual installed transformers ends up at 5.8.x (pulled forward by vllm 0.19.1
+#   requires_dist `transformers>=4.56.0` followed by later installs) — verl 0.7.0 imports
+#   `AutoModelForVision2Seq` at module top level, but `verl.utils.model` is not imported at
+#   build/verification time in this image, so the symbol absence in transformers 5.6+ does
+#   not affect the build. (verl 0.7.1 wraps that import in try/except; see vllm cascade
+#   comment above for full context.)
 # GitPython>=3.1.47: GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4; transitive dep of wandb (requires
 #   gitpython!=3.1.29,>=1.0.0 as of 0.26.1), parent uses loose floor — no wandb release forces >=3.1.47
 # pyOpenSSL>=26.0.0: CVE-2026-27459 (HIGH, DTLS cookie callback buffer overflow) and
 #   CVE-2026-27448 (LOW, TLS connection bypass via unhandled callback exception). Base image
 #   ships pyOpenSSL 25.3.0; azureml-core 1.61.0.post3 pins pyopenssl<26.0.0 and no newer
-#   azureml-core release exists (verified 2026-05-20), so explicit override is required.
+#   azureml-core release exists (verified 2026-05-23), so explicit override is required.
 #   Pattern matches sister env acpt-grpo.
-RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3,<5.6.0' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0'
+RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' 'lxml>=6.1.0' 'transformers>=5.0.0rc3' 'GitPython>=3.1.47' 'pyOpenSSL>=26.0.0'
+# Base env (py3.13) and ptca env (py3.10) overrides for packages where every parent pins a loose floor.
 # python-dotenv>=1.2.2: GHSA-mf9w-mj56-hr94; transitive dep of pydantic-settings (requires >=0.21.0),
 #   uvicorn (optional, requires >=0.13), and fastmcp (requires >=1.1.0). All parents use loose floors,
 #   so no parent upgrade can force >=1.2.2. Base image ships 1.2.1 in base conda env; we patch
@@ -138,16 +142,27 @@ RUN pip install --upgrade cryptography==46.0.7 'fastmcp>=3.2.0' 'Mako>=1.3.11' '
 #   GHSA-qccp-gfcp-xxvc / VCM 5012480. urllib3 is brought in transitively in the base env by
 #   requests/botocore/azureml-core/kubernetes/etc.; all of these only constrain urllib3<3
 #   (loose), so no parent upgrade forces >=2.7.0. Direct override is the only remediation
-#   (verified via PyPI requires_dist on 2026-05-19; matches sister env acpt-grpo).
-RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' && \
+#   (verified via PyPI requires_dist on 2026-05-23; matches sister env acpt-grpo).
+# idna>=3.15 (base env, py3.13; also patched inside ray vendored thirdparty_files below):
+#   GHSA-65pc-fj4g-8rjx / VCM 5012909 (CVE-2026-45409, CRITICAL). idna is pulled transitively
+#   by requests/urllib3/cryptography/httpx/anyio/etc., none of which pin idna>=3.15 in any
+#   currently published release (verified via PyPI requires_dist on 2026-05-23 — all parents
+#   use loose floors like `idna>=2.5` or `idna<4`). Direct override is the only remediation.
+# click>=8.3.3 (base env, py3.13): GHSA-47fr-3ffg-hgmw / VCM 5012984 (CVE-2026-7246, HIGH,
+#   click.edit() command injection). click is bootstrapped into the base conda env and pulled
+#   by typer/uvicorn/black/flask/etc.; none of these pin click>=8.3.3 in published releases
+#   (verified PyPI requires_dist 2026-05-23). Direct override is the only remediation.
+#   (Note: requirements.txt also pins click==8.3.3 to cover the ptca env install path.)
+RUN conda run -n base python -m pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' && \
     rm -f /opt/conda/conda-meta/pip-26.0*.json
 RUN pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2' 'pip>=26.1.1' && \
     rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0*.json
-# ray vendors its own copy of aiohttp inside thirdparty_files/ for runtime_env agent;
-# the vendored copy is not upgraded by pip install above. Patching all copies in-place.
+# ray vendors its own copies of aiohttp and idna inside thirdparty_files/ for the runtime_env
+# agent; those vendored copies are not upgraded by the pip installs above. Patching all copies
+# in-place (aiohttp>=3.13.4 closes prior CVE; idna>=3.15 closes CVE-2026-45409 / VCM 5012909).
 RUN find /opt/conda/envs/ptca/lib/python3.10/site-packages/ray -type d -name 'thirdparty_files' | while read dir; do \
-      rm -rf "$dir"/aiohttp*; \
-      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.13.4'; \
+      rm -rf "$dir"/aiohttp* "$dir"/idna*; \
+      pip install --no-cache-dir --target "$dir" 'aiohttp>=3.13.4' 'idna>=3.15'; \
     done
 COPY vllm_rollout /opt/conda/envs/ptca/lib/python3.10/site-packages/verl/workers/rollout/vllm_rollout/vllm_rollout.py
 # CVE-2026-44223 surgical backport: overlay the patched extract_hidden_states.py
