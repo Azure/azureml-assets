@@ -61,6 +61,10 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
 #   (anaconda-cloud-auth, conda, pip itself). `requests` has no upper bound on urllib3
 #   (Requires-Dist: urllib3<3,>=1.21.1), and none of the conda parents pin urllib3
 #   tightly, so no parent upgrade can force >=2.7.0 -- direct override required.
+# idna >=3.15 (GHSA-65pc-fj4g-8rjx): base env parents (`requests`, `anyio`,
+#   `httpx`, `yarl`) declare loose idna requirements, so direct override is required.
+# click >=8.3.3 (GHSA-47fr-3ffg-hgmw): base env CLI parents use loose click floors,
+#   so direct override is required.
 # setuptools 82.0.0 -> >=82.0.1 (GHSA-58pv-8j8x-9vj2 in vendored jaraco.context):
 #   no parent package pins setuptools.
 # python-dotenv 1.2.1 -> >=1.2.2 (GHSA-mf9w-mj56-hr94): brought in transitively by
@@ -72,6 +76,7 @@ RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
 RUN /opt/conda/bin/pip install --upgrade \
     'pip>=26.1.1' \
     'urllib3>=2.7.0' \
+    'idna>=3.15' \
+    'click>=8.3.3' \
     'setuptools>=82.0.1' \
     'python-dotenv>=1.2.2'
-

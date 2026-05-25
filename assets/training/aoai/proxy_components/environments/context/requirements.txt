@@ -16,3 +16,11 @@ urllib3==2.7.0
 # GHSA-m959-cc7f-wv43 (CVE-2026-34073). Override to >=46.0.7 (latest
 # fixed line) until the base image upgrades.
 cryptography>=46.0.7
+# idna is shipped by the base image (openmpi5.0-ubuntu24.04) at 3.13, which is
+# vulnerable to GHSA-65pc-fj4g-8rjx (CVE-2026-45409). The "parent" here is the
+# base image itself - no upstream Python package brings idna into our context;
+# it is a transitive dep of requests/httpx already installed in the base.
+# We cannot bump the base image to a tag that contains idna>=3.15 (none is
+# published as of 2026-05-23), so we pin idna directly here as the only
+# available remediation.
+idna>=3.15

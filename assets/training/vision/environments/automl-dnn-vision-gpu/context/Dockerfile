@@ -8,8 +8,6 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
@@ -84,10 +82,12 @@ RUN pip install --no-cache-dir --upgrade 'onnx>=1.21.0'
 # python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94); transitive chain in inference layer:
 #   azureml-defaults -> azureml-inference-server-http -> pydantic-settings -> python-dotenv>=0.21.0;
 #   pydantic-settings (<=2.14.0) only requires >=0.21.0, no parent upgrade resolves this.
+# idna>=3.15 and click>=8.3.3 are pulled by base-env HTTP/CLI parents with loose
+# requirements, so parent upgrades cannot force the fixed versions.
 RUN /opt/conda/bin/conda install -n base -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/bin/pip install --no-cache-dir --upgrade 'requests>=2.33.0' 'urllib3>=2.7.0' 'aiohttp>=3.13.4' 'wheel>=0.46.2' \
     'setuptools>=82.0.1' 'cryptography>=46.0.7' 'PyJWT>=2.12.0' \
-    'python-dotenv>=1.2.2'
+    'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
 # Security: fix ptca conda env (python 3.10) — packages present in base image at vulnerable versions.
 # Base image (probed) contains: aiohttp 3.13.3, filelock 3.20.0, onnx 1.20.1, pillow 12.1.0,
 # pip 25.3, protobuf 6.33.3, pytest 7.4.3, requests 2.32.5, setuptools 80.9.0, urllib3 2.6.3,
@@ -97,18 +97,20 @@ RUN /opt/conda/bin/conda install -n ptca -c conda-forge 'pip>=26.1' -y && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'filelock>=3.20.3' \
     'wheel>=0.46.2' 'setuptools>=82.0.1' 'protobuf>=6.33.5' \
     'pillow>=12.2.0' 'onnx>=1.21.0' 'requests>=2.33.0' 'urllib3>=2.7.0' \
-    'aiohttp>=3.13.4' 'pytest>=9.0.3'
+    'aiohttp>=3.13.4' 'pytest>=9.0.3' 'idna>=3.15'
 
 # Fix security vulnerabilities in active conda env (azureml-automl-dnn-vision-gpu, python 3.10)
 # aiohttp, bokeh, distributed, protobuf, cryptography, filelock, wheel, setuptools, PyJWT,
 # urllib3, pillow, onnx, requests, python-dotenv — all transitive deps of azureml SDK packages
 # pinned with template versions (cannot upgrade parent during template rendering).
 # python-dotenv>=1.2.2: CVE-2026-28684; pydantic-settings (<=2.14.0) requires >=0.21.0 only.
+# idna>=3.15 and click>=8.3.3 are direct overrides because parent packages keep
+# loose dependency ranges that allow the vulnerable base versions.
 RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH -c conda-forge 'pip>=26.1' -y && \
     pip install --no-cache-dir --upgrade 'aiohttp>=3.13.4' 'distributed>=2026.1.0' 'protobuf>=6.33.5' 'cryptography>=46.0.7' \
     'filelock>=3.20.3' 'wheel>=0.46.2' 'setuptools>=82.0.1' 'PyJWT>=2.12.0' 'urllib3>=2.7.0' 'pillow>=12.2.0' \
     'onnx>=1.21.0' 'requests>=2.33.0' 'python-dotenv>=1.2.2' \
-    'bokeh>=3.8.2'
+    'bokeh>=3.8.2' 'idna>=3.15' 'click>=8.3.3'
 # Remove stale vendored metadata that scanners pick up
 RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.context-5.3.0.dist-info \
     /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/wheel-0.45.1.dist-info \
@@ -118,4 +120,3 @@ RUN rm -rf /opt/conda/lib/python3.13/site-packages/setuptools/__vendor/jaraco.co
 
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
-# dummy number to change when needing to force rebuild without changing the definition: 1

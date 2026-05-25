@@ -128,20 +128,26 @@ RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setupt
 # Both are below 82.0.1 (which carries the vendored fix), so both overrides are required.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
-# Security: upgrade urllib3 2.6.3 -> >=2.7.0 in the BASE conda env only
-# (/opt/conda, py3.13) to fix GHSA-qccp-gfcp-xxvc (CVE-2026-44431, MEDIUM) and
-# GHSA-mf9v-mfxr-j63j (CVE-2026-44432, HIGH) — both affect urllib3's streaming
-# response handling.
-# Probe build (2026-05-19) against base image biweekly.202605.2 confirmed:
-#   /opt/conda (py3.13)        -> urllib3 2.6.3 (vulnerable)
-#   /opt/conda/envs/ptca (3.10) -> urllib3 2.7.0 (already fixed by base image)
-# So no PTCA override is needed; only base env requires upgrade.
-# Parent-upgrade analysis (2026-05-19): urllib3 in the base env is required by
-# `requests` only, which pins urllib3 with a loose floor (>=1.21.1,<3). No
-# package on PyPI as of today pins urllib3>=2.7.0 (urllib3 2.7.0 was published
-# 2026-05-13, same day the CVEs were disclosed), so a parent upgrade cannot
-# force the fixed version — direct override is the only remediation.
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0'
+# Security: upgrade urllib3 in base (py3.13) and ptca (py3.10) envs to fix
+# CVE-2026-44431 / GHSA-qccp-gfcp-xxvc and CVE-2026-44432 / GHSA-mf9v-mfxr-j63j
+# (urllib3 < 2.7.0). Base image biweekly.202605.1 ships urllib3 2.6.3 in both
+# envs. Parents: `requests` (urllib3<3,>=1.21.1) and `torchdata` (urllib3, no
+# pin) — both accept 2.7.0+, but neither pins forward, so a parent upgrade
+# cannot force the fix; direct override is the only remediation.
+#
+# Security: upgrade idna in base (py3.13) and ptca (py3.10) envs to fix
+# CVE-2026-45409 / GHSA-65pc-fj4g-8rjx (idna < 3.15). Base image ships
+# idna 3.11 (base) and 3.13 (ptca). Parents: `requests`, `anyio`, `httpx`,
+# `yarl` — all use loose `idna` requirements with no upper pin, so parent
+# upgrade cannot force the fix; direct override is the only remediation.
+#
+# Security: upgrade click in base env (py3.13) to fix CVE-2026-7246 /
+# GHSA-47fr-3ffg-hgmw (click.edit() command injection in click < 8.3.3).
+# Base image ships click 8.2.1. Parents: `typer`, `typer-slim`,
+# `anaconda-cli-base` — they require click with loose floors only, so parent
+# upgrade cannot force 8.3.3; direct override is the only remediation.
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'idna>=3.15'
 
 # Security: python-dotenv 1.2.1 -> >=1.2.2 fixes GHSA-mf9w-mj56-hr94 (set_key()/
 # unset_key() follow symlinks on cross-device .env writes -> arbitrary file
