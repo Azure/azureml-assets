@@ -36,19 +36,51 @@ RUN pip install -r requirements.txt --no-cache-dir
 #
 # ptca env (py3.10):
 #   pyasn1: mlflow -> databricks-sdk -> google-auth -> pyasn1-modules -> pyasn1;
-#     pyasn1-modules pins pyasn1 with no version floor so pip may resolve <0.6.3 (CVE-2026-30922)
-#   Mako: mlflow -> alembic -> Mako; alembic 1.18.4 uses unpinned `Requires-Dist: Mako`
+#     pyasn1-modules 0.4.2 (latest 2026-05-23) pins `pyasn1<0.7.0,>=0.6.1` so pip may
+#     still resolve <0.6.3 (CVE-2026-30922) — parent does not tighten the floor.
+#   Mako: mlflow -> alembic -> Mako; alembic 1.18.4 (latest 2026-05-23) still uses
+#     unpinned `Requires-Dist: Mako`.
 #   python-dotenv: mlflow -> mlflow-skinny -> python-dotenv<2,>=0.19.0;
-#     mlflow 3.11.1 (latest as of 2026-05-08) keeps that wide range so pip may resolve <1.2.2 (GHSA-mf9w-mj56-hr94)
+#     mlflow-skinny 3.12.0 (latest 2026-05-23) keeps that wide range so pip may resolve
+#     <1.2.2 (GHSA-mf9w-mj56-hr94).
 #
 # base conda env (py3.13):
-#   python-dotenv 1.2.1 is brought in by anaconda-auth 0.13.1 (`Requires-Dist: python-dotenv`,
-#   no version pin) and pydantic-settings 2.12.0 (`python-dotenv>=0.21.0`); both are shipped
+#   python-dotenv 1.2.1 is brought in by anaconda-auth 0.15.0 (`Requires-Dist: python-dotenv`,
+#   no version pin) and pydantic-settings 2.14.1 (`python-dotenv>=0.21.0`); both are shipped
 #   pre-installed in the base env from the upstream base image and neither parent ships a
-#   tighter pin in its latest release as of 2026-05-08, so we patch python-dotenv directly
+#   tighter pin in its latest release as of 2026-05-23, so we patch python-dotenv directly
 #   in the base env via /opt/conda/bin/pip.
 RUN pip install --no-cache-dir --upgrade 'pyasn1>=0.6.3' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' \
  && /opt/conda/bin/pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
+
+# urllib3 2.6.3 in both base (py3.13) and ptca (py3.10) is vulnerable to
+# GHSA-qccp-gfcp-xxvc / CVE-2026-44431 (MEDIUM) and GHSA-mf9v-mfxr-j63j /
+# CVE-2026-44432 (HIGH) — fixed in urllib3 2.7.0. urllib3 is a transitive dep
+# pulled in by `requests` (used by mlflow, gdown, azureml-* etc.). `requests`
+# 2.32.5 (latest 2026-05-23) only requires `urllib3<3,>=1.21.1`, so no parent
+# package can be upgraded to pull in 2.7.0 — we must override directly. urllib3
+# 2.7.0 is not yet published on PyPI (latest there is 2.6.3) but is available
+# on conda-forge, so we install via `conda install` in both envs. We also clear
+# any pip-installed 2.6.3 dist-info that conda doesn't track so the SBOM
+# scanner does not re-flag the old version.
+#
+# idna 3.11 in base env (py3.13) is vulnerable to GHSA-65pc-fj4g-8rjx /
+# CVE-2026-45409 (CRITICAL) — fixed in 3.15. idna is pulled in transitively by
+# `requests` and `httpx`; neither parent pins a floor that forces >=3.15
+# (requests 2.32.5 uses `idna<4,>=2.5`). Only present in base env per scan.
+#
+# click 8.2.1 in base env (py3.13) is vulnerable to GHSA-47fr-3ffg-hgmw /
+# CVE-2026-7246 (HIGH) — fixed in 8.3.3. click is bundled in the upstream
+# base conda env via several CLI tools (e.g. mlflow, conda CLI plugins); no
+# parent package in the base env pins click>=8.3.3 as of 2026-05-23. Only
+# present in base env per scan.
+RUN conda install -y -n base -c conda-forge 'urllib3=2.7.0' 'idna=3.15' 'click=8.3.3' && \
+    conda install -y -n ptca -c conda-forge 'urllib3=2.7.0' && \
+    rm -rf /opt/conda/lib/python3.13/site-packages/urllib3-2.6*.dist-info \
+           /opt/conda/lib/python3.13/site-packages/idna-3.11.dist-info \
+           /opt/conda/lib/python3.13/site-packages/click-8.2*.dist-info \
+           /opt/conda/envs/ptca/lib/python3.10/site-packages/urllib3-2.6*.dist-info && \
+    conda clean -ay
 
 # py-rattler bundles a compiled Rust extension (rattler.abi3.so) that statically
 # links several Rust crates. The version shipped in the upstream base image

@@ -1,9 +1,7 @@
-# PTCA image
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
 
 USER root
 
-# Install unzip and upgrade OS packages to pick up any pending security fixes from the base image.
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required packages from pypi
@@ -20,8 +18,9 @@ RUN pip uninstall -y fastmcp mcp
 
 # Override vulnerable transitive deps in the ptca env (Python 3.10) that pip won't auto-upgrade:
 # pip: shipped by the base image conda env at 26.0.1 (GHSA-jp4c-xjxw-mgf9). pip is a top-level
-#   tool with no parent package; the base image hasn't been rebuilt with pip 26.1 yet, so we
-#   upgrade it explicitly in both the ptca env and the system Python 3.13 env below.
+#   tool with no parent package. Use `conda install` (not `pip install -U pip`) so the
+#   conda-meta JSON is rewritten — the SBOM scanner reads conda-meta and a pip-self-upgrade
+#   leaves the stale 26.0.1 conda-meta record in place, causing the vuln to keep being flagged.
 # urllib3: transitive dep via requests/botocore/etc. (requests pins urllib3<3,>=1.21.1 with a
 #   loose floor); pip resolves to vulnerable 2.6.3 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j).
 #   No parent release floors urllib3>=2.7.0, so explicit override is required.
@@ -36,7 +35,8 @@ RUN pip uninstall -y fastmcp mcp
 #   azureml-mlflow, transformers, etc.). No parent package to bump — the base image pre-installs
 #   pytest 7.4.3 and the ACPT base hasn't been rebuilt with a fix yet, so explicit override
 #   to >=9.0.3 is required (GHSA-6w46-j5rx-g56g).
-RUN pip install --no-cache-dir --upgrade 'pip>=26.1' 'urllib3>=2.7.0' 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3'
+RUN /opt/conda/bin/conda install -n ptca -c conda-forge -y 'pip>=26.1' && /opt/conda/bin/conda clean -afy
+RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3'
 
 # Upgrade vulnerable packages in the system Python (3.13)
 # pip: base image ships 26.0.1 (GHSA-jp4c-xjxw-mgf9); pip is a top-level tool with no parent, override required.
@@ -44,4 +44,10 @@ RUN pip install --no-cache-dir --upgrade 'pip>=26.1' 'urllib3>=2.7.0' 'Mako>=1.3
 #   (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j). No parent release floors urllib3>=2.7.0, override required.
 # python-dotenv: transitive dep via pydantic-settings (>=0.21.0 floor); parent uses loose floor so base resolves to
 #   vulnerable 1.2.1 (GHSA-mf9w-mj56-hr94); override to >=1.2.2
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'pip>=26.1' 'urllib3>=2.7.0' 'python-dotenv>=1.2.2'
+# idna: transitive via requests (idna<4,>=2.5), anyio (idna>=2.8), httpx (no pin) — all loose floors
+#   resolve to vulnerable 3.11 (GHSA-65pc-fj4g-8rjx / CVE-2026-45409). No parent release floors
+#   idna>=3.15, so explicit override is required.
+# click: transitive via mlflow-skinny (click<9,>=7.0), uvicorn (click>=7.0), typer (click>=8.2.1),
+#   flask (click>=8.1.3) — all loose floors resolve to vulnerable 8.2.1 (GHSA-47fr-3ffg-hgmw /
+#   CVE-2026-7246). No parent release floors click>=8.3.3, so explicit override is required.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'pip>=26.1' 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
