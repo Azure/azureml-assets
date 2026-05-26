@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-medium-cuda-gpu
-version: 2
+version: 3
 isArchived: true
 path: ./
 tags:
@@ -13,7 +13,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-medium
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
   contextLength: 448
   capabilities: ""
@@ -31,5 +31,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 1640305824
-    vRamFootprintBytes: 1640305824
+    fileSizeBytes: 670344241
+    vRamFootprintBytes: 670344241
