@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-tiny-cuda-gpu
-version: 2
+version: 3
 isArchived: true
 path: ./
 tags:
@@ -13,7 +13,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-tiny
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"}"
   contextLength: 448
   capabilities: ""
@@ -31,5 +31,5 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 121285804
-    vRamFootprintBytes: 121285804
+    fileSizeBytes: 89899070
+    vRamFootprintBytes: 89899070

@@ -1,6 +1,6 @@
 path:
-  container_name: whisper-models
-  container_path: whisper-large-v3-turbo/cuda-fp16/v2
+  container_name: models
+  container_path: foundrylocal/models/openai-whisper-large-v3-turbo/onnx/cuda/v3
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
