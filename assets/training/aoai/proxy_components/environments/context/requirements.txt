@@ -1,26 +1,14 @@
 openai==1.28.0
 pandas==2.2.0
-azureml-mlflow==1.56.0
+azureml-mlflow==1.62.0.post2
 azure-mgmt-cognitiveservices==13.5.0
 azure-identity>=1.16.1
 jsonlines==4.0.0
-azureml-telemetry==1.56.0
+azureml-telemetry==1.62.0
 pydantic==2.7.0
 azure-keyvault-secrets==4.8.0
-requests==2.33.0
-urllib3==2.7.0
-# cryptography is pulled in transitively by azure-identity / msal /
-# azure-keyvault-secrets, none of which pin a fixed minimum. The base
-# image (openmpi5.0-ubuntu24.04) currently ships cryptography 44.0.3,
-# which is vulnerable to GHSA-r6ph-v2qm-q3c2 (CVE-2026-26007) and
-# GHSA-m959-cc7f-wv43 (CVE-2026-34073). Override to >=46.0.7 (latest
-# fixed line) until the base image upgrades.
-cryptography>=46.0.7
-# idna is shipped by the base image (openmpi5.0-ubuntu24.04) at 3.13, which is
-# vulnerable to GHSA-65pc-fj4g-8rjx (CVE-2026-45409). The "parent" here is the
-# base image itself - no upstream Python package brings idna into our context;
-# it is a transitive dep of requests/httpx already installed in the base.
-# We cannot bump the base image to a tag that contains idna>=3.15 (none is
-# published as of 2026-05-23), so we pin idna directly here as the only
-# available remediation.
+requests==2.34.2
+# idna is brought in by requests (directly and via azure-core/msal) and by
+# httpx (via openai). Current parent releases still allow vulnerable idna
+# versions instead of requiring idna>=3.15, so keep this direct override.
 idna>=3.15

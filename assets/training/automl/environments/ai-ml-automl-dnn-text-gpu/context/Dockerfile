@@ -7,8 +7,6 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 COPY --from=mcr.microsoft.com/azureml/mlflow-ubuntu20.04-py38-cpu-inference:20250506.v1 /var/mlflow_resources/ /var/mlflow_resources/
 
 ENV MLFLOW_MODEL_FOLDER="mlflow-model"
-# ENV AML_APP_ROOT="/var/mlflow_resources"
-# ENV AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
@@ -40,17 +38,11 @@ EXPOSE 5001 8883 8888
 
 ENV ENABLE_METADATA=true
 
-# try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y 
-RUN conda install pip -n ptca -y
-
 # Security: upgrade pip in /opt/conda (base, py3.13) and /opt/conda/envs/ptca (py3.10)
 # to fix CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9 (vulnerable self-update behaviour in
-# pip < 26.1). The `conda install pip -n {base,ptca}` lines above resolve to
-# pip==26.0.1 from conda-forge, so an explicit follow-up pip upgrade is required.
-# pip is its own parent — no upstream package can ship a fixed pip — so explicit
-# upgrades are the only available remediation. Kept as its own RUN (no co-installed
-# packages) to avoid the documented pip self-upgrade race.
+# pip < 26.1). Current base tag biweekly.202605.2 ships pip==26.0.1 in both
+# envs. pip is its own parent, so no upstream package can ship a fixed pip.
+# Keep this as its own RUN to avoid the documented pip self-upgrade race.
 RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1' && \
     /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
 
@@ -63,8 +55,8 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     numpy~=1.23.5\
     scikit-learn=1.5.1 \
     pandas~=1.5.3 \
-    setuptools \
-    wheel=0.46.2 \
+    setuptools=82.0.1 \
+    wheel=0.46.3 \
     scipy=1.10.1 \
     pybind11=2.10.1 \
     # end conda dependencies
@@ -99,68 +91,69 @@ RUN pip install --no-cache-dir \
 # Doing it  separately from pip install above to avoid conflict with other packages
 # We should aim for this list to be empty with new and patched releases
 # by fixing dependencies in the base packages
-RUN pip list && \
-    pip install pyarrow==14.0.2 \
+RUN pip install pyarrow==14.0.2 \
                 accelerate==1.12.0 
 
 # Override transformers to fix GHSA-69w3-r845-3855
-# Root cause: azureml-automl-dnn-nlp==1.62.0 (latest) pins transformers==4.53.0; cannot upgrade parent
+# Root cause: azureml-automl-dnn-nlp==1.62.0 (latest as of 2026-05-26)
+# pins transformers==4.53.0; cannot upgrade parent.
 RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
 
 
 # Security: upgrade pip to fix CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9 (vulnerable
 # self-update behaviour in pip < 26.1) in the AZUREML conda env. The `conda create`
-# above seeds the env with pip==26.0.1 from conda-forge. pip is its own parent —
-# no upstream package can bring in a patched pip — so an explicit upgrade is the
+# above seeds the env with pip==26.0.1 from conda-forge. pip is its own parent,
+# so no upstream package can bring in a patched pip; an explicit upgrade is the
 # only remediation. Kept as its own RUN to avoid the pip self-upgrade race.
 RUN pip install --no-cache-dir --upgrade 'pip>=26.1'
 
-# Upgrade bokeh, cryptography, onnx in the AZUREML conda env (py3.10).
-# NOTE: azureml-mlflow==1.62.0.post2 (latest as of 2026-05-19) pins
-# cryptography<47.0.0; we use >=46.0.5 (compatible) to fix prior CVEs.
+# Upgrade bokeh, cryptography, and onnx in the AZUREML conda env (py3.10).
+# NOTE: azureml-mlflow==1.62.0.post2 (latest as of 2026-05-26) caps
+# cryptography<47.0.0 but does not force the fixed floor; use >=46.0.5.
 # Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
 # Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
-RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'wheel>=0.46.2' 'bokeh>=3.8.2' 'onnx>=1.21.0'
+RUN pip install --upgrade 'distributed>=2026.1.0' 'cryptography>=46.0.5' 'bokeh>=3.8.2' 'onnx>=1.21.0'
 
-# Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in ptca/base setuptools.
+# Fix vulnerable vendored dependencies in base and ptca setuptools.
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced.
-# Base image biweekly.202605.2 ships: base=82.0.0, ptca=81.0.0 (verified via probe build).
-# Both are below 82.0.1 (which carries the vendored fix), so both overrides are required.
-RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
+# Current base tag biweekly.202605.2 ships: base=82.0.0, ptca=81.0.0.
+# Both are below 82.0.1, so direct overrides are still required.
+RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1' && \
+    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
-# Security: upgrade urllib3 in base (py3.13) and ptca (py3.10) envs to fix
+# Security: upgrade urllib3 in the base env (py3.13) to fix
 # CVE-2026-44431 / GHSA-qccp-gfcp-xxvc and CVE-2026-44432 / GHSA-mf9v-mfxr-j63j
-# (urllib3 < 2.7.0). Base image biweekly.202605.1 ships urllib3 2.6.3 in both
-# envs. Parents: `requests` (urllib3<3,>=1.21.1) and `torchdata` (urllib3, no
-# pin) — both accept 2.7.0+, but neither pins forward, so a parent upgrade
-# cannot force the fix; direct override is the only remediation.
+# (urllib3 < 2.7.0). Current base tag biweekly.202605.2 ships urllib3 2.6.3
+# in base; ptca already ships urllib3 2.7.0, so no ptca override is needed.
+# Latest parents (`requests==2.34.2`, `distributed==2026.3.0`) still use loose
+# urllib3 ranges, so parent upgrades cannot force urllib3>=2.7.0.
 #
-# Security: upgrade idna in base (py3.13) and ptca (py3.10) envs to fix
-# CVE-2026-45409 / GHSA-65pc-fj4g-8rjx (idna < 3.15). Base image ships
-# idna 3.11 (base) and 3.13 (ptca). Parents: `requests`, `anyio`, `httpx`,
-# `yarl` — all use loose `idna` requirements with no upper pin, so parent
-# upgrade cannot force the fix; direct override is the only remediation.
+# Security: upgrade idna in the base env (py3.13) to fix CVE-2026-45409 /
+# GHSA-65pc-fj4g-8rjx (idna < 3.15). Current base tag biweekly.202605.2 ships
+# idna 3.11 in base; ptca already ships idna 3.15. Latest parents
+# (`requests==2.34.2`, `anyio==4.13.0`, `httpx==0.28.1`, `yarl==1.24.2`)
+# still use loose idna ranges, so parent upgrades cannot force idna>=3.15.
 #
 # Security: upgrade click in base env (py3.13) to fix CVE-2026-7246 /
 # GHSA-47fr-3ffg-hgmw (click.edit() command injection in click < 8.3.3).
-# Base image ships click 8.2.1. Parents: `typer`, `typer-slim`,
-# `anaconda-cli-base` — they require click with loose floors only, so parent
-# upgrade cannot force 8.3.3; direct override is the only remediation.
-RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3' && \
-    /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'idna>=3.15'
+# Current base tag biweekly.202605.2 ships click 8.2.1. Latest parents
+# (`typer==0.25.1`, `anaconda-cli-base==0.8.2`, and httpx's CLI extra)
+# still use loose click ranges, so parent upgrades cannot force click>=8.3.3.
+RUN /opt/conda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
 
 # Security: python-dotenv 1.2.1 -> >=1.2.2 fixes GHSA-mf9w-mj56-hr94 (set_key()/
 # unset_key() follow symlinks on cross-device .env writes -> arbitrary file
-# overwrite). Lives in /opt/conda/lib/python3.13/site-packages of the BASE conda
-# env (shipped by the ACPT base image biweekly.202605.1). It is pulled in
+# overwrite). Lives in /opt/conda/lib/python3.13/site-packages of the base conda
+# env (shipped by the current ACPT base image biweekly.202605.2). It is pulled in
 # transitively by anaconda-auth (Requires-Dist: python-dotenv with no version pin)
 # and pydantic-settings (python-dotenv>=0.21.0, via anaconda-cli-base ->
-# anaconda-auth). Latest releases on PyPI as of 2026-05-12 (anaconda-auth==0.14.4,
-# pydantic-settings==2.14.0) still use the same loose floors, so a parent upgrade
-# cannot force >=1.2.2 — direct override is the only remediation.
+# anaconda-auth). Latest releases on PyPI as of 2026-05-26 (anaconda-auth==0.15.0,
+# pydantic-settings==2.14.1) still use the same loose floors, so a parent upgrade
+# cannot force >=1.2.2; direct override is the only remediation.
 RUN conda run -n base pip install --no-cache-dir --upgrade 'python-dotenv>=1.2.2'
 
-RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
+# Apply the same setuptools vendored-dependency fix in the AzureML conda env.
+RUN pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
 
 RUN /bin/bash -c "source activate $AZUREML_CONDA_ENVIRONMENT_PATH && \
  export CUDACXX=/usr/local/cuda/bin/nvcc && \
