@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/openai-whisper-medium/onnx/cuda/v2
+  container_path: foundrylocal/models/openai-whisper-medium/onnx/cuda/v3
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:

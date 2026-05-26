@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large-v3-turbo-cuda-gpu
-version: 2
+version: 3
 isArchived: true
 path: ./
 tags:
@@ -14,7 +14,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-large-v3-turbo
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
   contextLength: 448
@@ -34,8 +34,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 9438190632
-    vRamFootprintBytes: 9438528266
+    fileSizeBytes: 842333753
+    vRamFootprintBytes: 842333753
 description: |
   Whisper Large V3 Turbo is an advanced speech recognition model, optimized for high-performance GPU inference. It is suitable for automatic speech recognition (ASR) tasks in various domains, leveraging large-scale training data for robust multilingual transcription. This model is an optimized version of whisper-large-v3-turbo designed for scenarios to enable local inference on CUDA GPUs.
 

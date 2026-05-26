@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-small-cuda-gpu
-version: 2
+version: 3
 isArchived: true
 path: ./
 tags:
@@ -14,7 +14,7 @@ tags:
   task: automatic-speech-recognition
   maxOutputTokens: 2048
   alias: whisper-small
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"prompt\": \"<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\"\
     }"
   contextLength: 448
@@ -33,8 +33,8 @@ variantInfo:
     quantization: ['RTN']
     device: 'gpu'
     executionProvider: 'CUDAExecutionProvider'
-    fileSizeBytes: 569232292
-    vRamFootprintBytes: 572890964
+    fileSizeBytes: 316267734
+    vRamFootprintBytes: 316267734
 description: |-
   This model is an optimized version of Whisper Small for local inference. Optimized models are published here in ONNX format to run on CUDA devices, including server platforms, desktops, and mobile, with the precision best suited to each of these targets.
 
