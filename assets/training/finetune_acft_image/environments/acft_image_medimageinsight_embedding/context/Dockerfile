@@ -4,6 +4,15 @@ USER root
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# pip 26.0.1 in both conda envs has GHSA-jp4c-xjxw-mgf9. pip is the bootstrap installer,
+# not a runtime dependency from requirements.txt or their transitive deps. The current ACPT
+# base tag (biweekly.202605.2) still ships pip 26.0.1 in conda-meta; conda-forge has 26.1.1
+# and updates the conda metadata that the SBOM scanner reads. Use --no-deps to avoid pulling
+# unrelated conda-forge package updates into the base image.
+RUN /opt/conda/bin/conda install -n ptca -c conda-forge -y --no-deps 'pip>=26.1' && \
+    /opt/conda/bin/conda install -n base -c conda-forge -y --no-deps 'pip>=26.1' && \
+    /opt/conda/bin/conda clean -afy
+
 # Install required packages from pypi
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
@@ -17,29 +26,15 @@ RUN pip install --no-cache-dir mlflow==3.11.1
 RUN pip uninstall -y fastmcp mcp
 
 # Override vulnerable transitive deps in the ptca env (Python 3.10) that pip won't auto-upgrade:
-# pip: shipped by the base image conda env at 26.0.1 (GHSA-jp4c-xjxw-mgf9). pip is a top-level
-#   tool with no parent package. Use `conda install` (not `pip install -U pip`) so the
-#   conda-meta JSON is rewritten — the SBOM scanner reads conda-meta and a pip-self-upgrade
-#   leaves the stale 26.0.1 conda-meta record in place, causing the vuln to keep being flagged.
-# urllib3: transitive dep via requests/botocore/etc. (requests pins urllib3<3,>=1.21.1 with a
-#   loose floor); pip resolves to vulnerable 2.6.3 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j).
-#   No parent release floors urllib3>=2.7.0, so explicit override is required.
 # Mako: transitive dep (mlflow → alembic 1.18.4 → Mako); alembic 1.18.4 declares "Mako" with no
 #   version pin at all, so pip resolves to 1.3.10 which has GHSA-v92g-xgxw-vvmm. No parent
 #   release floors Mako >= 1.3.11, so explicit override is the only fix.
 # GitPython: transitive dep (mlflow → mlflow-skinny 3.11.1 requires gitpython<4,>=3.1.9); the
 #   loose floor lets pip resolve 3.1.46 which has GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
 #   mlflow-skinny has no release that pins gitpython>=3.1.47, so explicit override is required.
-# pytest: shipped by the ACPT base image (NOT pulled in by any package in requirements.txt nor
-#   any of their transitive deps; verified by inspecting requires_dist of mlflow, mlflow-skinny,
-#   azureml-mlflow, transformers, etc.). No parent package to bump — the base image pre-installs
-#   pytest 7.4.3 and the ACPT base hasn't been rebuilt with a fix yet, so explicit override
-#   to >=9.0.3 is required (GHSA-6w46-j5rx-g56g).
-RUN /opt/conda/bin/conda install -n ptca -c conda-forge -y 'pip>=26.1' && /opt/conda/bin/conda clean -afy
-RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'Mako>=1.3.11' 'GitPython>=3.1.47' 'pytest>=9.0.3'
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47'
 
 # Upgrade vulnerable packages in the system Python (3.13)
-# pip: base image ships 26.0.1 (GHSA-jp4c-xjxw-mgf9); pip is a top-level tool with no parent, override required.
 # urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3
 #   (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j). No parent release floors urllib3>=2.7.0, override required.
 # python-dotenv: transitive dep via pydantic-settings (>=0.21.0 floor); parent uses loose floor so base resolves to
@@ -50,4 +45,4 @@ RUN pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'Mako>=1.3.11' 'GitPyt
 # click: transitive via mlflow-skinny (click<9,>=7.0), uvicorn (click>=7.0), typer (click>=8.2.1),
 #   flask (click>=8.1.3) — all loose floors resolve to vulnerable 8.2.1 (GHSA-47fr-3ffg-hgmw /
 #   CVE-2026-7246). No parent release floors click>=8.3.3, so explicit override is required.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'pip>=26.1' 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
