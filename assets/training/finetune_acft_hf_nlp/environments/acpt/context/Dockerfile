@@ -43,7 +43,12 @@ RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26
 #   floors so upgrading them does not pull in 1.2.2; direct override (GHSA-mf9w-mj56-hr94).
 # - urllib3 2.6.3: parents requests (>=1.26,<3) and others use loose floors; direct override
 #   required for GHSA-mf9v-mfxr-j63j and GHSA-qccp-gfcp-xxvc until base image refreshes.
-RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0'
+# - idna 3.11: parent `requests` declares `idna<4,>=2.5` (loose floor); upgrading requests does not
+#   pull idna>=3.15; direct override required for GHSA-65pc-fj4g-8rjx (CVE-2026-45409).
+# - click 8.2.1: pulled by multiple base-env CLIs (anaconda-cli-base, conda-libmamba-solver, etc.)
+#   all with loose floors; no single parent upgrade resolves it; direct override required for
+#   GHSA-47fr-3ffg-hgmw (CVE-2026-7246, command injection in click.edit()).
+RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
 
 # pip 26.0.1 in both base (python3.13) and ptca (python3.10) conda envs from ACPT base image needs upgrade
 # (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357; fixed in 26.1). pip is the package manager itself, bundled by conda;
@@ -52,6 +57,27 @@ RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dot
 # the stale 26.0.1 version. Direct override is the only remediation until the ACPT base image ships pip>=26.1.
 RUN conda install -n base -c conda-forge -y 'pip>=26.1.1' && \
     conda install -n ptca -c conda-forge -y 'pip>=26.1.1'
+
+# py-rattler 0.23.2 (preinstalled in ACPT base via conda) ships a compiled rattler.abi3.so that
+# bundles vulnerable Rust crates — openssl 0.10.75 (5 CRITICAL), aws-lc-sys 0.37.1
+# (3 HIGH + 2 MEDIUM), bytes 1.11.0 (HIGH), tar 0.4.44 (HIGH + MEDIUM), rustls-webpki 0.103.9
+# (4 MEDIUM), rand 0.8.5/0.9.2 (MEDIUM). py-rattler 0.23.2 is the latest release on PyPI and still
+# ships the same vulnerable crates, so upgrading does not help. py-rattler is a conda packaging
+# helper not used by Hugging Face NLP finetune workloads. This step runs AFTER all conda install /
+# conda run steps so that conda's env-consistency checks cannot reinstall the .so from its package
+# cache. We:
+#   1. uninstall the package via conda + pip (to drop conda-meta and any pip RECORD);
+#   2. delete the site-packages dir, any leftover py(_|-)rattler*.dist-info metadata, and any
+#      stray rattler.abi3.so, scanning the full filesystem (no -xdev) so /opt/conda symlinked to
+#      /opt/miniconda on a different mount is also covered;
+#   3. delete the conda-meta JSON record so vulnerability scanners that read conda-meta no longer
+#      list py-rattler as installed.
+RUN (conda remove -n base -y py-rattler 2>/dev/null || true) && \
+    (conda run -n base python -m pip uninstall -y py-rattler 2>/dev/null || true) && \
+    find / \( -path '*/site-packages/rattler' -o -name 'rattler.abi3.so' -o -name 'py_rattler-*.dist-info' -o -name 'py-rattler-*.dist-info' \) -prune -exec rm -rf {} + 2>/dev/null; \
+    find / -path '*/conda-meta/py-rattler-*.json' -delete 2>/dev/null; \
+    find / -path '*/conda-meta/py_rattler-*.json' -delete 2>/dev/null; \
+    true
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

@@ -2,24 +2,10 @@ FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:{{latest
 
 USER root:root
 
-# Update system package index and upgrade Python 3.10 packages to required versions.
-# openssh-client is reinstalled explicitly after `apt-get upgrade` to force pickup
-# of USN-8222-1 (>= 1:8.9p1-3ubuntu0.15). The stable-ubuntu2204-cu126-py310-torch280
-# base image (biweekly.202605.1) ALREADY ships 1:8.9p1-3ubuntu0.15 (verified with
-# `dpkg -l openssh-client`), but `apt-get upgrade` alone has been observed to leave
-# an older 1:8.9p1-3ubuntu0.14 in place when older base layers are cached during
-# rebuilds, so the explicit reinstall is kept as a defensive measure (same pattern
-# as assets/training/finetune_acft_multimodal/.../Dockerfile). openssh is shipped
-# by the Ubuntu base, so the only available remediation is the apt upgrade itself.
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install --reinstall -y openssh-client && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y
-
-# try updating pip for base and ptca env using conda
-RUN conda install pip -n base -y
-RUN conda install pip -n ptca -y
 
 RUN pip install --no-cache-dir \ 
     'azureml-automl-dnn-nlp=={{latest-pypi-version}}' \
@@ -44,34 +30,53 @@ RUN pip install \
 # Root cause: azureml-automl-dnn-nlp==1.62.0 (latest) pins transformers==4.53.0; cannot upgrade parent
 RUN pip install --no-cache-dir --no-deps 'transformers[sentencepiece,torch]==5.5.4'
 
-# Address vulnerabilities
-# Patch for Pillow vulnerability : Direct dep (used by bokeh, torchvision) from base image
-RUN pip install --upgrade 'pillow>=12.1.1'
+# Vulnerability patches for ptca environment (python 3.10 at /opt/conda/envs/ptca)
+# pip 26.0.1 -> >=26.1.1 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357): pip is base infra;
+#   no parent package brings it, so a direct upgrade is the only fix. The stale
+#   conda-meta JSON for pip-26.0.1 is removed so scanners do not re-flag it.
+# setuptools 81.0.0 -> >=82.0.1 (GHSA-58pv-8j8x-9vj2 in vendored jaraco.context):
+#   setuptools is a build dependency with no parent that pins it.
+# pytest >=9.0.3 (GHSA-6w46-j5rx-g56g): ACPT base ptca env not yet patched.
+# Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6,
+#   GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m.
+#   Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent.
+# bokeh 2.4.3 -> >=3.8.2 (GHSA-793v-589g-574v, CVE-2026-21883) and distributed
+#   2023.2.0 -> >=2026.1.0 (GHSA-c336-7962-wfj2, CVE-2026-23528) are pulled in by
+#   azureml-automl-runtime==1.62.0 which pins bokeh==2.4.3 and distributed==2023.2.0;
+#   no newer azureml-automl-runtime release exists, so direct override is required.
+RUN /opt/conda/envs/ptca/bin/pip install --upgrade \
+    'pip>=26.1.1' \
+    'setuptools>=82.0.1' \
+    'pytest>=9.0.3' \
+    'onnx>=1.21.0' \
+    'bokeh>=3.8.2' \
+    'distributed>=2026.1.0' && \
+    rm -f /opt/conda/envs/ptca/conda-meta/pip-26.0.1-*.json
 
-# Fix security vulnerabilities (ptca env)
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
-# setuptools vendors jaraco.context internally; >=82.0.1 bundles the patched version (GHSA-58pv-8j8x-9vj2)
-# Override onnx to fix GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
-# Root cause: azureml-automl-runtime==1.62.0 (latest) pins onnx<=1.17.0; cannot upgrade parent
-RUN pip install --upgrade 'wheel>=0.46.2' 'cryptography>=46.0.5' 'setuptools>=82.0.1' 'distributed>=2026.1.0' 'filelock>=3.20.3' 'bokeh>=3.8.2' 'protobuf>=6.33.5' 'onnx>=1.21.0'
-
-
-# Vulnerability patches for ptca environment
-# pytest override: GHSA-6w46-j5rx-g56g — from ACPT base image ptca env; base image not yet patched
-RUN /opt/conda/envs/ptca/bin/pip install --upgrade 'pytest>=9.0.3'
-
-# Fix security vulnerabilities (conda base env, python 3.13 at /opt/conda)
-# Verified against base image biweekly.202605.1 (2026-05-08):
-#   cryptography 46.0.7, wheel 0.46.3, PyJWT 2.12.1, aiohttp 3.13.5 — already patched
-#     in base image, so the previous overrides for these were removed (cleanup).
-#   setuptools 82.0.0 — base ships 82.0.0 but jaraco.context fix (GHSA-58pv-8j8x-9vj2)
-#     requires >=82.0.1, so override is retained.
-#   python-dotenv 1.2.1 — base ships 1.2.1 (GHSA-mf9w-mj56-hr94, set_key()/unset_key()
-#     follow symlinks on cross-device .env writes -> arbitrary file overwrite). Required
-#     version is >=1.2.2. Brought in transitively by anaconda-auth==0.14.2 (Requires-Dist:
-#     python-dotenv with no version pin) and pydantic-settings==2.12.0 (python-dotenv>=0.21.0,
-#     via anaconda-cli-base -> anaconda-auth). Latest releases on PyPI as of 2026-05-08
-#     (anaconda-auth==0.14.4, pydantic-settings==2.14.0) still use the same loose floors,
-#     so a parent upgrade cannot force >=1.2.2 — direct override required.
-RUN /opt/conda/bin/pip install --upgrade 'setuptools>=82.0.1' 'python-dotenv>=1.2.2'
-
+# Vulnerability patches for conda base env (python 3.13 at /opt/conda)
+# pip 26.0.1 -> >=26.1.1 (GHSA-jp4c-xjxw-mgf9, CVE-2026-6357): pip is base infra;
+#   no parent package brings it, so a direct upgrade is the only fix.
+# urllib3 2.6.3 -> >=2.7.0 (GHSA-qccp-gfcp-xxvc / CVE-2026-44431, GHSA-mf9v-mfxr-j63j
+#   / CVE-2026-44432): pulled in transitively by `requests` and many conda CLI deps
+#   (anaconda-cloud-auth, conda, pip itself). `requests` has no upper bound on urllib3
+#   (Requires-Dist: urllib3<3,>=1.21.1), and none of the conda parents pin urllib3
+#   tightly, so no parent upgrade can force >=2.7.0 -- direct override required.
+# idna >=3.15 (GHSA-65pc-fj4g-8rjx): base env parents (`requests`, `anyio`,
+#   `httpx`, `yarl`) declare loose idna requirements, so direct override is required.
+# click >=8.3.3 (GHSA-47fr-3ffg-hgmw): base env CLI parents use loose click floors,
+#   so direct override is required.
+# setuptools 82.0.0 -> >=82.0.1 (GHSA-58pv-8j8x-9vj2 in vendored jaraco.context):
+#   no parent package pins setuptools.
+# python-dotenv 1.2.1 -> >=1.2.2 (GHSA-mf9w-mj56-hr94): brought in transitively by
+#   anaconda-auth==0.14.2 (Requires-Dist: python-dotenv with no version pin) and
+#   pydantic-settings==2.12.0 (python-dotenv>=0.21.0, via anaconda-cli-base ->
+#   anaconda-auth). Latest releases on PyPI as of 2026-05-19 (anaconda-auth==0.14.4,
+#   pydantic-settings==2.14.0) still use the same loose floors, so a parent upgrade
+#   cannot force >=1.2.2 -- direct override required.
+RUN /opt/conda/bin/pip install --upgrade \
+    'pip>=26.1.1' \
+    'urllib3>=2.7.0' \
+    'idna>=3.15' \
+    'click>=8.3.3' \
+    'setuptools>=82.0.1' \
+    'python-dotenv>=1.2.2'
