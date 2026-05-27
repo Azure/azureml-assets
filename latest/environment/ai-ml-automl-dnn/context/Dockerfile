@@ -10,26 +10,18 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 ENV ENABLE_METADATA=true
 
-# Security: upgrade all OS packages to pick up the latest Ubuntu security errata
-# (covers USN-8222 openssh, USN-8226 kmod, USN-8227 curl, USN-8229 sed,
-#  USN-8233 nghttp2, USN-8249 dpkg, etc.). --fix-missing tolerates mirror sync gaps.
+# Upgrade OS packages to pick up current Ubuntu security errata.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade --fix-missing && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Security: upgrade pip in the base miniconda (/opt/miniconda) to fix
-# GHSA-jp4c-xjxw-mgf9 (pip < 26.1 self-update behaviour). The base image ships
-# pip 26.0.1 in /opt/miniconda; pip is its own parent so the only remediation
-# is an explicit upgrade. Done before the conda env is created.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'pip>=26.1'
-
-# Security: upgrade urllib3 in the base miniconda (/opt/miniconda) to >=2.7.0 for
-# GHSA-mf9v-mfxr-j63j and GHSA-qccp-gfcp-xxvc. Base miniconda ships urllib3 2.6.3.
-# urllib3 is a transitive dep of `requests` (which is pulled by conda/anaconda
-# client tooling); the latest `requests` (2.32.5) only requires urllib3<3, so
-# upgrading the parent `requests` cannot raise the urllib3 floor — direct
-# override is the only remediation for the /opt/miniconda site-packages copy.
-RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'urllib3>=2.7.0'
+# Security: idna>=3.16 fixes GHSA-65pc-fj4g-8rjx / CVE-2026-45409 in
+# /opt/miniconda. Parent research (2026-05-26): base requests 2.34.1 requires
+# idna<4,>=2.5; latest public requests 2.32.5, observed internal requests 2.34.2,
+# and yarl 1.22.0 still keep loose idna ranges, so parent upgrades cannot force
+# idna>=3.15. Direct override required for the base miniconda copy.
+RUN /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.16' && \
+    /opt/miniconda/bin/python -c "import idna; version=tuple(map(int, idna.__version__.split('.'))); assert version >= (3, 16), idna.__version__"
 
 # begin conda create
 # Create conda environment (minimal — packages installed via pip to avoid solver OOM)
@@ -96,25 +88,30 @@ RUN pip install \
                 # end pypi dependencies
 # end pip install
 
-# Fix vulnerabilities - security overrides for transitive dependencies
+# Fix vulnerabilities - security overrides for transitive dependencies.
+# Parent research refreshed 2026-05-26; direct floors are kept only where the
+# current parent packages still allow vulnerable lower versions.
 #
 # distributed>=2026.1.0    CVE-2026-23528  XSS-to-RCE via Dask dashboard proxy
-#                          Chain (L1): prophet -> distributed
-#                          Chain (L1): xgboost -> distributed
-#                          Chain (L2): prophet -> dask -> distributed
+#                          Chain: azureml-train-automl-runtime 1.62.0 ->
+#                          dask[complete]<=2023.2.0 -> distributed. Latest dask
+#                          only aligns distributed to the dask release; it does
+#                          not force this security floor.
 #
 # protobuf>=5.29.6         CVE-2025-4565   DoS via recursive protobuf messages (pure-Python)
-#                          Chain (L1): mlflow-skinny -> protobuf
+#                          Chain (L1): mlflow-skinny -> protobuf. Latest
+#                          mlflow-skinny 3.12.0 still allows protobuf>=3.12.0.
 #                          Chain (L2): azureml-automl-runtime -> onnxruntime -> protobuf
 #
 # cryptography>=46.0.5     CVE-2026-26007  EC subgroup validation bypass (ECDH key leak)
-#                          Chain (L1): azureml-mlflow -> cryptography
 #                          Chain (L1): mltable -> cryptography
-#                          Chain (L2): azureml-core -> paramiko -> cryptography
+#                          Chain (L2): azureml-core -> paramiko -> cryptography.
+#                          Latest mltable 1.6.3 and paramiko 3.5.1 keep loose
+#                          cryptography floors.
 #
 # bokeh>=3.8.2             GHSA-793v-589g-574v  conda env installs 2.4.3, pip can't auto-upgrade
-#                          Chain (L1): azureml-train-automl-runtime -> bokeh
-#                          Chain (L2): prophet -> dask -> bokeh
+#                          Chain (L1): azureml-train-automl-runtime 1.62.0 ->
+#                          bokeh<3.0.0 and dask[complete]<=2023.2.0.
 #
 # onnx>=1.21.0             GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6,
 #                          GHSA-p433-9wv8-28xj, GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m
@@ -130,12 +127,9 @@ RUN pip install \
 #                          intermediate parent cannot raise the floor.  Direct override required.
 #
 # ujson>=5.12.1            GHSA-c38f-wx89-p2xg  (decode buffer overflow)
-#                          Chain (L1): azureml-defaults -> azureml-inference-server-http ->
-#                                       gunicorn / flask / werkzeug helpers that pull ujson
-#                          Chain (L1): mlflow-skinny -> databricks-sdk -> ujson (optional)
-#                          ujson 5.12.1 is the only release with the patch and no parent
-#                          declares a tight pin on ujson, so the floor can only be raised
-#                          via a direct override here.
+#                          Current parent metadata does not declare a tight ujson
+#                          floor, so the floor can only be raised via a direct
+#                          override here.
 RUN pip install --upgrade 'distributed>=2026.1.0' 'protobuf>=5.29.6' 'cryptography>=46.0.5' \
     'bokeh>=3.8.2' \
     'onnx>=1.21.0' \

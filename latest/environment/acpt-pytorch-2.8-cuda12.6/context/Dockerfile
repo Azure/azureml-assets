@@ -33,41 +33,29 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Fix security vulnerabilities in ptca conda env (python 3.10, active)
-# setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx
-# urllib3>=2.7.0: GHSA-mf9v-mfxr-j63j (CVE-2026-44432), GHSA-qccp-gfcp-xxvc
-#   (CVE-2026-44431). Transitive via requests<=2.34.2 (urllib3<3,>=1.26) and
-#   botocore<=1.43.14 (urllib3!=2.2.0,<3,>=1.25.4); neither parent pins a safe
-#   floor as of 2026-05-23, so direct override required.
-RUN pip install --upgrade 'setuptools>=82.0.1' 'urllib3>=2.7.0'
+# Fix ptca conda env vulnerabilities (python 3.10, active).
+# pip>=26.1.1: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no parent package,
+# and VCM reads the ptca conda-meta record, so conda must update it. The current
+# base plus requirements dry-run already keep urllib3 at 2.7.0.
+# setuptools>=82.0.1: GHSA-58pv-8j8x-9vj2, GHSA-8rrh-rw8j-w5fx.
+RUN conda install -n ptca -c conda-forge -y 'pip>=26.1.1' 'setuptools>=82.0.1'
 
-# pip>=26.1: CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). pip is a root tool with no
-# parent package. Scanner reads opt/conda/envs/ptca/conda-meta/pip-*.json which
-# is only updated by conda, so we must use `conda install` (a plain
-# `pip install --upgrade pip` leaves the conda-meta record stale).
-RUN conda install -n ptca -c conda-forge -y 'pip>=26.1'
-
-# Fix security vulnerabilities in base conda env (python 3.13)
-# setuptools>=82.0.1: same advisories as ptca env above.
-# python-dotenv>=1.2.2: CVE-2026-28684 (GHSA-mf9w-mj56-hr94). Transitive via
-#   azureml-defaults -> azureml-inference-server-http -> pydantic-settings
-#   (<=2.14.0 requires python-dotenv>=0.21.0, no safe floor); direct override
-#   required.
-# urllib3>=2.7.0: see ptca env block above; same parent analysis.
-# idna>=3.15: GHSA-65pc-fj4g-8rjx (CVE-2026-45409). Transitive via
-#   requests<=2.34.2 (idna<4,>=2.5); parent does not pin a safe floor as of
-#   2026-05-23, so direct override required.
-# click>=8.3.3: GHSA-47fr-3ffg-hgmw (CVE-2026-7246). Transitive via
-#   mlflow-skinny<=3.12.0 (click<9,>=7.0), flask<=3.1.3 (click>=8.1.3),
-#   uvicorn<=0.47.0 (click>=7.0), typer<=0.25.1 (click>=8.2.1); none pin a
-#   safe floor as of 2026-05-23, so direct override required.
+# Fix base conda env vulnerabilities (python 3.13). Parent packages still expose
+# loose floors as of 2026-05-25, so these direct floors are required:
+# setuptools>=82.0.1: conda 26.3.2 requires setuptools>=60.0.0 only.
+# python-dotenv>=1.2.2: pydantic-settings 2.14.1 requires >=0.21.0.
+# urllib3>=2.7.0: requests 2.34.2 requires <3,>=1.26.
+# idna>=3.15: requests 2.34.2 requires <4,>=2.5.
+# click>=8.3.3: typer 0.25.1 requires >=8.2.1; mlflow-skinny 3.12.0 requires
+#   <9,>=7.0.
 RUN conda run -n base python -m pip install --upgrade \
     'setuptools>=82.0.1' 'python-dotenv>=1.2.2' \
     'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
 
-# pip>=26.1 in base env: CVE-2026-6357 (GHSA-jp4c-xjxw-mgf9). Same reasoning as
-# ptca env: conda-managed pip needs `conda install` so conda-meta and the
-# matching dist-info are updated together.
-RUN conda install -n base -c conda-forge -y 'pip>=26.1'
+# pip>=26.1.1 in base env: GHSA-jp4c-xjxw-mgf9. pip is a root tool with no
+# parent package. Pin conda to the base version because an unconstrained
+# conda-forge solve upgrades conda and installs py-rattler 0.23.2, which brings
+# the Rust vulnerabilities reported in VCM under rattler/rattler.abi3.so.
+RUN conda install -n base -c conda-forge -y 'pip>=26.1.1' 'conda=26.3.2'
 
 RUN conda clean -a -y && rm -rf /opt/miniconda/pkgs/

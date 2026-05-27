@@ -10,18 +10,9 @@ ENV MLFLOW_MODEL_FOLDER="mlflow-model"
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20250310.v1 /artifacts /var/
-# USN-8222-1 (CVE-2026-35385/35386/35387/35388/35414): openssh-client must be
-# >= 1:8.9p1-3ubuntu0.15. openssh-client is shipped by the Ubuntu 22.04 ACPT base
-# image (no pip parent in this asset's context); the only fix path is the OS package
-# manager. `apt-get upgrade` alone has been observed to leave the held openssh
-# version in place when an older base layer is cached, so reinstall openssh-client
-# explicitly to force pickup of the patched version. Only openssh-client is
-# pre-installed in this base image — openssh-server / openssh-sftp-server are not
-# present (and would pull in systemd and fail postinst inside docker build).
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-        libcurl4 \
         liblttng-ust1 \
         libunwind8 \
         libxml++2.6-2v5 \
@@ -30,7 +21,6 @@ RUN apt-get update && \
         rsyslog \
         runit \
         unzip && \
-    apt-get install --reinstall -y openssh-client && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
     cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
@@ -91,9 +81,11 @@ RUN pip install --no-cache-dir \
                 azureml-train-automl-client==1.62.0 \
                 azureml-train-automl-runtime==1.62.0 \
                 azureml-automl-dnn-vision==1.62.0
-                
+
 # Vulnerability patches for conda environment
-# NOTE: azureml-mlflow~=1.62.0 pins cryptography<46.0.0; upgrading anyway for CVE fix
+# NOTE: azureml-mlflow==1.62.0.post2 allows cryptography<47.0.0; upgrading within
+#       that parent constraint for CVE fixes because AzureML parents only set loose
+#       cryptography lower bounds.
 # NOTE: azureml-automl-runtime pins onnx<=1.17.0,>=1.16.1; force-installing onnx>=1.21.0 to fix
 #       GHSA-cmw6-hcpp-c6jp, GHSA-538c-55jv-c5g9, GHSA-q56x-g2fj-4rj6, GHSA-p433-9wv8-28xj,
 #       GHSA-3r9x-f23j-gc73, GHSA-hqmj-h5c6-369m. Parent azureml-automl-runtime (1.62.0) cannot
@@ -117,16 +109,10 @@ RUN pip install --no-cache-dir --upgrade \
 # pip>=26.1 (CVE-2026-6357 / GHSA-jp4c-xjxw-mgf9): pip < 26.1 deferred imports of
 #   well-known module names until after wheel install, allowing a freshly-installed
 #   wheel to be imported during the self-update check. ptca env ships pip 26.0.1
-#   from the ACPT base image; pip is its own parent (no upstream package can pull
-#   in a fixed pip via dependency resolution), so explicit override is required.
-# urllib3>=2.7.0 (GHSA-qccp-gfcp-xxvc, GHSA-mf9v-mfxr-j63j): urllib3 2.6.3 ships in the
-#   ptca env (py3.10) via the ACPT base image as a transitive dep of requests/botocore.
-#   urllib3 is its own root for security purposes — requests pins urllib3>=1.21.1,<3 and
-#   botocore pins urllib3>=1.25.4,<2.5 (py<3.10) or <3 (py>=3.10), so no parent release
-#   forces urllib3>=2.7.0. Explicit override is the only fix path.
+#   in biweekly.202605.2; pip is its own parent (no upstream package can pull in a
+#   fixed pip via dependency resolution), so explicit override is required.
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --upgrade \
-                'pillow==12.2.0' 'filelock>=3.20.3' 'cryptography>=46.0.7' 'protobuf>=6.33.5' 'wheel>=0.46.2' \
-                'pytest>=9.0.3' 'pip>=26.1' 'urllib3>=2.7.0' 'requests>=2.33.0' 'idna>=3.15' 'pyOpenSSL>=26.0.0'
+                'pip>=26.1'
 # setuptools resolver picks wrong version due to dep conflicts; force install to fix jaraco.context vuln (GHSA-58pv-8j8x-9vj2)
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
@@ -148,18 +134,17 @@ RUN /opt/conda/envs/ptca/bin/pip install --no-cache-dir --force-reinstall --no-d
 #   package — its parents (requests pins urllib3>=1.21.1,<3; botocore pins
 #   urllib3>=1.25.4,<3) do not bound it tightly enough to force 2.7.0, so no parent
 #   upgrade can pull in the fix. Explicit override required.
+# click>=8.3.3 (GHSA-47fr-3ffg-hgmw / CVE-2026-7246): metadata probe of the
+#   resolved base image (biweekly.202605.2) found click 8.2.1 in /opt/conda via
+#   anaconda-cli-base==0.8.2 (`click`) and typer==0.25.1 (`click>=8.2.1`).
+#   Current published parent metadata still has loose floors only, so no parent
+#   upgrade can force the patched click version; explicit override is required.
 RUN conda run -n base pip install --no-cache-dir --upgrade \
-                'cryptography>=46.0.7' \
-                'wheel>=0.46.2' \
-                'PyJWT>=2.12.0' \
-                'aiohttp>=3.13.4' \
                 'python-dotenv>=1.2.2' \
                 'pip>=26.1' \
                 'urllib3>=2.7.0' \
-                'requests>=2.33.0' \
                 'idna>=3.15' \
-                'pyOpenSSL>=26.0.0'
-# PyJWT 2.10.1 (CVE-2026-32597) is installed in the base conda env (python3.13) from ACPT base image; manually upgrading since base image hasn't been patched yet
+                'click>=8.3.3'
 # Fix vendored jaraco.context (GHSA-58pv-8j8x-9vj2) and wheel (GHSA-8rrh-rw8j-w5fx) in base setuptools
 # setuptools vendors jaraco.context internally; --force-reinstall --no-deps ensures vendored copies are replaced
 RUN /opt/conda/bin/pip install --no-cache-dir --force-reinstall --no-deps 'setuptools==82.0.1'
