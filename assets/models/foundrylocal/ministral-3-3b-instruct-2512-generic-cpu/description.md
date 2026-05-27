@@ -1,9 +1,8 @@
-This model is an optimized version of Ministral-3-3B-Instruct-2512 for local inference. Optimized models are published here in ONNX format to run on CPU and GPU across devices, including server platforms, Windows, Linux and Mac desktops, and mobile CPUs, with the precision best suited to each of these targets.
+This model is an optimized version of Ministral-3-3B-Instruct-2512 for local inference on CPU and mobile devices. This optimized model is published here in ONNX format to run on CPU and mobile targets, with the precision best suited to this target.
 
 # ONNX Models
 Here are some of the optimized configurations we have added:
 1. ONNX model for CPU and mobile using RTN quantization.
-2. ONNX model for GPU using RTN quantization.
 
 # Model Description
 - **Developed by:** Microsoft
