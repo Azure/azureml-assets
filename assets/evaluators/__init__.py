@@ -2,3 +2,5 @@
 # Licensed under the MIT License.
 
 """Evaluators package init file."""
+
+# Improved module documentation
