@@ -5,7 +5,7 @@ path: ./
 
 system_metadata:
   domain:
-    - "Molecular & Materials"
+    - "Chemistry & Materials"
 
 properties:
   inference-min-sku-spec: 6|1|112|64
