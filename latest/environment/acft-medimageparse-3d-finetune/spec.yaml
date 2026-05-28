@@ -4,7 +4,7 @@ description: AzureML ACFT MedImageParse 3d Image for Training
 
 
 name: "acft-medimageparse-3d-finetune"
-version: "1"
+version: "2"
 
 build:
   path: "context"
