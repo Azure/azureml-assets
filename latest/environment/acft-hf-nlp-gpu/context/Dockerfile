@@ -38,46 +38,20 @@ RUN pip install --upgrade --no-cache-dir 'fastmcp>=3.2.0'
 #          not pull urllib3>=2.7.0; direct override required for GHSA-mf9v-mfxr-j63j, GHSA-qccp-gfcp-xxvc
 RUN pip install --upgrade --no-cache-dir pyasn1==0.6.3 'python-multipart>=0.0.26' 'Mako>=1.3.11' 'python-dotenv>=1.2.2' 'onnx>=1.21.0' 'skops>=0.13.0' 'urllib3>=2.7.0'
 
-# Base conda env (python3.13) overrides from ACPT base image:
-# - python-dotenv 1.2.1: parents anaconda-auth (no pin) and pydantic-settings (>=0.21.0) use loose
-#   floors so upgrading them does not pull in 1.2.2; direct override (GHSA-mf9w-mj56-hr94).
-# - urllib3 2.6.3: parents requests (>=1.26,<3) and others use loose floors; direct override
-#   required for GHSA-mf9v-mfxr-j63j and GHSA-qccp-gfcp-xxvc until base image refreshes.
-# - idna 3.11: parent `requests` declares `idna<4,>=2.5` (loose floor); upgrading requests does not
-#   pull idna>=3.15; direct override required for GHSA-65pc-fj4g-8rjx (CVE-2026-45409).
-# - click 8.2.1: pulled by multiple base-env CLIs (anaconda-cli-base, conda-libmamba-solver, etc.)
-#   all with loose floors; no single parent upgrade resolves it; direct override required for
-#   GHSA-47fr-3ffg-hgmw (CVE-2026-7246, command injection in click.edit()).
+# Base conda env (Python 3.13) packages scanned from /opt/conda need direct pip overrides.
+# Dependency inspection shows parents only use loose ranges:
+# - urllib3: requests 2.33.1 declares urllib3<3,>=1.26.
+# - idna: requests 2.33.1, httpx 0.28.1, anyio 4.12.1 and yarl 1.23.0 accept vulnerable 3.11.
+# - click: anaconda-cli-base 0.8.2, typer 0.25.1 and extras from httpx/python-dotenv/cryptography accept 8.2.1.
+# python-dotenv has no installed parent in base; it is a vulnerable base package itself. Upgrading parents
+# does not force patched child versions, and conda updates would introduce py-rattler, so use pip in base.
 RUN conda run -n base python -m pip install --upgrade --no-cache-dir 'python-dotenv>=1.2.2' 'urllib3>=2.7.0' 'idna>=3.15' 'click>=8.3.3'
 
-# pip 26.0.1 in both base (python3.13) and ptca (python3.10) conda envs from ACPT base image needs upgrade
-# (GHSA-jp4c-xjxw-mgf9 / CVE-2026-6357; fixed in 26.1). pip is the package manager itself, bundled by conda;
-# no parent package depends on it. We use `conda install` (not `pip install --upgrade pip`) so that conda-meta
-# is updated alongside site-packages — vulnerability scanners read conda-meta and would otherwise still report
-# the stale 26.0.1 version. Direct override is the only remediation until the ACPT base image ships pip>=26.1.
-RUN conda install -n base -c conda-forge -y 'pip>=26.1.1' && \
-    conda install -n ptca -c conda-forge -y 'pip>=26.1.1'
-
-# py-rattler 0.23.2 (preinstalled in ACPT base via conda) ships a compiled rattler.abi3.so that
-# bundles vulnerable Rust crates — openssl 0.10.75 (5 CRITICAL), aws-lc-sys 0.37.1
-# (3 HIGH + 2 MEDIUM), bytes 1.11.0 (HIGH), tar 0.4.44 (HIGH + MEDIUM), rustls-webpki 0.103.9
-# (4 MEDIUM), rand 0.8.5/0.9.2 (MEDIUM). py-rattler 0.23.2 is the latest release on PyPI and still
-# ships the same vulnerable crates, so upgrading does not help. py-rattler is a conda packaging
-# helper not used by Hugging Face NLP finetune workloads. This step runs AFTER all conda install /
-# conda run steps so that conda's env-consistency checks cannot reinstall the .so from its package
-# cache. We:
-#   1. uninstall the package via conda + pip (to drop conda-meta and any pip RECORD);
-#   2. delete the site-packages dir, any leftover py(_|-)rattler*.dist-info metadata, and any
-#      stray rattler.abi3.so, scanning the full filesystem (no -xdev) so /opt/conda symlinked to
-#      /opt/miniconda on a different mount is also covered;
-#   3. delete the conda-meta JSON record so vulnerability scanners that read conda-meta no longer
-#      list py-rattler as installed.
-RUN (conda remove -n base -y py-rattler 2>/dev/null || true) && \
-    (conda run -n base python -m pip uninstall -y py-rattler 2>/dev/null || true) && \
-    find / \( -path '*/site-packages/rattler' -o -name 'rattler.abi3.so' -o -name 'py_rattler-*.dist-info' -o -name 'py-rattler-*.dist-info' \) -prune -exec rm -rf {} + 2>/dev/null; \
-    find / -path '*/conda-meta/py-rattler-*.json' -delete 2>/dev/null; \
-    find / -path '*/conda-meta/py_rattler-*.json' -delete 2>/dev/null; \
-    true
+# pip is the package manager in both base and ptca conda envs. defaults has no pip>=26.1.1 package,
+# while a normal conda-forge solve pulls unrelated conda updates and py-rattler. Install only the
+# patched pip package so conda-meta and site-packages both report the fixed version.
+RUN conda install -n base -c conda-forge --no-deps -y 'pip>=26.1.1' && \
+    conda install -n ptca -c conda-forge --no-deps -y 'pip>=26.1.1'
 
 # clean conda and pip caches
 RUN rm -rf ~/.cache/pip

@@ -30,10 +30,8 @@ ffmpeg==1.4
 lightning==2.5.5
 azureml-acft-image-components[mip]==0.0.91
 filelock>=3.20.1
-# GitPython: GHSA-mv93-w799-cj2w (fixed in 3.1.50). Pulled in transitively by
-# mlflow-skinny, whose dependency declaration is `gitpython<4,>=3.1.9` in both
-# 3.11.1 (pinned above) and the latest 3.12.0 (verified on PyPI 2026-05-23).
-# That loose floor resolves back to a vulnerable 3.1.49, so a parent-only
-# upgrade is not possible. Direct pin retained until mlflow-skinny tightens
-# the floor to >=3.1.50.
+# GitPython: GHSA-mv93-w799-cj2w (fixed in 3.1.50). Programmatic PyPI metadata
+# checks on 2026-05-25 show mlflow-skinny still declares gitpython<4,>=3.1.9
+# in the pinned version and latest available release, so a parent-only upgrade
+# cannot force the fixed floor.
 GitPython>=3.1.50
