@@ -12,5 +12,5 @@ image:
   tags:
     System: ""
     Docker: ""
-    Oras: "1.2.0"
-    Trivy: "0.69.1"
+    Oras: "1.3.2"
+    Trivy: "0.70.0"

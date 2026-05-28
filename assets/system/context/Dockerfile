@@ -6,15 +6,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl git \
  && rm -rf /var/lib/apt/lists/*
-ARG GO_VERSION=1.26.0
+ARG GO_VERSION=1.26.2
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz \
  && tar -C /usr/local -xzf /tmp/go.tar.gz \
  && rm /tmp/go.tar.gz
 ENV PATH=/usr/local/go/bin:$PATH
-ARG ORAS_VERSION=1.3.0
+ARG ORAS_VERSION=1.3.2
 # RUN GOBIN=/out go install oras.land/oras/cmd/oras@v${ORAS_VERSION} \
 #  && test -x /out/oras
-# Build ORAS v1.3.0 with patched golang.org/x/crypto to fix:
+# Build ORAS v1.3.2 with patched golang.org/x/crypto to fix:
 # CVE-2025-58181 (GHSA-j5w8-q4qc-rx2x) and CVE-2025-47914 (GHSA-f6x5-jh6r-wrfv)
 RUN git clone --depth 1 --branch v${ORAS_VERSION} https://github.com/oras-project/oras.git /tmp/oras \
  && cd /tmp/oras \
@@ -44,7 +44,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Trivy install (same small-footprint pattern)
-ARG TRIVY_VERSION=0.69.1
+ARG TRIVY_VERSION=0.70.0
 RUN curl -fsSL -o /tmp/trivy.deb "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb" \
  && apt-get update \
  && apt-get install -y --no-install-recommends /tmp/trivy.deb \
