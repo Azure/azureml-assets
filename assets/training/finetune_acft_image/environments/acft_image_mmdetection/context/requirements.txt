@@ -4,11 +4,13 @@ azureml-acft-common-components[image]~={{latest-pypi-version}}
 azureml-acft-image-components=={{latest-pypi-version}}
 azureml-core=={{latest-pypi-version}}
 requests>=2.34.0
+# azureml-core and requests allow urllib3<3 but do not force the patched 2.7.0 floor.
+urllib3>=2.7.0,<3
 datasets==2.15.0
 transformers==5.5.4
 accelerate==0.27.2
 optimum==1.23.3
-diffusers==0.24.0
+diffusers==0.38.0
 huggingface-hub==1.5.0
 openmim==0.3.9
 platformdirs==4.3.6
