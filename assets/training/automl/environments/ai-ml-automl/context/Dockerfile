@@ -108,7 +108,11 @@ RUN pip install --upgrade \
     'onnx>=1.21.0' \
     'pillow>=12.2.0' \
     'python-dotenv>=1.2.2'
-RUN pip install --no-deps --force-reinstall 'pmdarima==2.0.4'
+RUN pip install --no-deps --force-reinstall 'setuptools==81.0.0'
+RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
+RUN pip install --no-deps --force-reinstall 'onnxconverter-common==1.16.0'
+RUN pip install --no-deps --force-reinstall 'onnxmltools==1.14.0'
+RUN pip install --no-deps --force-reinstall 'pandas==2.0.0'
 # onnx: azureml-automl-runtime pins onnx<=1.17.0; override needed for
 #   GHSA-3r9x-f23j-gc73, GHSA-p433-9wv8-28xj, GHSA-q56x-g2fj-4rj6,
 #   GHSA-538c-55jv-c5g9, GHSA-cmw6-hcpp-c6jp, GHSA-hqmj-h5c6-369m
