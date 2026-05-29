@@ -50,7 +50,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'py-cpuinfo==5.0.0' \
     'joblib==1.2.0' \
     'setuptools-git' \
-    'setuptools==82.0.1' \
+    'setuptools==81.0.0' \
     'psutil>5.0.0,<6.0.0' \
     'torch==2.8.0'
 # end conda create
@@ -108,7 +108,6 @@ RUN pip install --upgrade \
     'onnx>=1.21.0' \
     'pillow>=12.2.0' \
     'python-dotenv>=1.2.2'
-RUN pip install --no-deps --force-reinstall 'setuptools==81.0.0'
 RUN pip install --no-deps --force-reinstall 'skl2onnx==1.19.1'
 RUN pip install --no-deps --force-reinstall 'onnxconverter-common==1.16.0'
 RUN pip install --no-deps --force-reinstall 'onnxmltools==1.14.0'
