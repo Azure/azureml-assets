@@ -1196,7 +1196,8 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             reason = llm_output.get("reason", "")
             score = float(score)
             score_result = "pass" if score == 1 else "fail"
-            llm_properties.update(self._get_token_metadata(prompty_output_dict))
+            token_metadata = self._get_token_metadata(prompty_output_dict)
+            llm_properties.update(token_metadata)
             response_dict = {
                 self._result_key: score,
                 f"{self._result_key}_score": score,
@@ -1207,6 +1208,8 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_properties": llm_properties,
             }
+            # Add top-level token metadata fields for backward compatibility.
+            response_dict.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
             return response_dict
 
         else:
@@ -1278,7 +1281,8 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        return {
+        token_metadata = self._get_token_metadata({})
+        result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
@@ -1288,6 +1292,9 @@ class ToolInputAccuracyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_properties": None,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
 
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:

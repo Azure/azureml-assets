@@ -1230,7 +1230,7 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             "sample_input": p.get("sample_input", ""),
             "sample_output": p.get("sample_output", ""),
         }
-        return {
+        result_payload = {
             self._result_key: score,
             f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
@@ -1240,6 +1240,9 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._result_key}_status": status,
             f"{self._result_key}_properties": {**properties, **metadata}
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result_payload.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
+        return result_payload
 
     def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
@@ -1253,7 +1256,8 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        return {
+        token_metadata = self._get_token_metadata({})
+        result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
@@ -1263,6 +1267,9 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_properties": None,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
 
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:
@@ -1470,8 +1477,9 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
         success_result = "pass" if score >= 1.0 else "fail"
         reason = llm_output.get("reason", "")
         llm_properties = llm_output.get("properties", {}) or {}
-        llm_properties.update(self._get_token_metadata(prompty_output_dict))
-        return {
+        token_metadata = self._get_token_metadata(prompty_output_dict)
+        llm_properties.update(token_metadata)
+        result = {
             self._result_key: score,
             f"{self._result_key}_score": score,
             f"{self._result_key}_passed": success_result == "pass",
@@ -1481,3 +1489,6 @@ class TaskCompletionEvaluator(PromptyEvaluatorBase[Union[str, int]]):
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_properties": llm_properties,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
