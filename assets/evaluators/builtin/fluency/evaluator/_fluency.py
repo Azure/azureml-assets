@@ -712,7 +712,8 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        return {
+        token_metadata = self._get_token_metadata({})
+        result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
@@ -722,6 +723,9 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_properties": None,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
 
     async def _the_super_do_eval(self, eval_input: Dict) -> Dict[str, Union[float, str]]:
         """Do a relevance evaluation.
@@ -782,8 +786,9 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                         score = float(match.group())
             score = float(score) if score is not None else math.nan
             score_result = self._get_binary_result(score)
-            llm_properties.update(self._get_token_metadata(prompty_output_dict))
-            return {
+            token_metadata = self._get_token_metadata(prompty_output_dict)
+            llm_properties.update(token_metadata)
+            result = {
                 self._result_key: score,
                 f"{self._result_key}_score": score,
                 f"{self._result_key}_passed": score_result == "pass",
@@ -793,6 +798,9 @@ class FluencyEvaluator(PromptyEvaluatorBase[Union[str, float]]):
                 f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_properties": llm_properties,
             }
+            # Add top-level token metadata fields for backward compatibility.
+            result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+            return result
         raise EvaluationException(
             message="Evaluator returned invalid output.",
             blame=ErrorBlame.SYSTEM_ERROR,

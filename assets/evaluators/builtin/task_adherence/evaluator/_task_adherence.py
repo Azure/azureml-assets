@@ -1099,8 +1099,9 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         p = prompty_output_dict if isinstance(prompty_output_dict, dict) else {}
         resolved_threshold = threshold if threshold is not None else self._threshold
         properties = dict(properties) if isinstance(properties, dict) else {}
-        properties.update(self._get_token_metadata(p))
-        return {
+        token_metadata = self._get_token_metadata(p)
+        properties.update(token_metadata)
+        result_payload = {
             self._result_key: score,
             f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
@@ -1108,6 +1109,9 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_reason": reason,
             f"{self._result_key}_properties": properties,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result_payload.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result_payload
 
     def _return_not_applicable_result(
         self, error_message: str, threshold: Union[int, float]
@@ -1121,7 +1125,8 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        return {
+        token_metadata = self._get_token_metadata({})
+        result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
@@ -1131,6 +1136,9 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_properties": None,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
 
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:
@@ -1371,9 +1379,10 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         score = float(llm_output.get("score", 0.0))
         score_result = "pass" if score >= 1.0 else "fail"
         llm_properties = llm_output.get("properties", {}) or {}
-        llm_properties.update(self._get_token_metadata(prompty_output_dict))
+        token_metadata = self._get_token_metadata(prompty_output_dict)
+        llm_properties.update(token_metadata)
 
-        return {
+        result = {
             self._result_key: score,
             f"{self._result_key}_score": score,
             f"{self._result_key}_passed": score_result == "pass",
@@ -1383,3 +1392,6 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_threshold": self._threshold,
             f"{self._result_key}_properties": llm_properties,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
