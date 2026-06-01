@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: parakeet-tdt-0.6b-v2
+version: 1
+isArchived: true
+path: ./
+tags:
+  foundryLocal: ""
+type: custom_model

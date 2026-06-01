@@ -1270,7 +1270,7 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             "sample_input": p.get("sample_input", ""),
             "sample_output": p.get("sample_output", ""),
         }
-        return {
+        result_payload = {
             self._result_key: score,
             f"{self._result_key}_score": score,
             f"{self._result_key}_result": result,
@@ -1280,6 +1280,9 @@ class CustomerSatisfactionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             f"{self._result_key}_status": status,
             f"{self._result_key}_properties": {**properties, **metadata},
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result_payload.update({f"{self._result_key}_{key}": value for key, value in metadata.items()})
+        return result_payload
 
     def _parse_prompty_output(self, prompty_output_dict: Dict) -> Dict[str, Any]:
         """Parse the prompty output into a standardized result dictionary.

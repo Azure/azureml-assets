@@ -720,7 +720,8 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float, None]]
         """
-        return {
+        token_metadata = self._get_token_metadata({})
+        result = {
             f"{self._result_key}": None,
             f"{self._result_key}_score": None,
             f"{self._result_key}_passed": None,
@@ -730,6 +731,9 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
             f"{self._result_key}_threshold": threshold,
             f"{self._result_key}_properties": None,
         }
+        # Add top-level token metadata fields for backward compatibility.
+        result.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+        return result
 
     @staticmethod
     def _get_token_metadata(prompty_output: Dict) -> Dict:
@@ -872,8 +876,9 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
             reason = llm_output.get("reason", "")
             llm_properties = llm_output.get("properties", {}) or {}
             score_result = self._get_binary_result(score)
-            llm_properties.update(self._get_token_metadata(result))
-            return {
+            token_metadata = self._get_token_metadata(result)
+            llm_properties.update(token_metadata)
+            response_dict = {
                 self._result_key: score,
                 f"{self._result_key}_score": score,
                 f"{self._result_key}_passed": score_result == "pass",
@@ -883,6 +888,9 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
                 f"{self._result_key}_threshold": self._threshold,
                 f"{self._result_key}_properties": llm_properties,
             }
+            # Add top-level token metadata fields for backward compatibility.
+            response_dict.update({f"{self._result_key}_{key}": value for key, value in token_metadata.items()})
+            return response_dict
 
         raise EvaluationException(
             message="Evaluator returned invalid output.",
