@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-1.5b-instruct-qnn-npu
-version: 2
+version: 3
 isArchived: true
 path: ./
 tags:
@@ -13,7 +13,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-1.5b
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"system\": \"<|system|>You are Qwen, an AI assistant developed by Alibaba. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"}"
   supportsToolCalling: "true"
   toolCallStart: "<tool_call>"
@@ -38,6 +38,7 @@ variantInfo:
     quantization: ['QuaRot', 'GPTQ']
     device: 'npu'
     executionProvider: 'QNNExecutionProvider'
-    fileSizeBytes: 2982936576
-    vRamFootprintBytes: 1749486141
+    fileSizeBytes: 1139116915
+    vRamFootprintBytes: 1139116915
+
 
