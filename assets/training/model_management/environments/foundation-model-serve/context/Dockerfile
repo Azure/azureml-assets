@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:latest
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:{{latest-image-tag}}
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -47,8 +47,7 @@ COPY . .
 RUN python3.12 -m pip install -e ./ --no-cache-dir && \
     rm -rf ~/.cache/pip
 
-# services there for its built-in scoring stack; we want only our api_server supervised.
-# The MCR base ships its legacy AzureML scoring services (gunicorn/nginx/rsyslog)
+# The MCR base ships its AzureML scoring services (gunicorn/nginx/rsyslog)
 # under /var/runit; remove them so only our api_server is supervised.
 RUN rm -rf /var/runit/gunicorn /var/runit/nginx /var/runit/rsyslog
 ADD runit_folder/api_server /var/runit/api_server
