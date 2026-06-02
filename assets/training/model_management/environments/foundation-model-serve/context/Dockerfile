@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda13.1-ubuntu24.04:latest
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -47,18 +47,18 @@ COPY . .
 RUN python3.12 -m pip install -e ./ --no-cache-dir && \
     rm -rf ~/.cache/pip
 
-# Install our api_server service under /etc/service (empty in the base image).
-# IMPORTANT: do NOT use /var/runit here — the MCR base ships gunicorn/nginx/rsyslog
 # services there for its built-in scoring stack; we want only our api_server supervised.
-ADD runit_folder/api_server /etc/service/api_server
-RUN sed -i 's/\r$//g' /etc/service/api_server/run && \
-    chmod +x /etc/service/api_server/run
+# The MCR base ships its legacy AzureML scoring services (gunicorn/nginx/rsyslog)
+# under /var/runit; remove them so only our api_server is supervised.
+RUN rm -rf /var/runit/gunicorn /var/runit/nginx /var/runit/rsyslog
+ADD runit_folder/api_server /var/runit/api_server
+RUN sed -i 's/\r$//g' /var/runit/api_server/run && \
+    chmod +x /var/runit/api_server/run
 
-ENV SVDIR=/etc/service \
+ENV SVDIR=/var/runit \
     WORKER_TIMEOUT=3600
 
-# install runit as the CMD below depends on `runsvdir`).
 RUN command -v runsvdir >/dev/null || { echo 'runsvdir missing in base image'; exit 1; }
 
 EXPOSE 5001
-CMD ["runsvdir", "/etc/service"]
+CMD ["runsvdir", "/var/runit"]
