@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: Phi-3-mini-128k-instruct
 path: ./
+isArchived: true
 properties:
   SharedComputeCapacityEnabled: "True"
   languages: en

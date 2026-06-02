@@ -80,7 +80,7 @@ RUN pip install --no-cache-dir \
                 azureml-interpret==1.62.0 \
                 azureml-responsibleai==1.62.0 \
                 azureml-automl-core==1.62.0.post3 \
-                azureml-automl-runtime==1.62.0 \
+                azureml-automl-runtime==1.62.0.post1 \
                 azureml-dataset-runtime==1.62.0 \
                 'azure-identity>=1.25.1' \
                 'inference-schema' \
