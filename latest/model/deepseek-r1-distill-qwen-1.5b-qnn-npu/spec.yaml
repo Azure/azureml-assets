@@ -35,7 +35,8 @@ variantInfo:
     device: 'npu'
     executionProvider: 'QNNExecutionProvider'
     fileSizeBytes: 1632077086
-    vRamFootprintBytes: 1336043110
+    vRamFootprintBytes: 1632077086
+
 description: |
   This model is an optimized version of DeepSeek-R1-Distill-Qwen-1.5B to enable local inference on QNN NPUs. This model uses QuaRot and GPTQ quantization.
 

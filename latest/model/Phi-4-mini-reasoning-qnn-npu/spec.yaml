@@ -43,7 +43,8 @@ variantInfo:
     device: 'npu'
     executionProvider: 'QNNExecutionProvider'
     fileSizeBytes: 2982936576
-    vRamFootprintBytes: 1749486141
+    vRamFootprintBytes: 2982936576
+
 description: |-
   This model is an optimized version of Phi-4-mini-reasoning to enable local inference on QNN NPUs. This model uses QuaRot and GPTQ quantization.
 

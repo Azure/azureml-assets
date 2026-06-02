@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: qwen2.5-7b-instruct-qnn-npu
-version: 2
+version: 3
 isArchived: true
 path: ./
 tags:
@@ -14,7 +14,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: qwen2.5-7b
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"system\": \"<|system|>You are Qwen, an AI assistant developed
     by Alibaba. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\"\
     : \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
@@ -42,8 +42,9 @@ variantInfo:
     quantization: ['QuaRot', 'GPTQ']
     device: 'npu'
     executionProvider: 'QNNExecutionProvider'
-    fileSizeBytes: 2982936576
-    vRamFootprintBytes: 1749486141
+    fileSizeBytes: 7316493941
+    vRamFootprintBytes: 7316493941
+
 
 description: |
   This model is an optimized version of qwen2.5-7b-instruct to enable local inference on QNN NPUs.

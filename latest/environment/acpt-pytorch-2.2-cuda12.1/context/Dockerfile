@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202605.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu126-py310-torch280:biweekly.202606.1
 
 # Base conda env (Python 3.13) security floors. Tool-based parent checks on 2026-05-26
 # showed requests only requires urllib3<3/idna<4, pydantic-settings only requires

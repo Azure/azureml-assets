@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-3.5-mini-instruct-qnn-npu
-version: 2
+version: 3
 isArchived: true
 path: ./
 tags:
@@ -14,7 +14,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-3.5-mini
-  directoryPath: v2
+  directoryPath: v3
   promptTemplate: "{\"system\": \"<|system|>Your name is Phi, an AI math expert developed
     by Microsoft. {Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\", \"assistant\"\
     : \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
@@ -36,8 +36,9 @@ variantInfo:
     quantization: ['QuaRot', 'GPTQ']
     device: 'npu'
     executionProvider: 'QNNExecutionProvider'
-    fileSizeBytes: 2982936576
-    vRamFootprintBytes: 1749486141
+    fileSizeBytes: 2164067858
+    vRamFootprintBytes: 2164067858
+
 
 description: |
   This model is an optimized version of phi-3.5-mini-instruct to enable local inference on QNN NPUs.
