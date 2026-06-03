@@ -101,6 +101,7 @@ ENV PATH=/opt/miniconda/bin:$PATH
 RUN wget -qO /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py312_24.5.0-0-Linux-x86_64.sh && \
     bash /tmp/miniconda.sh -bf -p /opt/miniconda && \
     conda update --all -c conda-forge -y && \
+    conda install "py-rattler>=0.24.0" -c conda-forge -y && \
     conda clean -ay && \
     rm -rf /opt/miniconda/pkgs && \
     rm -f /tmp/miniconda.sh && \
@@ -130,7 +131,7 @@ RUN conda clean -afy && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y   
-    
+
 RUN pip install pipdeptree
 
 USER dockeruser
