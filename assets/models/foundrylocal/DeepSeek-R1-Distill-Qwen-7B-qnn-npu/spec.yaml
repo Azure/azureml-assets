@@ -32,4 +32,5 @@ variantInfo:
     device: 'npu'
     executionProvider: 'QNNExecutionProvider'
     fileSizeBytes: 3987199754
-    vRamFootprintBytes: 3301640765
+    vRamFootprintBytes: 3987199754
+

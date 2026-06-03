@@ -56,6 +56,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     conda clean -a -y
 
 # Install scientific packages + pip/setuptools/wheel via pip (avoids conda solver OOM)
+# Pin setuptools below 82 so pkg_resources remains available for AzureML packages.
 RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'numpy>=1.23.5,<1.24' \
     'scikit-learn==1.5.1' \
@@ -63,7 +64,7 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip install --no-cache-dir \
     'scipy==1.10.1' \
     'psutil>=5.2.2,<6.0.0' \
     'pip>=26.1' \
-    'setuptools>=82.0.1' \
+    'setuptools==81.0.0' \
     'wheel>=0.46.2'
 # end conda create
 
@@ -101,7 +102,6 @@ RUN pip install --no-cache-dir \
 # Fix vulnerabilities - overrides needed because parent packages cap vulnerable versions
 # distributed>=2026.1.0: CVE-2026-23528 (via azureml-train-automl-runtime -> dask[complete])
 # cryptography>=46.0.5: CVE-2026-26007 (via azureml-mlflow, azure-identity, azureml-core -> msal/pyopenssl)
-# setuptools>=82.0.1: CVE-2026-23949 (vendors patched jaraco.context 6.1.0; universal build tool)
 # mlflow-skinny>=2.16.0: security fixes (via azureml-mlflow, azureml-contrib-automl-dnn-forecasting)
 # protobuf>=5.29.6: CVE-2026-0994 (via mlflow-skinny, azureml-automl-runtime -> onnx/onnxruntime)
 # pillow>=12.1.1: CVE-2026-25990 (via matplotlib, bokeh, tensorboard)
