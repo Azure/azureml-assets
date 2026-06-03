@@ -2,7 +2,7 @@ azure-ai-contentsafety==1.0.0b1
 azure-ai-ml==1.13.0
 azureml-mlflow==1.60.0
 azure-identity==1.23.0
-fastapi==0.120.4
+fastapi==0.136.3
 pandas==2.2.3
 transformers==5.0.0
 uvicorn==0.38.0
