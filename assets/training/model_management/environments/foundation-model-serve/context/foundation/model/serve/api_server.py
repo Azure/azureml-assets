@@ -544,13 +544,13 @@ def _normalize_generation_params(params: Dict) -> Dict:
     Returns:
         Dict: Normalized parameters compatible with VLLM.
     """
-    # Map legacy or alternate keys
+    # Map legacy or alternate keys; pop so wrapper-only aliases don't reach vLLM.
     for key in ("max_gen_len", "max_new_tokens"):
         if key in params:
-            params["max_tokens"] = params[key]
+            params["max_tokens"] = params.pop(key)
 
     # Handle sampling and beam search configurations
-    if not params.get("do_sample", True):
+    if not params.pop("do_sample", True):
         logger.info("do_sample is false, setting temperature to 0.")
         params["temperature"] = 0.0
 
@@ -563,16 +563,9 @@ def _normalize_generation_params(params: Dict) -> Dict:
 
     # Handle EOS / Stop token mapping
     if "eos_token_id" in params:
-        eos_token_id = params["eos_token_id"]
+        eos_token_id = params.pop("eos_token_id")
         params["stop_token_ids"] = [eos_token_id] if not isinstance(
             eos_token_id, list) else eos_token_id
-
-    # Remove unsupported parameters
-    unsupported_keys = set(params.keys()) - set(VLLM_SAMPLING_PARAMS.keys())
-    for key in unsupported_keys:
-        logger.warning(
-            f"Parameter '{key}' is not supported by VLLM and will be removed.")
-        params.pop(key, None)
 
     return params
 
