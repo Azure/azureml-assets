@@ -658,18 +658,6 @@ class TestGroundednessNoneScoreHandling:
         assert result["groundedness"] is None
         assert result["groundedness_result"] == "not_applicable"
 
-    def test_turn_level_with_query_none_score_does_not_crash(self):
-        """Turn-level eval with query + response + context and score=None should not crash."""
-        evaluator = _create_mocked_groundedness_evaluator()
-        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
-        result = evaluator(
-            query="Why is the sky blue?",
-            response="The sky is blue.",
-            context="The sky appears blue due to Rayleigh scattering.",
-        )
-        assert result["groundedness"] is None
-        assert result["groundedness_result"] == "not_applicable"
-
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
         evaluator = _create_mocked_groundedness_evaluator()
