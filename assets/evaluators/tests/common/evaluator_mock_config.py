@@ -68,6 +68,7 @@ EVALUATOR_CONFIGS: Dict[str, EvaluatorOutputConfig] = {
     "customer_satisfaction": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
     "deflection_rate": EvaluatorOutputConfig(EvaluatorCategory.BINARY_INVERSE, OutputType.DICT),
     "quality_grader": EvaluatorOutputConfig(EvaluatorCategory.BINARY, OutputType.DICT),
+    "retrieval": EvaluatorOutputConfig(EvaluatorCategory.GRADERS, OutputType.DICT),
 }
 
 
