@@ -9,7 +9,11 @@ from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
-from ..common.evaluator_mock_config import create_none_score_flow_side_effect, create_mocked_evaluator, assert_none_score_result
+from ..common.evaluator_mock_config import (
+    create_none_score_flow_side_effect,
+    create_mocked_evaluator,
+    assert_none_score_result,
+)
 
 
 @pytest.mark.unittest

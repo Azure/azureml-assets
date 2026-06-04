@@ -19,7 +19,11 @@ from ...builtin.groundedness.evaluator._groundedness import (
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect, assert_none_score_result
+from ..common.evaluator_mock_config import (
+    get_flow_side_effect_for_evaluator,
+    create_none_score_flow_side_effect,
+    assert_none_score_result,
+)
 
 
 @pytest.mark.unittest

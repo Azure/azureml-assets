@@ -7,7 +7,11 @@ import pytest
 from unittest.mock import MagicMock
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..common import BasePromptyEvaluatorRunner
-from ..common.evaluator_mock_config import create_none_score_flow_side_effect, create_mocked_evaluator, assert_none_score_result
+from ..common.evaluator_mock_config import (
+    create_none_score_flow_side_effect,
+    create_mocked_evaluator,
+    assert_none_score_result,
+)
 
 
 @pytest.mark.unittest
