@@ -466,6 +466,11 @@ class ConversationValidator(ValidatorInterface):
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate the evaluation input dictionary."""
+        # Documented skip cases (empty/None query/response/conversation messages)
+        # should not raise USER_ERROR; they are surfaced as status="skipped" by
+        # _do_eval via _return_not_applicable_result. See PR #5042.
+        if _documented_skip_reason(eval_input) is not None:
+            return True
         conversation = eval_input.get("conversation")
         if conversation:
             conversation_validation_exception = self._validate_conversation(conversation)
@@ -486,6 +491,38 @@ class ConversationValidator(ValidatorInterface):
 # endregion Validators
 
 logger = logging.getLogger(__name__)
+
+
+def _is_empty_input_value(value: Any) -> bool:
+    """Return True if value is None or an empty string/list/dict (documented skip case)."""
+    if value is None:
+        return True
+    if isinstance(value, (str, list, dict)) and len(value) == 0:
+        return True
+    return False
+
+
+def _documented_skip_reason(eval_input: Dict[str, Any]) -> Optional[str]:
+    """Return a reason string when eval_input matches a documented skip case, else None.
+
+    Documented skip cases for the relevance evaluator (per the prompty's
+    "Status: Skipped" rules and PR #5042's _return_not_applicable_result helper):
+      - query or response is None / empty string / empty list
+      - conversation.messages is None / empty
+    These are inputs that the LLM-side prompt would itself return status="skipped"
+    for, but the SDK validators previously raised USER_ERROR before the LLM ever ran.
+    """
+    conversation = eval_input.get("conversation")
+    if isinstance(conversation, dict):
+        msgs = conversation.get("messages")
+        if _is_empty_input_value(msgs):
+            return "Conversation messages are empty; evaluation is not applicable."
+    if "query" in eval_input or "response" in eval_input:
+        if _is_empty_input_value(eval_input.get("query")):
+            return "Query is empty; evaluation is not applicable."
+        if _is_empty_input_value(eval_input.get("response")):
+            return "Response is empty; evaluation is not applicable."
+    return None
 
 
 def _is_intermediate_response(response):
@@ -840,6 +877,12 @@ class RelevanceEvaluator(PromptyEvaluatorBase):
         :return: The evaluation result.
         :rtype: Dict
         """
+        # Short-circuit documented skip cases (empty/missing inputs) to status="skipped"
+        # before any further processing. Matches PR #5042's _return_not_applicable_result
+        # design intent and the prompty's "Status: Skipped" rules.
+        skip_reason = _documented_skip_reason(eval_input)
+        if skip_reason is not None:
+            return self._return_not_applicable_result(skip_reason, self._threshold)
         if "query" not in eval_input and "response" not in eval_input:
             raise EvaluationException(
                 message="Only text conversation inputs are supported.",

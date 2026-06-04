@@ -524,6 +524,8 @@ class ConversationValidator(ValidatorInterface):
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input."""
+        if _documented_skip_reason(eval_input) is not None:
+            return True
         conversation = eval_input.get("conversation")
         if conversation:
             conversation_validation_exception = self._validate_conversation(conversation)
@@ -619,6 +621,8 @@ class ToolDefinitionsValidator(ConversationValidator):
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input with tool definitions."""
+        if _documented_skip_reason(eval_input) is not None:
+            return True
         if super().validate_eval_input(eval_input):
             tool_definitions = eval_input.get("tool_definitions")
             tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
@@ -633,6 +637,8 @@ class MessagesOrQueryResponseInputValidator(ToolDefinitionsValidator):
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input, supporting messages as an alternative to query/response."""
+        if _documented_skip_reason(eval_input) is not None:
+            return True
         messages = eval_input.get("messages")
         if messages is not None:
             if not isinstance(messages, list):
@@ -816,6 +822,39 @@ def serialize_messages(messages: List[dict]) -> str:
 
 
 logger = logging.getLogger(__name__)
+
+
+def _is_empty_input_value(value: Any) -> bool:
+    """Return True if value is None or an empty string/list/dict (documented skip case)."""
+    if value is None:
+        return True
+    if isinstance(value, (str, list, dict)) and len(value) == 0:
+        return True
+    return False
+
+
+def _documented_skip_reason(eval_input: Dict[str, Any]) -> Optional[str]:
+    """Return a reason string when eval_input matches a documented skip case, else None.
+
+    Documented skip cases for task_adherence (per prompty's "Status: Skipped" rules
+    and PR #5042's _return_not_applicable_result helper):
+      - query, response, conversation.messages, or messages is None/empty
+      - tool_definitions is present-but-empty (no tools to evaluate against)
+    """
+    conversation = eval_input.get("conversation")
+    if isinstance(conversation, dict):
+        if _is_empty_input_value(conversation.get("messages")):
+            return "Conversation messages are empty; evaluation is not applicable."
+    if "messages" in eval_input and _is_empty_input_value(eval_input.get("messages")):
+        return "Messages are empty; evaluation is not applicable."
+    if "query" in eval_input or "response" in eval_input:
+        if _is_empty_input_value(eval_input.get("query")):
+            return "Query is empty; evaluation is not applicable."
+        if _is_empty_input_value(eval_input.get("response")):
+            return "Response is empty; evaluation is not applicable."
+    if "tool_definitions" in eval_input and _is_empty_input_value(eval_input.get("tool_definitions")):
+        return "Tool definitions are empty; evaluation is not applicable."
+    return None
 
 
 def _is_intermediate_response(response):
@@ -1266,6 +1305,9 @@ class TaskAdherenceEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: The evaluation result.
         :rtype: Dict
         """
+        skip_reason = _documented_skip_reason(eval_input)
+        if skip_reason is not None:
+            return self._return_not_applicable_result(skip_reason, self._threshold)
         if self._should_use_conversation_level(eval_input):
             return await self._do_eval_conversation(eval_input)
         if "query" not in eval_input or "response" not in eval_input:

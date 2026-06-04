@@ -453,6 +453,8 @@ class ConversationValidator(ValidatorInterface):
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input."""
+        if _documented_skip_reason(eval_input) is not None:
+            return True
         conversation = eval_input.get("conversation")
         if conversation:
             conversation_validation_exception = self._validate_conversation(conversation)
@@ -548,6 +550,8 @@ class ToolDefinitionsValidator(ConversationValidator):
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate evaluation input with tool definitions."""
+        if _documented_skip_reason(eval_input) is not None:
+            return True
         if super().validate_eval_input(eval_input):
             tool_definitions = eval_input.get("tool_definitions")
             tool_definitions_validation_exception = self._validate_tool_definitions(tool_definitions)
@@ -605,6 +609,8 @@ class ToolCallsValidator(ToolDefinitionsValidator):
     @override
     def validate_eval_input(self, eval_input: Dict[str, Any]) -> bool:
         """Validate the evaluation input dictionary."""
+        if _documented_skip_reason(eval_input) is not None:
+            return True
         query = eval_input.get("query")
         query_validation_exception = self._validate_query(query)
         if query_validation_exception:
@@ -637,6 +643,40 @@ class ToolCallsValidator(ToolDefinitionsValidator):
 # endregion Validators
 
 logger = logging.getLogger(__name__)
+
+
+def _is_empty_input_value(value: Any) -> bool:
+    """Return True if value is None or an empty string/list/dict (documented skip case)."""
+    if value is None:
+        return True
+    if isinstance(value, (str, list, dict)) and len(value) == 0:
+        return True
+    return False
+
+
+def _documented_skip_reason(eval_input: Dict[str, Any]) -> Optional[str]:
+    """Return a reason string when eval_input matches a documented skip case, else None.
+
+    Documented skip cases for tool_selection (per prompty's "Status: Skipped" rules
+    and PR #5042's _return_not_applicable_result helper):
+      - query, response, or conversation.messages is None/empty
+      - tool_definitions is None / missing / empty (no tools to evaluate against)
+      - tool_calls is None / empty (no tool calls to score)
+    """
+    conversation = eval_input.get("conversation")
+    if isinstance(conversation, dict):
+        if _is_empty_input_value(conversation.get("messages")):
+            return "Conversation messages are empty; evaluation is not applicable."
+    if "query" in eval_input and _is_empty_input_value(eval_input.get("query")):
+        return "Query is empty; evaluation is not applicable."
+    if "response" in eval_input and _is_empty_input_value(eval_input.get("response")):
+        return "Response is empty; evaluation is not applicable."
+    if _is_empty_input_value(eval_input.get("tool_definitions")):
+        return "Tool definitions are empty; evaluation is not applicable."
+    if "tool_calls" in eval_input and _is_empty_input_value(eval_input.get("tool_calls")):
+        return "No tool calls to evaluate; evaluation is not applicable."
+    return None
+
 
 T_EvalValue = TypeVar("T_EvalValue")
 
@@ -1186,6 +1226,9 @@ class ToolSelectionEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         :return: A dictionary containing the result of the evaluation.
         :rtype: Dict[str, Union[str, float]]
         """
+        skip_reason = _documented_skip_reason(eval_input)
+        if skip_reason is not None:
+            return self._return_not_applicable_result(skip_reason, self._threshold)
         if eval_input.get("query") is None:
             raise EvaluationException(
                 message=(

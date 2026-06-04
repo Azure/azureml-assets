@@ -17,6 +17,30 @@ from azure.ai.evaluation._constants import EVALUATION_PASS_FAIL_MAPPING
 logger = logging.getLogger(__name__)
 
 
+def _is_empty_input_value(value) -> bool:
+    """Return True if value is None or an empty string/list/dict (documented skip case)."""
+    if value is None:
+        return True
+    if isinstance(value, (str, list, dict)) and len(value) == 0:
+        return True
+    return False
+
+
+def _documented_skip_reason(eval_input: Dict) -> Optional[str]:
+    """Return a reason string when eval_input matches a documented skip case, else None.
+
+    Documented skip cases for response_completeness:
+      - response or ground_truth is None / empty
+    These match PR #5042's _return_not_applicable_result design intent: empty
+    inputs should yield status="skipped" rather than raise USER_ERROR.
+    """
+    if "ground_truth" in eval_input and _is_empty_input_value(eval_input.get("ground_truth")):
+        return "Ground truth is empty; evaluation is not applicable."
+    if "response" in eval_input and _is_empty_input_value(eval_input.get("response")):
+        return "Response is empty; evaluation is not applicable."
+    return None
+
+
 def _is_intermediate_response(response):
     """Check if response is intermediate (last content item is function_call or mcp_approval_request)."""
     if isinstance(response, list) and len(response) > 0:
@@ -278,6 +302,9 @@ class ResponseCompletenessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         """
         # we override the _do_eval method as we want the output to be a dictionary,
         # which is a different schema than _base_prompty_eval.py
+        skip_reason = _documented_skip_reason(eval_input)
+        if skip_reason is not None:
+            return self._return_not_applicable_result(skip_reason, self._threshold)
         if "ground_truth" not in eval_input or "response" not in eval_input:
             raise EvaluationException(
                 message="Both ground_truth and response must be provided as input to the completeness evaluator.",
