@@ -12,7 +12,6 @@ import httpx
 import argparse
 import copy
 import json
-import time
 import uvicorn
 import importlib.resources as impresources
 import copy
@@ -514,62 +513,6 @@ def send_openai_request(request, raw_request, uri):
     return response
 
 
-VLLM_SAMPLING_PARAMS = {
-    "n": "Number of output sequences to return for the given prompt.",
-    "best_of": "Number of output sequences that are generated from the prompt. From these `best_of` sequences, the top `n` sequences are returned. `best_of` must be greater than or equal to `n`. This is treated as the beam width when `use_beam_search` is True. By default, `best_of` is set to `n`.",
-    "presence_penalty": "Float that penalizes new tokens based on whether they appear in the generated text so far. Values > 0 encourage the model to use new tokens, while values < 0 encourage the model to repeat tokens.",
-    "frequency_penalty": "Float that penalizes new tokens based on their frequency in the generated text so far. Values > 0 encourage the model to use new tokens, while values < 0 encourage the model to repeat tokens.",
-    "temperature": "Float that controls the randomness of the sampling. Lower values make the model more deterministic, while higher values make the model more random. Zero means greedy sampling.",
-    "top_p": "Float that controls the cumulative probability of the top tokens to consider. Must be in (0, 1]. Set to 1 to consider all tokens.",
-    "top_k": "Integer that controls the number of top tokens to consider. Set to -1 to consider all tokens.",
-    "use_beam_search": "Whether to use beam search instead of sampling.",
-    "length_penalty": "Float that penalizes sequences based on their length. Used in beam search.",
-    "early_stopping": 'Controls the stopping condition for beam search. Accepts `True`, `False`, or `"never"`.',
-    "stop": "List of strings that stop the generation when they are generated. The returned output will not contain the stop strings.",
-    "stop_token_ids": "List of tokens that stop the generation when they are generated. The returned output will contain the stop tokens unless they are special tokens.",
-    "ignore_eos": "Whether to ignore the EOS token and continue generating tokens after the EOS token is generated.",
-    "max_tokens": "Maximum number of tokens to generate per output sequence.",
-    "logprobs": "Number of log probabilities to return per output token.",
-    "skip_special_tokens": "Whether to skip special tokens in the output. Defaults to true.",
-    "_batch_size": "Number of prompts to generate in parallel. Defaults to 1.",
-}
-
-
-def _normalize_generation_params(params: Dict) -> Dict:
-    """Normalize generation-related parameter names and values for VLLM.
-    
-    Args:
-        params: Dictionary of generation parameters.
-        
-    Returns:
-        Dict: Normalized parameters compatible with VLLM.
-    """
-    # Map legacy or alternate keys; pop so wrapper-only aliases don't reach vLLM.
-    for key in ("max_gen_len", "max_new_tokens"):
-        if key in params:
-            params["max_tokens"] = params.pop(key)
-
-    # Handle sampling and beam search configurations
-    if not params.pop("do_sample", True):
-        logger.info("do_sample is false, setting temperature to 0.")
-        params["temperature"] = 0.0
-
-    if params.get("use_beam_search", False):
-        logger.info("Beam search is enabled, setting temperature to 0.")
-        params["temperature"] = 0.0
-        params.setdefault("best_of", 2)
-        if "best_of" not in params:
-            logger.info("Beam search is enabled, setting best_of to 2.")
-
-    # Handle EOS / Stop token mapping
-    if "eos_token_id" in params:
-        eos_token_id = params.pop("eos_token_id")
-        params["stop_token_ids"] = [eos_token_id] if not isinstance(
-            eos_token_id, list) else eos_token_id
-
-    return params
-
-
 def _get_payload_for_engine(data: Dict, task_type: str):
     """Prepare payload and endpoint path based on task type.
     
@@ -586,7 +529,7 @@ def _get_payload_for_engine(data: Dict, task_type: str):
     payload = MIRPayload.from_dict(data)
     logger.info(f"Processing new request with parameters: {payload.params}")
 
-    params = _normalize_generation_params(payload.params)
+    params = payload.params
 
     if task_type == TaskType.CHAT_COMPLETION:
         payload.convert_query_to_list()
@@ -636,10 +579,8 @@ async def send_request(data: Dict) -> (InferenceResult, Dict):
 
         logger.info(f"JSON payload for request execution: {payload}")
 
-        start_time = time.time()
         response = requests.post(
             f"{get_downstream_url()}/{uri}", headers=headers, json=payload)
-        end_time = time.time()
 
         generated_text = None
         if response.status_code == 200:
