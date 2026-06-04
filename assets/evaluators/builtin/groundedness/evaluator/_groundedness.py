@@ -1425,8 +1425,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
             eval_input["query"] = _preprocess_messages(eval_input["query"])
         if eval_input.get("query", None) is None:
             result = await self._the_super_do_eval(eval_input)
-            # Check if base returned nan (invalid output case)
-            if math.isnan(result.get(self._result_key, 0)):
+            # Check if base returned nan (invalid output case); None means not-applicable/skipped
+            _score = result.get(self._result_key, 0)
+            if _score is not None and math.isnan(_score):
                 raise EvaluationException(
                     message="Evaluator returned invalid output.",
                     blame=ErrorBlame.SYSTEM_ERROR,
@@ -1449,8 +1450,9 @@ class GroundednessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
 
         # Replace and call the parent method
         result = await self._the_super_do_eval(simplified_eval_input)
-        # Check if base returned nan (invalid output case)
-        if math.isnan(result.get(self._result_key, 0)):
+        # Check if base returned nan (invalid output case); None means not-applicable/skipped
+        _score = result.get(self._result_key, 0)
+        if _score is not None and math.isnan(_score):
             raise EvaluationException(
                 message="Evaluator returned invalid output.",
                 blame=ErrorBlame.SYSTEM_ERROR,
