@@ -19,7 +19,7 @@ from ...builtin.groundedness.evaluator._groundedness import (
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
+from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect
 
 
 @pytest.mark.unittest
@@ -631,6 +631,56 @@ class TestGroundednessSerializeMessages:
         result = serialize_messages(messages)
         assert "Rule 1." in result
         assert "Rule 2." in result
+
+
+# endregion
+
+
+# region None score handling tests
+
+@pytest.mark.unittest
+class TestGroundednessNoneScoreHandling:
+    """Tests for None score handling in _do_eval (math.isnan fix).
+
+    When _return_not_applicable_result returns score=None (for skipped evaluations
+    like intermediate responses), _do_eval must not crash on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow should not raise TypeError."""
+        evaluator = _create_mocked_groundedness_evaluator()
+        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
+        # Turn-level path: response + context, no query
+        result = evaluator(
+            response="The sky is blue.",
+            context="The sky appears blue due to Rayleigh scattering.",
+        )
+        assert result["groundedness"] is None
+        assert result["groundedness_result"] == "not_applicable"
+
+    def test_turn_level_with_query_none_score_does_not_crash(self):
+        """Turn-level eval with query + response + context and score=None should not crash."""
+        evaluator = _create_mocked_groundedness_evaluator()
+        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
+        result = evaluator(
+            query="Why is the sky blue?",
+            response="The sky is blue.",
+            context="The sky appears blue due to Rayleigh scattering.",
+        )
+        assert result["groundedness"] is None
+        assert result["groundedness_result"] == "not_applicable"
+
+    def test_conversation_level_none_score_does_not_crash(self):
+        """Conversation-level eval with score=None should not crash."""
+        evaluator = _create_mocked_groundedness_evaluator()
+        evaluator._multi_turn_flow = MagicMock(
+            side_effect=create_none_score_flow_side_effect(
+                reason="No agent responses to evaluate."
+            )
+        )
+        result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
+        assert result["groundedness"] is None
+        assert result["groundedness_result"] == "not_applicable"
 
 
 # endregion

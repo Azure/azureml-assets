@@ -119,6 +119,23 @@ def get_dict_llm_output(score: int, explanation: str = DEFAULT_EXPLANATION) -> D
     }
 
 
+def get_dict_llm_output_none_score(reason: str = "Not applicable: intermediate response") -> Dict[str, Any]:
+    """
+    Generate dictionary-formatted LLM output with score=None (skipped/not_applicable).
+
+    This simulates what the prompty returns when a response is not applicable
+    for evaluation (e.g., intermediate tool-only responses).
+    """
+    return {
+        "llm_output": {
+            "score": None,
+            "reason": reason,
+            "status": "skipped",
+            "properties": None,
+        }
+    }
+
+
 def create_flow_side_effect(
     score: int, output_type: OutputType, explanation: str = DEFAULT_EXPLANATION
 ) -> Callable[[int], Awaitable[str | Dict[str, Any]]]:
@@ -167,3 +184,19 @@ def get_flow_side_effect_for_evaluator(
 
     config = EVALUATOR_CONFIGS[evaluator_name]
     return create_flow_side_effect(config.score, config.output_type)
+
+
+def create_none_score_flow_side_effect(
+    reason: str = "Not applicable: intermediate response",
+) -> Callable[[int], Awaitable[Dict[str, Any]]]:
+    """
+    Create async side effect that returns score=None (skipped/not_applicable).
+
+    Used to test that evaluators handle None scores from _return_not_applicable_result
+    without crashing on math.isnan(None).
+    """
+
+    async def flow_side_effect(timeout, **kwargs):
+        return get_dict_llm_output_none_score(reason)
+
+    return flow_side_effect

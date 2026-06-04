@@ -19,7 +19,7 @@ from ...builtin.coherence.evaluator._coherence import (
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator
+from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect
 
 
 @pytest.mark.unittest
@@ -403,6 +403,43 @@ class TestCoherenceSerializeMessages:
         result = serialize_messages(messages)
         assert "Rule 1." in result
         assert "Rule 2." in result
+
+
+# endregion
+
+
+# region None score handling tests
+
+@pytest.mark.unittest
+class TestCoherenceNoneScoreHandling:
+    """Tests for None score handling in _do_eval (math.isnan fix).
+
+    When _return_not_applicable_result returns score=None, _do_eval must not
+    crash on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow should not raise TypeError."""
+        evaluator = _create_mocked_coherence_evaluator()
+        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
+        result = evaluator(
+            query="What is the weather?",
+            response="It is sunny today.",
+        )
+        assert result["coherence"] is None
+        assert result["coherence_result"] == "not_applicable"
+
+    def test_conversation_level_none_score_does_not_crash(self):
+        """Conversation-level eval with score=None should not crash."""
+        evaluator = _create_mocked_coherence_evaluator()
+        evaluator._multi_turn_flow = MagicMock(
+            side_effect=create_none_score_flow_side_effect(
+                reason="No agent responses to evaluate."
+            )
+        )
+        result = evaluator(messages=VALID_MESSAGES)
+        assert result["coherence"] is None
+        assert result["coherence_result"] == "not_applicable"
 
 
 # endregion

@@ -3,11 +3,15 @@
 
 """Behavioral tests for Fluency Evaluator."""
 
+import os
 import pytest
+from unittest.mock import MagicMock
 from .base_evaluator_behavior_test import BaseEvaluatorBehaviorTest
 from .base_tool_evaluation_test import BaseToolEvaluationTest
 from . import common_tool_test_data as data
 from ...builtin.fluency.evaluator._fluency import FluencyEvaluator
+from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect
+from azure.ai.evaluation import AzureOpenAIModelConfiguration
 
 
 @pytest.mark.unittest
@@ -86,3 +90,36 @@ class TestFluencyEvaluatorBehavior(BaseEvaluatorBehaviorTest, BaseToolEvaluation
 
     # Test Configs
     requires_query = False
+
+
+def _create_mocked_fluency_evaluator():
+    """Create a FluencyEvaluator with _flow mocked."""
+    model_config = AzureOpenAIModelConfiguration(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    )
+    evaluator = FluencyEvaluator(model_config=model_config)
+    evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator("fluency"))
+    return evaluator
+
+
+# region None score handling tests
+
+@pytest.mark.unittest
+class TestFluencyNoneScoreHandling:
+    """Tests for None score handling in _do_eval (math.isnan fix).
+
+    When _return_not_applicable_result returns score=None, _do_eval must not
+    crash on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow should not raise TypeError."""
+        evaluator = _create_mocked_fluency_evaluator()
+        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
+        result = evaluator(response="It is sunny today.")
+        assert result["fluency"] is None
+        assert result["fluency_result"] == "not_applicable"
+
+
+# endregion
