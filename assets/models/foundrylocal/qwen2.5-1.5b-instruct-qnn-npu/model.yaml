@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/tool_calling/qwen2.5-1.5b-instruct-qnn-npu/v2
+  container_path: foundrylocal/models/qwen2.5-1.5b-instruct/onnx/qnn_npu/v3
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
