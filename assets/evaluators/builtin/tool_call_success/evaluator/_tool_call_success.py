@@ -1053,8 +1053,8 @@ def _reformat_tool_calls_results(response, logger=None):
             # fallback to the original response in that case
             if logger:
                 logger.warning(
-                    f"Empty agent response extracted, likely due to input schema change. "
-                    f"Falling back to using the original response "
+                    "Empty agent response extracted, likely due to input schema change. "
+                    "Falling back to using the original response "
                 )
                 logger.debug(f"Original response: {response}")
             return response
