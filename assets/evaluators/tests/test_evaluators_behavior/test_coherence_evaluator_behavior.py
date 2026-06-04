@@ -19,7 +19,7 @@ from ...builtin.coherence.evaluator._coherence import (
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect
+from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect, assert_none_score_result
 
 
 @pytest.mark.unittest
@@ -426,8 +426,7 @@ class TestCoherenceNoneScoreHandling:
             query="What is the weather?",
             response="It is sunny today.",
         )
-        assert result["coherence"] is None
-        assert result["coherence_result"] == "not_applicable"
+        assert_none_score_result(result, "coherence")
 
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
@@ -438,8 +437,7 @@ class TestCoherenceNoneScoreHandling:
             )
         )
         result = evaluator(messages=VALID_MESSAGES)
-        assert result["coherence"] is None
-        assert result["coherence_result"] == "not_applicable"
+        assert_none_score_result(result, "coherence")
 
 
 # endregion

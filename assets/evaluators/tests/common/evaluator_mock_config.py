@@ -201,3 +201,45 @@ def create_none_score_flow_side_effect(
         return get_dict_llm_output_none_score(reason)
 
     return flow_side_effect
+
+
+def create_mocked_evaluator(evaluator_cls, evaluator_name: str):
+    """Create an evaluator instance with _flow mocked using standard side effect.
+
+    Reusable factory for evaluators that only need model_config and a mocked _flow.
+    For evaluators with extra init params (evaluation_level, multi_turn, etc.),
+    use a custom helper instead.
+
+    Args:
+        evaluator_cls: The evaluator class to instantiate (e.g., FluencyEvaluator).
+        evaluator_name: Name used to look up the mock config (e.g., "fluency").
+
+    Returns:
+        An evaluator instance with _flow replaced by a MagicMock.
+    """
+    import os
+    from unittest.mock import MagicMock
+    from azure.ai.evaluation import AzureOpenAIModelConfiguration
+
+    model_config = AzureOpenAIModelConfiguration(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
+    )
+    evaluator = evaluator_cls(model_config=model_config)
+    evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator(evaluator_name))
+    return evaluator
+
+
+def assert_none_score_result(result: Dict[str, Any], evaluator_name: str):
+    """Assert that an evaluator result reflects a None/not_applicable score.
+
+    Args:
+        result: The evaluator output dict.
+        evaluator_name: The evaluator key (e.g., "fluency", "groundedness").
+    """
+    assert result[evaluator_name] is None, (
+        f"Expected {evaluator_name} score to be None, got {result[evaluator_name]}"
+    )
+    assert result[f"{evaluator_name}_result"] == "not_applicable", (
+        f"Expected {evaluator_name}_result to be 'not_applicable', got {result.get(f'{evaluator_name}_result')}"
+    )

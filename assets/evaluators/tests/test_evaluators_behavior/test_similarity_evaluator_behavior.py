@@ -3,13 +3,11 @@
 
 """Behavioral tests for Similarity Evaluator."""
 
-import os
 import pytest
 from unittest.mock import MagicMock
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..common import BasePromptyEvaluatorRunner
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect
-from azure.ai.evaluation import AzureOpenAIModelConfiguration
+from ..common.evaluator_mock_config import create_none_score_flow_side_effect, create_mocked_evaluator, assert_none_score_result
 
 
 @pytest.mark.unittest
@@ -548,17 +546,6 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
         assert results["similarity"] >= results["similarity_threshold"]
 
 
-def _create_mocked_similarity_evaluator():
-    """Create a SimilarityEvaluator with _flow mocked."""
-    model_config = AzureOpenAIModelConfiguration(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "https://Sanitized.api.cognitive.microsoft.com"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "aoai-deployment"),
-    )
-    evaluator = SimilarityEvaluator(model_config=model_config)
-    evaluator._flow = MagicMock(side_effect=get_flow_side_effect_for_evaluator("similarity"))
-    return evaluator
-
-
 # region None score handling tests
 
 @pytest.mark.unittest
@@ -571,15 +558,14 @@ class TestSimilarityNoneScoreHandling:
 
     def test_turn_level_none_score_does_not_crash(self):
         """Turn-level eval with score=None from _flow should not raise TypeError."""
-        evaluator = _create_mocked_similarity_evaluator()
+        evaluator = create_mocked_evaluator(SimilarityEvaluator, "similarity")
         evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
         result = evaluator(
             query="What is the role of ribosomes?",
             response="Ribosomes are responsible for protein synthesis.",
             ground_truth="Ribosomes are cellular structures responsible for protein synthesis.",
         )
-        assert result["similarity"] is None
-        assert result["similarity_result"] == "not_applicable"
+        assert_none_score_result(result, "similarity")
 
 
 # endregion

@@ -19,7 +19,7 @@ from ...builtin.groundedness.evaluator._groundedness import (
     EvaluationLevel,
     serialize_messages,
 )
-from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect
+from ..common.evaluator_mock_config import get_flow_side_effect_for_evaluator, create_none_score_flow_side_effect, assert_none_score_result
 
 
 @pytest.mark.unittest
@@ -655,8 +655,7 @@ class TestGroundednessNoneScoreHandling:
             response="The sky is blue.",
             context="The sky appears blue due to Rayleigh scattering.",
         )
-        assert result["groundedness"] is None
-        assert result["groundedness_result"] == "not_applicable"
+        assert_none_score_result(result, "groundedness")
 
     def test_conversation_level_none_score_does_not_crash(self):
         """Conversation-level eval with score=None should not crash."""
@@ -667,8 +666,7 @@ class TestGroundednessNoneScoreHandling:
             )
         )
         result = evaluator(messages=VALID_GROUNDEDNESS_MESSAGES)
-        assert result["groundedness"] is None
-        assert result["groundedness_result"] == "not_applicable"
+        assert_none_score_result(result, "groundedness")
 
 
 # endregion
