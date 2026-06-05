@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: phi-4-mini-instruct-openvino-npu
-version: 3
+version: 4
 isArchived: true
 path: ./
 tags:
@@ -14,7 +14,7 @@ tags:
   task: chat-completion
   maxOutputTokens: 2048
   alias: phi-4-mini
-  directoryPath: v3
+  directoryPath: v4
   promptTemplate: "{\"system\": \"<|system|>{Content}<|end|>\", \"user\": \"<|user|>{Content}<|end|>\"\
     , \"assistant\": \"<|assistant|>{Content}<|end|>\", \"prompt\": \"<|user|>{Content}<|end|><|assistant|>\"\
     }"
