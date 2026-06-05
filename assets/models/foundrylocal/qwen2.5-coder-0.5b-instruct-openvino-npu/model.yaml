@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: foundrylocal/models/qwen2.5-coder-0.5b-instruct/onnx/openvino_npu/v4
+  container_path: foundrylocal/models/qwen2.5-coder-0.5b-instruct/onnx/openvino_npu/v5
   storage_name: foundrylocalassetdata
   type: azureblob
 publish:
