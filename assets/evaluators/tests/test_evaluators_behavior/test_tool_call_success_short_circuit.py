@@ -1,0 +1,178 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Tests for the ToolCallSuccess deterministic status-based short-circuit.
+
+When the agent runtime reports a known-failure ``status`` on any tool_call /
+tool_result content block (e.g. "failed", "error", "incomplete"), the
+evaluator deterministically returns a ``fail`` result without calling the
+LLM. Absent ``status``, behavior is unchanged.
+"""
+
+import pytest
+
+from ...builtin.tool_call_success.evaluator._tool_call_success import (
+    ToolCallSuccessEvaluator,
+    _FAILED_TOOL_STATUSES,
+    _collect_failed_tool_statuses,
+)
+from ..common.base_prompty_evaluator_runner import BasePromptyEvaluatorRunner
+
+
+# region helpers
+
+
+def _assistant_tool_call(tool_call_id, name, arguments, status=None):
+    """Build an assistant message carrying a single tool_call content block."""
+    block = {
+        "type": "tool_call",
+        "tool_call_id": tool_call_id,
+        "name": name,
+        "arguments": arguments,
+    }
+    if status is not None:
+        block["status"] = status
+    return {"role": "assistant", "content": [block]}
+
+
+def _tool_result(tool_call_id, result, status=None):
+    """Build a tool message carrying a single tool_result content block."""
+    block = {
+        "type": "tool_result",
+        "tool_call_id": tool_call_id,
+        "tool_result": result,
+    }
+    if status is not None:
+        block["status"] = status
+    return {
+        "role": "tool",
+        "tool_call_id": tool_call_id,
+        "content": [block],
+    }
+
+
+def _failing_response():
+    """A minimal agent response with a failed tool execution."""
+    return [
+        _assistant_tool_call("call_1", "fetch_weather", {"location": "Seattle"}, status="failed"),
+        _tool_result("call_1", "", status="failed"),
+    ]
+
+
+# endregion
+
+
+@pytest.mark.unittest
+class TestCollectFailedToolStatuses:
+    """Unit tests for the ``_collect_failed_tool_statuses`` helper."""
+
+    @pytest.mark.parametrize("status", sorted(_FAILED_TOOL_STATUSES))
+    def test_each_failure_status_is_detected(self, status):
+        msgs = [_assistant_tool_call("c1", "x", {}, status=status)]
+        assert _collect_failed_tool_statuses(msgs) == [status]
+
+    def test_case_insensitive_match(self):
+        msgs = [_assistant_tool_call("c1", "x", {}, status="FAILED")]
+        assert _collect_failed_tool_statuses(msgs) == ["failed"]
+
+    def test_completed_status_is_not_detected(self):
+        msgs = [_assistant_tool_call("c1", "x", {}, status="completed")]
+        assert _collect_failed_tool_statuses(msgs) == []
+
+    def test_missing_status_is_not_detected(self):
+        msgs = [_assistant_tool_call("c1", "x", {})]
+        assert _collect_failed_tool_statuses(msgs) == []
+
+    def test_status_on_tool_result_is_detected(self):
+        msgs = [_tool_result("c1", "", status="error")]
+        assert _collect_failed_tool_statuses(msgs) == ["error"]
+
+    def test_duplicates_preserved_in_return(self):
+        msgs = [
+            _assistant_tool_call("c1", "x", {}, status="failed"),
+            _tool_result("c1", "", status="failed"),
+        ]
+        assert _collect_failed_tool_statuses(msgs) == ["failed", "failed"]
+
+    def test_status_on_unrelated_content_type_is_ignored(self):
+        msgs = [{"role": "assistant", "content": [{"type": "text", "text": "hi", "status": "failed"}]}]
+        assert _collect_failed_tool_statuses(msgs) == []
+
+    def test_non_list_input_returns_empty(self):
+        assert _collect_failed_tool_statuses(None) == []
+        assert _collect_failed_tool_statuses("not-a-list") == []
+        assert _collect_failed_tool_statuses({"role": "assistant"}) == []
+
+    def test_malformed_messages_are_tolerated(self):
+        msgs = [
+            None,
+            "not-a-dict",
+            {"role": "assistant"},
+            {"role": "assistant", "content": "stringly"},
+            {"role": "assistant", "content": [None, "x", {"type": "tool_call", "status": "failed"}]},
+        ]
+        assert _collect_failed_tool_statuses(msgs) == ["failed"]
+
+    def test_unknown_status_string_is_ignored(self):
+        msgs = [_assistant_tool_call("c1", "x", {}, status="weird_state")]
+        assert _collect_failed_tool_statuses(msgs) == []
+
+
+@pytest.mark.unittest
+class TestToolCallSuccessShortCircuit(BasePromptyEvaluatorRunner):
+    """Integration tests that the evaluator short-circuits before invoking the LLM."""
+
+    evaluator_type = ToolCallSuccessEvaluator
+
+    def _failing_query(self):
+        return [{"role": "user", "content": [{"type": "text", "text": "What's the weather?"}]}]
+
+    def test_short_circuit_when_tool_call_status_is_failed(self):
+        results, flow_mock = self._run_evaluation_and_return_mocked_flow(
+            query=self._failing_query(),
+            response=_failing_response(),
+        )
+        assert results["tool_call_success_result"] == "fail"
+        assert results["tool_call_success_passed"] is False
+        assert results["tool_call_success_score"] == 0.0
+        assert results["tool_call_success_status"] == "completed"
+        properties = results["tool_call_success_properties"]
+        assert properties["short_circuit"] == "tool_status"
+        assert properties["failed_statuses"] == ["failed"]
+        flow_mock.assert_not_called()
+
+    def test_short_circuit_dedupes_failed_statuses_in_properties(self):
+        response = [
+            _assistant_tool_call("c1", "fetch_weather", {"location": "Seattle"}, status="failed"),
+            _tool_result("c1", "", status="error"),
+            _assistant_tool_call("c2", "send_email", {"to": "x@example.com"}, status="failed"),
+        ]
+        results, flow_mock = self._run_evaluation_and_return_mocked_flow(
+            query=self._failing_query(),
+            response=response,
+        )
+        properties = results["tool_call_success_properties"]
+        assert properties["failed_statuses"] == ["error", "failed"]
+        flow_mock.assert_not_called()
+
+    def test_no_short_circuit_when_all_statuses_completed(self):
+        response = [
+            _assistant_tool_call("c1", "fetch_weather", {"location": "Seattle"}, status="completed"),
+            _tool_result("c1", "Sunny, 72F.", status="completed"),
+        ]
+        _, flow_mock = self._run_evaluation_and_return_mocked_flow(
+            query=self._failing_query(),
+            response=response,
+        )
+        flow_mock.assert_called_once()
+
+    def test_no_short_circuit_when_status_absent(self):
+        response = [
+            _assistant_tool_call("c1", "fetch_weather", {"location": "Seattle"}),
+            _tool_result("c1", "Sunny, 72F."),
+        ]
+        _, flow_mock = self._run_evaluation_and_return_mocked_flow(
+            query=self._failing_query(),
+            response=response,
+        )
+        flow_mock.assert_called_once()
