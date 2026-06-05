@@ -64,7 +64,11 @@ class TestToolCallAccuracyEvaluatorBehavior(BaseToolCallEvaluatorBehaviorTest, B
 
     evaluator_type = ToolCallAccuracyEvaluator
 
-    check_for_unsupported_tools = True
+    # Restricted built-in tool types are accepted by the validator as of asset version 12 (formerly
+    # rejected with NOT_APPLICABLE). Per-tool expected_flow_inputs for the newly-enabled tool types
+    # are tracked in a follow-up PR; until they are captured the flow-mock arg matcher is relaxed
+    # for tools with an empty expected_flow_inputs dict.
+    check_for_unsupported_tools = False
 
     is_tool_definition_required = True
 
