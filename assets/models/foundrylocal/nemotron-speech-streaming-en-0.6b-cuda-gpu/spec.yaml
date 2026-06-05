@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: nemotron-3.5-asr-streaming-0.6b-generic-cpu
-version: 3
+name: nemotron-speech-streaming-en-0.6b-cuda-gpu
+version: 1
 isArchived: true
 path: ./
 tags:
@@ -12,24 +12,24 @@ tags:
   outputModalities: "text"
   task: automatic-speech-recognition
   maxOutputTokens: 2048
-  alias: nemotron-3.5-asr-streaming-0.6b
-  directoryPath: v3
+  alias: nemotron-speech-streaming-en-0.6b
+  directoryPath: v1
   promptTemplate: ""
   capabilities: ""
   supportsReasoning: ""
   reasoningStart: ""
   reasoningEnd: ""
   contextLength: 0
-  minFLVersion: "1.2.1"
+  minFLVersion: "1.1.0"
   disable-maap: "true"
 type: custom_model
 variantInfo:
   parents:
-  - assetId: azureml://registries/azureml/models/nemotron-3.5-asr-streaming-0.6b/versions/1
+  - assetId: azureml://registries/azureml/models/nemotron-speech-streaming-en-0.6b/versions/1
   variantMetadata:
     modelType: 'ONNX'
     quantization: ['RTN']
-    device: 'cpu'
-    executionProvider: 'CPUExecutionProvider'
-    fileSizeBytes: 793344362
-    vRamFootprintBytes: 793344362
+    device: 'gpu'
+    executionProvider: 'CUDAExecutionProvider'
+    fileSizeBytes: 730746955
+    vRamFootprintBytes: 730746955
