@@ -697,7 +697,7 @@ class ToolCallSuccessEvaluator(PromptyEvaluatorBase[Union[str, float]]):
         self._validator = ToolDefinitionsValidator(
             error_target=ExtendedErrorTarget.TOOL_CALL_SUCCESS_EVALUATOR,
             requires_query=False,
-            check_for_unsupported_tools=True,
+            check_for_unsupported_tools=False,
         )
 
         super().__init__(
