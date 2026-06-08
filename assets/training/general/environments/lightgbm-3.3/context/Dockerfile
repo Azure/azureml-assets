@@ -57,7 +57,7 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
     'tqdm~=4.66.3' \
     py-cpuinfo==5.0.0 \
     'torch-tb-profiler~=0.4.0' \
-    'starlette>=0.49.1' && \
+    'starlette>=1.0.1' && \
     rm conda_dependencies.yaml
 
 # Security vulnerability fixes
@@ -80,4 +80,5 @@ RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir \
 #   dask~=2026.3.0 -> distributed<2026.3.1) would otherwise allow older patch
 #   levels with outstanding CVEs, so explicit floor pins are required.
 RUN conda run -p $CONDA_PREFIX pip install --no-cache-dir --upgrade \
-    'aiohttp>=3.13.5' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==46.0.7
+    'aiohttp>=3.14.0' 'protobuf>=6.33.5' 'distributed>=2026.1.0' cryptography==46.0.7 'idna>=3.15' 'starlette>=1.0.1' && \
+    /opt/miniconda/bin/pip install --no-cache-dir --upgrade 'idna>=3.15'
