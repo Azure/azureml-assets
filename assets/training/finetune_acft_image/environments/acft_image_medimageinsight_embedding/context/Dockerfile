@@ -32,7 +32,9 @@ RUN pip uninstall -y fastmcp mcp
 # GitPython: transitive dep (mlflow → mlflow-skinny 3.11.1 requires gitpython<4,>=3.1.9); the
 #   loose floor lets pip resolve 3.1.46 which has GHSA-x2qx-6953-8485, GHSA-rpm5-65cw-6hj4.
 #   mlflow-skinny has no release that pins gitpython>=3.1.47, so explicit override is required.
-RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47'
+# aiohttp: transitive dep; resolves to 3.13.5 which has GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg.
+#   No parent release floors aiohttp>=3.14.0, so explicit override is required.
+RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47' 'aiohttp>=3.14.0'
 
 # Upgrade vulnerable packages in the system Python (3.13)
 # urllib3: transitive dep via requests; loose floor (urllib3<3,>=1.21.1) resolves to vulnerable 2.6.3
@@ -45,4 +47,6 @@ RUN pip install --no-cache-dir --upgrade 'Mako>=1.3.11' 'GitPython>=3.1.47'
 # click: transitive via mlflow-skinny (click<9,>=7.0), uvicorn (click>=7.0), typer (click>=8.2.1),
 #   flask (click>=8.1.3) — all loose floors resolve to vulnerable 8.2.1 (GHSA-47fr-3ffg-hgmw /
 #   CVE-2026-7246). No parent release floors click>=8.3.3, so explicit override is required.
-RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3'
+# aiohttp: resolves to 3.13.5 which has GHSA-jg22-mg44-37j8, GHSA-hg6j-4rv6-33pg. No parent
+#   release floors aiohttp>=3.14.0, so explicit override is required.
+RUN /opt/conda/bin/python3.13 -m pip install --no-cache-dir --upgrade 'urllib3>=2.7.0' 'python-dotenv>=1.2.2' 'idna>=3.15' 'click>=8.3.3' 'aiohttp>=3.14.0'
