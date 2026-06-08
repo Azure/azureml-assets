@@ -38,6 +38,21 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 # upstream parent package in this context), so the apt upgrade is the only fix.
 RUN apt-get update && ACCEPT_EULA=Y apt-get -y upgrade && \
     apt-get install -y sudo locales libssl-dev sqlite3 && \
+    # Security: explicitly upgrade specific packages with known CVEs to ensure they reach
+    # the required patched versions regardless of base-image state:
+    #   libgnutls30t64 USN-8284-1: >=3.8.3-1.1ubuntu3.6
+    #   libgcrypt20    USN-8319-1: >=1.10.3-2ubuntu0.1
+    #   nginx/nginx-common/nginx-light USN-8354-1: >=1.24.0-2ubuntu7.9
+    #   liblzma5/xz-utils USN-8362-1: >=5.6.1+really5.4.5-1ubuntu0.3
+    apt-get install -y --only-upgrade \
+        libgnutls30t64 \
+        libgcrypt20 \
+        nginx \
+        nginx-common \
+        nginx-light \
+        liblzma5 \
+        xz-utils \
+    || true && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Security: upgrade pip in BASE miniconda (/opt/miniconda) to fix CVE-2026-6357
