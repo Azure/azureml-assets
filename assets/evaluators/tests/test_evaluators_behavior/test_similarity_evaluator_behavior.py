@@ -4,8 +4,14 @@
 """Behavioral tests for Similarity Evaluator."""
 
 import pytest
+from unittest.mock import MagicMock
 from ...builtin.similarity.evaluator._similarity import SimilarityEvaluator
 from ..common import BasePromptyEvaluatorRunner
+from ..common.evaluator_mock_config import (
+    create_none_score_flow_side_effect,
+    create_mocked_evaluator,
+    assert_none_score_result,
+)
 
 
 @pytest.mark.unittest
@@ -542,3 +548,28 @@ class TestSimilarityEvaluatorBehavior(BasePromptyEvaluatorRunner):
         )
         assert results["similarity_result"] == "pass"
         assert results["similarity"] >= results["similarity_threshold"]
+
+
+# region None score handling tests
+
+@pytest.mark.unittest
+class TestSimilarityNoneScoreHandling:
+    """Tests for None score handling in _do_eval (math.isnan fix).
+
+    When _return_not_applicable_result returns score=None, _do_eval must not
+    crash on math.isnan(None).
+    """
+
+    def test_turn_level_none_score_does_not_crash(self):
+        """Turn-level eval with score=None from _flow should not raise TypeError."""
+        evaluator = create_mocked_evaluator(SimilarityEvaluator, "similarity")
+        evaluator._flow = MagicMock(side_effect=create_none_score_flow_side_effect())
+        result = evaluator(
+            query="What is the role of ribosomes?",
+            response="Ribosomes are responsible for protein synthesis.",
+            ground_truth="Ribosomes are cellular structures responsible for protein synthesis.",
+        )
+        assert_none_score_result(result, "similarity")
+
+
+# endregion
